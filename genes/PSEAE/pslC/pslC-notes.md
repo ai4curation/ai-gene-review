@@ -51,3 +51,29 @@ Node leaves were taken from the PAINT leaf GAF (`.cache/paint/leaf.gaf.gz`).
 - NEW: polysaccharide biosynthetic process (GO:0000271), IMP PMID:19659934.
 - PSEUDOCAP defect: IDA should be IMP (PROBABLE).
 - GO_CENTRAL defect: remove the GO:0044010 IBD at PTN002463206 (PROBABLE).
+
+## Leaf evidence check (2026-11-06)
+
+Audit of the leaf claims in the `GO_CENTRAL` source defect on PTN002463206.
+Membership confirmed with
+`uv run python projects/PSEUDOCAP/panther_tree.py node PTN002463206 --leaves`
+(7 leaves; PslC and RfbN in PTHR43685:SF13, the other five in SF2); UniProt
+flat files fetched for all seven.
+
+| Leaf | Name and its evidence | Experimental annotations | Verdict |
+|---|---|---|---|
+| P26403 (S. typhimurium RfbN) | RecName, curated (Reviewed, ECO:0000305); GN from ECO:0000303 PubMed:1710759; PE 1 | FUNCTION and PATHWAY by **ECO:0000269 PubMed:7684736**: rhamnosyltransferase adding rhamnose to the galactosyl-undecaprenyl-diphosphate LPS O-antigen intermediate | Claim **survives and strengthens**: experimentally characterised, product is LPS O-antigen, and it is PslC's closest relative (same subfamily SF13) |
+| Q89D69 (B. diazoefficiens "exoU") | **SubName** "UDP-hexose transferase" {ECO:0000313\|EMBL}; PE 4 Predicted | none | "Succinoglycan ExoU" identity **does not survive**: predicted name only. What is checkable: PF00535 GT-2, 313 aa |
+| Q9I4N8 (P. aeruginosa "FgtA", PA1091) | **SubName** "Flagellar glycosyl transferase, FgtA" {ECO:0000313\|EMBL}; PE 4 | none | Flagellin-glycosyltransferase identity **does not survive**. Stronger replacement fact: 1694 aa with Pfam PF04464 / InterPro IPR007554 TagF-like and **no GT-2 match at all**, so it does not even share PslC's catalytic domain |
+| Q9I3V4 (P. aeruginosa PA1390) | **SubName** "Probable glycosyl transferase"; PE 4 | none | Uncharacterised; PF00535, 344 aa |
+| Q74CL7 (G. sulfurreducens GSU1510.1) | **SubName** "Glycosyltransferase"; PE 4 | none | Uncharacterised; PF00535, 264 aa |
+| Q8P4N7 (X. campestris XCC3670) | RecName derived from **ECO:0000259\|Pfam:PF00535**; PE 4 | none | Uncharacterised; PF00535, 231 aa |
+
+Net effect: the "unrelated glycans" framing was overclaimed, because five of the
+six leaves are uncharacterised and their glycan assignments were predicted
+names. The argument is rebuilt on (a) RfbN's experimentally curated O-antigen
+role, (b) the absence of any experimental annotation on the other six, (c)
+domain content including FgtA's non-GT-2 architecture, and (d) the seed being a
+deletion phenotype. Confidence held at PROBABLE: the checks strengthened the
+one verifiable leaf but the "not a conserved function" step still rests partly
+on absence of evidence.

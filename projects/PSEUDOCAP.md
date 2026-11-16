@@ -4,8 +4,13 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEAE]
-genes: [arcA, arcD, aruC, braD, braF, ccmC, cif, cifR, cysB, dctP, dctQ, dgcB, dksA, eddB, estA, fimU, fleN, fliD, fpr, fur, gbuA, gltA, hfq, hom, hutF, hutH, hutI, lap, lasB, lasI, lhpL, liuC, lpxA, mgtE, motB, mucB, mucD, nirJ, nmoA, nrdJa, oprB, oprG, PA0692, PA0906, PA0920, PA1024, PA1054, PA1055, PA1056, PA1057, PA1058, PA1059, PA1340, PA1341, PA1486, PA2280, PA2580, PA3697, PA3760, PA3891, PA4079, PA4503, PA4504, PA4505, PA4521, PA4624, PA5085, PA5208, PA5359, PA5377, PA5458, pchB, pelA, pfeA, phnB, phzC1, phzM, phzS, pilA, pilB, pilD, pilM, pilN, pilT, pilU, pqsC, pqsH, pscC, pslC, ptrB, pvdH, Q9HTB8, relA, tgpA, thiI, thrB, waaL, wbpD, wbpY, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX, znuC, fimT]
-autolink_exclude: [III, PTS, pvdE, katA, fruB, ptsP, ampD, caiX, dgcA]
+genes: [aer, aguB, alg8, algA, algB, algC, algU, algZ, alr, ampD, ampDh2, ampDh3, ampG, ampR, arcA, arcB, arcC, arcD, argA, arr, aruC, aruG, aruH, astA, astB, atsA, atuR, azoR1, azoR2, azoR3, azu, betT1, bfd, bifA, braC, braD, braF, braG, brlR, cbrA, ccmC, ccmF, ccoP1, ccoP2, ccpA, cdhR, cheZ, cif, cifR, copR, ctpH, ctpL, ctpM, cueR, cupA3, cyaA, cyaB, cysB, cysH, dadA1, dadA2, dadX, dctP, dctQ, dgcB, dgcP, dksA, dsbB1, dsbB2, dsdA, eddB, eraR, estA, exsA, fabA, fabB, fabD, fabV, fadD1, fdnG, fdnH, fdnI, fimU, fiuA, fleN, fleQ, fleS, fliC, fliD, folP, foxA, foxI, foxR, fpr, fpvI, fpvR, fur, galU, gbcB, gbdR, gbuA, glmM, glmR, gltA, gmd, gntR, hemB, hfq, hom, hutF, hutH, hutI, hutU, infB, katA, kynB, lap, lasB, lasI, lhpL, ligD, liuA, liuC, liuE, lolA, lolD, lpxA, lpxC, lpxL, lysA, mcpB, mexA, mexT, mexX, mexZ, mgtE, migA, mltB1, motA, motB, motC, msrA, mucA, mucB, mucD, mucR, nalC, nalD, nbdA, ndk, nfxB, nirJ, nmoA, np20, nrdA, nrdJa, nuh, ohrR, opdP, opmQ, oprB, oprD, oprE, oprG, PA0011, PA0148, PA0149, PA0305, PA0317, PA0471, PA0472, PA0692, PA0845, PA0847, PA0906, PA0920, PA0938, PA0949, PA1014, PA1024, PA1054, PA1055, PA1056, PA1057, PA1058, PA1059, PA1107, PA1204, PA1242, PA1257, PA1340, PA1341, PA1342, PA1486, PA1566, PA1611, PA1810, PA1811, PA2050, PA2057, PA2070, PA2077, PA2078, PA2089, PA2093, PA2126, PA2127, PA2133, PA2200, PA2280, PA2412, PA2580, PA2590, PA2634, PA2870, PA2986, PA2988, PA3047, PA3170, PA3177, PA3271, PA3343, PA3345, PA3677, PA3678, PA3697, PA3760, PA3761, PA3825, PA3859, PA3891, PA3933, PA3992, PA4079, PA4088, PA4156, PA4178, PA4218, PA4332, PA4379, PA4400, PA4503, PA4504, PA4505, PA4506, PA4521, PA4596, PA4624, PA4675, PA4843, PA4896, PA4910, PA4912, PA4921, PA4975, PA5017, PA5082, PA5085, PA5089, PA5134, PA5208, PA5291, PA5359, PA5376, PA5377, PA5384, PA5455, PA5456, PA5458, PA5484, PA5498, PA5504, PA5542, parC, parE, parR, parS, pchA, pchB, pctA, pctB, pctC, pelA, pfeA, pfeE, pfeS, phnB, phr, phzC1, phzM, phzS, pilA, pilB, pilD, pilM, pilN, pilT, pilU, pirA, plcH, pldA, pmpM, pmrB, ppkA, pppA, pprA, ppx, pqsC, pqsH, prc, prpC, pscC, pslC, psrA, ptrB, ptxR, ptxS, putA, putP, pvdD, pvdH, pvdJ, pvdQ, pvdR, pvdS, pvdT, pyrE, Q9HTB8, quiP, recG, relA, rhdA, rmlC, rocA1, rocR, rpoS, rppH, sigX, sltB1, speA, speC, speE2, speH, spuA, spuB, spuD, spuE, spuI, sucC, sucD, tatA, tatC, tesA, tgpA, thiI, thrB, tpbA, tpbB, tpx, trpA, trpC, trpE, trpG, trpI, vgrG1a, vgrG1b, vgrG1c, vreI, waaC, waaF, waaL, wapR, wbpA, wbpD, wbpE, wbpI, wbpL, wbpW, wbpX, wbpY, wspR, wzx, wzz, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX, znuC]
+autolink_exclude: [III, PTS, pvdE, katA, fruB, ptsP, ampD, caiX, dgcA, argJ]
+manifest:
+  artifacts:
+    - href: https://claude.ai/artifact/44UaWpaBByrMaZcALkgq5R
+      title: Seed audit visual
+      description: AI generated
 ---
 
 # PseudoCAP annotation review: P. aeruginosa seeds of PAINT IBAs
@@ -29,6 +34,14 @@ does not fit. For 30 the claim is true but the PseudoCAP row misstates the
 evidence code, qualifier or reference, and 32 are sound. The reviews record 116
 defects for PseudoCAP and 75 for PAINT, written up in
 [`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md).
+
+Tier 2, the 289 proteins whose node terms have other seeds as well, is now
+reviewed too: 284 of 289 genes, 342 seedings and 43,061 leaf IBAs. There most
+seeds hold and most nodes stand on their other seeds, but the reviews still
+record 156 PseudoCAP defects and 41 for PAINT, including eleven seed rows that
+describe a different gene or organism and a pair of choline transporters whose
+annotations are swapped. Across all PAO1 reviews the reports now hold 272
+PseudoCAP, 116 PAINT, 15 UniProt and 12 other defects.
 
 ## Why start with IBA seeds
 
@@ -156,11 +169,16 @@ lasB, which are given secretion-system terms for being secretion cargo).
 
 [`export_pseae_defects.py`](PSEUDOCAP/export_pseae_defects.py) collects the
 `source_defects` recorded in all PAO1 reviews into one report per resource in
-[`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md): 116 for PseudoCAP (46
-wrong term, 41 wrong evidence code, 19 wrong reference, 8 wrong qualifier, 2
-wrong gene product), 75 for PAINT/GO Central, 5 for UniProt and 11 for other
-resources (mostly InterPro2GO mappings). They include defects from PAO1
-reviews made before this project.
+[`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md). After tier 2, and after
+the merge from main that brought in the AST-module and eut reviews, they stand
+at 272 for PseudoCAP (123 wrong term, 84 wrong evidence code, 41 wrong
+reference, 14 wrong qualifier, 8 wrong gene product, 2 other), 116 for PAINT/GO Central,
+23 for UniProt, 7 for InterPro (which now has its own report, since the
+InterPro2GO mappings outgrew the catch-all) and 5 for other resources: 423 in
+all, matching the 423 `source_defects` entries recorded under `genes/PSEAE`. They
+include defects from PAO1 reviews made before this project. The tier-1 counts
+quoted below are the totals as they stood at the end of tier 1 (116, 75, 5 and
+11).
 
 Confidence follows the rule in [REVIEW_PROTOCOL](PSEUDOCAP/REVIEW_PROTOCOL.md):
 CONFIRMED needs the full text, primary data we checked, or an abstract that
@@ -182,9 +200,51 @@ is never assayed and there is no hutI or hutF mutant; histidase is assayed
 directly, so hutH's IMP should be IDA), PMID:7768797 (oprB's evidence is
 whole-cell uptake in mutant and overexpressing strains, so IMP) and
 PMID:9224878 (its Fig. 1 is a pilA mutant twitching assay, so pilA's IMP
-stands and that defect was removed). The PseudoCAP report now stands at 36
-CONFIRMED, 56 PROBABLE and 24 SUSPECTED, and the PAINT report at 6, 56 and
-13.
+stands and that defect was removed). The PseudoCAP report stood at 36
+CONFIRMED, 56 PROBABLE and 24 SUSPECTED at the end of tier 1, and the PAINT
+report at 6, 56 and 13. After tier 2 and the tree check (below) the totals are
+96, 126 and 50 for PseudoCAP and 32, 83 and 1 for PAINT.
+
+### Checked against the tree
+
+Node-level calls were first made from the PAINT leaf list, which says what a node
+reaches but not how the clade is shaped. [`panther_tree.py`](PSEUDOCAP/panther_tree.py)
+now pulls the family's real topology from the PANTHER `treeinfo` service and reports a
+node's event type, its subfamily composition, every leaf, and the smallest clade holding
+a given set of accessions. The trees for 103 of the 105 nodes we filed against were
+fetched this way; the other two (hutH, pfeS) were resolved by hand, and pfeS turned out
+not to sit in the family UniProt assigns it.
+
+Every defect that had been left SUSPECTED pending the tree was re-examined on 2026-11-05.
+The PAINT report moved from 17 CONFIRMED, 82 PROBABLE and 17 SUSPECTED to **37 CONFIRMED,
+77 PROBABLE and 2 SUSPECTED** (116 entries in all). The 32/83/1 split quoted here earlier was
+exact when first written, but the leaf-evidence audit in `1f556e0` regenerated the reports and
+changed it; the totals still summed to 116, which is why the stale figures survived several
+reading passes. The check does three different things:
+
+- **It names the target.** A request to move an IBD can now give the node to move it to:
+  astA's dihydrolase term to PTN000764522 (the node is a duplication whose two children
+  are exactly the AstB and AstA/AruG subfamilies), xcpV's two T2SS terms to PTN002215342,
+  pfeA's colicin receptor to PTN002012591, thrB's homoserine kinase to PTN002326066,
+  hutF's two terms to PTN000138520, PA1257's cystine transport to PTN002024099.
+- **It shows when there is no target.** For fur the family is homogeneous but siderophore
+  production does not track the topology, so the fix is to retype the node term rather
+  than move it. For PA4088 the gene sits in a *Pseudomonas* duplication whose third member
+  is PAO1's own HemL, so no HemL-only subclade exists and the remedy became a leaf-level
+  divergence note. For ligD and aruC the clade is uniform, so the term is either right or
+  wrong family-wide: ligD's became a withdrawal request, and aruC's "move it" half was
+  dropped.
+- **It refutes.** hutI's 52 leaves really are all imidazolonepropionases, so that breadth
+  objection was withdrawn and the defect narrowed to its citation. PA4521's clade is a
+  clean one-ortholog-per-organism group, so the breadth objection was withdrawn entirely
+  and only the unverified seed remains — SUSPECTED, waiting on the full text of
+  PMID:9835532. It is one of the two entries still SUSPECTED; the other is mucB's
+  PTN002215378 GO:0032885 entry, which states its own counter-consideration. arcA's flagged leaves mostly survived scrutiny: three of four
+  are arginine deiminases whose names lag, leaving one archaeal duplication pair.
+  xcpV is the sharpest case: our own leaf-count analysis had read the node as spanning the
+  GspI/PilV split, but no PilV leaf is in the tree at all — the extra proteins were
+  non-reference members grafted by sequence. That conclusion is corrected in
+  `genes/PSEAE/xcpV/xcpV-bioinformatics/RESULTS.md`.
 
 ### Per-gene verdicts
 
@@ -396,6 +456,235 @@ are committed. The research findings for the other two:
 
 These are catalogued for PAINT as pattern 17 of [IBA_REVIEW](IBA_REVIEW.md), next to the closely related pattern 16 (a phenotype-derived molecular function as an IBD seed, worked through on the same ccmC node from the *Shewanella* side).
 
+## Results: tier 2 (nodes with other seeds)
+
+Tier 2 is the 289 PAO1 proteins whose PseudoCAP-supported node terms also have
+other seeds, so a wrong seed does not by itself sink the IBD. 284 are reviewed;
+the five Xcp/Hxc secretion genes below are not. Together they cover 342
+seedings and 43,061 leaf IBAs (reference-proteome counts, so lower bounds).
+
+Most seeds hold up, and most nodes stand on their other seeds, which is the
+expected result for this tier: the question here is less "does the IBD
+survive" than "is the PseudoCAP row itself right". The reviews record 156
+PseudoCAP defects (60 CONFIRMED, 70 PROBABLE, 26 SUSPECTED) on 130 of the 284
+genes, 41 for PAINT/GO Central (11, 26, 4), 10 for UniProt and 1 elsewhere.
+By kind, the PseudoCAP defects are 77 wrong term, 43 wrong evidence code, 22
+wrong reference, 6 wrong gene product and 6 wrong qualifier.
+
+### Seeds that are wrong
+
+Eleven seed rows are about something other than the gene they sit on, and all
+are CONFIRMED from the text:
+
+| Gene | What the seed says | What the paper shows |
+|---|---|---|
+| PA3933 (BetT2) | four choline-transport rows | the experiments are on BetT3 (PA5291), and PA5291 carries two of BetT2's glycine-betaine rows in exchange |
+| PA5134 | signal transduction, cell wall biogenesis (IDA) | a *Staphylococcus aureus* CtpA paper |
+| dadA2 | D-amino-acid dehydrogenase | a *P. putida* AauRS paper that never mentions the gene |
+| folP | dihydropteroate synthase (IDA) | purification of the native *E. coli* enzymes |
+| pvdJ | pyoverdine synthesis (IMP) | the mutant is *P. syringae* pvdJ |
+| vgrG1b | Hcp secretion (IMP) | the cited paper reports the mutant secretes normally |
+| opdP, wspR, PA4332, spuI, PA0949 | various | the cited paper has no experiment on that gene (PA4332's is an arsenate-resistance study) |
+
+In each case the term itself is usually still true on other evidence, so the
+row is kept and the reference or evidence code is corrected rather than the
+claim withdrawn.
+
+### Node terms that do not fit the clade
+
+41 PAINT defects, the 11 CONFIRMED ones being:
+
+- **argA** (PTN004744913): the node term is the ArgJ-type N-acetyltransferase
+  reaction, but every seed is an acetyl-CoA N-acetylglutamate synthase.
+- **ccoP1** (PTN002435498): cytochrome-c oxidase activity on a node of
+  cytochromes c4/c552 and bc1 subunits; the electron-transfer parent fits.
+- **waaC** (PTN001575314): heptosyltransferase II, from one *E. coli* WaaF
+  seed, on a node spanning heptosyltransferases I, II and III.
+- **wzz** (PTN000794252): tyrosine kinase activity, from Wzc and Etk, on a
+  clade whose Wzz-type members end a few residues after the second TM helix.
+- **astA** (PTN000764516): N-succinylarginine dihydrolase at the root of a
+  family that also holds the unrelated AstA/AruG succinyltransferases, so
+  seven succinyltransferase leaves inherit the dihydrolase.
+- **galU** (PTN000501197): LPS core biosynthesis on a UTP-glucose-1-phosphate
+  uridylyltransferase clade including *Bacillus*, *Staphylococcus* and
+  *Mycobacterium*, which make no LPS.
+- **wapR** (PTN000531351), **PA5455** (PTN002288302, both seeds from one paper
+  with no enzyme assay), **speC** and **spuE** (missing NOT annotations:
+  AZIN1 on the ornithine decarboxylase node, putrescine binding on SpuE),
+  **tpx** (PTN002454730, the node term is obsolete).
+
+The PROBABLE ones repeat tier-1 shapes: a term that suits one subfamily placed
+at a family root (PA4088, PA1611 and pfeS for histidine phosphotransfer
+activity on kinases with no HPt domain, liuE, speE2, ligD, arcC, PA2077,
+PA2127, cupA3), a location that does not hold across the clade (wspR, azu),
+and a catalytic term given to a non-catalytic subunit (parC's ATP binding,
+rpoS's RNA polymerase activity).
+
+### Patterns new in tier 2
+
+- **Paralog mix-ups** (PA3933/PA5291, PA5134, dadA2, folP, pvdJ): tier 1 found
+  single mis-keyed references; tier 2 found whole sets of rows on the wrong
+  member of a family, in both directions between two genes.
+- **Subunit-level coding of a complex result** (ccoP1, ccoP2): one operon
+  mutant phenotype given to all eight cbb3 oxidase subunits as `enables`. The
+  formate dehydrogenase subunits were checked for the same pattern and are
+  clean: their rows come from biochemistry on the purified complex.
+- **Location rows that the assay cannot support** (pmpM, wzx, PA0938, ampD,
+  ampDh2, ampDh3, ampG, PA4218): `periplasmic side of plasma membrane` on
+  12-TM transporters, and `cell wall` on cytoplasmic or inner-membrane
+  proteins.
+- **Regulators annotated with their targets' activities** (gbdR, ptxR, mexZ,
+  nfxB, nalC, nalD, atuR, glmR): phospholipase and phosphatase activity,
+  exotoxin A's ADP-ribosyltransferase activity, `negative regulation of
+  transporter activity` for repressing a pump's genes, and terpene catabolism
+  for repressing the atu operon.
+- **Gene model problems found on the way** (PA4596, PA2057, betT1): annotated
+  start sites that truncate a DNA-binding domain, a signal peptide, or the 18
+  residues an active BetT1 needs.
+
+### Not completed (tier 2)
+
+xcpT, xcpU, PA0681 (HxcT), PA0685 (HxcQ) and xqhA are fetched but unreviewed:
+the agent's draft was stopped by a safety classifier. Its analysis, which is
+not in any review file, found the tier-1 Xcp pattern again (the 1998 review
+PMID:9818381 cited as IDA, which should be TAS) and judged both nodes sound.
+The algC audit in the same batch also went unwritten; it found the
+PMID:22513190 IMP seed to be an indirect phenotype, since that paper measures
+polysaccharide output and never assays phosphomannomutase.
+
+
+## Tier 3: experimental rows that are not seeds
+
+Tiers 1 and 2 selected proteins that *seed* a PAINT node, because an error there
+propagates to every descendant. That set is reviewed. Tier 3 is the remainder of
+the PseudoCAP corpus, built by
+[`build_pseudocap_mf_worklist.py`](PSEUDOCAP/build_pseudocap_mf_worklist.py) into
+[`pseudocap_mf_worklist.yaml`](PSEUDOCAP/pseudocap_mf_worklist.yaml), and the
+ordering principle is different. Nothing here propagates, so the question is no
+longer "does this node suit its clade" but "does this row say what the experiment
+showed".
+
+The first cut takes IMP rows on **molecular-function** terms: **142** of the 930
+PAO1 proteins carrying a PseudoCAP row. Of those, 98 were already reviewed
+through tiers 1 and 2, 12 are reviewed here, and **32 remain**. An IMP is a mutant phenotype, which is evidence
+about what the cell does without the gene, not about what the protein does. Using
+one for a molecular function asserts an activity from an absence, so each row is
+either grounded in a paper that also assayed the protein or it is the kind of
+over-annotation this project exists to find. Reviewed entries stay in the file
+with their `review_folder` set, so it is a progress record rather than a shrinking
+queue; unreviewed entries sort first.
+
+The builder also emits a `shared_claims` block, which turned out to be the more
+useful half: one paper asserting one term across several proteins is usually one
+judgement, not several. There are **22** such groups. Four were entirely
+unreviewed when tier 3 opened:
+
+| term | reference | proteins |
+|---|---|---|
+| `GO:0004129` cytochrome-c oxidase activity | PMID:14763990 | the 6 cco subunits |
+| `GO:0004485` methylcrotonoyl-CoA carboxylase activity | PMID:16517656 | liuB, liuD |
+| `GO:0015232` heme transmembrane transporter activity | PMID:10658665 | hasR, phuR |
+| `GO:0097351` toxin sequestering activity | PMID:24589350 | tse6, tsi6 |
+
+All four are now reviewed, and each turned out to be a different kind of error,
+which is the argument for grouping by shared claim rather than reviewing gene by
+gene.
+
+The rest span reviewed and unreviewed members, and those are worth re-reading as
+groups even where the members are done, because a shared claim reviewed gene by
+gene is where parallel batches drifted apart in tier 2. The largest are
+`GO:0015385` from PMID:16030218 across PA1054-PA1059, `GO:0016987` from
+PMID:18086184 across five sigma factors including femA, and `GO:0015562` on
+opmQ/pvdR/pvdT, which carries three separate references for the same term.
+
+### The cbb3 oxidases: one phenotype, eight subunits
+
+PseudoCAP entered the identical `GO:0004129` IMP row
+on 20190311 for all eight subunits of the two cbb3 operons, from a paper whose
+experiments are whole-operon deletions: the abstract reports that "only loss of
+cbb3-1 influenced growth". The `ccoP1` review had already spotted this and filed
+a qualifier defect; the six remaining subunits are now reviewed, and rather than
+applying one verdict eight times they are separated by what each chain actually
+contributes, following the principle the human COX reviews state — that the
+catalytic activity resides in the subunit carrying the binuclear centre.
+
+| subunits | evidence on the record | `GO:0004129` row | core function |
+|---|---|---|---|
+| CcoN1, CcoN2 | copper B and two hemes (PIRSR), PROSITE `COX1_CUB`, 12 TM helices | `ACCEPT`, `enables` kept, no defect | `molecular_function` |
+| CcoO1, CcoO2, CcoP1, CcoP2 | one or two heme c sites, single TM anchor, relay electrons | `ACCEPT`, qualifier defect | `contributes_to` |
+| CcoQ1, CcoQ2 | 61 residues, one TM helix, no cofactor, `PE 4: Predicted` | `MARK_AS_OVER_ANNOTATED` | `contributes_to`, with a BIOLOGY knowledge gap |
+
+A structural check settled what the sequence records could not. Both CcoO entries
+cross-reference PDB 8SMR and 8SNH, which the RCSB API shows to be 2.7 A cryo-EM
+models of the bc1-cbb3 supercomplex. Their cbb3 chains are the orphan CcoN
+paralogue PA4133 (Q9HWP8) with CcoO1 and CcoP1/CcoP2 — so neither CcoN1 nor
+CcoN2 is the subunit in the solved complexes, which is raised as a question
+rather than claimed as evidence, and **no CcoQ chain is present in either model**.
+That is not proof CcoQ is outside the holoenzyme, since a 61-residue single-helix
+chain is easily lost or left unmodelled, which is why these rows are marked
+over-annotated rather than removed: `REMOVE` is reserved for the `SURF1` case, a
+protein shown to be an assembly factor rather than a subunit.
+
+Two CcoN rows also propose `GO:0005507` copper ion binding as `NEW`. Copper B is
+curated on both records and the `COX1_CUB` site matches, yet only heme binding was
+annotated.
+
+
+### MCC: the qualifier, settled from full text
+
+`liuB` and `liuD` are the two subunits of 3-methylcrotonyl-CoA carboxylase, and
+both carry the holoenzyme term `GO:0004485` as `enables`. Both papers behind the
+rows are cached with full text, and that is what let this group be settled rather
+than deferred. The IDA was measured on a **reconstituted** enzyme: the subunits
+were purified separately, mixed and renatured, so no single chain was ever shown
+active. The structure of this organism's own enzyme says why — the α subunit
+carries the biotin carboxylase and BCCP domains, the β subunit supplies the
+carboxyltransferase activity, and the two active sites are about 80 Å apart, so
+the carboxyl group is handed between chains. Both rows on both subunits are
+`ACCEPT` with a `WRONG_QUALIFIER` defect at **CONFIRMED** — where the cbb3 group's
+equivalent defect could only be PROBABLE from an abstract.
+
+Each subunit also gained its own half-reaction: `GO:0004075` biotin carboxylase
+was already annotated on `liuD` and is accepted as its own function, while
+`liuB`'s carboxyltransferase step was unannotated and is proposed as `NEW`
+(`GO:0016743`).
+
+### The haem receptors: a substrate term on the wrong subfamilies
+
+`hasR` and `phuR` are haem receptors that carry **siderophore** annotations —
+`GO:0015344` and `GO:0044718` by IBA, plus `GO:0033214` inferred from them. All
+trace to `PTN004738955`, which the tree tool shows to be the **LUCA root of
+PTHR30069**: 149 leaves across 18 subfamilies, seeded by five siderophore and
+colicin receptors from five *other* subfamilies. The targets sit in the haem
+subfamilies, and PANTHER's own names say so — SF41 "Heme uptake outer membrane
+receptor HasR" and SF29 "Heme_hemoglobin uptake outer membrane receptor".
+
+The seeds are not the problem: two of them, PA4675 and PA4156, were reviewed in
+tier 2 and their siderophore rows accepted as sound. The depth is. What the node
+supports is the shared TonB-dependent mechanism, not the substrate, which varies
+by subfamily. Relocation was tested rather than assumed and does not work — the
+smallest clade containing all five seeds is `PTN002824128` (145 leaves), which
+contains the haem subfamilies too — so the remedy is to generalise the node terms
+or block them in SF29 and SF41. One `CONFIRMED` request, recorded on `hasR` with
+`phuR` cross-referencing it.
+
+### The T6SS pair: the term is on the wrong half
+
+`GO:0097351` **toxin sequestering activity** is annotated to both halves of the
+`tse6`-`tsi6` effector–immunity bicistron. The term means binding a toxin to stop
+it acting, so it fits the immunity protein and inverts the role of the effector.
+The full text is explicit: the Tse6 Toxin_61 domain "is a potent cytoplasmic
+toxin whose activity can be specifically neutralized by Tsi6", with the
+non-cognate Tsi2 as the control. So the row is removed from `tse6` — a
+`WRONG_GENE_PRODUCT` request to delete it on Q9I739 and keep it on Q9I740 — and
+accepted as the core function of `tsi6`. Nothing is lost for the effector, whose
+real activity is already annotated as NAD(P)+ nucleosidase.
+
+The same pair-level experiment also gave `tsi6` a protein-secretion row.
+`tsi6` is a cytoplasmic immunity determinant; it is required for the outcome of
+those competition experiments without doing any of the work of secretion, which
+is the line the `involved_in` rule draws, so that row is marked over-annotated.
+
 ## Plan
 
 1. ~~Review every tier 1 gene.~~ Done except for writing the pqsA, PA2403 and
@@ -404,11 +693,22 @@ These are catalogued for PAINT as pattern 17 of [IBA_REVIEW](IBA_REVIEW.md), nex
    (PMID:9466253) has no reference defect, while the similar xcpW and xcpV rows
    (PMID:8331069) do.
 3. Send the PseudoCAP and PAINT reports upstream, starting with the 21
-   withdraw-or-repoint cases.
-4. Tier 2 (289 proteins that share each node with other seeds), starting with
-   seedings whose only PAO1 support is IMP or IGI.
-5. The rest of the PseudoCAP corpus (2,069 rows on PAO1 in QuickGO),
-   prioritising IMP rows on molecular-function terms.
+   withdraw-or-repoint cases. The PAINT report now names a target node for each
+   relocatable IBD (see "Checked against the tree").
+4. ~~Tier 2 (289 proteins that share each node with other seeds).~~ Done for
+   284; the five Xcp/Hxc genes above still need review files.
+5. Reconcile tier-2 inconsistencies between parallel batches: MODIFY versus
+   TOO_GENERAL for the same general term (rpoS against algU/pvdS; wbpE against
+   wbpD/wbpY; nrdA against nrdJa), whether an IDA code resting on a mutant
+   phenotype is worth a defect (PA1014 filed one, migA and wapR did not), and
+   the braC/braG disagreement over D-alanine transport, where only the braC
+   review used the ITC paper. The np20 review also judges its pyocyanin seed an
+   indirect phenotype, where the earlier fur review called the same seed
+   reasonable.
+6. The rest of the PseudoCAP corpus (2,069 rows on PAO1 in QuickGO),
+   prioritising IMP rows on molecular-function terms. Started: see
+   "Tier 3" below. 142 proteins carry such a row: 98 were covered by tiers 1-2,
+   12 are reviewed here, 32 remain.
 
 Re-run the builder when PAINT or QuickGO data change; it only re-downloads
 files missing from `.cache/paint/`, so delete that folder to refresh.

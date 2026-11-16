@@ -234,7 +234,24 @@ activity` vs `serine-type endopeptidase activity`), use `MODIFY` with `proposed_
 set to the specific supported term (an `is_a`/`part_of` descendant, preferably one the gene
 already carries; say so in `reason`). `KEEP_AS_NON_CORE` is only for terms that are as precise
 as warranted but peripheral to the core function. If the general term is already as precise as
-the evidence allows, keep it (`ACCEPT` if core, otherwise `KEEP_AS_NON_CORE`). The action must
+the evidence allows, keep it (`ACCEPT` if core, otherwise `KEEP_AS_NON_CORE`).
+MODIFY needs both: a deeper replacement term, **and** this row's own evidence supporting it.
+A paper that identifies the ligand supports `GO:0016498` neuromedin K receptor activity; an
+InterPro2GO mapping from a generic GPCR signature supports only `GO:0004930`. A row whose
+evidence stops at the general term is not MODIFY, and a respectably specific term such as
+`G protein-coupled receptor activity` is not `TOO_GENERAL` either: keep it. `TOO_GENERAL` is for
+terms that are imprecise on their own once a more specific term is asserted elsewhere, such as
+`membrane` (which membrane?).
+
+This paragraph is a **maintainer ruling** (2026-11-14), made because two reviews in one batch
+read the enum the two opposite ways for the same kind of row. It narrows `TOO_GENERAL` without
+contradicting the `ActionEnum` docstring: that action is still term-level and still never says
+the row's evidence is wrong, but it is now reserved for terms that are imprecise on their own,
+and the bar for `MODIFY` is this row's own evidence. **Reviews merged before the ruling are not
+retroactively defective** — a handful mark `GO:0004930` `TOO_GENERAL` exactly as the docstring
+prescribed, and the ruling applies to new and revisited reviews rather than condemning those.
+A corpus sweep is a separate pass, not a condition of any content PR; whether the `ActionEnum`
+docstring should be reworded to match is a schema change and is still open. The action must
 match the reason: never `ACCEPT` or `KEEP_AS_NON_CORE` while arguing that the term is too general.
 When several specific descendants are supported, as for a pleiotropic gene, list all of them rather than picking one.
 This rule is about refinement. Lateral or sign corrections, such as `positive` → `negative regulation of X`, are a
@@ -248,6 +265,16 @@ activity of a paralog, when a dedicated enzyme for the same reaction exists in
 the organism, is `REMOVE`, even on an IDA row. There is no numeric cutoff; state
 the judgement in `reason`. See the promiscuous-activity tiers in
 `projects/ENZYME_SPECIFICITY.md`.
+
+**A term in another EC class names a different reaction, not a broader one.**
+Watch for synthase/synthetase swaps: `GO:0004321` fatty-acyl-CoA synthase is
+the fatty acid synthase reaction (EC 2.3.1.86), while an acyl-CoA synthetase is
+a ligase (EC 6.2.1). When a kept, MODIFYed or TOO_GENERAL term's EC class differs from every
+EC on the protein's UniProt record, `just validate` warns (`ec_class_conflict`,
+`src/ai_gene_review/validation/ec_class_consistency.py`). Fix it with `REMOVE`
+and `source_defects`, or say in `reason` why the activity is genuine (a
+multifunctional or moonlighting enzyme). `just ec-class-audit` lists every hit
+in the corpus.
 
 **Decomposing precomposed "X involved in Y" terms.** When you MODIFY such a term to its genus X, say where Y
 went in `review.decomposed_into`: `gocam_associations` or `module_associations` (Y is a mechanism with a
@@ -323,9 +350,14 @@ are not covered yet. For these five terms the policy is an exception to the
   `KEEP_AS_NON_CORE` only with direct evidence on the gene or the endogenous protein in its
   native cell; a synthesis row resting only on transit or on retention of an overexpressed or
   mutant protein is `MARK_AS_OVER_ANNOTATED`. Never add a topology-forced ER membrane row for a
-  protein that only passes through. An ER membrane (`GO:0005789`) row needs a TM or tail anchor
+  protein that only passes through. A `NEW` ER membrane (`GO:0005789`) row needs a TM or tail anchor
   plus an ER-specific assay on the endogenous protein; a lumen (`GO:0005788`) row needs a
-  soluble signal-peptide protein shown to be retained. See rule 7 in `projects/ORGANELLES.md`.
+  soluble signal-peptide protein shown to be retained. A soluble, cytosolically made protein
+  (no signal peptide or targeting sequence) shown at the organelle and stably tethered there by a
+  named integral partner (losing the partner releases or destabilises it) gets the cytoplasmic-side
+  term, `GO:0098554` for the ER, which is the more
+  specific child of `GO:0005789`; brief or regulated recruitment stays at the root. See rule 7 in
+  `projects/ORGANELLES.md`.
 
 ### Do not overrule curators from incomplete evidence
 
@@ -355,6 +387,36 @@ Therefore:
 - Reserve confident "this reference is about organism/gene X" caveats for cases where the
   **cached abstract explicitly states it** (e.g. "in nontransformed mammalian cells"). Do
   not infer the organism or assay details that the abstract does not state.
+
+### Claiming a wrong gene or wrong reference: judge what the evidence can show
+
+A `WRONG_GENE_PRODUCT` or `WRONG_REFERENCE` source defect goes to the resource as a
+correction request, so its confidence must match what you actually saw. This is a
+judgement, not a rule keyed to whether the full text was read: ask whether the
+unread part of the paper could overturn the claim.
+
+- **It could not, so the claim can be confident from a title, abstract or record.**
+  A PMID whose title is on an unrelated subject (a thyroid-surgery paper on an
+  *E. coli* gene), especially when a near-identical PMID is the obvious intended
+  paper; a paper that predates the cloning of the gene; an abstract that defines
+  the entity as another protein ("p43, the precursor of EMAP II"; an 802-residue
+  enzyme when the annotated protein has 532); a WITH/FROM allele that belongs to
+  another gene; the identical row already present on the right gene.
+- **It could, so the claim is a query at most.** The title or abstract foregrounds
+  a paralog, another family member or another organism; the abstract "does not
+  mention" the gene; a TAS is faulted because the paper "does not assay" the
+  process (a TAS needs only an author statement, which may sit in a table); a
+  Reactome event summary does not name the gene (check the participant list,
+  including complexes and sets). Use `SUSPECTED` or `PROBABLE`, `requested_change:
+  CHECK`, and not `REMOVE`.
+- **Before claiming a mis-attribution, look at how the resource annotated the
+  paper as a whole.** The same row made on the same day across a family, or on
+  every isozyme an unfractionated assay cannot separate, is a deliberate practice,
+  not a slip. A reference-level view (QuickGO by reference, an RGD or MGI
+  reference page) shows this in one query.
+- **Say in `explanation` what depth the claim rests on**, and name a candidate
+  correction as a candidate when the intended paper or gene was inferred and not
+  read.
 
 ### Do not add what curators deliberately declined to add
 
@@ -464,6 +526,15 @@ same claim.
 
 See `projects/IBA_REVIEW.md` for the full propagation taxonomy and catalogued failure
 patterns.
+
+In a family review (`interpro/panther/<PTHR>/<PTHR>-review.yaml`), a node assessment that
+disputes a PAINT row records the fix in `proposed_action` as well as in prose:
+`paint_action` (MOVE_IBD, REMOVE_IBD, ADD_IRD, ADD_IKR, REMOVE_LOSS, MOVE_LOSS) and, for
+the moves and added losses, `target_node_id`. `family_residue_validator` checks that the
+action fits the verdict and that the target sits correctly in the family's PANTHER tree
+(below the node for TOO_DEEP, NEEDS_PRUNING and LOSS_TOO_BROAD). PAINT prunes per
+annotation: a loss of a general term does not block a more specific term asserted at an
+ancestral node, so request each change separately.
 
 ### Term-id validation: GOA ids are trusted, your `core_functions` ids are checked
 
