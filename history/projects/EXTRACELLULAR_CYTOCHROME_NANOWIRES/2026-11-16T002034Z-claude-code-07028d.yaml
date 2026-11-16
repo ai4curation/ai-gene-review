@@ -1,0 +1,35 @@
+history_version: 1
+target:
+  kind: project
+  slug: EXTRACELLULAR_CYTOCHROME_NANOWIRES
+  path: projects/EXTRACELLULAR_CYTOCHROME_NANOWIRES.md
+session:
+  id: 2026-11-16T002034Z-claude-code-07028d
+  timestamp: '2026-11-16T00:20:34Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    agent_tool: claude-code
+links:
+  issues: []
+  prs: []
+  urls: []
+events:
+- type: EDIT
+  outcome: changed
+  sections:
+  - results
+  summary: Test the filament predictor on the archaeal ECNs; fix two bugs and lower
+    the heme floor
+  details: |
+    Baquero et al. 2023 (PMID:37290436) solved two archaeal extracellular cytochrome nanowires by cryo-EM and named every protein they considered in each proteome with the reason for rejecting it, giving the only published negative reasoning for this class. Running the predictor against both proteomes did four things.
+
+    First it validated the motif counter: the paper's CXXCH counts for the four P. calidifontis multiheme proteins are 4, 3, 8, 8 and heme_motifs reproduces them exactly, as it does the paper's proteome-wide screen size of four proteins with more than two motifs. The A. veneficus screen does not reproduce (13 here against the paper's 17); this is not a counting convention, since overlapping and non-overlapping CXXCH both give 13, and not UniProt coverage, since the five entries outside the reference proteome carry no CXXCH at all. Recorded as unexplained.
+
+    Second, that validation caught a double-counting bug. A3MW92 came out at 4 motifs against the paper's 3 because the overlap check tested only whether a candidate match started inside an already-claimed span, so a long-linker match ending on a histidine already used by a shorter motif was accepted. Fixed to reject any span overlap. Consequences measured rather than assumed: 20 of 3402 G. sulfurreducens proteins were mis-counted, none crossed the minimum-four threshold, every known positive and negative kept its count, and no final candidate count changed. One protein inflated from 8 to 9 had been wrongly excluded from the 4-8 window, so four numbers in the published tables moved by one and were corrected in place.
+
+    Third, a reproducibility bug surfaced through a number that would not repeat. interpro_type caught every exception and returned a value that is not a family, so a transient EBI failure silently made the named-family filter more permissive and the candidate count larger; one run put G. daltonii at 31 where repeated runs give 24. Lookups are now cached to .cache/interpro_types.json, retried three times with backoff, and an unresolved lookup raises instead of passing. The failure path was verified with a control arm.
+
+    Fourth, the substantive result: a floor of four heme motifs loses the PcECN entirely. A3MW92 binds four hemes through only three CXXCH motifs, the fourth coordinated across the subunit interface, so motif count underestimates heme count for exactly the class this screen targets. At min-hemes 4 the screen returns nothing from a proteome that demonstrably contains an ECN; at min-hemes 3 it returns one candidate and that candidate is the PcECN, from 2151 proteins. The floor is now 3, costing about 20 percent more candidates elsewhere and no recall anywhere. Across five proteomes recall is 13 of 13, or 6 of 6 counting only solved filaments rather than cd21555 model members, at 142 to 2151 fold reduction. Both refinement rules survived an archaeal test they were never tuned on.
+
+    The script's hardcoded G. sulfurreducens positives and negatives were replaced with a per-proteome KNOWN registry that also records structural near-misses: F2KMU7, F2KPF5 and A3MW89 pass the sequence filter and were excluded by the authors only on cryo-EM fit, so they are tracked separately rather than counted as false positives. That is the strongest evidence yet for the project's structural second stage, since an independent group needed cryo-EM to make the same discrimination.

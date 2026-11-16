@@ -203,28 +203,28 @@ specific enough on its own the structural work would be unnecessary. So it was r
 
 | | ≥4 motifs | 4–8 motifs |
 |---|---:|---:|
-| of 3,402 proteins, with that many heme motifs | 63 | 35 |
-| … and a signal peptide | 55 | 28 |
-| … and no transmembrane segment | **52** | **26** |
+| of 3,402 proteins, with that many heme motifs | 63 | 36 |
+| … and a signal peptide | 55 | 29 |
+| … and no transmembrane segment | **52** | **27** |
 
 **Recall is perfect**: OmcS, OmcE, OmcZ and OmcT all pass, and the inner-membrane
 cytochromes that must not be caught — ImcH, CbcL, GSU2359 — are all excluded by the
 transmembrane clause. **Precision is not**: 52 candidates against three characterised
 subunits. The upper bound is worth having and is not arbitrary, since the known
 subunits carry 4, 6, 6 and 8 motifs while the false positives run to 34, 27 and 26 —
-they are the large outer-membrane polyheme cytochromes. Capping at eight halves the set
-with no loss of recall.
+they are the large outer-membrane polyheme cytochromes. Capping at eight nearly halves
+the set with no loss of recall.
 
-Of the remaining 26, four are CDD `cd21555` members and so are plausible rather than
+Of the remaining 27, four are CDD `cd21555` members and so are plausible rather than
 wrong. The rest are not: the set still holds three nitrite reductases, NrfA among them.
 
 That settles the question the experiment was for. The filter is a good **candidate
-generator** — 3,402 down to 26, a 130-fold cut with nothing lost — and not a
+generator** — 3,402 down to 27, a 126-fold cut with nothing lost — and not a
 classifier, because nothing in the sequence separates a pentaheme nitrite reductase
 from a filament subunit. What separates them is where the hemes end up. The structural
 half is worth building.
 
-**Two further sequence rules buy precision for free.** Inspecting the 26 survivors
+**Two further sequence rules buy precision for free.** Inspecting the 27 survivors
 gave a mechanistic rule, *not a lipoprotein* (a lipid-anchored protein is tethered,
 not a free polymer subunit), and a classification rule, *no named InterPro family*
 (the characterised subunits carry only superfamilies and structural domains, while
@@ -234,7 +234,7 @@ fool yourself, so they were tested on two Geobacteraceae not used to derive them
 
 | Proteome | base 4–8 | refined | known members kept |
 |---|---:|---:|---|
-| *G. sulfurreducens* (tuned on) | 26 | **17** | 4 / 4 |
+| *G. sulfurreducens* (tuned on) | 27 | **17** | 4 / 4 |
 | *C. bemidjiense* (held out) | 24 | **12** | 4 / 5 |
 | *G. daltonii* (held out) | 19 | **14** | 2 / 2 |
 
@@ -252,6 +252,59 @@ CbcL and GSU2359 by heme count and by carrying a named InterPro family. The clau
 costing a real positive while contributing nothing against the negatives it appeared
 to be catching, so the recommended setting is `--no-require-signal` and no
 signal-peptide predictor is needed.
+
+### Tested on the archaea, where it broke
+
+Everything above comes from one bacterial family. Baquero et al. 2023 (PMID:37290436)
+solved two archaeal ECNs by cryo-EM and, unusually, **named every protein they
+considered in each proteome and why they rejected it** — the only published negative
+reasoning for this class, and so the sharpest available test.
+
+It began by validating the tool: the paper's CXXCH counts for the four *P. calidifontis*
+multiheme proteins are 4, 3, 8, 8, and the script reproduces them exactly, as it does
+the paper's proteome-wide screen size (4 = 4). That validation then **caught a bug** —
+`A3MW92` came out at 4 motifs against the paper's 3, because a long-linker match was
+being counted on a histidine already used by a shorter motif. Measured consequences, not
+assumed: 20 of 3,402 *G. sulfurreducens* proteins mis-counted, no known positive or
+negative affected, no final candidate count changed, four numbers in the tables above
+moved by one and are corrected. A second bug surfaced the same way — a number that would
+not repeat. The InterPro lookup behind the named-family rule swallowed its errors, so a
+transient network failure silently made the filter *more permissive*; it now caches,
+retries and fails loudly.
+
+Then the real result. **A floor of four hemes loses the PcECN entirely.** `A3MW92` binds
+four hemes through only three CXXCH motifs — the fourth is coordinated across the subunit
+interface — so motif count underestimates heme count for exactly the kind of protein this
+screen is for. At `--min-hemes 4` the screen returns **nothing at all** from a proteome
+that demonstrably contains an ECN. At `--min-hemes 3` it returns **one candidate, and it
+is the PcECN**. The floor is now 3, which costs about 20% more candidates elsewhere and
+loses no recall anywhere:
+
+| Proteome | proteins | candidates | reduction | known kept |
+|---|---:|---:|---:|---|
+| *G. sulfurreducens* PCA | 3,402 | 24 | 142× | 4 / 4 |
+| *C. bemidjiense* Bem | 4,042 | 18 | 225× | 5 / 5 |
+| *G. daltonii* FRC-32 | 3,798 | 24 | 158× | 2 / 2 |
+| *P. calidifontis* VA1 | 2,151 | **1** | **2151×** | 1 / 1 |
+| *A. veneficus* SNP6 | 2,065 | 7 | 295× | 1 / 1 |
+
+**13 / 13 recall across two domains of life.** Both rules derived from four bacterial
+positives survive an archaeal test they were never tuned on: all seven proteins the paper
+considered carry only `IPR036280`, a homologous superfamily, and no named family, so the
+family rule keeps every one; the transmembrane clause carries *P. calidifontis* by itself.
+Counting only **solved** filaments — OmcE, OmcS, OmcZ, PcECN and AvECN — recall is 5 / 5;
+the other eight positives are OmcS's unsolved paralog OmcT and seven cd21555 model members,
+so they test propagation rather than truth.
+
+**And the paper supplies the argument for the structural stage.** In *A. veneficus*,
+`F2KMU7` and `F2KPF5` pass this filter and sit among its seven candidates; the authors
+excluded them only after building them into the cryo-EM map, on a helix-rich region and a
+too-short loop. In *P. calidifontis*, `A3MW89` — the only protein in that proteome with
+four CXXCH motifs, and so the obvious sequence-level answer — was excluded because its
+AlphaFold fold does not match the map. Nothing in the sequence separates any of them from
+the real subunit. An independent group needed cryo-EM to make precisely the
+discrimination this project proposes to make with heme geometry, which is the strongest
+evidence yet that the structural half is the half that matters.
 
 ## Proposed GO terms
 

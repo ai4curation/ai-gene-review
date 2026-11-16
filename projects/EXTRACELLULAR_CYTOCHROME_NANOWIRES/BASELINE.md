@@ -14,13 +14,18 @@ subunits. If that filter is specific enough on its own, the structural work is
 unnecessary. If it is hopeless, the structural work has to carry everything. Either
 way the number settles it, and it needs no structures.
 
+Those were the opening conditions. Both the heme floor and the signal-peptide clause
+were later **measured to be wrong** and have been changed — the sections below are in
+the order the measurements happened, so the recommended setting is the one at the end
+(`--min-hemes 3 --max-hemes 8 --refine --no-require-signal`), not the one named here.
+
 ## Result (run 2026-11-15, *G. sulfurreducens* PCA, UP000000577, 3,402 proteins)
 
 | Filter stage | ≥4 motifs | 4–8 motifs |
 |---|---:|---:|
-| heme motifs in range | 63 | 35 |
-| … and a signal peptide | 55 | 28 |
-| … and no TM segment | **52** | **26** |
+| heme motifs in range | 63 | 36 |
+| … and a signal peptide | 55 | 29 |
+| … and no TM segment | **52** | **27** |
 
 **Recall is perfect in both.** OmcS, OmcE, OmcZ and OmcT all pass. The inner-membrane
 multiheme cytochromes that must not be caught — ImcH, CbcL, GSU2359 — are all excluded,
@@ -30,10 +35,10 @@ by the transmembrane clause.
 17-fold over-selection. The upper bound helps, and it is not arbitrary: the known
 subunits carry 4, 6, 6 and 8 motifs, while the false positives run to 34, 27 and 26
 — they are the large outer-membrane polyheme cytochromes (OmcB, OmcC, OmcA-family) and
-lipoprotein cytochromes. Capping at 8 motifs halves the set to 26 while keeping 4/4
-recall.
+lipoprotein cytochromes. Capping at 8 motifs nearly halves the set, to 27, while keeping
+4/4 recall.
 
-Of those 26, four are members of CDD `cd21555`, the hand-curated OmcS-like model
+Of those 27, four are members of CDD `cd21555`, the hand-curated OmcS-like model
 (OmcS, OmcT, OmcJ and GSU2501), so they are plausible rather than clear errors. The
 remainder are not: the set still contains three nitrite reductases, including NrfA,
 which is a well-characterised pentaheme enzyme and emphatically not a filament subunit.
@@ -48,7 +53,7 @@ recall-oriented screen, and is a reminder that a hit is a question, not an answe
 ## What this settles
 
 The filter is a **good candidate generator and not a classifier**. It cuts 3,402
-proteins to 26, a 130-fold reduction, with no loss of the known subunits — which is
+proteins to 27, a 126-fold reduction, with no loss of the known subunits — which is
 exactly what a first-stage screen should do. It cannot do the second stage: it keeps
 nitrite reductases, and nothing in the sequence distinguishes them from a filament
 subunit, because what distinguishes them is where the hemes end up.
@@ -79,7 +84,7 @@ Geobacteraceae not used to derive them, each with known OmcS-family members from
 
 | Proteome | proteins | base 4–8 | not lipo | no named family | known members kept |
 |---|---:|---:|---:|---:|---|
-| *G. sulfurreducens* (tuned on) | 3,402 | 26 | 20 | **17** | 4 / 4 |
+| *G. sulfurreducens* (tuned on) | 3,402 | 27 | 21 | **17** | 4 / 4 |
 | *C. bemidjiense* (held out) | 4,042 | 24 | 17 | **12** | 4 / 5 |
 | *G. daltonii* (held out) | 3,798 | 19 | 18 | **14** | 2 / 2 |
 
@@ -117,15 +122,151 @@ contributing nothing against the negatives it was credited with catching.
 The default still requires a signal peptide so the funnel above reproduces; use
 `--no-require-signal` for the recommended setting.
 
+## The archaeal test (2026-11-16)
+
+Every measurement above is from one bacterial family. Baquero et al. 2023
+(PMID:37290436) solved two archaeal ECNs by cryo-EM — PcECN (`A3MW92`) in
+*Pyrobaculum calidifontis* and AvECN (`F2KMU8`) in *Archaeoglobus veneficus* — and,
+unusually, **named every protein they considered in each proteome and why they rejected
+it**. That makes these two the only proteomes with published negative reasoning, and the
+sharpest available test of the filter: a different domain of life, no sequence homology to
+*Geobacter*, and an independent ground truth.
+
+It falsified one rule, confirmed another, and exposed two bugs in this script.
+
+### First, it validated the motif counter
+
+The paper states the CXXCH count for all four *P. calidifontis* proteins that have more
+than two: `A3MW89` 4, `A3MW92` 3, `A3MW94` 8, `A3MW99` 8. Running `heme_motifs()` on
+those four sequences reproduces **4, 3, 8, 8 exactly**, and the proteome-wide screen
+reproduces the paper's own "only four proteins with more than two motifs" exactly (4 = 4).
+That is an independent check on the counter against numbers nobody here chose.
+
+It does not reproduce the second screen: the paper reports 17 *A. veneficus* proteins with
+three or more CXXCH motifs, where this script finds 13. The gap is **not** a counting
+convention (overlapping and non-overlapping CXXCH both give 13) and **not** UniProt
+coverage (only five *A. veneficus* entries sit outside the reference proteome, and none
+has a single CXXCH). The authors presumably screened their own gene calls rather than
+UniProt's. Unexplained, and recorded as such; it does not affect the outcome, since
+`F2KMU8` is found either way.
+
+### A double-counting bug, caught by that validation
+
+The counter initially gave `A3MW92` **4** motifs where the paper gives 3. The extra one is
+not a heme: a long-linker match `C...16X...CH` starting at 69 ends on the **same histidine**
+as the CXXCH at 85. The overlap check tested only whether a candidate match *started*
+inside an already-claimed span, so a long match that ends inside one was accepted, and the
+docstring's "non-overlapping" was false.
+
+Fixed to reject any span overlap. The effect on earlier results is bounded and was measured
+rather than assumed: **20 of 3,402** *G. sulfurreducens* proteins were mis-counted, **none**
+of them crossed the ≥4 threshold, and every known positive and negative kept its count. The
+`≥4` funnel (63 / 55 / 52) and every final candidate count in the tables above are
+unchanged. One protein inflated 8 → 9 had been wrongly pushed out of the 4–8 window, so
+four numbers in those tables moved by one and have been corrected in place: the 4–8 column
+now reads 36 / 29 / 27, and the refinement table's *G. sulfurreducens* base column 27.
+
+### A reproducibility bug, caught by a number that would not repeat
+
+The named-family rule calls the InterPro API, and `interpro_type()` caught every exception
+and returned `("?", "?")`. That is not a family, so a **transient network failure silently
+made the filter more permissive and the candidate count larger** — one run put *G. daltonii*
+at 31 where repeated runs give 24. Every number on this page was exposed to that.
+
+Now: lookups are cached to `.cache/interpro_types.json`, retried three times with backoff,
+and a lookup that still cannot be resolved **raises** instead of returning a value that
+would quietly pass. A measurement that cannot resolve its inputs should stop, not report a
+bigger number. The failure path was checked with a control arm — an unmutated run resolves
+`IPR003321` (Cytochrome c552) and an unreachable endpoint raises — so the gate is known to
+be able to fire. Every number in the table below was produced twice and is identical.
+
+### The falsification: a floor of four hemes loses the PcECN
+
+`A3MW92` carries **four hemes per subunit but only three CXXCH motifs** — the fourth is
+coordinated across the subunit interface, which the authors could only see in the filament
+model. So **motif count underestimates heme count** for a filament protein, which is
+exactly the class this screen is for, and a floor of 4 is wrong:
+
+| floor | *P. calidifontis* candidates | PcECN found |
+|---|---:|---|
+| `--min-hemes 4` | **0** | **MISS** |
+| `--min-hemes 3` | **1** | PASS |
+
+At a floor of 4 the screen does not merely rank the answer badly, it returns nothing at all
+from a proteome that demonstrably contains an ECN. At a floor of 3 it returns **one
+candidate, and that candidate is the PcECN** — 2,151 proteins to 1.
+
+Lowering the floor costs about 20% more candidates elsewhere and loses no recall anywhere,
+so **3 is now the default**.
+
+### The five-proteome result
+
+Recommended setting, `--min-hemes 3 --max-hemes 8 --refine --no-require-signal`:
+
+| Proteome | proteins | 3–8 motifs | no TM | final | reduction | known kept |
+|---|---:|---:|---:|---:|---:|---|
+| *G. sulfurreducens* PCA | 3,402 | 45 | 42 | **24** | 142× | 4 / 4 |
+| *C. bemidjiense* Bem | 4,042 | 36 | 33 | **18** | 225× | 5 / 5 |
+| *G. daltonii* FRC-32 | 3,798 | 36 | 33 | **24** | 158× | 2 / 2 |
+| *P. calidifontis* VA1 | 2,151 | 4 | 1 | **1** | 2151× | 1 / 1 |
+| *A. veneficus* SNP6 | 2,065 | 10 | 9 | **7** | 295× | 1 / 1 |
+
+**13 / 13 recall**, across two domains of life, at 142–2151× reduction. The two
+*G. sulfurreducens* rules derived from four bacterial positives were never tuned on an
+archaeon, and both survive it: all seven proteins the paper considered carry **only**
+`IPR036280` (multiheme cytochrome, a homologous superfamily) and no named family, so the
+family rule keeps every one of them; the TM clause does the real work in
+*P. calidifontis*, excluding `A3MW89`, `A3MW94` and `A3MW99`; and the lipoprotein rule
+drops two in *A. veneficus*.
+
+The caveat on the held-out Geobacteraceae still applies and is now explicit in the script:
+their "known members" are CDD `cd21555` homologs — membership in a hand-curated model, not
+a solved filament. Counting strictly, **five** of the thirteen are solved filaments — OmcE
+(7TFS), OmcS (6NEF), OmcZ (7LQ5, 8D9M), PcECN and AvECN — and all five are recovered, so
+the honest recall figure on solved structures is 5 / 5. OmcT is a characterised tandem
+paralog of OmcS with no structure of its own, and the remaining seven are cd21555 model
+members.
+
+### What the filter provably cannot do
+
+The best evidence for the structural second stage comes from the paper's own negatives.
+In *A. veneficus*, `F2KMU7` and `F2KPF5` both **pass this filter** and are retained among
+the seven candidates. The authors excluded them only after building them into the cryo-EM
+map: `F2KMU7` has a helix-rich region at 120–150 that the map cannot explain, and `F2KPF5`
+has a loop (131–151) too short to fit where `F2KMU8` needs 136–164. In *P. calidifontis*,
+`A3MW89` — the *only* protein in that proteome with four CXXCH motifs, and so the obvious
+sequence-level candidate — was excluded because its AlphaFold fold does not match the map.
+
+Nothing in the sequence separates these from the real subunit. They are tracked as
+`near_misses` rather than negatives for that reason: counting them as false positives would
+blame the filter for the one thing a sequence filter cannot be expected to do, and would
+understate what the structural stage is for. An independent group needed cryo-EM to make
+exactly the discrimination this project proposes to make with heme geometry.
+
 ## Honest limits
 
-- **"Known filament subunit" is a set of three.** Precision measured against three
-  positives is a weak estimate; the true positive set in this organism is unknown and
-  is plausibly larger than three, which is the point of the cd21555 overlap above.
-- **Motif counting is approximate.** `CXXCH`, `CXXXCH` and long-linker variants are
-  counted greedily and non-overlapping; a motif that is present but not used for heme
+- **Five solved filaments is still a small positive set.** Precision measured against
+  five positives across five proteomes is a weak estimate, and the true positive set in
+  any of these organisms is unknown and plausibly larger — which is the point of the
+  cd21555 overlap above. The seven cd21555 homologs in the held-out Geobacteraceae are
+  model members, not solved structures, so they test propagation rather than truth.
+- **Motif counting is a proxy for heme count, and the archaea showed it can undercount.**
+  `A3MW92` binds four hemes through three motifs. The fix for that was to lower the
+  floor, not to claim the counter is right: a heme coordinated across a subunit
+  interface is invisible to any single-sequence rule, so the floor is now set to
+  tolerate one such heme and would still miss a subunit with two.
+- **A motif is not necessarily a heme.** `CXXCH`, `CXXXCH` and long-linker variants are
+  counted canonical-first and non-overlapping; a motif present but not used for heme
   attachment still counts, and an unusual attachment chemistry would be missed.
 - **Signal-peptide and TM calls are UniProt's**, largely from SignalP and Phobius for
-  unreviewed entries, so the filter inherits their error rates.
-- **One organism, one genus.** The *S. oneidensis* run is a sanity check, not a second
-  measurement; the filter has not been tested on the archaeal members at all.
+  unreviewed entries, so the filter inherits their error rates. The signal clause is now
+  off by default, so only the TM call is load-bearing — and in *P. calidifontis* it is
+  load-bearing on its own, excluding all three of that proteome's other multiheme
+  candidates.
+- **The named-family rule is still the weakest.** It survived an archaeal test it was
+  never tuned on, which is real evidence, but it remains close to "the positives are
+  unclassified" — partly a fact about what InterPro has curated rather than about the
+  biology. If InterPro ever builds a family for this class, the rule inverts.
+- **Two domains, five proteomes.** The *S. oneidensis* run is a sanity check, not a
+  measurement. Untested: the ANME and Methanoperedenaceae OmcZ-type cytochromes, where
+  there is no solved filament to score against.
