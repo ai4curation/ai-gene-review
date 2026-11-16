@@ -8,8 +8,11 @@ variant sets and module references count as the engine reads them: a step holds 
 of its PANTHER family or subfamily ids selects a protein there (a step with no PANTHER id falls back to its
 UniProt accessions, and a protein-complex step holds when every active unit's PANTHER ids do, because
 the engine's atom for a complex carries no unit selectors). The ``unsatisfied_gaps`` of an organism are
-the engine's innermost gaps, and ``unevaluable_steps`` lists the steps this oracle cannot evaluate at all
-(a step with neither a PANTHER id nor an accession), which never hold. Annoton functions are not checked. Each descriptor row's ``required`` flag marks only whether its top-level part
+the engine's innermost gaps. Every step of the compiled module is classified once, before any organism
+is evaluated: ``unevaluable_steps`` lists the steps this oracle cannot evaluate at all (a step with
+neither a PANTHER id nor an accession), which never hold, and ``mixed_complex_steps`` the complexes
+whose units mix PANTHER-keyed and gene-keyed selectors, which are evaluated on their PANTHER-keyed
+units alone. Annoton functions are not checked. Each descriptor row's ``required`` flag marks only whether its top-level part
 is ``optional``; it is a reading aid, not the verdict. Classification rows with an empty
 accession column are skipped, so they cannot turn a zero count into a hit.
 
@@ -194,20 +197,55 @@ def complex_units(module: dict) -> dict[str, list[tuple[str, ...]]]:
     return out
 
 
+def panther_ids(atom: Atom) -> list[str]:
+    """PANTHER family and subfamily ids of a step, without the ``PANTHER:`` prefix.
+
+    >>> panther_ids(Atom("a", "a", None, None, family_ids=("PANTHER:PTHR1:SF2", "PF00001")))
+    ['PTHR1:SF2']
+    """
+    return [
+        f.removeprefix("PANTHER:")
+        for f in atom.family_ids
+        if f.startswith("PANTHER:PTHR")
+    ]
+
+
+def step_kind(atom: Atom, units: dict[str, list[tuple[str, ...]]]) -> str:
+    """How :func:`atom_holds` evaluates a step, independent of organism.
+
+    ``family`` (the step's own PANTHER ids), ``complex`` (every active unit has PANTHER ids),
+    ``mixed_complex`` (some units have PANTHER ids and some do not, so only the family-keyed units are
+    evaluated), ``accession`` (UniProt accessions only) or ``unevaluable`` (nothing this oracle reads).
+
+    >>> units = {"cx": [("PTHR1",), ("PTHR2",)], "mx": [("PTHR1",), ()], "gx": [(), ()]}
+    >>> [step_kind(Atom(i, i, None, None), units) for i in ("cx", "mx", "gx")]
+    ['complex', 'mixed_complex', 'unevaluable']
+    >>> step_kind(Atom("a", "a", None, None, family_ids=("PANTHER:PTHR1",)), units)
+    'family'
+    >>> step_kind(Atom("b", "b", None, "P1"), units)
+    'accession'
+    """
+    if panther_ids(atom):
+        return "family"
+    unit_ids = units.get(atom.node_id, [])
+    if any(unit_ids):
+        return "complex" if all(unit_ids) else "mixed_complex"
+    return "accession" if atom.uniprots else "unevaluable"
+
+
 def atom_holds(
     index: dict[str, set[str]],
     units: dict[str, list[tuple[str, ...]]] | None = None,
     accessions: set[str] | None = None,
-    unevaluable: set[str] | None = None,
 ) -> Callable[[Atom], bool]:
     """Oracle for one organism: a step holds when its PANTHER family ids select a protein.
 
     A protein-complex step (its id in ``units``, keyed as the engine names atoms) holds when every
-    active unit's PANTHER ids select a protein. A step with neither falls back to its UniProt
-    accessions, which hold when the organism's classification file lists one of them. A step this
-    oracle cannot evaluate (no PANTHER id, no accession, or a complex none of whose units has a PANTHER
-    id) does not hold, and its id is added to ``unevaluable`` so it is reported rather than read as an
-    absence.
+    active unit that has PANTHER ids selects a protein; units without PANTHER ids are not evaluated
+    (:func:`step_kind` reports such complexes as ``mixed_complex``). A step with neither falls back to
+    its UniProt accessions, which hold when the organism's classification file lists one of them. A
+    step this oracle cannot evaluate at all does not hold (:func:`step_kind` reports it as
+    ``unevaluable``, so it is listed rather than read as an absence).
 
     >>> holds = atom_holds({"PTHR1": {"P1"}, "PTHR2:SF3": {"P2"}}, {"cx": [("PTHR1",), ("PTHR9",)]})
     >>> holds(Atom("a", "a", None, None, family_ids=("PANTHER:PTHR1",)))
@@ -218,33 +256,24 @@ def atom_holds(
     True
     >>> holds(Atom("cx", "cx", None, None))
     False
-    >>> seen: set[str] = set()
-    >>> atom_holds({}, unevaluable=seen)(Atom("f", "f", None, None, function_ids=("GO:1",)))
+    >>> atom_holds({})(Atom("f", "f", None, None, function_ids=("GO:1",)))
     False
-    >>> seen
-    {'f'}
     """
     if accessions is None:
         accessions = set().union(*index.values()) if index else set()
     units = units or {}
 
     def holds(atom: Atom) -> bool:
-        panther = [
-            f.removeprefix("PANTHER:")
-            for f in atom.family_ids
-            if f.startswith("PANTHER:PTHR")
-        ]
-        if panther:
-            return any(index.get(f) for f in panther)
-        if atom.node_id in units and any(units[atom.node_id]):
+        kind = step_kind(atom, units)
+        if kind == "family":
+            return any(index.get(f) for f in panther_ids(atom))
+        if kind in ("complex", "mixed_complex"):
             return all(
                 any(index.get(f) for f in unit) for unit in units[atom.node_id] if unit
             )
-        if not atom.uniprots:
-            if unevaluable is not None:
-                unevaluable.add(atom.node_id)
-            return False
-        return any(acc in accessions for acc in atom.uniprots)
+        if kind == "accession":
+            return any(acc in accessions for acc in atom.uniprots)
+        return False
 
     return holds
 
@@ -294,10 +323,10 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
             units.update(
                 {f"{ref}#{k}": v for k, v in complex_units(ref_doc["module"]).items()}
             )
+        kinds = {a.node_id: step_kind(a, units) for a in iter_atoms(circuit)}
         met, gaps = {}, {}
-        unevaluable: set[str] = set()
         for o in ORGANISMS:
-            holds = atom_holds(data[o.slug], units, all_accessions[o.slug], unevaluable)
+            holds = atom_holds(data[o.slug], units, all_accessions[o.slug])
             met[o.slug] = is_satisfied(circuit, holds)
             if not met[o.slug]:
                 gaps[o.slug] = ["/".join(g.path) for g in gap_report(circuit, holds)]
@@ -307,7 +336,12 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
                 "descriptors": rows,
                 "required_parts_met": met,
                 "unsatisfied_gaps": gaps,
-                "unevaluable_steps": sorted(unevaluable),
+                "unevaluable_steps": sorted(
+                    k for k, v in kinds.items() if v == "unevaluable"
+                ),
+                "mixed_complex_steps": sorted(
+                    k for k, v in kinds.items() if v == "mixed_complex"
+                ),
             }
         )
     return {

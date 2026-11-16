@@ -77,3 +77,10 @@ The [source evidence guide](DPAGT1-source-evidence.md) distinguishes actual orig
 The non-core protein-binding row now includes a short target-specific excerpt from the existing UniProt interaction record. It identifies DPAGT1 and HTT alongside the reported experiment count. The three public IntAct records and the original automated Y2H Methods remain the evidence for the assay interpretation described in the [source guide](DPAGT1-source-evidence.md). The earlier fly-screen excerpt is retained as general study context; it does not identify the target pair by itself. Table S2 was not separately recovered, and no target-specific mammalian or native ER interaction is claimed.
 
 This follow-up reproduces four additional words from the existing UniProt source once. It preserves all prior quoted passages and their separately recorded historical totals; it adds no publication quotation or biological assertion.
+
+## 2026-11-15 ORGANELLES Golgi batch 2 (Golgi apparatus rows)
+
+- Row: GO:0005794 IEA is_active_in (GO_REF:0000107, Ensembl projection from mouse P42867). UNDECIDED changed to MARK_AS_OVER_ANNOTATED.
+- QuickGO (checked 2026-11-15): the donor is an MGI IPI is_active_in GO:0005794 on P42867 (Dpagt1), with Q8BH26 (Lyset/Tmem251), PMID:36074821, dated 2025-01-28. Mouse Gnptab (Q69ZN6) has no annotation from this paper.
+- PMID:36074821 (full main text cached) is about LYSET retaining the GNPTAB/GNPTG GlcNAc-1-phosphotransferase in the Golgi [PMID:36074821 "Our results support a model in which LYSET is essential for the activity of GlcNAc-1-phosphotransferase by binding to it and retaining it in the Golgi apparatus."]; DPAGT1 is never named. UniProt lists "Gnpta" as a synonym of mouse Dpagt1 (P42867) and of Gnptab (Q69ZN6). Probable name collision: recorded as a PROBABLE WRONG_GENE_PRODUCT source defect for MGI (candidate Q69ZN6). Supplement not read.
+- DPAGT1 acts on the cytosolic face of the ER membrane [PMID:29459785]; no Golgi data on DPAGT1 itself.
