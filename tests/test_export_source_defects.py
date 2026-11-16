@@ -333,6 +333,6 @@ def test_source_resource_enum_has_the_pipeline_values_reports_route_on() -> None
     distinct from the MOD values and from GO_CENTRAL.
     """
     values = set(_schema_enum_values("SourceResourceEnum"))
-    for expected in ("INTERPRO", "PANTHER", "COMPLEX_PORTAL", "GOC"):
+    for expected in ("INTERPRO", "PANTHER", "COMPLEX_PORTAL", "GOC", "SYNGO"):
         assert expected in values, f"SourceResourceEnum lost {expected}"
     assert "GO_CENTRAL" in values, "PANTHER must not have replaced GO_CENTRAL"
