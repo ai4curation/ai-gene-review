@@ -63,6 +63,8 @@ def test_uncached_term_is_reported_against_its_file(tmp_path: Path) -> None:
     assert {entry["enum"] for entry in report["missing_enum_memberships"]} == {
         "NCBITaxonEnum"
     }
+    assert labels[0]["needs_network"] is True
+    assert report["misses_needing_network"] == 2
 
 
 def test_wrong_label_is_a_finding_not_a_cache_miss(tmp_path: Path) -> None:

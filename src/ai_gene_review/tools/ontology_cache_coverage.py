@@ -19,6 +19,12 @@ term outside its enum, ...) and is listed separately as ``other_findings`` with
 its severity: it is not a coverage gap, and the online validators still report it
 in CI.
 
+Not every miss is an outage risk. ``conf/oak_config.yaml`` serves some prefixes
+from a local SQLite build (GO) and others from the EBI Ontology Lookup Service
+(``ols:``, e.g. NCBITaxon); only a miss on a service-backed prefix needs the
+network. Each miss is marked ``needs_network`` accordingly, and
+``--network-only`` restricts ``--check`` to those.
+
 ``--warm`` first runs LTV online on the same files, which fills the cache with
 whatever the service can answer, and then measures coverage offline, so the
 report shows what is still missing after warming. Warming writes to the
@@ -62,6 +68,32 @@ FILE_HEADER = re.compile(r"^(?:❌|✅) (?P<name>\S+\.ya?ml)(?: - \d+ issue\(s\)
 FINDING_LINE = re.compile(
     r"^\s*(?:❌ (?P<error>ERROR)|⚠️\s+(?P<warn>WARN)): (?P<message>.+)$"
 )
+
+
+def network_prefixes(config_path: Path = OAK_CONFIG) -> set[str]:
+    """Return the prefixes whose OAK adapter is a remote service (``ols:``).
+
+    >>> "NCBITaxon" in network_prefixes(PROJECT_ROOT / OAK_CONFIG)
+    True
+    >>> "GO" in network_prefixes(PROJECT_ROOT / OAK_CONFIG)
+    False
+    """
+    config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+    adapters = config.get("ontology_adapters") or {}
+    return {
+        prefix
+        for prefix, adapter in adapters.items()
+        if isinstance(adapter, str) and adapter.startswith("ols:")
+    }
+
+
+def prefix_of(curie: str) -> str:
+    """Return the prefix of a CURIE.
+
+    >>> prefix_of("NCBITaxon:9606")
+    'NCBITaxon'
+    """
+    return curie.split(":", 1)[0]
 
 
 @dataclass(frozen=True)
@@ -131,23 +163,44 @@ class CoverageReport:
     )
     other_findings: list[tuple[str, str, str]] = field(default_factory=list)
     unattributed_output: list[str] = field(default_factory=list)
+    remote_prefixes: set[str] = field(default_factory=set)
 
     @property
     def covered(self) -> bool:
         """True when the cache answered every term check."""
         return not self.label_misses and not self.enum_misses
 
+    def needs_network(self, curie: str) -> bool:
+        """True when a miss on ``curie`` would go to a remote ontology service."""
+        return prefix_of(curie) in self.remote_prefixes
+
+    def network_misses(self) -> int:
+        """Count the misses that would need a remote ontology service."""
+        return sum(self.needs_network(c) for c in self.label_misses) + sum(
+            self.needs_network(c) for c, _ in self.enum_misses
+        )
+
     def to_dict(self) -> dict:
         """Return a plain, deterministically ordered mapping for YAML output."""
         return {
             "files_checked": self.files_checked,
             "covered": self.covered,
+            "misses_needing_network": self.network_misses(),
             "missing_labels": [
-                {"curie": curie, "files": sorted(files)}
+                {
+                    "curie": curie,
+                    "needs_network": self.needs_network(curie),
+                    "files": sorted(files),
+                }
                 for curie, files in sorted(self.label_misses.items())
             ],
             "missing_enum_memberships": [
-                {"curie": curie, "enum": enum, "files": sorted(files)}
+                {
+                    "curie": curie,
+                    "enum": enum,
+                    "needs_network": self.needs_network(curie),
+                    "files": sorted(files),
+                }
                 for (curie, enum), files in sorted(self.enum_misses.items())
             ],
             "other_findings": [
@@ -174,7 +227,13 @@ def parse_offline_output(
     ... '''
     >>> parse_offline_output(out, [Path("a/X-predictions-review.yaml"), Path("b/Y-predictions-review.yaml")], report)
     >>> report.to_dict()["missing_labels"]
-    [{'curie': 'NCBITaxon:1', 'files': ['a/X-predictions-review.yaml']}]
+    [{'curie': 'NCBITaxon:1', 'needs_network': False, 'files': ['a/X-predictions-review.yaml']}]
+    >>> report.remote_prefixes = {"NCBITaxon"}
+    >>> report.network_misses()
+    2
+    >>> report.label_misses["GO:0000001"].add("a/X-predictions-review.yaml")
+    >>> report.needs_network("GO:0000001"), report.network_misses()
+    (False, 2)
     >>> report.to_dict()["missing_enum_memberships"][0]["enum"]
     'NCBITaxonEnum'
     """
@@ -248,7 +307,7 @@ def measure_coverage(
     grouped: dict[DocumentKind, list[Path]], warm: bool
 ) -> CoverageReport:
     """Optionally warm the cache online, then measure coverage offline."""
-    report = CoverageReport()
+    report = CoverageReport(remote_prefixes=network_prefixes(PROJECT_ROOT / OAK_CONFIG))
     for kind, files in grouped.items():
         rel = [relative_to_root(path) for path in files]
         if warm:
@@ -272,6 +331,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Exit 1 when any term check needs the ontology service",
     )
+    parser.add_argument(
+        "--network-only",
+        action="store_true",
+        help="With --check, fail only on misses that need a remote ontology service",
+    )
     parser.add_argument("-o", "--output", type=Path, help="Write the YAML report here")
     args = parser.parse_args(argv)
 
@@ -289,12 +353,17 @@ def main(argv: list[str] | None = None) -> int:
     for message in report.unattributed_output:
         print(f"Unattributed validator error: {message}", file=sys.stderr)
     missing = len(report.label_misses) + len(report.enum_misses)
+    network = report.network_misses()
     print(
-        f"{report.files_checked} files; {missing} cache misses; "
+        f"{report.files_checked} files; {missing} cache misses "
+        f"({network} needing the network); "
         f"{len(report.other_findings)} other term findings",
         file=sys.stderr,
     )
-    return 1 if args.check and not report.covered else 0
+    if not args.check:
+        return 0
+    failing = network if args.network_only else missing
+    return 1 if failing else 0
 
 
 if __name__ == "__main__":
