@@ -32,9 +32,9 @@ each subfamily the review names as affected lie below the node.
 
 | | Batches | Rows read | Applied | Left for adjudication |
 |---|---:|---:|---:|---:|
-| Gene reviews, candidate genes (`g001` to `g012`) | 12 of 73 | 278 | 236 | 40, and 2 not read |
+| Gene reviews, candidate genes (`g001` to `g012`) | 12 of 73 | 278 | 228 | 48, and 2 not read |
 | Gene reviews, the rest (`g013` to `g073`) | 0 of 61 | 0 | | |
-| Family reviews (`f001` to `f018`) | 18 of 18 | 386 | 339 | 47 |
+| Family reviews (`f001` to `f018`) | 18 of 18 | 386 | 321 | 65 |
 
 `tree_rereview.py status` prints the current counts. Results and what they show are in
 [tree-evidence.md](../tree-evidence.md#the-re-read).

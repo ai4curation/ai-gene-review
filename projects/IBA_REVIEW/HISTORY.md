@@ -150,8 +150,9 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
 
 Asked to run the re-read as batches of agents. 278 gene rows (every gene with a row on the
 candidate list) and all 386 disputed family node assessments were read against the tree
-and checked by a second agent; 575 rows now quote their extract or listing and say what
-the tree shows, and 87 are left for a curator. Results:
+and checked by a second agent; 549 rows now quote their extract or listing and say what
+the tree shows, and 113 are left for a curator, 26 of them because the review changed on
+main between the reading and the merge. Results:
 [tree-evidence.md](tree-evidence.md#the-re-read); method and run records:
 [tree-rereview](tree-rereview/README.md).
 

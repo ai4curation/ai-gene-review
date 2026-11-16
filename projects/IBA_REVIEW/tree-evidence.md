@@ -227,12 +227,13 @@ then edited by script. The method, the plans and a record of every row are in
 
 | | Rows read | Applied | Left for adjudication |
 |---|---:|---:|---:|
-| Gene reviews: the 12 batches that hold every candidate gene | 278 | 236 | 40, and 2 not read |
-| Family reviews: every disputed node assessment without a tree listing | 386 | 339 | 47 |
+| Gene reviews: the 12 batches that hold every candidate gene | 278 | 228 | 48, and 2 not read |
+| Family reviews: every disputed node assessment without a tree listing | 386 | 321 | 65 |
 
 An applied row quotes its own extract or listing in `supported_by` and says in its reason
-what the tree shows. The script changed no verdict. 239 of the 1,689 overruled IBA rows
-now quote their extract, and 345 of the 392 disputed node assessments cite a tree listing.
+what the tree shows. The script changed no verdict. 26 rows that had been applied were
+changed on main before this work was merged with it; their edits were not carried over,
+and they are counted here as left for adjudication.
 
 What the readers found in the gene rows, which were chosen as the ones most likely to have
 a problem:
@@ -273,10 +274,10 @@ Three things follow.
   More than half of the disputed node assessments make a placement argument that the tree
   bears out.
 
-87 rows are left for adjudication, each with its reason in the run records: 7 verdicts or
+113 rows are left for adjudication, each with its reason in the run records: 7 verdicts or
 assessments the tree does not support, 13 kept rows under a PAINT loss, 26 family rows
-whose node or term is not in the listing, and rows where the verifier did not accept the
-reading or its correction.
+whose node or term is not in the listing, 26 rows that changed on main after they were
+read, and rows where the verifier did not accept the reading or its correction.
 
 Not yet read: the 61 gene batches with no candidate row, about 1,420 overruled rows. They
 still raise `missing_tree_evidence`.
