@@ -108,10 +108,12 @@ Until that is done, the umbrella links to them as optional.
 
 The organelle-by-stage matrix lives in
 [ORGANELLE_LIFECYCLES/coverage.yaml](ORGANELLE_LIFECYCLES/coverage.yaml).
-Per-organism selector counts behind the phagosome and synaptic vesicle assessments are in
+Every eukaryote-wide rule candidate, plus the phagosome and synaptic vesicle modules, is evaluated
+across 24 organisms in [ORGANELLE_LIFECYCLES/rule-evaluation.md](ORGANELLE_LIFECYCLES/rule-evaluation.md).
+The per-organism counts and verdicts are in
 [ORGANELLE_LIFECYCLES/selector-census.yaml](ORGANELLE_LIFECYCLES/selector-census.yaml), made by
-[ORGANELLE_LIFECYCLES/selector_census.py](ORGANELLE_LIFECYCLES/selector_census.py) from PANTHER's
-release-pinned sequence classification files.
+[ORGANELLE_LIFECYCLES/selector_census.py](ORGANELLE_LIFECYCLES/selector_census.py) with the module engine
+from PANTHER's release-pinned sequence classification files.
 
 ## Plan
 
@@ -152,4 +154,11 @@ release-pinned sequence classification files.
 - [ ] Synaptic vesicle: narrow the cycle's context to animals with neurons and name the exceptions in the module; find selectors confined to neuronal animals; check ctenophores and proteomes; then reassess as a rule candidate
 - [ ] Phagosome: repoint the three `phagosome_maturation` selectors that miss human (Rab5, PIKfyve, V0a), already named in the module's own notes
 - [ ] Specialized organelles: lineage-specific organelles
-- [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)
+- [x] Evaluate the rule candidates against PANTHER's reference-proteome classification files for 24 organisms, with the module engine ([rule-evaluation](ORGANELLE_LIFECYCLES/rule-evaluation.md)); mitosome- and hydrogenosome-bearing lineages fail the mitochondrial and peroxisomal rules as expected, and several rules fail in model organisms on one selector
+- [x] Fix the MPP beta and alpha selectors (#6416) and the Pex2 selector (#6418), and rerun the rule evaluation with the fixes
+- [ ] Fix the remaining model-organism selector defects listed in the rule evaluation; several of the smaller ones (Nup88, Seh1, Atg steps, SRbeta) also fail in protist lineages, so check each against the full gap list before narrowing the fix to one organism
+- [ ] Triage the remaining gaps in the rule evaluation's full gap list (early animals, protists and the reduced-organelle lineages)
+- [ ] Check the cilium rule's fly (IFT81, IFT74, IFT139), worm (DYNC2I2) and Trichoplax (IFT74) gaps
+- [ ] Find out whether the lineages that PTHR13166 misses (plants and green algae, Monosiga, the chytrid, Phytophthora, Thalassiosira, Giardia, Trichomonas, Entamoeba) carry an ISD11 the family does not capture
+- [ ] Compile protein-complex annotons into their active units in `module_logic`, so family-keyed oracles can evaluate complex steps
+- [ ] Check the census gaps against the proteomes themselves, starting with the mitosome and hydrogenosome lineages once the selector defects are fixed
