@@ -15,3 +15,12 @@ No provider deep research was generated in this session (no API keys).
   of the reaction, not the catalyst, so its MF is electron transfer activity.
 - The 4Fe-4S binding core function was folded into the electron-transfer core
   function. NEW glycine betaine catabolic process (ISS).
+
+
+## Independent module audit — 2026-11-06
+
+All four rows reviewed. Membrane topology and conserved [4Fe-4S] motifs support the existing compartment and binding refinement. Retain inherited electron-carrier and pathway proposals at orthology/inference level, grounded in redox architecture plus native genetic placement rather than necessity alone. Specific DgcA donation and ETF reduction are proposed, not directly measured.
+
+Sources: [PMID:32631860] full text: “DMGDH activity was measured with the dye-linked assay systems, with PMS as the electron intermediator and DCPIP or NBT as the terminal electron acceptor.” The mechanism paragraph explicitly says “a possible reaction mechanism of DdhC toward DMG was proposed”. [PMID:17951379] full text: PA14 mutants, PAO1 locus numbering, direct NMR on dgcB and soxA. KT2440 functional transfer remains an orthology inference.
+
+All original annotation payloads and inherited NEW rows retained unchanged. No NEW rows added. Raw UniProt/GOA and existing provider artifacts preserved. Default Falcon research genuinely attempted; failed with HTTP 403 authentication/access error. Manual source assessment is recorded here; no provider report was fabricated.
