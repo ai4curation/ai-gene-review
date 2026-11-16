@@ -33,6 +33,7 @@ VALID_TAGS = {
     "BIOLOGY_DOMAIN",
     "EVALUATION",
     "ML_PREDICTIONS",
+    "ANNOTATION_REVIEW",
 }
 
 #: Controlled vocabulary for a manual review's ``status``.
