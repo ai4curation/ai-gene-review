@@ -345,6 +345,9 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
   - [x] Follow-ups to #6297 and #6353 (2026-11-15): abstract-only sweep of ER
         batch 1 (AIMP1 reworded), UFSP2 caveat, UFL1 tethering row; CDK5RAP3
         checked and left without one
+  - [ ] Sweep ER batches 2-4 and Golgi batch 1 for reasons that rest on a figure
+        reading from an abstract-only cached paper (only ER batch 1 was swept,
+        2026-11-15)
   - [ ] Write the Golgi rule after more batches; promote "curator deference
         stops at a readable paper" into the numbered rules, since it now
         governs direct-evidence rows too (CABP2, Golgi batch 1 review)
@@ -363,7 +366,8 @@ Items promised in the reviews of #6297 and #6353.
   now say what the Golgi row already said: the UniProt ER item is by similarity to
   mouse P31230, curated (ECO:0000269) from that paper, and the root is kept on
   curator deference; the figure reading is not relied on. The action is unchanged
-  (KEEP_AS_NON_CORE). AHCY also cites a figure from an abstract-only cache, but its
+  (KEEP_AS_NON_CORE). The PMC record (PMC1899434) serves no full text through
+  PMC or Europe PMC, so the figure could not be re-read. AHCY also cites a figure from an abstract-only cache, but its
   reason says the figure was read in an externally recovered author manuscript, which
   the policy allows; BRSK2 cites no figure.
 - **UFSP2.** The caveat now names both the release and the localisation tests as
