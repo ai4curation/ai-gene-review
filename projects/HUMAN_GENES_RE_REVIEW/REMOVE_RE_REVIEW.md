@@ -450,13 +450,13 @@ are `UNDECIDED`, like their source row.
   right and NADP is wrong. A rule in `rules/curated/` would correct it for
   every member of the signature, not only human GAPDH.
 - **Other organisms.** The mouse and rat reviews had the same pass on 14
-  November 2026: 109 of 469 substantive REMOVE rows changed. See
+  November 2026: 110 of 469 substantive REMOVE rows changed. See
   [Re-review of REMOVE actions in mouse and rat](../MOUSE_GENES_RE_REVIEW/REMOVE_RE_REVIEW.md).
   The other model organism reviews were not touched.
-- **Human rows put in question by the mouse and rat pass.** In twelve places a
-  mouse or rat review holds an argument, often from the full text of the
-  donor paper, against a row that the human review keeps, marks or leaves
-  undecided (MAP2K4, PAX6, GRIA1, SLC16A1, TARDBP, ITPR1, VEGFA, SOX2, TP53,
+- **Human rows put in question by the mouse and rat pass.** In eleven places a
+  mouse or rat review and the human review treat the same claim differently,
+  often because the mouse or rat review holds an argument from the full text
+  of the donor paper (PAX6, GRIA1, SLC16A1, TARDBP, ITPR1, VEGFA, SOX2, TP53,
   SERPINH1, NOTCH1, PTK7). They are listed with the argument under `followups`
   in the mouse and rat
   [row-level record](../MOUSE_GENES_RE_REVIEW/remove_rereview_changes.yaml).

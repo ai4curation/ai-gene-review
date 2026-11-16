@@ -13,11 +13,11 @@ rat counterpart of the
 
 **Bottom line:** every annotation row with `action: REMOVE` in `genes/mouse`
 and `genes/rat` was read again against the current review rules (14 November
-2026). There were 1,098 such rows in the 452 review files (232 mouse, 220
+2026, at commit `70e3fa209` of main). There were 1,098 such rows in the 452 review files (232 mouse, 220
 rat). 629 are bare `protein binding` rows, which the protein-binding policy
 removes as uninformative; they were audited by script and none changed
 action. The other 469 rows, in 163 reviews, were read one at a time.
-**109 of them (23%) no longer say REMOVE**, 360 stand, and 16 errors in
+**110 of them (23%) no longer say REMOVE**, 359 stand, and 16 errors in
 source records were written down as structured `source_defects`. 48 review
 files were edited (36 mouse, 12 rat). No row was changed to REMOVE.
 
@@ -82,8 +82,8 @@ the effect of Hsp60 does not depend on MyD88.
 | Bare protein binding (unchanged) | 431 | 198 | 629 |
 | Substantive rows read | 328 | 141 | 469 |
 | Reviews with substantive rows | 96 | 67 | 163 |
-| Rows that no longer say REMOVE | 83 | 26 | 109 |
-| REMOVE rows at end | 676 | 313 | 989 |
+| Rows that no longer say REMOVE | 84 | 26 | 110 |
+| REMOVE rows at end | 675 | 313 | 988 |
 | Review files edited | 36 | 12 | 48 |
 
 **Retired rows.** 27 of the REMOVE rows, all in rat reviews, are marked
@@ -97,10 +97,10 @@ Twelve are substantive rows, and eleven of those changed, all in rat/Prkaa2.
 | `KEEP_AS_NON_CORE` | 32 | 0 | 32 |
 | `MODIFY` | 6 | 14 | 20 |
 | `ACCEPT` | 4 | 3 | 7 |
-| `UNDECIDED` | 6 | 0 | 6 |
+| `UNDECIDED` | 7 | 0 | 7 |
 | `TOO_GENERAL` | 3 | 1 | 4 |
 
-What was wrong with the 109 rows:
+What was wrong with the 110 rows:
 
 | Pattern | Rows | What was done |
 |---|---|---|
@@ -113,7 +113,7 @@ What was wrong with the 109 rows:
 | Ancestor of a kept term | 4 | `TOO_GENERAL` |
 | The reason conceded that the claim is true | 2 | Kept or refined |
 | A no-data row removed because inferred rows cover the aspect | 2 | `ACCEPT` |
-| The donor paper could not be examined | 2 | `UNDECIDED` |
+| The paper behind the row, or behind its source row, could not be examined | 3 | `UNDECIDED` |
 
 ## Rows changed
 
@@ -215,7 +215,7 @@ what was measured is not removed as false.
 | mouse/App | protein phosphorylation | IMP | Dephosphorylation of an NMDA receptor subunit downstream of amyloid-beta. |
 | mouse/Mpo | mitochondrion | HDA | One hit in a mitochondrial proteome survey of vascularised tissues. |
 
-### Other changes (10)
+### Other changes (11)
 
 | Review | Term (rows) | Evidence | Now | Basis |
 |---|---|---|---|---|
@@ -226,8 +226,9 @@ what was measured is not removed as false.
 | mouse/Ghr | growth factor binding (1) | ISO | `MODIFY` → peptide hormone binding | The receptor binds growth hormone; the review accepts the specific term. |
 | rat/Actl7a, rat/Aph1a | biological_process (2) | ND | `ACCEPT`, `nd_case: INFERABLE` | No study of the rat protein identifies a process; the process rows are transfers from orthologs. |
 | mouse/Trp53 | receptor tyrosine kinase binding; protein heterodimerization activity (2) | IEA | `UNDECIDED` | Transfers of human physical-interaction rows; the cached abstracts do not describe the interactions. |
+| mouse/Hsp90aa1 | positive regulation of cytotoxic T cell differentiation (1) | TAS | `UNDECIDED` | An author statement may stand anywhere in the full text, so the row is not removed on the strength of the abstract, which speaks of the cytotoxic action of nitric oxide and not of T cells (suspected source defect). |
 
-## REMOVE rows kept, with a corrected record (25)
+## REMOVE rows kept, with a corrected record (24)
 
 | Review | Rows | What changed |
 |---|---|---|
@@ -235,7 +236,6 @@ what was measured is not removed as false.
 | mouse/Efr3a | 3 transfers from human corneodesmosin | Source defect `WRONG_GENE_PRODUCT`: the rows appear to belong to mouse Cdsn. |
 | mouse/Mtor | 6 rows for RNA polymerase III promoter DNA binding | Reason rewritten: the donor is a chromatin immunoprecipitation result (PMID:20233713), and occupancy is not sequence-specific DNA binding. The rows had been called electronic mis-assignments. |
 | rat/Casp3, rat/Ptk7 | 4 rows with no stated reason | Reason written. |
-| mouse/Hsp90aa1 | positive regulation of cytotoxic T cell differentiation (TAS) | Source defect `WRONG_TERM`: the author statement is about the cytotoxic action of nitric oxide, not about T cells. |
 | mouse/Pax6 | nervous system process | Reason no longer says that the human review removes the term; it records it as too general. |
 | rat/Pik3c2a | biological_process (ND) | `nd_case: STALE` recorded; a study in rat insulinoma cells identifies a process. |
 
@@ -260,15 +260,15 @@ policy. None changed action.
 
 ## What REMOVE means in the mouse and rat sets now
 
-The 360 substantive rows that stand rest on a biological argument. The common
+The 359 substantive rows that stand rest on a biological argument. The common
 ones:
 
 - **A target-specific argument against a transfer:** a divergent paralog
   (mouse Ang2, 41 rows), a gene or isoform absent from the species, a
   pseudoenzyme that has lost the activity (Irak3, Ptk7, Lalba, Serpinh1).
 - **The donor annotation is itself wrong:** the paper is about another gene
-  product (the angiotensin II rows, Efr3a, Map2k4, Tardbp), or the full text
-  contradicts the row.
+  product (the angiotensin II rows, Efr3a, one rat Tardbp row), or the full
+  text contradicts the row.
 - **The gene product is the substrate, the cargo or the target** of the
   process (Cdkn1b, Ctnnb1 and Ghr turnover, Npc1 glycosylation).
 - **An expression pattern of a rodent ortholog projected as a function**
@@ -276,15 +276,15 @@ ones:
 - **A wrong mapping:** a domain-based term on a protein that lacks the
   activity, an EC number of the wrong enzyme class, an obsolete term.
 
-21 of the rows that stand are listed with a note in the row-level record;
+20 of the rows that stand are listed with a note in the row-level record;
 eight of them are marked as close calls.
 
 ## Follow-ups
 
-- **Human rows that this pass puts in question.** Twelve places where a
-  mouse or rat review holds an argument, often from the full text, against a
-  row that the human review keeps, marks or leaves undecided: MAP2K4, PAX6,
-  GRIA1, SLC16A1, TARDBP, ITPR1, VEGFA, SOX2, TP53, SERPINH1, NOTCH1 and
+- **Human rows that this pass puts in question.** Eleven places where a
+  mouse or rat review and the human review treat the same claim differently,
+  often because the mouse or rat review holds an argument from the full text:
+  PAX6, GRIA1, SLC16A1, TARDBP, ITPR1, VEGFA, SOX2, TP53, SERPINH1, NOTCH1 and
   PTK7. The row-level record lists each with the index and the argument. They
   were not changed here, because this pass covers mouse and rat REMOVE rows.
 - **Rat rows kept beside the ones changed.** rat/Akt1 keeps translation on two
@@ -292,7 +292,12 @@ eight of them are marked as close calls.
   kinase performs no step of it. rat/Ghr keeps or marks three transfers whose
   human source rows are no longer in QuickGO.
 - **Full text needed.** PMID:23027130 and PMID:10837489 (mouse Trp53),
-  PMID:11584023 (mouse Dnajb11) and PMID:12887892 (Sirt2).
+  PMID:11584023 (mouse Dnajb11), PMID:12855682 (mouse Hsp90aa1) and
+  PMID:12887892 (Sirt2).
+- **Changes on main after the pass.** Before this pass was merged, main
+  changed five of the rows it had left as REMOVE (mouse Lamp1, mouse and rat
+  Map2k4, two rat Tardbp rows) and added 13 mouse and rat reviews. Those are
+  not counted here.
 - **Source defects beyond this pass.** Only the cases established here were
   structured; other REMOVE rows describe an error in a source record in their
   reason without a structured defect.
