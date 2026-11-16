@@ -597,7 +597,8 @@ descriptions fetcher would have asked the Alliance API for `MGI:MGI:106913`.
    `NCBI_API_KEY`, or back off and retry.
 5. The review-validation hook should honour `UV_PROJECT_ENVIRONMENT` (or call the
    shared interpreter directly). Otherwise every edit in a separate worktree builds a
-   new environment there.
+   new environment there
+   ([issue 6457](https://github.com/ai4curation/ai-gene-review/issues/6457)).
 
 ## Status and next steps
 
