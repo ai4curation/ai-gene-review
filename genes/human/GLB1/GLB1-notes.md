@@ -95,3 +95,9 @@ All 62 incoming annotation contexts are retained, including the two source-disti
 ## 2026-11-06: review follow-up
 
 The follow-up harmonizes the two repeated-term decisions while preserving all incoming contexts. Direct publication support replaces the duplicated guide quotations. Cache availability remains distinct from separately read original material. The earlier notes and initial validation/status record above remain preserved; current status is recorded in the review and source guide.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0005515 / PMID:15498789: defect retyped (evidence depth: ABSTRACT). The PMID is the intended paper (its abstract reports NGX6 associating with ezrin); the data concern NGX6 = TMEM8B (A6NDV4, EMBL AF188239 verified), which already carries the ezrin IPI from this paper, so this is WRONG_GENE_PRODUCT, not WRONG_REFERENCE. Retyped (slot DB_Object_ID, asserted P16278, corrected A6NDV4, CHECK, PROBABLE). A BHF-UCL row on EZR with With P16278 (GO:0050839) is the likely origin and is flagged in the explanation. Full text paywalled (OUP), so the action stays UNDECIDED.
