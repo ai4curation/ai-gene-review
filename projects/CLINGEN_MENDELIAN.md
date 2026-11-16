@@ -2992,9 +2992,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**762 of 2,876 genes are complete; 2,114 remain.**
-This checkpoint records the accepted human ACO2 actual merge and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-762-2026-11-15-140641-utc) records the evidence and retained uncertainties.
+**763 of 2,876 genes are complete; 2,113 remain.**
+This checkpoint records the accepted human ACSF3 actual merge and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-763-2026-11-16-021116-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3105,7 +3105,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **ACO2** — HGNC:118; [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2bca6e9c-e167-4862-bf45-3ec787b92f49-2023-10-19T040000.000Z) (MONDO:0044970; AD; Strong); [mitochondrial disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5892fec8-dc8b-467b-abba-fb6be142bb7a-2023-10-19T040000.000Z) (MONDO:0044970; AR; Definitive); [optic atrophy 9](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_236ff728-58f0-4f71-8575-8dd8546c8fba-2024-04-05T190000.000Z) (MONDO:0014571; SD; Definitive).
 - [x] **ACOX1** — HGNC:119; [Mitchell syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2efeef00-0803-472b-8e25-080e4728c018-2025-12-05T170000.000Z) (MONDO:0030073; AD; Definitive); [peroxisomal acyl-CoA oxidase deficiency](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_96026ae4-050d-4eb5-849c-178c703a556e-2022-11-04T160000.000Z) (MONDO:0009919; AR; Definitive).
 - [x] **ACOX2** — HGNC:120; [congenital bile acid synthesis defect 6](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_5627eadb-12f9-4768-915c-3da73c425650-2024-07-25T180000.000Z) (MONDO:0015015; AR; Definitive).
-- [ ] **ACSF3** — HGNC:27288; [combined malonic and methylmalonic acidemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b215e20c-7781-49a0-b473-9219cb07e0b9-2020-10-09T160000.000Z) (MONDO:0013661; AR; Definitive).
+- [x] **ACSF3** — HGNC:27288; [combined malonic and methylmalonic acidemia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b215e20c-7781-49a0-b473-9219cb07e0b9-2020-10-09T160000.000Z) (MONDO:0013661; AR; Definitive).
 - [x] **ACSL4** — HGNC:3571; [non-syndromic X-linked intellectual disability](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_b4da722c-f7fc-4dc4-ad19-1d1b023d488f-2023-01-10T110000.000Z) (MONDO:0019181; XL; Definitive).
 - [x] **ACTA1** — HGNC:129; [alpha-actinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_ba47597e-07a0-45e3-a971-f15807e8a1a4-2024-02-26T170000.000Z) (MONDO:0100084; AD; Definitive); [alpha-actinopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_098a7b3a-26ab-4915-8187-f6db682cef4f-2024-02-26T170000.000Z) (MONDO:0100084; AR; Definitive).
 - [x] **ACTA2** — HGNC:130; [multisystemic smooth muscle dysfunction syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2f4fb1fe-4b82-481d-a81d-398eea46acc5-2025-01-24T170000.000Z) (MONDO:0013452; AD; Definitive).
