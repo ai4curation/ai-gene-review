@@ -15,7 +15,9 @@
   [PMID:16226721 "SBAT1 excluded aromatic or charged amino acids, beta-amino acids, glycine, and GABA."].
 - Because glycine and GABA are explicitly excluded, GO:0005326 neurotransmitter transmembrane
   transporter activity is FALSE for this gene (not merely over-reaching) → changed to REMOVE.
-  GO:0006836 neurotransmitter transport (process) rows kept MARK_AS_OVER_ANNOTATED (pathway context).
+  GO:0006836 neurotransmitter transport (process) rows — the NAS row and the Reactome TAS row —
+  are likewise REMOVE for the same reason (one claim, one verdict; the family/pathway context is
+  recorded in the Reactome reference's reference_review, correctness MISCITED).
   Contrast SLC6A14, which carries glycine and so stays MARK_AS_OVER_ANNOTATED there.
 
 ## Decisions
