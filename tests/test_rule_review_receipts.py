@@ -426,3 +426,23 @@ def test_correction_text_backed_by_the_table_must_match_it(figure: str, fires: b
                   "evidence": ["projects/ARBA_REVIEW/rule_redundancy.tsv: ARBA00026480 condition_sets 343, covered_sets 313"]}
     data = review(id="ARBA00026480", rule=rule, corrections=[correction])
     assert ("redundancy_prose_mismatch" in checks(data, tmp_path)) is fires
+
+
+@pytest.mark.parametrize(
+    "text,expected_warning",
+    [
+        ("320 of 355 sets are covered by rules with more specific terms.", True),
+        ("48 sets are already matched by rules asserting a more specific term.", True),
+        ("313 of 343 sets are covered by rules with more specific terms.", False),
+        ("313 sets are already matched by rules asserting a more specific term.", False),
+        ("In the sample, 11 of 40 sets are matched by a rule for a curated term.", False),
+    ],
+)
+def test_coverage_figure_without_the_file_name_is_still_compared(text: str, expected_warning: bool, tmp_path: Path) -> None:
+    rule = {"rule_id": "ARBA00026480", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10",
+            "source_condition_set_count": 343,
+            "go_annotations": [{"go_id": "GO:0010605",
+                                "go_label": "negative regulation of macromolecule metabolic process"}]}
+    data = review(id="ARBA00026480", rule=rule, review_summary=text)
+    assert ("redundancy_prose_unconfirmed" in checks(data, tmp_path, "warning")) is expected_warning
+    assert "redundancy_prose_mismatch" not in checks(data, tmp_path)
