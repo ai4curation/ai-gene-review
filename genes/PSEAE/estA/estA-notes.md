@@ -110,6 +110,14 @@ review: quotes there must be verbatim substrings of the cached file, and a quote
 the validator cannot check is worse than a paraphrase that is honest about its
 source. The findings are recorded as `findings[].statement` and in row reasons.
 
+**Standing instruction for later passes.** The short quoted fragments below are
+transcribed from the publisher PDF for the reader's benefit. They must never be
+cited as `supporting_text` via `file:PSEAE/estA/estA-notes.md`. `quote_check`
+resolves `file:` sources under `genes/` and would happily verify such a quote
+against this file, which would launder an uncheckable full-text sentence into an
+apparently validated one. Until the cache actually holds the full text, the only
+quotable source for this PMID is its cached abstract.
+
 What the full text settles:
 
 - **Rhamnolipid is not made by EstA.** The authors state there is no obvious
@@ -140,7 +148,7 @@ What the full text settles:
   clonal growth". The earlier reason attributed it to rhamnolipid and has been
   corrected.
 - **Ser38 is the catalytic nucleophile.** It is the serine of the GDSL motif
-  (31-STLVVFGDSLSDAGQF-46) in the displayed O33407 sequence, and UniProt carries
+  (30-STLVVFGDSLSDAGQF-45) in the displayed O33407 sequence, and UniProt carries
   both `ACT_SITE 38 /note="Nucleophile"` and a `MUTAGEN 38` feature citing this
   paper, so the paper's numbering matches the canonical sequence directly.
 - The authors are explicit that the phenotypes "have no obvious physiological or
