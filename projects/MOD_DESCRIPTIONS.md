@@ -310,6 +310,14 @@ have a WormBase-written description.
   - a fission-yeast septum term for npp-20.
 
   No review needed an edit.
+- **Decision (2026-11-16): score only genes with a curated MOD text.** Scoring
+  sidecars whose only texts are the Alliance automated one and its RefSeq copy is not
+  worth the effort. Those texts are generated from the GO annotations under review, so
+  scoring them repeats the annotation review. They are also never written as
+  deep-research files. The nine automated-only sidecars in this round (abhd-11.1, for
+  example) produced no review edits; the curated ones (cki-1, for example) are where the
+  findings come from. From now on, an automated-only sidecar is fetched for the
+  comparison table and left unscored. Existing scores are kept.
 - **Choosing new genes.** Candidates were genes that the WormBase texts of reviewed
   genes name but that have no review of their own. They were ranked by how many texts
   name them ([worm_candidates.py](MOD_DESCRIPTIONS/worm_candidates.py)). For example, mes-1 is named in the texts for gpr-1, gpr-2, meg-1 and meg-2,
@@ -614,8 +622,8 @@ descriptions fetcher would have asked the Alliance API for `MGI:MGI:106913`.
 - [x] Record the contradicted MOD and UniProt statements as `source_defects`
 - [x] Worm: score the 11 reviews added after the run (all 452 worm sidecars `COMPLETE`)
 - [x] Worm: nine new reviews written with the WormBase text as input (26 text defects, 5 NEW rows)
-- [ ] Worm: more new reviews from the same ranking (next candidates: gex-3, ced-10, goa-1,
-  lin-5, npr-1, daf-1, cav-1, oma-1)
+- [ ] Worm: more new reviews from the same ranking, only for genes with a WormBase text
+  (next candidates: gex-3, ced-10, goa-1, lin-5, npr-1, daf-1, cav-1, oma-1)
 - [ ] File the WormBase, UniProt and Alliance reports (manual step) and set `report_status`
 - [x] Yeast: fetch descriptions and write SGD deep-research files (890 genes)
 - [x] Yeast: score descriptions (890 COMPLETE)
