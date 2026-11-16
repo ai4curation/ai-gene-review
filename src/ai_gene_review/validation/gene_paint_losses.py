@@ -25,6 +25,7 @@ from typing import Any, Iterable
 
 import yaml
 
+from ai_gene_review.etl.panther_families import paint_cache_dir
 from ai_gene_review.etl.panther_paint import (
     IBD_GAF_URL,
     IBDRecord,
@@ -141,7 +142,7 @@ def report(organism: str, gene: str, root: Path = Path(".")) -> tuple[str, list[
     accession = str(review.get("id", ""))
     uniprot = folder / f"{gene}-uniprot.txt"
     families = panther_families(uniprot.read_text()) if uniprot.exists() else []
-    with open_text(download_cached(IBD_GAF_URL, root / ".cache" / "paint")) as fh:
+    with open_text(download_cached(IBD_GAF_URL, paint_cache_dir(root / ".cache" / "paint"))) as fh:
         ibd_index = parse_ibd_gaf(fh)
 
     lines = [f"# PAINT losses on the {gene} ({accession}) lineage", ""]
