@@ -155,7 +155,8 @@ from PANTHER's release-pinned sequence classification files.
 - [ ] Phagosome: repoint the three `phagosome_maturation` selectors that miss human (Rab5, PIKfyve, V0a), already named in the module's own notes
 - [ ] Specialized organelles: lineage-specific organelles
 - [x] Evaluate the rule candidates against PANTHER's reference-proteome classification files for 24 organisms, with the module engine ([rule-evaluation](ORGANELLE_LIFECYCLES/rule-evaluation.md)); mitosome- and hydrogenosome-bearing lineages fail the mitochondrial and peroxisomal rules as expected, and several rules fail in model organisms on one selector
-- [ ] Fix the model-organism selector defects listed in the rule evaluation, starting with MPP beta and alpha and Pex2; several of the smaller ones (Nup88, Seh1, Atg steps, SRbeta) also fail in protist lineages, so check each against the full gap list before narrowing the fix to one organism
+- [x] Fix the MPP beta and alpha selectors (#6416) and the Pex2 selector (#6418), and rerun the rule evaluation with the fixes
+- [ ] Fix the remaining model-organism selector defects listed in the rule evaluation; several of the smaller ones (Nup88, Seh1, Atg steps, SRbeta) also fail in protist lineages, so check each against the full gap list before narrowing the fix to one organism
 - [ ] Triage the remaining gaps in the rule evaluation's full gap list (early animals, protists and the reduced-organelle lineages)
 - [ ] Check the cilium rule's fly (IFT81, IFT74, IFT139), worm (DYNC2I2) and Trichoplax (IFT74) gaps
 - [ ] Find out whether the lineages that PTHR13166 misses (plants and green algae, Monosiga, the chytrid, Phytophthora, Thalassiosira, Giardia, Trichomonas, Entamoeba) carry an ISD11 the family does not capture

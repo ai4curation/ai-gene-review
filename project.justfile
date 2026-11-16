@@ -276,6 +276,11 @@ ensure-panther-members:
 verify-panther-paint *args="":
     uv run ai-gene-review verify-panther-paint --output-dir . {{args}}
 
+# Report whether PANTHER has moved past the pinned release or PAINT snapshot (network).
+[group('QC')]
+check-panther-release:
+    uv run ai-gene-review check-panther-release
+
 # Fetch and cache a single GO-CAM model to gocams/<id>/<id>-src.yaml
 # Example: just fetch-gocam gomodel:568b0f9600000284
 fetch-gocam model_id *args="":
