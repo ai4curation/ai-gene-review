@@ -1,4 +1,4 @@
-# liuB (PA2012, Q9I297) review notes
+# liuB (PA2014, Q9I297) review notes
 
 ## Review session 2026-11-13 (PseudoCAP tier 3, shared-claim group liuB/liuD)
 
@@ -65,3 +65,5 @@ this pair drifted anyway, inside the group.
   [PMID:16272386 "enters that of leucine/isovalerate (Liu, leucine and isovalerate utilization) at the level of methylcrotonyl-CoA"],
   so enzymes downstream of that point perform steps of acyclic monoterpenoid catabolism; PseudoCAP
   isoprenoid/terpene rows are refined to GO:0016100 monoterpenoid catabolic process, matching the liuC review.
+
+- 2026-11-16: Corrected the locus tag to PA2014 in this file and in the review (description and UniProt reference title); the concurrently merged text had swapped the liuB and liuD tags. Q9I297 is PA2014 [file:PSEAE/liuB/liuB-uniprot.txt "OrderedLocusNames=PA2014"].
