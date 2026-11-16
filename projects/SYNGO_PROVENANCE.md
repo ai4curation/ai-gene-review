@@ -141,9 +141,48 @@ not as 18 row-level defect claims. The SynGO paper (PMID:31171447) documents no 
 for heterologous-cell evidence; its portal is a JavaScript application with no bulk
 download reachable from here, so SynGO's own assay records were not compared.
 
+**Evidence depth.** Nine papers were read in full: five from cached full text, three
+from their PubMed Central article pages, and PMID:19666514 from a PDF supplied by the
+project owner. The other ten were read as abstracts only, because their full text could
+not be fetched from this environment (publishers block XML download, and the PMC pages
+were not reachable). Each verdict records its `evidence_depth` and a `confidence`. A
+"no presynaptic context" verdict is `CONFIRMED` only when the full text was read (5
+papers), and `PROBABLE` when it rests on the abstract (7 papers), since a full text can
+hold an experiment its abstract omits. Read in full, PMID:20026616 mentions presynaptic
+receptors only as background and as a prediction in its discussion; its experiments are
+all in oocytes.
+
 One reference is simply mis-keyed. PMID:8137830 is the 1994 erratum notice for the 1993
 EMBO J glycine receptor paper, PMID:8404844 (found by PubMed search, title confirmed). That
 paper is itself a HEK-293 study with no presynaptic content.
+
+## Error categories this audit needs
+
+The repository's source-defect vocabulary records *what* is wrong (`defect_type`) and,
+optionally, *how* it arose (`cause`). These cases need two causes the vocabulary does not
+have yet. Proposed here; adding them is a schema change for a separate PR.
+
+1. **Ortholog transfer recorded as experimental evidence** ("implicit ISO"). A study in
+   rat or mouse is annotated to the human gene with IDA or IMP. The rodent result can be
+   sound and the human row still misrepresents its evidence: GO records annotation
+   transferred by orthology as ISO (or ISS). This is SynGO's documented method
+   (PMID:31171447), so it is one convention question, not a per-row error. As a
+   per-row defect it would be `defect_type: WRONG_EVIDENCE_CODE` with a new cause.
+2. **Context asserted but not assayed.** The paper shows the activity, but not the
+   biological context the term asserts. `GO:0099507` is a precomposed term: it claims a
+   ligand-gated channel *and* a role in setting presynaptic membrane potential. A
+   receptor expressed in HEK cells or oocytes can support the first half only. GO has
+   no explicit guideline on heterologous-system evidence, but for a context term the
+   context is the claim, so evidence that cannot reach it does not support the term. As
+   a defect it is `defect_type: WRONG_TERM`, with `corrected_value` the plain activity
+   term (for example `GO:0015276` ligand-gated monoatomic ion channel activity, or the
+   receptor-specific child the gene already carries).
+
+The existing vocabulary covers the rest: the GRIN2B case is `WRONG_GENE_PRODUCT`, the
+erratum is `WRONG_REFERENCE` (PMID:8137830 → PMID:8404844), and the PMID:20026616
+pattern, if SynGO took the discussion's prediction as a finding, is
+`SPECULATION_AS_ASSERTION`. If SynGO confirms that it used the term as a default for
+channel evidence, `PRACTICE_CHANGE` would describe the cohort for a bulk fix.
 
 ## Plan
 
@@ -160,8 +199,10 @@ paper is itself a HEK-293 study with no presynaptic content.
 - [ ] For each suspected case, run `reference_level.py` (how SynGO annotated the whole
   paper) before recording a defect, as for PMID:19666514.
 - [ ] Re-run the inventory once the GRIN reviews merge.
-- [ ] Add a `SYNGO` value to `SourceResourceEnum` (schema change), so defects export under
-  SynGO's name rather than `OTHER`.
+- [ ] Schema PR: add a `SYNGO` value to `SourceResourceEnum`, so defects export under
+  SynGO's name rather than `OTHER`, and the two causes proposed above.
+- [ ] Read the full text of the ten abstract-only papers (needs institutional access or
+  supplied PDFs) and upgrade or revise their `PROBABLE` verdicts.
 - [ ] Export confirmed defects (`just export-source-defects`) and send one report to
   SynGO, with two convention questions kept separate from the row-level defects: the ISO
   question, and the use of `GO:0099507` for channel evidence without presynaptic context.
