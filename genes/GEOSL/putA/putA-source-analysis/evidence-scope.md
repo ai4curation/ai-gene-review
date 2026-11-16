@@ -1,0 +1,9 @@
+# GsPutA evidence and identity scope
+
+2026-11-06. PMID34506758 explicitly identifies Geobacter sulfurreducens PCA, UniProt Q746X3, 1004 residues. Wild-type and A206W constructs were expressed in BL21-AI; the His tag was cleaved by TEV. Wild-type measurements are distinguished from the tunnel-mutant measurements. Frozen taxonomy places this organism in Thermodesulfobacteriota, not Pseudomonadota.
+
+The coupled assay uses menadione; separate PRODH measurements use PMS/DCPIP, and GSALDH measurements use P5C/GSAL plus NAD+. Thus the generic quinone-dependent and NAD-dependent reactions are supported, but an endogenous respiratory quinone or native electron-transfer partner is not identified by these assays. A206W diminishes PRODH flavin reduction as well as coupled turnover, so its phenotype is not interpreted as an isolated proof of blocked channel transit. Wild-type lag-free NADH production and structural tunnels support channeling.
+
+PMID24550478 remains abstract-only in the repository. PMC full-text sections were accessible in one web retrieval, including the solved domain architecture, quinone site and channeling evidence; subsequent requests encountered a browser challenge, and the EuropePMC XML request returned500. No failed response is presented as a full article or manually substituted into publications. The quoted cached abstract explicitly describes membrane orientation as an inference from the quinone-site location. No native membrane-localization measurement is invented.
+
+GsPutA is the class 2A bifunctional architecture; the transcriptional-repressor RHH domain belongs to class 1C PutAs. The current InterPro transcription annotations are judged a probable architecture-scope error, not rejected merely because a native repression assay was not found. No PutP partner is assigned.

@@ -57,4 +57,22 @@ mature chain 55-423.
   ProtInc term — over-annotation; heme biosynthesis is the specific process.
 - GO:0009416 (response to light stimulus) TAS from PMID:1376018 reflects EPP
   photosensitivity phenotype, not a molecular response-to-light function of the enzyme.
-</content>
+
+## Completion pass (2026-11-10, Claude (AI-assisted))
+
+Deep research unavailable; review uses UniProt, cached abstracts/full texts and Reactome.
+
+- All rows carry complete verbatim quotes (UniProt CC lines tied to PubMed:8276824/27599036;
+  abstracts of PMID:8276824, 17261801, 8973195, 15123683, 1729699, 1376018, 2260980; full text of
+  PMID:27599036, 30765471, 36836934, 34800366; Reactome R-HSA-189465; PANTHER PTHR11108 for IBA).
+- GO:0005515 protein binding (PGRMC1, ABCB7/ABCB10, BioPlex, MFRN1/ABCB10, frataxin): changed
+  MARK_AS_OVER_ANNOTATED -> REMOVE per the protein-binding policy; the interactions are real and
+  are described in core_functions/notes and by the ABC transporter complex row.
+- identical protein binding (x2) -> MODIFY to protein homodimerization activity (already IDA).
+- mitochondrial membrane IDA -> MODIFY to mitochondrial inner membrane.
+- iron ion binding (ARBA) -> MODIFY to ferrous iron binding + 2 iron, 2 sulfur cluster binding.
+- Rat Compara block: response to lead ion / metal ion / insecticide -> KEEP_AS_NON_CORE (rat
+  PMID:656697 and PMID:6626236 show decreased ferrochelatase activity; Reactome notes lead
+  inhibition of FECH); xenobiotic, ethanol, arsenic, methylmercury, platinum, dexamethasone ->
+  MARK_AS_OVER_ANNOTATED (no FECH-specific evidence found), replacing the earlier REMOVE.
+- The NEW [2Fe-2S] cluster binding row now cites its own evidence (IDA, PMID:8973195).
