@@ -342,12 +342,69 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
   - [x] Golgi batch 1: 20 human genes (2026-11-13); 53 human genes remain on
         the root-only Golgi list with a synthesis row (73 at the 2026-11-13
         survey; 118 human genes are root-only for GO:0005794)
+  - [x] Golgi batch 2: 20 human genes (2026-11-15); 33 human genes remain on
+        the root-only Golgi list with a synthesis row
   - [ ] Write the Golgi rule after more batches; promote "curator deference
         stops at a readable paper" into the numbered rules, since it now
         governs direct-evidence rows too (CABP2, Golgi batch 1 review)
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-15 (Golgi batch 2: 20 human genes)
+
+The next 20 human genes on the root-only Golgi list with a synthesis row (CERKL to
+GNAQ), from the survey regenerated on 2026-11-15. No gene gained a sub-compartment
+row. Eleven Golgi rows on ten genes changed action; six of those changes are
+to UNDECIDED, because the donor or source paper could not be read.
+
+| gene | outcome | evidence |
+|---|---|---|
+| CERKL | root; IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | the UniProt item is untagged and isoform-2 only; overexpressed CERKL overlaps GM130 (PMID:19158957), but a later marker-controlled overexpression study finds it absent from cis and trans Golgi (PMID:24498393); endogenous CERKL shows no Golgi marker (PMID:21151604) |
+| CHIC2 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | Ensembl projection of a mouse IDA from an abstract-only paper (PMID:11257495) that says "vesicular structures and the plasma membrane"; the UniProt "Golgi-like" note is untagged |
+| CHRNA3 | root; IEA and ISS ACCEPT to UNDECIDED | by similarity to rat, whose EXP row is from PMID:19474315 (unreadable); its abstract puts the partner UBXD4, not alpha3, in ER and cis-Golgi; the channel acts at the plasma membrane either way |
+| CLU | root; ISS ACCEPT to UNDECIDED | the dog donor IDA (PMID:10837345, abstract-only) does not mention the Golgi; the "probably within the Golgi lumen" cleavage note cites a plasma purification |
+| COQ6 | root; IEA MARK_AS_OVER_ANNOTATED kept, reason rewritten | a HAMAP rule spreads one rat podocyte staining (PMID:21540551) to every COQ6; COQ6 has a transit peptide and sits in the inner membrane with the CoQ complex (PMID:27499296) |
+| CSNK1D | root; IEA and IDA stay ACCEPT | abstract-only IDA: CK1delta "specifically interacts with the trans Golgi network" (PMID:10826492); CK1delta and its AKAP450 binding site are needed for Golgi microtubule nucleation and Golgi integrity (PMID:24648492); one line for the TGN, so no TGN row |
+| CUL3 | root; IEA and IDA stay KEEP_AS_NON_CORE | FLAG-CUL3 reaches the Golgi with GCC185 only when RhoBTB3 is co-transfected (PMID:24145166); the UniProt item cites an abstract-only paper (PMID:10500095); an adaptor-recruited pool |
+| DNM1L | root; EXP UNDECIDED to KEEP_AS_NON_CORE, three rows stay | the Golgi claim rests on PMID:20688057 ("in some but not all cell lines") and PMID:9570752, both abstract-only and kept on deference; PMID:9348079's abstract says tagged DVLP was not on Golgi markers, recorded as a SUSPECTED WRONG_REFERENCE defect (CHECK) |
+| DPAGT1 | root; IEA UNDECIDED to MARK_AS_OVER_ANNOTATED | the Ensembl projection traces to an MGI IPI with Lyset from PMID:36074821, a paper about GNPTAB that never names Dpagt1; the shared old symbol Gnpta suggests a mix-up, recorded as a PROBABLE WRONG_GENE_PRODUCT defect for MGI (candidate Q69ZN6); DPAGT1 acts on the ER membrane |
+| DRC4 | root; EXP, IBA, IDA and IEA stay KEEP_AS_NON_CORE | endogenous GAS11 is dispersed by brefeldin A and binds Golgi membranes (PMID:16643277); the PAINT IBD is seeded by orthologs; core activity in the axonemal dynein regulatory complex |
+| DYNC2LI1 | root; EXP and IEA stay KEEP_AS_NON_CORE | endogenous D2LIC co-stains with p58 and leaves the Golgi on brefeldin A (PMID:11907264); p58 cannot separate ERGIC from cis-Golgi, so no sub-compartment |
+| DYNLT1 | root; IEA stays KEEP_AS_NON_CORE | every ortholog's item is ECO:0000250 except bovine Tctex-1 (identical sequence), curated from PMID:9677391, whose abstract reports marker co-staining, drug redistribution and co-fractionation; curator deference |
+| FBXW8 | root; IDA and IEA stay ACCEPT | endogenous Fbxw8 overlaps GM130 and TGN38 in neurons, signal lost on RNAi; loss disperses the Golgi via Grasp65 (PMID:21572988, read in PMC) |
+| FGD1 | root; IEA and ISS stay KEEP_AS_NON_CORE | GFP-FGD1 overlaps TGN46 more than GM130 and FGD1 siRNA cuts post-Golgi carrier formation (PMID:19261807, read in PMC, newly cited); all localisation on a tagged protein, recruited GEF |
+| FGD4 | root; ISS UNDECIDED to MARK_AS_OVER_ANNOTATED | the donor is mouse Fgd1, a paralog in another PANTHER subfamily; FGD4's own data put it in actin microspikes (PMID:17564959) and its UniProt location line has no Golgi item; the CEPT1 pattern |
+| FGF7 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | Ensembl projection of an MGI IDA from PMID:12837279, an abstract-only paper on FGF22 (MGI made the same row on Fgf22 the same day) |
+| FGFR2 | root; IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | the UniProt item is untagged; the papers show "immature forms" of transfected receptors trapping STAT1 on Golgi membranes (PMID:17311277) and retention of mutant receptors (PMID:16844695); transit or retention only |
+| GANAB | root; ISS and IEA stay KEEP_AS_NON_CORE | immuno-EM of endogenous glucosidase II in pig kidney labels ER, Golgi and endocytic structures, but not hepatocyte Golgi (PMID:2404989, read in PMC); a cell-type-specific escape pool of an ER enzyme |
+| GFRA1 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | the TGN item is by similarity to rat, from PMID:23333276 (unreadable), and only "in the presence of SORL1": a recycling stop or a co-transfection artefact |
+| GNAQ | root; EXP and IEA stay KEEP_AS_NON_CORE | tagged wild-type Galpha(q) mainly at the plasma membrane with a GM130 and GalT-marked Golgi pool, cycling back for repalmitoylation (PMID:19001095, read in PMC) |
+
+Lessons, adding to batch 1:
+
+- **A fourth non-resident pool.** Besides transit, retrograde and recycling stops,
+  an ER-resident enzyme can escape to the Golgi in one cell type (GANAB). Endogenous
+  immuno-EM makes it real; it is non-core. Palmitoylation cycling (GNAQ) is a
+  retrograde pool, not tethering.
+- **Check which protein the marker data are on.** Donor papers about a partner
+  (CHRNA3 and UBXD4) or a paralog (FGF7 and FGF22; DPAGT1 and GNPTAB through the
+  shared symbol Gnpta) carry over the wrong protein's location. When the paper
+  never names the gene, record a source defect at the depth the reading supports.
+- **Rule-propagated single observations.** A HAMAP line that turns one tissue
+  staining into an unqualified location for the whole family (COQ6) is
+  MARK_AS_OVER_ANNOTATED even when the paper is unreadable, because no figure could
+  make the unqualified claim true. Still a judgement call against the strict
+  unreadable-donor line.
+- **Adaptor-dependent pools of overexpressed proteins** (CUL3 with RhoBTB3) sit
+  between the wild-type tagged rule and the perturbation rule; kept non-core here.
+- **UNDECIDED is now the most common change.** Six of the eleven changes are
+  unreadable donors. That is the policy working, but it argues for a later pass
+  that retrieves these papers rather than for loosening the line.
+- **Judgement calls to revisit:** FGD1 (ACCEPT is close: the TGN export role is
+  shown in human cells), DYNLT1 and DNM1L (deference to abstracts that name
+  markers), CSNK1D (ACCEPT, with the Golgi function from perturbation), CERKL
+  (Golgi over-annotated while its ER row on the same data stays non-core).
 
 ## 2026-11-13 (Golgi batch 1: 20 human genes)
 
