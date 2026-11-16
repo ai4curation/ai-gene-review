@@ -226,7 +226,7 @@ module, when built, carries its own cited evidence.
 | IL-1 family (IL-1β, IL-18 and IL-37 cut by caspase-1; IL-1α, IL-33 and IL-36 by other proteases) | 6 / 18 | Precursor cleavage by inflammasome caspase-1; release through gasdermin D pores | GO:0140447 *cytokine precursor processing*; GO:0140632 *canonical inflammasome complex assembly* | [`canonical_nlrp3_inflammasome`](../modules/canonical_nlrp3_inflammasome.html) exists |
 | TNF superfamily and other membrane-anchored ligands | 5 / 15 | iRhom2–ADAM17 shedding (also amphiregulin, fractalkine via ADAM10/17) | GO:0006509 *membrane protein ectodomain proteolysis* | **to build** |
 | TGF-β1/2/3 | 4 / 12 | Latency complex (LAP, LTBP, GARP); activation by αvβ6/αvβ8 integrins | none found by name | **to build**. These are among the six cytokine production terms never flagged do-not-annotate |
-| Type I/III interferons | 9 / 12 | Pattern-recognition receptor → TBK1 (IRAK1 in plasmacytoid dendritic cells) → IRF3/IRF7 → interferon genes; IRF3/7 are close to dedicated | GO:0140896 *cGAS/STING signaling pathway* and the RIG-I and TLR pathways | [`cgas_sting_signaling`](../modules/cgas_sting_signaling.html), [`rig_i_signaling`](../modules/rig_i_signaling.html), [`tlr4_md2_lps_signaling`](../modules/tlr4_md2_lps_signaling.html) exist; a shared IRF3/IRF7 induction arm is a candidate |
+| Type I/III interferons | 9 / 12 | Pattern-recognition receptor → TBK1 (IRAK1 in plasmacytoid dendritic cells) → IRF3/IRF7 → interferon genes; IRF3/7 are close to dedicated | GO:0140896 *cGAS/STING signaling pathway* and the RIG-I and TLR pathways | [`cgas_sting_signaling`](../modules/cgas_sting_signaling.html), [`rig_i_signaling`](../modules/rig_i_signaling.html), [`tlr4_md2_lps_signaling`](../modules/tlr4_md2_lps_signaling.html) for the sensors; [`irf3_irf7_interferon_induction`](../modules/irf3_irf7_interferon_induction.html) for the shared arm |
 | Perforin, granzymes, granulysin | 4 / 6 | Cytotoxic granule biogenesis and polarised exocytosis | GO:0043320 *natural killer cell degranulation* | **to build** (granule exocytosis) |
 | Immunoglobulin | 3 / 5 | V(D)J recombination, class switching, plasma cell differentiation | GO:0002377 *immunoglobulin production* is itself a real composite process | [`b_cell_receptor_signaling`](../modules/b_cell_receptor_signaling.html) covers the upstream step |
 | Small-molecule mediators (prostaglandin, leukotriene, NO, histamine, PAF, aldosterone) | 7 / 2 | Genuine biosynthetic pathways plus export or storage | GO:0001516, GO:0019370, GO:0006809, GO:0045730 *respiratory burst*; GO:0043303 *mast cell degranulation* for histamine | **to build** (eicosanoid biosynthesis); "production" here is redundant with biosynthesis plus transport |
@@ -426,6 +426,13 @@ Rows on the production term itself (do-not-annotate) need their own worklist.
 ## Modules
 
 - **Exist:**
+  - [`irf3_irf7_interferon_induction`](../modules/irf3_irf7_interferon_induction.html):
+    **built by this project.** The shared arm the type I interferon GO-CAMs were
+    using the production term for. It covers both routes to IRF phosphorylation
+    (adaptor-licensed TBK1/IKBKE, and MyD88-IRAK1-IKK-alpha in plasmacytoid
+    dendritic cells), dimerization and nuclear import, and interferon gene
+    transcription; it names IFNB1 and IFNA2 as the transcription factor's
+    targets and proposes the missing process term.
   - [`canonical_nlrp3_inflammasome`](../modules/canonical_nlrp3_inflammasome.html)
   - [`il1_signaling`](../modules/il1_signaling.html): it records processing as upstream of, not part of, IL-1 signalling.
   - [`cgas_sting_signaling`](../modules/cgas_sting_signaling.html)
@@ -443,10 +450,6 @@ Rows on the production term itself (do-not-annotate) need their own worklist.
   - cytotoxic granule exocytosis
   - mast cell degranulation
   - eicosanoid biosynthesis and export
-  - a shared IRF3/IRF7 interferon-induction arm, now the best-evidenced
-    candidate (see the GO-CAM section). The cGAS–STING
-    module already leaves type I interferon production to its vertebrate IRF3
-    variant.
 
 ## Observations for GO (candidate tickets, not filed)
 
@@ -489,13 +492,22 @@ Rows on the production term itself (do-not-annotate) need their own worklist.
       children, replacing the name heuristic
 - [ ] Worklist of the 21 rows on do-not-annotate production terms, and of the
       ACCEPT rows in the scattered remainder
-- [ ] Module stubs:
-  - first, the IRF3/IRF7 interferon-induction arm: 21 GO-CAMs, and the IRF3
-    and TBK1 reviews (14 production rows each), use the production term as
-    its name;
-  - then iRhom2–ADAM17 shedding and AU-rich-element mRNA decay, which each
-    span many cytokines (the decay genes ZFP36, ZC3H12A and RC3H1 have no
-    reviews yet);
+- [x] First module:
+      [`irf3_irf7_interferon_induction`](../modules/irf3_irf7_interferon_induction.html),
+      the arm 21 GO-CAMs and the IRF3 and TBK1 reviews (14 production rows each)
+      were naming with the production term. All 43 of its quotes verify; its QC
+      panel reports no function conflicts.
+- [ ] Follow-ups the first module exposed:
+  - gene reviews are missing for MAVS, IRF7, IKBKE, TBKBP1 and CHUK, all of
+    which carry a role in it;
+  - the AZI2 review states the adaptor role in prose but gives its core
+    function no GO id, so the module's `GO:0060090` assertion reads as
+    unsupported in QC;
+  - no module deep-research report exists for it yet (needs a provider run).
+- [ ] Further module stubs:
+  - iRhom2–ADAM17 shedding and AU-rich-element mRNA decay, which each span
+    many cytokines (the decay genes ZFP36, ZC3H12A and RC3H1 have no reviews
+    yet);
   - then TGF-β activation and cytotoxic granule exocytosis.
 - [ ] Maintainer decision on the review guidance
 - [ ] Draft the upstream GO tickets and the GO-CAM convention note above (file
