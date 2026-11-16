@@ -1,0 +1,11 @@
+# Curation Notes: var8 (A0A0N9M610) in Variovorax paradoxus
+
+## Overview
+- **UniProt ID:** `A0A0N9M610` (`A0A0N9M610_VARPD`, 815 aa)
+- **Gene symbol / GenBank protein:** `var8` (`ALG65343.1`, `EMBL:KT362218`)
+- **Organism:** *Variovorax paradoxus* strain P4B (`NCBITaxon:34073`)
+- **Function:** TonB-dependent outer-membrane ferric-variobactin siderophore receptor.
+
+## Domain Architecture & Physiological Role
+- **Domain organization:** N-terminal Sec signal peptide (residues 1-31), periplasmic Secretin/TonB short N-terminal (`STN`, `PF07660`, residues 64-115) surface-signaling domain, barrel-occluding TonB-dependent plug domain (`PF07715`), and 22-stranded outer-membrane beta-barrel (`PF00593` / `IPR010105`).
+- **Evidence:** Encoded immediately downstream of `var7` and adjacent to the FecR-like anti-sigma factor `var9` (`ALG65344.1`) and ECF sigma-24 subunit `var10` (`ALG65345.1`) in the *V. paradoxus* P4B `var` gene cluster (`KT362218`, [PMID:26412281], [PMID:38590537]), mediating TonB-dependent import of ferric-variobactin across the outer membrane (`GO:0015344`, `GO:0033214`). Note that `GO:0038023` (`signaling receptor activity`), though projected in GOA from `InterPro:IPR010105` (which includes non-signaling TonB receptors), is retained as `KEEP_AS_NON_CORE` on `Var8` specifically because `Var8` carries the N-terminal `STN` domain (`PF07660` / `IPR011662`, residues 64-115) paired with `var9`/`var10`.

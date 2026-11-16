@@ -17,3 +17,15 @@
 - Core MF: ATP hydrolysis activity (GO:0016887) + lipid binding (GO:0008289), acting on the matrix face of the inner membrane in CoQ biosynthesis. The module deliberately asserts no MF for Coq8; this review accepts ATPase and lipid binding as the experimentally demonstrated activities, while how they drive CoQ synthesis remains unresolved.
 - COQ8 is absent from YeastCyc pathways (no reactions in the summary file).
 - PomBase GO-CAM 662af8fa00000408 types S. pombe coq8 with GO:0004672 protein kinase activity (positively regulating coq3) – disagrees with PMID:27499294.
+
+## Audit to COMPLETE (2026-11-11)
+
+- Deep research: no provider deep-research file is available (no API keys in this session).
+- kinase activity (GO:0016301, IDA PMID:27499294) changed from KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED:
+  the activity is in-cis autophosphorylation whose sites are dispensable in vivo
+  [PMID:27499294 "mutating Coq8NΔ41 autophosphorylation sites did not inhibit respiratory yeast growth"],
+  so it is in vitro activity that does not reflect function.
+- Added NEW GO:0031314 extrinsic component of mitochondrial inner membrane (IDA PMID:21296186) and used it
+  as the core-function location.
+- Module note: the module asserts no MF for the Coq8 annoton; this review keeps ATP hydrolysis and lipid
+  binding as experimentally demonstrated activities.

@@ -64,6 +64,7 @@ VALIDATOR_TESTS = [
     "tests/test_family_residue_validator.py",
     "tests/test_gene_residue_claims.py",
     "tests/test_family_gene_crosscheck.py",
+    "tests/test_family_proposed_actions.py",
 ]
 
 VALIDATOR_SOURCES = [

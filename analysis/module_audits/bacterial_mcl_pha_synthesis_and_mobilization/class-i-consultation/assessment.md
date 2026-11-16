@@ -1,0 +1,30 @@
+# Class I PhaC counterexample: bounded assessment
+
+The class I counterexample is supported by primary evidence for **medium-chain hydroxyacyl unit incorporation into short/medium-chain copolyesters**. It is not evidence that the enzyme makes a predominantly medium-chain or pure medium-chain polymer, nor that its native strain has a complete matched mcl-PHA mobilization system. A requirement for a class II-specific domain would exclude this positive activity if the modeled synthesis role includes incorporation of medium-chain units into a PHA chain. Conversely, the observation alone does not establish a complete canonical mcl-storage-polymer profile.
+
+## Citation chain and measured phenotype
+
+The already frozen full review DOI10.1007/s10924-024-03474-4 cites reference72, Antonio, Steinbüchel and Rehm2000, for its C8/C12 statement. The primary is PMID10612741, DOI10.1111/j.1574-6968.2000.tb08883.x (also DOI10.1016/S0378-1097(99)00578-9). Its abstract was read directly, and publisher access attempts failed. It describes expression of Ralstonia eutropha type I PhaC in E. coli, alone, with the native PHB operon, and in a separate comparison with a P. aeruginosa type II synthase. Only the PHB-operon-bearing fad-mutant context yielded the reported PHB/C8 and PHB/C8/C12 copolyesters. The assay is accumulated-polymer comonomer analysis, not purified enzyme kinetic measurement on individual CoA substrates. The separate two-synthase comparison produces a polymer blend and must not be mistaken for the evidence assigning the class I enzyme's mixed-copolyester activity.
+
+The primary abstract states: “These data strongly suggested that R. eutropha PHA synthase accepts”. Its following sentence identifies hydroxybutyryl-CoA as the main substrate and C8/C12 hydroxyacyl-CoA acceptance. Thus the review compresses a context-dependent in-vivo inference into a more generic substrate-acceptance statement. It does not justify pure C8/C12 homopolymer synthesis or broad activity of every class I member. Minor-monomer percentages quoted by subsequent papers were not independently verified from the2000 full tables and are not asserted here.
+
+The independent primary PMID35341893, DOI10.1016/j.jbiotec.2022.03.011, explicitly names Cupriavidus necator H16 with its native synthase unchanged and altered precursor routing. Its abstract reports a mixed polymer containing3HB and C6/C8/C10 units. The relevant short source phrase is “without any synthase modification”. This corroborates medium-chain incorporation capacity of an unmodified H16 synthase in an engineered metabolic context. It does not establish wild-type native flux or isolated-enzyme kinetics. Full publisher access was blocked; only the primary abstract is used. No quantitative engineering instructions or construct optimization claims are needed for this curation decision.
+
+## Exact candidate identity
+
+The current official UniProt reference is **P23608, PHAC_CUPNH**, gene **phaC** (synonym phbC), locus **H16_A1437**,589residues, taxon381666. The entry explicitly names C. necator strain H16/ATCC17699/DSM428. Its original sequence publication is PMID2670936, whose curated title and strain provenance explicitly identify H16. The official archive **J05003/AAA21975.1** CDS translation matches the current sequence **589/589 residues**. `sequence-bridge.json`, `J05003.embl` and `P23608-uniprot.json` preserve this identity evidence.
+
+This is an exact reference-protein bridge, not a sequence audit of the2000 pBHR68 construct. The2000 accessible abstract does not name the source strain; its complete construct sequence was not recovered. Do not label P23608 directly sequenced in that experiment. The2022 primary explicitly names H16 and unmodified native synthase, so it supplies the bounded strain-level link. This is sufficient to propose **CUPNH/phaC P23608 as a qualified partial synthesis exemplar**, with that access/context limit retained in any gene review. Root must seed and freeze its source payload before review. No gene was created or edited in this consultation.
+
+Official PANTHER assignment is PTHR36837:SF5, the same broad subfamily label seen for the class II examples. Its label does not distinguish classI from classII or establish medium-chain incorporation; the exact member and primary evidence must do that work. The current official sequence/domain record, not a guessed alternate subfamily, should provide descriptive family context.
+
+## Model consequences
+
+1. For an activity defined as incorporation of medium-chain hydroxyacyl units into PHA, permit a positively evidenced exact class I member with context/precursor constraints. Do not require the class II-specific IPR011287 as a universal molecular prerequisite.
+2. Keep the synthesis-only evidence distinct from a complete synthesis-plus-intracellular-mobilization panel. No H16 depolymerase identity, activity toward the same mixed polymer, or matched native turnover has been established here.
+3. If the module intentionally requires a predominantly mcl polymer, keep this as a boundary comparator until that polymer-composition criterion is independently met. It should fail the complete-profile gate for incomplete evidence, not because class I enzymes are biologically incapable of medium-chain incorporation.
+4. Existing GPo1 and KT2440 class II anchors remain valid. The counterexample changes a universal exclusion, not those positive assignments.
+
+## Access and preservation
+
+Normal missing-publication fetches created only PMID10612741 and PMID35341893, both abstract-only. Wiley/OUP/ScienceDirect full routes returned403; the huge ScienceDirect error HTML is a Cloudflare page, not full text. ResearchGate explicitly offered only a request for the2000 full text; OpenAlex lists both as closed with no accessible full-text repository. `access-attempts.json` records concrete routes and limits. The lab publication listing confirms bibliographic identity but is not substituted for Results. No source bytes or either prior frozen handoff were changed.
