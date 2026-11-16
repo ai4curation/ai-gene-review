@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/ai-gene-review/assets/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How badly does the cheap sequence filter over-select? - AI Gene Review Projects</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-primary: #3498db;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .breadcrumb {
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #374151;
+        }
+
+        h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: #4b5563;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Gene symbol links */
+        .content a[href*="/genes/"] {
+            background-color: #dbeafe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+        }
+
+        .content a[href*="/genes/"]:hover {
+            background-color: #bfdbfe;
+        }
+
+        ul, ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+
+        li {
+            margin-bottom: 0.25rem;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.875em;
+        }
+
+        pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--color-primary);
+            margin-left: 0;
+            padding-left: 1.5rem;
+            color: #4b5563;
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-light);
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        tr:hover {
+            background-color: #f3f4f6;
+        }
+
+        /* Mermaid diagrams */
+        .mermaid {
+            text-align: center;
+            margin: 2rem 0;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Warnings section */
+        .warnings {
+            background-color: #fef3c7;
+            border: 1px solid #fde68a;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .warnings h3 {
+            color: #92400e;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .warnings ul {
+            margin-bottom: 0;
+            color: #78350f;
+        }
+
+        /* Task lists (checkboxes) */
+        li input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+
+        /* Status badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* Project meta: maturity + tag badges */
+        .project-meta { margin-bottom: 0.5rem; }
+        .project-meta .badge { margin: 0 0.25rem 0.25rem 0; }
+        .gene-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+            margin-bottom: 1rem;
+        }
+        .gene-list a,
+        .gene-list span {
+            background-color: #dbeafe;
+            border-radius: 0.25rem;
+            color: #1e40af;
+            display: inline-block;
+            font-weight: 500;
+            padding: 0.125rem 0.375rem;
+        }
+        .gene-list a:hover {
+            background-color: #bfdbfe;
+            text-decoration: none;
+        }
+        .m-SCOPING     { background: #fef3c7; color: #92400e; }
+        .m-IN_PROGRESS { background: #dbeafe; color: #1e40af; }
+        .m-MATURE      { background: #dcfce7; color: #166534; }
+        .m-COMPLETE    { background: #d1fae5; color: #065f46; }
+        .m-ARCHIVED    { background: #f3f4f6; color: #6b7280; }
+        .badge.tag { text-transform: none; }
+        .t-FLAGSHIP       { background: #fae8ff; color: #86198f; }
+        .t-BIOLOGY_DOMAIN { background: #e0f2fe; color: #075985; }
+        .t-PIPELINE       { background: #ede9fe; color: #5b21b6; }
+        .t-OBSOLETION     { background: #fee2e2; color: #991b1b; }
+
+        /* Project resource bar (manifest: slides, artifacts) */
+        .resource-bar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.25rem 0 0.75rem; }
+        .resource-bar a { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.8rem; border-radius: 9999px; border: 1px solid #bfdbfe; background: #eff6ff; color: #1e40af; font-size: 0.875rem; font-weight: 600; text-decoration: none; }
+        .resource-bar a:hover { background: #dbeafe; text-decoration: none; }
+        .resource-bar a.rk-artifacts { border-color: #e9d5ff; background: #faf5ff; color: #6b21a8; }
+        .resource-bar a.rk-artifacts:hover { background: #f3e8ff; }
+        .resource-bar .ext { font-size: 0.8em; opacity: 0.8; }
+        .resource-bar .note { font-size: 0.75em; font-weight: 500; opacity: 0.75; }
+
+        /* Manual reviews */
+        .manual-reviews {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 2rem;
+        }
+        .manual-reviews h3 { margin-top: 0; margin-bottom: 0.75rem; font-size: 1rem; }
+        .manual-reviews .review { padding: 0.5rem 0; }
+        .manual-reviews .review + .review { border-top: 1px dashed var(--border-color); }
+        .manual-reviews .review-head { margin-bottom: 0.25rem; }
+        .manual-reviews .review-head .badge { margin-right: 0.5rem; }
+        .manual-reviews .review-head .who { font-weight: 600; }
+        .manual-reviews .review-head .when { color: var(--text-muted); font-size: 0.85rem; margin-left: 0.5rem; }
+        .manual-reviews .review-notes { margin: 0.25rem 0; }
+        .manual-reviews .review-todos { margin: 0.25rem 0 0.5rem; }
+        .badge.r-READY             { background: #dcfce7; color: #166534; }
+        .badge.r-CHANGES_REQUESTED { background: #fee2e2; color: #991b1b; }
+
+        /* Content wrapper */
+        .content {
+            margin-bottom: 2rem;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        footer small {
+            display: block;
+        }
+    </style>
+    <!-- Mermaid.js for diagram rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#3498db',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#2c3e50',
+                lineColor: '#333',
+                secondaryColor: '#ecf0f1',
+                tertiaryColor: '#f39c12'
+            },
+            flowchart: {
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</head>
+<body>
+    <nav class="breadcrumb">
+        <a href="../../../index.html">Home</a> &raquo;
+        <a href="../index.html">Projects</a> &raquo;
+        How badly does the cheap sequence filter over-select?
+    </nav>
+
+    <header class="header">
+        <h1>How badly does the cheap sequence filter over-select?</h1>
+
+
+
+
+
+    </header>
+
+
+
+
+
+
+
+    <div class="content">
+        <h1 id="how-badly-does-the-cheap-sequence-filter-over-select">How badly does the cheap sequence filter over-select?</h1>
+<p>Run <code>uv run python filament_baseline.py</code> in this folder to reproduce. The proteome<br />
+TSV is fetched from UniProt and cached under a git-ignored <code>.cache/</code>.</p>
+<h2 id="why-run-it">Why run it</h2>
+<p>The project page argues that extracellular cytochrome nanowires cannot be found by<br />
+sequence, because the class is defined by heme geometry, and proposes a structural<br />
+route. Before building anything structural, the cheap alternative has to be<br />
+eliminated: a pure-sequence filter for <strong>at least four covalent heme motifs, a signal<br />
+peptide, and no transmembrane segment</strong> catches all three characterised filament<br />
+subunits. If that filter is specific enough on its own, the structural work is<br />
+unnecessary. If it is hopeless, the structural work has to carry everything. Either<br />
+way the number settles it, and it needs no structures.</p>
+<p>Those were the opening conditions. Both the heme floor and the signal-peptide clause<br />
+were later <strong>measured to be wrong</strong> and have been changed — the sections below are in<br />
+the order the measurements happened, so the recommended setting is the one at the end<br />
+(<code>--min-hemes 3 --max-hemes 8 --refine --no-require-signal</code>), not the one named here.</p>
+<h2 id="result-run-2026-11-15-g-sulfurreducens-pca-up000000577-3402-proteins">Result (run 2026-11-15, <em>G. sulfurreducens</em> PCA, UP000000577, 3,402 proteins)</h2>
+<table>
+<thead>
+<tr>
+<th>Filter stage</th>
+<th style="text-align: right;">≥4 motifs</th>
+<th style="text-align: right;">4–8 motifs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>heme motifs in range</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: right;">36</td>
+</tr>
+<tr>
+<td>… and a signal peptide</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">29</td>
+</tr>
+<tr>
+<td>… and no TM segment</td>
+<td style="text-align: right;"><strong>52</strong></td>
+<td style="text-align: right;"><strong>27</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Recall is perfect in both.</strong> <a href="../../../genes/GEOSL/omcS/omcS-ai-review.html">OmcS</a>, <a href="../../../genes/GEOSL/omcE/omcE-ai-review.html">OmcE</a>, <a href="../../../genes/GEOSL/omcZ/omcZ-ai-review.html">OmcZ</a> and OmcT all pass. The inner-membrane<br />
+multiheme cytochromes that must not be caught — <a href="../../../genes/GEOSL/imcH/imcH-ai-review.html">ImcH</a> (<a href="https://www.uniprot.org/uniprotkb/Q747K6/entry">Q747K6</a>) and <a href="../../../genes/GEOSL/cbcL/cbcL-ai-review.html">CbcL</a> (<a href="https://www.uniprot.org/uniprotkb/Q74GH2/entry">Q74GH2</a>) —<br />
+are both excluded by the transmembrane clause, and the periplasmic nitrite reductase<br />
+<a href="../../../genes/DESPS/nrfA/nrfA-ai-review.html">NrfA</a> (<a href="https://www.uniprot.org/uniprotkb/Q747W1/entry">Q747W1</a>) is not: it has four motifs, a signal peptide and no TM segment, so it<br />
+survives this stage and is removed later, by the named-family rule alone.</p>
+<p><strong>Precision is not.</strong> 52 candidates against three characterised filament subunits is<br />
+17-fold over-selection. The upper bound helps, and it is not arbitrary: the known<br />
+subunits carry 4, 6, 6 and 8 motifs, while the false positives run to 34, 27 and 26<br />
+— they are the large outer-membrane polyheme cytochromes (OmcB, OmcC, OmcA-family) and<br />
+lipoprotein cytochromes. Capping at 8 motifs nearly halves the set, to 27, while keeping<br />
+4/4 recall.</p>
+<p>Of those 27, four are members of CDD <code>cd21555</code>, the hand-curated OmcS-like model —<br />
+but two of those four are <a href="../../../genes/GEOSL/omcS/omcS-ai-review.html">OmcS</a> and OmcT, which are known positives rather than uncertain<br />
+hits, so the honest figure is <strong>two</strong> plausible extras (OmcJ and GSU2501). The<br />
+remainder are not plausible: the set still contains three nitrite reductases, including <a href="../../../genes/DESPS/nrfA/nrfA-ai-review.html">NrfA</a>,<br />
+which is a well-characterised pentaheme enzyme and emphatically not a filament subunit.</p>
+<h3 id="a-second-proteome">A second proteome</h3>
+<p><em>S. oneidensis</em> MR-1 (UP000008186, 4,068 proteins), which has no known cytochrome<br />
+filaments, yields 10 candidates under the same 4–8 filter. That the filter returns a<br />
+non-empty set from an organism with no known members is the expected behaviour of a<br />
+recall-oriented screen, and is a reminder that a hit is a question, not an answer.</p>
+<h2 id="what-this-settles">What this settles</h2>
+<p>The filter is a <strong>good candidate generator and not a classifier</strong>. It cuts 3,402<br />
+proteins to 27, a 126-fold reduction, with no loss of the known subunits — which is<br />
+exactly what a first-stage screen should do. It cannot do the second stage: it keeps<br />
+nitrite reductases, and nothing in the sequence distinguishes them from a filament<br />
+subunit.</p>
+<p>So the structural half is worth building, and the experiment that could have made it<br />
+unnecessary did not.</p>
+<p><strong>What that second stage can be is narrower than this page first claimed.</strong> The<br />
+original sentence here was that "what distinguishes them is where the hemes end up",<br />
+and the out-of-class measurement in <a href="RESULTS.html">RESULTS.md</a> shows that the hemes end<br />
+up in the <em>same</em> place: three independent <a href="../../../genes/DESPS/nrfA/nrfA-ai-review.html">NrfA</a> structures give a 9.7 Å median<br />
+nearest-neighbour Fe–Fe, inside the 9.1–10.4 Å filament band. A spacing filter would<br />
+keep every nitrite reductase this screen keeps. What does separate them is whether the<br />
+heme chain is continuous <em>through the subunit interface</em>, which is a property of the<br />
+assembled polymer rather than of the subunit — so the second stage needs the filament,<br />
+not a monomer model of its subunit.</p>
+<h2 id="refining-it-two-more-rules-validated-on-held-out-organisms-2026-11-15">Refining it: two more rules, validated on held-out organisms (2026-11-15)</h2>
+<p>Run with <code>--refine</code>. The 26 survivors above were inspected for features the four<br />
+characterised subunits share and the rest do not, which gave two rules:</p>
+<ol>
+<li><strong>Not a lipoprotein</strong> (<code>--refine</code>). A lipid-anchored protein is tethered to a<br />
+   membrane; a filament subunit is a free polymer. None of <a href="../../../genes/GEOSL/omcS/omcS-ai-review.html">OmcS</a>, <a href="../../../genes/GEOSL/omcE/omcE-ai-review.html">OmcE</a>, <a href="../../../genes/GEOSL/omcZ/omcZ-ai-review.html">OmcZ</a> or OmcT<br />
+   carries a lipid anchor. This is mechanistically motivated rather than fitted.</li>
+<li><strong>No named InterPro family.</strong> The characterised subunits carry only homologous<br />
+   superfamilies (<code>IPR036280</code> multiheme cytochrome) and structural domains (Ig-like,<br />
+   IPT, doubled CXXCH), plus <code>IPR051174</code>, which is only the mirror of PANTHER<br />
+<code>PTHR30333</code> — the family this project's own review records as heterogeneous, so it<br />
+   is excluded from the rule. A protein that <em>does</em> carry a family-level entry has<br />
+   already been classified as something else: Cytochrome c552, Octaheme c-type<br />
+   cytochrome, Cytochrome c550/c551-like.</li>
+</ol>
+<p>The obvious risk is fitting two rules to four positives, so they were tested on two<br />
+Geobacteraceae not used to derive them, each with known OmcS-family members from CDD<br />
+<code>cd21555</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Proteome</th>
+<th style="text-align: right;">proteins</th>
+<th style="text-align: right;">base 4–8</th>
+<th style="text-align: right;">not lipo</th>
+<th style="text-align: right;">no named family</th>
+<th>known members kept</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>G. sulfurreducens</em> (tuned on)</td>
+<td style="text-align: right;">3,402</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;"><strong>17</strong></td>
+<td>4 / 4</td>
+</tr>
+<tr>
+<td><em>C. bemidjiense</em> (held out)</td>
+<td style="text-align: right;">4,042</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;"><strong>12</strong></td>
+<td>4 / 5</td>
+</tr>
+<tr>
+<td><em>G. daltonii</em> (held out)</td>
+<td style="text-align: right;">3,798</td>
+<td style="text-align: right;">19</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;"><strong>14</strong></td>
+<td>2 / 2</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The refinements cost no recall.</strong> Precision improves by about a third, and every<br />
+known member that entered the refinement came out of it. The single miss, <em>C.<br />
+bemidjiense</em> <a href="https://www.uniprot.org/uniprotkb/B5EHF0/entry">B5EHF0</a> (omcS-3), is lost by the <strong>base</strong> filter, not by either new<br />
+rule: its UniProt entry has no signal-peptide annotation at all, and running without<br />
+<code>--refine</code> loses it too. Its InterPro profile (<code>IPR051174</code>, <code>IPR036280</code>) is exactly<br />
+the positive profile.</p>
+<h3 id="the-signal-peptide-clause-should-be-dropped-measured-2026-11-15">The signal-peptide clause should be dropped (measured, 2026-11-15)</h3>
+<p>The obvious reading of that miss was that the screen needs a real signal-peptide<br />
+prediction instead of UniProt's annotation, which would mean installing and running<br />
+SignalP over every proteome. Measuring first made that unnecessary. Running with<br />
+<code>--no-require-signal</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Proteome</th>
+<th style="text-align: right;">signal required</th>
+<th style="text-align: right;">signal dropped</th>
+<th>known members kept</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>G. sulfurreducens</em></td>
+<td style="text-align: right;">17</td>
+<td style="text-align: right;">21</td>
+<td>4/4 → 4/4</td>
+</tr>
+<tr>
+<td><em>C. bemidjiense</em></td>
+<td style="text-align: right;">12</td>
+<td style="text-align: right;">16</td>
+<td>4/5 → <strong>5/5</strong></td>
+</tr>
+<tr>
+<td><em>G. daltonii</em></td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">17</td>
+<td>2/2 → 2/2</td>
+</tr>
+</tbody>
+</table>
+<p>Dropping the clause costs about 25% more candidates and buys complete recall: 11/11<br />
+known members across the three organisms instead of 10/11, with <a href="https://www.uniprot.org/uniprotkb/B5EHF0/entry">B5EHF0</a> recovered.</p>
+<p><strong>It also excludes none of the known negatives</strong>, which is the part worth recording,<br />
+because an earlier draft of this page asserted the opposite. Running the screen with and<br />
+without the clause leaves the verdict on every negative identical: <a href="../../../genes/GEOSL/imcH/imcH-ai-review.html">ImcH</a> and <a href="../../../genes/GEOSL/cbcL/cbcL-ai-review.html">CbcL</a> are<br />
+excluded because each <em>has a transmembrane segment</em> (<a href="../../../genes/GEOSL/cbcL/cbcL-ai-review.html">CbcL</a> also carries nine motifs, over<br />
+the upper bound), and <a href="../../../genes/DESPS/nrfA/nrfA-ai-review.html">NrfA</a> is excluded by the named-family rule. None is excluded by the<br />
+signal-peptide test. The clause was costing a real positive and contributing nothing<br />
+against the negatives it was credited with catching.</p>
+<p>Each attribution is checked by removing one clause at a time rather than asserted: <a href="../../../genes/DESPS/nrfA/nrfA-ai-review.html">NrfA</a><br />
+becomes a false positive as soon as <code>--refine</code> is dropped, and <a href="../../../genes/GEOSL/cbcL/cbcL-ai-review.html">CbcL</a> stays excluded even<br />
+with no upper bound, which is what <a href="../../../genes/DROME/pins/pins-ai-review.html">pins</a> its exclusion on the TM call.</p>
+<p>The default still requires a signal peptide so the funnel above reproduces; use<br />
+<code>--no-require-signal</code> for the recommended setting.</p>
+<h2 id="the-archaeal-test-2026-11-16">The archaeal test (2026-11-16)</h2>
+<p>Every measurement above is from one bacterial family. Baquero et al. 2023<br />
+(PMID:37290436) solved two archaeal ECNs by cryo-EM — PcECN (<a href="https://www.uniprot.org/uniprotkb/A3MW92/entry">A3MW92</a>) in<br />
+<em>Pyrobaculum calidifontis</em> and AvECN (<a href="https://www.uniprot.org/uniprotkb/F2KMU8/entry">F2KMU8</a>) in <em>Archaeoglobus veneficus</em> — and,<br />
+unusually, <strong>named every protein they considered in each proteome and why they rejected<br />
+it</strong>. That makes these two the only proteomes with published negative reasoning, and the<br />
+sharpest available test of the filter: a different domain of life, no sequence homology to<br />
+<em>Geobacter</em>, and an independent ground truth.</p>
+<p>It falsified one rule, confirmed another, and exposed two bugs in this script.</p>
+<h3 id="first-it-validated-the-motif-counter">First, it validated the motif counter</h3>
+<p>The paper states the CXXCH count for all four <em>P. calidifontis</em> proteins that have more<br />
+than two: <a href="https://www.uniprot.org/uniprotkb/A3MW89/entry">A3MW89</a> 4, <a href="https://www.uniprot.org/uniprotkb/A3MW92/entry">A3MW92</a> 3, <a href="https://www.uniprot.org/uniprotkb/A3MW94/entry">A3MW94</a> 8, <a href="https://www.uniprot.org/uniprotkb/A3MW99/entry">A3MW99</a> 8. Running <code>heme_motifs()</code> on<br />
+those four sequences reproduces <strong>4, 3, 8, 8 exactly</strong>, and the proteome-wide screen<br />
+reproduces the paper's own "only four proteins with more than two motifs" exactly (4 = 4).<br />
+That is an independent check on the counter against numbers nobody here chose.</p>
+<p>It does not reproduce the second screen: the paper reports 17 <em>A. veneficus</em> proteins with<br />
+three or more CXXCH motifs, where this script finds 13. The gap is <strong>not</strong> a counting<br />
+convention (overlapping and non-overlapping CXXCH both give 13) and <strong>not</strong> UniProt<br />
+coverage (only five <em>A. veneficus</em> entries sit outside the reference proteome, and none<br />
+has a single CXXCH). The authors presumably screened their own gene calls rather than<br />
+UniProt's. Unexplained, and recorded as such; it does not affect the outcome, since<br />
+<a href="https://www.uniprot.org/uniprotkb/F2KMU8/entry">F2KMU8</a> is found either way.</p>
+<h3 id="a-double-counting-bug-caught-by-that-validation">A double-counting bug, caught by that validation</h3>
+<p>The counter initially gave <a href="https://www.uniprot.org/uniprotkb/A3MW92/entry">A3MW92</a> <strong>4</strong> motifs where the paper gives 3. The extra one is<br />
+not a heme: a long-linker match <code>C...16X...CH</code> starting at 69 ends on the <strong>same histidine</strong><br />
+as the CXXCH at 85. The overlap check tested only whether a candidate match <em>started</em><br />
+inside an already-claimed span, so a long match that ends inside one was accepted, and the<br />
+docstring's "non-overlapping" was false.</p>
+<p>Fixed to reject any span overlap. The effect on earlier results is bounded and was measured<br />
+rather than assumed: <strong>20 of 3,402</strong> <em>G. sulfurreducens</em> proteins were mis-counted, <strong>none</strong><br />
+of them crossed the ≥4 threshold, and every known positive and negative kept its count. The<br />
+<code>≥4</code> funnel (63 / 55 / 52) and every final candidate count in the tables above are<br />
+unchanged. One protein inflated 8 → 9 had been wrongly pushed out of the 4–8 window, so<br />
+four numbers in those tables moved by one and have been corrected in place: the 4–8 column<br />
+now reads 36 / 29 / 27, and the refinement table's <em>G. sulfurreducens</em> base column 27.</p>
+<h3 id="a-reproducibility-bug-caught-by-a-number-that-would-not-repeat">A reproducibility bug, caught by a number that would not repeat</h3>
+<p>The named-family rule calls the InterPro API, and <code>interpro_type()</code> caught every exception<br />
+and returned <code>("?", "?")</code>. That is not a family, so a <strong>transient network failure silently<br />
+made the filter more permissive and the candidate count larger</strong> — one run <a href="../../../genes/DROME/put/put-ai-review.html">put</a> <em>G. daltonii</em><br />
+at 31 where repeated runs give 24. Every number on this page was exposed to that.</p>
+<p>Now: lookups are cached to <code>.cache/interpro_types.json</code>, retried three times with backoff,<br />
+and a lookup that still cannot be resolved <strong>raises</strong> instead of returning a value that<br />
+would quietly pass. A measurement that cannot resolve its inputs should stop, not report a<br />
+bigger number. The failure path was checked with a control arm — an unmutated run resolves<br />
+<code>IPR003321</code> (Cytochrome c552) and an unreachable endpoint raises — so the gate is known to<br />
+be able to fire. Every number in the table below was produced twice and is identical.</p>
+<h3 id="two-of-the-three-negatives-were-the-wrong-proteins">Two of the three negatives were the wrong proteins</h3>
+<p>Found by review challenge, not by this screen, and the worst of the three errors because<br />
+it was invisible: the accessions registered as <a href="../../../genes/GEOSL/cbcL/cbcL-ai-review.html">CbcL</a> and <a href="../../../genes/GEOSL/GSU2359/GSU2359-ai-review.html">GSU2359</a> were neither.</p>
+<table>
+<thead>
+<tr>
+<th>registered as</th>
+<th>accession</th>
+<th>what it actually is</th>
+<th style="text-align: right;">CXXCH</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../../../genes/GEOSL/imcH/imcH-ai-review.html">ImcH</a></td>
+<td><a href="https://www.uniprot.org/uniprotkb/Q747K6/entry">Q747K6</a></td>
+<td><a href="../../../genes/GEOSL/imcH/imcH-ai-review.html">ImcH</a> (GSU3259), multiheme c-type cytochrome</td>
+<td style="text-align: right;">6</td>
+</tr>
+<tr>
+<td><a href="../../../genes/GEOSL/cbcL/cbcL-ai-review.html">CbcL</a></td>
+<td><a href="https://www.uniprot.org/uniprotkb/Q74FN7/entry">Q74FN7</a></td>
+<td><strong>nicotinamidase-related cysteine hydrolase</strong> (GSU0569)</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr>
+<td><a href="../../../genes/GEOSL/GSU2359/GSU2359-ai-review.html">GSU2359</a></td>
+<td><a href="https://www.uniprot.org/uniprotkb/Q74EV9/entry">Q74EV9</a></td>
+<td><strong>DsbC/DsbG-like disulphide isomerase</strong> (GSU0850)</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+<p>Neither wrong entry is a cytochrome, and neither has a single heme motif, so both were<br />
+excluded from the funnel before any clause of the filter applied — which is exactly why<br />
+nothing caught it: a negative that is correctly excluded for a nonsense reason looks<br />
+identical in the output to one correctly excluded for a real reason. The InterPro family<br />
+names quoted for them in an earlier revision of this page (Isochorismatase-like<br />
+hydrolase, DsbC/G disulphide bond isomerase) were read correctly off the records; the<br />
+records were the wrong proteins. <strong>No claim about <a href="../../../genes/GEOSL/cbcL/cbcL-ai-review.html">CbcL</a> or <a href="../../../genes/GEOSL/GSU2359/GSU2359-ai-review.html">GSU2359</a> on this page before<br />
+this revision was tested.</strong></p>
+<p>Looking up the real ones changed the negative set substantively:</p>
+<ul>
+<li><strong><a href="../../../genes/GEOSL/cbcL/cbcL-ai-review.html">CbcL</a> is <a href="https://www.uniprot.org/uniprotkb/Q74GH2/entry">Q74GH2</a></strong> (GSU0274), "Cytochrome c, and cytochrome b", 619 aa, <strong>nine</strong><br />
+  CXXCH motifs, with a TM segment — a genuine inner-membrane multiheme cytochrome, and<br />
+  still correctly excluded.</li>
+<li><strong><a href="../../../genes/GEOSL/GSU2359/GSU2359-ai-review.html">GSU2359</a> is <a href="https://www.uniprot.org/uniprotkb/Q74AJ5/entry">Q74AJ5</a></strong>, a family-57 glycoside hydrolase with no hemes. It was never a<br />
+  sensible negative for a cytochrome screen and is dropped rather than fixed.</li>
+<li>In its place, <strong><a href="../../../genes/DESPS/nrfA/nrfA-ai-review.html">NrfA</a> <a href="https://www.uniprot.org/uniprotkb/Q747W1/entry">Q747W1</a></strong> (GSU3154), the periplasmic nitrite reductase this page<br />
+  has named as a false positive throughout. It is a far better negative: four motifs, a<br />
+  signal peptide and no TM segment, so every clause of the base filter passes it and it<br />
+  is removed <strong>only</strong> by the named-family rule.</li>
+</ul>
+<p>The set is now built so each negative tests a different clause — <a href="../../../genes/GEOSL/imcH/imcH-ai-review.html">ImcH</a> the TM call, <a href="../../../genes/GEOSL/cbcL/cbcL-ai-review.html">CbcL</a><br />
+the TM call with the upper bound as backup, <a href="../../../genes/DESPS/nrfA/nrfA-ai-review.html">NrfA</a> the named-family rule alone — and each<br />
+attribution is verified by removing one clause at a time. That also answers a fair<br />
+objection to the named-family rule, that it drops the informative negatives before they<br />
+can be scored: with <a href="../../../genes/DESPS/nrfA/nrfA-ai-review.html">NrfA</a> registered, the rule's one hard case is now scored explicitly<br />
+instead of being argued about in prose.</p>
+<p>The conclusions this page draws survive the correction, and were re-run rather than<br />
+assumed: no candidate count depends on the negative list, and the signal-peptide verdict<br />
+is identical with the corrected set, since <a href="../../../genes/DESPS/nrfA/nrfA-ai-review.html">NrfA</a> has a signal peptide and the other two<br />
+are excluded on topology.</p>
+<h3 id="the-falsification-a-floor-of-four-hemes-loses-the-pcecn">The falsification: a floor of four hemes loses the PcECN</h3>
+<p><a href="https://www.uniprot.org/uniprotkb/A3MW92/entry">A3MW92</a> carries <strong>four hemes per subunit but only three CXXCH motifs</strong> — the fourth is<br />
+coordinated across the subunit interface, which the authors could only see in the filament<br />
+model. So <strong>motif count underestimates heme count</strong> for a filament protein, which is<br />
+exactly the class this screen is for, and a floor of 4 is wrong:</p>
+<table>
+<thead>
+<tr>
+<th>floor</th>
+<th style="text-align: right;"><em>P. calidifontis</em> candidates</th>
+<th>PcECN found</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--min-hemes 4</code></td>
+<td style="text-align: right;"><strong>0</strong></td>
+<td><strong>MISS</strong></td>
+</tr>
+<tr>
+<td><code>--min-hemes 3</code></td>
+<td style="text-align: right;"><strong>1</strong></td>
+<td>PASS</td>
+</tr>
+</tbody>
+</table>
+<p>At a floor of 4 the screen does not merely rank the answer badly, it returns nothing at all<br />
+from a proteome that demonstrably contains an ECN. At a floor of 3 it returns <strong>one<br />
+candidate, and that candidate is the PcECN</strong> — 2,151 proteins to 1.</p>
+<p>Lowering the floor costs about 20% more candidates elsewhere and loses no recall anywhere,<br />
+so <strong>3 is now the default</strong>.</p>
+<h3 id="the-five-proteome-result">The five-proteome result</h3>
+<p>Recommended setting, <code>--min-hemes 3 --max-hemes 8 --refine --no-require-signal</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Proteome</th>
+<th style="text-align: right;">proteins</th>
+<th style="text-align: right;">3–8 motifs</th>
+<th style="text-align: right;">no TM</th>
+<th style="text-align: right;">final</th>
+<th style="text-align: right;">reduction</th>
+<th>known kept</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>G. sulfurreducens</em> PCA</td>
+<td style="text-align: right;">3,402</td>
+<td style="text-align: right;">45</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;"><strong>24</strong></td>
+<td style="text-align: right;">142×</td>
+<td>4 / 4</td>
+</tr>
+<tr>
+<td><em>C. bemidjiense</em> Bem</td>
+<td style="text-align: right;">4,042</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;"><strong>18</strong></td>
+<td style="text-align: right;">225×</td>
+<td>5 / 5</td>
+</tr>
+<tr>
+<td><em>G. daltonii</em> FRC-32</td>
+<td style="text-align: right;">3,798</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;"><strong>24</strong></td>
+<td style="text-align: right;">158×</td>
+<td>2 / 2</td>
+</tr>
+<tr>
+<td><em>P. calidifontis</em> VA1</td>
+<td style="text-align: right;">2,151</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;"><strong>1</strong></td>
+<td style="text-align: right;">2151×</td>
+<td>1 / 1</td>
+</tr>
+<tr>
+<td><em>A. veneficus</em> SNP6</td>
+<td style="text-align: right;">2,065</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;"><strong>7</strong></td>
+<td style="text-align: right;">295×</td>
+<td>1 / 1</td>
+</tr>
+<tr>
+<td><em>D. soudanensis</em> WTL</td>
+<td style="text-align: right;">3,469</td>
+<td style="text-align: right;">22</td>
+<td style="text-align: right;">16</td>
+<td style="text-align: right;"><strong>7</strong></td>
+<td style="text-align: right;">496×</td>
+<td>1 / 1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>14 / 14 recall</strong>, across two domains of life, at 142–2151× reduction. The<br />
+<em>D. soudanensis</em> row was added last, after a third solved filament turned up during the<br />
+geometry work — the bundled antiparallel ECN of PDB <code>9YUQ</code> (<a href="https://www.uniprot.org/uniprotkb/A0A0M4DKA8/entry">A0A0M4DKA8</a>, which UniProt<br />
+names <code>omcE</code>, so an OmcE-family subunit). Neither the rules nor the thresholds were<br />
+touched for it, so it is a clean out-of-sample test, and its candidate set is the<br />
+cleanest of the six: all seven survivors are annotated "putative multiheme cytochrome<br />
+c", with the named-family rule removing five others. The two<br />
+<em>G. sulfurreducens</em> rules derived from four bacterial positives were never tuned on an<br />
+archaeon, and both survive it: all seven proteins the paper considered carry <strong>only</strong><br />
+<code>IPR036280</code> (multiheme cytochrome, a homologous superfamily) and no named family, so the<br />
+family rule keeps every one of them; the TM clause does the real work in<br />
+<em>P. calidifontis</em>, excluding <a href="https://www.uniprot.org/uniprotkb/A3MW89/entry">A3MW89</a>, <a href="https://www.uniprot.org/uniprotkb/A3MW94/entry">A3MW94</a> and <a href="https://www.uniprot.org/uniprotkb/A3MW99/entry">A3MW99</a>; and the lipoprotein rule<br />
+drops two in <em>A. veneficus</em>.</p>
+<p>The caveat on the held-out Geobacteraceae still applies and is now explicit in the script:<br />
+their "known members" are CDD <code>cd21555</code> homologs — membership in a hand-curated model, not<br />
+a solved filament. Counting strictly, <strong>six</strong> of the fourteen are solved filaments — <a href="../../../genes/GEOSL/omcE/omcE-ai-review.html">OmcE</a><br />
+(7TFS), <a href="../../../genes/GEOSL/omcS/omcS-ai-review.html">OmcS</a> (6NEF), <a href="../../../genes/GEOSL/omcZ/omcZ-ai-review.html">OmcZ</a> (7LQ5, 8D9M), PcECN, AvECN and DsECN (9YUQ) — and all six are<br />
+recovered, so the honest recall figure on solved structures is 6 / 6. OmcT is a characterised tandem<br />
+paralog of <a href="../../../genes/GEOSL/omcS/omcS-ai-review.html">OmcS</a> with no structure of its own, and the remaining seven are cd21555 model<br />
+members.</p>
+<h3 id="what-the-filter-provably-cannot-do">What the filter provably cannot do</h3>
+<p>The best evidence for the structural second stage comes from the paper's own negatives.<br />
+In <em>A. veneficus</em>, <a href="https://www.uniprot.org/uniprotkb/F2KMU7/entry">F2KMU7</a> and <a href="https://www.uniprot.org/uniprotkb/F2KPF5/entry">F2KPF5</a> both <strong>pass this filter</strong> and are retained among<br />
+the seven candidates. The authors excluded them only after building them into the cryo-EM<br />
+map: <a href="https://www.uniprot.org/uniprotkb/F2KMU7/entry">F2KMU7</a> has a helix-rich region at 120–150 that the map cannot explain, and <a href="https://www.uniprot.org/uniprotkb/F2KPF5/entry">F2KPF5</a><br />
+has a loop (131–151) too short to fit where <a href="https://www.uniprot.org/uniprotkb/F2KMU8/entry">F2KMU8</a> needs 136–164. In <em>P. calidifontis</em>,<br />
+<a href="https://www.uniprot.org/uniprotkb/A3MW89/entry">A3MW89</a> — the <em>only</em> protein in that proteome with four CXXCH motifs, and so the obvious<br />
+sequence-level candidate — was excluded because its AlphaFold fold does not match the map.</p>
+<p>Nothing in the sequence separates these from the real subunit. They are tracked as<br />
+<code>near_misses</code> rather than negatives for that reason: counting them as false positives would<br />
+blame the filter for the one thing a sequence filter cannot be expected to do, and would<br />
+understate what the structural stage is for. An independent group needed cryo-EM to make<br />
+exactly the discrimination this project proposes to make with heme geometry.</p>
+<h2 id="honest-limits">Honest limits</h2>
+<ul>
+<li><strong>Six solved filaments is still a small positive set.</strong> Precision measured against<br />
+  six positives across six proteomes is a weak estimate, and the true positive set in<br />
+  any of these organisms is unknown and plausibly larger — which is the point of the<br />
+  cd21555 overlap above. The seven cd21555 homologs in the held-out Geobacteraceae are<br />
+  model members, not solved structures, so they test propagation rather than truth.</li>
+<li><strong>Motif counting is a proxy for heme count, and the archaea showed it can undercount.</strong><br />
+<a href="https://www.uniprot.org/uniprotkb/A3MW92/entry">A3MW92</a> binds four hemes through three motifs. The fix for that was to lower the<br />
+  floor, not to claim the counter is right: a heme coordinated across a subunit<br />
+  interface is invisible to any single-sequence rule, so the floor is now set to<br />
+  tolerate one such heme and would still miss a subunit with two.</li>
+<li><strong>A motif is not necessarily a heme.</strong> <code>CXXCH</code>, <code>CXXXCH</code> and long-linker variants are<br />
+  counted canonical-first and non-overlapping; a motif present but not used for heme<br />
+  attachment still counts, and an unusual attachment chemistry would be missed.</li>
+<li><strong>Signal-peptide and TM calls are UniProt's</strong>, largely from SignalP and Phobius for<br />
+  unreviewed entries, so the filter inherits their error rates. The signal clause is now<br />
+  off by default, so only the TM call is load-bearing — and in <em>P. calidifontis</em> it is<br />
+  load-bearing on its own, excluding all three of that proteome's other multiheme<br />
+  candidates.</li>
+<li><strong>The named-family rule is still the weakest.</strong> It survived an archaeal test it was<br />
+  never tuned on, which is real evidence, but it remains close to "the positives are<br />
+  unclassified" — partly a fact about what InterPro has curated rather than about the<br />
+  biology. If InterPro ever builds a family for this class, the rule inverts.</li>
+<li><strong>Two domains, six proteomes.</strong> The <em>S. oneidensis</em> run is a sanity check, not a<br />
+  measurement. Untested: the ANME and Methanoperedenaceae OmcZ-type cytochromes, where<br />
+  there is no solved filament to score against.</li>
+</ul>
+    </div>
+
+    <footer>
+        <small>Generated from BASELINE.md</small>
+
+<small class="source-provenance">
+    <strong>Local changes</strong> ·
+
+    Last committed source:
+    <time datetime="2026-11-16T06:45:12Z">16 Nov 2026, 06:45 UTC</time>
+    · <a href="https://github.com/ai4curation/ai-gene-review/commit/3453baeb0bdccd85f699457f90fcb128e35acf14" aria-label="View source change 3453baeb0bdccd85f699457f90fcb128e35acf14">3453baeb0bdc</a>
+    · <a href="https://github.com/ai4curation/ai-gene-review/blob/3453baeb0bdccd85f699457f90fcb128e35acf14/projects/EXTRACELLULAR_CYTOCHROME_NANOWIRES/BASELINE.md">View committed source</a>
+
+</small>
+
+        <small>AI Gene Review Project</small>
+    </footer>
+</body>
+</html>

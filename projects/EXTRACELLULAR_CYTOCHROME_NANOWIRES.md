@@ -6,6 +6,10 @@ species: [GEOSL, SHEON]
 genes: [omcS, omcE, omcZ]
 # "III" is the oxidation state in Fe(III), not the BPM13 phage gene of that name.
 autolink_exclude: [III]
+manifest:
+  artifacts:
+    - href: https://claude.ai/artifact/J6iDADErEjrJXDAc3SwtJS
+      title: Project brief
 ---
 
 # Extracellular Cytochrome Nanowires
@@ -80,6 +84,38 @@ a histidine from the next — recurs in OmcS, OmcE and the archaeal filaments, a
 the OmcE authors describe it as unique among c-type cytochrome structures solved
 to date. It is the best candidate for a structural definition of the class.
 
+### The invariant, measured
+
+Both statements above are geometric claims about deposited coordinates, so they can
+be measured rather than quoted. Reading the heme irons out of the deposited mmCIF
+files and taking each one's distance to its nearest neighbour
+([`heme_geometry.py`](EXTRACELLULAR_CYTOCHROME_NANOWIRES/heme_geometry.py),
+[results](EXTRACELLULAR_CYTOCHROME_NANOWIRES/RESULTS.md)):
+
+| PDB | Protein | Hemes / protomer | Median nearest-neighbour Fe–Fe |
+|---|---|---:|---:|
+| 7TFS | OmcE | 4 | 10.4 Å |
+| 6NEF | OmcS | 6 | 9.3 Å |
+| 7LQ5 | OmcZ | 8 | 9.2 Å |
+| 8D9M | OmcZ, independent deposition | 8 | 9.4 Å |
+| 8E5F | PcECN (`A3MW92`), archaeal | 4 | 10.4 Å |
+| 8E5G | AvECN (`F2KMU8`), archaeal | 4 | 9.4 Å |
+| 9YUQ | DsECN (`A0A0M4DKA8`), bundled | 4 | 8.7 Å |
+
+Six proteins, four six and eight hemes, two domains of life, no sequence or fold
+similarity, and the medians fall in a band about 1.7 Å wide. The two independent OmcZ
+depositions agree to 0.2 Å, which is the control showing the spread between proteins is
+not deposition noise. The two archaeal filaments were measured after the bacterial band
+was fixed and land inside it, so they are an out-of-sample confirmation rather than part
+of the fit. Fe–Fe is a proxy for the edge-to-edge distances the papers quote, which are
+smaller.
+
+**The band is real but it is not diagnostic.** Measured against non-filament multiheme
+cytochromes, three independent NrfA nitrite reductases give 9.7 Å — inside this band.
+That rules the spacing out as a classifier; the autoclassification section below
+treats it in full, as does
+[RESULTS.md](EXTRACELLULAR_CYTOCHROME_NANOWIRES/RESULTS.md).
+
 ## The three *Geobacter sulfurreducens* filaments
 
 | | hemes | structure | established role | GOA before review |
@@ -134,6 +170,198 @@ Two pieces of work follow from this:
 `PTHR35038`, OmcE's family, is not yet reviewed and looks at least as heterogeneous:
 its SF6 holds OmcE alongside MtrA and a hydroxylamine oxidoreductase, and its single
 PAINT node carries only `GO:0016491` oxidoreductase activity, seeded by NrfB.
+
+## Could this be autoclassified, and would AlphaFold help?
+
+Worth setting out, because the obvious answers are both wrong in the same way.
+
+**A sequence HMM cannot see it**, which is the whole problem above. **Foldseek cannot
+either**, and for the same reason: it matches backbone fold, and the fold is precisely
+what the papers say is *not* conserved. A structural search inherits the HMM's blind
+spot rather than fixing it.
+
+**Plain AlphaFold does not solve it on its own.** AFDB models are apo monomers. They
+give you the backbone — the part that varies — and no hemes at all. Worse, the
+published signature of the class is *inter*-subunit: a heme ligated by a histidine from
+the neighbouring subunit. A monomer model cannot show that by construction.
+
+**There is a route, but not the one this page first proposed.** The hemes are
+covalently attached at CXXCH motifs, which are in the sequence and findable by regex. A
+predicted monomer places those cysteines and the axial histidines in three dimensions,
+and a heme iron sits in a near-fixed position relative to its own CXXCH plus its distal
+ligand. So pseudo-iron positions can be placed on an apo model without predicting the
+ligand at all, and the resulting distance matrix examined. In the terms of
+[STRUCTURE_FUNCTION](STRUCTURE_FUNCTION.md) this is a Level 2 local-motif search, but
+keyed on a **cofactor geometry** rather than a catalytic site, which is why M-CSA /
+EnzyMM and PARSE do not cover it off the shelf.
+
+**What the distance matrix must not be asked is whether the spacing is ~9–10 Å.** That
+was the proposal here, and measuring the out-of-class controls refuted it
+([RESULTS.md](EXTRACELLULAR_CYTOCHROME_NANOWIRES/RESULTS.md)). The cytochrome c3
+look-alikes the literature offers do separate — 11.4–11.7 Å, above the band — but the
+pentaheme nitrite reductases do not: NrfA measures **9.7 Å in three independent
+structures from three organisms**, between OmcS's 9.3 and OmcE's 10.4. NrfA is exactly
+what the sequence screen yields as its hardest false positive, so a spacing filter
+would add nothing precisely where precision is needed.
+
+**The feature that does separate them is continuity through the subunit interface**, and
+the papers named it all along — hemes "coordinated by histidines in adjacent subunits".
+Measured as the closest inter-subunit Fe–Fe over the intra-subunit spacing, all three
+multi-subunit filament depositions sit at **1.00×**: the chain does not notice the
+interface. Every non-filament is ≥1.10×, and not one chain of any of them is continuous
+at the 1.05× factor — including the NrfHA complex, where electrons genuinely do cross a
+subunit interface during catalysis and the junction is still 10% longer than the spacing
+either side of it. That is the difference between a relay with a junction and a wire.
+
+The chain-level topology makes it plainer still. In the 7-subunit OmcS filament the
+chains in heme contact form a single unbranched run — contacts per chain 2, 2, 2, 2, 2,
+1, 1, which is a wire with two ends and nothing else; the 3-subunit OmcZ gives 2, 1, 1.
+The 18-chain NrfHA complex gives **zero** chain pairs in contact. The third filament,
+the bundled antiparallel *Desulfuromonas* ECN (`9YUQ`), reaches 1.00× on its minimum but
+only 4 of 16 chains individually, because most of the bundle is laterally packed at
+11.3–12.3 Å rather than in axial register; that count is threshold-sensitive (2/16 to
+6/16 across factors of 1.03–1.07) and is reported as indicative, while the minimum is
+the statistic that separates. One tempting generalisation was tried and discarded:
+asking whether the hemes form a single connected component under a fixed distance cutoff
+fails in both directions, since NrfA's dimer links into one component at 14 Å while the
+real `9YUQ` filament fragments into three.
+
+Caveats, stated plainly, and one of them is now much heavier. The method is still
+untested. The proteins are loop-rich and partly disordered, so predicted confidence may
+be poor exactly where it matters. And the discriminating feature is a property of the
+**polymer, not the subunit** — which is the same wall the AFDB paragraph above hits, now
+reached from the other side: it is not merely that a monomer model happens to omit the
+inter-subunit contact, it is that the only feature known to separate this class from its
+look-alikes lives in that contact. Until polymer prediction is good enough, the honest
+position is that the sequence screen is a candidate generator with no automated second
+stage, and the second stage is the cryo-EM work the papers did by hand. The continuity
+threshold rests on three filaments against five non-filaments, which is a small test
+set; `9YUQ` was added after the threshold was set and did not move it, and that is the
+only out-of-sample test it has had, so it remains provisional.
+
+### The cheap baseline, run
+
+Before building anything structural, the alternative had to be eliminated: a
+pure-sequence filter of **at least four covalent heme motifs, a signal peptide, and no
+transmembrane segment** catches all three characterised subunits, and if it were
+specific enough on its own the structural work would be unnecessary. So it was run
+([`filament_baseline.py`](EXTRACELLULAR_CYTOCHROME_NANOWIRES/filament_baseline.py),
+[results](EXTRACELLULAR_CYTOCHROME_NANOWIRES/BASELINE.md)), over the whole
+*G. sulfurreducens* proteome:
+
+| | ≥4 motifs | 4–8 motifs |
+|---|---:|---:|
+| of 3,402 proteins, with that many heme motifs | 63 | 36 |
+| … and a signal peptide | 55 | 29 |
+| … and no transmembrane segment | **52** | **27** |
+
+**Recall is perfect**: OmcS, OmcE, OmcZ and OmcT all pass, and the inner-membrane
+cytochromes that must not be caught — ImcH (`Q747K6`) and CbcL (`Q74GH2`) — are both
+excluded by the transmembrane clause. The periplasmic nitrite reductase NrfA (`Q747W1`)
+is not: four motifs, a signal peptide and no TM segment carry it through this stage. **Precision is not**: 52 candidates against three characterised
+subunits. The upper bound is worth having and is not arbitrary, since the known
+subunits carry 4, 6, 6 and 8 motifs while the false positives run to 34, 27 and 26 —
+they are the large outer-membrane polyheme cytochromes. Capping at eight nearly halves
+the set with no loss of recall.
+
+Of the remaining 27, four are CDD `cd21555` members — though two of those are OmcS and
+OmcT, already known positives, so only two are genuinely plausible extras. The rest are
+not: the set still holds three nitrite reductases, NrfA among them.
+
+That settles the question the experiment was for. The filter is a good **candidate
+generator** — 3,402 down to 27, a 126-fold cut with nothing lost — and not a
+classifier, because nothing in the sequence separates a pentaheme nitrite reductase
+from a filament subunit. What separates them is where the hemes end up. The structural
+half is worth building.
+
+**Two further sequence rules buy precision for free.** Inspecting the 27 survivors
+gave a mechanistic rule, *not a lipoprotein* (a lipid-anchored protein is tethered,
+not a free polymer subunit), and a classification rule, *no named InterPro family*
+(the characterised subunits carry only superfamilies and structural domains, while
+the false positives are already classified as Cytochrome c552, Octaheme c-type
+cytochrome and the like). Fitting two rules to four positives is an obvious way to
+fool yourself, so they were tested on two Geobacteraceae not used to derive them:
+
+| Proteome | base 4–8 | refined | known members kept |
+|---|---:|---:|---|
+| *G. sulfurreducens* (tuned on) | 27 | **17** | 4 / 4 |
+| *C. bemidjiense* (held out) | 24 | **12** | 4 / 5 |
+| *G. daltonii* (held out) | 19 | **14** | 2 / 2 |
+
+Precision improves by about a third at no cost in recall: every known member that
+entered the refinement came out of it. The one miss belongs to the *base* filter —
+*C. bemidjiense* `B5EHF0` (omcS-3) has no signal-peptide annotation in UniProt at all,
+so the screen never sees it, even though its InterPro profile is exactly the positive
+one.
+
+**That pointed at running SignalP, and measuring first made it unnecessary.** Simply
+dropping the signal-peptide requirement costs about 25% more candidates (17→21, 12→16,
+14→17) and buys complete recall, 11/11 known members instead of 10/11. It also
+excludes none of the known negatives: ImcH and CbcL are caught by their transmembrane
+segments and NrfA by the named-family rule, each attribution checked by removing one
+clause at a time rather than asserted. The clause was
+costing a real positive while contributing nothing against the negatives it appeared
+to be catching, so the recommended setting is `--no-require-signal` and no
+signal-peptide predictor is needed.
+
+### Tested on the archaea, where it broke
+
+Everything above comes from one bacterial family. Baquero et al. 2023 (PMID:37290436)
+solved two archaeal ECNs by cryo-EM and, unusually, **named every protein they
+considered in each proteome and why they rejected it** — the only published negative
+reasoning for this class, and so the sharpest available test.
+
+It began by validating the tool: the paper's CXXCH counts for the four *P. calidifontis*
+multiheme proteins are 4, 3, 8, 8, and the script reproduces them exactly, as it does
+the paper's proteome-wide screen size (4 = 4). That validation then **caught a bug** —
+`A3MW92` came out at 4 motifs against the paper's 3, because a long-linker match was
+being counted on a histidine already used by a shorter motif. Measured consequences, not
+assumed: 20 of 3,402 *G. sulfurreducens* proteins mis-counted, no known positive or
+negative affected, no final candidate count changed, four numbers in the tables above
+moved by one and are corrected. A second bug surfaced the same way — a number that would
+not repeat. The InterPro lookup behind the named-family rule swallowed its errors, so a
+transient network failure silently made the filter *more permissive*; it now caches,
+retries and fails loudly.
+
+Then the real result. **A floor of four hemes loses the PcECN entirely.** `A3MW92` binds
+four hemes through only three CXXCH motifs — the fourth is coordinated across the subunit
+interface — so motif count underestimates heme count for exactly the kind of protein this
+screen is for. At `--min-hemes 4` the screen returns **nothing at all** from a proteome
+that demonstrably contains an ECN. At `--min-hemes 3` it returns **one candidate, and it
+is the PcECN**. The floor is now 3, which costs about 20% more candidates elsewhere and
+loses no recall anywhere:
+
+| Proteome | proteins | candidates | reduction | known kept |
+|---|---:|---:|---:|---|
+| *G. sulfurreducens* PCA | 3,402 | 24 | 142× | 4 / 4 |
+| *C. bemidjiense* Bem | 4,042 | 18 | 225× | 5 / 5 |
+| *G. daltonii* FRC-32 | 3,798 | 24 | 158× | 2 / 2 |
+| *P. calidifontis* VA1 | 2,151 | **1** | **2151×** | 1 / 1 |
+| *A. veneficus* SNP6 | 2,065 | 7 | 295× | 1 / 1 |
+| *D. soudanensis* WTL | 3,469 | 7 | 496× | 1 / 1 |
+
+**14 / 14 recall across two domains of life.** Both rules derived from four bacterial
+positives survive an archaeal test they were never tuned on: all seven proteins the paper
+considered carry only `IPR036280`, a homologous superfamily, and no named family, so the
+family rule keeps every one; the transmembrane clause carries *P. calidifontis* by itself.
+Counting only **solved** filaments — OmcE, OmcS, OmcZ, PcECN, AvECN and DsECN — recall is
+6 / 6; the other eight positives are OmcS's unsolved paralog OmcT and seven cd21555 model
+members, so they test propagation rather than truth. The *D. soudanensis* row was added
+after a third solved filament turned up during the geometry work, with no rule or
+threshold touched for it.
+
+**And the paper supplies the argument for the structural stage.** In *A. veneficus*,
+`F2KMU7` and `F2KPF5` pass this filter and sit among its seven candidates; the authors
+excluded them only after building them into the cryo-EM map, on a helix-rich region and a
+too-short loop. In *P. calidifontis*, `A3MW89` — the only protein in that proteome with
+four CXXCH motifs, and so the obvious sequence-level answer — was excluded because its
+AlphaFold fold does not match the map. Nothing in the sequence separates any of them from
+the real subunit. An independent group needed cryo-EM to make precisely the
+discrimination this project proposes to make computationally, which is the strongest
+evidence yet that the structural half is the half that matters — and, read together with
+the out-of-class geometry result, the clearest sign of how hard that half is: the
+discriminating feature lives in the subunit interface, which is the part a monomer model
+does not have.
 
 ## Proposed GO terms
 
