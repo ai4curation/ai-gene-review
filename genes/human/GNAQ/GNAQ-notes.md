@@ -216,3 +216,17 @@ Both GO:0007603 ISS rows are now KEEP_AS_NON_CORE. The four outer-segment/entrai
 ## PR #5582 follow-up, 2026-10-26
 
 Normalized human-facing citation identifiers and spacing, preserving every machine annotation field and existing supporting quotation. Removed exactly repeated summary prefixes from reasons where a separate substantive explanation remains. All annotation actions remain unchanged for this gene.
+
+## 2026-11-15 ORGANELLES Golgi batch 2 (Golgi apparatus rows)
+
+- Two Golgi rows: EXP PMID:19001095 and IEA GO_REF:0000044 (UniProt Golgi item tagged
+  ECO:0000269|PubMed:19001095).
+- Full text read outside the cache: PMC2612512, DOI 10.1128/MCB.01144-08 (PMC article HTML; text
+  and figure legends, not images). Tagged wild-type Galpha(q) (GFP, Dendra2) in HeLa cells is
+  mainly at the plasma membrane with a pool in GM130-stained and GalT-mCherry-marked Golgi;
+  photoconversion and FRAP show constitutive retrograde PM-to-Golgi cycling that depends on
+  repalmitoylation by Golgi-resident DHHC3/DHHC7 (siRNA knockdown makes Galpha(q) cytosolic).
+- Verdict: both rows stay KEEP_AS_NON_CORE (minor marker-confirmed pool of a wild-type tagged
+  protein; retrograde cycling pool; signalling acts at the plasma membrane). No sub-compartment
+  row: GalT marks the Golgi region without cisternal resolution, and dynamic cycling is not
+  tethering. No GO:0005794 row is is_active_in.
