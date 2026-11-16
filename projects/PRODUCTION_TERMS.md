@@ -19,13 +19,15 @@ mediators, including the immune cell-surface proteins CD4, CD80, CD86 and FasL
 and the enzyme nitric-oxide synthase.
 
 Analysed from first principles, a production term names an **outcome**: the
-amount of X goes up. It is not a pathway. Most of these terms (about 73 of 137)
-read out shared programmes (NF-κB, STAT, NFAT/AP-1 signalling) whose only
-X-specific parts are the X gene's own regulatory DNA. A minority sit on top of
-**dedicated machinery** that is worth modelling: inflammasome processing of
-IL-1β/IL-18, ADAM17 shedding of TNF, TGF-β latency and activation, cytotoxic
-granule exocytosis, interferon induction through IRF3/IRF7, and
-immunoglobulin production. This project proposes **modules for the
+amount of X goes up. It is not a pathway. Every one of the 137 terms now
+carries a curated verdict: **59 read out shared programmes** (NF-κB, STAT,
+NFAT/AP-1 signalling) whose only X-specific parts are the X gene's own
+regulatory DNA, while **40 sit on dedicated machinery** worth modelling —
+inflammasome processing of IL-1β and IL-18, ADAM17 shedding of TNF, TGF-β
+latency and activation, obligate heterodimer assembly in the IL-12 family,
+cytotoxic granule exocytosis, interferon induction through IRF3/IRF7, and
+immunoglobulin production. The rest are groupings, small-molecule chemistry
+GO already models, or open questions. This project proposes **modules for the
 machines, not for the cytokines**. It also proposes moving the product's
 identity into the annotation (an input or a GO-CAM edge) and the "amount of X"
 observation into a readout layer.
@@ -216,31 +218,95 @@ idea applied to cytokines.
 
 ## Which terms map to real mechanisms
 
-The sizes below are from the script's name-pattern heuristic (`heuristic_class`
-in [`production_terms.yaml`](PRODUCTION_TERMS/data/production_terms.yaml)), not
-a curated classification. The mechanism column is standard immunology; each
-module, when built, carries its own cited evidence.
+Every one of the 137 live production terms now carries a curated verdict in
+[`term_classification.yaml`](PRODUCTION_TERMS/term_classification.yaml), which
+replaces the name-pattern heuristic the first version of this page used. The
+test is the one above: **is any step on the way to this product performed by
+machinery dedicated to it, or to a small family including it?**
 
-| Group | Production / regulation terms | Dedicated step | GO process for the step | Module |
+| Verdict | Terms | Meaning |
+|---|---|---|
+| `SHARED_PROGRAMME` | 59 | A readout. Only the gene's own regulatory DNA and 3′ UTR are product-specific. |
+| `DEDICATED_MACHINERY` | 39 | A real mechanism; a module is warranted. |
+| `GROUPING` | 20 | A parent, cell type or context naming no single product. |
+| `UNCERTAIN` | 11 | Recorded as a question, with what would settle it. |
+| `BIOSYNTHESIS_PLUS_TRANSPORT` | 6 | A small molecule whose chemistry GO already models. |
+| `COMPOSITE_PROCESS` | 1 | Immunoglobulin production: a real composite process. |
+| `DIFFERENT_SENSE` | 1 | GO:0045433, where "production" means generating a *sound*. |
+
+So **40 of the 137 terms sit on a mechanism** and 59 are readouts. Confidence is
+`HIGH` for 48, `MEDIUM` for 73 and `LOW` for 16; every `LOW` and every
+`UNCERTAIN` is a question rather than a finding, and the file carries the
+specific thing that would settle each one. `basis` is curator judgement at
+textbook level, not a literature review, so only two entries carry a quote.
+
+**Curating changed 23 of the 137 verdicts** relative to reading the labels.
+That is the argument for not shipping the heuristic: 13 terms whose names look
+like ordinary cytokines do sit on dedicated machinery, and 10 that look
+mechanistic do not. The full list is in
+[`classification_check.yaml`](PRODUCTION_TERMS/data/classification_check.yaml);
+the ones worth knowing:
+
+- **IL-28A, IL-28B and IL-29 are interferon-λ2, λ3 and λ1.** Their labels say
+  "interleukin", their parent says `GO:0034343 type III interferon production`,
+  and they are induced by the same IRF3/IRF7 arm as type I. Any label-driven
+  analysis of this branch gets these three wrong.
+- **Endothelin has a dedicated converting enzyme**, and GO already has
+  `GO:0034959 endothelin maturation` for the step. The clearest non-immune
+  mechanism in the set.
+- **IL-12, IL-23, IL-27 and IL-35 are obligate heterodimers** that compete for
+  shared subunits, so which cytokine appears depends on an assembly step.
+  GO has complex terms for all four (`GO:0043514`, `GO:0070743`, `GO:0070744`,
+  `GO:0070745`). IL-30 is the IL-27 p28 subunit alone.
+- **IL-15 is trans-presented**, assembled with IL-15Rα inside the cell and
+  displayed on its surface rather than released.
+- **Pro-HGF is activated outside the cell** by HGF activator, an enzyme named
+  for that substrate: the closest growth-factor parallel to latent TGF-β.
+- **Fractalkine and CXCL16** are the two membrane-anchored chemokines, shed by
+  ADAM10/17, with different jobs anchored and soluble.
+- Going the other way: **lymphotoxin A** is conventionally secreted and does
+  not follow its TNF-superfamily relatives, **IL-33** is a nuclear alarmin
+  whose caspase-1 cleavage *inactivates* it, and **interferon-ε** is reported
+  to be constitutive and hormone-regulated rather than IRF-driven.
+
+The table below groups the mechanism verdicts. The mechanism column is standard
+immunology; each module, when built, carries its own cited evidence.
+
+| Group | Terms (production / regulation) | Dedicated step | GO process for the step | Module |
 |---|---|---|---|---|
-| IL-1 family (IL-1β, IL-18 and IL-37 cut by caspase-1; IL-1α, IL-33 and IL-36 by other proteases) | 6 / 18 | Precursor cleavage by inflammasome caspase-1; release through gasdermin D pores | GO:0140447 *cytokine precursor processing*; GO:0140632 *canonical inflammasome complex assembly* | [`canonical_nlrp3_inflammasome`](../modules/canonical_nlrp3_inflammasome.html) exists |
-| TNF superfamily and other membrane-anchored ligands | 5 / 15 | iRhom2–ADAM17 shedding (also amphiregulin, fractalkine via ADAM10/17) | GO:0006509 *membrane protein ectodomain proteolysis* | **to build** |
-| TGF-β1/2/3 | 4 / 12 | Latency complex (LAP, LTBP, GARP); activation by αvβ6/αvβ8 integrins | none found by name | **to build**. These are among the six cytokine production terms never flagged do-not-annotate |
-| Type I/III interferons | 9 / 12 | Pattern-recognition receptor → TBK1 (IRAK1 in plasmacytoid dendritic cells) → IRF3/IRF7 → interferon genes; IRF3/7 are close to dedicated | GO:0140896 *cGAS/STING signaling pathway* and the RIG-I and TLR pathways | [`cgas_sting_signaling`](../modules/cgas_sting_signaling.html), [`rig_i_signaling`](../modules/rig_i_signaling.html), [`tlr4_md2_lps_signaling`](../modules/tlr4_md2_lps_signaling.html) for the sensors; [`irf3_irf7_interferon_induction`](../modules/irf3_irf7_interferon_induction.html) for the shared arm |
-| Perforin, granzymes, granulysin | 4 / 6 | Cytotoxic granule biogenesis and polarised exocytosis | GO:0043320 *natural killer cell degranulation* | **to build** (granule exocytosis) |
-| Immunoglobulin | 3 / 5 | V(D)J recombination, class switching, plasma cell differentiation | GO:0002377 *immunoglobulin production* is itself a real composite process | [`b_cell_receptor_signaling`](../modules/b_cell_receptor_signaling.html) covers the upstream step |
-| Small-molecule mediators (prostaglandin, leukotriene, NO, histamine, PAF, aldosterone) | 7 / 2 | Genuine biosynthetic pathways plus export or storage | GO:0001516, GO:0019370, GO:0006809, GO:0045730 *respiratory burst*; GO:0043303 *mast cell degranulation* for histamine | **to build** (eicosanoid biosynthesis); "production" here is redundant with biosynthesis plus transport |
-| Antimicrobial peptides | 3 / 9 | Induction by Toll and Imd in insects; precursor processing in mammals | | [`dmel_toll_signaling`](../modules/dmel_toll_signaling.html), [`dmel_imd_signaling`](../modules/dmel_imd_signaling.html) exist |
-| Other interleukins, chemokines, CSFs, growth factors (IL-8 here) | 73 / 162 | **None** beyond the gene's regulatory DNA and mRNA 3′ end | shared: [`nfkb_canonical_signaling`](../modules/nfkb_canonical_signaling.html), [`jak_stat_signaling`](../modules/jak_stat_signaling.html), T-helper differentiation | readouts |
-| Cell-type and "involved in" groupings | 20 / 46 | None | | precomposed context; see [INVOLVED_IN_PRECOMPOSITION](INVOLVED_IN_PRECOMPOSITION.md) |
-| Other (oxytocin, cell adhesion molecule, courtship song production) | 3 / 6 | Oxytocin is a peptide hormone like insulin: processing and regulated secretion are the real steps | | |
+| **Mechanism verdicts** | | | | |
+| IL-1 family (IL-1β, IL-18; IL-1α by the same release route) | 6 / 18 | Precursor cleavage by an inflammasome caspase, then release through gasdermin D pores | `GO:0140447` *cytokine precursor processing*; `GO:0140632` *canonical inflammasome complex assembly* | [`canonical_nlrp3_inflammasome`](../modules/canonical_nlrp3_inflammasome.html) |
+| Ectodomain shedding (TNF, RANKL, amphiregulin, fractalkine, CXCL16) | 7 / 17 | iRhom2–ADAM17 or ADAM10 cleavage of a membrane-anchored ligand | `GO:0006509` *membrane protein ectodomain proteolysis* | **to build**: `adam17_ectodomain_shedding` |
+| IRF3/IRF7 interferon induction (type I and type III, including IL-28A/B and IL-29) | 12 / 12 | Adaptor-licensed TBK1/IKBKE, or MyD88–IRAK1–IKK-α, phosphorylating IRF3 or IRF7 | no process term exists; the module proposes one | [`irf3_irf7_interferon_induction`](../modules/irf3_irf7_interferon_induction.html), with [`cgas_sting_signaling`](../modules/cgas_sting_signaling.html), [`rig_i_signaling`](../modules/rig_i_signaling.html) and [`tlr4_md2_lps_signaling`](../modules/tlr4_md2_lps_signaling.html) upstream |
+| TGF-β1/2/3 | 4 / 12 | Latency complex (LAP, LTBP, GARP); activation by αvβ6/αvβ8 integrins and by force | none found by name | **to build**: `latent_tgfb_activation` |
+| IL-12 family assembly (IL-12, IL-23, IL-27, IL-35, IL-30) | 5 / 12 | Obligate pairing of shared subunits, which decides which cytokine appears | `GO:0043514`, `GO:0070743`, `GO:0070744`, `GO:0070745` (the complexes) | **to build**: `il12_family_heterodimer_assembly` |
+| Cytotoxic granule mediators (perforin, granzymes A and B, granulysin) | 4 / 6 | Granule biogenesis and polarised exocytosis (RAB27A, UNC13D, STX11, STXBP2) | `GO:0043320` *natural killer cell degranulation*; `GO:0044194` *cytolytic granule* | **to build**: `cytotoxic_granule_exocytosis` |
+| Immunoglobulin (the process, plus its two precomposed context terms) | 3 / 5 | V(D)J recombination, class switching, plasma cell differentiation | `GO:0033151`, `GO:0045190`, `GO:0002317` | [`b_cell_receptor_signaling`](../modules/b_cell_receptor_signaling.html) covers the upstream step |
+| Prohormone processing (oxytocin, endothelin) | 2 / 6 | Convertase cleavage of a precursor; for endothelin a dedicated converting enzyme | `GO:0016486` *peptide hormone processing*; `GO:0034959` *endothelin maturation* | — |
+| IL-15 trans-presentation | 1 / 3 | Intracellular assembly with IL-15Rα and display on the producing cell's surface | none found by name | **to build**: `il15_trans_presentation` |
+| Protease-activated growth factor (HGF) | 1 / 3 | Extracellular cleavage of the secreted single-chain precursor by HGF activator | none found by name | candidate, alongside `latent_tgfb_activation` |
+| Histamine in inflammation | 1 / 0 | Synthesis by one decarboxylase, then mast cell degranulation | `GO:0001694`; `GO:0043303` *mast cell degranulation* | **to build**: `mast_cell_degranulation` |
+| **Readout and other verdicts** | | | | |
+| Interleukins, conventionally secreted (IL-8 here) | 26 / 66 | **None** beyond the gene's regulatory DNA and mRNA 3′ end | shared: [`nfkb_canonical_signaling`](../modules/nfkb_canonical_signaling.html), [`jak_stat_signaling`](../modules/jak_stat_signaling.html), T-helper differentiation | readouts; `are_mediated_mrna_decay` would absorb many of the negative-regulation rows |
+| Chemokines (all but the two shed ones) | 20 / 36 | **None** | as above | readouts |
+| Growth factors and CSFs | 8 / 23 | **None** established for the family as a whole | as above | readouts; PDGF and CSF1 are flagged `LOW` for a check |
+| Cell-type, context and root groupings | 18 / 46 | None | | precomposed context; see [INVOLVED_IN_PRECOMPOSITION](INVOLVED_IN_PRECOMPOSITION.md) |
+| Small-molecule mediators (prostaglandin, leukotriene, NO, serotonin, aldosterone, arachidonate) | 6 / 2 | Genuine biosynthesis, modelled elsewhere in GO | `GO:0001516`, `GO:0019370`, `GO:0006809`, `GO:0042427`, `GO:0032342`, `GO:0046456` | **to build**: `eicosanoid_biosynthesis_and_export` |
+| Antimicrobial peptides | 3 / 9 | Transcriptional output of Toll and Imd, or of epithelial programmes | | [`dmel_toll_signaling`](../modules/dmel_toll_signaling.html), [`dmel_imd_signaling`](../modules/dmel_imd_signaling.html) |
+| Unconventional secretion (MIF, IL-32) and neurotrophin pro-forms | 4 / 8 | `UNCERTAIN`: export or pro-form processing may be the controlled step | | questions, not candidates |
+| Interferon-γ and lymphotoxin A | 2 / 6 | None; lineage programmes | | readouts |
+| Symbiont-mediated phytoalexin terms, cell adhesion molecule, courtship song | 4 / 3 | not applicable | | see the open questions |
 
-About 41 of the 137 production terms rest on a dedicated or genuinely specific
-step. **IL-8 is the
-typical member of the readout group.** Its production is NF-κB/AP-1-driven
-transcription, p38–MK2-dependent mRNA stabilisation and constitutive
-secretion. Where a cell type stores a cytokine in granules, the machinery
-belongs to the granule, not to the cytokine.
+Per-group counts are generated into
+[`classification_check.yaml`](PRODUCTION_TERMS/data/classification_check.yaml),
+with every regulation term counted against the curated group of the production
+term it regulates; all 293 map.
+
+**IL-8 is the typical member of the readout group.** Its production is
+NF-κB/AP-1-driven transcription, p38–MK2-dependent mRNA stabilisation and
+constitutive secretion. Endothelial cells also store it in Weibel–Palade
+bodies, but that machinery belongs to the granule, which it shares with von
+Willebrand factor, not to IL-8.
 
 One shared module would absorb many "negative regulation of X production"
 rows: **AU-rich-element mRNA decay**. Its parts are TTP (ZFP36), Regnase-1
@@ -443,13 +509,20 @@ Rows on the production term itself (do-not-annotate) need their own worklist.
   - [`b_cell_receptor_signaling`](../modules/b_cell_receptor_signaling.html)
   - [`tgfb_smad_signaling`](../modules/tgfb_smad_signaling.html): signalling only, not latency or activation.
 - **Candidates**, one per machine as module policy requires, never one per
-  cytokine:
-  - iRhom2–ADAM17 ectodomain shedding
-  - AU-rich-element mRNA decay (TTP, Regnase-1, Roquin)
-  - latent TGF-β activation
-  - cytotoxic granule exocytosis
-  - mast cell degranulation
-  - eicosanoid biosynthesis and export
+  cytokine. The term counts are what each would absorb (production /
+  regulation):
+  - `adam17_ectodomain_shedding` — iRhom2–ADAM17 and ADAM10 (7 / 17)
+  - `latent_tgfb_activation` — latency complex and integrin activation (4 / 12),
+    which could also cover pro-HGF activation by HGF activator (1 / 3)
+  - `il12_family_heterodimer_assembly` — shared-subunit pairing (5 / 12)
+  - `cytotoxic_granule_exocytosis` (4 / 6)
+  - `eicosanoid_biosynthesis_and_export` (6 / 2)
+  - `are_mediated_mrna_decay` — TTP (ZFP36), Regnase-1 (ZC3H12A) and Roquin
+    (RC3H1), restrained by p38–MK2 (named for 2 terms, but it is the shared
+    brake on most of the 66 interleukin regulation terms)
+  - `mast_cell_degranulation` (1 / 0, plus the histamine and preformed-TNF
+    stores)
+  - `il15_trans_presentation` (1 / 3)
 
 ## Observations for GO (candidate tickets, not filed)
 
@@ -482,14 +555,26 @@ Rows on the production term itself (do-not-annotate) need their own worklist.
    that, GO cannot retire the classes even if it wanted to.
 4. Should the 21 rows on do-not-annotate production terms be MODIFY to the
    regulation child, or does their evidence support something else?
+5. The classification leaves 11 terms `UNCERTAIN`. Four are worth GO's
+   attention rather than ours: **interferon-ε**, if it is constitutive and
+   hormone-regulated, is not a product of the interferon-induction arm its
+   class membership implies; **IL-33**, whose caspase-1 cleavage inactivates
+   it, does not belong with the IL-1 family on mechanism; **MIF** and
+   **IL-32** have no signal peptide, so a production term presumes an
+   appearance outside the cell that may not happen; and the two
+   **symbiont-mediated phytoalexin** terms have the same shape as GO:0140133,
+   which GO obsoleted as a readout.
 
 ## Plan
 
 - [x] Survey the GO issue history and verify the quotes (59 threads)
 - [x] Inventory script and data
 - [x] GO-CAM usage, model by model
-- [ ] Curated classification of the 137 production terms and their regulation
-      children, replacing the name heuristic
+- [x] Curated classification of all 137 production terms
+      ([`term_classification.yaml`](PRODUCTION_TERMS/term_classification.yaml)),
+      with each of the 293 regulation terms counted against its parent's group.
+      It changed 23 verdicts relative to the name heuristic, which the script
+      now cross-checks on every run.
 - [ ] Worklist of the 21 rows on do-not-annotate production terms, and of the
       ACCEPT rows in the scattered remainder
 - [x] First module:
@@ -504,11 +589,17 @@ Rows on the production term itself (do-not-annotate) need their own worklist.
     function no GO id, so the module's `GO:0060090` assertion reads as
     unsupported in QC;
   - no module deep-research report exists for it yet (needs a provider run).
-- [ ] Further module stubs:
-  - iRhom2–ADAM17 shedding and AU-rich-element mRNA decay, which each span
-    many cytokines (the decay genes ZFP36, ZC3H12A and RC3H1 have no reviews
-    yet);
-  - then TGF-β activation and cytotoxic granule exocytosis.
+- [ ] Further module stubs, in the order the classification ranks them by how
+      many terms they would absorb: `adam17_ectodomain_shedding` (7 production
+      terms, 17 regulation), `latent_tgfb_activation` (4 / 12),
+      `il12_family_heterodimer_assembly` (5 / 12),
+      `cytotoxic_granule_exocytosis` (4 / 6),
+      `eicosanoid_biosynthesis_and_export` (6 / 2), then
+      `are_mediated_mrna_decay`, `mast_cell_degranulation` and
+      `il15_trans_presentation`. The decay genes ZFP36, ZC3H12A and RC3H1 have
+      no gene reviews yet.
+- [ ] Settle the 11 `UNCERTAIN` verdicts and the 16 `LOW`-confidence ones; each
+      carries in the classification file the specific thing that would settle it.
 - [ ] Maintainer decision on the review guidance
 - [ ] Draft the upstream GO tickets and the GO-CAM convention note above (file
       only after review)
@@ -525,6 +616,11 @@ Outputs:
 
 - `production_terms.yaml`: every production-named term, live or obsolete, with
   flags, parents, merges, obsoletion comment and heuristic class.
+- `classification_check.yaml`: the curated verdicts joined to the ontology —
+  coverage in both directions, verdict and confidence counts, per-group
+  production and regulation counts, the modules and candidates the verdicts
+  name, the open questions, and every term where the curated verdict disagrees
+  with the name heuristic.
 - `gocam_models.yaml`: every cached GO-CAM with an activity on such a term,
   with all of its activities, their inputs and causal edges, and the two
   product-naming signals. Those signals are a transcription factor's input,
