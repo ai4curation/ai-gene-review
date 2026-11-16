@@ -307,12 +307,16 @@ def coverage_claims(text: str) -> List[Tuple[int, Optional[int]]]:
     [(39, None)]
     >>> coverage_claims("In the sample, 11 of 40 sets are matched by a rule for a curated term.")
     []
+    >>> coverage_claims("none of the 90 condition sets is matched by a rule for a descendant keyword.")
+    []
     """
     claims: List[Tuple[int, Optional[int]]] = []
     for sentence in re.split(r"(?<=[.;])\s+", " ".join(text.split())):
         if re.search(r"\bsampl", sentence, re.IGNORECASE):
             continue
         for match in _COVERAGE_CLAIM.finditer(sentence):
+            if re.search(r"\b(?:none|no|not\s+one)\s+(?:of\s+)?(?:the\s+)?$", sentence[:match.start()], re.IGNORECASE):
+                continue  # "none of the 90 sets is matched by a rule" claims zero, not ninety
             first, second, cover, bracket = (int(g.replace(",", "")) if g else None for g in match.groups())
             if cover is not None or bracket is not None:
                 claims.append((cover if cover is not None else bracket, None))  # type: ignore[arg-type]
@@ -663,6 +667,32 @@ def check_review(
     check_meaning(data, add, labels)
 
 
+def _check_coverage_prose(data: Dict[str, Any], covered: int, total: int, table: str, add: Any) -> None:
+    """Compare every "N (of M) sets are covered by rules" in a review with the redundancy table.
+
+    The figure is the table's whether or not the sentence names the file. A
+    disagreement is an error where the text, or a correction's evidence, cites a
+    redundancy table, and a warning elsewhere, since the figure may be a stated
+    subset.
+    """
+    claims = [(path, text, bool(_CITES_REDUNDANCY_TABLE.search(text))) for path, text in iter_prose(data)]
+    for c, correction in enumerate(data.get("corrections") or []):
+        if isinstance(correction, dict):
+            text = str(correction.get("correction") or "")
+            backed = bool(_CITES_REDUNDANCY_TABLE.search(text)) or any(
+                _CITES_REDUNDANCY_TABLE.search(str(item)) for item in correction.get("evidence") or [])
+            claims.append((f"corrections[{c}].correction", text, backed))
+    for path, text, cites_table in claims:
+        for said_covered, said_total in coverage_claims(text):
+            if said_covered == covered and said_total in (None, total):
+                continue
+            said = f"{said_covered} of {said_total}" if said_total is not None else str(said_covered)
+            add(ValidationSeverity.ERROR if cites_table else ValidationSeverity.WARNING,
+                "redundancy_prose_mismatch" if cites_table else "redundancy_prose_unconfirmed",
+                f"says {said} sets are covered by more specific rules; {table} gives {covered} of {total}", path,
+                "Quote the table, or say which subset the figure is.")
+
+
 def check_meaning(data: Dict[str, Any], add: Any, labels: Dict[str, Dict[str, str]]) -> None:
     """Checks on the second axis: is the rule a meaningful, parsimonious statement?
 
@@ -774,24 +804,7 @@ def check_meaning(data: Dict[str, Any], add: Any, labels: Dict[str, Dict[str, st
                     add(error, "redundancy_prose_mismatch",
                         f"cites rule_redundancy.tsv for {column} {value}; the table gives {row[column]}", path,
                         "Quote the committed table, or say where the other figure comes from.")
-        # "N of M sets are covered by more specific rules" is the table's figure whether or not the
-        # sentence names the file. It is an error where the text or its evidence cites the table,
-        # and a warning elsewhere, since the figure may be a stated subset.
-        covered, total = int(row["covered_sets"]), int(row["condition_sets"])
-        claims = [(path, text, bool(_CITES_REDUNDANCY_TABLE.search(text))) for path, text in iter_prose(data)]
-        for c, correction in enumerate(data.get("corrections") or []):
-            if isinstance(correction, dict):
-                backed = any(_CITES_REDUNDANCY_TABLE.search(str(item)) for item in correction.get("evidence") or [])
-                claims.append((f"corrections[{c}].correction", str(correction.get("correction") or ""), backed))
-        for path, text, cites_table in claims:
-            for said_covered, said_total in coverage_claims(text):
-                if said_covered == covered and said_total in (None, total):
-                    continue
-                said = f"{said_covered} of {said_total}" if said_total is not None else str(said_covered)
-                add(error if cites_table else warning,
-                    "redundancy_prose_mismatch" if cites_table else "redundancy_prose_unconfirmed",
-                    f"says {said} sets are covered by more specific rules; rule_redundancy.tsv gives "
-                    f"{covered} of {total}", path, "Quote the table, or say which subset the figure is.")
+        _check_coverage_prose(data, int(row["covered_sets"]), int(row["condition_sets"]), "rule_redundancy.tsv", add)
 
     keywords = [str(a.get("value")) for a in data.get("annotation_assessments") or []
                 if isinstance(a, dict) and a.get("annotation_kind") == "KEYWORD"]
@@ -810,6 +823,8 @@ def check_meaning(data: Dict[str, Any], add: Any, labels: Dict[str, Dict[str, st
                 if column in keyword_row and value != int(keyword_row[column]):
                     add(error, "redundancy_prose_mismatch",
                         f"cites keyword_redundancy.tsv for {column} {value}; the table gives {keyword_row[column]}", path)
+        _check_coverage_prose(data, int(keyword_row["covered_sets"]), int(keyword_row["condition_sets"]),
+                              "keyword_redundancy.tsv", add)
 
     examined, total_sets = meaning.get("sets_examined_for_meaning"), rule.get("source_condition_set_count")
     if (isinstance(examined, int) and isinstance(total_sets, int) and examined < total_sets

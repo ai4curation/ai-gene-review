@@ -446,3 +446,32 @@ def test_coverage_figure_without_the_file_name_is_still_compared(text: str, expe
     data = review(id="ARBA00026480", rule=rule, review_summary=text)
     assert ("redundancy_prose_unconfirmed" in checks(data, tmp_path, "warning")) is expected_warning
     assert "redundancy_prose_mismatch" not in checks(data, tmp_path)
+
+
+def test_correction_naming_the_table_in_its_own_text_is_an_error(tmp_path: Path) -> None:
+    rule = {"rule_id": "ARBA00026480", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10",
+            "source_condition_set_count": 343,
+            "go_annotations": [{"go_id": "GO:0010605",
+                                "go_label": "negative regulation of macromolecule metabolic process"}]}
+    correction = {"withdrawn_claim": "x", "correction": "Per rule_redundancy.tsv, 320 of 355 sets are covered by rules."}
+    assert "redundancy_prose_mismatch" in checks(review(id="ARBA00026480", rule=rule, corrections=[correction]), tmp_path)
+
+
+@pytest.mark.parametrize(
+    "text,expected_warning",
+    [
+        ("600 of 4,603 sets are also matched by a rule for a descendant keyword.", True),
+        ("2,661 of 4,603 sets are also matched by a rule for a descendant keyword.", False),
+        ("None of the 4,603 condition sets is matched by a rule for a descendant keyword.", False),
+    ],
+)
+def test_keyword_coverage_figure_is_compared_with_the_keyword_table(text: str, expected_warning: bool, tmp_path: Path) -> None:
+    from ai_gene_review.validation.rule_review_receipts import keyword_redundancy_row
+
+    row = keyword_redundancy_row("ARBA00022679")
+    assert row is not None and (row["condition_sets"], row["covered_sets"]) == ("4603", "2661"), "fixture row changed"
+    rule = {"rule_id": "ARBA00022679", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10",
+            "source_condition_set_count": 4603}
+    data = review(id="ARBA00022679", rule=rule, review_summary=text,
+                  annotation_assessments=[{"annotation_kind": "KEYWORD", "value": "KW-0808", "assessment": "UNDECIDED"}])
+    assert ("redundancy_prose_unconfirmed" in checks(data, tmp_path, "warning")) is expected_warning
