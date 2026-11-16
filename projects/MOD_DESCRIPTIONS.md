@@ -4,6 +4,13 @@ maturity: IN_PROGRESS
 tags: [PIPELINE, EVALUATION]
 species: [worm, yeast, DROME]
 autolink_exclude: [MOD, MODS, GET3, EGF]
+manifest:
+  slides:
+    - href: MOD_DESCRIPTIONS/slides/MOD_DESCRIPTIONS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/Uak8ttS9nu4C36Fh9JypKg
+      title: Project brief
 ---
 
 # MOD gene descriptions as review input
@@ -16,13 +23,15 @@ deep-research source, scores it against our review, and acts on what it finds.
 
 | | Worm (WormBase) | Yeast (SGD) | Fly (FlyBase) |
 |---|---|---|---|
-| Genes reviewed | 432 | 890 | 539 |
+| Genes reviewed (at the time of each run) | 432 | 890 | 539 |
 | With a curated MOD description | 374 (87%) | 890 (100%) | 345 (64%) |
 | Median MOD text length (words) | 75 | 33 | 37 |
 | MOD text correctness, 1-5 (UniProt) | 4.2 (4.5) | 4.8 (4.6) | 4.7 (4.6) |
-| Description-text defects recorded (MOD + UniProt) | 100 (73 + 27) | 89 (44 + 45) | 73 (39 + 34) |
+| Description-text defects recorded (MOD + UniProt) | 105 (76 + 29) | 92 (47 + 45) | 75 (39 + 36) |
+| Of which cite a quoted paper as evidence | 96 | 84 | 72 |
+| Of which recorded as `CONFIRMED` | 33 | 40 | 27 |
 | Reviews edited in the follow-up | about 60 | 249 | 124 |
-| NEW annotation rows | 0 | 2 | 1 |
+| NEW annotation rows | 1 | 2 | 1 |
 
 What we learned:
 
@@ -34,19 +43,26 @@ What we learned:
   FlyBase score above UniProt on correctness; WormBase scores below it. UniProt is
   often the more informative source, especially for fly.
 - **Most errors are stale, transferred or copied text, in both MOD and UniProt
-  descriptions.** The 262 recorded defects split 156 MOD and 106 UniProt. They are the
-`WRONG_STATEMENT`, `OUTDATED_STATEMENT` and `MISSING_STATEMENT` defects (plus one worm
-`WRONG_REFERENCE`) on the cited MOD and UniProt files, counted per resource across
-`genes/worm`, `genes/yeast` and `genes/DROME`. Other source defects in those folders,
-mostly on GO annotations, are not included. Typical
-  cases are a claim later overturned (FlyBase says amon cleaves Slit; Tolkin is the
-  Slit protease), text carried over from another species (UniProt gives fly SCAP the
-  mammalian sterol-sensing mechanism) and a copy error (UniProt names Gurken, another
-  ligand, as the receptor for Spitz). Each defect quotes the offending sentence, and
-  `just export-source-defects` turns them into per-resource reports. Filing those
-  reports is a manual step that has not been done yet.
+  descriptions.** There are 272 recorded defects, 162 in MOD text and 110 in UniProt
+  text: 186 wrong or outdated statements, 85 omissions and one wrong citation. 252 cite
+  a quoted paper as evidence, and 100 carry the reviewer's `CONFIRMED` confidence (the
+  rest are `PROBABLE`); the two measures do not coincide. Typical cases are a claim later
+  overturned (FlyBase says amon cleaves Slit; Tolkin is the Slit protease), text carried
+  over from another species (UniProt gives fly SCAP the mammalian sterol-sensing
+  mechanism) and a copy error (UniProt names Gurken, another ligand, as the receptor for
+  Spitz). Each defect quotes the offending sentence, and `just export-source-defects`
+  turns them into per-resource reports. Filing those reports is a manual step that has
+  not been done yet.
+- **How the defects are counted.** [defect_tally.py](MOD_DESCRIPTIONS/defect_tally.py)
+  counts the `WRONG_STATEMENT`, `OUTDATED_STATEMENT` and `MISSING_STATEMENT` defects
+  (plus one worm `WRONG_REFERENCE`) on the cited MOD and UniProt files in `genes/worm`,
+  `genes/yeast` and `genes/DROME`, and writes them with their quotes and evidence to
+  [defect-tally.yaml](MOD_DESCRIPTIONS/defect-tally.yaml) (as of 2026-11-15). Other source
+  defects in those folders, mostly on GO annotations, are left out. The total was 262 on
+  2026-11-02; reviews merged since then added 10.
 - **Gaps rarely become annotations.** 794 gap and discrepancy findings produced 3
-  NEW rows. Most gaps are mutant phenotypes, which show that the gene is needed,
+  NEW rows (yeast MIH1 and HOG1, fly Tango5); the fourth, worm fshr-1, came from the
+  hand comparison. Most gaps are mutant phenotypes, which show that the gene is needed,
   not that it does the work, so they become description sentences instead.
 - **The Alliance automated text is the weakest source.** It is generated from the
   GO annotations under review, so it is never cited as evidence, and it scores lowest
@@ -243,7 +259,7 @@ results were spot-checked (pek-1, lrx-1, sem-5).
 - **Upstream defects:** 100 errors in description text across 93 genes (73
   WormBase, 27 UniProt) are now recorded as `source_defects` on the cited
   reference: 31 WRONG_STATEMENT, 28 OUTDATED_STATEMENT, 40 MISSING_STATEMENT and 1
-  WRONG_REFERENCE. Of these, 28 are CONFIRMED by a quoted paper and the rest are
+  WRONG_REFERENCE. Of these, 28 were recorded as CONFIRMED and the rest as
   PROBABLE. `just export-source-defects` writes them to
   `reports/source-defects/WORMBASE.md` and `UNIPROT.md` for filing. Examples:
   - UniProt says IRE-1 retains unspliced mRNAs, but its cited paper says the opposite.
@@ -345,7 +361,8 @@ each other only.
   gene was validated and given a history record.
   - 89 description-text `source_defects` across 81 genes: 44 SGD and 45 UniProt (one in a UniProt SUBUNIT comment);
     49 `WRONG_STATEMENT`, 25 `OUTDATED_STATEMENT`, 15 `MISSING_STATEMENT`; 38 of them
-    CONFIRMED by a quoted paper.
+    recorded as CONFIRMED. These counts are from the follow-up run (2026-11-01); the table
+    above has the current totals.
   - 249 reviews edited, mostly with a description sentence for a verified gap.
   - Two `NEW` rows, both checked against the NEW bar:
     - MIH1 GO:1905279 regulation of retrograde transport, endosome to Golgi:
@@ -408,7 +425,8 @@ each other only.
   discrepancy findings (187 genes) under the yeast rules.
   - 73 description-text `source_defects` across 64 genes: 39 FlyBase and 34 UniProt;
     34 `WRONG_STATEMENT`, 13 `OUTDATED_STATEMENT`, 26 `MISSING_STATEMENT`; 25 of them
-    CONFIRMED by a quoted paper.
+    recorded as CONFIRMED. These counts are from the follow-up run (2026-11-01); the table
+    above has the current totals.
   - 124 reviews edited, mostly with a description sentence or a `reference_review`.
   - One `NEW` row: Tango5 GO:0000045 autophagosome assembly (IMP, PMID:34019822).
     Tango5 is the fly VMP1, the ER scramblase that does part of the work, and human
