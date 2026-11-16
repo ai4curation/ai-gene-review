@@ -23,13 +23,13 @@ deep-research source, scores it against our review, and acts on what it finds.
 
 | | Worm (WormBase) | Yeast (SGD) | Fly (FlyBase) |
 |---|---|---|---|
-| Genes reviewed (at the time of each run) | 432 | 890 | 539 |
-| With a curated MOD description | 374 (87%) | 890 (100%) | 345 (64%) |
+| Genes reviewed (at the time of each run) | 452 | 890 | 539 |
+| With a curated MOD description | 385 (85%) | 890 (100%) | 345 (64%) |
 | Median MOD text length (words) | 75 | 33 | 37 |
 | MOD text correctness, 1-5 (UniProt) | 4.2 (4.5) | 4.8 (4.6) | 4.7 (4.6) |
-| Description-text defects recorded (MOD + UniProt) | 105 (76 + 29) | 92 (47 + 45) | 75 (39 + 36) |
-| Of which cite a quoted paper as evidence | 96 | 84 | 72 |
-| Of which recorded as `CONFIRMED` | 33 | 40 | 27 |
+| Description-text defects recorded (MOD + UniProt) | 131 (90 + 41) | 92 (47 + 45) | 75 (39 + 36) |
+| Of which cite a quoted paper as evidence | 121 | 84 | 72 |
+| Of which recorded as `CONFIRMED` | 50 | 40 | 27 |
 | Reviews edited in the follow-up | about 60 | 249 | 124 |
 | NEW annotation rows | 1 | 2 | 1 |
 
@@ -43,10 +43,10 @@ What we learned:
   FlyBase score above UniProt on correctness; WormBase scores below it. UniProt is
   often the more informative source, especially for fly.
 - **Most errors are stale, transferred or copied text, in both MOD and UniProt
-  descriptions.** There are 272 recorded defects, 162 in MOD text and 110 in UniProt
-  text: 186 wrong or outdated statements, 85 omissions and one wrong citation. 252 cite
-  a quoted paper as evidence, and 100 carry the reviewer's `CONFIRMED` confidence (the
-  rest are `PROBABLE`); the two measures do not coincide. Typical cases are a claim later
+  descriptions.** There are 298 recorded defects, 176 in MOD text and 122 in UniProt
+  text: 195 wrong or outdated statements, 102 omissions and one wrong citation. 277 cite
+  a quoted paper as evidence, and 117 carry the reviewer's `CONFIRMED` confidence (the
+  rest are `PROBABLE`, apart from one `SUSPECTED`); the two measures do not coincide. Typical cases are a claim later
   overturned (FlyBase says amon cleaves Slit; Tolkin is the Slit protease), text carried
   over from another species (UniProt gives fly SCAP the mammalian sterol-sensing
   mechanism) and a copy error (UniProt names Gurken, another ligand, as the receptor for
@@ -57,9 +57,10 @@ What we learned:
   counts the `WRONG_STATEMENT`, `OUTDATED_STATEMENT` and `MISSING_STATEMENT` defects
   (plus one worm `WRONG_REFERENCE`) on the cited MOD and UniProt files in `genes/worm`,
   `genes/yeast` and `genes/DROME`, and writes them with their quotes and evidence to
-  [defect-tally.yaml](MOD_DESCRIPTIONS/defect-tally.yaml) (as of 2026-11-15). Other source
+  [defect-tally.yaml](MOD_DESCRIPTIONS/defect-tally.yaml) (as of 2026-11-16). Other source
   defects in those folders, mostly on GO annotations, are left out. The total was 262 on
-  2026-11-02; reviews merged since then added 10.
+  2026-11-02; reviews merged by 2026-11-15 added 10, and the nine new worm reviews of
+  2026-11-16 added 26 (see [More worm genes](#more-worm-genes-2026-11-16)).
 - **Gaps rarely become annotations.** 794 gap and discrepancy findings produced 3
   NEW rows (yeast MIH1 and HOG1, fly Tango5); the fourth, worm fshr-1, came from the
   hand comparison. Most gaps are mutant phenotypes, which show that the gene is needed,
@@ -291,6 +292,117 @@ results were spot-checked (pek-1, lrx-1, sem-5).
   The lrx-1 suggested questions look as if they belong to another gene. Both need
   a human look.
 
+## More worm genes (2026-11-16)
+
+This round applied the standing rule (the WormBase text is an input to every new worm
+review) to new genes, and brought the reviews added after the worm run into the
+comparison. Worm now has 452 scored sidecars, all `COMPLETE`, and 385 of them (85%)
+have a WormBase-written description.
+
+- **Eleven later reviews.** F54F2.7, T04F3.1, Y54E10BR.2, abhd-11.1, abhd-11.2,
+  abhd-14, abi-1, acbp-5, cec-10, npp-20 and pnk-1 were reviewed after the worm run and
+  had no sidecar. All were fetched and scored. Only abi-1 and acbp-5 have WormBase text,
+  and both reviews already cite it as a deep-research source. The 18 findings are mostly
+  automated texts that lead with terms the reviews reject:
+  - transaminase activity for T04F3.1;
+  - phosphatase activity for pnk-1, which keeps the pantothenate kinase catalytic residues;
+  - fungal Swi6-family G1/S transcription terms for cec-10;
+  - a fission-yeast septum term for npp-20.
+
+  No review needed an edit.
+- **Choosing new genes.** Candidates were genes that the WormBase texts of reviewed
+  genes name but that have no review of their own. They were ranked by how many texts
+  name them ([worm_candidates.py](MOD_DESCRIPTIONS/worm_candidates.py)). For example, mes-1 is named in the texts for gpr-1, gpr-2, meg-1 and meg-2,
+  and mec-3 in those for cct-2, cct-4, mec-14 and ric-4. The top of the raw ranking
+  holds non-genes, which were dropped: human bcl-2, and mkrs-1, a misspelling of mksr-1.
+  (A first version of the script also listed hsp-16, by cutting hsp-16.41 at the
+  dot; the committed script reads the full name.) So was lag-3, which is sel-8 (Q09260) and already reviewed
+  under that name. Nine genes with a Swiss-Prot entry and a WormBase text were reviewed,
+  in three related groups:
+  - touch-neuron fate transcription factors: egl-44, egl-46, mec-3;
+  - germline P-lineage regulators: pie-1, pos-1, mes-1;
+  - signalling outputs and cell-cycle control: lin-31, cki-1, yap-1.
+
+| Gene | GOA rows | NEW rows | WormBase text | UniProt text | Text defects (WormBase + UniProt) |
+|---|---|---|---|---|---|
+| egl-44 | 30 | 0 | UNVERIFIED | UNVERIFIED | 3 (2 + 1) |
+| egl-46 | 33 | 0 | DISPUTED | VERIFIED | 4 (3 + 1) |
+| mec-3 | 31 | 0 | VERIFIED | VERIFIED | 2 (1 + 1) |
+| pie-1 | 36 | 2 | VERIFIED | DISPUTED | 3 (1 + 2) |
+| pos-1 | 24 | 2 | DISPUTED | DISPUTED | 4 (2 + 2) |
+| mes-1 | 17 | 0 | VERIFIED | DISPUTED | 2 (1 + 1) |
+| lin-31 | 14 | 0 | DISPUTED | VERIFIED | 3 (2 + 1) |
+| cki-1 | 21 | 0 | VERIFIED | VERIFIED | 2 (1 + 1) |
+| yap-1 | 20 | 1 | UNVERIFIED | DISPUTED | 3 (1 + 2) |
+
+The verdict columns are the `reference_review.correctness` of each cited file, under the
+convention above. The 26 description-text defects are 17 omissions, 6 wrong statements
+and 3 outdated statements; 17 are `CONFIRMED`, 8 `PROBABLE` and 1 `SUSPECTED`.
+
+| Source (9 new genes) | Correctness | Utility | Compactness | Completeness | Specificity |
+|---|---|---|---|---|---|
+| UniProt FUNCTION (9) | 4.6 | 3.9 | 3.6 | 3.3 | 4.0 |
+| WormBase curated (9) | 4.3 | 3.6 | 3.7 | 2.6 | 3.7 |
+| Alliance automated (9) | 3.7 | 2.2 | 4.0 | 2.1 | 2.2 |
+
+Concordance across sources averages 3.6 (five genes score 4 and four score 3), against
+4.24 for all 452 worm genes. These are well-studied genes, so the sources have more to
+disagree about. The 41 findings (17 gaps, 15 discrepancies, 9 insights) are in
+[worm-findings.yaml](MOD_DESCRIPTIONS/worm-findings.yaml) with the rest.
+
+- **WormBase text: mostly omissions, a few errors.** 10 of the 14 WormBase defects are
+  omissions of later work. Examples:
+  - the YAP-1/WTS-1 Hippo roles of egl-44;
+  - the PVD role of mec-3;
+  - the cytoplasmic second function of PIE-1, which promotes mom-2 and nos-2 expression.
+
+  The wrong or outdated statements are:
+  - egl-46 "required for ... terminal divisions of the Q neuroblasts": mutants make an extra
+    division.
+  - egl-46 "TFIIA-like zinc-finger protein family": EGL-46 is an INSM-family protein, and
+    TFIIA has no zinc fingers.
+  - lin-31: the 1998 phosphorylation model is stated as fact. Endogenous alleles lacking all
+    four MAPK sites give only vulval morphology defects (PMID:23995389).
+  - pos-1: mex-6 3' UTR binding called "in vitro", when it came from a yeast three-hybrid
+    assay.
+- **UniProt text: fewer omissions, harder errors.** Two FUNCTION sentences contradict the
+  paper they cite:
+  - pie-1 "Inhibits the histone deacetylase activity of hda-1 (PubMed:34003111)": that paper
+    shows PIE-1 promoting HDA-1 SUMOylation and germline hypoacetylation.
+  - pos-1 promotes endo-mesoderm "in anterior blastomeres": POS-1 acts posteriorly and
+    restricts NEG-1 to the anterior (PMID:26096734).
+
+  Also: mes-1's GPR-1/2 enrichment mechanism has since been revised, and yap-1's S104A
+  mutagenesis note contradicts itself.
+- **Automated text** leads with removed terms here too: kinase activities for the MES-1
+  pseudokinase, a pseudokinase confirmed by a residue analysis in
+  `genes/worm/mes-1/mes-1-bioinformatics/`. The egl-44 and egl-46 texts give exit from
+  mitosis for a defect in which a cell divides once too often.
+- **NEW rows.** There are five, all from the literature rather than from a gap finding:
+  - positive regulation of translation for pie-1 (PMID:24131629) and pos-1 (PMID:16499902);
+  - defense response to Gram-negative bacterium for yap-1 (PMID:32857822). A comparator check
+    showed that the worm transcription factors with that role carry the term.
+  - nucleolus for pie-1 and P-body for pos-1, both by IDA.
+
+  One proposed NEW row was withdrawn in the coordinator's check. mec-3 mechanoreceptor
+  differentiation (GO:0042490) is a direct child of neuron differentiation, which the gene
+  already carries. It became a MODIFY of the two IMP rows whose papers are about touch
+  receptors, and the family-level IBA and IEA rows stay `ACCEPT`.
+- **Lexical overlap.** The new descriptions recover a median 0.46 of their WormBase
+  content words, against 0.37 for the worm corpus. That is expected when the text is an
+  input. The corpus median is unchanged at 0.37 (452 genes; see
+  [worm-comparison.yaml](MOD_DESCRIPTIONS/worm-comparison.yaml)).
+- **How the reviews were run.**
+  - No deep-research provider was configured, so each notes file records the literature
+    searches that were done by hand.
+  - UniProt's gene-symbol search returned HTTP 429, so `just fetch-gene` was given
+    `--uniprot-id`.
+  - The reviews were written in parallel, in sparse registered worktrees that shared the
+    main runtime. The project's PostToolUse validation hook runs `uv run` in the edited
+    file's checkout without the `UV_PROJECT_ENVIRONMENT` setting. In two worktrees, one
+    review edit each built a 1.4 GB `.venv` and rewrote `uv.lock`. Both were reverted, and
+    the remaining edits were made without the editor tools.
+
 ## Yeast (SGD)
 
 - `fetch-descriptions-bulk yeast` refreshed all 890 sidecars, and
@@ -483,6 +595,10 @@ descriptions fetcher would have asked the Alliance API for `MGI:MGI:106913`.
    phenotype summary, RGD's is automated text, and ZFIN and Xenbase have none.
 4. The NCBI step hits rate limits (HTTP 429) on bulk runs. It should honour an
    `NCBI_API_KEY`, or back off and retry.
+5. The review-validation hook should honour `UV_PROJECT_ENVIRONMENT` (or call the
+   shared interpreter directly). Otherwise every edit in a separate worktree builds a
+   new environment there
+   ([issue 6457](https://github.com/ai4curation/ai-gene-review/issues/6457)).
 
 ## Status and next steps
 
@@ -496,6 +612,10 @@ descriptions fetcher would have asked the Alliance API for `MGI:MGI:106913`.
 - [x] Rubric reviews of all description sources for all 432 worm genes, with a findings worklist
 - [x] Work through the gap and discrepancy findings in `worm-findings.yaml`
 - [x] Record the contradicted MOD and UniProt statements as `source_defects`
+- [x] Worm: score the 11 reviews added after the run (all 452 worm sidecars `COMPLETE`)
+- [x] Worm: nine new reviews written with the WormBase text as input (26 text defects, 5 NEW rows)
+- [ ] Worm: more new reviews from the same ranking (next candidates: gex-3, ced-10, goa-1,
+  lin-5, npr-1, daf-1, cav-1, oma-1)
 - [ ] File the WormBase, UniProt and Alliance reports (manual step) and set `report_status`
 - [x] Yeast: fetch descriptions and write SGD deep-research files (890 genes)
 - [x] Yeast: score descriptions (890 COMPLETE)
