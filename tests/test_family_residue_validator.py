@@ -511,7 +511,10 @@ def test_real_pgrp_node_assessments_check_out():
         Path("interpro/panther/PTHR11022/PTHR11022-review.yaml"),
         Path(".cache/uniprot_seq"),
     )
-    node_results = [r for r in results if r.accession.startswith("GO:")]
+    node_results = [
+        r for r in results
+        if r.accession.startswith("GO:") and r.kind != "NODE_PROPOSED_ACTION"
+    ]
     # two node/term pairings plus a seed check for each
     assert len(node_results) == 4, [str(r) for r in node_results]
     assert all(r.outcome is Outcome.PASS for r in node_results)

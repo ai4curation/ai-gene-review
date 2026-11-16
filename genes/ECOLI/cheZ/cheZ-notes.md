@@ -39,3 +39,10 @@
 - GO:0000160 phosphorelay signal transduction system: not added. CheZ acts on the response
   regulator's phosphoaspartate to terminate the relay output; whether that counts as
   participation is left as a suggested question rather than a NEW row.
+
+
+## 2026-11-06 taxonomic module audit
+
+Retained all 34 row actions and inherited NEW cell-pole assertion. Removed unsupported quantitative dominance of bulk-cytoplasmic CheZ, retaining both soluble and array-recruited pools. Corrected the upstream defect resource to INTERPRO and limited its argument to the target. Removed an assertion about components in inaccessible PMID2832069 full text.
+
+Reviewed all existing rows, references and core functions. Current PAINT-loss checks found no IRD or IKR on this target lineage. A normal Falcon research attempt failed with HTTP 403 authentication; no provider report was fabricated or overwritten. Existing source payloads, raw files and inherited NEW rows are preserved; no new annotation rows were added. Comparative scope was checked against the full text of PMID33684668: the E. coli ligand-response direction and optional adaptation/termination components are not universal.

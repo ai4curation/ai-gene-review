@@ -16,3 +16,8 @@
 - Remove iron-ion binding: it appears to cross the multi-subunit enzyme boundary from the Fe-S-bearing XdhA module.
 - Do not assign a homodimeric XDH complex term to the heteromeric XdhAB realization.
 - Do not import the report's target-specific XdhA2B2 stoichiometry, cytosolic location, exact XdhC requirement, Mo-MCD form, active-site residue numbering, AlphaFold metrics, methylxanthine range, or electron path. The terminal acceptor for KT2440 remains inferred from EC 1.17.1.4 and homologous XDH rather than directly measured.
+
+## Completion pass
+
+- Completion pass (2026-11-09): recorded the IPR016208 iron-ion mapping that crosses into the Mo subunit as a source defect on the REMOVE row; restored GOA's `enables` qualifier on any GO:0004854 row with a WRONG_QUALIFIER defect; replaced label-only UniProt quotes with the NCBIfam TIGR02965 family line. UniProt's ARBA cofactor comments (FAD, [2Fe-2S]) belong to XdhA, not XdhB, and were not used as evidence. Status set to COMPLETE.
+- Review follow-up (PR #6212): added a paired NEW GO:0004854 contributes_to row beside the MODIFY of the GOA enables row (SDH relation-only pattern); WRONG_QUALIFIER cause set to PRACTICE_CHANGE.

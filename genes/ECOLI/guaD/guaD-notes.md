@@ -36,3 +36,7 @@ Decision sketch:
   deamination, and PMID:31283204 later directly showed secondary ammeline
   deaminase activity for purified EcGuaD, but the physiological purine substrate
   remains guanine.
+
+## Completion pass
+
+- Completion pass (2026-11-09): generic parents of the accepted guanine deaminase activity / guanine catabolic process rows are now TOO_GENERAL (true but entailed by the child), and every row carries vetted supported_by (PTHR11271 PAINT lines, UniProt curated reaction/pathway, PMID:10913105). Status set to COMPLETE.

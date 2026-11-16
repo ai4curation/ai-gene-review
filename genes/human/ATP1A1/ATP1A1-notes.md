@@ -253,3 +253,10 @@ The seven evidence-backed alpha/beta refinements to GO:0046982 and all other ann
 - Traced the source via QuickGO: rat P06685 GO:0005783 IDA PMID:18768923 (BHF-UCL). Cached full text: MDCK-cell study of ankyrin-dependent ER-to-Golgi export. [PMID:18768923 "the α- and β-ATPase subunits assemble in the ER and exit efficiently only as a complex"]; ER accumulation appears only when export is blocked: [PMID:18768923 "accumulated significant amounts of α 1 -Na + -K + -ATPase in a cytosolic compartment that appeared to be the ER"] (eGFP-MAB overexpression), and the MAB deletion mutant binds BiP (misfolded).
 - UniProt human location: cell membrane, basolateral, sarcolemma, axon, melanosome; no ER.
 - Outcome: KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED (biosynthetic transit plus perturbation-induced retention of a plasma-membrane pump). No sub-compartment row. Added PMID:18768923 to references. Golgi ISS row (same source) not touched in this batch; it likely deserves the same check in the Golgi batch.
+
+## 2026-11-13 ORGANELLES Golgi batch 1 (Golgi apparatus rows)
+
+- Row: GO:0005794 ISS (GO_REF:0000024, BHF-UCL, with UniProtKB:P06685). QuickGO: rat P06685 GO:0005794 IDA PMID:18768923 (BHF-UCL), the same paper as the ER ISS row reviewed 2026-11-04.
+- PMID:18768923 (full text) measures ER-to-Golgi export: reporters (VSV-G, VSV-MAB) reaching the Golgi and Golgi glycosylation of the beta subunit as a proxy for alpha,beta passage. Alpha1 is never shown in a marker-defined Golgi compartment; wild-type alpha1 goes on to the surface [PMID:18768923 "Upon transient expression, Flag-tagged WT α 1 -Na + -K + -ATPase moved to the plasma membrane"]; conclusion [PMID:18768923 "These results establish that ankyrin facilitates the passage of α 1 -Na + -K + -ATPase through the secretory pathway, at least to the Golgi"].
+- UniProt human location: no Golgi.
+- Outcome: KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED (biosynthetic transit of a plasma-membrane pump), consistent with the ER ISS row. Removed the "Neighbouring Golgi row not re-reviewed here" sentence from the ER row reason (no other change to that row). No sub-compartment row.

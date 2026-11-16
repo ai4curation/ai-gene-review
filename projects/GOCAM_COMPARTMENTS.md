@@ -20,7 +20,7 @@ activities in 104 models). The most common compartment jump, a plasma-membrane
 receptor kinase or JAK directly activating a nuclear SMAD or STAT, is a GO-CAM
 convention rather than an error: the steps in between (release, SMAD4 or STAT
 pairing, nuclear import) are left out. **Modules now state those steps and are
-linked to the GO-CAM activities, so they explain the jump**: 62 of the 76 direct
+linked to the GO-CAM activities, so they explain the jump**: 73 of the 76 direct
 receptor → nucleus edges are explained by a module path through a nuclear
 import step ([Explaining edges with modules](#explaining-edges-with-modules)).
 What remains, 54 direct edges in 33 models, are review leads; most pass
@@ -210,6 +210,8 @@ the GO-CAM edge stands for.
 | [`jak_stat_signaling`](../modules/jak_stat_signaling.yaml) | The dimerization and import step is now two sub-steps: STAT release and dimerization (no other gene product), then STAT nuclear import by `module_ref`, citing importin-alpha5 for STAT1 and importin-alpha3 for STAT3 | 38 |
 | [`bmp_signaling`](../modules/bmp_signaling.yaml) | **New step**: R-SMAD/SMAD4 complex formation (SMAD4 had been listed only at the output) and SMAD nuclear import by `module_ref` (importin-7/8; the SMAD1 basic NLS motif) | 19 |
 | [`tgfb_smad_signaling`](../modules/tgfb_smad_signaling.yaml) | **New step**: SMAD2/3 nuclear import by `module_ref` (SMAD3 binds importin-beta1; both need importin-7/8) | 5 |
+| [`activin_receptor_signaling`](../modules/activin_receptor_signaling.yaml) | **New step**: R-SMAD/co-SMAD nuclear import by `module_ref`, between type I receptor phosphorylation and transcriptional output. ALK4 (ACVR1B) and SMAD2/3 activities are pinned from the Activin A model and from the BMP3, BMP3b/GDF10 and BMP8B models, whose ligands drive the same ALK4 → SMAD2/3 relay; ALK7 (ACVR1C) from the Activin E model is pinned to the receptor step | 11 |
+| [`nodal_signaling`](../modules/nodal_signaling.yaml) | **New step**: SMAD2/3-SMAD4 nuclear import by `module_ref`. No cached production GO-CAM models Nodal signaling, so nothing is pinned yet | 0 |
 
 So the answer to "does this jump involve other genes?" is now written down
 where it can be reused. Release and STAT dimerization are changes of state of
@@ -218,9 +220,9 @@ from all 16 SMAD GO-CAMs in this set. Import uses shared machinery (importins
 and the Ran system), which GO-CAMs reasonably leave out and the import module
 supplies once.
 
-Only human GO-CAM activities are pinned. Mouse and fly models with the same
-pattern, and the activin and nodal receptor models (ACVR1B, ACVR1C → SMAD2/3),
-are left for the corresponding modules.
+Only human GO-CAM activities are pinned. The mouse and fly models with the same
+pattern (Il22ra1 → Stat3, hop → Stat92E) and the IL13RA2 → AP-1 edge are the three
+direct receptor → nucleus edges still unexplained.
 
 ## First corpus run
 
@@ -244,8 +246,8 @@ model:
 | same compartment | 4,676 |
 | adjacent | 1,207 |
 | bridged (membrane–space–membrane) | 63 |
-| explained by a module | 62 |
-| relocating | 23 |
+| explained by a module | 73 |
+| relocating | 12 |
 | non-adjacent | 179 (54 with a direct predicate: 33 material flow, 21 regulation) |
 | indeterminate | 2,956 |
 
@@ -254,7 +256,7 @@ were taken into account (upstream → downstream, all edges / direct edges):
 
 | Upstream | Downstream | Edges | Direct | Usual missing step |
 |---|---|---|---|---|
-| plasma membrane | nucleus | 99 | 76 | the receptor or kinase acts on a cytosolic factor, which then enters the nucleus (JAK1 → STAT3 in `5f46c3b700002685`); 61 models. Of the 76 direct edges, 62 are now explained by modules and 11 (activin/nodal → SMAD2/3) are relocating |
+| plasma membrane | nucleus | 99 | 76 | the receptor or kinase acts on a cytosolic factor, which then enters the nucleus (JAK1 → STAT3 in `5f46c3b700002685`); 61 models. Of the 76 direct edges, 73 are now explained by modules |
 | nucleus | extracellular region | 21 | 3 | gene expression → secreted product, normally an indirect edge |
 | nucleus | plasma membrane | 16 | 0 | as above, for a membrane product |
 | cytoplasmic vesicle (coarse) | ER (coarse) | 11 | 11 | all in one *S. pombe* model (`693b3c0900004859`): COPII cargo receptors acting on Sec24; placing both ends in their membranes would make these bridged |
@@ -335,7 +337,7 @@ genes; and several references that appear to be copied from another model.
 A recurring pattern across many models is better answered once in a module
 than once per model in a review. The receptor → nuclear transcription factor
 pattern turned out to be a convention with a well-defined set of missing steps;
-writing them into modules settled it for 62 edges at once.
+writing them into modules settled it for 73 edges at once.
 
 Unresolved locations are second priority, because the biology is usually
 obvious. A review deals with them by noting the term that would state the
@@ -368,9 +370,12 @@ location (chromatin → `GO:0000228` nuclear chromosome).
 
 - Work through the review leads above, writing a GO-CAM review for each
   model taken up.
-- Give `activin_receptor_signaling` and `nodal_signaling` the same SMAD2/3
-  import step and pin their GO-CAM activities; that would explain the 11
-  relocating ACVR1B/ACVR1C → SMAD2/3 edges.
+- The `cytosolic_iron_sulfur_assembly` module explains nothing yet: its two
+  pinned ABCB7 → cytosolic scaffold edges are refused (`spans_edge: false`)
+  because its export step declares only the inner mitochondrial membrane, and
+  reaching the cytosol also crosses the outer membrane. Either declare the
+  route the exported intermediate takes, or record why the outer-membrane step
+  is collapsed (the same porin question the gluconeogenesis reviews raised).
 - Write or extend modules for the material-flow jumps (mitochondrial metabolite
   export through the outer membrane; pyruvate import), and pin them.
 - Report chromatin → nuclear chromosome upstream to the GO-CAM curators and to

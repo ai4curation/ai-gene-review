@@ -554,8 +554,10 @@ pflC/ybiY, and a query on an *L. lactis* donor), 4 against InterPro2GO mappings
 and 1 against an EcoliWiki GOA row. The InterPro defects sit on just **three
 distinct entries** (IPR004559 carries two wrong mappings), and each propagates to
 every member of its signature, so correcting three entries fixes far more genes
-than the 29 here. `SourceResourceEnum` has no `INTERPRO` value, so those four are
-filed as `resource: OTHER` with InterPro named in each explanation.
+than the 29 here. Those four are filed `resource: INTERPRO`, so they route to
+`reports/source-defects/INTERPRO.md`; they were `resource: OTHER` with InterPro
+named in the explanation until the enum gained an `INTERPRO` value (#5984) and
+they were re-filed onto it (#6027).
 
 `just export-source-defects` turns them into per-resource reports.
 
