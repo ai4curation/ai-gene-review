@@ -70,7 +70,7 @@ GDP-mannose binding residues that UniProt annotates by similarity to the archaea
 (Q8U4M3), and it has no metal-binding residue.
 
 **Annotation decisions.** GO:0004582 (IEA, InterPro2GO) is kept as REMOVE for this product. I added a
-`source_defects` entry (PROBABLE, REPOINT U4PF58 -> Q9TYJ7) so that the row can go upstream as a
+`source_defects` entry (PROBABLE; on re-review DELETE_ROW for InterPro, since Q9TYJ7 already carries the term) so that the row can go upstream as a
 fragment-coverage problem. The annotation is right for the gene and wrong only for this product.
 No NEW terms were proposed: the fragment has no demonstrated activity, location or partner, and
 core_functions stays empty. The description was rewritten to state the isoform relationship and
