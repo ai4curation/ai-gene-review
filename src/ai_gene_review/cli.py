@@ -3546,6 +3546,41 @@ def render_projects(
 
 
 @app.command()
+def render_gocams(
+    gocams_dir: Annotated[
+        Path,
+        typer.Option("--gocams-dir", help="Directory of cached GO-CAM models and reviews"),
+    ] = Path("gocams"),
+    output_dir: Annotated[
+        Path,
+        typer.Option("--output-dir", "-o", help="Output directory for GO-CAM review pages"),
+    ] = Path("pages/gocams"),
+    genes_dir: Annotated[
+        Path,
+        typer.Option("--genes-dir", help="Directory of gene reviews, for links"),
+    ] = Path("genes"),
+    modules_dir: Annotated[
+        Path,
+        typer.Option("--modules-dir", help="Directory of module YAML, for links"),
+    ] = Path("modules"),
+):
+    """Render every GO-CAM review (gocams/<id>/<id>-review.yaml) plus an index page.
+
+    Examples:
+        ai-gene-review render-gocams
+    """
+    from ai_gene_review.render_gocams import render_all_gocams
+
+    written = render_all_gocams(
+        gocams_dir=gocams_dir,
+        output_dir=output_dir,
+        genes_dir=genes_dir,
+        modules_dir=modules_dir,
+    )
+    typer.echo(f"Rendered {len(written) - 1} GO-CAM review page(s) and an index to {output_dir}")
+
+
+@app.command()
 def render_modules(
     files: Annotated[
         Optional[List[Path]],
