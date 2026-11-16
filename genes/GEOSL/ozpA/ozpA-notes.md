@@ -101,7 +101,34 @@ Deliberately **not** added, and this is the interesting part:
 
 ## Ontology note
 
-Nothing here needs a change to an existing term: `GO:0016485` fits exactly. The one
-existing-term problem this family's reviews have surfaced is in the ImcH review, and
-concerns `GO:0008121`'s transporter parents; it is now recorded there as structured
-`proposed_ontology_changes` rather than prose.
+Nothing here needs a change to an existing term: `GO:0016485` fits exactly.
+
+The one existing-term problem this family's reviews surfaced is in the ImcH review and
+concerns `GO:0008121`'s transporter parents. It was briefly recorded there as two
+structured `EDGE_DELETION` requests; those were **withdrawn** after checking the term
+itself. `GO:0008121` is cross-referenced to `EC:7.1.1.8` and `RHEA:11484`, and EC class 7
+is the translocases, created for vectorial reactions; with a definition that opens
+"Enables the transfer of a solute or solutes from one side of a membrane to the other",
+the transporter parents are the term's identity rather than an accident inherited from
+the cytochrome bc1 archetype. Deleting them would leave the term contradicting its own
+definition and both reaction cross-references. The coherent request is the separate
+electroneutral term the ImcH review already asks for in `proposed_new_terms`, so that is
+now the only live upstream ask, and the parentage is recorded as a question rather than a
+change request.
+
+## On the declined cellular-component row
+
+Checked rather than assumed, after the claim was challenged in review: `GO:0005576`
+extracellular region does carry the comment "Note that this term is intended to annotate
+gene products that are not attached to the cell surface. For gene products at the cell
+surface, consider annotating to external side of plasma membrane ; GO:0009897."
+(QuickGO, 2026-11-16). So the stated reason for declining the row stands — the term turns
+on surface attachment, which the evidence does not resolve.
+
+The review's wording did understate what PMID:33837010 did, though, and is now corrected.
+That work compared three fractions, not one, and found OmcZL-cleaving activity in the
+supernatant alone, which excludes an intracellular location and a loosely attached
+surface one. What remains open is narrower: activity in a fraction is not protein in a
+fraction, and a *tightly* attached surface protein would not shear into a loosely bound
+fraction either. That is the gap the suggested experiment now addresses by following the
+protein rather than the activity, and by adding protease accessibility on intact cells.

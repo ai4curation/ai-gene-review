@@ -98,12 +98,22 @@ files and taking each one's distance to its nearest neighbour
 | 6NEF | OmcS | 6 | 9.3 Å |
 | 7LQ5 | OmcZ | 8 | 9.2 Å |
 | 8D9M | OmcZ, independent deposition | 8 | 9.4 Å |
+| 8E5F | PcECN (`A3MW92`), archaeal | 4 | 10.4 Å |
+| 8E5G | AvECN (`F2KMU8`), archaeal | 4 | 9.4 Å |
 
-Three proteins, four six and eight hemes, no sequence or fold similarity, and the
-medians fall in a band about 1.2 Å wide. The two independent OmcZ depositions agree
-to 0.2 Å, which is the control showing the spread between proteins is not deposition
-noise. Fe–Fe is a proxy for the edge-to-edge distances the papers quote, which are
-smaller, and four structures is a consistency check rather than a survey.
+Five proteins, four six and eight hemes, two domains of life, no sequence or fold
+similarity, and the medians fall in a band about 1.3 Å wide. The two independent OmcZ
+depositions agree to 0.2 Å, which is the control showing the spread between proteins is
+not deposition noise. The two archaeal filaments were measured after the bacterial band
+was fixed and land inside it, so they are an out-of-sample confirmation rather than part
+of the fit. Fe–Fe is a proxy for the edge-to-edge distances the papers quote, which are
+smaller.
+
+**The band is real but it is not diagnostic.** Measured against non-filament multiheme
+cytochromes, three independent NrfA nitrite reductases give 9.7 Å — inside this band.
+That rules the spacing out as a classifier; the autoclassification section below
+treats it in full, as does
+[RESULTS.md](EXTRACELLULAR_CYTOCHROME_NANOWIRES/RESULTS.md).
 
 ## The three *Geobacter sulfurreducens* filaments
 
@@ -174,22 +184,44 @@ give you the backbone — the part that varies — and no hemes at all. Worse, t
 published signature of the class is *inter*-subunit: a heme ligated by a histidine from
 the neighbouring subunit. A monomer model cannot show that by construction.
 
-**There is a route, and the measurement above says what it would key on.** The hemes
-are covalently attached at CXXCH motifs, which are in the sequence and findable by
-regex. A predicted monomer places those cysteines and the axial histidines in three
-dimensions, and a heme iron sits in a near-fixed position relative to its own CXXCH
-plus its distal ligand. So pseudo-iron positions can be placed on an apo model without
-predicting the ligand at all, and the resulting distance matrix asked whether it looks
-like a chain at ~9–10 Å spacing. In the terms of
+**There is a route, but not the one this page first proposed.** The hemes are
+covalently attached at CXXCH motifs, which are in the sequence and findable by regex. A
+predicted monomer places those cysteines and the axial histidines in three dimensions,
+and a heme iron sits in a near-fixed position relative to its own CXXCH plus its distal
+ligand. So pseudo-iron positions can be placed on an apo model without predicting the
+ligand at all, and the resulting distance matrix examined. In the terms of
 [STRUCTURE_FUNCTION](STRUCTURE_FUNCTION.md) this is a Level 2 local-motif search, but
 keyed on a **cofactor geometry** rather than a catalytic site, which is why M-CSA /
 EnzyMM and PARSE do not cover it off the shelf.
 
-Caveats, stated plainly: this is untested, the premise is measured but the method is
-not; a monomer model captures only the intra-protomer chain and misses the
-cross-subunit ligation that the literature calls the signature; and these proteins are
-loop-rich and partly disordered, so predicted confidence may be poor exactly where it
-matters.
+**What the distance matrix must not be asked is whether the spacing is ~9–10 Å.** That
+was the proposal here, and measuring the out-of-class controls refuted it
+([RESULTS.md](EXTRACELLULAR_CYTOCHROME_NANOWIRES/RESULTS.md)). The cytochrome c3
+look-alikes the literature offers do separate — 11.4–11.7 Å, above the band — but the
+pentaheme nitrite reductases do not: NrfA measures **9.7 Å in three independent
+structures from three organisms**, between OmcS's 9.3 and OmcE's 10.4. NrfA is exactly
+what the sequence screen yields as its hardest false positive, so a spacing filter
+would add nothing precisely where precision is needed.
+
+**The feature that does separate them is continuity through the subunit interface**, and
+the papers named it all along — hemes "coordinated by histidines in adjacent subunits".
+Measured as the closest inter-subunit Fe–Fe over the intra-subunit spacing, the two
+multi-subunit filament depositions sit at **1.00×**: the chain does not notice the
+interface. Every non-filament is ≥1.10×, including the NrfHA complex, where electrons
+genuinely do cross a subunit interface during catalysis and the junction is still 10%
+longer than the spacing either side of it. That is the difference between a relay with a
+junction and a wire.
+
+Caveats, stated plainly, and one of them is now much heavier. The method is still
+untested. The proteins are loop-rich and partly disordered, so predicted confidence may
+be poor exactly where it matters. And the discriminating feature is a property of the
+**polymer, not the subunit** — which is the same wall the AFDB paragraph above hits, now
+reached from the other side: it is not merely that a monomer model happens to omit the
+inter-subunit contact, it is that the only feature known to separate this class from its
+look-alikes lives in that contact. Until polymer prediction is good enough, the honest
+position is that the sequence screen is a candidate generator with no automated second
+stage, and the second stage is the cryo-EM work the papers did by hand. The continuity
+threshold itself rests on two filaments, so it is provisional.
 
 ### The cheap baseline, run
 
@@ -306,8 +338,11 @@ too-short loop. In *P. calidifontis*, `A3MW89` — the only protein in that prot
 four CXXCH motifs, and so the obvious sequence-level answer — was excluded because its
 AlphaFold fold does not match the map. Nothing in the sequence separates any of them from
 the real subunit. An independent group needed cryo-EM to make precisely the
-discrimination this project proposes to make with heme geometry, which is the strongest
-evidence yet that the structural half is the half that matters.
+discrimination this project proposes to make computationally, which is the strongest
+evidence yet that the structural half is the half that matters — and, read together with
+the out-of-class geometry result, the clearest sign of how hard that half is: the
+discriminating feature lives in the subunit interface, which is the part a monomer model
+does not have.
 
 ## Proposed GO terms
 

@@ -59,11 +59,20 @@ The filter is a **good candidate generator and not a classifier**. It cuts 3,402
 proteins to 27, a 126-fold reduction, with no loss of the known subunits — which is
 exactly what a first-stage screen should do. It cannot do the second stage: it keeps
 nitrite reductases, and nothing in the sequence distinguishes them from a filament
-subunit, because what distinguishes them is where the hemes end up.
+subunit.
 
 So the structural half is worth building, and the experiment that could have made it
-unnecessary did not. The sensible shape is this filter for recall, then heme geometry
-for precision, as the project page proposes.
+unnecessary did not.
+
+**What that second stage can be is narrower than this page first claimed.** The
+original sentence here was that "what distinguishes them is where the hemes end up",
+and the out-of-class measurement in [RESULTS.md](RESULTS.md) shows that the hemes end
+up in the *same* place: three independent NrfA structures give a 9.7 Å median
+nearest-neighbour Fe–Fe, inside the 9.1–10.4 Å filament band. A spacing filter would
+keep every nitrite reductase this screen keeps. What does separate them is whether the
+heme chain is continuous *through the subunit interface*, which is a property of the
+assembled polymer rather than of the subunit — so the second stage needs the filament,
+not a monomer model of its subunit.
 
 ## Refining it: two more rules, validated on held-out organisms (2026-11-15)
 
