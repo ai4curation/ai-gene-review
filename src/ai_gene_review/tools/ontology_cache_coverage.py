@@ -90,7 +90,9 @@ LABEL_MISMATCH = re.compile(r"Label mismatch for '(?P<curie>[^']+)'")
 FILE_HEADER = re.compile(
     r"^(?:❌|✅) (?P<name>\S+\.ya?ml)(?: - (?P<issues>\d+) issue\(s\):)?\s*$"
 )
-SINGLE_FILE_RESULT = re.compile(r"^(?:✅ Validation passed|❌ Validation failed)")
+SINGLE_FILE_RESULT = re.compile(
+    r"^(?:✅ Validation passed|❌ Validation failed(?: with (?P<issues>\d+) issue\(s\):)?)"
+)
 FINDING_LINE = re.compile(
     r"^\s*(?:❌ (?P<error>ERROR)|⚠️\s+(?P<warn>WARN)): (?P<message>.+)$"
 )
@@ -375,6 +377,13 @@ def parse_offline_output(
     >>> report.unchecked_files
     {'a/X-predictions-review.yaml': 'validator announced 2 issue(s) but 0 were parsed'}
 
+    The single-file result line carries the same count:
+
+    >>> report = CoverageReport()
+    >>> parse_offline_output("❌ Validation failed with 1 issue(s):", 1, files[:1], report)
+    >>> report.unchecked_files
+    {'a/X-predictions-review.yaml': 'validator announced 1 issue(s) but 0 were parsed'}
+
     A run that names only one of two files, or crashes, leaves files unchecked:
 
     >>> report = CoverageReport()
@@ -403,8 +412,13 @@ def parse_offline_output(
                 issues = header.group("issues")
                 announced[current] = int(issues) if issues is not None else 0
             continue
-        if len(files) == 1 and SINGLE_FILE_RESULT.match(line):
+        if len(files) == 1 and (single := SINGLE_FILE_RESULT.match(line)):
             accounted.add(files[0].as_posix())
+            issues = single.group("issues")
+            if issues is not None:
+                announced[files[0].as_posix()] = int(issues)
+            elif line.startswith("✅"):
+                announced[files[0].as_posix()] = 0
             continue
         finding = FINDING_LINE.match(line)
         if not finding:
