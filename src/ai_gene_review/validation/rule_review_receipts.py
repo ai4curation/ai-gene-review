@@ -246,7 +246,7 @@ def _official_label(identifier: str, labels: Dict[str, Dict[str, str]]) -> Optio
     return labels["funfam"].get(identifier)
 
 
-@lru_cache(maxsize=2)
+@lru_cache(maxsize=8)
 def _redundancy_table(path: Optional[Path] = None) -> Dict[str, Dict[str, str]]:
     """Rows of ``projects/ARBA_REVIEW/rule_redundancy.tsv`` keyed by rule id."""
     table = path or PROJECT_ROOT / "projects" / "ARBA_REVIEW" / "rule_redundancy.tsv"
@@ -668,7 +668,7 @@ def check_review(
             "the rule is withdrawn, so the action is WITHDRAWN, not DEPRECATE", "action",
             "DEPRECATE is for a rule that is still served and should be retired.")
 
-    check_meaning(data, add, labels)
+    check_meaning(data, add, labels, project_root)
 
 
 def _check_coverage_prose(data: Dict[str, Any], covered: int, total: int, table: str, add: Any) -> None:
@@ -697,7 +697,9 @@ def _check_coverage_prose(data: Dict[str, Any], covered: int, total: int, table:
                 "Quote the table, or say which subset the figure is.")
 
 
-def check_meaning(data: Dict[str, Any], add: Any, labels: Dict[str, Dict[str, str]]) -> None:
+def check_meaning(
+    data: Dict[str, Any], add: Any, labels: Dict[str, Dict[str, str]], project_root: Path = PROJECT_ROOT
+) -> None:
     """Checks on the second axis: is the rule a meaningful, parsimonious statement?
 
     Accuracy (is each annotation true?) is not enough for a verdict. A rule whose
@@ -787,7 +789,8 @@ def check_meaning(data: Dict[str, Any], add: Any, labels: Dict[str, Dict[str, st
 
     # The generality and coverage figures are copied from the project's redundancy table; check the copy.
     go_ids = [a.get("go_id") for a in rule.get("go_annotations") or [] if a.get("go_id")]
-    row = redundancy_row(str(rule.get("rule_id") or data.get("id") or ""))
+    tables = project_root / "projects" / "ARBA_REVIEW"
+    row = redundancy_row(str(rule.get("rule_id") or data.get("id") or ""), tables / "rule_redundancy.tsv")
     if row and len(go_ids) == 1 and row["term"] == go_ids[0]:
         for field, column in (("consequent_descendant_count", "go_descendants"),
                               ("sets_covered_by_more_specific_rule", "covered_sets")):
@@ -812,7 +815,8 @@ def check_meaning(data: Dict[str, Any], add: Any, labels: Dict[str, Dict[str, st
 
     keywords = [str(a.get("value")) for a in data.get("annotation_assessments") or []
                 if isinstance(a, dict) and a.get("annotation_kind") == "KEYWORD"]
-    keyword_row = keyword_redundancy_row(str(rule.get("rule_id") or data.get("id") or ""))
+    keyword_row = keyword_redundancy_row(
+        str(rule.get("rule_id") or data.get("id") or ""), tables / "keyword_redundancy.tsv")
     if keyword_row and not go_ids and keyword_row["keyword"] in keywords:
         stated_value = meaning.get("sets_covered_by_more_specific_rule")
         if isinstance(stated_value, int) and stated_value != int(keyword_row["covered_sets"]):

@@ -68,7 +68,22 @@ def review(**overrides: Any) -> dict[str, Any]:
     return base
 
 
+def write_tables(root: Path) -> None:
+    """Synthetic redundancy tables under ``root``, so no test depends on the committed ones."""
+    folder = root / "projects" / "ARBA_REVIEW"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "rule_redundancy.tsv").write_text(
+        "rule\tterm\tlabel\tgo_descendants\tcondition_sets\tcovered_sets\tcovered_by_terms\n"
+        "ARBA00026480\tGO:0010605\tnegative regulation of macromolecule metabolic process\t524\t343\t313\tGO:0010629\n"
+    )
+    (folder / "keyword_redundancy.tsv").write_text(
+        "rule\tkeyword\tname\tkeyword_descendants\tcondition_sets\tcovered_sets\tcovered_by_keywords\n"
+        "ARBA00022679\tKW-0808\tTransferase\t13\t4603\t2661\tKW-0418=1196\n"
+    )
+
+
 def checks(data: dict[str, Any], tmp_path: Path, severity: str = "error") -> set[str]:
+    write_tables(tmp_path)
     report = ValidationReport(is_valid=True)
     check_review(data, report, project_root=tmp_path, labels=LABELS)
     return {str(issue.check_type) for issue in report.issues if issue.severity == severity}
@@ -380,10 +395,6 @@ def test_correct_assessment_cannot_name_wrong_proteins(tmp_path: Path) -> None:
     ],
 )
 def test_prose_quoting_the_redundancy_table_must_match_it(field: str, text: str, fires: bool, tmp_path: Path) -> None:
-    from ai_gene_review.validation.rule_review_receipts import redundancy_row
-
-    row = redundancy_row("ARBA00026480")
-    assert row is not None and (row["condition_sets"], row["covered_sets"]) == ("343", "313"), "fixture row changed"
     rule = {"rule_id": "ARBA00026480", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10",
             "source_condition_set_count": 343,
             "go_annotations": [{"go_id": "GO:0010605",
@@ -477,3 +488,23 @@ def test_coverage_prose_is_compared_with_given_table_figures(text: str, expected
 
     _check_coverage_prose({"review_summary": text}, 2661, 4603, "keyword_redundancy.tsv", add)
     assert fired == expected
+
+
+@pytest.mark.parametrize(
+    "text,expected_error,expected_warning",
+    [
+        ("600 of 4,603 sets are also matched by a rule for a descendant keyword.", False, True),
+        ("keyword_redundancy.tsv: 600 of 4,603 sets are also matched by a rule for a descendant keyword.", True, False),
+        ("keyword_redundancy.tsv: 2,661 of 4,603 sets are also matched by a rule for a descendant keyword.", False, False),
+    ],
+)
+def test_keyword_review_is_routed_to_the_keyword_table(
+    text: str, expected_error: bool, expected_warning: bool, tmp_path: Path
+) -> None:
+    """End to end: a KEYWORD review reaches the coverage check with its keyword_redundancy.tsv row."""
+    rule = {"rule_id": "ARBA00022679", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10",
+            "source_condition_set_count": 4603}
+    data = review(id="ARBA00022679", rule=rule, review_summary=text,
+                  annotation_assessments=[{"annotation_kind": "KEYWORD", "value": "KW-0808", "assessment": "UNDECIDED"}])
+    assert ("redundancy_prose_mismatch" in checks(data, tmp_path)) is expected_error
+    assert ("redundancy_prose_unconfirmed" in checks(data, tmp_path, "warning")) is expected_warning
