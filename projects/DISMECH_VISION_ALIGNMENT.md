@@ -315,6 +315,236 @@ disagreement: the gene's nodes carry GO terms and none of them relates to a core
 function in the review.
 
 <!-- BEGIN GENERATED: audit -->
+Audit run 2026-11-16T06:56:06Z over dismech `0669e13e5` and ai-gene-review `d6828d1c9` (GO adapter `sqlite:obo:go`, ai-gene-review tree had uncommitted changes). 126 entries, 224 gene rows, 215 of them causal or untyped.
+
+Flag counts on causal and untyped rows: `NO_ORIGIN` 139, `NO_AIGR_REVIEW` 92, `AIGR_NOT_COMPLETE` 76, `UNTYPED` 53, `NO_MODULE_MEMBERSHIP` 47, `NO_GO_ON_GENE_NODES` 42, `NO_CORE_FUNCTION_TERMS` 30, `GENE_ON_NO_NODE` 24, `ALIGNED_ON_SHARED_NODE_ONLY` 15, `PARTIAL_ALIGNMENT` 14, `NO_GO_ALIGNMENT` 11, `ALIGNED_NONCORE` 8, `MODULE_NOT_COVERING` 1.
+
+| Entry | Gene | Relationship | Nodes | Review | Aligned node terms (node->core) | Unaligned node terms | Flags |
+|---|---|---|---|---|---|---|---|
+| ADAM9-Related_Retinopathy | ADAM9 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| AIPL1-Related_Retinopathy | AIPL1 | untyped | 1 | DRAFT | - | GO:0051087 | UNTYPED, NO_ORIGIN, AIGR_NOT_COMPLETE, NO_GO_ALIGNMENT, NO_MODULE_MEMBERSHIP |
+| ATF6-Related_Retinopathy | ATF6 | CAUSATIVE | 1 | COMPLETE | GO:0036500 | - | ok |
+| Achromatopsia | CNGA3 | CAUSATIVE | 1 | DRAFT | GO:0007603->GO:0007602 | - | AIGR_NOT_COMPLETE, ALIGNED_ON_SHARED_NODE_ONLY |
+| Achromatopsia | CNGB3 | CAUSATIVE | 1 | COMPLETE | GO:0007603->GO:0007602 | - | ALIGNED_ON_SHARED_NODE_ONLY |
+| Achromatopsia | GNAT2 | CAUSATIVE | 1 | INITIALIZED | - | - | AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Achromatopsia | PDE6C | CAUSATIVE | 1 | INITIALIZED | - | - | AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Achromatopsia | PDE6H | CAUSATIVE | 1 | INITIALIZED | - | - | AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Achromatopsia | ATF6 | CAUSATIVE | 1 | COMPLETE | - | - | NO_GO_ON_GENE_NODES |
+| Aland_Island_Eye_Disease | CACNA1F | CAUSATIVE | 1 | COMPLETE | GO:0005245->GO:0008331 GO:0070588->GO:0008331/GO:0098703 | - | NO_MODULE_MEMBERSHIP |
+| Aniridia | PAX6 | CAUSATIVE | 2 | COMPLETE | GO:0003700->GO:0000981 | GO:0010467 GO:0043010 | NO_ORIGIN, PARTIAL_ALIGNMENT |
+| Aniridia | WT1 | CAUSATIVE | 1 | IN_PROGRESS | GO:0003700->GO:0000981/GO:0001228 | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_MODULE_MEMBERSHIP |
+| Aniridia | TRIM44 | UNKNOWN | 0 | - | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| Autosomal_Dominant_Optic_Atrophy | OPA1 | CAUSATIVE | 1 | COMPLETE | - | - | NO_GO_ON_GENE_NODES |
+| Autosomal_Recessive_Optic_Atrophy_OPA7_Type | TMEM126A | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| BBSome-Related_Retinitis_Pigmentosa | ARL6 | untyped | 1 | COMPLETE | GO:0061512 | - | UNTYPED, NO_ORIGIN, ALIGNED_ON_SHARED_NODE_ONLY |
+| BBSome-Related_Retinitis_Pigmentosa | TTC8 | untyped | 1 | COMPLETE | - | GO:0061512 | UNTYPED, NO_ORIGIN, NO_GO_ALIGNMENT |
+| BBSome-Related_Retinitis_Pigmentosa | BBS1 | untyped | 1 | COMPLETE | GO:0061512 | - | UNTYPED, NO_ORIGIN, ALIGNED_ON_SHARED_NODE_ONLY |
+| BBSome-Related_Retinitis_Pigmentosa | BBS2 | untyped | 1 | COMPLETE | GO:0061512 | - | UNTYPED, NO_ORIGIN, ALIGNED_ON_SHARED_NODE_ONLY |
+| BBSome-Related_Retinitis_Pigmentosa | BBS9 | untyped | 1 | COMPLETE | GO:0061512 | - | UNTYPED, NO_ORIGIN, ALIGNED_ON_SHARED_NODE_ONLY |
+| BEST1-Related_Dominant_Retinopathy | BEST1 | untyped | 1 | COMPLETE | GO:0005229->GO:0005229/GO:1902476 GO:0006821->GO:0005229/GO:1902476 | - | UNTYPED, NO_ORIGIN, NO_MODULE_MEMBERSHIP |
+| BEST1-related_Vitreoretinochoroidopathy | BEST1 | CAUSATIVE | 1 | COMPLETE | GO:0005229->GO:0005229/GO:1902476 | - | NO_MODULE_MEMBERSHIP |
+| BEST1_Bestrophinopathies | BEST1 | untyped | 2 | COMPLETE | GO:0005229->GO:0005229/GO:1902476 GO:0006821->GO:0005229/GO:1902476 | - | UNTYPED, NO_ORIGIN, NO_MODULE_MEMBERSHIP |
+| Bietti_Crystalline_Dystrophy | CYP4V2 | CAUSATIVE | 0 | DRAFT | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE, NO_MODULE_MEMBERSHIP |
+| Blue_Cone_Monochromacy | OPN1LW | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Blue_Cone_Monochromacy | OPN1MW | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Blue_Cone_Monochromacy | OPN1LW | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Blue_Cone_Monochromacy | OPN1MW | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Blue_Cone_Monochromacy | OPN1LW | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Blue_Cone_Monochromacy | OPN1LW | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Blue_Cone_Monochromacy | OPN1LW | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| CACNA1F-Related_Retinopathy | CACNA1F | CAUSATIVE | 0 | COMPLETE | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_MODULE_MEMBERSHIP |
+| CACNA2D4-related_Retinopathy | CACNA2D4 | CAUSATIVE | 1 | COMPLETE | GO:0005246 | - | NO_MODULE_MEMBERSHIP |
+| CAPN5-Related_Vitreoretinopathy | CAPN5 | CAUSATIVE | 1 | DRAFT | GO:0004198 | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_MODULE_MEMBERSHIP |
+| CERKL-Related_Retinopathy | CERKL | untyped | 0 | COMPLETE | - | - | UNTYPED, NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_MODULE_MEMBERSHIP |
+| CFAP418-related_Retinal_Ciliopathy | CFAP418 | untyped | 1 | DRAFT | - | GO:0061512 | UNTYPED, NO_ORIGIN, AIGR_NOT_COMPLETE, NO_GO_ALIGNMENT, NO_MODULE_MEMBERSHIP |
+| CNGA1-Related_Retinopathy | CNGA1 | CAUSATIVE | 1 | COMPLETE | GO:0005223->GO:0098655 | - | ok |
+| CNGA3-Related_Retinopathy | CNGA3 | CAUSATIVE | 4 | DRAFT | GO:0005223->GO:0098655 | GO:1903546 | NO_ORIGIN, AIGR_NOT_COMPLETE, PARTIAL_ALIGNMENT |
+| CNGA3-Related_Retinopathy | CNGA3 | MODIFIER | 4 | DRAFT | GO:0005223->GO:0098655 | GO:1903546 | NO_ORIGIN, AIGR_NOT_COMPLETE, PARTIAL_ALIGNMENT |
+| CNGB1-Related_Retinopathy | CNGB1 | untyped | 1 | DRAFT | - | - | UNTYPED, NO_ORIGIN, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE |
+| CNGB3-Related_Retinopathy | CNGB3 | CAUSATIVE | 1 | COMPLETE | GO:0005223->GO:0098655 | - | NO_ORIGIN |
+| CRB1_Retinal_Dystrophies | CRB1 | CAUSATIVE | 2 | DRAFT | GO:0007163->GO:0045197 | GO:0034332 | NO_ORIGIN, AIGR_NOT_COMPLETE, PARTIAL_ALIGNMENT, NO_MODULE_MEMBERSHIP |
+| CRX_Related_Retinopathy | CRX | untyped | 0 | DRAFT | - | - | UNTYPED, NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE, NO_MODULE_MEMBERSHIP |
+| Cataract_12_Multiple_Types | BFSP2 | CAUSATIVE | 2 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Cataract_13_With_Adult_I_Phenotype | GCNT2 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Cataract_15 | MIP | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Cataract_1_Multiple_Types | GJA8 | CAUSATIVE | 2 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Cataract_21_Multiple_Types | MAF | CAUSATIVE | 2 | - | - | - | NO_AIGR_REVIEW |
+| Cataract_2_Multiple_Types | CRYGC | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Cataract_31_Multiple_Types | CHMP4B | CAUSATIVE | 1 | COMPLETE | GO:0180020 | - | NO_ORIGIN |
+| Cataract_33 | BFSP1 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Cataract_39_Multiple_Types | CRYGB | untyped | 1 | - | - | - | UNTYPED, NO_ORIGIN, NO_AIGR_REVIEW |
+| Cataract_3_Multiple_Types | CRYBB2 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Cataract_40 | NHS | CAUSATIVE | 2 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Cataract_48 | DNMBP | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Cataract_4_Multiple_Types | CRYGD | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Cataract_5_Multiple_Types | HSF4 | CAUSATIVE | 3 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Cataract_9_Multiple_Types | CRYAA | CAUSATIVE | 2 | COMPLETE | GO:0005212 | GO:0044183 | NO_ORIGIN, PARTIAL_ALIGNMENT, NO_MODULE_MEMBERSHIP |
+| Central_Areolar_Choroidal_Dystrophy | PRPH2 | untyped | 1 | - | - | - | UNTYPED, NO_ORIGIN, NO_AIGR_REVIEW |
+| Central_Areolar_Choroidal_Dystrophy | GUCY2D | untyped | 1 | DRAFT | GO:0004383->GO:0004383/GO:0006182 | GO:0005509 GO:0007602 GO:0030250 | UNTYPED, NO_ORIGIN, AIGR_NOT_COMPLETE, ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
+| Central_Areolar_Choroidal_Dystrophy | GUCA1A | untyped | 1 | DRAFT | GO:0030250->GO:0030249 | GO:0004383 GO:0005509 GO:0007602 | UNTYPED, NO_ORIGIN, AIGR_NOT_COMPLETE, ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
+| Choroideremia | CHM | CAUSATIVE | 0 | DRAFT | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE, NO_MODULE_MEMBERSHIP |
+| Cone-rod_Dystrophy_10 | SEMA4A | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Cone-rod_Dystrophy_20 | POC1B | untyped | 1 | - | - | - | UNTYPED, NO_ORIGIN, NO_AIGR_REVIEW |
+| Cone-rod_Dystrophy_5 | PITPNM3 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Cone_Dystrophy | GUCA1A | CAUSATIVE | 0 | DRAFT | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE |
+| Cone_Dystrophy | GUCY2D | CAUSATIVE | 0 | DRAFT | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE |
+| Cone_Dystrophy | PDE6C | CAUSATIVE | 0 | INITIALIZED | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE |
+| Cone_Dystrophy | RPGR | CAUSATIVE | 0 | - | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| Cone_Dystrophy | TTLL5 | CAUSATIVE | 0 | - | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| Cone_Dystrophy | CNGA3 | CAUSATIVE | 0 | DRAFT | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE |
+| Cone_Dystrophy | CNGB3 | CAUSATIVE | 0 | COMPLETE | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES |
+| Congenital_Glaucoma | CYP1B1 | CAUSATIVE | 1 | COMPLETE | GO:0001523->GO:0042572/GO:0042574 GO:0004497->GO:0008395/GO:0016712 | - | NO_MODULE_MEMBERSHIP |
+| Congenital_Glaucoma | LTBP2 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Congenital_Glaucoma | TEK | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Congenital_Glaucoma | ANGPT1 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Congenital_Glaucoma | FOXC1 | CAUSATIVE | 1 | DRAFT | - | GO:0001755 GO:0002930 | AIGR_NOT_COMPLETE, ALIGNED_NONCORE, NO_MODULE_MEMBERSHIP |
+| Congenital_Glaucoma | PITX2 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Congenital_Glaucoma | PAX6 | CAUSATIVE | 1 | COMPLETE | - | GO:0001755 GO:0002930 | ALIGNED_NONCORE |
+| Congenital_Glaucoma | SVEP1 | MODIFIER | 0 | - | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| Congenital_Stationary_Night_Blindness | NYX | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS, NO_MODULE_MEMBERSHIP |
+| Congenital_Stationary_Night_Blindness | GRM6 | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS, NO_MODULE_MEMBERSHIP |
+| Congenital_Stationary_Night_Blindness | TRPM1 | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS, NO_MODULE_MEMBERSHIP |
+| Congenital_Stationary_Night_Blindness | LRIT3 | CAUSATIVE | 1 | COMPLETE | GO:0050808->GO:0099084 | GO:0007216 | NO_ORIGIN, ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT, NO_MODULE_MEMBERSHIP |
+| Congenital_Stationary_Night_Blindness | GPR179 | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS, NO_MODULE_MEMBERSHIP |
+| Congenital_Stationary_Night_Blindness | CACNA1F | CAUSATIVE | 1 | COMPLETE | GO:0070588->GO:0008331/GO:0098703 | GO:0007269 | NO_ORIGIN, ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT, NO_MODULE_MEMBERSHIP |
+| Congenital_Stationary_Night_Blindness | CABP4 | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS, NO_MODULE_MEMBERSHIP |
+| Congenital_Stationary_Night_Blindness | GNAT1 | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Congenital_Stationary_Night_Blindness | GNB3 | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Congenital_Stationary_Night_Blindness | RHO | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Congenital_Stationary_Night_Blindness | SAG | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Congenital_Stationary_Night_Blindness | GRK1 | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Congenital_Stationary_Night_Blindness | SLC24A1 | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Congenital_Stationary_Night_Blindness | PDE6B | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| Congenital_Stationary_Night_Blindness | GUCY2D | CAUSATIVE | 1 | DRAFT | - | GO:0007602 | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_GO_ALIGNMENT |
+| Doyne_Honeycomb_Retinal_Dystrophy | EFEMP1 | CAUSATIVE | 1 | DRAFT | GO:0005201 | GO:0006457 GO:0009306 | AIGR_NOT_COMPLETE, PARTIAL_ALIGNMENT, NO_MODULE_MEMBERSHIP |
+| EYS_Related_Retinitis_Pigmentosa | EYS | untyped | 1 | COMPLETE | GO:0045494 | GO:0060271 | UNTYPED, NO_ORIGIN, PARTIAL_ALIGNMENT, NO_MODULE_MEMBERSHIP |
+| Ectopia_Lentis_1_Isolated_Autosomal_Dominant | FBN1 | CAUSATIVE | 1 | DRAFT | GO:0005201 | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_MODULE_MEMBERSHIP |
+| Enhanced_S-Cone_Syndrome | NR2E3 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| FLVCR1-Related_Retinopathy | FLVCR1 | CAUSATIVE | 0 | DRAFT | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE, NO_MODULE_MEMBERSHIP |
+| FOXE3_Anterior_Segment_Dysgenesis | FOXE3 | untyped | 1 | COMPLETE | GO:0000981 | GO:0002088 GO:0070306 | UNTYPED, NO_ORIGIN, PARTIAL_ALIGNMENT, NO_MODULE_MEMBERSHIP |
+| Familial_Exudative_Vitreoretinopathy | FZD4 | CAUSATIVE | 1 | DRAFT | GO:0060070 GO:0110135 | - | NO_ORIGIN, AIGR_NOT_COMPLETE, ALIGNED_ON_SHARED_NODE_ONLY, NO_MODULE_MEMBERSHIP |
+| Familial_Exudative_Vitreoretinopathy | NDP | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Familial_Exudative_Vitreoretinopathy | LRP5 | CAUSATIVE | 2 | COMPLETE | GO:0060070 GO:0110135 | - | NO_ORIGIN, NO_MODULE_MEMBERSHIP |
+| Familial_Exudative_Vitreoretinopathy | TSPAN12 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Familial_Exudative_Vitreoretinopathy | KIF11 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Familial_Exudative_Vitreoretinopathy | ZNF408 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Familial_Exudative_Vitreoretinopathy | CTNNB1 | CAUSATIVE | 1 | DRAFT | GO:0060070 | GO:0110135 | NO_ORIGIN, AIGR_NOT_COMPLETE, ALIGNED_ON_SHARED_NODE_ONLY, PARTIAL_ALIGNMENT |
+| Familial_Progressive_Retinal_Dystrophy-iris_Coloboma-congenital_Cataract_Syndrome | MIR204 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| GNAT2-Related_Retinopathy | GNAT2 | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| GUCA1A-Related_Retinopathy | GUCA1A | untyped | 2 | DRAFT | - | GO:0005513 GO:0006182 | UNTYPED, NO_ORIGIN, AIGR_NOT_COMPLETE, NO_GO_ALIGNMENT |
+| GUCY2D-Related_Retinopathy | GUCY2D | untyped | 2 | DRAFT | GO:0004383->GO:0004383/GO:0006182 GO:0006182->GO:0004383/GO:0006182 | - | UNTYPED, NO_ORIGIN, AIGR_NOT_COMPLETE |
+| Hereditary_Hyperferritinemia_With_Congenital_Cataracts | FTL | CAUSATIVE | 1 | DRAFT | - | - | NO_ORIGIN, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE, NO_MODULE_MEMBERSHIP |
+| IDH3B-Related_Retinopathy | IDH3B | untyped | 1 | COMPLETE | - | GO:0004449 | UNTYPED, NO_GO_ALIGNMENT, NO_MODULE_MEMBERSHIP |
+| IMPDH1-Related_Retinopathy | IMPDH1 | CAUSATIVE | 1 | INITIALIZED | GO:0003938 | - | AIGR_NOT_COMPLETE |
+| IMPG1-related_Dominant_Retinopathy | IMPG1 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| IMPG1-related_Recessive_Retinopathy | IMPG1 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| IMPG2-related_Recessive_Retinopathy | IMPG2 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Isolated_Anophthalmia-Microphthalmia_Syndrome | SOX2 | CAUSATIVE | 1 | COMPLETE | - | GO:0060898 GO:0060900 | NO_ORIGIN, ALIGNED_NONCORE |
+| Isolated_Anophthalmia-Microphthalmia_Syndrome | OTX2 | CAUSATIVE | 1 | DRAFT | - | GO:0060898 GO:0060900 | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_GO_ALIGNMENT |
+| Isolated_Anophthalmia-Microphthalmia_Syndrome | RAX | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Isolated_Anophthalmia-Microphthalmia_Syndrome | VSX2 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Isolated_Anophthalmia-Microphthalmia_Syndrome | ALDH1A3 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Isolated_Anophthalmia-Microphthalmia_Syndrome | FOXE3 | CAUSATIVE | 1 | COMPLETE | - | GO:0060898 GO:0060900 | NO_ORIGIN, ALIGNED_NONCORE, NO_MODULE_MEMBERSHIP |
+| Isolated_Anophthalmia-Microphthalmia_Syndrome | PAX6 | CAUSATIVE | 1 | COMPLETE | - | GO:0060898 GO:0060900 | NO_ORIGIN, ALIGNED_NONCORE |
+| Isolated_Anophthalmia-Microphthalmia_Syndrome | MAB21L2 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Isolated_Anophthalmia-Microphthalmia_Syndrome | GDF6 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Isolated_Anophthalmia-Microphthalmia_Syndrome | GDF3 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Isolated_Anophthalmia-Microphthalmia_Syndrome | MFRP | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Isolated_Anophthalmia-Microphthalmia_Syndrome | PRSS56 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Isolated_Anophthalmia-Microphthalmia_Syndrome | MYRF | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Isolated_Anophthalmia-Microphthalmia_Syndrome | TMEM98 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Juvenile_Open_Angle_Glaucoma | MYOC | CAUSATIVE | 0 | - | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| Juvenile_Open_Angle_Glaucoma | CYP1B1 | CAUSATIVE | 1 | COMPLETE | GO:0004497->GO:0008395/GO:0016712 | - | NO_MODULE_MEMBERSHIP |
+| KCNV2_Related_Retinopathy | KCNV2 | untyped | 0 | INITIALIZED | - | - | UNTYPED, NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE, NO_MODULE_MEMBERSHIP |
+| KIZ-related_Retinopathy | KIZ | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| LCA5-Related_Retinopathy | LCA5 | untyped | 1 | - | - | - | UNTYPED, NO_ORIGIN, NO_AIGR_REVIEW |
+| Leber-like_Hereditary_Optic_Neuropathy_Autosomal_Recessive_1 | DNAJC30 | CAUSATIVE | 1 | DRAFT | GO:0034367 | GO:0019899 | AIGR_NOT_COMPLETE, PARTIAL_ALIGNMENT, NO_MODULE_MEMBERSHIP |
+| Leber_Congenital_Amaurosis_10 | CEP290 | untyped | 0 | DRAFT | - | - | UNTYPED, NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE |
+| Leber_Congenital_Amaurosis_13 | RDH12 | CAUSATIVE | 1 | INITIALIZED | - | - | NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE |
+| Leber_Congenital_Amaurosis_16 | KCNJ13 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Leber_Congenital_Amaurosis_9 | NMNAT1 | CAUSATIVE | 1 | INITIALIZED | GO:0000309 | - | AIGR_NOT_COMPLETE |
+| Leber_Hereditary_Optic_Neuropathy | MT-ND4 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Leber_Hereditary_Optic_Neuropathy | MT-ND1 | CAUSATIVE | 1 | COMPLETE | GO:0008137->GO:1902600 | - | ALIGNED_ON_SHARED_NODE_ONLY |
+| Leber_Hereditary_Optic_Neuropathy | MT-ND6 | CAUSATIVE | 1 | COMPLETE | GO:0008137->GO:0015078/GO:1902600 | - | ALIGNED_ON_SHARED_NODE_ONLY |
+| Leber_Hereditary_Optic_Neuropathy | DNAJC30 | CAUSATIVE | 1 | DRAFT | - | GO:0008137 | AIGR_NOT_COMPLETE, NO_GO_ALIGNMENT, NO_MODULE_MEMBERSHIP |
+| Leber_Hereditary_Optic_Neuropathy | NQO1 | MODIFIER | 0 | - | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| MAK-related_Retinopathy | MAK | CAUSATIVE | 1 | DRAFT | GO:0004674 | - | AIGR_NOT_COMPLETE |
+| MERTK-Related_Retinopathy | MERTK | untyped | 1 | - | - | - | UNTYPED, NO_ORIGIN, NO_AIGR_REVIEW |
+| Macular_Degeneration_Early-onset | FBN2 | CAUSATIVE | 1 | DRAFT | GO:0005201 | - | AIGR_NOT_COMPLETE, NO_MODULE_MEMBERSHIP |
+| Macular_Dystrophy_With_Or_Without_Cone_Dysfunction | SAMD7 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Microphthalmia_with_Coloboma | SOX2 | untyped | 1 | COMPLETE | - | GO:0001654 GO:0048592 GO:0048593 | UNTYPED, NO_ORIGIN, ALIGNED_NONCORE |
+| Microphthalmia_with_Coloboma | OTX2 | untyped | 2 | DRAFT | - | GO:0001654 GO:0048592 GO:0048593 | UNTYPED, NO_ORIGIN, AIGR_NOT_COMPLETE, NO_GO_ALIGNMENT |
+| Microphthalmia_with_Coloboma | PAX6 | untyped | 1 | COMPLETE | - | GO:0001654 GO:0048592 GO:0048593 | UNTYPED, NO_ORIGIN, ALIGNED_NONCORE |
+| Microphthalmia_with_Coloboma | MAB21L2 | untyped | 2 | - | - | - | UNTYPED, NO_ORIGIN, NO_AIGR_REVIEW |
+| Microphthalmia_with_Coloboma | FZD5 | untyped | 1 | - | - | - | UNTYPED, NO_ORIGIN, NO_AIGR_REVIEW |
+| Microphthalmia_with_Coloboma | FOXE3 | untyped | 1 | COMPLETE | - | GO:0001654 GO:0048592 GO:0048593 | UNTYPED, NO_ORIGIN, ALIGNED_NONCORE, NO_MODULE_MEMBERSHIP |
+| Microphthalmia_with_Coloboma | ALDH1A3 | untyped | 1 | - | - | - | UNTYPED, NO_ORIGIN, NO_AIGR_REVIEW |
+| Microphthalmia_with_Coloboma | ABCB6 | CAUSATIVE | 1 | COMPLETE | - | GO:0048593 GO:0061386 | NO_ORIGIN, NO_GO_ALIGNMENT, NO_MODULE_MEMBERSHIP |
+| Microphthalmia_with_Coloboma | TENM3 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Microphthalmia_with_Coloboma | RBP4 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Microphthalmia_with_Coloboma | IHH | CAUSATIVE | 1 | - | - | - | NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| Myopia_24_Autosomal_Dominant | SLC39A5 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| NDP_Related_Vitreoretinopathy | NDP | untyped | 0 | - | - | - | UNTYPED, NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| North_Carolina_Macular_Dystrophy | PRDM13 | untyped | 1 | - | - | - | UNTYPED, NO_ORIGIN, NO_AIGR_REVIEW |
+| North_Carolina_Macular_Dystrophy | IRX1 | untyped | 1 | - | - | - | UNTYPED, NO_ORIGIN, NO_AIGR_REVIEW |
+| OPTN-related_Open_Angle_Glaucoma | OPTN | CAUSATIVE | 0 | COMPLETE | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES |
+| OPTN-related_Open_Angle_Glaucoma | OPTN | SUSCEPTIBILITY | 0 | COMPLETE | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES |
+| Optic_Atrophy_13_With_Retinal_And_Foveal_Abnormalities | SSBP1 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| Optic_Atrophy_14 | MIEF1 | CAUSATIVE | 1 | - | - | - | NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| Optic_Atrophy_15 | MCAT | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Optic_Atrophy_3 | OPA3 | CAUSATIVE | 1 | - | - | - | NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| PDE6A-Related_Retinopathy | PDE6A | untyped | 1 | INITIALIZED | - | - | UNTYPED, NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| PDE6C-Related_Retinopathy | PDE6C | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| PDE6G-Related_Retinopathy | PDE6G | CAUSATIVE | 1 | INITIALIZED | - | - | AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| PRPF31-Related_Retinopathy | PRPF31 | CAUSATIVE | 0 | - | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| PRPF31-Related_Retinopathy | CNOT3 | MODIFIER | 0 | DRAFT | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, AIGR_NOT_COMPLETE |
+| PRPF8-Related_Retinopathy | PRPF8 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| PRPH2-Related_Retinopathy | PRPH2 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| PRPH2-Related_Retinopathy | ROM1 | MODIFIER | 0 | - | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| Posterior_Polymorphous_Corneal_Dystrophy | OVOL2 | untyped | 1 | - | - | - | UNTYPED, NO_ORIGIN, NO_AIGR_REVIEW |
+| Posterior_Polymorphous_Corneal_Dystrophy | ZEB1 | untyped | 1 | - | - | - | UNTYPED, NO_ORIGIN, NO_AIGR_REVIEW |
+| Posterior_Polymorphous_Corneal_Dystrophy | COL8A2 | UNKNOWN | 0 | - | - | - | GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| Posterior_Polymorphous_Corneal_Dystrophy | GRHL2 | untyped | 1 | - | - | - | UNTYPED, NO_ORIGIN, NO_AIGR_REVIEW |
+| Progressive_Retinal_Dystrophy_Due_To_Retinol_Transport_Defect | RBP4 | CAUSATIVE | 0 | - | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| Protan_Color_Vision_Deficiency | OPN1LW | CAUSATIVE | 2 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| RAB28-Related_Retinopathy | RAB28 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| RCBTB1-Related_Retinopathy | RCBTB1 | untyped | 0 | - | - | - | UNTYPED, NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| RD3-Related_Retinopathy | RD3 | CAUSATIVE | 1 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS, NO_MODULE_MEMBERSHIP |
+| RDH12-Related_Dominant_Retinopathy | RDH12 | untyped | 2 | INITIALIZED | GO:0052650->GO:0001523/GO:0042572/GO:0052650 | - | UNTYPED, AIGR_NOT_COMPLETE |
+| RDH5-Related_Retinopathy | RDH5 | untyped | 1 | INITIALIZED | GO:0001523->GO:0001523/GO:0042572 GO:0042572->GO:0001523/GO:0042572 | - | UNTYPED, NO_ORIGIN, AIGR_NOT_COMPLETE |
+| RHO-Related_Retinopathy | RHO | untyped | 2 | INITIALIZED | - | - | UNTYPED, NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| RLBP1-Related_Retinopathy | RLBP1 | untyped | 1 | COMPLETE | GO:0005501->GO:0005502/GO:0019841 GO:0019841 | - | UNTYPED, NO_ORIGIN, MODULE_NOT_COVERING |
+| RP1-Related_Retinopathy | RP1 | CAUSATIVE | 2 | - | - | - | NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| RP2-Related_Retinopathy | RP2 | untyped | 1 | DRAFT | GO:0005096 | - | UNTYPED, NO_ORIGIN, AIGR_NOT_COMPLETE |
+| RPE65-Related_Retinopathy | RPE65 | CAUSATIVE | 1 | INITIALIZED | GO:0001523->GO:0052884/GO:0052885 GO:0042572->GO:0052884/GO:0052885 GO:0052885 | - | AIGR_NOT_COMPLETE |
+| RPGR-Related_Retinopathy | RPGR | untyped | 1 | - | - | - | UNTYPED, NO_ORIGIN, NO_AIGR_REVIEW |
+| Retinal_Arterial_Tortuosity | COL4A1 | untyped | 0 | COMPLETE | - | - | UNTYPED, NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES |
+| Retinitis_Pigmentosa_59 | DHDDS | CAUSATIVE | 1 | DRAFT | GO:0045547 | - | AIGR_NOT_COMPLETE, ALIGNED_ON_SHARED_NODE_ONLY |
+| Retinitis_Pigmentosa_59 | ALG6 | MODIFIER | 0 | COMPLETE | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES |
+| Retinitis_Pigmentosa_With_or_Without_Situs_Inversus | ARL2BP | CAUSATIVE | 1 | COMPLETE | - | - | NO_ORIGIN, NO_GO_ON_GENE_NODES, NO_MODULE_MEMBERSHIP |
+| SNRNP200-Related_Dominant_Retinopathy | SNRNP200 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Schnyder_Corneal_Dystrophy | UBIAD1 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Sorsby_Fundus_Dystrophy | TIMP3 | CAUSATIVE | 1 | - | - | - | NO_AIGR_REVIEW |
+| Stargardt_Disease | ABCA4 | untyped | 1 | DRAFT | GO:0006869->GO:0045332/GO:0090555/GO:0140347 GO:0140327->GO:0090555/GO:0140347 | - | UNTYPED, NO_ORIGIN, AIGR_NOT_COMPLETE, NO_MODULE_MEMBERSHIP |
+| Stargardt_Disease | ELOVL4 | untyped | 1 | DRAFT | GO:0009922 | - | UNTYPED, NO_ORIGIN, AIGR_NOT_COMPLETE |
+| Stargardt_Disease | PROM1 | untyped | 0 | - | - | - | UNTYPED, NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| Stickler_Syndrome_Type_1_Nonsyndromic_Ocular | COL2A1 | CAUSATIVE | 1 | DRAFT | - | GO:0000184 | AIGR_NOT_COMPLETE, NO_GO_ALIGNMENT |
+| Stromal_Corneal_Dystrophy | CHST6 | CAUSATIVE | 1 | COMPLETE | - | - | NO_ORIGIN, NO_GO_ON_GENE_NODES, NO_MODULE_MEMBERSHIP |
+| Stromal_Corneal_Dystrophy | UBIAD1 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Stromal_Corneal_Dystrophy | DCN | CAUSATIVE | 1 | COMPLETE | GO:0030198->GO:0030199 | - | NO_ORIGIN, NO_MODULE_MEMBERSHIP |
+| Stromal_Corneal_Dystrophy | TGFBI | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| TGFBI_Corneal_Dystrophies | TGFBI | untyped | 1 | - | - | - | UNTYPED, NO_ORIGIN, NO_AIGR_REVIEW |
+| TOPORS-Related_Retinopathy | TOPORS | CAUSATIVE | 2 | - | - | - | NO_AIGR_REVIEW |
+| TTLL5-Related_Retinopathy | TTLL5 | CAUSATIVE | 1 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| TULP1-Related_Retinopathy | TULP1 | CAUSATIVE | 3 | - | - | - | NO_ORIGIN, NO_AIGR_REVIEW |
+| Tritan_Color_Vision_Deficiency | OPN1SW | CAUSATIVE | 3 | INITIALIZED | - | - | NO_ORIGIN, AIGR_NOT_COMPLETE, NO_CORE_FUNCTION_TERMS |
+| U4_and_U6_snRNA_Gene-Related_Retinitis_Pigmentosa | RNU4-2 | CAUSATIVE | 1 | - | - | - | NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| U4_and_U6_snRNA_Gene-Related_Retinitis_Pigmentosa | RNU6-1 | CAUSATIVE | 1 | - | - | - | NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| U4_and_U6_snRNA_Gene-Related_Retinitis_Pigmentosa | RNU6-2 | CAUSATIVE | 1 | - | - | - | NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| U4_and_U6_snRNA_Gene-Related_Retinitis_Pigmentosa | RNU6-8 | CAUSATIVE | 1 | - | - | - | NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| U4_and_U6_snRNA_Gene-Related_Retinitis_Pigmentosa | RNU6-9 | CAUSATIVE | 1 | - | - | - | NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| X-linked_Retinoschisis | RS1 | CAUSATIVE | 0 | - | - | - | NO_ORIGIN, GENE_ON_NO_NODE, NO_GO_ON_GENE_NODES, NO_AIGR_REVIEW |
+| ornithine_aminotransferase_deficiency | OAT | untyped | 1 | COMPLETE | GO:0004587 GO:0055129 | GO:0006591 GO:0006593 | UNTYPED, NO_ORIGIN, PARTIAL_ALIGNMENT |
 <!-- END GENERATED: audit -->
 
 ## Disagreements to adjudicate
