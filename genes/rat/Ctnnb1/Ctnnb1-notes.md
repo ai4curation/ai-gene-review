@@ -44,3 +44,9 @@
   IMP cellular response to IGF stimulus from PMID:20042609 (the paper perturbs
   IGF-IR/AKT/ER pharmacologically, not beta-catenin).
 - No NEW terms proposed.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0098609 / PMID:20299672: defect withdrawn (evidence depth: FULL_TEXT). Full text read at PMC (PMC2843003; only the abstract is cached): the review's Wnt section states beta-catenin may maintain epicardial cell-cell adhesion and that beta-catenin/E-cadherin adherens-junction localisation in cultured rat epicardial cells is disrupted by TGF-beta3, weakening intercellular adhesion. The DFLAT TAS is supported; defect deleted and the reference_review entry changed from MISCITED/NONE to VERIFIED/LOW.
