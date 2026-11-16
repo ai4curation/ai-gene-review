@@ -279,10 +279,107 @@ least one production-term row marked ACCEPT (core):
   Scgb1a1, PLD3, PLD4, PRG3, PARK7, CASP3, CHRNA7, APPL2). These are the rows
   to recheck first.
 
-**GO-CAM usage** (`gocams/index.tsv`). 76 activities in 35 GO-CAM models use
-a production-named biological process. 50 of them are positive or negative
-regulation of type I interferon production, mostly in TBK1, IRF3 and
+**GO-CAM usage.** 76 activities in 35 GO-CAM models use a production-named
+biological process. The next section looks at each model.
+
+## How GO-CAM models use the terms
+
+From [`gocam_models.yaml`](PRODUCTION_TERMS/data/gocam_models.yaml), which the
+script builds from the cached models under `gocams/`. In every case the
+production-named term is the process an activity is part of.
+
+- **Who built them:** 33 of the 35 models are UniProt's, one is WormBase's and
+  one is joint MGI and UniProt.
+- **When:** all were last modified between March 2023 and June 2026.
+- **Respect for the flag:** only one activity uses a production term itself
+  rather than a regulation term. AP-1 sits on *transforming growth factor
+  beta1 production*, one of the six cytokine production terms GO never
+  blocked. Curators otherwise keep to the do-not-annotate flag.
+- **No obsolete terms:** the only hit for one is an automated note recording a
+  2024 replacement.
+
+| Group | Models | Activities | Models naming the product |
+|---|---|---|---|
+| Type I interferon (positive or negative regulation of type I interferon, interferon-alpha or interferon-beta production) | 21 | 53 | 4, with IFNB1 as IRF3's input |
+| *(Positive/negative) regulation of cytokine production involved in inflammatory response* | 10 | 17 | 4, by an edge to the cytokine's activity |
+| Other (interleukin-2, T cell cytokine, TGF-β1, antimicrobial peptide) | 4 | 6 | 3 |
+
+### Type I interferon: the regulation term is used as the pathway's name
+
+Examples are *TBK1 activation via TRAF3 autoubiquitination*, *USP22 activation
+of IRF3 via KPNA2 stabilization*, the poxvirus inhibition models and the
 cGAS–STING models.
+
+- **Every step of the chain is filed under the regulation term.** That covers
+  TRAF3, TICAM1 and TICAM2, MAVS, TBK1, IKBKE, DDX3X, TANK, KPNA2, USP22, and
+  IRF3 or IRF7 at the end, all under *positive regulation of type I interferon
+  production*.
+- **Each activity gets the sign of its own effect.** Negative regulators
+  (TRIM27, XAF1, KAT8, CTPS1, the viral proteins) are filed under the negative
+  term. The core steps in the same model stay under the positive one.
+- **The interferon is mostly absent.** 11 IRF3 or IRF7 activities sit on these
+  terms. Four name IFNB1 as their input; seven name nothing. 17 of the 21
+  models never name an interferon gene, so the production term is the only
+  place the product appears.
+- **The same steps sit under different processes in different models.**
+  Across every cached model:
+
+  | Gene | Process each activity is part of |
+  |---|---|
+  | TBK1 (40 activities) | type I interferon production term 13, cytoplasmic pattern recognition receptor signalling 6, antiviral innate immune response 5, activation of innate immune response 5, cGAS/STING signalling 3, others 8 |
+  | IRF3 (19 activities) | type I interferon production term 8, cGAS/STING signalling 3, cytoplasmic pattern recognition receptor signalling 2, TLR4 signalling 1, mRNA transcription 1, none 4 |
+
+  Even within one cGAS–STING model the pathway is split. CGAS and STING1 are
+  under *cGAS/STING signaling pathway*, TBK1 phosphorylating STING under
+  *activation of innate immune response*, and TBK1's other activity under
+  *positive regulation of type I interferon production*.
+
+The reading: curators use the regulation term because no process term names
+the IRF3/IRF7 interferon-induction arm. This is the strongest evidence for
+that module candidate. A module would give these steps one consistent home,
+and the receptor-pathway terms that exist could then be used consistently.
+
+### Inflammation models: a precomposed term, with the cytokine sometimes named
+
+These are the cholinergic anti-inflammatory models (CHRNA7 through JAK2–STAT3,
+or through calcium and PKC to HMOX1, human and mouse), REG3A/REG3G acting
+through EXTL3, and XBP1 in dendritic cells.
+
+- **The cytokine is named in 4 of the 10, by a causal edge to its cytokine
+  activity.** In the wounding models, MAPK9 has edges to TNF and IL6. In the
+  IL22–REG3 airway models, EXTL3 has edges to IL33 and TSLP.
+- **The CHRNA7 and XBP1 models name no cytokine.**
+- **The human CHRNA7–STAT3 model routes through TTP.** STAT3's input is ZFP36,
+  and ZFP36 sits under *negative regulation of 3′-UTR-mediated mRNA
+  stabilization*. That is the AU-rich-element decay machinery proposed above
+  as a module, already present in a production model.
+- **The XBP1 models use GO:1903409.** They place respiratory chain complex I
+  under *reactive oxygen species biosynthetic process*, the term proposed for
+  obsoletion in the still-open #23668. Obsoleting it would touch both models.
+- **The terms are precomposed "X involved in Y" terms.** GO has been
+  obsoleting these when nothing uses them
+  ([INVOLVED_IN_PRECOMPOSITION](INVOLVED_IN_PRECOMPOSITION.md), #31254). Use
+  in these models would block that.
+
+### Other models
+
+| Model | Use |
+|---|---|
+| GPR174 signalling | GPR174 and PRKACA under *negative regulation of interleukin-2 production*; PRKACA has an edge to IL2's activity |
+| SECTM1–CD7 | CD7 and SECTM1 under *positive regulation of T cell cytokine production*; CD7 has an edge to IL2 |
+| IL13RA2 alternative IL-13 pathway | AP-1 takes TGFB1 as input and sits on *transforming growth factor beta1 production* itself |
+| *C. elegans* intestinal MAPK | One kinase (tpa-1) under *positive regulation of antimicrobial peptide production*; the rest of the cascade is under *antibacterial innate immune response* |
+
+### What retiring the terms would take in these models
+
+- **Type I interferon:** 17 models would need the interferon gene added, as
+  the input of an IRF3 or IRF7 step. Their signalling steps would need a
+  pathway process.
+- **Inflammation:** 6 models would need the cytokine named.
+- **Other:** the *C. elegans* model would need its antimicrobial peptide
+  genes.
+- **Who to ask:** almost all of this is one group's convention (UniProt), so
+  a change would mostly be one conversation.
 
 ## A from-scratch design
 
@@ -346,7 +443,8 @@ Rows on the production term itself (do-not-annotate) need their own worklist.
   - cytotoxic granule exocytosis
   - mast cell degranulation
   - eicosanoid biosynthesis and export
-  - possibly a shared IRF3/IRF7 interferon-induction arm. The cGAS–STING
+  - a shared IRF3/IRF7 interferon-induction arm, now the best-evidenced
+    candidate (see the GO-CAM section). The cGAS–STING
     module already leaves type I interferon production to its vertebrate IRF3
     variant.
 
@@ -365,6 +463,10 @@ Rows on the production term itself (do-not-annotate) need their own worklist.
   remains for genes in the regulated cytokine exocytosis machinery.
 - **The CL dependency could move to RO:0003000 `produces`.** That would remove
   the main argument for keeping production classes at all.
+- **For the GO-CAM curators (mostly UniProt):**
+  - the type I interferon models file signalling steps under a
+    regulation-of-production term instead of a pathway process;
+  - 17 of the 21 name no interferon gene.
 
 ## Open questions
 
@@ -382,15 +484,22 @@ Rows on the production term itself (do-not-annotate) need their own worklist.
 
 - [x] Survey the GO issue history and verify the quotes (59 threads)
 - [x] Inventory script and data
+- [x] GO-CAM usage, model by model
 - [ ] Curated classification of the 137 production terms and their regulation
       children, replacing the name heuristic
 - [ ] Worklist of the 21 rows on do-not-annotate production terms, and of the
       ACCEPT rows in the scattered remainder
-- [ ] Module stubs: iRhom2–ADAM17 shedding and AU-rich-element mRNA decay
-      first (largest share of existing rows), then TGF-β activation and
-      cytotoxic granule exocytosis
+- [ ] Module stubs:
+  - first, the IRF3/IRF7 interferon-induction arm: 21 GO-CAMs, and the IRF3
+    and TBK1 reviews (14 production rows each), use the production term as
+    its name;
+  - then iRhom2–ADAM17 shedding and AU-rich-element mRNA decay, which each
+    span many cytokines (the decay genes ZFP36, ZC3H12A and RC3H1 have no
+    reviews yet);
+  - then TGF-β activation and cytotoxic granule exocytosis.
 - [ ] Maintainer decision on the review guidance
-- [ ] Draft the upstream GO tickets above (file only after review)
+- [ ] Draft the upstream GO tickets and the GO-CAM convention note above (file
+      only after review)
 
 ## Reproducing
 
@@ -400,8 +509,15 @@ python projects/PRODUCTION_TERMS/scripts/inventory.py \
     --go path/to/go-edit.obo --out projects/PRODUCTION_TERMS/data
 ```
 
-Outputs: `production_terms.yaml` (every production-named term, live or
-obsolete, with flags, parents, merges, obsoletion comment and heuristic class)
-and `summary.yaml` (all counts on this page). Review rows are found by term id
+Outputs:
+
+- `production_terms.yaml`: every production-named term, live or obsolete, with
+  flags, parents, merges, obsoletion comment and heuristic class.
+- `gocam_models.yaml`: every cached GO-CAM with an activity on such a term,
+  with all of its activities, their inputs and causal edges, and the two
+  product-naming signals. Those signals are a transcription factor's input,
+  and a causal edge to a cytokine activity. A kinase's substrate input is not
+  counted.
+- `summary.yaml`: all counts on this page. Review rows are found by term id
 with a line-based scan of `existing_annotations`. A full YAML parse of every
 review takes minutes, and this scan reads only each row's term id and action.

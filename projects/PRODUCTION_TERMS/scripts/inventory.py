@@ -11,9 +11,16 @@ writes:
   asserted parents, whether it sits under GO:0001816 cytokine production, a
   heuristic mechanism class, and for obsolete terms the obsoletion comment,
   replacement pointers and tracker issues.
+* ``gocam_models.yaml`` -- every cached GO-CAM (``gocams/<id>/<id>-src.yaml``)
+  with an activity on such a term: title, contributing groups, which term
+  families it uses, whether it names the regulated product (an input molecule
+  or a causal edge to a cytokine activity), and all of its activities with
+  their function, process, inputs and causal edges.
 * ``summary.yaml`` -- counts: live and obsolete terms, do-not-annotate
   coverage, obsoletion reasons, heuristic classes, review actions on these
-  terms, genes whose reviews ACCEPT one, and GO-CAM activities that use one.
+  terms, genes whose reviews ACCEPT one, and GO-CAM use (activities, models,
+  model groups, transcription-factor inputs, and where the most-used genes'
+  activities sit across all cached models).
 
 The mechanism class is a **name-pattern heuristic** (see ``CLASS_RULES``),
 not a curated judgement. It is there to size the groups discussed on the
@@ -276,12 +283,150 @@ def review_rows(genes_dir: Path, production_ids: set[str]) -> list[dict[str, str
     return out
 
 
-def gocam_rows(index: Path, production_ids: set[str]) -> list[dict[str, str]]:
+def read_index(index: Path) -> list[dict[str, str]]:
     if not index.exists():
         return []
     with index.open(encoding="utf-8") as fh:
-        return [r for r in csv.DictReader(fh, delimiter="\t")
-                if r.get("biological_process") in production_ids]
+        return list(csv.DictReader(fh, delimiter="\t"))
+
+
+HAS_INPUT = "RO:0002233"
+
+
+def term_family(label: str) -> str:
+    """Group the production terms GO-CAMs use: the type I interferon terms, the
+    precomposed "... involved in inflammatory response" terms, and the rest."""
+    if re.search(r"type I interferon|interferon-alpha|interferon-beta", label):
+        return "type_I_interferon"
+    if "involved in inflammatory response" in label:
+        return "inflammatory_response_precomposed"
+    return "other"
+
+
+def provided_by(node: Any, found: set[str]) -> set[str]:
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "provided_by" and isinstance(value, list):
+                found.update(str(v) for v in value)
+            else:
+                provided_by(value, found)
+    elif isinstance(node, list):
+        for item in node:
+            provided_by(item, found)
+    return found
+
+
+def gocam_models(gocam_dir: Path, gocams: list[dict[str, str]],
+                 index: list[dict[str, str]], production_ids: set[str],
+                 labels: dict[str, str]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Read each cached model that uses a production term and record every
+    activity: enabling gene product, function, the process it is part of,
+    its has_input molecules and its causal edges. Two signals record whether
+    the model names the regulated product: a transcription-factor activity on a
+    production term with an input molecule (its target gene), and a causal edge
+    from an activity on a production term to an activity whose function is a
+    cytokine activity. Inputs of other activities (a kinase's substrate) are
+    not counted."""
+    models_out = []
+    model_ids = sorted({r["model_id"] for r in gocams})
+    tf_rows = Counter()
+    for model_id in model_ids:
+        path = gocam_dir / model_id / f"{model_id}-src.yaml"
+        if not path.exists():
+            models_out.append({"model_id": model_id, "cached": False})
+            continue
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        objects = {o["id"]: o.get("label") for o in data.get("objects") or []}
+        molecules = {m["id"]: m.get("term") for m in data.get("molecules") or []}
+        activities = data.get("activities") or []
+        act_label = {a["id"]: objects.get((a.get("enabled_by") or {}).get("term"),
+                                          (a.get("enabled_by") or {}).get("term"))
+                     for a in activities}
+        act_mf = {a["id"]: objects.get((a.get("molecular_function") or {}).get("term"), "")
+                  for a in activities}
+        acts = []
+        families: set[str] = set()
+        tf_inputs: set[str] = set()
+        cytokine_targets: set[str] = set()
+        for act in activities:
+            gene = act_label[act["id"]]
+            mf_label = act_mf[act["id"]]
+            bp = (act.get("part_of") or {}).get("term")
+            inputs = [objects.get(molecules.get(m.get("molecule")), molecules.get(m.get("molecule")))
+                      for m in act.get("molecular_associations") or []
+                      if m.get("predicate") == HAS_INPUT]
+            edges = [{"predicate": c.get("predicate"),
+                      "to": act_label.get(c.get("downstream_activity"), c.get("downstream_activity")),
+                      "to_function": act_mf.get(c.get("downstream_activity"), "")}
+                     for c in act.get("causal_associations") or []]
+            on_production = bp in production_ids
+            if on_production:
+                families.add(term_family(labels[bp]))
+                cytokine_targets.update(str(e["to"]) for e in edges
+                                        if "cytokine activity" in e["to_function"])
+                if "transcription" in mf_label:
+                    tf_inputs.update(str(i) for i in inputs)
+                    key = "with_input" if inputs else "without_input"
+                    tf_rows[(term_family(labels[bp]), key)] += 1
+            entry: dict[str, Any] = {
+                "enabled_by": gene,
+                "function": mf_label,
+                "part_of": objects.get(bp, bp) if bp else None,
+                "part_of_is_production_term": on_production,
+            }
+            if inputs:
+                entry["has_input"] = inputs
+            if edges:
+                entry["causal"] = [f'{e["predicate"]} -> {e["to"]}' for e in edges]
+            acts.append(entry)
+        models_out.append({
+            "model_id": model_id,
+            "title": (data.get("title") or "").strip(),
+            "taxon": data.get("taxon"),
+            "date_modified": data.get("date_modified"),
+            "provided_by": sorted(provided_by(data, set())),
+            "term_families": sorted(families),
+            "transcription_factor_inputs": sorted(tf_inputs),
+            "cytokine_activity_targets": sorted(cytokine_targets),
+            "activities": acts,
+        })
+
+    cached = [m for m in models_out if m.get("cached", True)]
+    by_family: dict[str, list[str]] = defaultdict(list)
+    for m in cached:
+        key = "+".join(m["term_families"])
+        by_family[key].append(m["model_id"])
+    group_count = Counter(tuple(m["provided_by"]) for m in cached)
+    dates = sorted(str(m["date_modified"]) for m in cached if m.get("date_modified"))
+
+    # Where else do the genes most often placed on a production term sit?
+    gene_counts = Counter(r["gene_label"] for r in gocams)
+    spread = {}
+    for gene, n in gene_counts.most_common():
+        if n < 5:
+            break
+        spread[gene] = dict(Counter(r["bp_label"] or "(none)" for r in index
+                                    if r["gene_label"] == gene).most_common())
+
+    stats = {
+        "models_cached": len(cached),
+        "models_by_term_family": {k: len(v) for k, v in sorted(by_family.items())},
+        "models_with_transcription_factor_input": {
+            k: sum(1 for m in cached if "+".join(m["term_families"]) == k
+                   and m["transcription_factor_inputs"]) for k in sorted(by_family)},
+        "models_with_edge_to_cytokine_activity": {
+            k: sum(1 for m in cached if "+".join(m["term_families"]) == k
+                   and m["cytokine_activity_targets"]) for k in sorted(by_family)},
+        "transcription_factor_activities_on_production_terms": {
+            f"{fam}/{key}": n for (fam, key), n in sorted(tf_rows.items())},
+        "provided_by": {" + ".join(k) or "(none)": v for k, v in group_count.most_common()},
+        "date_modified_range": [dates[0], dates[-1]] if dates else [],
+        "direct_use_of_production_terms": sorted(
+            {f'{r["model_id"]} {r["gene_label"]} -> {r["bp_label"]}' for r in gocams
+             if not REGULATION_PREFIX.match(r["bp_label"])}),
+        "process_spread_of_most_used_genes": spread,
+    }
+    return models_out, stats
 
 
 def summarise(rows: list[dict[str, Any]], reviews: list[dict[str, str]],
@@ -359,13 +504,19 @@ def main() -> None:
     production_ids = {r["id"] for r in rows}
     labels = {r["id"]: r["label"] for r in rows}
     reviews = review_rows(args.genes, production_ids)
-    gocams = gocam_rows(args.gocam_index, production_ids)
+    index = read_index(args.gocam_index)
+    gocams = [r for r in index if r.get("biological_process") in production_ids]
     summary = summarise(rows, reviews, gocams, labels)
+    models, model_stats = gocam_models(args.gocam_index.parent, gocams, index,
+                                       production_ids, labels)
+    summary["gocams"].update(model_stats)
     summary = {"source": {"go_file": args.go.name}, **summary}
 
     args.out.mkdir(parents=True, exist_ok=True)
     with (args.out / "production_terms.yaml").open("w", encoding="utf-8") as fh:
         yaml.safe_dump(rows, fh, sort_keys=False, allow_unicode=True, width=100)
+    with (args.out / "gocam_models.yaml").open("w", encoding="utf-8") as fh:
+        yaml.safe_dump(models, fh, sort_keys=False, allow_unicode=True, width=100)
     with (args.out / "summary.yaml").open("w", encoding="utf-8") as fh:
         yaml.safe_dump(summary, fh, sort_keys=False, allow_unicode=True, width=100)
     print(yaml.safe_dump(summary["terms"], sort_keys=False, width=100))
