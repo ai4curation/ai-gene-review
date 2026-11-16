@@ -116,3 +116,104 @@ GRK node; donors include Drosophila Gprk2 FBgn0261988 and human GRK4 P32298).
   PMID:16675451, PMID:1730692, PMID:21299498); membrane EXP (PMID:14561760, PMID:1527025).
 - Mouse Grk1 Q9WVL4: rhodopsin kinase activity EXP PMID:10097103 and IMP PMID:12853434;
   GO:0016059 IMP PMID:10704496; photoreceptor outer segment IDA PMID:22183407.
+
+## 7. Papers fetched and read beyond the GOA citations (2026-11-16)
+
+All were confirmed by PubMed esummary before fetching with `just fetch-pmid`.
+
+### Human
+- PMID:9419375 (Cideciyan et al. 1998, PNAS; abstract only). The direct human
+  loss-of-function study: an exon 5 deletion in the RK gene.
+  [PMID:9419375 "In vitro experiments demonstrated that the mutation, a deletion of exon 5, abolishes the enzymatic activity of RK and is likely a null."]
+  [PMID:9419375 "Both a homozygote and heterozygote with this RK mutation had recovery phase abnormalities of rod-isolated photoresponses by electroretinography (ERG); photoactivation was normal."]
+  [PMID:9419375 "A slight slowing of cone deactivation kinetics in the homozygote was detected by ERG."]
+  [PMID:9419375 "The role of RK in rods would thus be to accelerate inactivation of activated rhodopsin molecules that in concert with regeneration leads to the normal rate of recovery of sensitivity."]
+- PMID:8812493 (Khani et al. 1996, Genomics; abstract only). Human gene and cDNA.
+  [PMID:8812493 "In rod photoreceptors rhodopsin kinase (RK) mediates rapid desensitization of rod photoreceptors to light by catalyzing phosphorylation of the visual pigment rhodopsin."]
+  [PMID:8812493 "The RK locus, assigned to chromosome 13 band q34, is composed of seven exons that encode a protein 92% identical in amino acid sequence to bovine rhodopsin kinase."]
+- PMID:11717351 (Weiss et al. 2001, J Neurosci; abstract only).
+  [PMID:11717351 "GRK7 and GRK1 are coexpressed in monkey and human cones, suggesting that coordinate regulation of desensitization by both kinases may occur in primates."]
+  [PMID:11717351 "In pigs and dogs, cones express only GRK7, whereas in mice and rats, we detected only GRK1 in cones."]
+- PMID:11754336 (Chen et al. 2001, Mol Vis; abstract only).
+  [PMID:11754336 "We provide evidence that GRK1 and GRK7 are co-expressed in human cones."]
+
+### Bovine (most of the enzymology)
+- PMID:1730692 (Inglese et al. 1992, J Biol Chem; abstract only). Farnesylation.
+  [PMID:1730692 "RK was determined to be modified by a farnesyl moiety and alpha-carboxyl-methylated."]
+  [PMID:1730692 "A time course of Rho* phosphorylation revealed that non-processed RK is approximately 4-fold less active than wild-type RK."]
+  Bovine numbering Cys558; the human equivalent is Cys-560 (UniProt, by similarity).
+- PMID:7629115 (Chen et al. 1995, J Biol Chem; abstract only). Recoverin.
+  [PMID:7629115 "RK, purified using immobilized Rv as an affinity matrix, catalyzed the light-dependent and Ca(2+)-independent incorporation of phosphates into rhodopsin when reconstituted with urea-stripped rod outer segment membranes."]
+  [PMID:7629115 "When recoverin was added, the activity of RK became sensitive to free Ca2+, with EC50 = 3 microM."]
+  [PMID:7629115 "Rv neither interacts with other members of the G-protein-coupled receptor kinase family such as beta-adrenergic receptor kinase 1 nor inhibits beta-adrenergic receptor kinase 1 activity."]
+- PMID:16675451 (Higgins et al. 2006, J Biol Chem; abstract only; species of the kinase
+  not stated in the abstract, UniProt files the paper under bovine P28327).
+  [PMID:16675451 "In this study we map this interaction interface, showing that residues 1-15 of the kinase form the interaction site for recoverin binding."]
+  [PMID:16675451 "Finally, we observe that a kinase mutant lacking the N-terminal recoverin binding site is unable to phosphorylate light-activated rhodopsin."]
+- PMID:18339619 (Singh et al. 2008, J Biol Chem; abstract only). Six GRK1 crystal
+  structures. [PMID:18339619 "Co-localization of the N terminus and the C-terminal extension near the hinge of the kinase domain suggests that activated GPCRs stimulate kinase activity by binding to this region to facilitate full closure of the kinase domain."]
+- PMID:34262173 (Chen et al. 2021, Nature; full text cached; bovine GRK1 residues
+  1-535 and bovine rhodopsin).
+  [PMID:34262173 "Here we report a series of cryo-electron microscopy single-particle reconstructions of light-activated rhodopsin (Rho*) bound to rhodopsin kinase (GRK1), wherein the N terminus of GRK1 forms a helix that docks into the open cytoplasmic cleft of Rho*."]
+  [PMID:34262173 "Full length bovine GRK1 (residues 1–561) has a farnesylation site at its C-terminus which limits its expression in insect cells."]
+  The provider report says a GRK1-Rho* complex structure is still needed; this paper
+  shows that statement is out of date.
+- PMID:14561760 (Zhang et al. 2004, J Biol Chem; abstract only). PDE6D binds
+  farnesylated GRK1.
+  [PMID:14561760 "We find by yeast two-hybrid screening with a PDEdelta bait that it can interact with farnesylated rhodopsin kinase (GRK1) and that prenylation is essential for this interaction."]
+- PMID:1527025 (Palczewski et al. 1992, J Biol Chem; abstract only). Autophosphorylation
+  at Ser488/Thr489 (major) and Ser21 (minor); bovine numbering.
+
+### Mouse
+- PMID:10097103 (Chen et al. 1999, PNAS; full text cached). Grk1 knockout.
+  [PMID:10097103 "This eliminated the light-dependent phosphorylation of rhodopsin and caused the single-photon response to become larger and longer lasting than normal."]
+  [PMID:10097103 "Thus, under these conditions, phosphorylation of photoexcited rhodopsin did not occur in the absence of RK."]
+  [PMID:10097103 "These data suggest that RK is solely responsible for normal rhodopsin deactivation in the dark-adapted rod."]
+- PMID:10704496 (Lyubarsky et al. 2000, J Neurosci; abstract only). Cones.
+  [PMID:10704496 "the cone-driven ERGs of GRK1 -/- animals recovered 30-50 times more slowly than those of WT mice"]
+- PMID:12853434 (Zhu et al. 2003, J Neurosci; abstract only). Cone opsins.
+  [PMID:12853434 "We found that, in the retina of these mice, the light-activated cone opsins were neither phosphorylated nor bound with mCAR."]
+- PMID:31908030 (Kolesnikov et al. 2020, FASEB J; full text cached, abstract read).
+  [PMID:31908030 "rod dark adaptation following exposure to bright bleaching light was significantly delayed in GRK1-S21A mice"]
+- PMID:22183407 (Hagstrom et al. 2012; the MGI source for mouse Grk1 outer-segment
+  location): the cache has no abstract, so the donor evidence for the ISS location row
+  could not be read.
+
+## 8. Decisions and their reasons
+
+- Molecular function. `rhodopsin kinase activity` (GO:0050254) is the specific term and
+  is accepted on all four rows. The human enzyme was assayed directly (PMID:15946941).
+  `G protein-coupled receptor kinase activity`, `protein serine/threonine kinase
+  activity` and `protein kinase activity` are its is_a ancestors; they are true but
+  less specific than the evidence, so they are MODIFY to GO:0050254, not REMOVE.
+  `ATP binding` is accepted (ATP is the co-substrate, Km measured on the human enzyme).
+- Process. The specific terms are `negative regulation of opsin-mediated signaling
+  pathway` (GO:0016059), `photoresponse recovery` (GO:0036368) and `desensitization of G
+  protein-coupled receptor signaling pathway` (GO:0002029); all accepted. Their
+  ancestors (`regulation of opsin-mediated signaling pathway`, `regulation of G
+  protein-coupled receptor signaling pathway`, `regulation of signal transduction`,
+  `response to light stimulus`) are MODIFY to the specific child the gene already
+  carries. `signal transduction` and `G protein-coupled opsin signaling pathway` name
+  the forward pathway; GRK1 switches it off, and in human GOA the terminators (GRK1,
+  GRK7, SAG, ARR3) carry GO:0016059 while the activation chain (RHO, GNAT1/2, PDE6,
+  cone opsins) carries the pathway term GO:0141190, so these rows are MODIFY to
+  GO:0016059. `visual perception` is kept: loss of GRK1 causes night blindness with
+  slowed dark adaptation (Oguchi disease).
+- Location. Outer segment rows accepted (human immunocytochemistry, PMID:12601058).
+  `membrane` is refined to `photoreceptor disc membrane` (GO:0097381), the term the
+  Reactome row already carries. The IBA `cytoplasm` row comes from a deep GRK-family
+  node; for GRK1 the supported site of action is the outer segment.
+- No NEW rows. No source defect is recorded: the IMP rows cite PMID:12601058, whose
+  patients carry NR2E3 mutations, and the abstract compares them with GRK1-deficient
+  Oguchi patients; whether the full text contains new GRK1-patient recordings could not
+  be checked (abstract-only), so the evidence code is not challenged.
+
+## 9. Not verified
+
+- Full texts of PMID:15946941, PMID:12601058, PMID:1656454, PMID:9147475, PMID:9020843
+  (abstract-only caches). The species of the recombinant GRK1 in PMID:15946941 is taken
+  from UniProt's attribution to the human entry, not from the abstract.
+- PMID:22183407 (no abstract in cache).
+- The PAINT tree and alignment behind PTN002806936 and PTN001219785 were not inspected.
+- Recoverin inhibition, farnesylation and the autophosphorylation sites have not been
+  shown on the human protein; the human record carries them by similarity to bovine.
