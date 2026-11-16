@@ -270,8 +270,15 @@ Recommended setting, `--min-hemes 3 --max-hemes 8 --refine --no-require-signal`:
 | *G. daltonii* FRC-32 | 3,798 | 36 | 33 | **24** | 158× | 2 / 2 |
 | *P. calidifontis* VA1 | 2,151 | 4 | 1 | **1** | 2151× | 1 / 1 |
 | *A. veneficus* SNP6 | 2,065 | 10 | 9 | **7** | 295× | 1 / 1 |
+| *D. soudanensis* WTL | 3,469 | 22 | 16 | **7** | 496× | 1 / 1 |
 
-**13 / 13 recall**, across two domains of life, at 142–2151× reduction. The two
+**14 / 14 recall**, across two domains of life, at 142–2151× reduction. The
+*D. soudanensis* row was added last, after a third solved filament turned up during the
+geometry work — the bundled antiparallel ECN of PDB `9YUQ` (`A0A0M4DKA8`, which UniProt
+names `omcE`, so an OmcE-family subunit). Neither the rules nor the thresholds were
+touched for it, so it is a clean out-of-sample test, and its candidate set is the
+cleanest of the six: all seven survivors are annotated "putative multiheme cytochrome
+c", with the named-family rule removing five others. The two
 *G. sulfurreducens* rules derived from four bacterial positives were never tuned on an
 archaeon, and both survive it: all seven proteins the paper considered carry **only**
 `IPR036280` (multiheme cytochrome, a homologous superfamily) and no named family, so the
@@ -281,9 +288,9 @@ drops two in *A. veneficus*.
 
 The caveat on the held-out Geobacteraceae still applies and is now explicit in the script:
 their "known members" are CDD `cd21555` homologs — membership in a hand-curated model, not
-a solved filament. Counting strictly, **five** of the thirteen are solved filaments — OmcE
-(7TFS), OmcS (6NEF), OmcZ (7LQ5, 8D9M), PcECN and AvECN — and all five are recovered, so
-the honest recall figure on solved structures is 5 / 5. OmcT is a characterised tandem
+a solved filament. Counting strictly, **six** of the fourteen are solved filaments — OmcE
+(7TFS), OmcS (6NEF), OmcZ (7LQ5, 8D9M), PcECN, AvECN and DsECN (9YUQ) — and all six are
+recovered, so the honest recall figure on solved structures is 6 / 6. OmcT is a characterised tandem
 paralog of OmcS with no structure of its own, and the remaining seven are cd21555 model
 members.
 
@@ -305,8 +312,8 @@ exactly the discrimination this project proposes to make with heme geometry.
 
 ## Honest limits
 
-- **Five solved filaments is still a small positive set.** Precision measured against
-  five positives across five proteomes is a weak estimate, and the true positive set in
+- **Six solved filaments is still a small positive set.** Precision measured against
+  six positives across six proteomes is a weak estimate, and the true positive set in
   any of these organisms is unknown and plausibly larger — which is the point of the
   cd21555 overlap above. The seven cd21555 homologs in the held-out Geobacteraceae are
   model members, not solved structures, so they test propagation rather than truth.
@@ -327,6 +334,6 @@ exactly the discrimination this project proposes to make with heme geometry.
   never tuned on, which is real evidence, but it remains close to "the positives are
   unclassified" — partly a fact about what InterPro has curated rather than about the
   biology. If InterPro ever builds a family for this class, the rule inverts.
-- **Two domains, five proteomes.** The *S. oneidensis* run is a sanity check, not a
+- **Two domains, six proteomes.** The *S. oneidensis* run is a sanity check, not a
   measurement. Untested: the ANME and Methanoperedenaceae OmcZ-type cytochromes, where
   there is no solved filament to score against.

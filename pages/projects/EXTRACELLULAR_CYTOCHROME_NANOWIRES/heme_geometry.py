@@ -51,7 +51,7 @@ from pathlib import Path
 
 #: In class: the three G. sulfurreducens filaments (with a second OmcZ deposition as
 #: an internal control and a 7-subunit OmcS segment), plus the two archaeal ECNs.
-IN_CLASS = ("7TFS", "6NEF", "6EF8", "7LQ5", "8D9M", "8E5F", "8E5G")
+IN_CLASS = ("7TFS", "6NEF", "6EF8", "7LQ5", "8D9M", "8E5F", "8E5G", "9YUQ")
 
 #: Out of class. The c3/Hmc entries are the ones PMID:36732469 names as having
 #: "similar haem-haem distances"; the Nrf entries are the sequence screen's own
@@ -70,6 +70,7 @@ LABELS = {
     "8D9M": "OmcZ   (Q74BG5), independent deposition",
     "8E5F": "PcECN  (A3MW92), Pyrobaculum calidifontis",
     "8E5G": "AvECN  (F2KMU8), Archaeoglobus veneficus",
+    "9YUQ": "DsECN  (A0A0M4DKA8), Desulfuromonas soudanensis, 16-chain bundle",
     # Out of class, named by PMID:36732469 as having "similar haem-haem distances".
     "1GYO": "c3     di-tetraheme cytochrome c3, D. gigas  [OUT OF CLASS]",
     "2BQ4": "c3     type I cytochrome c3, D. africanus  [OUT OF CLASS]",
@@ -174,12 +175,29 @@ def nearest_neighbour_distances(sites, within_chain: bool = False) -> list[float
     return out
 
 
-def chain_continuity(sites) -> tuple[float, float, float] | None:
+def chain_continuity(sites) -> tuple[float, float, float, int, int] | None:
     """Does the heme chain continue across the subunit interface?
 
     Returns (closest inter-chain Fe-Fe, median intra-chain nearest neighbour,
-    fraction of hemes whose nearest neighbour lies in another chain), or None for a
-    single-chain deposition.
+    fraction of hemes whose nearest neighbour lies in another chain, number of
+    chains whose own closest other-chain heme is within CONTINUITY_FACTOR of the
+    intra-chain spacing, total chains), or None for a single-chain deposition.
+
+    The last two matter because the first number is an *existence* claim: one close
+    pair anywhere in the deposition sets it. The per-chain count says how pervasive
+    the continuity is, and the two can disagree. In 6EF8 every one of seven OmcS
+    subunits has a neighbour at exactly 1.00x, a wire throughout; 7LQ5 is 3/3. In
+    9YUQ, the bundled antiparallel Desulfuromonas filament, two chains sit at 1.00x,
+    two at 1.05x, two at 1.05x just over the cutoff and the remaining ten at
+    1.29-1.40x. So its minimum is filament-like while most modelled chains are not in
+    axial contact, which is a property of what the bundle model contains rather than
+    evidence against the filament.
+
+    Treat the per-chain count as indicative only: for 9YUQ it is threshold-sensitive,
+    reading 2/16 at a factor of 1.03, 4/16 at 1.05 and 6/16 at 1.07. The minimum
+    ratio is the robust statistic -- all three filaments reach 1.00x and no
+    non-filament measured here gets below 1.10x, nor has a single chain at or below
+    the factor.
 
     This is the measure that distinguishes a wire from a globular multiheme enzyme,
     and it is not a distance threshold. A filament's hemes form one chain that runs
@@ -216,7 +234,21 @@ def chain_continuity(sites) -> tuple[float, float, float] | None:
         )
         if best_any is not None and (best_own is None or best_any < best_own - 1e-6):
             pooled_is_cross += 1
-    return min(inter), statistics.median(intra), pooled_is_cross / len(sites)
+    median_intra = statistics.median(intra)
+    continuous_chains = 0
+    for c in chains:
+        own = [a for a in sites if a[0] == c]
+        other = [b for b in sites if b[0] != c]
+        closest = min(math.dist(a[2:5], b[2:5]) for a in own for b in other)
+        if closest <= median_intra * CONTINUITY_FACTOR:
+            continuous_chains += 1
+    return (
+        min(inter),
+        median_intra,
+        pooled_is_cross / len(sites),
+        continuous_chains,
+        len(chains),
+    )
 
 
 def _summary(nn: list[float]) -> str:
@@ -248,7 +280,7 @@ def report(entry: str, cache: Path) -> None:
         )
         cont = chain_continuity(sites)
         if cont is not None:
-            closest_inter, median_intra, frac = cont
+            closest_inter, median_intra, frac, cont_chains, n_chains = cont
             ratio = closest_inter / median_intra
             verdict = (
                 "CONTINUOUS through the interface -> wire-like"
@@ -259,7 +291,8 @@ def report(entry: str, cache: Path) -> None:
                 f"    continuity        : closest inter-chain Fe-Fe {closest_inter:.1f} A"
                 f" vs {median_intra:.1f} A intra-chain spacing"
                 f" = {ratio:.2f}x;"
-                f" {frac:.0%} of hemes have a cross-chain nearest neighbour"
+                f" {cont_chains}/{n_chains} chains continuous,"
+                f" {frac:.0%} of hemes with a cross-chain nearest neighbour"
                 f"\n                        -> {verdict}"
             )
 

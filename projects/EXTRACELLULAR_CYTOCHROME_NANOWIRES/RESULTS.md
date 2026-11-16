@@ -30,10 +30,14 @@ classifier would have to key on.
 | 8D9M | OmcZ (`Q74BG5`), independent deposition | 8 | 1 | **9.4 Å** | 8.8 | 11.4 |
 | 8E5F | PcECN (`A3MW92`), *P. calidifontis* | 4 | 1 | **10.4 Å** | 9.4 | 12.3 |
 | 8E5G | AvECN (`F2KMU8`), *A. veneficus* | 4 | 1 | **9.4 Å** | 9.4 | 9.4 |
+| 9YUQ | DsECN (`A0A0M4DKA8`), *D. soudanensis*, 16-chain bundle | 4 | 16 | **8.7 Å** | 7.8 | 11.9 |
 
-Across five proteins carrying four, six and eight hemes, from two domains of life,
+Across six proteins carrying four, six and eight hemes, from two domains of life,
 with no sequence or fold similarity between them, the median nearest-neighbour Fe–Fe
-distance falls in a band about 1.3 Å wide, **9.1–10.4 Å**. The two independent OmcZ
+distance falls in a band about 1.7 Å wide, **8.7–10.4 Å**. The band widened when the
+*Desulfuromonas* filament was added: it is the tightest-packed member measured, 0.4 Å
+below the previous lower edge, which moves NrfA's 9.7 Å from just inside the band to
+near its middle. The two independent OmcZ
 depositions, from different groups, agree to 0.2 Å, which is the internal control: the
 measurement is reproducible across depositions, so the spread between proteins is not
 deposition noise. The two archaeal filaments were added after the bacterial band was
@@ -47,7 +51,7 @@ about whether it is *specific* to the class, and the project page previously pro
 the spacing as a precision stage without having checked. Checked now, against two sets
 of non-filament multiheme cytochromes. All chains pooled:
 
-| PDB | Protein | Hemes / protomer | Median NN Fe–Fe | Inside the 9.1–10.4 Å band? |
+| PDB | Protein | Hemes / protomer | Median NN Fe–Fe | Inside the 8.7–10.4 Å band? |
 |---|---|---:|---:|---|
 | 1GYO | di-tetraheme cytochrome c3, *D. gigas* | 4 | 11.7 Å | no |
 | 2BQ4 | type I cytochrome c3, *D. africanus* | 4 | 11.6 Å | no |
@@ -63,7 +67,7 @@ cytochromes from *Desulfovibrio* species also have similar haem structures (PDB 
 1gyo, 2bq4 and 2e84) … All four structures have consecutive histidines causing tight
 haem T-junction with similar haem–haem distances. However, none of the c3 cytochromes
 is known to form nanowires." At the Fe–Fe level that is not what the coordinates say:
-all three sit 1.0–1.6 Å *above* the filament band and separate cleanly from it. The
+all three sit 1.0–3.0 Å *above* the filament band and separate cleanly from it. The
 paper is describing edge-to-edge porphyrin contact and T-stacking geometry, which is a
 different measurement, so this is not a contradiction of the paper — but it does mean
 the c3 entries cannot be used to argue that spacing is non-specific.
@@ -88,22 +92,59 @@ In a globular enzyme the hemes stay inside one protomer.
 Measured as the closest inter-chain Fe–Fe divided by the intra-chain spacing, on every
 deposition here that contains more than one chain:
 
-| PDB | Protein | closest inter-chain | intra-chain spacing | ratio | hemes with cross-chain NN |
+| PDB | Protein | closest inter-chain | intra-chain spacing | ratio | chains continuous |
 |---|---|---:|---:|---:|---:|
-| 6EF8 | **OmcS filament** | 9.1 Å | 9.1 Å | **1.00×** | 29% |
-| 7LQ5 | **OmcZ filament** | 9.3 Å | 9.3 Å | **1.00×** | 17% |
-| 2J7A | NrfHA complex | 10.7 Å | 9.7 Å | 1.10× | 0% |
-| 1OAH | NrfA | 11.1 Å | 9.7 Å | 1.15× | 10% |
-| 3L1T | NrfA | 11.7 Å | 9.7 Å | 1.21× | 0% |
-| 1GYO | cytochrome c3 (biological dimer) | 15.2 Å | 11.7 Å | 1.29× | 0% |
-| 2BQ4 | cytochrome c3 (crystal copies) | 24.8 Å | 11.6 Å | 2.14× | 0% |
+| 6EF8 | **OmcS filament** | 9.1 Å | 9.1 Å | **1.00×** | **7 / 7** |
+| 7LQ5 | **OmcZ filament** | 9.3 Å | 9.3 Å | **1.00×** | **3 / 3** |
+| 9YUQ | **DsECN filament**, bundled | 8.7 Å | 8.8 Å | **1.00×** | 4 / 16 |
+| 2J7A | NrfHA complex | 10.7 Å | 9.7 Å | 1.10× | 0 / 18 |
+| 1OAH | NrfA | 11.1 Å | 9.7 Å | 1.15× | 0 / 2 |
+| 3L1T | NrfA | 11.7 Å | 9.7 Å | 1.21× | 0 / 4 |
+| 1GYO | cytochrome c3 (biological dimer) | 15.2 Å | 11.7 Å | 1.29× | 0 / 2 |
+| 2BQ4 | cytochrome c3 (crystal copies) | 24.8 Å | 11.6 Å | 2.14× | 0 / 2 |
 
-The filaments sit at exactly **1.00×** — the chain simply does not notice the
-interface — and every non-filament is at 1.10× or above. The strongest control is
+All three filaments sit at exactly **1.00×** — the chain simply does not notice the
+interface — and every non-filament is at 1.10× or above, with not one chain of any of
+them continuous at the 1.05× factor. The strongest control is
 `2J7A`, the NrfHA complex, where electrons genuinely do cross a subunit interface
 during catalysis: even there the closest inter-subunit Fe–Fe is 10% longer than the
 intra-subunit spacing, and no heme's nearest neighbour is in the other subunit. That
 is the difference between a relay with a junction and a wire.
+
+**Two statistics, and only one of them is robust.** The ratio is an *existence* claim:
+one close pair anywhere in the deposition sets it. The per-chain count says how
+pervasive the continuity is, and the two can disagree. `6EF8` is uniform — every one of
+seven OmcS subunits has a neighbour at exactly 1.00×, a wire throughout — and `7LQ5` is
+3/3. `9YUQ` is not: two chains at 1.00×, two at 1.05×, two more at 1.054× just over the
+cutoff, and the remaining ten at 1.29–1.40×. Its per-chain count is therefore
+threshold-sensitive, reading 2/16 at a factor of 1.03, 4/16 at 1.05 and 6/16 at 1.07,
+and it is reported as indicative only. The architecture explains that rather than
+undermining it: this is a *bundled antiparallel* filament, so most of the sixteen
+modelled chains are laterally packed at 11.3–12.3 Å rather than in axial contact, and
+what the count measures is how much of the bundle the model places in axial register.
+The minimum ratio is the statistic that separates, and on it all three filaments reach
+1.00× while nothing out of class gets below 1.10×.
+
+**The chain-level contact topology is the clearest view**, and it is what a wire should
+look like. Counting pairs of chains whose hemes come within the 1.05× cutoff: `6EF8`
+gives six pairs over seven chains, with contacts per chain of 2, 2, 2, 2, 2, 1, 1 — a
+single unbranched run with two ends, which is a filament and nothing else. `7LQ5` gives
+2, 1, 1 over three chains, the same topology as far as three subunits can show. `2J7A`,
+with eighteen chains and a real catalytic interface, gives **zero** pairs.
+
+### A criterion that did not work, recorded so it is not retried
+
+The obvious generalisation — link every pair of hemes within a fixed cutoff and ask
+whether they form one connected component spanning the filament — **fails**, and fails
+in both directions, so it is not used. At a 14 Å cutoff `6EF8` and `7LQ5` do give a
+single component containing every heme, but so does `1OAH`: NrfA's two pentaheme
+protomers come within 11.1 Å, so the dimer links into one component of all ten hemes
+and reads as wire-like. Meanwhile the genuine `9YUQ` filament splits into three
+components, because the bundle's lateral spacings exceed the cutoff. Tightening to 12 Å
+fragments everything, filaments included. The result is threshold-dependent and
+separates the classes at none of the cutoffs tried (10, 12, 14 Å), which is why the
+criterion above is framed as a *ratio to each structure's own intra-chain spacing*
+rather than as an absolute distance.
 
 This is what the structural second stage has to measure. It is also harder than the
 project page assumed, for a reason that matters: **continuity is a property of the
@@ -128,12 +169,14 @@ monomer prediction cannot carry.
   genus: the two archaeal filaments were measured after the bacterial band was fixed
   and fall inside it, which is a real out-of-sample confirmation of the published
   claim.
-- **The continuity criterion rests on two filaments.** Only `6EF8` (OmcS, 7 subunits)
-  and `7LQ5` (OmcZ, 3 subunits) are multi-subunit depositions; `6NEF`, `7TFS`, `8D9M`,
-  `8E5F` and `8E5G` each hold a single chain, so continuity cannot be computed for
-  them. The 1.05× threshold in `heme_geometry.py` is therefore provisional — it
-  separates 1.00× from 1.10× with a real but modest margin, on n=2. A third
-  multi-subunit filament would be the first thing to add.
+- **The continuity criterion rests on three filaments.** `6EF8` (OmcS, 7 subunits),
+  `7LQ5` (OmcZ, 3 subunits) and `9YUQ` (DsECN, 16 chains) are the multi-subunit
+  depositions; `6NEF`, `7TFS`, `8D9M`, `8E5F` and `8E5G` each hold a single chain, so
+  continuity cannot be computed for them. `9YUQ` was added after the 1.05× threshold was
+  set and did not move it, which is the only out-of-sample test the criterion has had.
+  The margin is still modest — 1.00× against 1.10× for the nearest control — and three
+  filaments against five non-filaments is a small test set. A filament of a fourth
+  family, and a non-filament multiheme polymer if one exists, are what would stress it.
 - **Not every inter-chain contact means the same thing.** For the filaments and for
   `2J7A`/`1OAH`/`3L1T`/`1GYO` the chains are biological; for `2BQ4` they are two
   crystallographic copies, so its 2.14× is partly a packing accident and is reported

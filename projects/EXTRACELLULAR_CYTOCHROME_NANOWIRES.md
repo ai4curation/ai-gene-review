@@ -100,9 +100,10 @@ files and taking each one's distance to its nearest neighbour
 | 8D9M | OmcZ, independent deposition | 8 | 9.4 Å |
 | 8E5F | PcECN (`A3MW92`), archaeal | 4 | 10.4 Å |
 | 8E5G | AvECN (`F2KMU8`), archaeal | 4 | 9.4 Å |
+| 9YUQ | DsECN (`A0A0M4DKA8`), bundled | 4 | 8.7 Å |
 
-Five proteins, four six and eight hemes, two domains of life, no sequence or fold
-similarity, and the medians fall in a band about 1.3 Å wide. The two independent OmcZ
+Six proteins, four six and eight hemes, two domains of life, no sequence or fold
+similarity, and the medians fall in a band about 1.7 Å wide. The two independent OmcZ
 depositions agree to 0.2 Å, which is the control showing the spread between proteins is
 not deposition noise. The two archaeal filaments were measured after the bacterial band
 was fixed and land inside it, so they are an out-of-sample confirmation rather than part
@@ -205,12 +206,25 @@ would add nothing precisely where precision is needed.
 
 **The feature that does separate them is continuity through the subunit interface**, and
 the papers named it all along — hemes "coordinated by histidines in adjacent subunits".
-Measured as the closest inter-subunit Fe–Fe over the intra-subunit spacing, the two
+Measured as the closest inter-subunit Fe–Fe over the intra-subunit spacing, all three
 multi-subunit filament depositions sit at **1.00×**: the chain does not notice the
-interface. Every non-filament is ≥1.10×, including the NrfHA complex, where electrons
-genuinely do cross a subunit interface during catalysis and the junction is still 10%
-longer than the spacing either side of it. That is the difference between a relay with a
-junction and a wire.
+interface. Every non-filament is ≥1.10×, and not one chain of any of them is continuous
+at the 1.05× factor — including the NrfHA complex, where electrons genuinely do cross a
+subunit interface during catalysis and the junction is still 10% longer than the spacing
+either side of it. That is the difference between a relay with a junction and a wire.
+
+The chain-level topology makes it plainer still. In the 7-subunit OmcS filament the
+chains in heme contact form a single unbranched run — contacts per chain 2, 2, 2, 2, 2,
+1, 1, which is a wire with two ends and nothing else; the 3-subunit OmcZ gives 2, 1, 1.
+The 18-chain NrfHA complex gives **zero** chain pairs in contact. The third filament,
+the bundled antiparallel *Desulfuromonas* ECN (`9YUQ`), reaches 1.00× on its minimum but
+only 4 of 16 chains individually, because most of the bundle is laterally packed at
+11.3–12.3 Å rather than in axial register; that count is threshold-sensitive (2/16 to
+6/16 across factors of 1.03–1.07) and is reported as indicative, while the minimum is
+the statistic that separates. One tempting generalisation was tried and discarded:
+asking whether the hemes form a single connected component under a fixed distance cutoff
+fails in both directions, since NrfA's dimer links into one component at 14 Å while the
+real `9YUQ` filament fragments into three.
 
 Caveats, stated plainly, and one of them is now much heavier. The method is still
 untested. The proteins are loop-rich and partly disordered, so predicted confidence may
@@ -221,7 +235,9 @@ inter-subunit contact, it is that the only feature known to separate this class 
 look-alikes lives in that contact. Until polymer prediction is good enough, the honest
 position is that the sequence screen is a candidate generator with no automated second
 stage, and the second stage is the cryo-EM work the papers did by hand. The continuity
-threshold itself rests on two filaments, so it is provisional.
+threshold rests on three filaments against five non-filaments, which is a small test
+set; `9YUQ` was added after the threshold was set and did not move it, and that is the
+only out-of-sample test it has had, so it remains provisional.
 
 ### The cheap baseline, run
 
@@ -322,14 +338,17 @@ loses no recall anywhere:
 | *G. daltonii* FRC-32 | 3,798 | 24 | 158× | 2 / 2 |
 | *P. calidifontis* VA1 | 2,151 | **1** | **2151×** | 1 / 1 |
 | *A. veneficus* SNP6 | 2,065 | 7 | 295× | 1 / 1 |
+| *D. soudanensis* WTL | 3,469 | 7 | 496× | 1 / 1 |
 
-**13 / 13 recall across two domains of life.** Both rules derived from four bacterial
+**14 / 14 recall across two domains of life.** Both rules derived from four bacterial
 positives survive an archaeal test they were never tuned on: all seven proteins the paper
 considered carry only `IPR036280`, a homologous superfamily, and no named family, so the
 family rule keeps every one; the transmembrane clause carries *P. calidifontis* by itself.
-Counting only **solved** filaments — OmcE, OmcS, OmcZ, PcECN and AvECN — recall is 5 / 5;
-the other eight positives are OmcS's unsolved paralog OmcT and seven cd21555 model members,
-so they test propagation rather than truth.
+Counting only **solved** filaments — OmcE, OmcS, OmcZ, PcECN, AvECN and DsECN — recall is
+6 / 6; the other eight positives are OmcS's unsolved paralog OmcT and seven cd21555 model
+members, so they test propagation rather than truth. The *D. soudanensis* row was added
+after a third solved filament turned up during the geometry work, with no rule or
+threshold touched for it.
 
 **And the paper supplies the argument for the structural stage.** In *A. veneficus*,
 `F2KMU7` and `F2KPF5` pass this filter and sit among its seven candidates; the authors

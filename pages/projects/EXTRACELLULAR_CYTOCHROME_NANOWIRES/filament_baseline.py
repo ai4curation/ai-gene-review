@@ -127,6 +127,15 @@ KNOWN: dict[str, dict] = {
         },
         "negatives": {},
     },
+    # A sixth solved filament, and a sixth proteome, added after the screen was
+    # fixed: the bundled antiparallel ECN of Desulfuromonas soudanensis (PDB 9YUQ).
+    # Neither the rules nor the thresholds were touched for it, so its row is an
+    # out-of-sample recall test.
+    "UP000057158": {
+        "organism": "Desulfuromonas soudanensis WTL",
+        "positives": {"A0A0M4DKA8": "DsECN, filament (cryo-EM, PDB 9YUQ)"},
+        "negatives": {},
+    },
     # Baquero et al. 2023 (PMID:37290436) solved two archaeal ECNs by cryo-EM and
     # named, for each proteome, every protein they considered and why they rejected it.
     # That makes these two the only proteomes with published negative reasoning.
