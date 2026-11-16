@@ -458,20 +458,22 @@ def test_correction_naming_the_table_in_its_own_text_is_an_error(tmp_path: Path)
 
 
 @pytest.mark.parametrize(
-    "text,expected_warning",
+    "text,expected",
     [
-        ("600 of 4,603 sets are also matched by a rule for a descendant keyword.", True),
-        ("2,661 of 4,603 sets are also matched by a rule for a descendant keyword.", False),
-        ("None of the 4,603 condition sets is matched by a rule for a descendant keyword.", False),
+        ("600 of 4,603 sets are also matched by a rule for a descendant keyword.", {"redundancy_prose_unconfirmed"}),
+        ("2,661 of 4,603 sets are also matched by a rule for a descendant keyword.", set()),
+        ("None of the 4,603 condition sets is matched by a rule for a descendant keyword.", set()),
+        ("keyword_redundancy.tsv: 600 sets are matched by a rule for a descendant keyword.", {"redundancy_prose_mismatch"}),
     ],
 )
-def test_keyword_coverage_figure_is_compared_with_the_keyword_table(text: str, expected_warning: bool, tmp_path: Path) -> None:
-    from ai_gene_review.validation.rule_review_receipts import keyword_redundancy_row
+def test_coverage_prose_is_compared_with_given_table_figures(text: str, expected: set[str]) -> None:
+    """The comparison itself, with the table's figures passed in: no committed table is read."""
+    from ai_gene_review.validation.rule_review_receipts import _check_coverage_prose
 
-    row = keyword_redundancy_row("ARBA00022679")
-    assert row is not None and (row["condition_sets"], row["covered_sets"]) == ("4603", "2661"), "fixture row changed"
-    rule = {"rule_id": "ARBA00022679", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10",
-            "source_condition_set_count": 4603}
-    data = review(id="ARBA00022679", rule=rule, review_summary=text,
-                  annotation_assessments=[{"annotation_kind": "KEYWORD", "value": "KW-0808", "assessment": "UNDECIDED"}])
-    assert ("redundancy_prose_unconfirmed" in checks(data, tmp_path, "warning")) is expected_warning
+    fired: set[str] = set()
+
+    def add(severity: Any, check: str, message: str, path: str, suggestion: str | None = None) -> None:
+        fired.add(check)
+
+    _check_coverage_prose({"review_summary": text}, 2661, 4603, "keyword_redundancy.tsv", add)
+    assert fired == expected
