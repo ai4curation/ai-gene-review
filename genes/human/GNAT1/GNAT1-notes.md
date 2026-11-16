@@ -266,3 +266,29 @@ Other
   pathway term for this gene.
 - GO:0120202 rod photoreceptor disc membrane: the discs are separated from the ciliary and
   plasma membrane.
+
+## 9. Review decisions (second worker, 2026-11-16)
+
+Decisions merged from the vision-alignment decisions file; quotes re-checked against the
+cached sources (whitespace-normalised substring match).
+
+- Core function: GO:0003925 G protein activity, directly involved in GO:0141190, located at
+  GO:0120202, in GO:0005834. Agrees with the rod transducin annoton in
+  modules/visual_phototransduction.yaml and with GNAT1's activity in GO-CAM 6918f23700000035.
+- Ancestry checked in QuickGO: GO:0141190 is_a descendant of GO:0007603, GO:0016056,
+  GO:0007186, GO:0007165 and GO:0009416, but not of GO:0007188 or GO:0050908.
+  GO:0120202 descends from GO:0097381, GO:0001750 and GO:0016020, not from GO:0042622.
+  So general process rows and membrane / disc membrane / OS membrane rows were MODIFIED to
+  GO:0141190 / GO:0120202; GTPase activity to G protein activity; guanyl nucleotide
+  binding to GTP and GDP binding; response to light stimulus to GO:0141190 + GO:0009642.
+- Outer segment rows ACCEPTED rather than modified: the outer segment holds both the
+  disc-bound and the soluble activated pool.
+- REMOVE only for adenylate cyclase-modulating GPCR signalling (IBA from the G alpha root
+  node and InterPro IEA): transducin's effector is PDE6.
+- MARK_AS_OVER_ANNOTATED: acyl binding (covalent acylation), bitter taste (rat in vitro,
+  stated as a suggestion), plasma membrane (generic Reactome drawing), apical plasma
+  membrane (rat jejunum, unspecified transducin), protein kinase binding (Src substrate),
+  cGMP catabolic process (PDE6 does the work), negative regulation of PDE activity (in vitro
+  GDP-alpha effect; physiological relation is activation).
+- PMID:2534964 IDA rows (outer and inner segment) kept in deference to the curator; the
+  abstract does not show the rod-alpha localization experiment.

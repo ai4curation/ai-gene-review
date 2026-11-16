@@ -217,3 +217,21 @@ All were confirmed by PubMed esummary before fetching with `just fetch-pmid`.
 - The PAINT tree and alignment behind PTN002806936 and PTN001219785 were not inspected.
 - Recoverin inhibition, farnesylation and the autophosphorylation sites have not been
   shown on the human protein; the human record carries them by similarity to bovine.
+
+## 10. Review written (2026-11-16, second worker)
+
+Decisions merged from the scratchpad decisions file with `apply_review.py`; all 36 rows
+have actions. Quotes reused from sections 3 and 7 were re-checked against their cached
+source files (all verbatim). Changes from the plan in section 8:
+- `ATP binding` (row 11) is KEEP_AS_NON_CORE rather than ACCEPT: true, but subsidiary to
+  the catalytic activity.
+- IBA `cytoplasm` (row 12) is KEEP_AS_NON_CORE: GO:0001750 is not a descendant of
+  GO:0005737, so no refinement exists; GRK1 is a soluble, prenyl-anchored cytoplasmic-face
+  kinase, so the claim is not wrong.
+- Process rows on the forward pathway and on regulation ancestors are MODIFY to GO:0016059;
+  `response to light stimulus` is MODIFY to GO:0036368.
+Core function: GO:0050254 rhodopsin kinase activity, directly involved in GO:0016059 and
+GO:0036368, at GO:0097381 photoreceptor disc membrane and GO:0001750 photoreceptor outer
+segment. This matches the `grk1_kinase` annoton in modules/visual_phototransduction.yaml.
+Warnings left: IBA row 19 has no propagation_review (the PAINT tree was not inspected);
+the deep-research file is not cited (by design, lead only).
