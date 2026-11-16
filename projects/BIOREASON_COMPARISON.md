@@ -28,6 +28,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/DtnNGp5GAUCDokkUYa1eRE
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 # BioReason-Pro Comparison Project
 

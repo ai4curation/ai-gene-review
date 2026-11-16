@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [OBSOLETION, PIPELINE]
 species: [human, mouse, rat]
 collections: [GO_TRACKER_BACKLOG]
+index_group: GO_TRACKER_BACKLOG
 ---
 
 # Partner-Named and Condition-Dependent Protein Binding Terms

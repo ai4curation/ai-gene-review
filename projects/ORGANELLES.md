@@ -3,6 +3,8 @@ title: "Organelles"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60, TPR, TIM22, Ca2, CA2, SERCA]
+index_group: CROSS_CUTTING
+description: When is a root organelle term (e.g. mitochondrion) informative, versus its membrane or lumen?
 ---
 
 # Organelles

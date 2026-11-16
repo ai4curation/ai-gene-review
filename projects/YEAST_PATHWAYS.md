@@ -3,6 +3,7 @@ title: "YeastPathways to Modules"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [yeast, SCHPO]
+index_group: CROSS_CUTTING
 ---
 
 # YeastPathways to Modules

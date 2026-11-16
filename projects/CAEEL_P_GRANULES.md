@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/5cREn2bg18z6AMLszSedou
       title: Project brief
+index_group: WORM
 ---
 
 # C. elegans P Granule/Germ Granule Dynamics Project

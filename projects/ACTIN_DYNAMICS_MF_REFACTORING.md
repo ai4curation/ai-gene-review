@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [OBSOLETION, BIOLOGY_DOMAIN]
 species: [human, yeast, SCHPO, DROME]
 collections: [GO_TRACKER_BACKLOG]
+index_group: GO_TRACKER_BACKLOG
 ---
 
 # Actin Dynamics: Process Terms to Molecular Functions
