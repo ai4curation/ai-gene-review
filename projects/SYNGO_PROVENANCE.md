@@ -48,7 +48,10 @@ assigned by SynGO, and joins each to its review actions. Output:
 [`SYNGO_PROVENANCE/data/syngo_rows.yaml`](SYNGO_PROVENANCE/data/syngo_rows.yaml).
 It counts two units. A **row** is one GOA line. A **claim** is one gene, term, qualifier
 and paper: SynGO usually files one assertion as an IDA + IMP (+ NAS) set on the same paper,
-so rows overstate claims by about two to one. Run on `main` as of 2026-11-15:
+so rows overstate claims by about two to one. (The inventory counts a row as one term,
+qualifier, evidence code and paper. QuickGO also lists each ECO code separately, and SynGO
+often files IDA under two ECO codes, so a per-term QuickGO listing runs nearer four rows per
+claim.) Run on `main` as of 2026-11-15:
 
 | Measure | Rows | Claims |
 |---|---|---|
@@ -64,8 +67,8 @@ GRIN2D, GRIN3A and GRIN3B reviews are not yet on `main`, so their rows are not c
 ## Cases found so far
 
 All three concern `GO:0099507` (ligand-gated monoatomic ion channel activity involved in
-regulation of presynaptic membrane potential). Each SynGO claim below arrives as an IDA,
-IMP and NAS triple on the same paper: one claim, three rows.
+regulation of presynaptic membrane potential). Each SynGO claim below arrives as a set of
+IDA, IMP and NAS rows on the same paper, so one claim appears as several rows.
 
 The reference-level views come from
 [`SYNGO_PROVENANCE/reference_level.py`](SYNGO_PROVENANCE/reference_level.py), which
@@ -153,21 +156,32 @@ receptors only as background and as a prediction in its discussion; its experime
 all in oocytes.
 
 One reference is simply mis-keyed. PMID:8137830 is the 1994 erratum notice for the 1993
-EMBO J glycine receptor paper, PMID:8404844 (found by PubMed search, title confirmed). That
-paper is itself a HEK-293 study with no presynaptic content.
+EMBO J glycine receptor paper, PMID:8404844, found by PubMed search. The two cached records
+confirm each other: PMID:8137830 says "Erratum for EMBO J. 1993 Oct;12(10):3729-37" and
+PMID:8404844 says "Erratum in EMBO J. 1994 Mar 15;13(6):1493". That paper is itself a
+HEK-293 study with no presynaptic content.
+
+**What the rows themselves record.** The row listing keeps each row's ECO code and
+WITH/FROM. None of the 99 rows has a WITH/FROM, including all 48 human rows: no orthology
+source is recorded for any human annotation made from a rodent paper. That is the
+evidence for the first error category below, not an inference.
 
 ## Error categories this audit needs
 
 The repository's source-defect vocabulary records *what* is wrong (`defect_type`) and,
 optionally, *how* it arose (`cause`). These cases need two causes the vocabulary does not
-have yet. Proposed here; adding them is a schema change for a separate PR.
+had. They are added by #6449 as `ORTHOLOG_TRANSFER_AS_EXPERIMENTAL` and
+`CONTEXT_NOT_ASSAYED`, with a `SYNGO` resource value.
 
 1. **Ortholog transfer recorded as experimental evidence** ("implicit ISO"). A study in
    rat or mouse is annotated to the human gene with IDA or IMP. The rodent result can be
    sound and the human row still misrepresents its evidence: GO records annotation
    transferred by orthology as ISO (or ISS). This is SynGO's documented method
-   (PMID:31171447), so it is one convention question, not a per-row error. As a
-   per-row defect it would be `defect_type: WRONG_EVIDENCE_CODE` with a new cause.
+   (PMID:31171447), so it is one convention question, not a per-row error. The cause is
+   for reporting the cohort once, with the date range and row count, not for filing on
+   every row. Where it is filed, it is `defect_type: WRONG_EVIDENCE_CODE`, and the fix has
+   two parts: the evidence code becomes ISO, and `With/From` names the rodent gene that
+   was assayed.
 2. **Context asserted but not assayed.** The paper shows the activity, but not the
    biological context the term asserts. `GO:0099507` is a precomposed term: it claims a
    ligand-gated channel *and* a role in setting presynaptic membrane potential. A
@@ -176,7 +190,9 @@ have yet. Proposed here; adding them is a schema change for a separate PR.
    context is the claim, so evidence that cannot reach it does not support the term. As
    a defect it is `defect_type: WRONG_TERM`, with `corrected_value` the plain activity
    term (for example `GO:0015276` ligand-gated monoatomic ion channel activity, or the
-   receptor-specific child the gene already carries).
+   receptor-specific child the gene already carries). In a gene review this is a MODIFY
+   that decomposes a precomposed term, so the row records `review.decomposed_into` with
+   `context_dropped: true`: the context was never assayed.
 
 The existing vocabulary covers the rest: the GRIN2B case is `WRONG_GENE_PRODUCT`, the
 erratum is `WRONG_REFERENCE` (PMID:8137830 → PMID:8404844), and the PMID:20026616
@@ -199,8 +215,10 @@ channel evidence, `PRACTICE_CHANGE` would describe the cohort for a bulk fix.
 - [ ] For each suspected case, run `reference_level.py` (how SynGO annotated the whole
   paper) before recording a defect, as for PMID:19666514.
 - [ ] Re-run the inventory once the GRIN reviews merge.
-- [ ] Schema PR: add a `SYNGO` value to `SourceResourceEnum`, so defects export under
-  SynGO's name rather than `OTHER`, and the two causes proposed above.
+- [ ] Schema PR #6449: a `SYNGO` value for `SourceResourceEnum` and the two causes above.
+- [ ] Before sending the question to SynGO, look for per-annotation assay types in the
+  supplementary tables of PMID:31171447 and in the SynGO release files. They would show
+  directly whether `GO:0099507` was a default term for channel evidence.
 - [ ] Read the full text of the ten abstract-only papers (needs institutional access or
   supplied PDFs) and upgrade or revise their `PROBABLE` verdicts.
 - [ ] Export confirmed defects (`just export-source-defects`) and send one report to

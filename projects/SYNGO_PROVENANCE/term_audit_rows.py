@@ -42,18 +42,31 @@ def main() -> None:
     go_id = sys.argv[1] if len(sys.argv) > 1 else "GO:0099507"
     url, rows = fetch(go_id, "SynGO")
     by_ref: dict = collections.defaultdict(lambda: collections.defaultdict(set))
+    skipped = 0
     for r in rows:
+        if not r.get("reference"):
+            skipped += 1
+            continue
         key = (r.get("geneProductId"), r.get("symbol"), r.get("taxonId"), r.get("qualifier"))
-        by_ref[r.get("reference")][key].add(r.get("goEvidence"))
+        # Keep the ECO code and WITH/FROM: SynGO files two IDA rows per claim with different ECO codes,
+        # and an empty WITH/FROM on a human row from a rodent paper is what an implicit ortholog transfer looks like.
+        by_ref[r["reference"]][key].add((r.get("goEvidence"), r.get("evidenceCode"), r.get("withFrom") and json.dumps(r["withFrom"], sort_keys=True)))
     papers = []
     for ref in sorted(by_ref):
-        prods = [{"gene_product": gp, "symbol": sym, "taxon": tax, "qualifier": q, "evidence": sorted(ev)}
-                 for (gp, sym, tax, q), ev in sorted(by_ref[ref].items(), key=lambda kv: tuple(str(x) for x in kv[0]))]
+        prods = []
+        for (gp, sym, tax, q), ev in sorted(by_ref[ref].items(), key=lambda kv: tuple(str(x) for x in kv[0])):
+            ev = sorted(ev, key=lambda e: tuple(str(x) for x in e))
+            prods.append({"gene_product": gp, "symbol": sym, "taxon": tax, "qualifier": q,
+                          "evidence": sorted({e[0] for e in ev}),
+                          "rows": [{"go_evidence": e[0], "eco": e[1], "with_from": json.loads(e[2]) if e[2] else None}
+                                   for e in ev]})
         papers.append({"reference": ref, "annotations": prods})
     out = ROOT / "projects/SYNGO_PROVENANCE/data/term_audit" / f"{go_id.replace(':', '_')}-rows.yaml"
     out.parent.mkdir(parents=True, exist_ok=True)
     doc = {"go_id": go_id, "assigned_by": "SynGO", "query": url, "retrieved": datetime.date.today().isoformat(),
-           "rows": len(rows), "papers": len(papers), "claims": sum(len(p["annotations"]) for p in papers),
+           "rows": len(rows), "rows_without_reference": skipped, "distinct_evidence_rows":
+           sum(len(a["rows"]) for p in papers for a in p["annotations"]),
+           "papers": len(papers), "claims": sum(len(p["annotations"]) for p in papers),
            "by_reference": papers}
     with out.open("w") as fh:
         yaml.safe_dump(doc, fh, sort_keys=False, width=120)
