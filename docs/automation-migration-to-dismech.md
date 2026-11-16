@@ -323,6 +323,18 @@ less literature mining and more scanning of GO repositories, which its own
 `post-review-agent` (turns human review comments into suggested changes) and
 `auto-merge-compliance` are still open candidates.
 
+What dismech's scanners also do is feed the curation scanner's effort tiers:
+they file `curation,low_effort` issues. Without an equivalent, this repo's
+`low_effort` and `medium_effort` tiers had no candidates at all (the labels did
+not even exist), and every curation issue went to the high tier. Two feeds now
+fill them. `litscan-module-member` tags each lead `medium_effort` (bounded to one
+module, member already reviewed) or `high_effort`. `validation-cleanup-scan`
+(weekly, deterministic, no agent) reads the `validation-all-report` artifact of
+`main.yaml`'s scheduled full validation and files one
+`curation,low_effort,validation-cleanup` issue per review file whose warnings
+have mechanical fixes (`LOW_EFFORT_CHECKS` in
+`src/ai_gene_review/validation/cleanup_issues.py`), capped at 15 open.
+
 ## Deterministic PR Shepherd closing pass
 
 The Shepherd's closing decision is code, not an LLM judgment. The agentic job
