@@ -99,9 +99,9 @@ What stands out:
 - **Our reviews accept the process terms GO wants to retire.** All 16 rows
   on GO:0034314 are ACCEPT across ARPC1B, ARPC4, ARPC5 and DROME SCAR and
   wash, and seven of ten GO:0051764 rows are ACCEPT, on FLNA, BAIAP2,
-  BAIAP2L1 and DPYSL3. Under the
-  [precomposition guidance](INVOLVED_IN_PRECOMPOSITION.md) these are the
-  rows that should carry an MF instead, once one exists.
+  BAIAP2L1 and DPYSL3. These are MF_in_BP cases: process terms that
+  describe one protein's activity. Each row should carry an MF instead, once
+  one exists.
 - **One review already uses GO:7770064 as a core MF** (human/ESPN), and
   human/AFAP1's review cites it as supported, so the cross-linking replacement
   has been exercised here. Likewise human/CFL2 already names GO:0003789 as its

@@ -14,7 +14,7 @@ receptor or binding activities), or obsoleting them. None of the heavily used
 detection terms has changed; only unused leaves were cleaned up. The
 question is still disputed: a 2026 thread has PomBase saying the branch is
 MF-like, while Cell Ontology and FlyBase anatomy editors say detection is a
-multi-gene process. Reviews here hold 306 rows on 158 genes under GO:0051606
+multi-gene process. Reviews here hold 307 rows on 159 genes under GO:0051606
 *detection of stimulus*. They already sort the genes the way the dispute
 needs: the transducer or receptor is ACCEPTed, and upstream or downstream
 factors are marked over-annotated. A gene-by-gene table of that split is
@@ -63,8 +63,8 @@ marked do-not-merge, has been open since 2020.
 
 All terms under GO:0051606 with at least five rows, computed 2026-11-16 with
 [`term_actions.py`](GO_TRACKER_BACKLOG/term_actions.py)
-(`--descendants GO:0051606 --min-rows 5`). Of the 154 live descendants, 62
-have at least one row.
+(`--descendants GO:0051606 --min-rows 5`). Of the 156 live terms in the
+branch, 63 have at least one row.
 
 | Term | Rows | Genes | ACCEPT | KEEP_AS_NON_CORE | MODIFY | MARK_AS_OVER_ANNOTATED | REMOVE | UNDECIDED | Other | Core in |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|---:|
@@ -92,8 +92,8 @@ have at least one row.
 | GO:0009372 quorum sensing | 7 | 6 | 3 | 1 | 0 | 2 | 1 | 0 |  | 3 |
 | GO:0050906 detection of stimulus involved in sensory perception | 5 | 5 | 0 | 2 | 1 | 1 | 1 | 0 |  | 0 |
 
-Total over all 154 descendants: 306 rows on 158 reviewed genes (ACCEPT 143,
-KEEP_AS_NON_CORE 50, MARK_AS_OVER_ANNOTATED 42, MODIFY 28, REMOVE 16, NEW 14,
+Total over all 156 terms: 307 rows on 159 reviewed genes (ACCEPT 143,
+KEEP_AS_NON_CORE 51, MARK_AS_OVER_ANNOTATED 42, MODIFY 28, REMOVE 16, NEW 14,
 UNDECIDED 13). Some MF receptor terms (GO:0008020, GO:0033038, GO:0038022)
 appear because GO places them part_of a detection process.
 
@@ -135,7 +135,7 @@ What stands out:
 
 ## Plan
 
-- [ ] Export the 306 rows to a per-gene table with three columns: detector
+- [ ] Export the 307 rows to a per-gene table with three columns: detector
       (MF available), pathway member, upstream or structural. Seed it from the
       existing review actions and check the ACCEPT rows against the cited
       evidence.
@@ -163,3 +163,7 @@ What stands out:
   2026-11-12).
 - #20133 is effectively a duplicate of #18097. Its single GO:0043575
   annotation is not on any reviewed gene.
+- The branch count follows part_of edges in logical definitions as well as
+  asserted ones. Two terms reach GO:0051606 only that way: GO:0060243 and
+  GO:0060244, the contact-inhibition growth and proliferation terms. They
+  add one KEEP_AS_NON_CORE row.

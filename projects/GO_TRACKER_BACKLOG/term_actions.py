@@ -10,7 +10,7 @@ Prints a markdown table; ``--json`` also writes per-action gene lists.
         --descendants GO:0051606 --json /tmp/detection.json
 
 ``--descendants`` adds every non-obsolete is_a/part_of descendant of the
-given roots (needs ``--obo``). It does not follow ``regulates`` links, so
+given roots (needs ``--obo``), including part_of edges in logical definitions. It does not follow ``regulates`` links, so
 pass regulation terms explicitly. Rows are counted as they stand in the review
 files, so NEW rows proposed by a review are included.
 """
@@ -27,7 +27,13 @@ import yaml
 REPO = Path(__file__).resolve().parents[2]
 LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 MAIN_ACTIONS = ["ACCEPT", "KEEP_AS_NON_CORE", "MODIFY", "MARK_AS_OVER_ANNOTATED", "REMOVE", "UNDECIDED"]
-CORE_SLOTS = ("molecular_function", "directly_involved_in", "locations", "in_complex")
+CORE_SLOTS = (
+    "molecular_function",
+    "contributes_to_molecular_function",
+    "directly_involved_in",
+    "locations",
+    "in_complex",
+)
 
 
 def obo_index(path: Path) -> tuple[dict[str, str], dict[str, set[str]], set[str]]:
@@ -55,7 +61,7 @@ def obo_index(path: Path) -> tuple[dict[str, str], dict[str, set[str]], set[str]
                 obsolete.add(cur)
             elif key == "is_a" or (key == "intersection_of" and val.startswith("GO:")):
                 kids[val.split()[0]].add(cur)
-            elif key == "relationship" and val.startswith("part_of GO:"):
+            elif (key == "relationship" or key == "intersection_of") and val.startswith("part_of GO:"):
                 kids[val.split()[1]].add(cur)
     return names, kids, obsolete
 

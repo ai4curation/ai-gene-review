@@ -77,7 +77,7 @@ def parse_obo(path: Path) -> dict[str, dict]:
                 cur["alt_ids"].append(val.split()[0])
             elif key == "is_a" or (key == "intersection_of" and val.startswith("GO:")):
                 cur["parents"].append(val.split()[0])
-            elif key == "relationship" and val.startswith("part_of GO:"):
+            elif key in ("relationship", "intersection_of") and val.startswith("part_of GO:"):
                 cur["parents"].append(val.split()[1])
     return terms
 

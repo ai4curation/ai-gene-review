@@ -92,8 +92,8 @@ What stands out:
   42 name it in `core_functions`, among them ARATH BRI1, PIN1 and UVR8, human
   IRF3, HMOX1 and ERN1.
 - **Reviews refine the generic term into the specific ones.** 31 genes have
-  GO:0046983 MODIFY rows, all to homodimerization (20 rows) or
-  heterodimerization (18 rows). They are mainly MADS-box and bHLH
+  GO:0046983 MODIFY rows. Of the 35 rows, 17 go to homodimerization, 15 to
+  heterodimerization and 3 to both. They are mainly MADS-box and bHLH
   transcription factors (ARATH SEP1-4, SOC1, SVP, MUTE; DANRE hes6; DROME
   tgo; HORSE MITF) and bacterial enzymes. That is the opposite direction
   from the 2021 consensus.
