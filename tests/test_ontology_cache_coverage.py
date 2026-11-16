@@ -81,6 +81,9 @@ def test_wrong_label_is_a_label_mismatch_not_a_cache_miss(tmp_path: Path) -> Non
     [(path, message)] = report.label_mismatches
     assert path == review.resolve().as_posix()
     assert "Label mismatch" in message
+    # CI blocks on NCBITaxon label mismatches (cli.BLOCKING_LABEL_MISMATCH).
+    assert report.blocking_mismatch_count() == 1
+    assert len(report.to_dict()["blocking_label_mismatches"]) == 1
 
 
 @pytest.mark.parametrize(
@@ -113,11 +116,13 @@ def test_same_basename_in_two_directories_is_attributed_separately(
     missing = write_prediction_review(
         tmp_path / "b" / "x-predictions-review.yaml", UNCACHED
     )
+    # A third file makes one batch multi-file, so header attribution is exercised.
+    write_prediction_review(tmp_path / "a" / "y-predictions-review.yaml", CACHED)
 
     report = measure_coverage(expand_inputs([tmp_path]), warm=False)
 
     assert report.complete
-    assert report.files_checked == 2
+    assert report.files_checked == 3
     assert set(report.label_misses[UNCACHED[0]]) == {missing.resolve().as_posix()}
     assert covered.resolve().as_posix() not in report.label_misses[UNCACHED[0]]
 
@@ -131,6 +136,7 @@ def test_unreadable_file_fails_closed(tmp_path: Path) -> None:
 
     assert not report.complete
     assert list(report.unchecked_files) == [bad.resolve().as_posix()]
+    assert report.files_checked == 0
     assert main([str(bad), "--check"]) == 2
 
 

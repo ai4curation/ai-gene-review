@@ -14,14 +14,16 @@ LTV reports into:
 * **enum-membership misses**: ``Cannot validate 'X' against dynamic enum 'E'
   offline``;
 * **label mismatches**: the cached label differs from the file's label. Offline,
-  this cannot tell a stale cache from a wrong label in the file: online CI
-  compares against the current ontology instead, and blocks on a real mismatch
-  (``scripts/run_term_validator.sh`` runs LTV strictly). Check which side is out
-  of date before editing a review;
+  this cannot tell a stale cache from a wrong label in the file. They are split
+  by CI's own policy (``BLOCKING_LABEL_MISMATCH`` in ``cli.py``): an NCBITaxon
+  mismatch blocks CI, while a GO mismatch is advisory, because GO labels lag
+  between GOA and GO releases. A large advisory count usually means the cached
+  GO labels need refreshing, not that reviews need editing;
 * **other findings**: any other error or warning, such as a term outside its enum.
 
-A file the run did not account for (LTV crashed, could not read it, or printed
-something this parser does not recognise) is listed under ``unchecked_files``,
+A file the run did not account for (LTV crashed, could not read it, printed
+something this parser does not recognise, or announced more issues than were
+parsed) is listed under ``unchecked_files``,
 and the report is then ``complete: false``: the tool fails closed, so a coverage
 gate can never pass because nothing was checked.
 
@@ -66,7 +68,7 @@ from pathlib import Path
 
 import yaml
 
-from ai_gene_review.cli import _tool_command
+from ai_gene_review.cli import BLOCKING_LABEL_MISMATCH, _tool_command
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 GENE_SCHEMA = Path("src/ai_gene_review/schema/gene_review.yaml")
@@ -81,12 +83,17 @@ ENUM_MISS = re.compile(
     r"Cannot validate '(?P<curie>[^']+)' against dynamic enum '(?P<enum>[^']+)' offline"
 )
 LABEL_MISMATCH = re.compile(r"Label mismatch for '(?P<curie>[^']+)'")
-FILE_HEADER = re.compile(r"^(?:❌|✅) (?P<name>\S+\.ya?ml)(?: - \d+ issue\(s\):)?\s*$")
+FILE_HEADER = re.compile(
+    r"^(?:❌|✅) (?P<name>\S+\.ya?ml)(?: - (?P<issues>\d+) issue\(s\):)?\s*$"
+)
 SINGLE_FILE_RESULT = re.compile(r"^(?:✅ Validation passed|❌ Validation failed)")
 FINDING_LINE = re.compile(
     r"^\s*(?:❌ (?P<error>ERROR)|⚠️\s+(?P<warn>WARN)): (?P<message>.+)$"
 )
-OUTAGE_BANNER = re.compile(r"ontology service unavailable", re.IGNORECASE)
+# Same alternatives as scripts/term_validate.sh, which documents LTV's outage contract.
+OUTAGE_BANNER = re.compile(
+    r"ontology service unavailable|could not reach ontology service", re.IGNORECASE
+)
 
 
 def remote_prefixes(config_path: Path) -> set[str]:
@@ -290,15 +297,16 @@ class CoverageReport:
                 }
                 for (curie, enum), files in sorted(self.enum_misses.items())
             ],
-            "label_mismatches": [
+            "blocking_label_mismatches": [
                 {"file": path, "message": message}
                 for path, message in sorted(self.label_mismatches)
+                if BLOCKING_LABEL_MISMATCH.search(message)
             ],
-            "label_mismatch_note": (
-                "Offline, a mismatch means the cached label differs from the file's: "
-                "the cache may be stale or the file may be wrong. Online CI compares "
-                "against the current ontology."
-            ),
+            "advisory_label_mismatches": [
+                {"file": path, "message": message}
+                for path, message in sorted(self.label_mismatches)
+                if not BLOCKING_LABEL_MISMATCH.search(message)
+            ],
             "other_findings": [
                 {"file": path, "severity": severity, "message": message}
                 for path, severity, message in sorted(self.other_findings)
@@ -309,9 +317,23 @@ class CoverageReport:
             ],
             "unattributed_output": list(self.unattributed_output),
         }
+        if self.label_mismatches:
+            result["label_mismatch_note"] = (
+                "The cached label differs from the file's: the cache may be stale or "
+                "the file may be wrong. CI blocks on NCBITaxon mismatches only; GO "
+                "mismatches are advisory (GO release lag), and many of them usually "
+                "mean the cached GO labels need refreshing."
+            )
         if self.warm is not None:
             result["warm"] = self.warm.to_dict(self.miss_count())
         return result
+
+    def blocking_mismatch_count(self) -> int:
+        """Count label mismatches that CI treats as errors."""
+        return sum(
+            bool(BLOCKING_LABEL_MISMATCH.search(message))
+            for _, message in self.label_mismatches
+        )
 
 
 def parse_offline_output(
@@ -338,8 +360,16 @@ def parse_offline_output(
     [{'curie': 'NCBITaxon:1', 'needs_network': True, 'files': ['a/X-predictions-review.yaml']}]
     >>> d["missing_enum_memberships"][0]["enum"], report.network_misses()
     ('NCBITaxonEnum', 2)
-    >>> len(d["label_mismatches"]), d["complete"]
-    (1, True)
+    >>> len(d["advisory_label_mismatches"]), d["blocking_label_mismatches"], d["complete"]
+    (1, [], True)
+
+    A header announcing more issues than were parsed means the finding format was
+    not understood, so the file is unchecked:
+
+    >>> report = CoverageReport()
+    >>> parse_offline_output("❌ X-predictions-review.yaml - 2 issue(s):", 1, files[:1], report)
+    >>> report.unchecked_files
+    {'a/X-predictions-review.yaml': 'validator announced 2 issue(s) but 0 were parsed'}
 
     A run that names only one of two files, or crashes, leaves files unchecked:
 
@@ -354,6 +384,8 @@ def parse_offline_output(
     """
     by_name = {path.name: path.as_posix() for path in files}
     accounted: set[str] = set()
+    announced: dict[str, int] = {}
+    parsed: defaultdict[str, int] = defaultdict(int)
     current: str | None = files[0].as_posix() if len(files) == 1 else None
     for line in output.splitlines():
         header = FILE_HEADER.match(line)
@@ -363,6 +395,8 @@ def parse_offline_output(
                 report.unattributed_output.append(line.strip())
             else:
                 accounted.add(current)
+                if header.group("issues") is not None:
+                    announced[current] = int(header.group("issues"))
             continue
         if len(files) == 1 and SINGLE_FILE_RESULT.match(line):
             accounted.add(files[0].as_posix())
@@ -372,6 +406,8 @@ def parse_offline_output(
             continue
         severity = finding.group("error") or finding.group("warn")
         message = finding.group("message").strip()
+        if current is not None:
+            parsed[current] += 1
         if current is None:
             report.unattributed_output.append(message)
         elif match := LABEL_MISS.search(message):
@@ -391,6 +427,11 @@ def parse_offline_output(
         posix = path.as_posix()
         if posix not in accounted:
             report.unchecked_files[posix] = reason
+        elif announced.get(posix, parsed[posix]) != parsed[posix]:
+            report.unchecked_files[posix] = (
+                f"validator announced {announced[posix]} issue(s) "
+                f"but {parsed[posix]} were parsed"
+            )
 
 
 def ltv_command(
@@ -478,8 +519,11 @@ def offline_pass(
             file=sys.stderr,
         )
         output, returncode = run_ltv(kind, batch, offline=True, cache_dir=cache_dir)
+        unchecked_before = len(report.unchecked_files)
         parse_offline_output(output, returncode, batch, report)
-        report.files_checked += len(batch)
+        report.files_checked += len(batch) - (
+            len(report.unchecked_files) - unchecked_before
+        )
     return report
 
 
@@ -497,9 +541,18 @@ def measure_coverage(
     if not warm:
         return offline_pass(work, cache_dir, "offline")
     before = offline_pass(work, cache_dir, "before warm")
-    warm_pass = WarmPass(batches=len(work), misses_before=before.miss_count())
-    for number, (kind, batch) in enumerate(work, start=1):
-        print(f"[warm] batch {number}/{len(work)}", file=sys.stderr)
+    # Only batches holding a miss (or an unchecked file) have anything to warm.
+    to_warm = set(before.unchecked_files)
+    for misses in (*before.label_misses.values(), *before.enum_misses.values()):
+        to_warm |= misses
+    warm_work = [
+        (kind, batch)
+        for kind, batch in work
+        if any(path.as_posix() in to_warm for path in batch)
+    ]
+    warm_pass = WarmPass(batches=len(warm_work), misses_before=before.miss_count())
+    for number, (kind, batch) in enumerate(warm_work, start=1):
+        print(f"[warm] batch {number}/{len(warm_work)}", file=sys.stderr)
         output, returncode = run_ltv(kind, batch, offline=False, cache_dir=cache_dir)
         outcome = classify_online_pass(output, returncode)
         if outcome == "outage":
@@ -558,7 +611,8 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"{report.files_checked} files; {report.miss_count()} cache misses "
         f"({report.network_misses()} needing the network); "
-        f"{len(report.label_mismatches)} label mismatches; "
+        f"{len(report.label_mismatches)} label mismatches "
+        f"({report.blocking_mismatch_count()} blocking in CI); "
         f"{len(report.other_findings)} other findings; "
         f"{len(report.unchecked_files)} unchecked files",
         file=sys.stderr,
