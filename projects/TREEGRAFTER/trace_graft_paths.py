@@ -46,10 +46,10 @@ PAINT_SNAPSHOT in ai_gene_review.etl.panther_families (PAINT_BASE is that folder
 The script stays standard-library only, so it runs under a bare python3 and does
 not import them.
 
-Run:
+Run (the second form shows the 19.0 pin; substitute the release the repo pins now):
   python3 projects/TREEGRAFTER/trace_graft_paths.py
   python3 projects/TREEGRAFTER/trace_graft_paths.py --all \
-      --panther-trees PANTHER<release>_data/Tree_MSF --ibd-gaf IBD.gaf \
+      --panther-trees PANTHER19.0_data/Tree_MSF --ibd-gaf IBD.gaf \
       --paint-total PAINT_TreeGrafter_Annotations_TOTAL.txt.gz
 """
 from __future__ import annotations
