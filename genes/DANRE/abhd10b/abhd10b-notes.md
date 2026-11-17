@@ -25,3 +25,7 @@
 - **`GO:0004553` (`hydrolase activity, hydrolyzing O-glycosyl compounds`, `IBA` `PTN004490000`)**: `REMOVE` (`SOURCE_BAD` / `SOURCE_MISCITATION` from erroneous `GO:0004553` on human `Q9NUJ1` in `PMID:22294686`).
 - **`GO:0098734` (`obsolete macromolecule depalmitoylation`, `IEA` `GO_REF:0000108`)**: `MODIFY` -> `GO:0008474`.
 - **`GO:0102390` (`mycophenolic acid acyl-glucuronide esterase activity`, `IEA` `GO_REF:0000003` via `EC:3.1.1.93`)**: `MARK_AS_OVER_ANNOTATED` (automated projection of human hepatic drug-conjugate esterase activity onto a teleost paralog).
+
+## 2026-11-15 re-review: PMID:26469318 source defect withdrawn
+
+The `WRONG_REFERENCE` source defect against UniProt for `PMID:26469318` (Elkon et al. 2015, "RFX transcription factors are essential for hearing in mice") was withdrawn. The earlier note above attributed this citation to a historical `tagln3b` cross-link; that was an inference and it does not hold. The open-access full text (PMC4634137) includes a genome-wide RNA-seq dataset of sorted zebrafish hair cells (ppv3b:GFP, 5 dpf; Supplementary Data 6), and NCBI Gene links the paper to about 12,000 genes, among them abhd10b (GeneID:492622; checked by eutils elink pubmed_gene). The reference therefore reaches E7F9Y7 through the normal RefSeq import of gene-linked publications. It still says nothing about abhd10b function and is not used to support any annotation.

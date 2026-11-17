@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/LccgRwveX3WD36dBzUGemZ
       title: Project brief
+index_group: PLANT
 ---
 
 # Arabidopsis Heat Stress Gene Curation Project

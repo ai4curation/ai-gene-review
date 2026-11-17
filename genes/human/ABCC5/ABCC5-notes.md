@@ -83,8 +83,19 @@ A and B motifs"]. Cryo-EM structures: PDB 8KCI, 8WI0-8WI5. PANTHER PTHR24223:SF1
   and the BP root `GO:0055085 transmembrane transport`. Ontology ancestry confirmed via OLS
   (GO:0008559 and GO:1905948 are descendants of GO:0140359 → GO:0042626 → GO:0022857).
 - **Blood-brain-barrier** (`GO:0150104`, NAS) is KEEP_AS_NON_CORE: the two NAS references
-  (PMID:26590417, PMID:30280653) are general BBB reviews that do not mention ABCC5, but ABCC5's
+  (PMID:26590417, PMID:30280653) are general BBB reviews (both list MRP5; see the 2026-11-15 note below), and ABCC5's
   luminal localization in human brain capillary endothelium (PMID:15501592) supports a role.
 - All catalytic activity is transport; ABCC5 performs no biosynthetic chemistry, so metabolic/
   biosynthetic process terms (`GO:0006805 xenobiotic metabolic process`) are refined to the
   matching transport term the gene carries (`GO:0042908 xenobiotic transport`).
+
+## 2026-11-15: source-defect re-review
+
+- Withdrew both WRONG_REFERENCE defects on the GO:0150104 NAS rows. The earlier claim that the two
+  BBB reviews do not mention ABCC5/MRP5 was made from truncated cached copies. PMID:26590417 full
+  text (PMC4655822, via NCBI efetch) lists "MRP5 / ABCC5 / Endothelium to blood" in Table 1
+  (molecular atlas of the BBB: transport systems). PMID:30280653 (PMC6335099, read on the PMC
+  page) names "multidrug resistance-associated proteins 1-5 (MRP1/2/3/4/5)" in its section on
+  endothelial active efflux. ARUK-UCL annotated about 50 and 100 transporters respectively from
+  these reviews by NAS, a deliberate table-level practice. The `reference_review` entries were
+  changed from MISCITED to VERIFIED; the action (KEEP_AS_NON_CORE) is unchanged.

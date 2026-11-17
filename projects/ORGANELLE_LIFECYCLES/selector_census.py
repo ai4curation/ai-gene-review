@@ -3,11 +3,17 @@
 For each module named on the command line, every family descriptor (an annoton participant or a
 protein-complex unit) is read from the module YAML, and the number of proteins its PANTHER family or
 subfamily ids select is counted in each organism's PANTHER release-pinned sequence classification file.
-A descriptor sits under a required part unless the top-level part holding it is ``optional: true``; an
-organism meets the module's required parts when every required descriptor selects at least one of its
-proteins. That is a scratch satisfiability reading of the selectors only: it ignores annoton functions,
-``ONE_OR_MORE`` variant logic and module references, and it honours ``optional`` only on top-level parts
-(a descriptor inside an optional nested part is counted as required). Classification rows with an empty
+Satisfiability comes from the module engine (``ai_gene_review.module_logic``), so optional parts,
+variant sets and module references count as the engine reads them: a step holds in an organism when one
+of its PANTHER family or subfamily ids selects a protein there (a step with no PANTHER id falls back to its
+UniProt accessions, and a protein-complex step holds when every active unit's PANTHER ids do, because
+the engine's atom for a complex carries no unit selectors). The ``unsatisfied_gaps`` of an organism are
+the engine's innermost gaps. Every step of the compiled module is classified once, before any organism
+is evaluated: ``unevaluable_steps`` lists the steps this oracle cannot evaluate at all (a step with
+neither a PANTHER id nor an accession), which never hold, and ``mixed_complex_steps`` the complexes
+whose units mix PANTHER-keyed and gene-keyed selectors, which are evaluated on their PANTHER-keyed
+units alone. Annoton functions are not checked. Each descriptor row's ``required`` flag marks only whether its top-level part
+is ``optional``; it is a reading aid, not the verdict. Classification rows with an empty
 accession column are skipped, so they cannot turn a zero count into a hit.
 
 Usage (from the repository root)::
@@ -25,13 +31,20 @@ import argparse
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterator
+from typing import Callable, Iterator
 
 import yaml
 
 from ai_gene_review.etl.panther_families import (
     PANTHER_RELEASE,
     fetch_sequence_classification,
+)
+from ai_gene_review.module_logic import (
+    Atom,
+    compile_module_file,
+    gap_report,
+    iter_atoms,
+    is_satisfied,
 )
 
 
@@ -150,6 +163,121 @@ def load_classification(path: Path, mnemonic: str | None) -> dict[str, set[str]]
     return index
 
 
+def complex_units(module: dict) -> dict[str, list[tuple[str, ...]]]:
+    """Map each protein-complex annoton id to the PANTHER ids of its active units, one tuple per unit.
+
+    The module engine compiles a protein-complex annoton into one atom without its units' selectors,
+    so a family-keyed oracle needs them supplied separately.
+
+    >>> complex_units({"parts": [{"node": {"id": "n", "annotons": [{"id": "c", "participant": {
+    ...     "protein_complex": {"active_units": [
+    ...         {"participant": {"family": {"term": {"id": "PANTHER:PTHR1"}}}},
+    ...         {"participant": {"family": {"term": {"id": "PANTHER:PTHR2"}}}}]}}}]}}]})
+    {'c': [('PTHR1',), ('PTHR2',)]}
+    """
+    out: dict[str, list[tuple[str, ...]]] = {}
+
+    def walk(obj: object) -> None:
+        if isinstance(obj, dict):
+            units = ((obj.get("participant") or {}).get("protein_complex") or {}).get(
+                "active_units"
+            )
+            if units and isinstance(obj.get("id"), str):
+                out[obj["id"]] = [
+                    family_ids((u.get("participant") or {}).get("family") or {})
+                    for u in units
+                ]
+            for value in obj.values():
+                walk(value)
+        elif isinstance(obj, list):
+            for value in obj:
+                walk(value)
+
+    walk(module)
+    return out
+
+
+def panther_ids(atom: Atom) -> list[str]:
+    """PANTHER family and subfamily ids of a step, without the ``PANTHER:`` prefix.
+
+    >>> panther_ids(Atom("a", "a", None, None, family_ids=("PANTHER:PTHR1:SF2", "PF00001")))
+    ['PTHR1:SF2']
+    """
+    return [
+        f.removeprefix("PANTHER:")
+        for f in atom.family_ids
+        if f.startswith("PANTHER:PTHR")
+    ]
+
+
+def step_kind(atom: Atom, units: dict[str, list[tuple[str, ...]]]) -> str:
+    """How :func:`atom_holds` evaluates a step, independent of organism.
+
+    ``family`` (the step's own PANTHER ids), ``complex`` (every active unit has PANTHER ids),
+    ``mixed_complex`` (some units have PANTHER ids and some do not, so only the family-keyed units are
+    evaluated), ``accession`` (UniProt accessions only) or ``unevaluable`` (nothing this oracle reads).
+
+    >>> units = {"cx": [("PTHR1",), ("PTHR2",)], "mx": [("PTHR1",), ()], "gx": [(), ()]}
+    >>> [step_kind(Atom(i, i, None, None), units) for i in ("cx", "mx", "gx")]
+    ['complex', 'mixed_complex', 'unevaluable']
+    >>> step_kind(Atom("a", "a", None, None, family_ids=("PANTHER:PTHR1",)), units)
+    'family'
+    >>> step_kind(Atom("b", "b", None, "P1"), units)
+    'accession'
+    """
+    if panther_ids(atom):
+        return "family"
+    unit_ids = units.get(atom.node_id, [])
+    if any(unit_ids):
+        return "complex" if all(unit_ids) else "mixed_complex"
+    return "accession" if atom.uniprots else "unevaluable"
+
+
+def atom_holds(
+    index: dict[str, set[str]],
+    units: dict[str, list[tuple[str, ...]]] | None = None,
+    accessions: set[str] | None = None,
+) -> Callable[[Atom], bool]:
+    """Oracle for one organism: a step holds when its PANTHER family ids select a protein.
+
+    A protein-complex step (its id in ``units``, keyed as the engine names atoms) holds when every
+    active unit that has PANTHER ids selects a protein; units without PANTHER ids are not evaluated
+    (:func:`step_kind` reports such complexes as ``mixed_complex``). A step with neither falls back to
+    its UniProt accessions, which hold when the organism's classification file lists one of them. A
+    step this oracle cannot evaluate at all does not hold (:func:`step_kind` reports it as
+    ``unevaluable``, so it is listed rather than read as an absence).
+
+    >>> holds = atom_holds({"PTHR1": {"P1"}, "PTHR2:SF3": {"P2"}}, {"cx": [("PTHR1",), ("PTHR9",)]})
+    >>> holds(Atom("a", "a", None, None, family_ids=("PANTHER:PTHR1",)))
+    True
+    >>> holds(Atom("b", "b", None, None, family_ids=("PANTHER:PTHR9",)))
+    False
+    >>> holds(Atom("c", "c", None, "P2"))
+    True
+    >>> holds(Atom("cx", "cx", None, None))
+    False
+    >>> atom_holds({})(Atom("f", "f", None, None, function_ids=("GO:1",)))
+    False
+    """
+    if accessions is None:
+        accessions = set().union(*index.values()) if index else set()
+    units = units or {}
+
+    def holds(atom: Atom) -> bool:
+        kind = step_kind(atom, units)
+        if kind == "family":
+            return any(index.get(f) for f in panther_ids(atom))
+        if kind in ("complex", "mixed_complex"):
+            return all(
+                any(index.get(f) for f in unit) for unit in units[atom.node_id] if unit
+            )
+        if kind == "accession":
+            return any(acc in accessions for acc in atom.uniprots)
+        return False
+
+    return holds
+
+
 def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
     """Build the census document for the named modules."""
     data = {}
@@ -158,10 +286,13 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
         if path is None:
             raise SystemExit(f"no PANTHER classification file for {org.slug}")
         data[org.slug] = load_classification(path, org.mnemonic)
+    all_accessions = {
+        slug: set().union(*index.values()) for slug, index in data.items()
+    }
     modules = []
     for name in module_names:
         doc = yaml.safe_load((repo_root / "modules" / f"{name}.yaml").read_text())
-        rows, failures = [], defaultdict(list)
+        rows = []
         for d in descriptors(doc["module"]):
             counts = {
                 o.slug: len(
@@ -177,18 +308,40 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
                     "proteins_per_organism": counts,
                 }
             )
-            if d.required:
-                for slug, n in counts.items():
-                    if n == 0:
-                        failures[slug].append(d.path)
+        circuit = compile_module_file(repo_root / "modules" / f"{name}.yaml")
+        units = dict(complex_units(doc["module"]))
+        for ref in sorted(
+            {
+                a.node_id.rpartition("#")[0]
+                for a in iter_atoms(circuit)
+                if "#" in a.node_id
+            }
+        ):
+            ref_doc = yaml.safe_load(
+                (repo_root / "modules" / f"{ref}.yaml").read_text()
+            )
+            units.update(
+                {f"{ref}#{k}": v for k, v in complex_units(ref_doc["module"]).items()}
+            )
+        kinds = {a.node_id: step_kind(a, units) for a in iter_atoms(circuit)}
+        met, gaps = {}, {}
+        for o in ORGANISMS:
+            holds = atom_holds(data[o.slug], units, all_accessions[o.slug])
+            met[o.slug] = is_satisfied(circuit, holds)
+            if not met[o.slug]:
+                gaps[o.slug] = ["/".join(g.path) for g in gap_report(circuit, holds)]
         modules.append(
             {
                 "module": name,
                 "descriptors": rows,
-                "required_parts_met": {o.slug: not failures[o.slug] for o in ORGANISMS},
-                "required_descriptors_unmet": {
-                    o.slug: failures[o.slug] for o in ORGANISMS if failures[o.slug]
-                },
+                "required_parts_met": met,
+                "unsatisfied_gaps": gaps,
+                "unevaluable_steps": sorted(
+                    k for k, v in kinds.items() if v == "unevaluable"
+                ),
+                "mixed_complex_steps": sorted(
+                    k for k, v in kinds.items() if v == "mixed_complex"
+                ),
             }
         )
     return {
