@@ -213,6 +213,30 @@ evidence against it. None of these should be reported as "wrong" without an expe
 each should be reported as "citation does not support the term, and we found no
 independent functional evidence".
 
+## GABA-B findings recorded on GABA-A genes
+
+The two GABA receptor families share a letter. GABA-B receptor subunits are written
+GABA(B1) and GABA(B2) (genes GABBR1, GABBR2); GABA-A beta subunits are beta1-3 (genes
+GABRB1-3). Tracing GABRB1's presynaptic annotations led to a SynGO row on rat Gabrb1
+taken from a GABA-B paper, so every SynGO annotation on a GABA receptor gene was checked
+for the same slip. [`gaba_receptor_swaps.py`](SYNGO_PROVENANCE/gaba_receptor_swaps.py)
+pulls them (339 rows from 38 papers), reads each paper's title and abstract, and flags a
+GABA-A gene annotated from a paper mostly about GABA-B receptors, or the reverse. It
+flagged three papers; the verdicts are in
+[`gaba_receptor_swaps-verdicts.yaml`](SYNGO_PROVENANCE/data/gaba_receptor_swaps-verdicts.yaml).
+
+| Paper | What SynGO did | Spread | Verdict |
+|---|---|---|---|
+| PMID:11498050, mice lacking GABA(B(1)) | Gave mouse **Gabrb1** the same three terms as Gabbr1, including `GO:0099528` G protein-coupled neurotransmitter receptor activity | 58 Ensembl rows per term, 57 species, including human GABRB1 | Wrong gene; the GPCR activity is biologically impossible for a GABA-A subunit |
+| PMID:15174078, GABA(B1) and GABA(B2) in rat globus pallidus | Recorded the locations on rat **Gabrb1** and **Gabrb2**, not on Gabbr1/Gabbr2 | 4 rows from Gabrb1, including the only presynaptic location on human GABRB1 | Wrong gene |
+| PMID:15749345, GABA-A and GABA-B receptors in monkey globus pallidus | Annotated macaque GABBR1 only | none | Not a swap (flagged because the paper covers both families) |
+
+The first case is the clearest bad seed in this audit: an annotation that is wrong on
+biological grounds, not only mis-sourced, and copied into 57 species. Human GABRB1 now
+carries `G protein-coupled neurotransmitter receptor activity` (Ensembl IEA, from mouse
+Gabrb1) beside its correct GABA-A annotations. Both cases are `WRONG_GENE_PRODUCT` with
+cause `SYMBOL_COLLISION`, confirmed from the abstracts, which name the subunits studied.
+
 ## Error categories this audit needs
 
 The repository's source-defect vocabulary records *what* is wrong (`defect_type`) and,
@@ -278,6 +302,10 @@ channel evidence, `PRACTICE_CHANGE` would describe the cohort for a bulk fix.
 - [x] Separate provenance from biology: a PubMed screen per flagged seed gene
   (`GO_0099507-seed-biology.yaml`). Most seeds are true but mis-sourced; none is
   contradicted; five lack functional evidence.
+- [x] Check every SynGO annotation on a GABA receptor gene for GABA-A/GABA-B swaps
+  (`gaba_receptor_swaps.py`): two confirmed (PMID:11498050, PMID:15174078).
+- [ ] Look for the same kind of name collision beyond GABA receptors (for example other
+  receptor families whose subunit and receptor-type names share a letter or number).
 - [ ] Ask an expert (or SynGO) about the five seeds without functional evidence (GRIA4,
   GRIA1, GRIN3B, GABRA5, GABRB1) before calling any of them wrong.
 - [x] Count the downstream annotations each seed feeds (`seed_downstream.py`): 1,030
