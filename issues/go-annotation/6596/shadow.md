@@ -104,9 +104,9 @@ Worker: claude-opus-5-5. Blinding: BLIND (opening post only, via
 
 The worker's edits to `genes/yeast/LSC1/LSC1-ai-review.yaml` and
 `interpro/panther/PTHR11117/PTHR11117-review.yaml` did not land as written. Before
-this work merged, main gained a fuller evolutionary review of the family (#6277,
-corrected in #6336), and the merge took main's versions of those files. Main
-independently keeps REMOVE on the LSC1 row, sets the PTN000122012 node to
-NEEDS_PRUNING, and records LSC1 and SPAC16E8.17c as member exceptions. The
-worker's original diff is preserved in `shadow-work.patch` in this folder; rate
-against that, not against the current files.
+this work merged, main gained its own review of the family, and the merge took
+main's versions of those files. The worker's original diff is preserved in
+`shadow-work.patch` in this folder (a later follow-up from PR review is in
+`review-followup.patch`); rate against those, not against the current files,
+and do not read the current files before scoring. The history record listed
+above is kept, with an added event saying the edit did not land.

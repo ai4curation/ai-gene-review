@@ -28,7 +28,9 @@ and use they/them for them.
 
 Do not open `self-rating.yaml` until you have scored. Read `issue.yaml` (triage,
 shadow, prior_work), `shadow.md`, and the diff of the work products listed in
-`shadow.work_products`.
+`shadow.work_products`. A product with `landed: false` did not reach main as
+written, so the current file does not show the shadow work: read its
+`preserved_diff` instead, and do not read the current file before scoring.
 
 ## 2. Establish what upstream did
 

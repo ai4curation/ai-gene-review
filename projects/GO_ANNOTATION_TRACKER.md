@@ -243,9 +243,11 @@ Enforcement, all built on `src/ai_gene_review/shadow_issues/guard.py`:
   the biology: the G-type beta gene was lost within fungi, not before them,
   and Gln at position 20 does not decide GTP use. The worker's and follow-up
   edits to those files are kept as `issues/go-annotation/6596/shadow-work.patch`
-  and `review-followup.patch`, since a squash merge would otherwise lose them,
-  and the history records for those edits are withdrawn because the edits do
-  not land.
+  and `review-followup.patch`, since a squash merge would otherwise lose them.
+  In `issue.yaml` those work products carry `landed: false` and a
+  `preserved_diff`, so a rater reads the patch rather than the current file.
+  The history records for those edits are kept, each with a second event
+  recording that the edit did not land.
 
 ## Next steps
 

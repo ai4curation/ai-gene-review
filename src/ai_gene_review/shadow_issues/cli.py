@@ -236,6 +236,28 @@ def ratings_cmd(
             typer.echo("| " + " | ".join(str(c) for c in row) + " |")
 
 
+def work_product_problems(issue: dict, repo_root: Path) -> list[str]:
+    """Check that a work product that did not land names an existing preserved diff.
+
+    >>> work_product_problems({"shadow": {"work_products": [
+    ...     {"kind": "GENE_REVIEW", "path": "x.yaml", "landed": False}]}}, Path("."))
+    ['work product x.yaml has landed: false but no preserved_diff']
+    >>> work_product_problems({"shadow": {"work_products": [
+    ...     {"kind": "GENE_REVIEW", "path": "x.yaml"}]}}, Path("."))
+    []
+    """
+    problems = []
+    for product in (issue.get("shadow") or {}).get("work_products") or []:
+        diff = product.get("preserved_diff")
+        if product.get("landed") is False and not diff:
+            problems.append(
+                f"work product {product['path']} has landed: false but no preserved_diff"
+            )
+        elif diff and not (repo_root / diff).exists():
+            problems.append(f"preserved_diff {diff} does not exist")
+    return problems
+
+
 @shadow_issues_app.command("validate")
 def validate_cmd(
     tracker: TrackerArg = "go-annotation", root: RootOpt = ISSUES_DIR
@@ -263,6 +285,8 @@ def validate_cmd(
                 problems.append(
                     f"tracker/number do not match folder {tracker}/{folder.name}"
                 )
+            if target == "ShadowIssue":
+                problems += work_product_problems(data, root.parent)
             if target == "ShadowRating" and not report_for(path).exists():
                 problems.append(f"{path.name} has no {report_for(path).name} beside it")
             for problem in problems:
