@@ -72,9 +72,11 @@ or absent in these patients" [PMID:11179007].
 ### The two annotations I removed: `GO:0001771` immunological synapse formation (IBA + IDA)
 
 Perforin is cargo delivered **into** a synapse built by TCR/adhesion-molecule clustering; the
-term's definition names that clustering as the mechanism. Perforin-null lymphocytes conjugate with
-targets and fail at lysis, not at synapse assembly. The IDA is cited to a Syntaxin-7 paper in
-which perforin antibody is the lytic-granule marker and Stx7 is the protein shown to be required
+term's definition names that clustering as the mechanism. Perforin-null lymphocytes are present in
+normal numbers and fail at lysis [PMID:8164737]; no published measurement of synapse assembly in
+perforin-null cells is in the cache, so the argument rests on the term's definition and on perforin
+being synapse cargo, not on a conjugation assay. The IDA is cited to a Syntaxin-7 paper in which
+perforin antibody is the lytic-granule marker and Stx7 is the protein shown to be required
 [PMID:21438968]; the underlying observation (perforin-stained granules at the synapse) is a
 localisation result, already captured by the CC term `GO:0001772`, which the review accepts.
 The IBA's PAINT node draws on that same human IDA, so the scoping error is inherited.
