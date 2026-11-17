@@ -499,22 +499,70 @@ def load_previous_release(repo_root: Path, release: str) -> "PreviousRelease | N
     )
 
 
-@lru_cache(maxsize=None)
-def _previous_release(panther_dir: Path) -> "PreviousRelease | None":
-    """The previous release's names and memberships, or None outside a switch."""
+def _switch_release() -> "str | None":
+    """The release being left during a PANTHER switch, or None outside one."""
     from ai_gene_review.etl.panther_families import (
         PANTHER_PREVIOUS_RELEASE,
         PANTHER_RELEASE,
     )
 
-    if PANTHER_PREVIOUS_RELEASE is None:
-        return None
-    if PANTHER_PREVIOUS_RELEASE == PANTHER_RELEASE:
+    if PANTHER_PREVIOUS_RELEASE is not None and PANTHER_PREVIOUS_RELEASE == PANTHER_RELEASE:
         raise ValueError(
             f"PANTHER_PREVIOUS_RELEASE equals PANTHER_RELEASE ({PANTHER_RELEASE}); "
             "set it to the release being left, or to None outside a switch"
         )
-    return load_previous_release(Path(panther_dir).parents[1], PANTHER_PREVIOUS_RELEASE)
+    return PANTHER_PREVIOUS_RELEASE
+
+
+def _previous_release(panther_dir: Path) -> "PreviousRelease | None":
+    """The previous release's names and memberships, or None outside a switch.
+
+    Cached per resolved directory, so callers that spell the path differently share
+    one load.
+    """
+    release = _switch_release()
+    if release is None:
+        return None
+    return _load_previous_release_cached(Path(panther_dir).resolve(), release)
+
+
+@lru_cache(maxsize=None)
+def _load_previous_release_cached(panther_dir: Path, release: str) -> "PreviousRelease | None":
+    return load_previous_release(panther_dir.parents[1], release)
+
+
+def previous_release_labels(panther_dir: Path) -> "tuple[str, dict[str, str]] | None":
+    """``(release, PANTHER:<id> -> name)`` for the release being left, or None.
+
+    For label tools such as ``fix-panther-labels``: reads only the names file from
+    the cache, not the per-organism member map. None outside a switch, or when the
+    names file is not cached.
+    """
+    release = _switch_release()
+    if release is None:
+        return None
+    return _load_previous_labels_cached(Path(panther_dir).resolve(), release)
+
+
+@lru_cache(maxsize=None)
+def _load_previous_labels_cached(
+    panther_dir: Path, release: str
+) -> "tuple[str, dict[str, str]] | None":
+    from ai_gene_review.etl.panther_families import (
+        hmm_classifications_path,
+        panther_cache_dir,
+        previous_release_names,
+    )
+
+    cache = panther_cache_dir(panther_dir.parents[1])
+    if not hmm_classifications_path(cache, release).exists():
+        print(
+            f"warning: PANTHER {release} classifications are not cached in {cache}; run "
+            "`just ensure-panther-members`",
+            file=sys.stderr,
+        )
+        return None
+    return release, previous_release_names(cache, release)
 
 
 class PantherTerm(NamedTuple):

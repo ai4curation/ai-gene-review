@@ -1147,6 +1147,7 @@ def test_load_previous_release_is_offline_and_off_when_not_cached(tmp_path, caps
     previous = load_previous_release(tmp_path, "99.0")  # other organisms absent: not fetched
     assert previous is not None
     err = capsys.readouterr().err
-    assert "memberships in those organisms" in err and "mouse" in err and "human," not in err
+    listed = err.split("classifications for ", 1)[1].split(" are not cached", 1)[0].split(", ")
+    assert "mouse" in listed and "human" not in listed
     assert previous.labels == {"PANTHER:PTHR00001:SF7": "OLD SUBFAMILY"}
     assert previous.members == {"P00002": "PTHR00001:SF7"}

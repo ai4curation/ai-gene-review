@@ -173,8 +173,8 @@ On 2026-11-17 it found:
      and stay at 55 with it.
    - **Labels are not laundered.** In both halves an id is deferred only while it
      carries the previous release's name; a label wrong in both releases fails. During
-     the window `just fix-panther-labels` holds back, rather than rewrites, any label
-     that still carries the previous release's name, even with `--allow-divergent`,
+     the window `just fix-panther-labels` holds back, rather than rewrites, any label on
+     an id whose name changed between the releases, even with `--allow-divergent`,
      because the id may now name something else. Those go through the remap batches.
 2. The bump PR changes the pinned constants, rebuilds the caches and `panther.obo`
    (2.1), and re-quotes the `panther.obo` quotes the report lists (10 today), so

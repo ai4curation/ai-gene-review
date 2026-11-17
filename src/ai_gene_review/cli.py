@@ -4952,11 +4952,11 @@ def refresh_panther_members(
     organisms = list(organism) if organism else list(DEFAULT_ORGANISMS)
 
     # During a PANTHER switch, validators read the previous release's names and
-    # memberships from this cache without downloading anything; warm it here. The
-    # validators read the default organisms, so those are always included.
+    # memberships from this cache without downloading anything; warm it here. Only the
+    # default organisms: they are what the validators read, whatever --organism says.
     if PANTHER_PREVIOUS_RELEASE is not None:
         fetch_hmm_classifications(cache, url=hmm_url(PANTHER_PREVIOUS_RELEASE))
-        for slug in sorted(set(organisms) | set(DEFAULT_ORGANISMS)):
+        for slug in DEFAULT_ORGANISMS:
             fetch_sequence_classification(slug, cache, release=PANTHER_PREVIOUS_RELEASE)
         typer.echo(f"cached PANTHER {PANTHER_PREVIOUS_RELEASE} classifications for the switch allowance")
 
@@ -5345,7 +5345,7 @@ def fix_panther_labels(
         load_obo_names,
         rewrite_panther_labels,
     )
-    from ai_gene_review.validation.family_residue_validator import _previous_release
+    from ai_gene_review.validation.family_residue_validator import previous_release_labels
     from ai_gene_review.validation.module_validator import (
         iter_family_member_uses,
         load_member_index,
@@ -5357,8 +5357,8 @@ def fix_panther_labels(
     names = load_obo_names(repo_root / "interpro" / "panther" / "panther.obo")
     # During a PANTHER switch, a label still carrying the previous release's name is
     # held back for remapping rather than relabelled (see rewrite_panther_labels).
-    previous = _previous_release(repo_root / "interpro" / "panther")
-    previous_names = previous.labels if previous is not None else None
+    previous = previous_release_labels(repo_root / "interpro" / "panther")
+    previous_names = previous[1] if previous is not None else None
     from ai_gene_review.etl.panther_families import member_index_path
 
     from ai_gene_review.etl.panther_families import load_member_index_alternates
@@ -5389,11 +5389,11 @@ def fix_panther_labels(
         new_text, changes, deferred = rewrite_panther_labels(
             text, names, skip, allow_divergent=allow_divergent, previous_names=previous_names
         )
-        for curie, old, new in deferred:
-            if previous_names is not None and previous_names.get(curie) == old.strip():
-                renamed.append((path, curie, old, new))
+        for item in deferred:
+            if item.reason == "renamed_in_switch":
+                renamed.append((path, item.curie, item.old, item.new))
             else:
-                held_back.append((path, curie, old, new, curie in corroborated))
+                held_back.append((path, item.curie, item.old, item.new, item.curie in corroborated))
         if not changes:
             continue
         total += len(changes)
@@ -5407,8 +5407,8 @@ def fix_panther_labels(
 
     if renamed and previous is not None:
         typer.echo(
-            f"\n⚠  {len(renamed)} label(s) NOT rewritten: they carry the PANTHER "
-            f"{previous.release} name of an id the switch renamed, so the id may now "
+            f"\n⚠  {len(renamed)} label(s) NOT rewritten: they are on ids whose name "
+            f"changed since PANTHER {previous[0]}, so the id may now "
             "name something else. Remap them from `just panther-release-diff`."
         )
         for path, curie, old, new in renamed:

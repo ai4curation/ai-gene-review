@@ -1094,17 +1094,27 @@ def load_subfamily_counts(path: Path) -> Dict[str, int]:
     return counts
 
 
+class DeferredLabel(NamedTuple):
+    """A label :func:`rewrite_panther_labels` held back, and why."""
+
+    curie: str
+    old: str
+    new: str
+    reason: str  # "divergent" | "renamed_in_switch"
+
+
 def rewrite_panther_labels(
     text: str,
     names: Dict[str, str],
     skip_curies: Optional[Set[str]] = None,
     allow_divergent: bool = False,
     previous_names: Optional[Dict[str, str]] = None,
-) -> Tuple[str, List[Tuple[str, str, str]], List[Tuple[str, str, str]]]:
+) -> Tuple[str, List[Tuple[str, str, str]], List[DeferredLabel]]:
     """Rewrite PANTHER family/subfamily labels to their official PANTHER names.
 
-    Returns ``(new_text, applied, deferred)``, each change a
-    ``(curie, old_label, new_label)`` triple.
+    Returns ``(new_text, applied, deferred)``. Each applied change is a
+    ``(curie, old_label, new_label)`` triple; each deferred one a
+    :class:`DeferredLabel`, which also says why it was held back.
 
     Three categories are deliberately NOT rewritten:
 
@@ -1115,11 +1125,11 @@ def rewrite_panther_labels(
       unless ``allow_divergent``. When the authored label describes a different
       protein entirely, the likely error is the id, and normalising the label
       would manufacture consistency around a guessed identifier.
-    * during a PANTHER switch (``previous_names``, the previous release's names), a
-      label that equals the previous release's name for its id, returned in
-      ``deferred`` even with ``allow_divergent``. The id was renamed by the bump and
-      may now name something else, so it is remapped from ``just
-      panther-release-diff``, not relabelled.
+    * during a PANTHER switch (``previous_names``, the previous release's names), any
+      label on an id whose name changed between the releases, returned in ``deferred``
+      (reason ``renamed_in_switch``) even with ``allow_divergent``. The id may now name
+      something else, so it is remapped from ``just panther-release-diff``, not
+      relabelled; that holds a typo on such an id until the remap too.
 
     >>> names = {"PANTHER:PTHR1": "ALDO/KETO REDUCTASE"}
     >>> text = "  term:\\n    id: PANTHER:PTHR1\\n    label: ALDO-KETO REDUCTASE\\n"
@@ -1137,25 +1147,25 @@ def rewrite_panther_labels(
     >>> new, applied, deferred = rewrite_panther_labels(text, names)
     >>> applied
     []
-    >>> deferred
-    [('PANTHER:PTHR1', 'SUCCINATE DEHYDROGENASE', 'ALDO/KETO REDUCTASE')]
+    >>> [(d.curie, d.old, d.reason) for d in deferred]
+    [('PANTHER:PTHR1', 'SUCCINATE DEHYDROGENASE', 'divergent')]
     >>> new == text
     True
 
-    During a switch, a label still carrying the previous release's name is held back:
+    During a switch, a label on an id the switch renamed is held back, whatever it says:
 
     >>> text = "  term:\\n    id: PANTHER:PTHR1\\n    label: ALDO-KETO REDUCTASE\\n"
-    >>> previous = {"PANTHER:PTHR1": "ALDO-KETO REDUCTASE"}
+    >>> previous = {"PANTHER:PTHR1": "ALDO KETO REDUCTASE"}
     >>> new, applied, deferred = rewrite_panther_labels(
     ...     text, names, allow_divergent=True, previous_names=previous)
-    >>> applied, new == text
-    ([], True)
+    >>> applied, new == text, deferred[0].reason
+    ([], True, 'renamed_in_switch')
     """
     skip = skip_curies or set()
     previous = previous_names or {}
     lines = text.splitlines(keepends=True)
     changes: List[Tuple[str, str, str]] = []
-    deferred: List[Tuple[str, str, str]] = []
+    deferred: List[DeferredLabel] = []
     for index, line in enumerate(lines):
         match = _LABEL_ID_RE.match(line.rstrip("\n"))
         if not match or index + 1 >= len(lines):
@@ -1174,15 +1184,15 @@ def rewrite_panther_labels(
         current = str(yaml.safe_load(f"v: {label_match.group(2)}")["v"])
         if current.strip() == official:
             continue
-        if previous.get(curie) == current.strip():
-            deferred.append((curie, current, official))
+        if previous.get(curie, official) != official:
+            deferred.append(DeferredLabel(curie, current, official, "renamed_in_switch"))
             continue
         if (
             not allow_divergent
             and not is_placeholder_label(current, curie)
             and label_drift(current, official) == "divergent"
         ):
-            deferred.append((curie, current, official))
+            deferred.append(DeferredLabel(curie, current, official, "divergent"))
             continue
         lines[index + 1] = f"{expected_indent}label: {emit_yaml_scalar(official)}\n"
         changes.append((curie, current, official))
