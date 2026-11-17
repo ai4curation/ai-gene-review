@@ -71,12 +71,14 @@ def actions_for_term(folder: str, term_id: str) -> list[str]:
     phosphotransferase activity, a different reaction class, because it is a
     WecA-type initiating enzyme rather than a glycosyltransferase.
 
-    Two empty-ish results are kept distinct, because they mean different things
+    Three empty-ish results are kept distinct, because they mean different things
     and conflating them would report "no row" for a review that is simply not
     there: ``["(no review file)"]`` when the review does not exist, against
     ``["(no row)"]`` when it exists but says nothing about the term -- the
     latter being worth seeing, since the claim is in GOA for the gene and absent
-    from its review.
+    from its review. ``["(only a NEW row)"]`` is the third: the review addresses
+    the term, but only to propose an annotation GOA lacks, so there is no verdict
+    on the shared claim to compare and reporting silence would be wrong.
 
     ``NEW`` rows are deliberately excluded. A ``NEW`` row proposes an annotation
     GOA does not have, so it is an addition rather than a verdict on the shared
@@ -92,12 +94,16 @@ def actions_for_term(folder: str, term_id: str) -> list[str]:
     with open(path, encoding="utf-8") as handle:
         doc = yaml.safe_load(handle)
     verdicts = set()
+    skipped_new = False
     for row in doc.get("existing_annotations") or []:
         if row.get("term", {}).get("id") != term_id:
             continue
         review = row.get("review") or {}
         action = review.get("action")
-        if not action or action == "NEW":
+        if not action:
+            continue
+        if action == "NEW":
+            skipped_new = True
             continue
         replacements = sorted(
             term.get("id", "?")
@@ -105,7 +111,13 @@ def actions_for_term(folder: str, term_id: str) -> list[str]:
             if term.get("id")
         )
         verdicts.add(f"{action}->{'+'.join(replacements)}" if replacements else action)
-    return sorted(verdicts) or ["(no row)"]
+    if verdicts:
+        return sorted(verdicts)
+    # Excluding NEW rows created a third empty case, distinct from the other two:
+    # the review does discuss this term, but only to propose an annotation GOA
+    # lacks. Reporting that as "(no row)" would say the review is silent about a
+    # claim it in fact addresses.
+    return ["(only a NEW row)"] if skipped_new else ["(no row)"]
 
 
 def collect() -> dict[str, list[dict[str, Any]]]:

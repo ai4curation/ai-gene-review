@@ -150,3 +150,26 @@ Both corrections are the same failure repeated: fixing a claim in one file and
 leaving the identical claim in the file next to it. The lesson applied from
 round 3 onwards is to sweep every instance rather than patch the one that was
 named.
+
+**Substrate specificity, added in a later round.** The two enzymes differ in a
+way neither review recorded at first. WbpX is strictly specific for its sugar
+[PMID:35166992 "WbpX showed no transferase activity using any of the nucleotide
+sugars other than GDP-D-[3H]Rha, indicating that it is exclusively a D-RhaT."],
+while WbpY also transfers D-mannose [PMID:35166992 "In contrast, His6-WbpY had
+also significant D-ManT activity using GDP-[3H]Man which was 70% of the D-RhaT
+activity (Table 1)."] and is therefore [PMID:35166992 "WbpY is therefore a dual
+D-RhaT and D-ManT, similar to WbpZ."].
+
+So WbpX is bifunctional in *linkage* (α1-2 and α1-3) but monospecific in
+*sugar*, and WbpY is the reverse: one linkage, two sugars. That bears on the
+request for a GO D-rhamnosyltransferase term, which is recorded once for the
+pair on the wbpY review — such a term would describe WbpX exactly and WbpY only
+partly. It also means `GO:0016758` hexosyltransferase activity is the apter stop
+for WbpY than it first appeared, since D-rhamnose is 6-deoxy-D-mannose and the
+term covers both sugars the enzyme uses.
+
+Neither activity is separately annotated: GOA carries no mannosyltransferase row
+for either gene, and at 70% of the D-rhamnose rate the D-mannose activity is a
+genuine secondary activity rather than noise, but no D-mannose appears in the CPA
+repeat, so what it does in vivo is unknown. That is a question for the bench, and
+it is recorded as one on wbpY.
