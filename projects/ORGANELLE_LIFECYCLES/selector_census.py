@@ -180,16 +180,40 @@ def interpro_ids(descriptors: list[object]) -> tuple[str, ...]:
 UNIPROT_ACCESSIONS_URL = "https://rest.uniprot.org/uniprotkb/accessions"
 
 
-def fetch_interpro_domains(
-    accessions: set[str], cache_file: Path
-) -> dict[str, set[str]]:
-    """Map UniProt accessions to their InterPro entries, from UniProt, cached in ``cache_file``.
+@dataclass(frozen=True)
+class DomainLookup:
+    """InterPro entries per accession, with what UniProt did not answer and the releases it answered from."""
 
-    Only accessions not already in the cache are requested. An accession UniProt does not return
-    (obsolete or merged) maps to no domains, so a step needing a domain does not hold for it.
+    domains: dict[str, set[str]]
+    unanswered: tuple[str, ...]
+    uniprot_releases: tuple[str, ...]
+
+
+def parse_interpro_tsv(text: str) -> dict[str, list[str]]:
+    r"""Parse UniProt's ``accession,xref_interpro`` TSV into accession -> InterPro ids.
+
+    >>> parse_interpro_tsv("Entry\tInterPro\nP1\tIPR1;IPR2;\nP2\t\n")
+    {'P1': ['IPR1', 'IPR2'], 'P2': []}
+    """
+    found = {}
+    for row in text.splitlines()[1:]:
+        acc, _, ipr = row.partition("\t")
+        found[acc] = [i for i in ipr.split(";") if i]
+    return found
+
+
+def fetch_interpro_domains(accessions: set[str], cache_file: Path) -> DomainLookup:
+    """Look up the InterPro entries of UniProt accessions, caching answers in ``cache_file``.
+
+    Only accessions UniProt actually returned are cached, each with the UniProt release it came
+    from, so an accession missing from a response (obsolete, merged, or a failed request) is asked
+    again on the next run instead of being remembered as having no domains. Accessions still
+    unanswered are reported in :attr:`DomainLookup.unanswered`; a step needing a domain does not
+    hold for them.
     """
     cached = json.loads(cache_file.read_text()) if cache_file.exists() else {}
-    missing = sorted(accessions - set(cached))
+    entries: dict[str, dict] = cached.get("accessions", {})
+    missing = sorted(accessions - set(entries))
     for start in range(0, len(missing), 200):
         batch = missing[start : start + 200]
         query = urllib.parse.urlencode(
@@ -200,16 +224,28 @@ def fetch_interpro_domains(
             }
         )
         with urllib.request.urlopen(f"{UNIPROT_ACCESSIONS_URL}?{query}") as response:
-            rows = response.read().decode().splitlines()[1:]
-        found = {}
-        for row in rows:
-            acc, _, ipr = row.partition("\t")
-            found[acc] = [i for i in ipr.split(";") if i]
-        cached.update({acc: found.get(acc, []) for acc in batch})
+            release = response.headers.get("X-UniProt-Release", "unknown")
+            found = parse_interpro_tsv(response.read().decode())
+        entries.update(
+            {
+                acc: {"interpro": found[acc], "uniprot_release": release}
+                for acc in batch
+                if acc in found
+            }
+        )
     if missing:
         cache_file.parent.mkdir(parents=True, exist_ok=True)
-        cache_file.write_text(json.dumps(cached, sort_keys=True, indent=0))
-    return {acc: set(cached[acc]) for acc in accessions}
+        cache_file.write_text(
+            json.dumps({"accessions": entries}, sort_keys=True, indent=0)
+        )
+    answered = accessions & set(entries)
+    return DomainLookup(
+        domains={acc: set(entries[acc]["interpro"]) for acc in answered},
+        unanswered=tuple(sorted(accessions - answered)),
+        uniprot_releases=tuple(
+            sorted({entries[acc]["uniprot_release"] for acc in answered})
+        ),
+    )
 
 
 def load_classification(path: Path, mnemonic: str | None) -> dict[str, set[str]]:
@@ -383,7 +419,17 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
             for a in iter_atoms(circuit)
             if a.domain_ids and panther_ids(a)
         ]
-        domains = fetch_interpro_domains(
+        for a in iter_atoms(circuit):
+            if (
+                a.domain_ids
+                and panther_ids(a)
+                and not interpro_ids([{"term": {"id": d}} for d in a.domain_ids])
+            ):
+                raise SystemExit(
+                    f"{name}: step {a.node_id} names a domain the census cannot check "
+                    f"({', '.join(a.domain_ids)}); use an InterPro id"
+                )
+        lookup = fetch_interpro_domains(
             {
                 acc
                 for selectors in domain_families
@@ -393,6 +439,7 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
             },
             cache / "uniprot-interpro.json",
         )
+        domains = lookup.domains
         rows = []
         for d in descriptors(doc["module"]):
             selected = {
@@ -446,6 +493,17 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
                 ),
                 "mixed_complex_steps": sorted(
                     k for k, v in kinds.items() if v == "mixed_complex"
+                ),
+                **(
+                    {
+                        "domain_lookup": {
+                            "source": "UniProt InterPro cross-references",
+                            "uniprot_releases": list(lookup.uniprot_releases),
+                            "unanswered_accessions": list(lookup.unanswered),
+                        }
+                    }
+                    if domain_families
+                    else {}
                 ),
             }
         )

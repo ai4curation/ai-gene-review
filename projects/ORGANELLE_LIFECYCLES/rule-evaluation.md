@@ -142,17 +142,23 @@ lineage-specific placements, divergent orthologs or real losses; which is not ch
 ## The acidocalcisome rule
 
 `acidocalcisome_polyphosphate_storage` is scoped to the lineages that make polyphosphate with the VTC
-complex. It needs a Vtc4-type catalytic subunit (`PTHR46140:SF1` carrying the VTC domain, InterPro
-IPR018966) and an acidifying pump (the H+-PPase `PTHR31998` or the V-ATPase rule). It is met in the
-nine organisms with that subunit: the chytrid, Chlamydomonas, *Trypanosoma*, *Leishmania*,
+complex. It needs a VTC-domain subunit of `PTHR46140:SF1` (InterPro IPR018966; Vtc4 in most lineages)
+and an acidifying pump (the H+-PPase `PTHR31998` or the V-ATPase rule). It is met in the nine organisms
+with such a subunit: the chytrid, Chlamydomonas, *Trypanosoma*, *Leishmania*,
 *Plasmodium*, Thalassiosira and the three fungi. Every other organism fails on the Vtc4 step alone. The
-domain requirement matters in one case. Dictyostelium's two `PTHR46140:SF1` proteins (Q54JW8, Q54ZD5)
-carry only the DUF202 membrane domain of Vtc1, and Dictyostelium makes polyphosphate with a
-bacterial-type PPK1, so without the domain the rule would pass there on the wrong protein. The failures
-in animals and land plants are expected, since neither has VTC. Paramecium and Phytophthora have no
-Vtc4-type protein in these files either, and whether they have acidocalcisomes is not checked here. The
-three fungi pass on their polyphosphate-filled vacuole, which the rule does not distinguish from an
-acidocalcisome.
+domain requirement excludes the Vtc1-like proteins, which have only the DUF202 membrane domain.
+Dictyostelium's two `PTHR46140:SF1` proteins (Q54JW8, Q54ZD5) are of that kind, so without the domain the
+rule would pass there on the wrong protein. The domain does not exclude every non-catalytic VTC subunit:
+the entries table places Toxoplasma Vtc2 in `PTHR46140:SF1`, so *Plasmodium*'s pass, on the putative VTC
+protein C6KT60, does not establish a catalytic Vtc4 there. The other passes are on proteins named Vtc4,
+or on the Chlamydomonas, Leishmania and Thalassiosira VTC-domain proteins (the module lists them).
+
+The failures in animals and land plants are expected, since neither has VTC. A failure does not mean the
+organism lacks acidocalcisomes. Dictyostelium has polyphosphate-rich mass-dense granules with an H+-PPase
+activity (PMID:11748243), but no VTC-domain protein and no `PTHR31998` protein in these files, and it makes
+polyphosphate with a bacterial-type PPK1 (PMID:17940044). Paramecium and Phytophthora have no Vtc4-type
+protein in these files either, and whether they have acidocalcisomes is not checked here. The three fungi
+pass on their polyphosphate-filled vacuole, which the rule does not distinguish from an acidocalcisome.
 
 ## Expected failures
 
