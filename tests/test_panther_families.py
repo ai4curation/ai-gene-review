@@ -469,3 +469,9 @@ def test_repo_member_overrides_are_reflected_in_index():
         if accession in index:
             assert index[accession] == family_sf, accession
             assert accession not in alternates, accession
+
+
+def test_previous_release_differs_from_the_pinned_release():
+    """During a switch the allowance compares two releases; equal ones would make it a no-op."""
+    from ai_gene_review.etl.panther_families import PANTHER_PREVIOUS_RELEASE, PANTHER_RELEASE
+    assert PANTHER_PREVIOUS_RELEASE != PANTHER_RELEASE

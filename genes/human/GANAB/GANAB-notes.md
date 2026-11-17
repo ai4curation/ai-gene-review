@@ -39,3 +39,19 @@ The renewed review identified production usage missed by a human enabled-by inde
 This positive usage replaces the earlier null-search rationale. Reconciling the existing GO:0106407 definition is preferred because it preserves current model/module typing. The final-glucose NTR remains conditional: a separate term would require retyping the appropriate downstream activity and separating the final step within the combined module, not replacing both activities indiscriminately. The two cores and five replacement lists remain intact.
 
 The actual GO:0106407 is_a GO:0090599 edge supports the stated refinement. Product-anomer wording is a separate unresolved issue: the [official GH31 family description](https://www.ncbi.nlm.nih.gov/Structure/cdd/cd06589) describes a retaining mechanism, whereas the curated RHEA products are beta-D-glucose. The conditional definition now uses D-glucose and a question requests reconciliation; no direct product-anomer measurement or source defect is claimed. The existing first-core excerpt supports the two-step chemistry and is reused by reference rather than duplicated. All source bytes, original contexts, actions, products and quotations remain unchanged. A native codex EDIT records the follow-up. Default validation passed with zero curation advisories. Strict GOA matches all 39 original contexts; native codex EDIT history, computed COMPLETE status, private rendering, links and scoped whitespace checks passed. The one source-specific UNDECIDED judgment is retained.
+
+## 2026-11-15 ORGANELLES Golgi batch 2 (Golgi apparatus rows)
+
+- Two Golgi rows: ISS GO_REF:0000024 (donor pig P79403) and IEA GO_REF:0000044 (UniProt Golgi
+  item tagged ECO:0000250|UniProtKB:P79403). Both rest on PMID:2404989 (Brada, Kerjaschki and
+  Roth 1990, J Cell Biol).
+- Full text read outside the cache: PMC2116019, DOI 10.1083/jcb.110.2.309 (PMC text via the
+  PubMed full-text tool; figure images not inspected). Read: Methods (pig kidney perfusion
+  fixation, Lowicryl K4M protein A-gold immuno-EM, antibody to pig kidney glucosidase II) and
+  Results/Discussion. Endogenous glucosidase II labels the ER and autophagosomes and, in
+  addition, the Golgi apparatus, apical endocytic structures (predominant) and the brush border;
+  endo H-resistant and sialylated active species show passage through the Golgi. The paper
+  recalls that in hepatocytes Golgi cisternae are free of label (Lucocq et al. 1986).
+- Verdict: both rows stay KEEP_AS_NON_CORE (endogenous protein in native cell, cell-type-specific
+  escape pool; activity in the ER lumen). MARK_AS_OVER_ANNOTATED is the close alternative. No
+  sub-compartment row (one line, no cisternal resolution). ER rows untouched.

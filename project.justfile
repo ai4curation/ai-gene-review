@@ -282,7 +282,8 @@ check-panther-release:
     uv run ai-gene-review check-panther-release
 
 # Dry-run report of what a PANTHER release bump would change: cited ids gone or
-# renamed, and member-based id proposals for every anchor. Edits nothing.
+# renamed, member-based id proposals for every anchor, and panther.obo quotes the
+# rebuilt artifact would break. Edits nothing.
 # Example: just panther-release-diff 20.0
 [group('QC')]
 panther-release-diff target_release *args="":
@@ -1406,6 +1407,14 @@ validate-quotes *args:
 [group('QC')]
 local-quote-baseline *args:
     uv run python scripts/local_quote_baseline.py {{args}}
+
+# List kept MF terms whose GO EC class contradicts the protein's UniProt EC
+# (e.g. a "synthase" term on a "synthetase"). Same rule as the ec_class_conflict
+# warning in `just validate`; writes reports/ec-class-conflicts.tsv (git-ignored).
+# Example: just ec-class-audit genes/PSEPK/PP_2213/PP_2213-ai-review.yaml
+[group('QC')]
+ec-class-audit *files:
+    uv run python -m ai_gene_review.validation.ec_class_consistency {{files}}
 
 # Validate all gene review files (schema + references + best practices).
 # Uses batch mode for schema and advisory term validation, then the CLI for
