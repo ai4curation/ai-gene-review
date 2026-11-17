@@ -420,6 +420,30 @@ class MemberIndexGaps(NamedTuple):
     """UniProt was not consulted, so the status is unknown. Rerun to resolve."""
 
 
+
+def members_not_looked_up(
+    accessions: Iterable[str], index: Dict[str, str], gaps: MemberIndexGaps
+) -> bool:
+    """Whether no accession has a family in ``index`` and some were never looked up.
+
+    A descriptor in that state can be neither confirmed nor disputed by its members
+    until the index is refreshed, so label tools leave its id alone. Accessions PANTHER
+    is known to have no family for (``gaps.absent``) are a permanent state, not a
+    missing lookup, and descriptors with no members have nothing to look up.
+
+    >>> gaps = MemberIndexGaps(absent={"P3"}, unchecked={"P2"})
+    >>> members_not_looked_up({"P1", "P2"}, {"P1": "PTHR1"}, gaps)
+    False
+    >>> members_not_looked_up({"P2"}, {}, gaps), members_not_looked_up({"P4"}, {}, gaps)
+    (True, True)
+    >>> members_not_looked_up({"P3"}, {}, gaps), members_not_looked_up(set(), {}, gaps)
+    (False, False)
+    """
+    accessions = set(accessions)
+    if any(accession in index for accession in accessions):
+        return False
+    return bool(accessions - gaps.absent)
+
 def render_member_index(
     index: Dict[str, str],
     unresolved: Optional[Set[str]] = None,

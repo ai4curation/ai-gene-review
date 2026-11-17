@@ -822,3 +822,37 @@ def test_fix_panther_labels_holds_back_a_renamed_id_during_a_switch(
     assert "changed since PANTHER 18.0" in result.output
     assert "Applied 0 label correction(s)" in result.output
     assert module.read_text() == before
+
+
+def test_fix_panther_labels_skips_ids_whose_members_were_never_looked_up(tmp_path: Path) -> None:
+    """With a partial index, an id no member confirms yet is held back, not relabelled."""
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = _label_fix_repo(tmp_path, with_member_index=True)  # index knows only P00001
+    (repo / "interpro" / "panther" / "panther.obo").write_text(
+        "[Term]\nid: PANTHER:PTHR00001\nname: REAL NAME\n\n"
+        "[Term]\nid: PANTHER:PTHR00002\nname: OTHER NAME\n"
+    )
+    module = repo / "modules" / "m.yaml"
+    module.write_text(
+        "id: m\nparts:\n"
+        "- family:\n    preferred_term: confirmed\n    term:\n"
+        "      id: PANTHER:PTHR00001\n      label: REAL NAMES\n"
+        "    representative_members:\n    - preferred_term: a\n      term:\n"
+        "        id: UniProtKB:P00001\n"
+        "- family:\n    preferred_term: not looked up\n    term:\n"
+        "      id: PANTHER:PTHR00002\n      label: OTHER NAMES\n"
+        "    representative_members:\n    - preferred_term: b\n      term:\n"
+        "        id: UniProtKB:Q99999\n"
+    )
+
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+
+    assert result.exit_code == 0, result.output
+    assert "Applied 1 label correction(s)" in result.output
+    assert "1 label(s) NOT rewritten: no representative member" in result.output
+    assert "PANTHER:PTHR00002  'OTHER NAMES' -> 'OTHER NAME'" in result.output
+    text = module.read_text()
+    assert "label: REAL NAME\n" in text and "label: OTHER NAMES\n" in text
