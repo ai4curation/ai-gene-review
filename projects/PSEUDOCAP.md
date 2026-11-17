@@ -605,12 +605,20 @@ The "re-read as groups" step is now mechanical:
 compares the review actions on each shared term across its members and reports
 the groups that disagree.
 
-Divergence is a prompt to read, not a verdict. Two of the current divergences are
+Divergence is a prompt to read, not a verdict. All three current divergences are
 deliberate: `ccoQ1`/`ccoQ2` sit at `MARK_AS_OVER_ANNOTATED` on `GO:0004129` while
-the six catalytic cbb3 subunits are `ACCEPT`, because the Q chains are accessory
-and absent from the cryo-EM models; and `tse6` is `REMOVE` against `tsi6`'s
-`ACCEPT` on `GO:0097351` because of a recorded `WRONG_GENE_PRODUCT` defect. Both
-are argued in the rows themselves, which is what makes them fine.
+the six catalytic cbb3 subunits are `ACCEPT`, because the Q chains are accessory and
+absent from the cryo-EM models; `tse6` is `REMOVE` against `tsi6`'s `ACCEPT` on
+`GO:0097351` because of a recorded `WRONG_GENE_PRODUCT` defect; and on `GO:0016757`
+`wbpL` modifies to `GO:0016780` phosphotransferase activity while `wbpX` and `wbpY`
+accept, because `wbpL` is a WecA-type initiating enzyme that transfers a
+sugar-1-phosphate and is not a glycosyltransferase in GO's sense at all. Each is
+argued in the rows themselves, which is what makes them fine.
+
+The verdict the script compares is the action *plus the replacement term* where the
+action is MODIFY. Comparing bare actions would have called `wbpL` and `wbpY`
+consistent back when both read MODIFY, even though they were moving to different
+branches of the ontology.
 
 The check has already paid for itself twice. It is the generalisation of the
 `liuB`/`liuD` drift caught in review on PR #6341, and run across the corpus it
@@ -619,7 +627,18 @@ PMID:9680202, and `wbpY` had refined it to `GO:0016758` citing direct enzymology
 in PMID:35166992 **for both enzymes**, while `wbpX` accepted the generic term on
 the stated ground that the donor and linkage "have not been shown biochemically"
 and never cited that paper. The paper is titled for both enzymes and its full text
-is cached; `wbpX` now matches `wbpY`.
+is cached.
+
+Reconciling them exposed a second question: *which* encoding is right. Under the
+2026-11-14 ruling a `MODIFY` needs the row's own evidence for the deeper term, and
+none of the three `GO:0016757` rows has it — the IBA inherits a node typed at the
+general term, the IEA rests on a generic GT1 fold signature, and the 1998 IMP is a
+mutant phenotype. So the rows stay `ACCEPT` on both genes and the assayed activity is
+asserted where its evidence lives, as a `NEW` `GO:0016758` IDA row on PMID:35166992.
+Harmonising the pair meant changing `wbpY` as well as `wbpX`, which is a deliberate
+revisit of a merged review rather than an opportunistic sweep: the shared claim is the
+unit this audit works on, and fixing one half only would have re-created the
+divergence.
 
 Note what the automated checks could not see here. `just validate` and
 `quote_check` passed on both reviews throughout: every quote was verbatim and every

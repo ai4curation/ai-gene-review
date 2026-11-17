@@ -47,7 +47,15 @@ GENES = ROOT / "genes" / "PSEAE"
 
 
 def actions_for_term(folder: str, term_id: str) -> list[str]:
-    """Return the sorted distinct review actions on ``term_id`` in a gene review.
+    """Return the sorted distinct review verdicts on ``term_id`` in a gene review.
+
+    A verdict is the action, plus the replacement term where the action is
+    MODIFY: two members that both MODIFY but to *different* terms have not
+    reached the same judgement, and comparing bare actions would call them
+    consistent. ``wbpL`` and ``wbpY`` are the worked example -- both once read
+    MODIFY on ``GO:0016757``, but ``wbpL`` moves to ``GO:0016780``
+    phosphotransferase activity, a different reaction class, because it is a
+    WecA-type initiating enzyme rather than a glycosyltransferase.
 
     An empty list means the review has no row for that term, which is itself
     worth seeing: the claim is in GOA for the gene but absent from its review.
@@ -57,12 +65,21 @@ def actions_for_term(folder: str, term_id: str) -> list[str]:
         return []
     with open(path, encoding="utf-8") as handle:
         doc = yaml.safe_load(handle)
-    actions = {
-        row.get("review", {}).get("action")
-        for row in doc.get("existing_annotations") or []
-        if row.get("term", {}).get("id") == term_id
-    }
-    return sorted(a for a in actions if a)
+    verdicts = set()
+    for row in doc.get("existing_annotations") or []:
+        if row.get("term", {}).get("id") != term_id:
+            continue
+        review = row.get("review") or {}
+        action = review.get("action")
+        if not action:
+            continue
+        replacements = sorted(
+            term.get("id", "?")
+            for term in review.get("proposed_replacement_terms") or []
+            if term.get("id")
+        )
+        verdicts.add(f"{action}->{'+'.join(replacements)}" if replacements else action)
+    return sorted(verdicts)
 
 
 def collect() -> dict[str, list[dict[str, Any]]]:

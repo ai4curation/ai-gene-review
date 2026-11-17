@@ -58,14 +58,36 @@ true in 2021, not after this work.
 
 Consequences recorded in the review:
 
-- All three `GO:0016757` rows (IBA, IEA, IMP) are now `MODIFY` to `GO:0016758`
-  hexosyltransferase activity, matching `wbpY`. D-rhamnose is 6-deoxy-D-mannose, a
-  hexose, and `GO:0016758` is an `is_a` child of `GO:0016757` (checked in OLS).
-  GO still has no D-rhamnosyltransferase term, which is why the refinement stops
-  at hexosyltransferase rather than naming the sugar.
-- `core_functions.molecular_function` moved to `GO:0016758`, and the description no
-  longer calls the transfer "proposed". The *linkage* assignment (alpha1-2 to WbpX)
-  is still an inference from repeat-unit structure, and the description says so.
+- The specific activity is asserted as a **`NEW` row**: `GO:0016758`
+  hexosyltransferase activity, IDA, on PMID:35166992. D-rhamnose is
+  6-deoxy-D-mannose, a hexose, and `GO:0016758` is an `is_a` child of `GO:0016757`
+  (checked in OLS). GO still has no D-rhamnosyltransferase term, which is why it
+  stops at hexosyltransferase rather than naming the sugar.
+- The three existing `GO:0016757` rows (IBA, IEA, IMP) stay **`ACCEPT`**. An earlier
+  version of this change made all three `MODIFY` to `GO:0016758`, copying `wbpY`.
+  The 2026-11-14 ruling in CLAUDE.md disallows that: a `MODIFY` needs *this row's own*
+  evidence for the deeper term, and none of the three has it — the IBA inherits a node
+  typed at `GO:0016757`, the IEA rests on the generic GT1 fold signature `IPR001296`,
+  and the 1998 IMP is a mutant phenotype whose "rhamnosyltransferase" naming is the
+  authors' own hedged inference. The assay belongs on the row that holds it. `wbpY` was
+  changed the same way in the same PR, so the pair still agrees.
+- `core_functions.molecular_function` is `GO:0016758`, and neither the core-function
+  description nor the top-level `description` calls the transfer "proposed" any more.
+
+Three statements in this file contradicted the paper and were corrected with it:
+
+- The top-level `description` said the donor and linkage "have not been shown by
+  enzyme assay" and that WbpX acts **processively**. The paper shows transfer from
+  GDP-D-Rha directly, and reports the opposite mechanism: the WbpX/WbpY mixture
+  synthesises D-Rha oligomers *non-processively*.
+- The core-function description said the alpha1-2 assignment "remains inferred …
+  rather than shown". It was shown: [PMID:35166992 "NMR analysis revealed that WbpX
+  synthesizes both α1-2 and α1-3 D-Rha linkages while WbpY synthesizes a single
+  D-Rhaα1-3 linkage."]. The open question is which linkage WbpX makes at each
+  position of the native repeat, not whether any was demonstrated.
+- `suggested_questions` and `suggested_experiments` asked for the donor, linkage and
+  processivity work this paper had already done. Both now ask what is actually open:
+  how a single-domain enzyme switches between the two linkages.
 - The IBA row carries a `propagation_review` identical in substance to `wbpY`'s:
   the node conclusion is sound and apt for the GT4 node's breadth, the two seeds
   are weak only in provenance (a 1998 mutant phenotype, not an assay), and the node
