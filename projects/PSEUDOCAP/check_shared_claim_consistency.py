@@ -167,6 +167,12 @@ def collect() -> dict[str, list[dict[str, Any]]]:
             # only "a member is missing" would hide a live divergence among the
             # rest until the backlog cleared -- GO:0003955 has four reviewed
             # members and GO:0016987 four, so that is most of each group.
+            #
+            # This branch always lands in "incomplete", never "no_verdict", even
+            # if every remaining member turns out to be NEW-only. That is not an
+            # oversight to tidy away: an unreviewed member is backlog, so the
+            # group is not "complete with nothing to compare". The branch below
+            # reaches the same conclusion through its `backlog or ...` test.
             comparable = {
                 s: actions_for_term(str(folders[s]), group["term"])
                 for s in record["reviewed"]

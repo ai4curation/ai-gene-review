@@ -170,5 +170,5 @@ other half of the contrast is the sentence immediately after it: [PMID:35166992
 synthesizes the α1-3 linkage although it has 2 proposed GT domains."]. So WbpX
 does more with one domain and WbpY less with two, which is the reason the 1998
 proposal that WbpY contributes two of the three repeat residues cannot be
-inferred from its domain architecture. That proposal is recorded as DISPUTED on
-the wbpY review.
+inferred from its domain architecture. That proposal is recorded as DISPUTED in
+this review's findings, on PMID:9680202.
