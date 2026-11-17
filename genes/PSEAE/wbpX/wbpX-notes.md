@@ -195,3 +195,22 @@ finding a few lines above.
 
 Both are corrected in the description, which now states each enzyme's result
 with the acceptor that produced it.
+
+**Correction to the D-mannose reasoning above.** The paragraph on substrate
+specificity says "no D-mannose appears in the CPA repeat, so what it does in vivo
+is unknown". The *repeat* is pure D-rhamnan, so that sentence is literally
+accurate, but it was written on the broader premise that CPA contains no
+D-mannose at all, and the paper says otherwise: [PMID:35166992 "CPA from various
+PA strains is essentially a D-rhamnan but has been shown to contain a small
+amount of D-Man as well as other monosaccharides including xylose and ribose"].
+
+The paper also goes some way to answering the question that premise generated.
+WbpY is judged [PMID:35166992 "WbpY could transfer a single D-Man but due its
+restricted acceptor specificity it is not likely to build a D-Man polymer."], and
+the purity of the polymer is attributed to WbpX alone: [PMID:35166992 "The
+relatively high purity of CPA is clearly due to the polymerizing activity of WbpX
+that exclusively utilizes GDP-D-Rha as donor."]. So the minor D-mannose in CPA
+would be single residues rather than stretches, which fits WbpY as a possible
+source without showing it is one. The wbpY question is sharpened accordingly, and
+WbpX's exclusivity is now recorded as the reason the polymer is as pure as it is
+rather than as a bare specificity fact.

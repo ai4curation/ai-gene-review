@@ -130,6 +130,7 @@ def collect() -> dict[str, list[dict[str, Any]]]:
         "divergent": [],
         "consistent": [],
         "incomplete": [],
+        "no_verdict": [],
     }
     for group in data.get("shared_claims") or []:
         symbols = group["symbols"]
@@ -160,14 +161,20 @@ def collect() -> dict[str, list[dict[str, Any]]]:
             if v in (["(no review file)"], ["(only a NEW row)"])
         }
         if absent:
-            # Keep *why* each member cannot be compared. Flattening both to
-            # "unreviewed" would throw away the distinction actions_for_term
-            # exists to draw: a gene with no review file has not been looked at,
-            # while one whose only row is NEW has been reviewed and simply makes
-            # no ruling on this claim.
+            # Keep *why* each member cannot be compared, and bucket by what the
+            # reader would do about it. A missing review file is curation
+            # backlog: someone has to review the gene. A member whose only row
+            # is NEW has been reviewed and simply rules on nothing here, so
+            # there is no backlog and nothing to chase -- the group is complete
+            # and just has no verdict to compare.
             record["uncomparable"] = absent
             record["reviewed"] = [s for s in symbols if s not in absent]
-            out["incomplete"].append(record)
+            bucket = (
+                "no_verdict"
+                if all(r == "(only a NEW row)" for r in absent.values())
+                else "incomplete"
+            )
+            out[bucket].append(record)
             continue
 
         record["actions"] = actions
@@ -218,6 +225,17 @@ def main() -> int:
                     f"  {record['term']:13} {record['reference']:16} "
                     f"reviewed={record['reviewed']} uncomparable: {why}"
                 )
+        if groups["no_verdict"]:
+            print()
+            print("NO VERDICT -- reviewed, but no member rules on this claim:")
+            for record in groups["no_verdict"]:
+                why = ", ".join(
+                    f"{s} {reason}" for s, reason in record["uncomparable"].items()
+                )
+                print(
+                    f"  {record['term']:13} {record['reference']:16} "
+                    f"reviewed={record['reviewed']} {why}"
+                )
         if groups["consistent"]:
             print()
             print("CONSISTENT:")
@@ -228,7 +246,8 @@ def main() -> int:
     print(
         f"summary: {len(groups['divergent'])} divergent, "
         f"{len(groups['consistent'])} consistent, "
-        f"{len(groups['incomplete'])} incomplete"
+        f"{len(groups['incomplete'])} incomplete, "
+        f"{len(groups['no_verdict'])} with no verdict"
     )
     print(
         "scope: molecular-function shared claims only; process and component claims are not checked"
