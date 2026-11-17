@@ -23,9 +23,16 @@ LTV reports into:
 
 A file the run did not account for (LTV crashed, could not read it, printed
 something this parser does not recognise, or announced more issues than were
-parsed) is listed under ``unchecked_files``,
-and the report is then ``complete: false``: the tool fails closed, so a coverage
-gate can never pass because nothing was checked.
+parsed) is listed under ``unchecked_files``, and the report is then
+``complete: false``: the tool fails closed, so a coverage gate can never pass
+because nothing was checked.
+
+The report covers the term positions LTV resolves, which is also the whole of
+what an outage can affect. LTV does not look up every id/label pair in a review:
+CHEBI substrates, UBERON and CL anatomical locations and family-review
+``node_taxon`` labels are not resolved at all, online or offline (a wrong label
+there passes and no cache row is written), so they are neither misses nor an
+outage risk.
 
 Not every miss is an outage risk. ``conf/oak_config.yaml`` serves some prefixes
 from a SQLite build that oaklib downloads once and caches (GO, RHEA) and others
