@@ -653,7 +653,7 @@ ple replaced it.
 
 | Gene | Non-duplicative IBA rows: verdict | FlyBase text | Description defects |
 |---|---|---|---|
-| Atg8a | 8: 2 ACCEPT, 3 non-core, 1 MODIFY (nitrogen to amino-acid starvation), 2 over-annotated (GABA receptor binding; PE binding, a covalent conjugation) | VERIFIED | FlyBase: omits the roles of non-lipidated Atg8a (MISSING, CONFIRMED) |
+| Atg8a | 8: 3 ACCEPT, 3 non-core, 1 MODIFY (nitrogen to amino-acid starvation), 1 over-annotated (GABA receptor binding) | VERIFIED | FlyBase: omits the roles of non-lipidated Atg8a (MISSING, CONFIRMED) |
 | Drp1 | 4: peroxisome fission ACCEPT, 1 non-core, microtubule and microtubule binding over-annotated (seeded by the paralog shibire) | UNVERIFIED | none |
 | Adar | 3: dsRNA binding ACCEPT, cytoplasm over-annotated, tRNA adenosine deaminase REMOVE (seeded by ADAT1-type enzymes; fly Adat1 does that reaction) | UNVERIFIED | none |
 | ple | 4: dopamine biosynthesis and perikaryon ACCEPT, cognition non-core, dopaminergic synaptic transmission over-annotated | VERIFIED | UniProt: "adrenergic neurons"; isoform names swapped (both CONFIRMED) |
@@ -663,11 +663,11 @@ ple replaced it.
 | Traf6 | 4: adaptor ACCEPT, 1 non-core, LPS-mediated signalling REMOVE, glutamatergic synapse over-annotated | VERIFIED | none |
 
 - **The result repeats batch 1.** Of 35 rows:
-  - Kept: 12 ACCEPT and 8 KEEP_AS_NON_CORE.
+  - Kept: 13 ACCEPT and 8 KEEP_AS_NON_CORE.
   - Corrected: 2 MODIFY.
-  - Not kept: 9 MARK_AS_OVER_ANNOTATED and 4 REMOVE.
+  - Not kept: 8 MARK_AS_OVER_ANNOTATED and 4 REMOVE.
 
-  Across both batches, 53 of 82 rows are kept or corrected (65%). The failures again come
+  Across both batches, 54 of 82 rows are kept or corrected (66%). The failures again come
   from nodes placed above a lineage-specific function:
   - vertebrate-only complexes (npBAF, nBAF);
   - vertebrate receptors (GABA-A gamma2, TLR4/MD-2);
@@ -675,11 +675,17 @@ ple replaced it.
   - contested mammalian locations (IP3R at the plasma membrane, Traf6 at the
     glutamatergic synapse from one rodent SynGO study).
 
-  Two failures are new kinds: the node carries the wrong term. Itpr's seed papers are, by
+  One failure is a new kind: the node carries the wrong term. Itpr's seed papers are, by
   their titles, about IP3 binding, but the node asserts phosphatidylinositol binding, and
-  IP3 is not a lipid. Atg8a's PE row names a covalent
-  conjugation as binding; that verdict departs from the human, worm and yeast Atg8-family
-  reviews, and is left as a suggested question.
+  IP3 is not a lipid.
+- **Atg8a follows the corpus convention for PE binding.** The first draft marked the PE
+  binding and protein tag rows over-annotated, because the PE link is covalent and GO
+  binding is non-covalent. The PR review showed that the same IBA is accepted as a core
+  function for yeast ATG8, human GABARAP and MAP1LC3B, and worm lgg-1 and lgg-2. Both rows
+  are now ACCEPT, so orthologs carry the same claim on the same evidence. The definitional
+  point applies to the whole family, and even to the replacement term, protein-membrane
+  adaptor activity, which GO also defines as binding. It stays a suggested question and
+  would need a family-wide sweep.
 - **FlyBase text did better this time**: 5 VERIFIED, 3 UNVERIFIED and none DISPUTED.
   Correctness scores 4.6, utility 3.8, compactness 4.9, completeness 2.9 and specificity
   3.5. The untraced claims are Drp1 oligomerization and neuronal development, Adar
@@ -767,6 +773,7 @@ descriptions fetcher would have asked the Alliance API for `MGI:MGI:106913`.
 - [x] Fly: fetch, score and act on findings (345 FlyBase files, 73 source defects, 124 reviews edited)
 - [x] Fly: 8 new reviews of genes with non-duplicative IBA rows, using FlyBase text as the deep-research source (47 IBA rows judged, 10 source defects)
 - [x] Fly: batch 2, 8 more new reviews (35 IBA rows judged, 4 counted text defects, 3 NEW rows)
+- [ ] Decide family-wide how GO should record Atg8-family PE conjugation (PE binding is accepted by convention in all six Atg8-family reviews, and protein tag activity in yeast ATG8 and fly Atg8a)
 - [ ] Fly: continue with [fly-iba-novel-candidates.yaml](MOD_DESCRIPTIONS/fly-iba-novel-candidates.yaml) (169 genes)
 - [ ] Raise the tim, Fadd and Sirt1 PAINT over-propagations with PANTHER/PAINT curators
 - [ ] Make `fetch-gene` fail (or retry) when QuickGO errors, instead of writing an empty GOA file

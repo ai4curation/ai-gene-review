@@ -148,3 +148,16 @@ neuromuscular function and normal lifespan."
   roles (midgut removal, viability; PMID:33249988). The second is recorded as a MISSING_STATEMENT,
   because the text presents lipidation as the way Atg8a works.
 - UniProt: unreviewed record without a FUNCTION comment, so no UniProt text to check.
+
+## Revision 2026-11-17 (PR review)
+
+- The review bot on the batch-2 PR pointed out that the same PE-binding IBA (node PTN000103522,
+  same seeds) is ACCEPTed as a core function in genes/yeast/ATG8, genes/human/GABARAP,
+  genes/human/MAP1LC3B, genes/worm/lgg-1 and genes/worm/lgg-2, and that yeast ATG8 also accepts
+  protein tag activity as core. Marking only the fly row over-annotated would give orthologs
+  different claims on the same evidence. Both rows are now ACCEPT, and the covalent-versus-binding
+  point stays a suggested question that would need a family-wide sweep.
+- GO:0043495 protein-membrane adaptor activity is itself defined as "The binding activity of a
+  molecule that brings together a protein ... with a membrane, either via membrane lipid binding
+  ..." (QuickGO, 2026-11-17), so it does not avoid the definitional objection. It stays as the core
+  MF because the LDS knock-in shows the adaptor function directly.
