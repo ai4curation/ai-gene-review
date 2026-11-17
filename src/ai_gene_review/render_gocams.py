@@ -22,12 +22,14 @@ import yaml
 from ai_gene_review.render_modules import (
     _environment,
     clean_rendered_html,
+    iter_module_files,
     relative_href,
 )
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 VERDICTS = ("OK", "UNCERTAIN", "WRONG")
 MODEL_ID_PATTERN = re.compile(r"gomodel:([0-9a-f]{16})")
+PAGE_NAME_PATTERN = re.compile(r"[0-9a-f]{16}\.html")
 
 
 def local_model_id(model: str) -> str:
@@ -51,19 +53,22 @@ def model_iri(model: str) -> str:
 
 
 def gene_review_path(reference: Optional[str], genes_dir: Path) -> Optional[Path]:
-    """Resolve a ``file:<org>/<gene>/<gene>-ai-review.yaml`` reference.
+    """Resolve a gene review reference to its YAML path under ``genes_dir``.
 
-    The reference is relative to ``genes/``. Returns the YAML path, or None
-    when there is no reference.
+    Reviews write it either as ``file:<org>/<gene>/<gene>-ai-review.yaml``
+    (relative to ``genes/``) or as the repo-root path ``genes/<org>/...``.
+    Returns None when there is no reference.
 
     >>> gene_review_path("file:worm/tir-1/tir-1-ai-review.yaml", Path("genes"))
     PosixPath('genes/worm/tir-1/tir-1-ai-review.yaml')
+    >>> gene_review_path("genes/human/DDX41/DDX41-ai-review.yaml", Path("genes"))
+    PosixPath('genes/human/DDX41/DDX41-ai-review.yaml')
     >>> gene_review_path(None, Path("genes")) is None
     True
     """
     if not reference:
         return None
-    return genes_dir / reference.removeprefix("file:")
+    return genes_dir / reference.removeprefix("file:").removeprefix("genes/")
 
 
 def object_labels(src_path: Path) -> dict[str, str]:
@@ -109,11 +114,9 @@ def source_defects(review: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def modules_by_model(modules_dir: Path) -> dict[str, list[Path]]:
-    """Map each local model id to the module YAML files that mention it."""
+    """Map each local model id to the module documents that mention it."""
     index: dict[str, list[Path]] = {}
-    if not modules_dir.is_dir():
-        return index
-    for module_file in sorted(modules_dir.rglob("*.yaml")):
+    for module_file in iter_module_files(modules_dir):
         text = module_file.read_text(encoding="utf-8")
         for model_id in sorted(set(MODEL_ID_PATTERN.findall(text))):
             index.setdefault(model_id, []).append(module_file)
@@ -237,7 +240,8 @@ def render_all_gocams(
 
     output_dir.mkdir(parents=True, exist_ok=True)
     for stale in output_dir.glob("*.html"):
-        stale.unlink()
+        if stale.name == "index.html" or PAGE_NAME_PATTERN.fullmatch(stale.name):
+            stale.unlink()
 
     rows = []
     written = []
@@ -264,6 +268,7 @@ def render_all_gocams(
         clean_rendered_html(
             index_template.render(
                 rows=rows,
+                home_href=relative_href(index_path, Path("index.html")),
                 totals={verdict: totals[verdict] for verdict in VERDICTS},
                 total_defects=sum(row["defects"] for row in rows),
                 cached_models=sum(1 for path in gocams_dir.iterdir() if path.is_dir())

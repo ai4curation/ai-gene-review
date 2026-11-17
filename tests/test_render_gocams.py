@@ -31,6 +31,15 @@ REVIEW = {
             "gene_review": "file:worm/kin-1/kin-1-ai-review.yaml",
         },
         {
+            "activity_id": f"gomodel:{MODEL}/a3",
+            "gene_product": "WB:WBGene00000001",
+            "molecular_function": "GO:0004672",
+            "verdict": "UNCERTAIN",
+            # Repo-root form of the reference, used by a quarter of the corpus.
+            "gene_review": "genes/worm/kin-1/kin-1-ai-review.yaml",
+            "supporting_text": "kin-1 phosphorylates its target in vitro",
+        },
+        {
             "activity_id": f"gomodel:{MODEL}/a2",
             "gene_product": "WB:WBGene00000002",
             "molecular_function": "GO:0005515",
@@ -74,9 +83,13 @@ def repo(tmp_path: Path) -> Path:
     modules_dir.mkdir()
     (modules_dir / "kinase_cascade.yaml").write_text(
         f"id: MODULE:kinase_cascade\ntitle: Kinase cascade module\n"
-        f"notes: grounded in gomodel:{MODEL}\n"
+        f"notes: grounded in gomodel:{MODEL}\nmodule: {{}}\n"
     )
-    (modules_dir / "unrelated.yaml").write_text("id: MODULE:unrelated\ntitle: Other\n")
+    (modules_dir / "unrelated.yaml").write_text(
+        "id: MODULE:unrelated\ntitle: Other\nmodule: {}\n"
+    )
+    # A support file that mentions the model but is not a module document.
+    (modules_dir / "scan-config.yaml").write_text(f"target: gomodel:{MODEL}\n")
     return tmp_path
 
 
@@ -99,9 +112,12 @@ def test_review_page_shows_labels_verdicts_and_links(repo: Path) -> None:
     assert "kin-1 Cele" in page
     # An id with no label in the cached model still appears.
     assert "WB:WBGene00000002" in page
-    assert "1 OK" in page and "1 wrong" in page
+    assert "1 OK" in page and "1 uncertain" in page and "1 wrong" in page
     assert "BARE_PROTEIN_BINDING" in page
-    assert 'href="../../genes/worm/kin-1/kin-1-ai-review.html"' in page
+    # Both the file: form and the repo-root genes/ form link to the review.
+    assert page.count('href="../../genes/worm/kin-1/kin-1-ai-review.html"') == 2
+    # Activity-level supporting_text is quoted even without an evidence list.
+    assert "kin-1 phosphorylates its target in vitro" in page
     assert 'href="../modules/kinase_cascade.html">Kinase cascade module<' in page
     assert "Unrelated" not in page and "Other</a>" not in page
     assert "The cited paper is about another gene." in page
@@ -118,11 +134,14 @@ def test_index_lists_reviewed_models_with_totals(repo: Path) -> None:
 def test_stale_pages_are_removed(repo: Path) -> None:
     output_dir = repo / "pages" / "gocams"
     output_dir.mkdir(parents=True)
-    (output_dir / "deleted0000000000.html").write_text("old")
+    (output_dir / "dddddddd00000009.html").write_text("old")
+    # Files this renderer could not have written are left alone.
+    (output_dir / "notes.html").write_text("keep")
     _render(repo)
     assert sorted(p.name for p in output_dir.glob("*.html")) == [
         f"{MODEL}.html",
         "index.html",
+        "notes.html",
     ]
 
 
