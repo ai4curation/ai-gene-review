@@ -27,3 +27,5 @@ No provider deep-research file exists for this gene. Providers were unavailable 
 ## Wnt paper (Cabello 2010)
 
 - The spindle, left/right and DTC IGIs with mom-5 are over-annotations. The paper reports a role for the CED-1/6/7 branch in DTC migration as [PMID:20126385 "at most a minor role, if any"], and no ced-6 spindle phenotype.
+
+Round 6 of projects/INVOLVED_IN_PRECOMPOSITION.md (2026-11-10): the two GO:1902742 MODIFY replacements and the two GOA GO:1904747 rows (previously KEEP_AS_NON_CORE, now MODIFY) now use GO:0043065 positive regulation of apoptotic process instead of the precomposed GO:1904747 positive regulation of apoptotic process involved in development, with `decomposed_into.context_dropped`. The sign correction (the gene promotes death from the engulfing cell rather than taking part in the dying cell's program) is unchanged; only the developmental context is dropped. Earlier mentions of GO:1904747 above are superseded.

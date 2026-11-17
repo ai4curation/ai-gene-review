@@ -23,3 +23,8 @@ PMID:7868621 was read in the publisher PDF, although its canonical cache remains
 - GO:0098809 nitrite reductase activity: **REMOVE**. Native experiments assign nitrite reduction to NasDE and nitrate assimilation to NasBC. NasB lacks the siroheme-associated motif characteristic of the catalytic nitrite-reductase region. The IPR012744 family-level substrate mapping is therefore inappropriate for this specialized member; this decision does not depend on independent-subunit catalysis.
 
 No isolated-subunit catalytic claim is inferred from the ordinary machine relationship value. The native complex contribution is assessed on biology. All seeded rows and machine payloads remain intact; no redundant NEW row was introduced. Nitrogen-regulator induction is regulation of these enzymes, not a transcription-factor function of the enzymes. Provider authentication failures are recorded in the foundation; no provider report was invented.
+
+
+## Module completion pass, 2026-11-03
+
+Resolved the remaining UNDECIDED row so the review can be COMPLETE for the bacterial assimilatory nitrate reduction module. GO:0050661 NADP binding (InterPro IEA): UNDECIDED -> MODIFY to GO:0051287 NAD binding [url:https://pmc.ncbi.nlm.nih.gov/articles/PMC94119/ "NasB is a diaphorase with NADH- and FAD-binding domains"]. Same lateral coenzyme correction as E. coli NirB and Bacillus NasD.

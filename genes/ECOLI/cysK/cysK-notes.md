@@ -45,3 +45,17 @@ publications for every GOA row (all abstract-only except PMID:18304323).
   sulfhydrylase A)."] and PMID:27531961 ["CysK significantly increases
   CdiA-CT(EC536) thermostability and is required for toxin interaction with tRNA
   substrates."]; a suggested question was added.
+
+
+## Comparative cysteine-route audit (2026-11-06)
+
+The OAS+sulfide reaction, cysteine synthase complex, cytosol localization, homodimerization and secondary cysteine degradation remain supported. Removed the prior argument about an inert GOA relationship qualifier without changing the payload or action. The full PMID22333533 now independently establishes direct CdiA-CT ribonuclease activation, including retained activity of CysK K42A and failure of CysM to activate. PMID27531961 remains abstract-only after normal force-fetch but directly describes toxin stabilization and acquired tRNA-binding competence. The reviewed UniProt record identifies BW25113/X90 K12 recipients; UPEC536 is the toxin donor, not the enzyme accession. PDBe SIFTS for 5J43 maps chains A/E residues1–323 to P0ABK5. NEW GO:0170054 ribonuclease activator activity records that distinct function; no generic activator ancestor, nuclease catalysis, or new CDI process is added.
+
+Default Falcon research was attempted normally with --provider falcon and failed with HTTP403. No provider report was fabricated; this section records manual review.
+
+Original GOA payloads, raw UniProt/GOA files and inherited authored proposals are preserved. Current GO checks distinguish the active cysteine synthase MF from obsolete route-specific BP terms GO:0006535 and GO:0019345. Focused gene and helper-history validations are recorded in the audit manifest.
+
+
+## 2026-11-06 PR #6120 round-1 follow-up
+
+Retained the existing NEW GO:0170054 row and its direct purified-protein support [PMID:22333533, "Equimolar mixtures of CysK-His 6 and CdiA-CT were able to cleave purified tRNA"]. Removed only the toxin-activation core entry: the evidence shows exploitation of a recipient biosynthetic protein, not a selected beneficial function of recipient CysK. This does not deny molecular activation or convert the NEW row to a different action. The matched UniProt strain quote is explicitly CC:FUNCTION. The activator role is not RNase catalysis or a broad CDI process, and prior GOA absence is not labeled an oversight solely from omission.

@@ -26,3 +26,17 @@ All eight rows and core synthesis reviewed. Restored catalytic activity, nucleot
 ## Recovery PR evidence refinement (2026-09-22)
 
 Refine the catalytic-activity ancestor to the already supported specific reaction. Source GOA assertions are unchanged.
+
+
+## Completion pass (2026-11-10)
+
+Brought to COMPLETE, aligned with the new genes/ECOLI/moeB review and the PTHR10953 family review.
+Nucleotidyltransferase (GO:0016779) and cytoplasm (GO:0005737) changed from ACCEPT to MODIFY
+(correct but general; GO:0061605 and GO:0005829 are carried). GO:0004792 and GO:0008146 REMOVE kept,
+now with PANTHER (TreeGrafter) source defects naming the PAINT nodes PTN000102040 (Uba4-only seed,
+TOO_DEEP) and PTN000102608 (MoeZ-only seed, WRONG_NODE); GO:0008641 REMOVE kept with an INTERPRO
+source defect. ARBA-derived UniProt FUNCTION quotes and the self-citing GOA table were replaced by
+the PubMed-tied E. coli UniProt FUNCTION line and PMID:11463785
+["the formation of a thioester intermediate between MoeB and MoaD could not be observed"].
+The OpenScientist report reference was re-rated LOW_QUALITY to match the 2026-07-20 note.
+Core MF GO:0061605.
