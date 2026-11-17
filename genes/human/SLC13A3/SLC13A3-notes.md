@@ -88,7 +88,8 @@ transport.
 - Sodium ion transmembrane transport (GO:0035725): coupled Na+ movement, true but peripheral →
   KEEP_AS_NON_CORE.
 - extracellular exosome (GO:0070062) KEEP_AS_NON_CORE (urinary-exosome proteomics).
-- transport across blood-brain barrier (GO:0150104, NAS, general BBB review): peripheral and
-  weakly supported → KEEP_AS_NON_CORE.
+- transport across blood-brain barrier (GO:0150104, NAS, general BBB review): the evidence is
+  astrocyte/choroid-plexus (blood-CSF barrier), not the endothelial BBB the term denotes, and
+  the NAS source is MISCITED → MARK_AS_OVER_ANNOTATED.
 - No GO term exists for N-acetyl-L-aspartate transmembrane transporter activity (confirmed
   absent via OLS) → proposed_new_terms entry.

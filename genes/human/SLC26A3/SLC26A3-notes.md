@@ -36,11 +36,16 @@ are REMOVEd and replaced by a single informative NEW GO:0030165 (PDZ domain bind
 ## Other substrates (SLC26/SulP family functions)
 
 The SLC26/SulP family transports sulfate, oxalate, and other anions. SLC26A3's
-dominant physiological activity is Cl-/HCO3- exchange; oxalate and sulfate transport are
-secondary, family-conserved activities (IBD placed at the PANTHER family node,
+dominant physiological activity is Cl-/HCO3- exchange; oxalate transport is a
+secondary, family-conserved activity (IBD placed at the PANTHER family node,
 GO_REF:0000033). Kept as non-core: GO:0019531 oxalate transmembrane transporter,
-GO:0019532 oxalate transport, GO:0015116 / GO:0008271 sulfate transporter activity,
-GO:1902358 sulfate transmembrane transport.
+GO:0019532 oxalate transport.
+Sulfate is NOT a SLC26A3 substrate: P40879 is not an IBD seed at the sulfate nodes
+(PTN000212046 / PTN000929279), UniProt FUNCTION is silent on sulfate, and the early
+DRA "sulfate transporter" characterization is contested. The sulfate rows
+GO:0008271, GO:0015116, GO:1902358 (IBA+IEA) are REMOVEd, the IBA rows with a
+propagation_review (FUNCTIONAL_DIVERGENCE); the dedicated family sulfate transporters
+are SLC26A1/A2.
 
 ## Disease
 
@@ -63,7 +68,7 @@ inferred from the mouse ortholog).
 ## Action summary
 
 - Core MF: GO:0140900 chloride:bicarbonate antiporter activity (2Cl-/1HCO3-). ACCEPT (IDA x4, IBA, IEA).
-- Substrate-named MF (Cl, HCO3): ACCEPT/core. Sulfate, oxalate MF/BP: KEEP_AS_NON_CORE.
+- Substrate-named MF (Cl, HCO3): ACCEPT/core. Oxalate MF/BP: KEEP_AS_NON_CORE. Sulfate MF/BP: REMOVE (P40879 not an IBD seed at the sulfate nodes; propagation_review FUNCTIONAL_DIVERGENCE).
 - GO:0005452 (solute:inorganic anion antiporter, Reactome TAS x2): MODIFY -> GO:0140900 (already carried; Reactome reaction is the Cl-/HCO3- exchange).
 - Locations: plasma membrane (ACCEPT), apical PM (ACCEPT), brush border (ACCEPT); bare GO:0016020 membrane (IEA/ISS) -> TOO_GENERAL.
 - Generic BP: GO:0006820 monoatomic anion transport, GO:0055085 transmembrane transport -> TOO_GENERAL (specific Cl/HCO3 transport asserted elsewhere).

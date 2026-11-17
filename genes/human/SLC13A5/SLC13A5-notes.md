@@ -91,7 +91,8 @@ protein binding row.
   confirmed via OLS). Both ACCEPT.
 - Core BP: GO:0015746 citrate transport (ACCEPT; a transporter executing its
   transport is core), GO:0035674 tricarboxylic acid transmembrane transport
-  (ACCEPT), GO:0035725 sodium ion transmembrane transport (ACCEPT; Na+ co-moved).
+  (ACCEPT). GO:0035725 sodium ion transmembrane transport is KEEP_AS_NON_CORE
+  (Na+ is the coupling ion, not the cargo; aligned with SLC13A3).
 - Secondary substrates (succinate/fumarate/oxaloacetate/2-oxoglutarate transport
   and sodium:dicarboxylate symporter / tricarboxylate transporter rows that are
   peripheral) → KEEP_AS_NON_CORE. GO:0015142 tricarboxylic acid transmembrane
