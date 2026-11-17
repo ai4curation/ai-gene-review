@@ -236,6 +236,28 @@ def ratings_cmd(
             typer.echo("| " + " | ".join(str(c) for c in row) + " |")
 
 
+def diff_covers(path: str, diff_text: str) -> bool:
+    r"""True if a unified diff has a file header for ``path``.
+
+    Matches the ``---`` old-file header, so git, ``--no-prefix`` and plain
+    ``diff -u`` patches all count; a context line that merely quotes the path
+    does not.
+
+    >>> diff_covers("x.yaml", "diff --git a/x.yaml b/x.yaml\n--- a/x.yaml\n+++ b/x.yaml\n")
+    True
+    >>> diff_covers("x.yaml", "--- x.yaml\t2026-11-17\n+++ x.yaml\n")
+    True
+    >>> diff_covers("x.yaml", "--- a/y.yaml\n+++ b/y.yaml\n  see a/x.yaml here\n")
+    False
+    """
+    for line in diff_text.split("\n"):
+        if line.startswith("--- "):
+            name = line[4:].split("\t")[0]
+            if name in (path, f"a/{path}"):
+                return True
+    return False
+
+
 def work_product_problems(issue: dict, repo_root: Path) -> list[str]:
     """Check that a work product that did not land names a preserved diff of its path.
 
@@ -257,7 +279,7 @@ def work_product_problems(issue: dict, repo_root: Path) -> list[str]:
             )
         elif diff and not (repo_root / diff).exists():
             problems.append(f"preserved_diff {diff} does not exist")
-        elif diff and f"a/{product['path']} " not in (repo_root / diff).read_text():
+        elif diff and not diff_covers(product["path"], (repo_root / diff).read_text()):
             problems.append(f"preserved_diff {diff} has no diff of {product['path']}")
     return problems
 

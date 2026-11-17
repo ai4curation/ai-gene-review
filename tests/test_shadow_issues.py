@@ -609,7 +609,9 @@ def test_work_product_problems(tmp_path, product, expected):
     """A product that did not land must point at a committed diff."""
     from ai_gene_review.shadow_issues.cli import work_product_problems
 
-    (tmp_path / "d.patch").write_text("diff --git a/a.yaml b/a.yaml\n")
+    (tmp_path / "d.patch").write_text(
+        "diff --git a/a.yaml b/a.yaml\n--- a/a.yaml\n+++ b/a.yaml\n context a/b.yaml\n"
+    )
     issue = {"shadow": {"work_products": [{"kind": "GENE_REVIEW", **product}]}}
     problems = work_product_problems(issue, tmp_path)
     assert len(problems) == len(expected)
