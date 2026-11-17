@@ -402,7 +402,8 @@ HSP17.6A, and five UniProt rows from it sit on that protein. They now carry a
 likely protein; the other class II gene (P29830) is not excluded from the abstract. The
 review no longer relies on the paper for any claim about Q9XIE3: those rows, its core function
 and its description now rest on the family-level evidence, and the reference is marked
-`MISCITED`. This lead
+`MISCITED`. The osmotic stress row, whose only other support relays the same paper, moves
+to UNDECIDED. This lead
 is not counted in the tallies, since it was not one of the 20.
 
 **Why the yield fell.** Outside human, the gene's own UniProt entry is often unreviewed
