@@ -835,8 +835,8 @@
 
 
 <h1 id="plan-anchor-panther-claims-on-tree-nodes-and-prepare-for-panther-20">Plan: anchor PANTHER claims on tree nodes, and prepare for PANTHER 20</h1>
-<p>Status: Phase 0 done (2026-11-15); Phase 1 reduced to guidance; Phases 2 and 3 not
-started. The decisions below keep churn to curated files minimal: no schema changes,
+<p>Status: Phase 0 done (2026-11-15); Phase 1 reduced to guidance; Phase 2 has its dry-run
+report (<code>just panther-release-diff</code>); Phase 3 not started. The decisions below keep churn to curated files minimal: no schema changes,
 and no edits to existing modules or reviews until PANTHER 20 forces them.</p>
 <h2 id="summary">Summary</h2>
 <p>PANTHER 20 is described in Mi et al., "PANTHER: the protein tree and function
@@ -1014,6 +1014,57 @@ files PANTHER keeps per release (releases back to 14.1 are still on the FTP site
 </ul>
 <h2 id="phase-2-the-switch-to-panther-20">Phase 2: the switch to PANTHER 20</h2>
 <p>Start when <code>just check-panther-release</code> reports that PAINT and the API serve 20.</p>
+<p><strong>Dry run, available now.</strong> <code>just panther-release-diff 20.0</code> writes
+<code>reports/panther-release-diff-19.0-to-20.0.yaml</code> (git-ignored) and edits nothing. It
+lists:</p>
+<ul>
+<li>every family or subfamily id cited in modules and family reviews that is gone or
+  renamed, with how far the name moved;</li>
+<li>every anchor with representative members (module family descriptors and
+  family-review subfamilies) whose members fall into a different id in the target
+  release, with a proposed id when they agree. A member row that records only a bare
+  family never yields a proposal to coarsen a subfamily anchor. Anchors whose members
+  were already split or unclassified in 19.0 are counted but not listed, since the bump
+  did not cause them;</li>
+<li>every quote of <code>interpro/panther/panther.obo</code> that verifies today but would fail once
+  that committed artifact is rebuilt for the target release.</li>
+</ul>
+<p>Two kinds of file are not scanned for ids, on purpose:</p>
+<ul>
+<li><strong>Rule reviews</strong> (<code>rules/</code>) cite PANTHER ids inside <code>rule.condition_sets</code>, a verbatim
+  transcription of the published ARBA or UniRule rule. Rewriting them would falsify the
+  receipt; they change only when the rule is re-fetched after UniProt updates it.</li>
+<li><strong>Gene reviews</strong> mention subfamilies in prose and quote UniProt's <code>DR PANTHER</code> lines,
+  which move on UniProt's schedule, not with this repository's pinned release.</li>
+</ul>
+<p>On 2026-11-17 it found:</p>
+<ul>
+<li>6,086 cited ids: 334 gone, 262 renamed to a divergent name, 139 partially renamed,
+  388 cosmetically renamed, and 2 in neither release.</li>
+<li>5,416 anchors: 495 with a proposed remap, 220 newly split across ids, 6 no longer
+  classified; 688 have members outside the classified organisms in both releases.</li>
+<li>514 files hold a listed anchor, and 535 cite an id that is gone or substantively
+  renamed. The two sets overlap.</li>
+<li>10 quotes of <code>panther.obo</code>, in 10 files (7 family reviews, 3 gene reviews), would
+  break when it is rebuilt. The other ~700 citations of <code>panther.obo</code> are
+  <code>references:</code> entries with no quoted text, which a rebuild cannot break. Quotes of
+  <code>-entries.csv</code> files are InterPro snapshots that change only when a family is
+  re-fetched, not at the bump.</li>
+</ul>
+<p><strong>No mega-migration PR.</strong> About 500 files change, so the switch is split:</p>
+<ol>
+<li>A transition PR (before the switch, or with it) lets validators accept an id that is
+   valid in the previous release but changed in the new one, as a warning carrying the
+   report's proposal, instead of an error.</li>
+<li>The bump PR changes the pinned constants, rebuilds the caches and <code>panther.obo</code>
+   (2.1), and re-quotes the <code>panther.obo</code> quotes the report lists (10 today), so
+   <code>just validate-quotes</code> stays green. That is too few to need a transition allowance
+   in the quote check.</li>
+<li>Remap PRs follow in batches of about 50 files each, one directory at a time
+   (modules, then family reviews), each regenerated from the report and checked by a
+   curator.</li>
+<li>A final PR removes the transition allowance.</li>
+</ol>
 <table>
 <thead>
 <tr>
@@ -1035,7 +1086,7 @@ files PANTHER keeps per release (releases back to 14.1 are still on the FTP site
 </tr>
 <tr>
 <td>2.3</td>
-<td>Remap SF ids through representative members to the version 20 SF, not by label, and edit only files whose cited ids are gone or renamed. Bulk relabelling with <code>just fix-panther-labels</code> is not allowed for this step: some ids now name a different protein (for example <code>PTHR10133:SF27</code> changes from "DNA POLYMERASE NU" to "HELICASE AND POLYMERASE-CONTAINING PROTEIN TEBICHI").</td>
+<td>Remap SF ids through representative members to the version 20 SF (<code>just panther-release-diff 20.0</code>), not by label, and edit only files whose cited ids are gone or renamed. Bulk relabelling with <code>just fix-panther-labels</code> is not allowed for this step: some ids now name a different protein (for example <code>PTHR10133:SF27</code> changes from "DNA POLYMERASE NU" to "HELICASE AND POLYMERASE-CONTAINING PROTEIN TEBICHI").</td>
 <td>Validation passes; remaps are reviewed in a PR.</td>
 </tr>
 <tr>
