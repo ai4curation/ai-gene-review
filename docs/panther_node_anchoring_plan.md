@@ -112,19 +112,40 @@ Start when `just check-panther-release` reports that PAINT and the API serve 20.
 
 **Dry run, available now.** `just panther-release-diff 20.0` writes
 `reports/panther-release-diff-19.0-to-20.0.yaml` (git-ignored) and edits nothing. It
-lists every cited family or subfamily id that is gone or renamed (with how far the name
-moved), and every anchor with representative members (module family descriptors and
-family-review subfamilies) whose members fall into a different id in the target
-release, with a proposed id when they agree. Anchors whose members were already split
-or unclassified in 19.0 are counted but not listed, since the bump did not cause them.
-On 2026-11-15 it found:
+lists:
 
-- 6,073 cited ids: 337 gone, 253 renamed to a divergent name, 138 partially renamed,
-  389 cosmetically renamed.
-- 5,265 anchors: 473 with a proposed remap, 193 newly split across ids, 5 no longer
-  classified; 661 have members outside the classified organisms in both releases.
-- 476 files hold a listed anchor, and 513 cite an id that is gone or substantively
+- every family or subfamily id cited in modules and family reviews that is gone or
+  renamed, with how far the name moved;
+- every anchor with representative members (module family descriptors and
+  family-review subfamilies) whose members fall into a different id in the target
+  release, with a proposed id when they agree. A member row that records only a bare
+  family never yields a proposal to coarsen a subfamily anchor. Anchors whose members
+  were already split or unclassified in 19.0 are counted but not listed, since the bump
+  did not cause them;
+- every quote of `interpro/panther/panther.obo` that verifies today but would fail once
+  that committed artifact is rebuilt for the target release.
+
+Two kinds of file are not scanned for ids, on purpose:
+
+- **Rule reviews** (`rules/`) cite PANTHER ids inside `rule.condition_sets`, a verbatim
+  transcription of the published ARBA or UniRule rule. Rewriting them would falsify the
+  receipt; they change only when the rule is re-fetched after UniProt updates it.
+- **Gene reviews** mention subfamilies in prose and quote UniProt's `DR PANTHER` lines,
+  which move on UniProt's schedule, not with this repository's pinned release.
+
+On 2026-11-17 it found:
+
+- 6,086 cited ids: 334 gone, 262 renamed to a divergent name, 139 partially renamed,
+  388 cosmetically renamed, and 2 in neither release.
+- 5,416 anchors: 495 with a proposed remap, 220 newly split across ids, 6 no longer
+  classified; 688 have members outside the classified organisms in both releases.
+- 514 files hold a listed anchor, and 535 cite an id that is gone or substantively
   renamed. The two sets overlap.
+- 10 quotes of `panther.obo`, in 10 files (7 family reviews, 3 gene reviews), would
+  break when it is rebuilt. The other ~700 citations of `panther.obo` are
+  `references:` entries with no quoted text, which a rebuild cannot break. Quotes of
+  `-entries.csv` files are InterPro snapshots that change only when a family is
+  re-fetched, not at the bump.
 
 **No mega-migration PR.** About 500 files change, so the switch is split:
 
@@ -133,16 +154,21 @@ On 2026-11-15 it found:
    report's proposal, instead of an error. It is switched on by setting
    `PANTHER_PREVIOUS_RELEASE` in `etl/panther_families.py`.
    - **Family reviews: done.** `check_panther_ids` reports such ids, labels and
-     memberships as UNRESOLVED. A simulated bump to 20.0 over all family reviews gives
-     2,187 new failures without it (541 ids, 1,091 labels, 555 memberships) and none
-     with it. The one new failure is real: P0ABZ4, first classified in 20.0, sits
-     outside its declared subfamily, which the bump did not change.
+     memberships as UNRESOLVED. In a simulated bump to 20.0 over all family reviews
+     (PANTHER checks only), total failures go from 62 today to 2,249 without the
+     allowance (2,187 new: 541 ids, 1,091 labels, 555 memberships) and stay at 62 with
+     it. Those 62 are the same set as today's except for one swap: a new, real failure
+     (P0ABZ4, first classified in 20.0, sits outside its declared subfamily, which the
+     bump did not change) and one existing failure that 20.0 resolves.
    - **Modules: to do.** Term labels go through the OAK term validator, and
      membership through `validate_family_members`.
-2. The bump PR changes only the pinned constants and rebuilt caches (2.1).
+2. The bump PR changes the pinned constants, rebuilds the caches and `panther.obo`
+   (2.1), and re-quotes the `panther.obo` quotes the report lists (10 today), so
+   `just validate-quotes` stays green. That is too few to need a transition allowance
+   in the quote check.
 3. Remap PRs follow in batches of about 50 files each, one directory at a time
-   (modules, then family reviews, then rules), each regenerated from the report and
-   checked by a curator.
+   (modules, then family reviews), each regenerated from the report and checked by a
+   curator.
 4. A final PR removes the transition allowance.
 
 | Item | Change | Done when |
