@@ -6,13 +6,19 @@ that ``conf/oak_config.yaml`` configures -- including the awkward
 ``PANTHER:PTHR1:SF2`` CURIE, whose second colon several OAK backends mishandle.
 """
 
+import io
+import json
+import urllib.error
 from pathlib import Path
 
 import pytest
 import yaml
 
+from ai_gene_review.etl import panther_families
 from ai_gene_review.etl.panther_families import (
     PantherEntry,
+    fetch_panther_from_uniprot,
+    parent_accession,
     emit_yaml_scalar,
     label_drift,
     rewrite_panther_labels,
@@ -469,3 +475,128 @@ def test_repo_member_overrides_are_reflected_in_index():
         if accession in index:
             assert index[accession] == family_sf, accession
             assert accession not in alternates, accession
+
+
+# --------------------------------------------------------------------------- #
+# UniProt fallback: chain and isoform ids, and a poisoned batch
+#
+# ``/uniprotkb/accessions`` rejects the WHOLE request with HTTP 400 when any id
+# in it is not a bare accession, and modules legitimately cite UniProt chain ids
+# (``P57764-PRO_0000437526``, the gasdermin-D N-terminal fragment). One such id
+# therefore used to abort the entire member-index build, which made
+# ``validate-families`` report "not indexed yet" for the whole corpus.
+# --------------------------------------------------------------------------- #
+
+
+def _panther_payload(*records: tuple[str, str]) -> bytes:
+    """UniProt-shaped JSON for ``(accession, panther_subfamily)`` pairs."""
+    return json.dumps(
+        {
+            "results": [
+                {
+                    "primaryAccession": accession,
+                    "uniProtKBCrossReferences": [
+                        {"database": "PANTHER", "id": family_sf.split(":")[0]},
+                        {"database": "PANTHER", "id": family_sf},
+                    ],
+                }
+                for accession, family_sf in records
+            ]
+        }
+    ).encode()
+
+
+class _FakeResponse(io.BytesIO):
+    """Context-manager response, as ``urlopen`` returns."""
+
+    def __enter__(self):  # noqa: D105 - trivial
+        return self
+
+    def __exit__(self, *_exc):  # noqa: D105 - trivial
+        self.close()
+        return False
+
+
+@pytest.mark.parametrize(
+    "cited,expected",
+    [
+        ("P57764-PRO_0000437526", "P57764"),  # chain (cleavage product)
+        ("Q9D8T2-PRO_0000437528", "Q9D8T2"),
+        ("P19544-1", "P19544"),  # displayed isoform
+        ("Q9UJF2-2", "Q9UJF2"),  # non-displayed isoform
+        ("P0AEK4", "P0AEK4"),  # already bare
+        ("A0A0B4J2F0", "A0A0B4J2F0"),  # long-form accession, untouched
+    ],
+)
+def test_parent_accession_strips_chain_and_isoform_suffixes(cited, expected):
+    assert parent_accession(cited) == expected
+
+
+def test_fetch_panther_from_uniprot_resolves_chain_ids_through_their_parent(monkeypatch):
+    """A cited chain id gets its parent's family, keyed by the id as cited.
+
+    A ``PRO_`` chain has no PANTHER cross-reference of its own, so querying the
+    parent is the correct answer rather than merely a way round the 400.
+    """
+    queried: list[str] = []
+
+    def fake_urlopen(url, timeout=None):
+        queried.append(url)
+        assert "PRO_" not in url, "chain ids must not reach the endpoint"
+        return _FakeResponse(
+            _panther_payload(("P57764", "PTHR20750:SF4"), ("P0AEK4", "PTHR43159:SF2"))
+        )
+
+    monkeypatch.setattr(panther_families.urllib.request, "urlopen", fake_urlopen)
+    resolved = fetch_panther_from_uniprot(
+        ["P57764-PRO_0000437526", "P57764", "P0AEK4"]
+    )
+
+    assert resolved == {
+        "P57764-PRO_0000437526": "PTHR20750:SF4",
+        "P57764": "PTHR20750:SF4",
+        "P0AEK4": "PTHR43159:SF2",
+    }
+    # One request, and the parent is asked for once however many of its chains
+    # and isoforms are cited.
+    assert len(queried) == 1
+    assert queried[0].count("P57764") == 1
+
+
+def test_fetch_panther_from_uniprot_falls_back_per_accession_when_a_batch_is_rejected(
+    monkeypatch,
+):
+    """One unusable id costs one row, not the whole index.
+
+    The suffix stripping above is the fix for the ids we know about; this is the
+    guard for the next odd id someone cites, since aborting the build turns a
+    single bad row into a corpus-wide "membership not indexed yet".
+    """
+    calls: list[str] = []
+
+    def fake_urlopen(url, timeout=None):
+        calls.append(url)
+        if "BOGUS" in url and url.count("accessions=") and "%2C" in url.split("accessions=")[1]:
+            raise urllib.error.HTTPError(url, 400, "Bad Request", {}, None)
+        if "BOGUS" in url:
+            raise urllib.error.HTTPError(url, 400, "Bad Request", {}, None)
+        accession = url.split("accessions=")[1].split("&")[0]
+        return _FakeResponse(_panther_payload((accession, "PTHR43159:SF2")))
+
+    monkeypatch.setattr(panther_families.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(panther_families, "UNIPROT_BATCH_SIZE", 3)
+
+    resolved = fetch_panther_from_uniprot(["P0AEK4", "P0A6R0", "BOGUS_ID"])
+
+    assert resolved == {"P0AEK4": "PTHR43159:SF2", "P0A6R0": "PTHR43159:SF2"}
+    # The rejected batch is retried one accession at a time: the batch call plus
+    # one call per member of it.
+    assert len(calls) == 4
+
+
+def test_fetch_panther_from_uniprot_gives_up_quietly_on_a_single_bad_accession(monkeypatch):
+    def fake_urlopen(url, timeout=None):
+        raise urllib.error.HTTPError(url, 400, "Bad Request", {}, None)
+
+    monkeypatch.setattr(panther_families.urllib.request, "urlopen", fake_urlopen)
+    assert fetch_panther_from_uniprot(["BOGUS_ID"]) == {}
