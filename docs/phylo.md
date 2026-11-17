@@ -30,6 +30,14 @@ The live PANTHER `treeinfo` and `familymsa` services return the same data one fa
 time but time out on many families, so nothing here calls them. The extract records the
 release and the bundle's `Last-Modified` date.
 
+Without that database `just phylo` cannot write an extract, and an overruled IBA row then
+keeps its `missing_tree_evidence` warning. The warning is advisory, so a review made where
+the release cannot be fetched (no network, no room for 1.3 GB) is not blocked: say in the
+gene's notes file that the tree was not read, and leave the row for a re-read where the
+database is. Do not quote a tree fact from memory or from another gene's extract instead.
+Extracts already committed can be read and quoted without the database; it is needed only
+to write or refresh one.
+
 ## What the gene extract says
 
 For each family tree the gene's rows sit in:
@@ -109,7 +117,8 @@ making one:
    - How similar is the gene to the nearest seed, and does either lack a region the
      other has?
    - Has PAINT already removed the term on this path?
-3. Quote the row's `summary`, or one sentence of it, in `supported_by`:
+3. Quote the row's `summary` in `supported_by`: the sentence that names the term, and
+   every sentence that stands against the verdict (below).
 
 ```yaml
     supported_by:
@@ -123,6 +132,23 @@ Start the quote at the term id: the check looks for the row's own term in it. Th
 is checked verbatim against the file like any other `file:` quote, so it must come from
 the current extract. If the tree does not support the verdict, reconsider the
 verdict rather than leaving the quote out.
+
+**Quote what stands against the verdict, and answer it.** A verdict that overrules the row
+can be right although the summary says that the gene is itself a seed of the node, that it
+is inside the clade the seeds span, that seeds share its own branch below the node, or
+(for a row overruled as `WRONG_ORTHOLOG_OR_PARALOG`) that every seed is an ortholog by the
+tree. But a review that quotes the sentences on either side of such a statement, and says
+only what suits the verdict, has argued from a selected slice of the tree. Quote the
+sentence and say in `reason` why the verdict holds in spite of it: the function diverged
+after a duplication further down, the review rejects the gene's own experimental
+annotation, the objection is to the term and not to the transfer, the family placement is
+itself in dispute. "Branch" names two different things in a deep tree, the branch
+directly below the PAINT node and the gene's own small clade many steps down, so name the
+node meant. `just validate` warns when such a sentence is left out
+(`tree_evidence_adverse_unquoted`).
+
+List the extract under the review's top-level `references`, as for any other file a review
+cites (`id: file:<org>/<GENE>/<GENE>-phylo.yaml`).
 
 A residue argument ("lacks the catalytic residues") goes in
 `propagation_review.residue_claims`; `residue_sites` gives the positions to put there, with
@@ -138,11 +164,14 @@ In a family review, a node assessment of `TOO_DEEP`, `WRONG_NODE`, `NEEDS_PRUNIN
 |---|---|---|
 | `missing_tree_evidence` | `just validate` (warning) | an IBA row that is still in the gene's GOA file is overruled without a quote from the gene's own extract |
 | `tree_evidence_other_row` | `just validate` (warning) | the extract is quoted, but no quote names the row's term |
+| `tree_evidence_adverse_unquoted` | `just validate` (warning) | the row is quoted, but not the sentence of its summary that stands against the verdict: the gene is itself a seed, is inside the seed clade, shares its branch below the node with seeds, or, under a `WRONG_ORTHOLOG_OR_PARALOG` claim, every seed is an ortholog |
+| `kept_under_paint_loss` | `just validate` (warning) | an IBA row is kept (`ACCEPT`, `KEEP_AS_NON_CORE`, `MODIFY`, `TOO_GENERAL`) although the extract says PAINT has removed the term on the path to the gene and not asserted it again below, and the row does not quote that sentence |
 | `missing_residue_evidence` | `just validate` (warning) | a propagated row is overruled as `PSEUDO_OR_SUBACTIVITY_LOSS` with neither `residue_claims` nor `residue_claims_not_applicable` |
 | `NODE_TREE_EVIDENCE` | `just validate-families` (UNRESOLVED) | a node assessment disputes a placement without quoting a tree listing |
 
-All four are advisory: they mark verdicts made without the tree, not verdicts that are
-wrong. A review row whose IBA has since been withdrawn from GOA is not asked for a quote:
+All six are advisory: they mark verdicts made without the tree, or without facing part of
+it, not verdicts that are wrong. The two that read the extract say nothing for a gene
+that has none. A review row whose IBA has since been withdrawn from GOA is not asked for a quote:
 the extract describes the rows of the current GOA file and has none for it. `projects/IBA_REVIEW/tree_evidence.py` joins every reviewed IBA row with its tree
 facts and lists the rows where the two pull apart
 (see [the IBA project](https://github.com/ai4curation/ai-gene-review/blob/main/projects/IBA_REVIEW.md)).
@@ -164,6 +193,10 @@ facts and lists the rows where the two pull apart
   does not cover is invisible to both.
 - Sequences are those of the PANTHER 19.0 build. Check `same_as_uniprot_file` before
   citing a position.
+- PAINT losses on the path (`paint_losses_on_path`, and so `kept_under_paint_loss` and
+  the count of stale rows) are read from the family's local PAINT slice
+  (`<PTHR>-paint.tsv`). A family without a slice has `paint_slice: false` and no loss
+  information at all: an empty list there would mean "no loss", so none is written.
 - The gene extract describes the seeds of the cached GOA row, which is a snapshot. PAINT
   may have changed the seed list since: on about one row in seven the family's current
   PAINT slice lists different seeds. `<PTHR>-tree-nodes.yaml` describes the seeds of the

@@ -57,7 +57,11 @@ at a tree and left only prose was not counted.
 - **`just phylo-family <PTHR>`** writes `<PTHR>-tree-nodes.yaml`, the same description for
   every node of a family's PAINT slice.
 - **Checks.** `just validate` warns when an IBA row is overruled without a quote from the
-  gene's own extract (`missing_tree_evidence`), and when a propagated row is overruled for
+  gene's own extract (`missing_tree_evidence`), when the quote leaves out a sentence that
+  stands against the verdict (`tree_evidence_adverse_unquoted`: the gene is itself a seed,
+  is inside the seed clade, shares its branch with seeds, or every seed is an ortholog
+  under a paralog claim), when a row is kept although PAINT has removed the term on the
+  path to the gene (`kept_under_paint_loss`), and when a propagated row is overruled for
   residue loss without a checkable residue claim (`missing_residue_evidence`).
   `just validate-families` reports a node assessment that disputes a placement without
   quoting a tree listing (`NODE_TREE_EVIDENCE`).
@@ -101,8 +105,21 @@ rows in 7,383 genes, 29,075 are placed in a PANTHER 19.0 tree. "Overruled" is `R
 | PAINT loss on the path to the gene | 22 | 8 | 4 | 10 | 45.5% | 27.3% |
 
 The seed clade is the smallest clade that holds all the seeds of the row. A one-to-one
-ortholog is a seed that joins the gene at a speciation node with no duplication on either
-side since. Half of all IBA rows are on a gene that is one of the row's own seeds.
+ortholog is a seed that joins the gene at a speciation node with no duplication and no
+horizontal-transfer node on either side since. Half of all IBA rows are on a gene that is
+one of the row's own seeds.
+
+"Inside the seed clade" means less than it sounds on many rows. When the seeds bracket the
+node, the seed clade is everything below the node, so every gene the row reaches is inside
+it; a gene can be outside only when the term was placed above the seeds' own common
+ancestor. The "inside" rows therefore mix genes that sit in a tight clade with the seeds
+and genes that merely descend from a node whose seeds span it, and this table and the one
+on node height below describe partly the same variable. The extract says which case a row
+is: for a bracketing node it gives the number of seeds on the gene's own branch below the
+node instead.
+
+A PAINT loss can be seen only where the family has a local PAINT slice, so the last line
+counts rows in those families and says nothing about the others.
 
 ### Similarity to the seeds in the family alignment
 
@@ -194,6 +211,30 @@ stood since the examples were written.
 The verdicts on these rows stand. The reasons now rest on what the tree shows, and the
 three gene reviews (MYCTU and VIBCH `cds1`, human CIRBP) quote their extracts.
 
+Review of this work then found three more, in the work itself.
+
+- **CIRBP, quoting around the adverse fact.** The corrected CIRBP reasons said the seeds
+  "all sit in one branch below" the splicing node and that "CIRBP's own branch holds none
+  of them". The first branch is the one directly below the node (`PTN000391533`); the
+  second is the CIRBP/RBM3 clade 14 steps further down (`PTN008483167`). At the node's own
+  level every seed is in CIRBP's branch, and CIRBP is inside the clade the seeds span,
+  which the extract says in the sentence between the two that were quoted. The reasons now
+  state both facts and quote that sentence. The verdict rests on what does separate CIRBP
+  from each seed, a duplication (`PTN009224850` for the RBMX-family seeds, `PTN004472736`
+  for TRA2A and TRA2B), and on the absence of splicing evidence for CIRBP.
+- **"One-to-one ortholog" across a transfer.** The extract counted a seed as a one-to-one
+  ortholog whenever it joined the gene at a speciation with no duplication between, even
+  with a horizontal-transfer node on the way. For SCHPO cab4 it called all six seeds of
+  `GO:0004140` one-to-one orthologs; four of them (the kinase-only proteins) are separated
+  from cab4 by transfer nodes at 11-16% identity. Such seeds are now counted and named
+  apart. 251 rows in 138 extracts changed, 34 of which had counted such a seed as
+  one-to-one.
+- **An ortholog call used against a review that disputes the placement.** For DROME mam
+  and SCHPO cab4 the re-read removed the failure mode `WRONG_ORTHOLOG_OR_PARALOG` because
+  the tree calls the seeds orthologs. Both reviews argue that the family or subfamily
+  placement is itself the artefact, and the ortholog call is read from that placement. The
+  mode is back on both, and the script no longer changes failure modes.
+
 ## Rows to re-review
 
 `tree-evidence-candidates.yaml` listed 233 rows in three groups when it was first built
@@ -227,13 +268,42 @@ then edited by script. The method, the plans and a record of every row are in
 
 | | Rows read | Applied | Left for adjudication |
 |---|---:|---:|---:|
-| Gene reviews: the 12 batches that hold every candidate gene | 278 | 228 | 48, and 2 not read |
+| Gene reviews: the 12 batches that hold every candidate gene | 278 | 229 | 47, and 2 not read |
 | Family reviews: every disputed node assessment without a tree listing | 386 | 321 | 65 |
 
 An applied row quotes its own extract or listing in `supported_by` and says in its reason
 what the tree shows. The script changed no verdict. 26 rows that had been applied were
 changed on main before this work was merged with it; their edits were not carried over,
 and they are counted here as left for adjudication.
+
+Review of the first batches found four things the script should not have done, and all
+four were put right on 2026-11-16 and 2026-11-17, in the rows already applied and in the
+script:
+
+- **It quoted around adverse facts.** A row could be applied with quotes that left out the
+  sentence saying the gene is inside the seed clade or shares its branch with seeds. 65
+  applied rows in 52 reviews had done so; each now quotes that sentence too, and a reading
+  that leaves one out is no longer applied. No reason among the 65 said the opposite of
+  the sentence it had left out.
+- **It changed failure modes.** On six rows it removed or added a failure mode as the
+  reading proposed. Two of those changes were wrong (mam and cab4, above) and are undone;
+  four were checked and kept. A reading that proposes a change of failure modes now goes to
+  a curator.
+- **It corrected a reason and left the same claim standing elsewhere in the row.** On five
+  gene rows the claim the tree contradicts was in the summary or a source note as well
+  (NDUFA9, SDHAF2 twice, TK2, ADH3; and HMOX2, whose source note called rat Hmox1 an
+  ortholog and labelled it Hmox2), and on four family rows the corrected reason said that
+  a subfamily listed as affected holds seeds of the assertion. Those fields now agree with
+  the corrected reasons, and a reading whose contradicted claim is anywhere but the reason
+  goes to a curator.
+- **It let an edit reach a second row.** The mam failure-mode change reached a row the
+  script had refused to edit, through a YAML block the two rows share. The editor now
+  refuses a shared value from either side.
+
+What the re-read leaves for a curator is in
+[`needs-curator.yaml`](tree-rereview/needs-curator.yaml): the rows below, and the 328
+applied rows on which the reader left a note, often about a verdict or failure mode that
+no longer fits.
 
 What the readers found in the gene rows, which were chosen as the ones most likely to have
 a problem:
@@ -268,16 +338,19 @@ Three things follow.
   tree that was wrong.** Typical cases:
   a "paralog" that the tree makes a one-to-one ortholog, a "broad" node with five leaves,
   a seed list described from gene names, a subfamily named as affected that does not
-  descend from the node. 10 gene rows and 24 family rows had their reason corrected after
+  descend from the node. 11 gene rows and 24 family rows had their reason corrected after
   the verifier agreed with the correction; the rest are among the rows left for a curator.
 - **Family reviewers argue from the tree more than gene reviewers, and are mostly right.**
   More than half of the disputed node assessments make a placement argument that the tree
   bears out.
 
-113 rows are left for adjudication, each with its reason in the run records: 7 verdicts or
-assessments the tree does not support, 13 kept rows under a PAINT loss, 26 family rows
-whose node or term is not in the listing, 26 rows that changed on main after they were
-read, and rows where the verifier did not accept the reading or its correction.
+112 rows are left for adjudication, each with its reason in the run records: 42 where the
+verifier did not accept the reading or its correction (among them 2 verdicts the reader
+found unsupported and 2 kept rows under a PAINT loss), 26 family rows whose node or term
+is not in the listing, 26 rows that changed on main after they were read, 11 kept rows
+under a PAINT loss, 5 verdicts or assessments the tree does not support, and 2 family
+rows that name an affected subfamily which does not descend from the node. Two gene rows
+were not read: the reader returned no entry for them.
 
 Not yet read: the 61 gene batches with no candidate row, about 1,420 overruled rows. They
 still raise `missing_tree_evidence`.
@@ -307,7 +380,12 @@ regenerated by these commands.
   interpreted.
 - "Ortholog" and "paralog" are read from the event where two leaves join. An ortholog
   with duplications since the split is an ortholog of a whole group of later paralogs,
-  which is why the tables separate one-to-one orthologs.
+  which is why the tables separate one-to-one orthologs. An ortholog with a
+  horizontal-transfer node between it and the gene is not one-to-one either. And every
+  such relation is read from the family and subfamily PANTHER placed the gene in: it does
+  not answer a review that disputes that placement.
+- PAINT losses are read from a family's local PAINT slice. Rows in a family without one
+  carry no loss information, so the loss counts here are over the families with a slice.
 - Identity and coverage are over the family model's columns. A domain the model does not
   cover is invisible.
 - A seed list in a cached GOA row is a snapshot and can lag PAINT. Of the 21,802 placed

@@ -108,8 +108,8 @@ PAINT curator had in view:
 - whether the seeds bracket the node or all sit in one branch below it, and whether the
   gene is inside the clade the seeds span;
 - how each seed is related to the gene by the tree (one-to-one ortholog, ortholog across
-  later duplications, paralog, xenolog), their tree distance, and their identity and
-  coverage in the family alignment;
+  later duplications, ortholog across horizontal-transfer nodes, paralog, xenolog), their
+  tree distance, and their identity and coverage in the family alignment;
 - PAINT losses on the path, and the family's curated residue sites read off the alignment.
 
 A `REMOVE` or `MARK_AS_OVER_ANNOTATED` on an IBA row argues with a placement, so it quotes
@@ -118,7 +118,18 @@ that row's `summary` in `supported_by` (start the quote at the term id), with
 shows and how it bears on the verdict. If the tree does not support the verdict (a
 one-to-one ortholog seed, no duplication on the path, the gene inside the seed clade),
 the verdict needs other evidence or needs changing; do not drop the citation instead.
-Validation warns on an overruled IBA row without it (`missing_tree_evidence`). Positions
+Validation warns on an overruled IBA row without it (`missing_tree_evidence`).
+
+Quote the sentences of the summary that stand against your verdict as well, and answer
+them in `reason`: that the gene is itself a seed, that it is inside the clade the seeds
+span, that seeds share its own branch below the node, or (when you call the row
+`WRONG_ORTHOLOG_OR_PARALOG`) that every seed is an ortholog by the tree. A verdict can
+hold in spite of any of these; a quote that steps around them is a selected slice of the
+tree, and validation warns (`tree_evidence_adverse_unquoted`). When you mean a branch, name
+its node: the branch directly below the PAINT node and the gene's own small clade many
+steps down are different things. An ortholog call does not refute an argument that the
+family or subfamily placement is itself wrong, because the call is read from that
+placement. List the extract under the review's `references`. Positions
 in the extract are in each protein's own numbering. Never count residues along a PANTHER
 alignment row: the rows leave out unaligned stretches. See `docs/phylo.md`.
 

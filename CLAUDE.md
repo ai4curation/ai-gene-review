@@ -539,6 +539,14 @@ PAINT losses on the path, and the family's curated residue sites read off the al
   `supported_by` (start the quote at the term id; `reference_id:
   file:<org>/<GENE>/<GENE>-phylo.yaml`) and says in `reason` what the tree shows.
   Validation warns otherwise (`missing_tree_evidence`, `tree_evidence_other_row`).
+- Quote what stands against the verdict too, and answer it in `reason`: that the gene is
+  itself a seed, is inside the clade the seeds span, shares its branch below the node
+  with seeds, or (under `WRONG_ORTHOLOG_OR_PARALOG`) that every seed is an ortholog by the
+  tree. Quoting around such a sentence warns (`tree_evidence_adverse_unquoted`). A kept
+  row that PAINT has removed on the path to the gene warns too (`kept_under_paint_loss`).
+- An ortholog call is read from the family and subfamily the gene was placed in, so it
+  does not refute a review that disputes that placement itself; and a seed with a
+  horizontal-transfer node between it and the gene is never a one-to-one ortholog.
 - If the tree does not support the verdict, the verdict needs other evidence or needs
   changing. Do not leave the citation out instead.
 - A "lost the catalytic residue" argument (`PSEUDO_OR_SUBACTIVITY_LOSS`) carries
