@@ -1,6 +1,6 @@
 # Experimental regulatory evidence
 
-Each reviewed TF can have a `GENE-regulatory-evidence.yaml` companion to its
+Each reviewed regulator can have a `GENE-regulatory-evidence.yaml` companion to its
 gene-review YAML. These records preserve supported regulator–target relationships
 without turning expression-module membership into direct regulation or creating
 a gene-specific GO term. This pilot format is defined by the LinkML schema
@@ -12,12 +12,19 @@ The first four reviews and their results are tracked in the
 ## Interpretation
 
 - `regulator` identifies the KT2440 reference accession, locus and taxon.
-- `target.type` distinguishes promoter, gene and operon assertions. For a promoter,
+- `target.type` distinguishes promoter, gene, operon, mRNA and ncRNA assertions. For a promoter,
   optional `locus` anchors the associated gene; it does not encode binding-site coordinates.
   Leave the locus absent when only the published promoter name is securely resolved.
+- `regulatory_level` distinguishes transcription, translation and RNA stability.
+  Older records without this field retain their transcription meaning. RNA targets
+  require an explicit level: translation acts on mRNA, and RNA stability acts on
+  mRNA or ncRNA. A sigma-factor promoter assertion is transcriptional; an Hfq RNA
+  assertion is not a DNA-binding claim.
 - `effect` records activation, repression or unknown sign under the stated condition.
+  `stabilizes` is reserved for increased RNA lifetime at `rna_stability` level.
 - `directness: direct` requires binding evidence and a functional regulatory effect
-  supporting that target. Binding alone or differential expression alone is insufficient.
+  supporting that target at the stated level (DNA binding for transcription, RNA
+  binding for post-transcriptional effects). Binding alone or differential expression alone is insufficient.
   `unresolved` preserves supported regulation without claiming physical directness;
   `indirect` requires an argument for an intervening mechanism.
 - `experimental_strain` retains native strain, derivative and heterologous-host context.

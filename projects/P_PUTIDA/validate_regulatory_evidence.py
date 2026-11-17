@@ -46,6 +46,15 @@ def check_record(data, review, metadata, validator):
     reference_ids = {r['id'] for r in review.get('references', [])}
     ids = set()
     for assertion in data['relationships']:
+        level = assertion.get('regulatory_level', 'transcription')
+        target_type = assertion['target']['type']
+        effect = assertion['effect']
+        valid_types = {'transcription': {'gene', 'promoter', 'operon'},
+                       'translation': {'mRNA'}, 'rna_stability': {'mRNA', 'ncRNA'}}
+        if (target_type not in valid_types[level]
+                or (effect == 'stabilizes' and level != 'rna_stability')
+                or (level == 'rna_stability' and effect not in {'stabilizes', 'unknown'})):
+            raise ValueError('Inconsistent regulatory level, target type or effect')
         if assertion['id'] in ids:
             raise ValueError(f'Duplicate relationship ID: {assertion["id"]}')
         ids.add(assertion['id'])

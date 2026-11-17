@@ -33,6 +33,33 @@ def test_valid_record_retains_unknown_directness(case, validator):
     assert data['relationships'][0]['directness'] == 'unresolved'
 
 
+def test_rna_stability_relationship_snippet(case, validator):
+    """RNA stability must be expressible without claiming promoter activation."""
+    relationship = copy.deepcopy(case[0]['relationships'][0])
+    relationship.update(regulatory_level='rna_stability', effect='stabilizes')
+    relationship['target'] = {'name': 'CrcZ', 'type': 'ncRNA'}
+    checker.check_structure(relationship, validator, 'RegulatoryRelationship')
+
+
+@pytest.mark.parametrize('level,target,effect', [
+    (None, 'ncRNA', 'activates'),
+    ('transcription', 'promoter', 'stabilizes'),
+    ('rna_stability', 'promoter', 'stabilizes'),
+    ('translation', 'ncRNA', 'represses'),
+    ('rna_stability', 'ncRNA', 'activates'),
+])
+def test_reject_confused_regulatory_levels(case, validator, level, target, effect):
+    """Do not silently reinterpret an RNA assay as a transcriptional edge."""
+    data, review, metadata = copy.deepcopy(case)
+    relationship = data['relationships'][0]
+    relationship['target']['type'] = target
+    relationship['effect'] = effect
+    if level is not None:
+        relationship['regulatory_level'] = level
+    with pytest.raises(ValueError, match='regulatory level'):
+        checker.check_record(data, review, metadata, validator)
+
+
 @pytest.mark.parametrize('section', ['relationships', 'pathway_context'])
 def test_reject_quote_absent_from_cited_source(case, validator, section):
     data, review, metadata = copy.deepcopy(case)
@@ -52,7 +79,7 @@ def test_author_manuscript_url_does_not_waive_abstract_quote_check(case, validat
         checker.check_record(data, review, metadata, validator)
 
 
-@pytest.mark.parametrize('gene', ['BenR', 'hexR', 'ptxS', 'cbrB'])
+@pytest.mark.parametrize('gene', ['BenR', 'hexR', 'ptxS', 'cbrB', 'gacA', 'fleQ', 'rpoS', 'hfq'])
 def test_batch_quotes_match_cached_primary_sources(gene):
     path = ROOT / f'genes/PSEPK/{gene}/{gene}-regulatory-evidence.yaml'
     checker.check_quotes(yaml.safe_load(path.read_text()))

@@ -35,7 +35,7 @@ Counts overlap and do not represent independent lines of evidence. PRECISE321_TR
 | PRECISE321_TRN | 93 |
 | Pfam | 434 |
 | RegPrecise | 51 |
-| existing_review_tf_row | 29 |
+| existing_review_tf_row | 28 |
 | go_sigma | 25 |
 | go_tf | 300 |
 | go_transcription_regulation | 434 |
@@ -72,7 +72,7 @@ Inspected **998 review files**. Full-file mapping results are in [review_coverag
 
 ## Prioritized calibration worklist
 
-Scoped identity/evidence and importer assessments are tracked separately from full GO reviews; see [calibration assessment](../calibration-review.md). The rsmA negative control and out-of-proteome XylR control are excluded from the candidate denominator. Full rationale and paths are in [calibration.tsv](calibration.tsv). 4 cases have a recorded full GO re-review and validation in this workstream.
+Scoped identity/evidence and importer assessments are tracked separately from full GO reviews; see [calibration assessment](../calibration-review.md). The rsmA negative control and out-of-proteome XylR control are excluded from the candidate denominator. Full rationale and paths are in [calibration.tsv](calibration.tsv). 8 cases have a recorded full GO re-review and validation in this workstream.
 
 | Order | Accession | Display name | Locus | Candidate class |
 |---:|---|---|---|---|

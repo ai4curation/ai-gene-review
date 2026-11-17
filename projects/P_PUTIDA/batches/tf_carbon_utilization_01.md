@@ -85,11 +85,11 @@ just --justfile projects/P_PUTIDA/tf_census/justfile check
 - [x] HexR
 - [x] PtxS
 - [x] CbrB
-- [ ] Next batch: GacA, FleQ, RpoS and Hfq, keeping transcriptional control,
+- [x] [Batch 2](tf_signaling_rna_02.md): GacA, FleQ, RpoS and Hfq, keeping transcriptional control,
   sigma-factor activity and post-transcriptional control separate.
 - [ ] Remaining calibration cases, followed by system/family batches from the census.
 
-The calibration table records 4 full re-reviews and 16 scoped-only assessments;
+After batch 2, the calibration table records 8 full re-reviews and 12 scoped-only assessments;
 existing review files for other genes are not counted as newly validated work.
 
 ## PR review follow-up — 2026-11-11
