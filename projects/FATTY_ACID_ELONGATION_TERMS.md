@@ -5,6 +5,7 @@ tags: [BIOLOGY_DOMAIN]
 species: [human, yeast, SCHPO, ARATH, worm, ECOLI]
 collections: [GO_TRACKER_BACKLOG]
 autolink_exclude: [benD]
+index_group: GO_TRACKER_BACKLOG
 ---
 
 # Fatty Acid Biosynthesis versus Elongation

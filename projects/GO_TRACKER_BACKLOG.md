@@ -3,6 +3,7 @@ title: "GO Tracker Backlog: Old Open Ontology Issues That Gene Review Can Move"
 maturity: SCOPING
 tags: [PIPELINE]
 collections: [GO_TRACKER_BACKLOG]
+index_group: GO_TRACKER_BACKLOG
 ---
 
 # GO Tracker Backlog: Old Open Ontology Issues That Gene Review Can Move

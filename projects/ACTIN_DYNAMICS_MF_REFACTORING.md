@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [OBSOLETION, BIOLOGY_DOMAIN]
 species: [human, mouse, yeast, SCHPO, DROME]
 collections: [GO_TRACKER_BACKLOG]
+index_group: GO_TRACKER_BACKLOG
 proposed_ontology_changes:
 - change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
   ontology: GO

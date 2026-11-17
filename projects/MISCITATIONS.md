@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/B28H55M68QGuTavmzp4QAR
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Miscitation Review Project

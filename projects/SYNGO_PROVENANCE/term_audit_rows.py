@@ -68,6 +68,10 @@ def main() -> None:
            sum(len(a["rows"]) for p in papers for a in p["annotations"]),
            "papers": len(papers), "claims": sum(len(p["annotations"]) for p in papers),
            "by_reference": papers}
+    if doc["distinct_evidence_rows"] + skipped != len(rows):
+        # A row whose (code, ECO, WITH/FROM) repeats another for the same gene and paper is merged above.
+        print(f"WARNING: {len(rows)} rows from QuickGO, {doc['distinct_evidence_rows']} kept and {skipped} "
+              "without a reference; the difference was merged as duplicate evidence", file=sys.stderr)
     with out.open("w") as fh:
         yaml.safe_dump(doc, fh, sort_keys=False, width=120)
     print(f"{go_id}: {len(rows)} rows, {doc['claims']} gene-product claims, {len(papers)} papers -> {out.relative_to(ROOT)}")

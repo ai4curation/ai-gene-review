@@ -9,6 +9,7 @@ sidecars:
 manifest:
   slides:
     - href: UNFOLDED_PROTEIN_BINDING/slides/UPB-slides.html
+index_group: MAMMAL
 ---
 # Unfolded Protein Binding Annotation Review
 
