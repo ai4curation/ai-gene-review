@@ -416,6 +416,15 @@ def _alias_sites(text: str) -> dict[str, list[int]]:
     return sites
 
 
+def alias_count(text: str) -> int:
+    """How many YAML aliases a document uses.
+
+    >>> alias_count("a: &x [1]\\nb: *x\\nc: *x\\n"), alias_count("a: 1\\n")
+    (2, 0)
+    """
+    return sum(len(sites) for sites in _alias_sites(text).values())
+
+
 def _row_changes(
     text: str,
     row: yaml.Node,

@@ -113,3 +113,32 @@ for a specific MF.
   MODIFY at most.
 - Extracellular CIRP (eCIRP) as a DAMP/inflammatory mediator (sepsis, shock) is a major part of the
   CIRBP literature but is NOT in current GOA; consider for proposed new terms / suggested experiments.
+
+## Tree placement of the two splicing IBA rows (2026-11)
+
+From `CIRBP-phylo.yaml` (`just phylo human CIRBP`, PANTHER 19.0, family PTHR48034) and the
+release tree:
+
+- Both IBA rows (`GO:0000398`, `GO:0005681`) descend from PTN000391532, a speciation node at
+  Eukaryota one step below the family root, covering 373 of the family's 405 leaves.
+- The tree does **not** put CIRBP outside the evidence for that node. All seeds lie in the same
+  branch below it as CIRBP (PTN000391533, Unikonts), and CIRBP is inside the clade the seeds span
+  (common ancestor PTN002690243, Bilateria, 213 leaves, for `GO:0000398`; the duplication
+  PTN004472736, 166 leaves, for `GO:0005681`).
+- What separates CIRBP from each seed is duplication: rat Rbmx (RGD:1565256, Q4V898), rat Rbmxrtl
+  (RGD:1306751, P84586) and human RBMX (P38159) join CIRBP at the duplication PTN009224850; TRA2A
+  (Q13595) and TRA2B (P62995) at the earlier duplication PTN004472736; fly tra2 (FBgn0003742) at
+  the Bilateria speciation, with four duplications and a horizontal-transfer node between.
+- CIRBP and RBM3 join at the duplication PTN008729730 and share the clade PTN008483167
+  (Euteleostomi, 45 leaves), one of the two branches below PTN009224850. No seed lies in it.
+
+So the over-annotation verdict rests on functional divergence after duplication and on the
+absence of experimental splicing evidence for CIRBP, not on CIRBP lying outside the seed clade.
+
+*Corrections.* 2026-11-10: the review used to call PTN008729690 CIRBP's own subfamily node and the
+two RGD seeds rat Tra2; PTN008729690 is the family root, and the RGD seeds are rat Rbmx and
+Rbmxrtl. 2026-11-16: the reasons said the seeds "all sit in one branch below" the node and that
+"CIRBP's own branch holds none of them", using "branch" for two nodes 14 steps apart, and quoted
+the extract around its sentence "CIRBP is inside that clade". They now state both facts and quote
+that sentence. The seed fly tra2 was described as an ortholog across later duplications; a
+horizontal-transfer node also lies between it and CIRBP, and the extract now says so.

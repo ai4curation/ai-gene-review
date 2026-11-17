@@ -59,10 +59,16 @@ CIRBP's GOA row for the splicing IBA names the source node explicitly in its WIT
 splicing factors at the ancestral node PTN000391532, but were propagated down to the
 diverged cold-shock branch (CIRBP/RBM3). The annotation crosses a functional-divergence
 boundary: the family root (PTN008729690) is annotated only with the generic, correct
-`mRNA binding`, and the CIRBP/RBM3 branch itself (PTN008483167, a speciation node at
-Euteleostomi with 45 leaves, 14 steps below PTN000391532) holds none of the splicing
-seeds. By the PANTHER 19.0 tree the five `GO:0000398` seeds are four paralogs of CIRBP and
-one ortholog across later duplications (see `genes/human/CIRBP/CIRBP-phylo.yaml`). PAINT curators *did* prune annotations in other branches of this
+`mRNA binding`. By the PANTHER 19.0 tree CIRBP is not outside the evidence for the splicing
+node: all five `GO:0000398` seeds lie in the same branch below PTN000391532 as CIRBP
+(PTN000391533, Unikonts), and CIRBP is inside the clade they span (their common ancestor is
+PTN002690243, Bilateria, 213 leaves). What separates CIRBP from every seed is duplication:
+rat Rbmx and Rbmxrtl join it at the duplication PTN009224850, TRA2A and TRA2B at the earlier
+duplication PTN004472736, and fly tra2 at the Bilateria speciation with four duplications
+and a horizontal-transfer node between. The CIRBP/RBM3 clade below those duplications
+(PTN008483167, a speciation node at Euteleostomi with 45 leaves, 14 steps below
+PTN000391532) holds none of the splicing seeds (see `genes/human/CIRBP/CIRBP-phylo.yaml`).
+PAINT curators *did* prune annotations in other branches of this
 family (e.g. node PTN001924395 carries IRD "NOT" records blocking `GO:0003729`,
 `GO:0000381`, `GO:0016607`), so the absence of a pruning/NOT on the CIRBP branch for the
 splicing terms is the gap that produced the over-annotation.

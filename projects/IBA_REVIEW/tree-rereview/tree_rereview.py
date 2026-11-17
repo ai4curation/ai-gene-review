@@ -30,13 +30,17 @@ Usage (from the repository root):
     uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py apply g001
     uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py finish --journal JOURNAL --date YYYY-MM-DD   # record + apply a workflow run
     uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py status
+    uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py worklist        # needs-curator.yaml
+    uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py requote         # complete the quotes of applied rows
 """
 
 from __future__ import annotations
 
 import argparse
+import contextlib
 import csv
 import importlib.util
+import io
 import json
 import subprocess
 import sys
@@ -45,15 +49,21 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Iterable, Iterator
+from typing import Any, Iterator
 
 import yaml
 
 from ai_gene_review.etl.gene_phylo import read_iba_rows, read_paint_slice, resolve_seed
 from ai_gene_review.etl.panther_release import DEFAULT_DB, PantherRelease
-from ai_gene_review.tools.review_row_edit import RowEdit, RowEditError, apply_row_edits, one_paragraph
+from ai_gene_review.tools.review_row_edit import RowEdit, RowEditError, alias_count, apply_row_edits, one_paragraph
 from ai_gene_review.validation.family_residue_validator import PLACEMENT_DISPUTES, TREE_LISTING_SUFFIXES
-from ai_gene_review.validation.tree_evidence import OVERRULING_ACTIONS, phylo_reference_ids
+from ai_gene_review.validation.tree_evidence import (
+    OVERRULING_ACTIONS,
+    adverse_sentences,
+    phylo_reference_ids,
+    quotes_from,
+    sentences,
+)
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent.parent
@@ -67,6 +77,8 @@ Loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 ROWS_PER_BATCH = 24
 DOSSIER_WIDTH = 220
 SEEDS_SHOWN = 8
+#: Seeds of a family assertion listed one by one in a dossier; all of them are counted.
+SEEDS_LISTED = 20
 #: Readings whose edit is a quote plus a sentence: nothing in the review is contradicted.
 ADDITIVE = {"SUPPORTS", "NOT_A_TREE_ARGUMENT", "PAINT_ALREADY_REMOVED"}
 READINGS = [*sorted(ADDITIVE), "REASON_CONTRADICTED", "VERDICT_UNSUPPORTED", "LOSS_TOO_BROAD", "LOSS_APPLIES", "CANNOT_TELL"]
@@ -92,35 +104,6 @@ def gene_paths(gene: str) -> tuple[Path, Path, Path]:
     organism, name = gene.split("/")
     folder = ROOT / "genes" / organism / name
     return folder / f"{name}-ai-review.yaml", folder / f"{name}-phylo.yaml", folder / f"{name}-goa.tsv"
-
-
-def sentences(summary: str) -> list[str]:
-    """Split an extract summary so that joining neighbours with a space gives the text back.
-
-    >>> sentences("GO:1 (x): a node. cds1 is 4 steps below it; path length 1.512. Seeds: 2 of 2.")
-    ['GO:1 (x): a node.', 'cds1 is 4 steps below it; path length 1.512.', 'Seeds: 2 of 2.']
-    """
-    parts = summary.strip().split(". ")
-    return [part + "." for part in parts[:-1]] + [parts[-1]]
-
-
-def quotes_from(summary: str, numbers: Iterable[int]) -> list[str]:
-    """Verbatim quotes for the chosen sentences (1-based); neighbours are joined.
-
-    The first sentence, which names the term and the node, is always quoted.
-
-    >>> quotes_from("A b. C d. E f. G h.", [4, 2])
-    ['A b. C d.', 'G h.']
-    """
-    parts = sentences(summary)
-    chosen = sorted({1, *(n for n in numbers if 1 <= n <= len(parts))})
-    groups: list[list[int]] = []
-    for number in chosen:
-        if groups and number == groups[-1][-1] + 1:
-            groups[-1].append(number)
-        else:
-            groups.append([number])
-    return [" ".join(parts[n - 1] for n in group) for group in groups]
 
 
 def candidate_flags() -> dict[tuple[str, str], list[str]]:
@@ -284,17 +267,24 @@ def _seed_line(seed: dict[str, Any], names: dict[str, str]) -> str:
     parts = [seed["id"], seed.get("organism", ""), name, seed.get("subfamily", "")]
     relation = seed.get("relation", "not in this tree")
     if relation == "ORTHOLOG":
-        relation = "ONE-TO-ONE ORTHOLOG" if not seed.get("duplications_between") else "ORTHOLOG across later duplications"
+        if seed.get("transfers_between"):
+            relation = "ORTHOLOG across horizontal-transfer nodes"
+        elif seed.get("duplications_between"):
+            relation = "ORTHOLOG across later duplications"
+        else:
+            relation = "ONE-TO-ONE ORTHOLOG"
     parts.append(relation)
     if "mrca" in seed:
         parts.append(f"joins the gene at {seed['mrca']} ({seed.get('mrca_event', '').lower()})")
     if seed.get("duplications_between"):
         parts.append(f"{seed['duplications_between']} duplications between")
+    if seed.get("transfers_between"):
+        parts.append(f"{seed['transfers_between']} horizontal-transfer nodes between")
     if "identity" in seed:
-        parts.append(
-            f"identity {round(seed['identity'] * 100)}% over {seed.get('aligned', '?')} columns"
-            f" (covers {round(seed.get('covers_target', 0) * 100)}% of the gene, {round(seed.get('covers_seed', 0) * 100)}% of the seed)"
-        )
+        text = f"identity {round(seed['identity'] * 100)}% over {seed.get('aligned', '?')} columns"
+        if "covers_target" in seed and "covers_seed" in seed:
+            text += f" (covers {round(seed['covers_target'] * 100)}% of the gene, {round(seed['covers_seed'] * 100)}% of the seed)"
+        parts.append(text)
     return "  - " + "; ".join(part for part in parts if part)
 
 
@@ -357,9 +347,10 @@ def dossier_rows(gene: str, flags: dict[tuple[str, str], list[str]]) -> Iterator
             f"gene leaf {target_leaf['leaf']} in {target_leaf.get('subfamily', '?')} ({target_leaf.get('subfamily_name', '')})",
         ]
         for key in (
-            "steps", "duplications_on_path", "transfers_on_path", "seeds_resolved", "seeds_unresolved",
+            "steps", "duplications_on_path", "transfers_on_path", "seeds_resolved", "seeds_unresolved", "seed_leaves",
             "seed_branches", "node_branches", "seed_mrca", "seed_mrca_steps_below_node", "target_in_seed_clade",
-            "self_seed", "seeds_on_target_branch", "orthologs", "one_to_one_orthologs", "paralogs", "xenologs",
+            "self_seed", "seeds_on_target_branch", "orthologs", "one_to_one_orthologs", "orthologs_across_transfers",
+            "paralogs", "xenologs",
         ):
             if key in row:
                 facts.append(f"{key}={row[key]}")
@@ -389,6 +380,9 @@ def dossier_rows(gene: str, flags: dict[tuple[str, str], list[str]]) -> Iterator
         yield "extract summary, by sentence (quote by number):"
         for number, sentence in enumerate(sentences(row["summary"]), 1):
             yield f"  [{number}] {sentence}"
+        must = required_sentences({"kind": target["kind"], "action": target["action"]}, row["summary"], body)
+        if must:
+            yield "MUST QUOTE AND ADDRESS: " + "; ".join(f"[{number}] {what}" for number, what in must)
 
 
 def write_dossier(batch: str, out: Path) -> Path:
@@ -503,35 +497,43 @@ def tree_context(family: str, node: str, term: str, negated: bool, affected: lis
     an = tree.an_of.get(node.removeprefix("PANTHER:")) if tree else None
     if database is None or tree is None or an is None:
         return []
-    subfamily = {row[0]: row[1] for row in database._con.execute("SELECT an, subfamily FROM node WHERE family = ?", (family,))}
+    subfamily = tree.subfamily_of
     below = tree.leaves_below(an)
-    slice_rows = read_paint_slice(family_paths(family)[2]) or []
+    slice_rows = read_paint_slice(family_paths(family)[2])
     tokens = [
         token
-        for rec in slice_rows
+        for rec in slice_rows or []
         if rec["node"] == node.removeprefix("PANTHER:") and rec["go_id"] == term and (rec["negated"] == "true") == negated
         for token in rec["seeds"].split("|")
         if token and not token.startswith("PANTHER:")
     ]
     names = family_names(family)
     lines: list[str] = []
+    if slice_rows is None:
+        lines.append("  - the family has no PAINT slice here, so the seeds of this assertion are not known")
     seed_subfamilies: Counter[str] = Counter()
-    for token in tokens[:20]:
+    for position, token in enumerate(tokens):
         leaf, _ = resolve_seed(token, tree, database)
+        if leaf is not None:
+            seed_subfamilies[subfamily.get(leaf, "?")] += 1
+        if position >= SEEDS_LISTED:
+            continue
         if leaf is None:
             lines.append(f"  - seed {token}: not a leaf of this tree")
             continue
         long_id = tree.nodes[leaf].long_id
         accession = long_id.rsplit("UniProtKB=", 1)[-1]
-        seed_subfamilies[subfamily.get(leaf, "?")] += 1
         lines.append(
             f"  - seed {token}: {long_id.split('|')[0]} {names.get(accession, '')} in {subfamily.get(leaf, '?')}; "
             f"{tree.depth(leaf) - tree.depth(an)} steps below the node" + ("" if tree.is_ancestor(an, leaf) else " (NOT below this node)")
         )
+    if len(tokens) > SEEDS_LISTED:
+        lines.append(f"  - the first {SEEDS_LISTED} of {len(tokens)} seeds are listed; the counts below are over all of them")
     for name in affected:
         short = name.removeprefix("PANTHER:")
         count = sum(subfamily.get(leaf) == short for leaf in below)
-        lines.append(f"  - affected subfamily {short}: {count} of the node's {len(below)} leaves; {seed_subfamilies.get(short, 0)} of its seeds")
+        seeds = "seeds not known" if slice_rows is None else f"{seed_subfamilies.get(short, 0)} of its seeds"
+        lines.append(f"  - affected subfamily {short}: {count} of the node's {len(below)} leaves; {seeds}")
     return lines
 
 
@@ -608,6 +610,9 @@ def family_dossier_rows(family: str) -> Iterator[str]:
         yield "listing summary, by sentence (quote by number):"
         for number, sentence in enumerate(sentences(found["summary"]), 1):
             yield f"  [{number}] {sentence}"
+        must = required_sentences({"kind": "node", "action": target["action"]}, found["summary"], assessment)
+        if must:
+            yield "MUST QUOTE AND ADDRESS: " + "; ".join(f"[{number}] {what}" for number, what in must)
 
 
 def _key(row: dict[str, Any]) -> tuple[Any, ...]:
@@ -617,21 +622,41 @@ def _key(row: dict[str, Any]) -> tuple[Any, ...]:
     return row["gene"], row["term"], bool(row.get("negated"))
 
 
-def make_record(batch: str, analysis: dict[str, Any], verification: dict[str, Any] | None, date: str) -> dict[str, Any]:
-    """Join the plan's rows with the analysts' readings and the verifier's checks."""
+#: Fields a reader's entry may carry into the run record.
+READING_FIELDS = (
+    "tree_reading", "quote_sentences", "tree_sentence", "false_claims", "false_claim_fields", "reason_replacement",
+    "proposed_action", "failure_modes_add", "failure_modes_remove", "note",
+)
+NOT_READ = "the reader returned no entry for this row"
+#: In a node listing, the sentence that stands against a TOO_DEEP assessment.
+BRACKETING = "so the node is their common ancestor"
+
+
+def join_readings(
+    rows: list[dict[str, Any]], analysis: dict[str, Any], verification: dict[str, Any] | None
+) -> list[dict[str, Any]]:
+    """Give each planned row its reading and the verifier's check; a row without a reading says so.
+
+    >>> planned = [{"gene": "human/A", "term": "GO:1", "negated": False, "kind": "overruled", "action": "REMOVE"},
+    ...            {"gene": "human/A", "term": "GO:2", "negated": False, "kind": "overruled", "action": "REMOVE"}]
+    >>> read = {"rows": [{"gene": "human/A", "term": "GO:1", "negated": False, "tree_reading": "SUPPORTS", "note": ""}]}
+    >>> out = join_readings(planned, read, None)
+    >>> [(row["term"], row["outcome"], row.get("outcome_detail", "")) for row in out]
+    [('GO:1', 'pending', ''), ('GO:2', 'not_read', 'the reader returned no entry for this row')]
+    >>> "note" in out[0], out[0]["tree_reading"]
+    (False, 'SUPPORTS')
+    """
     read = {_key(row): row for row in analysis.get("rows") or []}
     checked = {_key(row): row for row in (verification or {}).get("rows") or []}
-    rows: list[dict[str, Any]] = []
-    for row in batch_rows(batch):
+    out: list[dict[str, Any]] = []
+    for planned in rows:
+        row = dict(planned)
         key = _key(row)
         reading = read.get(key)
         if reading is None:
-            row["outcome"] = "not_read"
+            row["outcome"], row["outcome_detail"] = "not_read", NOT_READ
         else:
-            for field in (
-                "tree_reading", "quote_sentences", "tree_sentence", "false_claims", "reason_replacement",
-                "proposed_action", "failure_modes_add", "failure_modes_remove", "note",
-            ):
+            for field in READING_FIELDS:
                 if reading.get(field) not in (None, "", []):
                     row[field] = reading[field]
             if key in checked:
@@ -642,8 +667,13 @@ def make_record(batch: str, analysis: dict[str, Any], verification: dict[str, An
                     **({"fixed": fixed} if one_paragraph(str(fixed.get("tree_sentence", ""))) else {}),
                 }
             row["outcome"] = "pending"
-        rows.append(row)
-    return {"batch": batch, "read_on": date, "rows": rows}
+        out.append(row)
+    return out
+
+
+def make_record(batch: str, analysis: dict[str, Any], verification: dict[str, Any] | None, date: str) -> dict[str, Any]:
+    """Join the plan's rows with the analysts' readings and the verifier's checks."""
+    return {"batch": batch, "read_on": date, "rows": join_readings(batch_rows(batch), analysis, verification)}
 
 
 def run_path(batch: str) -> Path:
@@ -673,20 +703,93 @@ def quote_source(row: dict[str, Any]) -> tuple[str, str, str] | None:
     return in_extract[1]["summary"], extract_path.read_text(encoding="utf-8"), f"file:{organism}/{name}/{name}-phylo.yaml"
 
 
-def row_edit(row: dict[str, Any]) -> RowEdit | str:
+def matching_rows(document: dict[str, Any], row: dict[str, Any]) -> list[dict[str, Any]]:
+    """The rows of a review that an edit for ``row`` would reach.
+
+    For a gene review, the ``review`` of every IBA annotation on the term with the same
+    negation; for a family review, every assessment of the node and term.
+
+    >>> doc = {"existing_annotations": [
+    ...     {"term": {"id": "GO:1"}, "evidence_type": "IBA", "review": {"action": "REMOVE"}},
+    ...     {"term": {"id": "GO:1"}, "evidence_type": "IEA", "review": {"action": "ACCEPT"}},
+    ...     {"term": {"id": "GO:1"}, "evidence_type": "IBA", "negated": True, "review": {"action": "ACCEPT"}}]}
+    >>> matching_rows(doc, {"gene": "human/A", "term": "GO:1", "negated": False})
+    [{'action': 'REMOVE'}]
+    """
+    if row.get("family"):
+        return [
+            item
+            for item in document.get("node_assessments") or []
+            if isinstance(item, dict)
+            and item.get("node_id") == row["node"]
+            and mapping(item.get("asserted_term")).get("id") == row["term"]
+            and bool(item.get("negated")) == bool(row.get("negated"))
+        ]
+    return [
+        mapping(item.get("review"))
+        for item in document.get("existing_annotations") or []
+        if isinstance(item, dict)
+        and item.get("evidence_type") == "IBA"
+        and mapping(item.get("term")).get("id") == row["term"]
+        and bool(item.get("negated")) == bool(row.get("negated"))
+    ]
+
+
+def required_sentences(row: dict[str, Any], summary: str, review_row: dict[str, Any] | None = None) -> list[tuple[int, str]]:
+    """The sentences of a tree file's summary that a reading of ``row`` has to quote: ``(number, what)``.
+
+    For a gene row these are the sentences that stand against the verdict
+    (:func:`ai_gene_review.validation.tree_evidence.adverse_sentences`), given the failure
+    modes the review row carries. For a family assessment it is the sentence saying the
+    seeds bracket the node, when the assessment is ``TOO_DEEP``.
+
+    >>> text = "PTN1 GO:1 IBD: PAINT node PTN1 is a speciation node at LUCA. Seeds: 2 of 2 resolved. They sit in 2 of the 2 branches below the node, so the node is their common ancestor."
+    >>> required_sentences({"kind": "node", "action": "TOO_DEEP"}, text)
+    [(3, 'the seeds bracket the node, which is their common ancestor')]
+    >>> required_sentences({"kind": "node", "action": "NEEDS_PRUNING"}, text)
+    []
+    """
+    if row["kind"] == "node":
+        if row.get("action") != "TOO_DEEP":
+            return []
+        return [
+            (number, "the seeds bracket the node, which is their common ancestor")
+            for number, sentence in enumerate(sentences(summary), 1)
+            if BRACKETING in sentence
+        ]
+    modes = mapping(mapping(review_row).get("propagation_review")).get("failure_modes") or []
+    kept = row["kind"] == "kept_under_loss"
+    return [(number, what) for number, what, _ in adverse_sentences(summary, failure_modes=modes, kept=kept)]
+
+
+def row_edit(
+    row: dict[str, Any],
+    reached: list[dict[str, Any]] | None = None,
+    source: tuple[str, str, str] | None = None,
+) -> RowEdit | str:
     """The edit a reading calls for, or the reason it is left for adjudication.
 
-    Where the verifier faults a reading but gives a corrected one that only quotes the row
-    and adds a sentence, the corrected reading is used.
+    ``reached`` holds the rows of the review the edit would reach (:func:`matching_rows`)
+    and ``source`` the summary, file text and reference id of the tree file
+    (:func:`quote_source`); both are looked up when not given. Where the verifier faults a
+    reading but gives a corrected one that only quotes the row and adds a sentence, the
+    corrected reading is used, whole: its own quotes, and none of the faulted reading's
+    proposals.
+
+    An edit is a quote plus a sentence, or a quote plus a corrected reason. Nothing else
+    is applied: a proposed verdict or change of failure modes, and a contradicted claim
+    that sits anywhere but in the reason, are a curator's to decide.
     """
     verifier = row.get("verifier")
     if verifier is not None and not verifier["agrees"]:
         fixed = mapping(verifier.get("fixed"))
         if fixed.get("tree_reading") not in ADDITIVE:
             return "the verifier disagrees with the reading"
-        row = {**row, "tree_reading": fixed["tree_reading"], "tree_sentence": fixed.get("tree_sentence", ""),
-               "quote_sentences": fixed.get("quote_sentences") or row.get("quote_sentences") or [],
-               "proposed_action": "", "reason_replacement": ""}
+        row = {
+            **row, "tree_reading": fixed["tree_reading"], "tree_sentence": fixed.get("tree_sentence", ""),
+            "quote_sentences": fixed.get("quote_sentences") or [], "proposed_action": "", "reason_replacement": "",
+            "failure_modes_add": [], "failure_modes_remove": [], "false_claim_fields": [],
+        }
     reading = row.get("tree_reading", "")
     if row["kind"] == "kept_under_loss":
         return "a kept row under a PAINT loss needs a decision on the loss, not a quote"
@@ -698,19 +801,44 @@ def row_edit(row: dict[str, Any]) -> RowEdit | str:
         return "a reason correction was not checked by the verifier"
     if row.get("proposed_action"):
         return "a change of verdict is proposed"
+    modes = [*(f"add {mode}" for mode in row.get("failure_modes_add") or []), *(f"remove {mode}" for mode in row.get("failure_modes_remove") or [])]
+    if modes:
+        return f"a change of failure modes is proposed ({', '.join(modes)}), which a curator decides"
+    if reached is not None and len(reached) != 1:
+        return (
+            f"{len(reached)} rows of the review match this term and an edit would reach all of them"
+            if reached else "no row of the review matches this term any more"
+        )
+    review_row = reached[0] if reached else {}
+    replacement = one_paragraph(row.get("reason_replacement", "")) if reading == "REASON_CONTRADICTED" else ""
+    if reading == "REASON_CONTRADICTED":
+        fields = [str(field) for field in row.get("false_claim_fields") or []]
+        if not fields:
+            return "the reading does not say which field holds the contradicted claim"
+        elsewhere = sorted(set(fields) - {"reason"})
+        if elsewhere:
+            return f"the contradicted claim is in {', '.join(elsewhere)}, which the script does not rewrite"
+        reason_key = "assessment_reason" if row["kind"] == "node" else "reason"
+        if reached is not None and not one_paragraph(str(review_row.get(reason_key) or "")):
+            return "the row has no reason to correct"
+        if len(replacement) < 80:
+            return "a reason correction without a replacement reason"
     sentence = one_paragraph(row.get("tree_sentence", ""))
     if len(sentence) < 40:
         return "no sentence on what the tree shows"
-    source = quote_source(row)
+    source = source or quote_source(row)
     if source is None:
         return "the tree file has no entry for this row"
     summary, source_text, reference = source
-    quotes = quotes_from(summary, row.get("quote_sentences") or [])
+    chosen = [number for number in row.get("quote_sentences") or [] if isinstance(number, int)]
+    if len(sentences(summary)) > 1 and not set(chosen) - {1}:
+        return "the reading quotes only the sentence that names the term and the node"
+    unquoted = [what for number, what in required_sentences(row, summary, review_row) if number not in chosen]
+    if unquoted:
+        return "the reading does not quote what stands against the verdict: " + "; ".join(unquoted)
+    quotes = quotes_from(summary, chosen)
     if not quotes or row["term"] not in quotes[0] or any(quote not in source_text for quote in quotes):
         return "the quotes are not verbatim parts of the tree file"
-    replacement = one_paragraph(row.get("reason_replacement", "")) if reading == "REASON_CONTRADICTED" else ""
-    if reading == "REASON_CONTRADICTED" and len(replacement) < 80:
-        return "a reason correction without a replacement reason"
     return RowEdit(
         row["term"],
         negated=row["negated"],
@@ -718,8 +846,6 @@ def row_edit(row: dict[str, Any]) -> RowEdit | str:
         add_support=tuple((reference, quote) for quote in quotes),
         append_reason="" if replacement else sentence,
         replace_reason=replacement or None,
-        add_failure_modes=tuple(row.get("failure_modes_add") or []) if replacement else (),
-        remove_failure_modes=tuple(row.get("failure_modes_remove") or []) if replacement else (),
     )
 
 
@@ -754,6 +880,18 @@ def validate(review_path: Path) -> tuple[bool, str]:
     return True, "\n".join(outputs)
 
 
+def validate_history(paths: list[Path]) -> tuple[bool, str]:
+    """Check scaffolded history records against the history schema, as `just validate-history` does."""
+    if not paths:
+        return True, ""
+    linkml = str(Path(sys.executable).with_name("linkml-validate"))
+    code, output = _run(
+        linkml, "--schema", "src/ai_gene_review/schema/history.yaml", "--target-class", "HistoryRecord",
+        *(str(path.relative_to(ROOT)) for path in paths),
+    )
+    return code == 0, output
+
+
 def unit_of(row: dict[str, Any]) -> str:
     """The gene (``org/GENE``) or family a row belongs to."""
     return row.get("family") or row["gene"]
@@ -773,8 +911,41 @@ def _new_history() -> Any:
     return module
 
 
-def history_details(unit: str, rows: list[dict[str, Any]]) -> str:
-    """What was done to one review, for its history record."""
+def write_history(scaffolder: Any, arguments: list[str]) -> Path:
+    """Scaffold one history record and return its path (the scaffolder prints it last)."""
+    captured = io.StringIO()
+    with contextlib.redirect_stdout(captured), contextlib.redirect_stderr(io.StringIO()):
+        scaffolder.main(arguments)
+    path = Path(captured.getvalue().strip().splitlines()[-1])
+    return path if path.is_absolute() else ROOT / path
+
+
+READING_MEANS = {
+    "SUPPORTS": "the tree agrees with the stated reason",
+    "NOT_A_TREE_ARGUMENT": "the verdict rests on evidence the tree does not speak to, and the tree contradicts nothing stated",
+    "PAINT_ALREADY_REMOVED": "PAINT has itself removed the term on the path to the gene",
+}
+UNSHARED = (
+    "Some rows of this review shared a supported_by list through a YAML alias. The list was written out in "
+    "full in each of them so that the new quotes go to one row only; the content of the other rows is unchanged."
+)
+
+
+def history_details(unit: str, rows: list[dict[str, Any]], unshared: bool = False) -> str:
+    """What was done to one review, for its history record.
+
+    An added sentence is reported as added; a corrected reason as rewritten, with the claims
+    the tree contradicted. ``unshared`` says that shared ``supported_by`` lists were written
+    out, which changes the text of rows the edit was not for.
+
+    >>> row = {"term": "GO:1", "action": "REMOVE", "tree_reading": "REASON_CONTRADICTED",
+    ...        "false_claims": ["seeds are paralogs: the tree gives 2 orthologs"], "tree_sentence": "x"}
+    >>> print(history_details("human/A", [row]).splitlines()[2])
+    - GO:1 (REMOVE): the reason made a claim the tree contradicts (seeds are paralogs: the tree gives 2 orthologs). The reason was rewritten to correct it; the rest of its argument is kept.
+    >>> row = {"term": "GO:2", "action": "REMOVE", "tree_reading": "SUPPORTS", "tree_sentence": "In the tree the seeds are paralogs."}
+    >>> print(history_details("human/A", [row]).splitlines()[2])
+    - GO:2 (REMOVE): the tree agrees with the stated reason. Added to the reason: In the tree the seeds are paralogs.
+    """
     if "/" in unit:
         organism, name = unit.split("/")
         lines = [
@@ -795,26 +966,30 @@ def history_details(unit: str, rows: list[dict[str, Any]]) -> str:
         ]
         source = "the family's node listing"
     for row in rows:
-        if row.get("outcome_detail") == "applied as corrected by the verifier":
+        if row.get("outcome_detail") == CORRECTED_BY_VERIFIER:
             row = {**row, **row["verifier"]["fixed"]}
-        what = {
-            "SUPPORTS": "the tree agrees with the stated reason",
-            "NOT_A_TREE_ARGUMENT": "the verdict rests on evidence the tree does not speak to, and the tree contradicts nothing stated",
-            "PAINT_ALREADY_REMOVED": "PAINT has itself removed the term on the path to the gene",
-            "REASON_CONTRADICTED": "the reason made a claim the tree contradicts; the reason was corrected",
-        }[row["tree_reading"]]
         where = f"{row['node']} " if row.get("node") else ""
-        lines.append(f"- {where}{row['term']} ({row['action']}): {what}. Added to the reason: {one_paragraph(row.get('tree_sentence', ''))}")
+        head = f"- {where}{row['term']} ({row['action']}): "
+        if row["tree_reading"] == "REASON_CONTRADICTED":
+            claims = "; ".join(one_paragraph(str(claim)) for claim in row.get("false_claims") or [])
+            lines.append(
+                f"{head}the reason made a claim the tree contradicts{f' ({claims})' if claims else ''}. "
+                "The reason was rewritten to correct it; the rest of its argument is kept."
+            )
+        else:
+            lines.append(f"{head}{READING_MEANS[row['tree_reading']]}. Added to the reason: {one_paragraph(row.get('tree_sentence', ''))}")
     lines += [
         "",
         f"Each row now quotes {source} in supported_by; the quotes were assembled from the "
         "file's sentences by projects/IBA_REVIEW/tree-rereview/tree_rereview.py and checked "
         "verbatim. The review validates after the edit.",
     ]
+    if unshared:
+        lines += ["", UNSHARED]
     return "\n".join(lines)
 
 
-def history_arguments(unit: str, applied: list[dict[str, Any]], pr: str = "") -> list[str]:
+def history_arguments(unit: str, applied: list[dict[str, Any]], pr: str = "", unshared: bool = False) -> list[str]:
     """Arguments for the history scaffolder for one changed review."""
     count = f"{len(applied)} {'row' if len(applied) == 1 else 'rows'}"
     if "/" in unit:
@@ -830,8 +1005,11 @@ def history_arguments(unit: str, applied: list[dict[str, Any]], pr: str = "") ->
     return [
         *target, "--event", "REVIEW", "--outcome", "changed", "--agent-tool", "claude-code",
         *(["--pr", pr] if pr else []),
-        "--summary", summary, "--details", history_details(unit, applied),
+        "--summary", summary, "--details", history_details(unit, applied, unshared),
     ]
+
+
+CORRECTED_BY_VERIFIER = "applied as corrected by the verifier"
 
 
 def apply_batch(batch: str, jobs: int = 4, pr: str = "") -> Counter[str]:
@@ -847,7 +1025,7 @@ def apply_batch(batch: str, jobs: int = 4, pr: str = "") -> Counter[str]:
         review_path = review_path_of(gene)
         text = originals[gene] = review_path.read_text(encoding="utf-8")
         for row in rows:
-            edit = row_edit(row)
+            edit = row_edit(row, matching_rows(yaml.load(text, Loader=Loader) or {}, row))
             if isinstance(edit, str):
                 row["outcome"], row["outcome_detail"] = "adjudicate", edit
                 continue
@@ -858,13 +1036,14 @@ def apply_batch(batch: str, jobs: int = 4, pr: str = "") -> Counter[str]:
                 continue
             row["outcome"] = "applied"
             if row.get("verifier") and not row["verifier"]["agrees"]:
-                row["outcome_detail"] = "applied as corrected by the verifier"
+                row["outcome_detail"] = CORRECTED_BY_VERIFIER
         if text != originals[gene]:
             review_path.write_text(text, encoding="utf-8")
     changed = [gene for gene, rows in by_gene.items() if any(row["outcome"] == "applied" for row in rows)]
     with ThreadPoolExecutor(max_workers=jobs) as pool:
         results = dict(zip(changed, pool.map(lambda gene: validate(review_path_of(gene)), changed)))
     scaffolder = _new_history()
+    records: list[Path] = []
     for gene in changed:
         valid, output = results[gene]
         applied = [row for row in by_gene[gene] if row["outcome"] == "applied"]
@@ -874,9 +1053,141 @@ def apply_batch(batch: str, jobs: int = 4, pr: str = "") -> Counter[str]:
             for row in applied:
                 row["outcome"], row["outcome_detail"] = "adjudicate", f"edit undone, the review no longer validated: {first_error[:300]}"
             continue
-        scaffolder.main(history_arguments(gene, applied, pr))
+        unshared = alias_count(review_path_of(gene).read_text(encoding="utf-8")) < alias_count(originals[gene])
+        records.append(write_history(scaffolder, history_arguments(gene, applied, pr, unshared)))
     path.write_text(dump(record), encoding="utf-8")
+    valid, output = validate_history(records)
+    if not valid:
+        raise SystemExit(f"history records of batch {batch} do not validate:\n{output}")
     return Counter(row["outcome"] for row in record["rows"])
+
+
+WORKLIST = HERE / "needs-curator.yaml"
+WORKLIST_FIELDS = (
+    "action", "tree_reading", "outcome", "outcome_detail", "proposed_action", "failure_modes_add",
+    "failure_modes_remove", "false_claims", "note", "correction",
+)
+
+
+def worklist() -> dict[str, Any]:
+    """What the re-read leaves for a curator, from the run records.
+
+    Every row left for adjudication or not read, and every applied row on which the reader
+    left a note: an applied row quotes its tree file and so drops out of the work list and
+    out of the validator's warnings, which would otherwise make the note the last anyone
+    hears of it.
+    """
+    groups: dict[str, list[dict[str, Any]]] = {"adjudicate": [], "not_read": [], "applied_with_note": []}
+    for path in sorted(RUNS.glob("*.yaml")):
+        record = load(path)
+        for row in record["rows"]:
+            outcome = row.get("outcome", "")
+            group = outcome if outcome in ("adjudicate", "not_read") else "applied_with_note" if row.get("note") else ""
+            if not group:
+                continue
+            entry: dict[str, Any] = {"batch": record["batch"]}
+            for field in ("gene", "family", "node", "term"):
+                if row.get(field):
+                    entry[field] = row[field]
+            if row.get("negated"):
+                entry["negated"] = True
+            for field in WORKLIST_FIELDS:
+                if row.get(field) not in (None, "", []):
+                    entry[field] = row[field]
+            problem = mapping(row.get("verifier")).get("problem")
+            if problem and outcome == "adjudicate":
+                entry["verifier_problem"] = problem
+            groups[group].append(entry)
+    return {
+        "generated_by": "projects/IBA_REVIEW/tree-rereview/tree_rereview.py worklist",
+        "about": (
+            "Rows of the tree re-read that need a curator. adjudicate: the reading calls for a judgement, "
+            "the verifier disagreed, or the edit could not be placed; nothing was changed. not_read: no "
+            "reading was returned. applied_with_note: the row was edited (a quote and a sentence, or a "
+            "corrected reason), and the reader noted something the edit does not settle, often a verdict "
+            "or failure mode that no longer fits."
+        ),
+        "counts": {group: len(rows) for group, rows in groups.items()},
+        **groups,
+    }
+
+
+def requote(pr: str = "", jobs: int = 4) -> list[str]:
+    """Add to applied rows any sentence their quotes should include and do not (:func:`required_sentences`).
+
+    The first batches were applied before that rule. The sentence is added as one more
+    ``supported_by`` entry; nothing else changes. Returns one line per changed review.
+    """
+    changed: dict[str, list[tuple[dict[str, Any], list[tuple[int, str]]]]] = {}
+    originals: dict[str, str] = {}
+    records: dict[Path, dict[str, Any]] = {}
+    for path in sorted(RUNS.glob("*.yaml")):
+        record = records[path] = load(path)
+        for row in record["rows"]:
+            if row.get("outcome") != "applied":
+                continue
+            unit = unit_of(row)
+            review_path = review_path_of(unit)
+            text = review_path.read_text(encoding="utf-8")
+            reached = matching_rows(yaml.load(text, Loader=Loader) or {}, row)
+            source = quote_source(row)
+            if len(reached) != 1 or source is None:
+                continue
+            summary, _, reference = source
+            quoted = " ".join(
+                str(item.get("supporting_text", ""))
+                for item in reached[0].get("supported_by") or []
+                if isinstance(item, dict) and item.get("reference_id") == reference
+            )
+            parts = sentences(summary)
+            missing = [(number, what) for number, what in required_sentences(row, summary, reached[0]) if parts[number - 1] not in quoted]
+            if not missing:
+                continue
+            numbers = sorted({number for number, _ in missing})
+            edit = RowEdit(
+                row["term"], negated=row["negated"], node_id=row.get("node", ""),
+                add_support=tuple((reference, parts[number - 1]) for number in numbers),
+            )
+            originals.setdefault(unit, text)
+            review_path.write_text(apply_row_edits(text, [edit]), encoding="utf-8")
+            row["quotes_added"] = numbers
+            changed.setdefault(unit, []).append((row, missing))
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
+        results = dict(zip(changed, pool.map(lambda unit: validate(review_path_of(unit)), changed)))
+    scaffolder = _new_history()
+    written: list[Path] = []
+    lines: list[str] = []
+    for unit, rows in changed.items():
+        if not results[unit][0]:
+            raise SystemExit(f"{unit} no longer validates after its quotes were completed:\n{results[unit][1][-2000:]}")
+        gene = "/" in unit
+        details = [
+            "The first pass of the tree re-read quoted the tree file on these rows without the sentence that "
+            "stands against the verdict. That sentence is now quoted as well, as one more supported_by entry. "
+            "Reasons and verdicts are unchanged.",
+            "",
+            *(
+                f"- {row['node'] + ' ' if row.get('node') else ''}{row['term']} ({row['action']}): "
+                + "; ".join(f"sentence {number}, {what}" for number, what in missing)
+                for row, missing in rows
+            ),
+        ]
+        target = (
+            ["--kind", "gene", "--organism", unit.split("/")[0], "--slug", unit.split("/")[1], "--sections", "existing_annotations"]
+            if gene else
+            ["--kind", "other", "--slug", unit, "--path", f"interpro/panther/{unit}/{unit}-review.yaml", "--sections", "node_assessments"]
+        )
+        written.append(write_history(scaffolder, [
+            *target, "--event", "EDIT", "--outcome", "changed", "--agent-tool", "claude-code", *(["--pr", pr] if pr else []),
+            "--summary", "Quote the tree sentences that stand against the verdict", "--details", "\n".join(details),
+        ]))
+        lines.append(f"{unit}: {len(rows)} row(s)")
+    for path, record in records.items():
+        path.write_text(dump(record), encoding="utf-8")
+    valid, output = validate_history(written)
+    if not valid:
+        raise SystemExit(f"history records do not validate:\n{output}")
+    return lines
 
 
 def collect(journal: Path) -> dict[str, dict[str, Any]]:
@@ -918,6 +1229,7 @@ def finish(journal: Path, date: str, jobs: int = 4, pr: str = "") -> list[str]:
             f"{batch}: {len(record['rows'])} rows; readings {dict(readings)}; verifier checked {len(checked)}, "
             f"disagreed on {checked.count(False)}; outcomes {dict(outcomes)}"
         )
+    WORKLIST.write_text(dump(worklist()), encoding="utf-8")
     return lines
 
 
@@ -972,6 +1284,10 @@ def main(argv: list[str] | None = None) -> int:
     done.add_argument("--jobs", type=int, default=4)
     done.add_argument("--pr", default="", help="pull request number or URL for the history records")
     commands.add_parser("status")
+    commands.add_parser("worklist")
+    again = commands.add_parser("requote")
+    again.add_argument("--jobs", type=int, default=4)
+    again.add_argument("--pr", default="", help="pull request number or URL for the history records")
     args = parser.parse_args(argv)
 
     if args.command == "plan":
@@ -995,6 +1311,12 @@ def main(argv: list[str] | None = None) -> int:
         print(dict(apply_batch(args.batch, args.jobs, args.pr)))
     elif args.command == "finish":
         print("\n".join(finish(args.journal, args.date, args.jobs, args.pr)))
+    elif args.command == "worklist":
+        made = worklist()
+        WORKLIST.write_text(dump(made), encoding="utf-8")
+        print(f"{WORKLIST.relative_to(ROOT)}: {made['counts']}")
+    elif args.command == "requote":
+        print("\n".join(requote(args.pr, args.jobs)) or "every applied row already quotes what it has to")
     else:
         print(status())
     return 0
