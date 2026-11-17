@@ -630,8 +630,11 @@ things to a reader:
 - **divergent** — every member ruled on the claim, and they disagree. Read it.
 - **consistent** — every member ruled, and they agree.
 - **incomplete** — a member cannot be compared because its review does not exist.
-  That is curation backlog: someone has to review the gene, and divergence can only
-  appear once they have.
+  That is curation backlog: someone has to review the gene. The *other* members are
+  still compared, and the line says so — most of these groups have three or more
+  reviewed members, so waiting for the backlog before comparing them would hide a
+  live divergence. An incomplete group whose comparable members disagree is marked
+  on its line and counted in the summary.
 - **no verdict** — every member is reviewed, but none rules on the claim (the only
   rows on the term are `NEW` proposals, which assert an addition rather than judge
   the shared claim). Nothing to chase; the group is complete and simply has no
@@ -653,6 +656,19 @@ too. All three rows across the two genes now read `TOO_GENERAL`, which is what
 specific accepted term, here `GO:0009243` O antigen biosynthetic process, which both
 genes already carry. Widening the audit means building a process-aspect worklist (the
 builder takes `--all-aspects`) or reading shared claims from GOA directly.
+
+Comparing the reviewed members of incomplete groups found a third case immediately.
+`GO:0008320` protein transmembrane transporter activity from PMID:16621825 is
+`MODIFY`→`GO:0009977` on `tatA` and `TOO_GENERAL` on `tatC`, with `tatB` unreviewed.
+This is the `liuB`/`liuD` shape exactly: `tatC` carries `GO:0009977` as its own IBA
+row and accepts it, so the ancestor term is `TOO_GENERAL` there, while `tatA` has no
+`GO:0009977` row and its reviewer refined to reach the same level. The two verdicts
+agree about what the supported term is, and the asymmetry is in GOA. What is open is
+whether `tatA`'s rows pass the 2026-11-14 bar — a `MODIFY` needs that row's own
+evidence for the deeper term, and its IMP reason says the evidence is an export
+phenotype. That is a judgement about three merged reviews of genes this PR does not
+touch (and `tatB` is in the QuickGO-blocked batch), so it is recorded here rather
+than fixed opportunistically.
 
 The check has already paid for itself twice. It is the generalisation of the
 `liuB`/`liuD` drift caught in review on PR #6341, and run across the corpus it

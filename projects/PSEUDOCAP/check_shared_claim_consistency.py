@@ -155,6 +155,15 @@ def collect() -> dict[str, list[dict[str, Any]]]:
         if missing:
             record["uncomparable"] = {s: "(not reviewed)" for s in missing}
             record["reviewed"] = [s for s in symbols if folders[s]]
+            # An unreviewed member does not stop the reviewed ones from being
+            # compared, and most of these groups have three or more. Reporting
+            # only "a member is missing" would hide a live divergence among the
+            # rest until the backlog cleared -- GO:0003955 has four reviewed
+            # members and GO:0016987 four, so that is most of each group.
+            record["actions"] = {
+                s: actions_for_term(str(folders[s]), group["term"])
+                for s in record["reviewed"]
+            }
             out["incomplete"].append(record)
             continue
 
@@ -183,6 +192,7 @@ def collect() -> dict[str, list[dict[str, Any]]]:
             # and just has no verdict to compare.
             record["uncomparable"] = absent
             record["reviewed"] = [s for s in symbols if s not in absent]
+            record["actions"] = {s: actions[s] for s in record["reviewed"]}
             bucket = (
                 "no_verdict"
                 if all(r == "(only a NEW row)" for r in absent.values())
@@ -192,13 +202,18 @@ def collect() -> dict[str, list[dict[str, Any]]]:
             continue
 
         record["actions"] = actions
-        bucket = (
-            "divergent"
-            if len({tuple(v) for v in actions.values()}) > 1
-            else "consistent"
-        )
-        out[bucket].append(record)
+        out["divergent" if diverges(actions) else "consistent"].append(record)
     return out
+
+
+def diverges(actions: dict[str, list[str]]) -> bool:
+    """True when two comparable members reached different verdicts.
+
+    One member cannot disagree with itself, so a group with a single comparable
+    member is never divergent; that is why this is not simply ``len(set) > 1``
+    on a possibly-empty mapping.
+    """
+    return len({tuple(v) for v in actions.values()}) > 1
 
 
 def main() -> int:
@@ -228,27 +243,35 @@ def main() -> int:
         print("No divergent shared claims.")
 
     if not args.quiet:
-        if groups["incomplete"]:
+        for bucket, heading in (
+            (
+                "incomplete",
+                "INCOMPLETE -- groups with a member that cannot be compared:",
+            ),
+            (
+                "no_verdict",
+                "NO VERDICT -- reviewed, but no member rules on this claim:",
+            ),
+        ):
+            if not groups[bucket]:
+                continue
             print()
-            print("INCOMPLETE -- groups with a member that cannot be compared:")
-            for record in groups["incomplete"]:
+            print(heading)
+            for record in groups[bucket]:
                 why = ", ".join(
                     f"{s} {reason}" for s, reason in record["uncomparable"].items()
                 )
-                print(
-                    f"  {record['term']:13} {record['reference']:16} "
-                    f"reviewed={record['reviewed']} uncomparable: {why}"
+                pairs = ", ".join(
+                    f"{s}={'/'.join(a)}" for s, a in record["actions"].items()
                 )
-        if groups["no_verdict"]:
-            print()
-            print("NO VERDICT -- reviewed, but no member rules on this claim:")
-            for record in groups["no_verdict"]:
-                why = ", ".join(
-                    f"{s} {reason}" for s, reason in record["uncomparable"].items()
+                flag = (
+                    "  <-- DIVERGENT among the members that can be compared"
+                    if diverges(record["actions"])
+                    else ""
                 )
                 print(
                     f"  {record['term']:13} {record['reference']:16} "
-                    f"reviewed={record['reviewed']} {why}"
+                    f"{pairs or '(none comparable)'} | uncomparable: {why}{flag}"
                 )
         if groups["consistent"]:
             print()
@@ -257,11 +280,23 @@ def main() -> int:
                 print(show(record))
 
     print()
+    partial = sum(
+        1
+        for bucket in ("incomplete", "no_verdict")
+        for record in groups[bucket]
+        if diverges(record["actions"])
+    )
+    print()
     print(
         f"summary: {len(groups['divergent'])} divergent, "
         f"{len(groups['consistent'])} consistent, "
         f"{len(groups['incomplete'])} incomplete, "
         f"{len(groups['no_verdict'])} with no verdict"
+        + (
+            f"; {partial} of the latter two diverge among their comparable members"
+            if partial
+            else ""
+        )
     )
     print(
         "scope: molecular-function shared claims only; process and component claims are not checked"
