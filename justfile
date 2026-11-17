@@ -84,6 +84,10 @@ fix-caches:
 ontology-cache-coverage *args:
 	uv run python -m ai_gene_review.tools.ontology_cache_coverage {{args}}
 
+# Recheck terms in an empty staging cache; --apply requires a successful offline replay.
+refresh-ontology-cache *args:
+	uv run python -m ai_gene_review.tools.ontology_cache_refresh {{args}}
+
 # Exercise the DISMECH_METABOLIC_ALIGNMENT page generator's refusals: each case breaks one
 # thing in a copy of the committed reports and checks the generator refuses with the message
 # it declares, or still renders with the clause it declares.
