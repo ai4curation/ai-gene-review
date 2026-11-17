@@ -179,9 +179,10 @@ deliberately declined to add").
 
 **How the reviews used `GO:0009986` cell surface.** On its own evidence, where the
 gene genuinely sits on / is bound at the surface — not as a blanket surface call.
-34 of the 147 reviews carry the term: 52 rows ACCEPT it, 25 KEEP_AS_NON_CORE, 2
-MODIFY, and 3 are NEW (the GARP-presented TGFB1 pool, the DLL3 tumour pool, and the
-ectoenzyme/complement cases), the rest in `core_functions` locations. The general
+34 of the 147 reviews carry the term: 53 rows ACCEPT it, 25 KEEP_AS_NON_CORE, 2
+MODIFY, and 3 are NEW — the DLL3 tumour pool, the TYRP1 minor surface pool of a
+melanosomal protein, and the AMHR2 ectodomain seen by FACS — the rest in
+`core_functions` locations. The general
 "is this protein accessible at the surface?" inference across the benchmark is left
 to the scoring rule above, deliberately: assigning `cell surface` to every TM
 receptor would be manufacturing annotations the curators declined to make.
