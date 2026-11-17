@@ -164,8 +164,13 @@ On 2026-11-17 it found:
      family's subfamily) still fail during the window. The previous release is read
      from the cache only; `just ensure-panther-members` fills it while a switch is on,
      and without it the allowance is off with a warning.
-   - **Modules: to do.** Term labels go through the OAK term validator, and
-     membership through `validate_family_members`.
+   - **Modules: done.** PANTHER terms whose label matches the previous release are
+     set aside with a warning before OAK term validation
+     (`defer_previous_release_panther_terms`), and `validate_family_members` treats a
+     family that matched the members in the previous release as a warning. In a
+     simulated bump over all modules (2026-11-17), term errors go from 2 today to 463
+     without it and stay at 2 with it; membership errors go from 55 to 56 without it
+     and stay at 55 with it.
 2. The bump PR changes the pinned constants, rebuilds the caches and `panther.obo`
    (2.1), and re-quotes the `panther.obo` quotes the report lists (10 today), so
    `just validate-quotes` stays green. That is too few to need a transition allowance
