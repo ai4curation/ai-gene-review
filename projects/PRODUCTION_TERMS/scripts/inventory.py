@@ -16,15 +16,21 @@ writes:
   families it uses, whether it names the regulated product (an input molecule
   or a causal edge to a cytokine activity), and all of its activities with
   their function, process, inputs and causal edges.
+* ``classification_check.yaml`` -- the curated classification joined to the
+  ontology: terms classified but no longer live, live terms with no verdict,
+  verdict and confidence counts, the module candidates the verdicts name, and
+  every term whose curated verdict disagrees with the name heuristic.
 * ``summary.yaml`` -- counts: live and obsolete terms, do-not-annotate
   coverage, obsoletion reasons, heuristic classes, review actions on these
   terms, genes whose reviews ACCEPT one, and GO-CAM use (activities, models,
   model groups, transcription-factor inputs, and where the most-used genes'
   activities sit across all cached models).
 
-The mechanism class is a **name-pattern heuristic** (see ``CLASS_RULES``),
-not a curated judgement. It is there to size the groups discussed on the
-project page; a curated classification is a separate step.
+Each live production term also carries a **name-pattern heuristic** class (see
+``CLASS_RULES``). The heuristic is not a judgement: it only groups terms by what
+their label looks like. The curated verdicts live in ``term_classification.yaml``
+beside this script, and ``--classification`` cross-checks the two, reporting
+coverage gaps and every term where they disagree.
 
 Nothing is hardcoded: re-run against a newer GO edition and the outputs move.
 
@@ -292,6 +298,107 @@ def read_index(index: Path) -> list[dict[str, str]]:
 
 HAS_INPUT = "RO:0002233"
 
+#: Curated verdicts that say the term sits on a real mechanism rather than
+#: reading one out. Used only to group the report.
+MECHANISM_VERDICTS = {"DEDICATED_MACHINERY", "COMPOSITE_PROCESS"}
+
+
+def check_classification(path: Path, rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Join the curated classification to the ontology and the heuristic.
+
+    Reports what is missing in each direction, the verdict and confidence
+    spread, the modules and module candidates the verdicts name, and the terms
+    where the curated verdict and the name heuristic disagree. A disagreement is
+    not an error: the curated verdict wins, and the list is there to show what
+    reading the labels alone gets wrong.
+    """
+    if not path.exists():
+        return {"classification_file": None}
+    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    entries = data.get("classification") or []
+    curated = {e["id"]: e for e in entries}
+    live = {r["id"]: r for r in rows if not r["obsolete"] and r["kind"] == "production"}
+
+    # The heuristic class name and the curated group do not share a vocabulary,
+    # so compare at the level the page uses: mechanism versus not.
+    heuristic_mechanism = {
+        "il1_family_precursor_processing", "tnf_superfamily", "tgf_beta_latency",
+        "interferon_induction_irf3_irf7", "cytotoxic_granule_mediator", "immunoglobulin",
+    }
+    disagreements = []
+    for term_id, entry in curated.items():
+        row = live.get(term_id)
+        if row is None:
+            continue
+        curated_is_mechanism = entry["verdict"] in MECHANISM_VERDICTS
+        heuristic_is_mechanism = row["heuristic_class"] in heuristic_mechanism
+        if curated_is_mechanism != heuristic_is_mechanism:
+            disagreements.append({
+                "id": term_id,
+                "label": entry["label"],
+                "curated": entry["verdict"],
+                "heuristic_class": row["heuristic_class"],
+                "direction": ("heuristic missed a mechanism" if curated_is_mechanism
+                              else "heuristic claimed a mechanism"),
+            })
+
+    modules = Counter()
+    for entry in entries:
+        if entry.get("module"):
+            modules[f'{entry["module"]} (built)'] += 1
+        if entry.get("module_candidate"):
+            modules[f'{entry["module_candidate"]} (candidate)'] += 1
+
+    # Per-group counts, with each regulation term counted against the curated
+    # group of the production term it regulates.
+    by_label = {r["label"]: r["id"] for r in rows
+                if not r["obsolete"] and r["kind"] == "production"}
+    prod_counts: Counter = Counter()
+    reg_counts: Counter = Counter()
+    unmapped = []
+    for row in rows:
+        if row["obsolete"]:
+            continue
+        if row["kind"] == "production":
+            entry = curated.get(row["id"])
+            if entry:
+                prod_counts[entry["group"]] += 1
+            continue
+        target = row.get("regulates") or by_label.get(
+            REGULATION_PREFIX.sub("", row["label"]))
+        entry = curated.get(target) if target else None
+        if entry:
+            reg_counts[entry["group"]] += 1
+        else:
+            unmapped.append(f'{row["id"]} {row["label"]}')
+    # Largest group first, ties broken by name. The name is part of the key on
+    # purpose: a set union iterates in hash order, which varies between
+    # processes, so sorting on the count alone made this file's ordering differ
+    # from run to run and produced a spurious diff every time it was regenerated.
+    groups = {g: {"production_terms": prod_counts[g], "regulation_terms": reg_counts[g]}
+              for g in sorted(set(prod_counts) | set(reg_counts),
+                              key=lambda g: (-(prod_counts[g] + reg_counts[g]), g))}
+
+    low = [f'{e["id"]} {e["label"]}' for e in entries if e.get("confidence") == "LOW"]
+    unresolved = [f'{e["id"]} {e["label"]}' for e in entries if e.get("resolution")]
+    return {
+        "classification_file": path.name,
+        "classified": len(entries),
+        "live_production_terms": len(live),
+        "classified_but_not_live": sorted(set(curated) - set(live)),
+        "live_but_unclassified": sorted(
+            f'{i} {r["label"]}' for i, r in live.items() if i not in curated),
+        "verdicts": dict(Counter(e["verdict"] for e in entries).most_common()),
+        "mechanism_terms": sum(1 for e in entries if e["verdict"] in MECHANISM_VERDICTS),
+        "confidence": dict(Counter(e["confidence"] for e in entries).most_common()),
+        "low_confidence_terms": low,
+        "terms_with_an_open_question": unresolved,
+        "groups": groups,
+        "regulation_terms_not_mapped_to_a_group": unmapped,
+        "modules_named": dict(modules.most_common()),
+        "heuristic_disagreements": sorted(disagreements, key=lambda d: d["id"]),
+    }
+
 
 def term_family(label: str) -> str:
     """Group the production terms GO-CAMs use: the type I interferon terms, the
@@ -497,6 +604,9 @@ def main() -> None:
     parser.add_argument("--genes", type=Path, default=REPO / "genes")
     parser.add_argument("--gocam-index", type=Path, default=REPO / "gocams" / "index.tsv")
     parser.add_argument("--out", type=Path, default=Path(__file__).resolve().parent.parent / "data")
+    parser.add_argument("--classification", type=Path,
+                        default=Path(__file__).resolve().parent.parent / "term_classification.yaml",
+                        help="curated verdicts to cross-check against the heuristic")
     args = parser.parse_args()
 
     terms = parse_obo(args.go)
@@ -510,6 +620,8 @@ def main() -> None:
     models, model_stats = gocam_models(args.gocam_index.parent, gocams, index,
                                        production_ids, labels)
     summary["gocams"].update(model_stats)
+    check = check_classification(args.classification, rows)
+    summary["classification"] = check
     summary = {"source": {"go_file": args.go.name}, **summary}
 
     args.out.mkdir(parents=True, exist_ok=True)
@@ -517,6 +629,8 @@ def main() -> None:
         yaml.safe_dump(rows, fh, sort_keys=False, allow_unicode=True, width=100)
     with (args.out / "gocam_models.yaml").open("w", encoding="utf-8") as fh:
         yaml.safe_dump(models, fh, sort_keys=False, allow_unicode=True, width=100)
+    with (args.out / "classification_check.yaml").open("w", encoding="utf-8") as fh:
+        yaml.safe_dump(check, fh, sort_keys=False, allow_unicode=True, width=100)
     with (args.out / "summary.yaml").open("w", encoding="utf-8") as fh:
         yaml.safe_dump(summary, fh, sort_keys=False, allow_unicode=True, width=100)
     print(yaml.safe_dump(summary["terms"], sort_keys=False, width=100))
