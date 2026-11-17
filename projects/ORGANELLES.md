@@ -369,14 +369,18 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
   `core_functions` only when an assay places the activity itself there, and no
   assay places UFSP2's deUFMylation on the cytoplasmic leaflet: the face is an IC
   inference from topology and the partner, as UFSP2's own row says. The
-  GO:0098554 IC row stays. Rule of thumb for the tethering route: the row records
+  GO:0098554 IC row stays. The core function names the ER root, not the ER
+  membrane as UFL1's does, because UFSP2's curated location evidence is
+  root-level. Rule of thumb for the tethering route: the row records
   where the protein sits; the core function names the face only when the activity
   is shown there.
 - **Open item updated:** the abstract-only sweep still owed now covers ER batches
   2-4 and Golgi batches 1-2.
 - **History note.** The GFRA1 record added in #6432 cites `a8f60d2418`, a branch
   commit squashed away when #6433 merged; the change it describes is in #6433.
-  History records are append-only, so the record stays as written.
+  The SHA was accurate when written (it existed on the branch), which is the
+  append case in `docs/history.md`, so the record stays as written; prose that
+  was never true is corrected in place instead.
 
 ## 2026-11-15 (follow-ups to the tethering and Golgi batch 1 PRs)
 
