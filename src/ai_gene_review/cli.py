@@ -43,10 +43,12 @@ from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.validator import get_project_root, get_schema_path
 from ai_gene_review.draw import ReviewVisualizer
 from ai_gene_review.litscan.cli import litscan_app
+from ai_gene_review.shadow_issues.cli import shadow_issues_app
 from ai_gene_review.tools.audit_fulltext_flags import audit as audit_flags
 
 app = typer.Typer(help="ai-gene-review: Gene data ETL and review tool.")
 app.add_typer(litscan_app, name="litscan")
+app.add_typer(shadow_issues_app, name="shadow-issues")
 
 
 @app.command()
@@ -3546,6 +3548,65 @@ def render_projects(
 
 
 @app.command()
+def render_hubs(
+    root: Annotated[
+        Path, typer.Option("--root", help="Repository root to read reviews from")
+    ] = Path("."),
+    pages_dir: Annotated[
+        Path, typer.Option("--pages-dir", help="Site pages directory to write into")
+    ] = Path("pages"),
+):
+    """Render the feedback-to-resources and annotation-rules landing pages.
+
+    Writes pages/feedback/ (ontology changes, proposed new terms, source defects,
+    mapping and rule reviews, with TSV downloads) and pages/rules/index.html.
+
+    Examples:
+        ai-gene-review render-hubs
+    """
+    from ai_gene_review.render_hubs import render_feedback, render_rules
+
+    feedback = render_feedback(root=root, output_dir=pages_dir / "feedback")
+    rules = render_rules(root=root, output_dir=pages_dir / "rules")
+    typer.echo(f"Rendered {len(feedback)} feedback page(s) and {rules}")
+
+
+@app.command()
+def render_gocams(
+    gocams_dir: Annotated[
+        Path,
+        typer.Option("--gocams-dir", help="Directory of cached GO-CAM models and reviews"),
+    ] = Path("gocams"),
+    output_dir: Annotated[
+        Path,
+        typer.Option("--output-dir", "-o", help="Output directory for GO-CAM review pages"),
+    ] = Path("pages/gocams"),
+    genes_dir: Annotated[
+        Path,
+        typer.Option("--genes-dir", help="Directory of gene reviews, for links"),
+    ] = Path("genes"),
+    modules_dir: Annotated[
+        Path,
+        typer.Option("--modules-dir", help="Directory of module YAML, for links"),
+    ] = Path("modules"),
+):
+    """Render every GO-CAM review (gocams/<id>/<id>-review.yaml) plus an index page.
+
+    Examples:
+        ai-gene-review render-gocams
+    """
+    from ai_gene_review.render_gocams import render_all_gocams
+
+    written = render_all_gocams(
+        gocams_dir=gocams_dir,
+        output_dir=output_dir,
+        genes_dir=genes_dir,
+        modules_dir=modules_dir,
+    )
+    typer.echo(f"Rendered {len(written) - 1} GO-CAM review page(s) and an index to {output_dir}")
+
+
+@app.command()
 def render_modules(
     files: Annotated[
         Optional[List[Path]],
@@ -4941,8 +5002,24 @@ def refresh_panther_members(
     from ai_gene_review.validation.prose_panther_scan import collect_claims
 
     repo_root = output_dir or Path.cwd()
-    cache = cache_dir or (repo_root / ".cache" / "panther")
+    from ai_gene_review.etl.panther_families import (
+        PANTHER_PREVIOUS_RELEASE,
+        fetch_hmm_classifications,
+        hmm_url,
+        panther_cache_dir,
+    )
+
+    cache = cache_dir or panther_cache_dir(repo_root)
     organisms = list(organism) if organism else list(DEFAULT_ORGANISMS)
+
+    # During a PANTHER switch, validators read the previous release's names and
+    # memberships from this cache without downloading anything; warm it here. Only the
+    # default organisms: they are what the validators read, whatever --organism says.
+    if PANTHER_PREVIOUS_RELEASE is not None:
+        fetch_hmm_classifications(cache, url=hmm_url(PANTHER_PREVIOUS_RELEASE))
+        for slug in DEFAULT_ORGANISMS:
+            fetch_sequence_classification(slug, cache, release=PANTHER_PREVIOUS_RELEASE)
+        typer.echo(f"cached PANTHER {PANTHER_PREVIOUS_RELEASE} classifications for the switch allowance")
 
     # Every representative member, grounded or not -- an ungrounded descriptor's
     # members are the ones whose real family most needs resolving -- plus the
@@ -5090,6 +5167,121 @@ def check_panther_release():
 
 
 @app.command()
+def panther_release_diff(
+    target_release: Annotated[
+        str, typer.Argument(help="PANTHER release to compare with, e.g. 20.0.")
+    ],
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    output: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output",
+            help="Report path (default: <repo>/reports/panther-release-diff-<current>-to-<target>.yaml).",
+        ),
+    ] = None,
+    organism: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--organism",
+            help="PANTHER organism slug to classify members with (repeatable). Defaults "
+            "to the set covering species curated in this repository.",
+        ),
+    ] = None,
+):
+    """Dry-run report of what bumping PANTHER_RELEASE to TARGET_RELEASE would change.
+
+    Lists cited PANTHER family and subfamily ids that are gone or renamed in the
+    target release, and, for every module family descriptor and family-review
+    subfamily that names representative members, the id those members fall into
+    in the target release, and the quotes of interpro/panther/panther.obo that the
+    rebuilt artifact would break. Edits nothing; proposals are for curators to
+    check. Downloads both releases' classification files into <repo>/.cache/panther
+    and renders the target release's OBO there.
+
+    Example:
+        ai-gene-review panther-release-diff 20.0
+    """
+    import yaml
+
+    from ai_gene_review.etl.panther_families import (
+        DEFAULT_ORGANISMS,
+        PANTHER_RELEASE,
+        build_member_index,
+        fetch_hmm_classifications,
+        fetch_sequence_classification,
+        hmm_url,
+        parse_hmm_classifications,
+        write_panther_obo,
+    )
+    from ai_gene_review.etl.panther_release_diff import (
+        DEFAULT_SCAN_GLOBS,
+        broken_obo_quotes,
+        build_report,
+        cited_ids,
+        collect_anchors,
+    )
+    from ai_gene_review.validation.quote_check import default_files
+
+    if target_release == PANTHER_RELEASE:
+        raise typer.BadParameter(
+            f"{target_release} is the pinned release; give the release to compare with"
+        )
+    repo_root = output_dir or Path.cwd()
+    cache = repo_root / ".cache" / "panther"
+    anchors = collect_anchors(repo_root)
+    accessions = {accession for anchor in anchors for accession in anchor.members}
+    organisms = list(organism or DEFAULT_ORGANISMS)
+
+    def entries(release: str) -> list:
+        path = fetch_hmm_classifications(cache, url=hmm_url(release))
+        return parse_hmm_classifications(path.read_text(errors="replace").splitlines())
+
+    def names(release: str) -> dict:
+        return {entry.accession: entry.name for entry in entries(release)}
+
+    def member_index(release: str) -> dict:
+        paths = []
+        for slug in organisms:
+            path = fetch_sequence_classification(slug, cache, release=release)
+            if path is None:
+                typer.echo(f"⚠️  no PANTHER {release} classification for organism '{slug}'")
+            else:
+                paths.append(path)
+        return build_member_index(accessions, paths)
+
+    files = sorted({path for pattern in DEFAULT_SCAN_GLOBS for path in repo_root.glob(pattern)})
+    report = build_report(
+        PANTHER_RELEASE,
+        target_release,
+        cited_ids(files, repo_root),
+        names(PANTHER_RELEASE),
+        names(target_release),
+        anchors,
+        member_index(PANTHER_RELEASE),
+        member_index(target_release),
+        broken_obo_quotes(
+            # validate-quotes' files, plus gene reviews, whose quotes `just validate` checks.
+            sorted(set(default_files(repo_root)) | set(repo_root.glob("genes/*/*/*-ai-review.yaml"))),
+            repo_root,
+            repo_root / "interpro" / "panther" / "panther.obo",
+            write_panther_obo(
+                entries(target_release), cache / f"panther-{target_release}.obo", release=target_release
+            ),
+        ),
+    )
+    out = output or (
+        repo_root / "reports" / f"panther-release-diff-{PANTHER_RELEASE}-to-{target_release}.yaml"
+    )
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(yaml.safe_dump(report, sort_keys=False, allow_unicode=True, width=120))
+    typer.echo(yaml.safe_dump({"summary": report["summary"]}, sort_keys=False).rstrip())
+    typer.echo(f"✓ Wrote {out}")
+
+
+@app.command()
 def verify_panther_paint(
     output_dir: Annotated[
         Optional[Path],
@@ -5214,6 +5406,7 @@ def fix_panther_labels(
         load_obo_names,
         rewrite_panther_labels,
     )
+    from ai_gene_review.validation.family_residue_validator import previous_release_labels
     from ai_gene_review.validation.module_validator import (
         iter_family_member_uses,
         load_member_index,
@@ -5223,6 +5416,10 @@ def fix_panther_labels(
 
     repo_root = output_dir or Path.cwd()
     names = load_obo_names(repo_root / "interpro" / "panther" / "panther.obo")
+    # During a PANTHER switch, a label still carrying the previous release's name is
+    # held back for remapping rather than relabelled (see rewrite_panther_labels).
+    previous = previous_release_labels(repo_root / "interpro" / "panther")
+    previous_names = previous[1] if previous is not None else None
     from ai_gene_review.etl.panther_families import member_index_path
 
     from ai_gene_review.etl.panther_families import load_member_index_alternates
@@ -5236,6 +5433,7 @@ def fix_panther_labels(
 
     total = 0
     held_back: list[tuple[Path, str, str, str, bool]] = []
+    renamed: list[tuple[Path, str, str, str]] = []
     for path in targets:
         text = path.read_text()
         doc = yaml.safe_load(text)
@@ -5250,12 +5448,13 @@ def fix_panther_labels(
             elif any(a in member_index for a in use.representative_accessions):
                 corroborated.update(use.declared_family_curies)
         new_text, changes, deferred = rewrite_panther_labels(
-            text, names, skip, allow_divergent=allow_divergent
+            text, names, skip, allow_divergent=allow_divergent, previous_names=previous_names
         )
-        held_back.extend(
-            (path, curie, old, new, curie in corroborated)
-            for curie, old, new in deferred
-        )
+        for item in deferred:
+            if item.reason == "renamed_in_switch":
+                renamed.append((path, item.curie, item.old, item.new))
+            else:
+                held_back.append((path, item.curie, item.old, item.new, item.curie in corroborated))
         if not changes:
             continue
         total += len(changes)
@@ -5266,6 +5465,15 @@ def fix_panther_labels(
             typer.echo(f"  (skipped {len(skip)} id(s) with disputed grounding)")
         if apply:
             path.write_text(new_text)
+
+    if renamed and previous is not None:
+        typer.echo(
+            f"\n⚠  {len(renamed)} label(s) NOT rewritten: they are on ids whose name "
+            f"changed since PANTHER {previous[0]}, so the id may now "
+            "name something else. Remap them from `just panther-release-diff`."
+        )
+        for path, curie, old, new in renamed:
+            typer.echo(f"  {path.name}: {curie}  {old!r} -> now {new!r}")
 
     if held_back:
         typer.echo(

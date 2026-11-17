@@ -10,6 +10,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/1E5N6CURrZmbvxXEgk6uh7
       title: Project brief
+index_group: MAMMAL
 ---
 
 # EVIDENCE_SOURCE_SUFFICIENCY

@@ -41,3 +41,7 @@ Sources checked (2026-11-04):
   that binds IL-1; the ligand is not a subunit.
 - No IL1A-specific evidence for apoptotic process participation (IL-1 is processed/released during
   apoptosis, PMID:1924307, it does not execute it).
+
+## Source-defect re-review, round 2 (2026-11-15)
+
+Reconciled with the IL1RAP and IL1R1 reviews, which cover the same Complex Portal complexes. The three negative-regulation rows (GO:0032690, GO:0050728, GO:2000660; NAS, PMID:23847621) are Complex Portal's standard export of a term held by the decoy complex CPX-9168 (IL1A:IL1RAP:IL1R2) to every member. IL-1alpha is a genuine member, so nothing in the record is on the wrong gene and the source defects were withdrawn; REMOVE stays as this review's own judgement, because the ligand performs none of the inhibition. The monocyte differentiation row (GO:0030224) and the interleukin-1 receptor complex row (GO:0045323) keep a query, now typed WRONG_TERM against the complex records, matching IL1RAP: the question is whether the term fits the complex, not which member carries it.

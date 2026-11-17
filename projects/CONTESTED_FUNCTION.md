@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/GW82WzsUznCSPvHxx9WdXV
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Contested Function Project

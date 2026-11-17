@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/Uak8ttS9nu4C36Fh9JypKg
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # MOD gene descriptions as review input

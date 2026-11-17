@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 
 from ai_gene_review.validation.rule_review_receipts import (
+    _redundancy_table,
     check_review,
     experimental_annotations,
     labels_agree,
@@ -31,6 +32,23 @@ DICER_SET = {
 }
 
 
+UNIT = {
+    "name": "Dicer-like RNase III",
+    "unit_kind": "FAMILY",
+    "condition_sets": [1],
+    "example_proteins": ["Q9UPY3"],
+    "most_informative_term_id": "GO:0010605",
+    "most_informative_term_label": "negative regulation of macromolecule metabolic process",
+    "term_relation": "SAME_AS_CONSEQUENT",
+    "evidence": ["Q9UPY3 GO:0010605 IDA PMID:1"],
+}
+MEANING: dict[str, Any] = {
+    "biological_meaning": {"assessment": "COHERENT", "notes": "One family, one term."},
+    "biological_units": [UNIT],
+    "parsimony": {"assessment": "PARSIMONIOUS", "notes": "One set."},
+}
+
+
 def review(**overrides: Any) -> dict[str, Any]:
     """A minimal review that passes every offline check."""
     base: dict[str, Any] = {
@@ -51,7 +69,23 @@ def review(**overrides: Any) -> dict[str, Any]:
     return base
 
 
+def write_tables(root: Path) -> None:
+    """Synthetic redundancy tables under ``root``, so no test depends on the committed ones."""
+    folder = root / "projects" / "ARBA_REVIEW"
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "rule_redundancy.tsv").write_text(
+        "rule\tterm\tlabel\tgo_descendants\tcondition_sets\tcovered_sets\tcovered_by_terms\n"
+        "ARBA00026480\tGO:0010605\tnegative regulation of macromolecule metabolic process\t524\t343\t313\tGO:0010629\n"
+    )
+    (folder / "keyword_redundancy.tsv").write_text(
+        "rule\tkeyword\tname\tkeyword_descendants\tcondition_sets\tcovered_sets\tcovered_by_keywords\n"
+        "ARBA00022679\tKW-0808\tTransferase\t13\t4603\t2661\tKW-0418=1196\n"
+    )
+    _redundancy_table.cache_clear()  # the loader caches by path; a rewritten table must be re-read
+
+
 def checks(data: dict[str, Any], tmp_path: Path, severity: str = "error") -> set[str]:
+    write_tables(tmp_path)
     report = ValidationReport(is_valid=True)
     check_review(data, report, project_root=tmp_path, labels=LABELS)
     return {str(issue.check_type) for issue in report.issues if issue.severity == severity}
@@ -178,6 +212,7 @@ def test_deprecate_with_counterexample_passes(tmp_path: Path) -> None:
     data = review(
         action="DEPRECATE",
         confidence=0.9,
+        **MEANING,
         annotation_assessments=[
             {"annotation_kind": "GO_TERM", "value": "GO:0010605", "assessment": "INCORRECT",
              "incorrect_examples": ["P12345"]}
@@ -187,9 +222,66 @@ def test_deprecate_with_counterexample_passes(tmp_path: Path) -> None:
 
 
 def test_withdrawn_rule_can_be_deprecated_without_sets(tmp_path: Path) -> None:
-    data = review(action="DEPRECATE", confidence=0.9, rule={"rule_id": "A", "condition_sets": [], "withdrawn": True,
-                                            "retrieved_date": "2026-11-10"})
-    assert checks(data, tmp_path) == set()
+    withdrawn_rule = {"rule_id": "A", "condition_sets": [], "withdrawn": True, "retrieved_date": "2026-11-10"}
+    assert checks(review(action="WITHDRAWN", rule=withdrawn_rule), tmp_path) == set()
+    assert "withdrawn_action_mismatch" in checks(review(action="DEPRECATE", confidence=0.9, rule=withdrawn_rule), tmp_path)
+    assert "withdrawn_action_mismatch" in checks(review(action="WITHDRAWN"), tmp_path)
+
+
+def test_accept_with_a_meaning_judgement_passes(tmp_path: Path) -> None:
+    assert checks(review(action="ACCEPT", confidence=0.8, **MEANING), tmp_path) == set()
+
+
+def _meaning(assessment: str, units: list[dict[str, Any]], parsimony: str = "PARSIMONIOUS") -> dict[str, Any]:
+    return {"biological_meaning": {"assessment": assessment}, "biological_units": units,
+            "parsimony": {"assessment": parsimony}}
+
+
+@pytest.mark.parametrize(
+    "overrides,expected",
+    [
+        pytest.param({"action": "ACCEPT", "confidence": 0.8}, "verdict_without_meaning",
+                     id="accurate per set, never asked whether the rule means anything"),
+        pytest.param({"action": "ACCEPT", "confidence": 0.8, **_meaning("NOT_ASSESSED", [UNIT])},
+                     "verdict_without_meaning", id="accept with meaning not assessed"),
+        pytest.param({"action": "ACCEPT", "confidence": 0.8, **_meaning("TRUE_BUT_UNINFORMATIVE", [UNIT])},
+                     "accept_of_uninformative_rule", id="accepting an umbrella term"),
+        pytest.param({"action": "ACCEPT", "confidence": 0.8, **_meaning("COHERENT", [UNIT], "REDUNDANT")},
+                     "accept_without_parsimony", id="accepting a redundant rule"),
+        pytest.param({"action": "SPLIT", "confidence": 0.8, **_meaning("HETEROGENEOUS", [UNIT, {"name": "other"}])},
+                     "split_without_units", id="split with one target term"),
+        pytest.param({"action": "MODIFY", "confidence": 0.8, "suggested_modifications": "x",
+                      **_meaning("TRUE_BUT_UNINFORMATIVE", [UNIT])},
+                     "uninformative_without_units", id="uninformative with no more specific term shown"),
+        pytest.param({"action": "MODIFY", "confidence": 0.8, "suggested_modifications": "x",
+                      **_meaning("HETEROGENEOUS", [UNIT])},
+                     "heterogeneous_without_units", id="heterogeneous with one unit"),
+        pytest.param({"action": "ACCEPT", "confidence": 0.8,
+                      **_meaning("COHERENT", [{**UNIT, "most_informative_term_label": "gene silencing"}])},
+                     "unit_term_label_mismatch", id="unit term label from memory"),
+        pytest.param({"action": "ACCEPT", "confidence": 0.8, **_meaning("COHERENT", [{**UNIT, "evidence": []}])},
+                     "unit_term_without_evidence", id="unit term with no curated annotation"),
+        pytest.param({"action": "ACCEPT", "confidence": 0.8, **_meaning("COHERENT", [{**UNIT, "condition_sets": [7]}])},
+                     "condition_set_out_of_range", id="unit cites a set the rule lacks"),
+        pytest.param({"action": "ACCEPT", "confidence": 0.8,
+                      **_meaning("COHERENT", [{**UNIT, "example_proteins": ["DICER1"]}])},
+                     "example_not_an_accession", id="unit example is a gene symbol"),
+    ],
+)
+def test_meaning_error_is_caught(overrides: dict[str, Any], expected: str, tmp_path: Path) -> None:
+    assert expected in checks(review(**overrides), tmp_path)
+
+
+def test_redundancy_figures_are_checked_against_the_table(tmp_path: Path) -> None:
+    rule = {"rule_id": "ARBA00026480", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10",
+            "source_condition_set_count": 355,
+            "go_annotations": [{"go_id": "GO:0010605",
+                                "go_label": "negative regulation of macromolecule metabolic process"}]}
+    data = review(id="ARBA00026480", rule=rule,
+                  biological_meaning={"assessment": "NOT_ASSESSED", "consequent_descendant_count": 12})
+    assert "redundancy_receipt_mismatch" in checks(data, tmp_path)
+    data["biological_meaning"]["consequent_descendant_count"] = 524
+    assert "redundancy_receipt_mismatch" not in checks(data, tmp_path)
 
 
 def test_naming_the_analysis_cap_is_allowed_when_undecided(tmp_path: Path) -> None:
@@ -201,6 +293,7 @@ def test_obsolete_consequent_justifies_deprecate(tmp_path: Path) -> None:
     data = review(
         action="DEPRECATE",
         confidence=0.9,
+        **MEANING,
         annotation_assessments=[
             {"annotation_kind": "GO_TERM", "value": "GO:0010605", "assessment": "UNDECIDED", "consequent_obsolete": True}
         ],
@@ -258,3 +351,164 @@ def test_committed_rule_reviews_pass_offline_receipt_checks(review_file: Path) -
 
 def test_rule_reviews_were_found() -> None:
     assert len(RULE_REVIEWS) >= 78
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "term,relation,expected",
+    [
+        ("GO:0010605", "SAME_AS_CONSEQUENT", False),
+        ("GO:0010629", "DESCENDANT_OF_CONSEQUENT", False),  # negative regulation of gene expression
+        ("GO:0010629", "OUTSIDE_CONSEQUENT", True),
+        ("GO:0006412", "DESCENDANT_OF_CONSEQUENT", True),  # translation is not under GO:0010605
+    ],
+)
+def test_unit_term_relation_is_checked_against_the_ontology(term: str, relation: str, expected: bool) -> None:
+    from ai_gene_review.validation.rule_review_receipts import check_review_online
+
+    unit = {**UNIT, "most_informative_term_id": term, "term_relation": relation}
+    data = review(rule={"rule_id": "X", "go_annotations": [{"go_id": "GO:0010605"}]}, biological_units=[unit])
+    report = ValidationReport(is_valid=True)
+    check_review_online(data, report)
+    fired = any(issue.check_type == "unit_term_relation_mismatch" for issue in report.issues)
+    assert fired is expected
+
+
+def test_deprecate_of_a_rule_that_does_no_work(tmp_path: Path) -> None:
+    meaning = {**MEANING, "biological_meaning": {"assessment": "COHERENT", "sets_covered_by_more_specific_rule": 1}}
+    assert checks(review(action="DEPRECATE", confidence=0.8, **meaning), tmp_path) == set()
+    meaning["biological_meaning"]["sets_covered_by_more_specific_rule"] = 0
+    assert "deprecate_without_counterexample" in checks(review(action="DEPRECATE", confidence=0.8, **meaning), tmp_path)
+
+
+def test_correct_assessment_cannot_name_wrong_proteins(tmp_path: Path) -> None:
+    data = review(annotation_assessments=[{"annotation_kind": "GO_TERM", "value": "GO:0010605", "assessment": "CORRECT",
+                                           "incorrect_examples": ["P12345"]}])
+    assert "correct_assessment_with_incorrect_examples" in checks(data, tmp_path)
+
+
+@pytest.mark.parametrize(
+    "field,text,fires",
+    [
+        ("review_summary", "rule_redundancy.tsv finds 320 of 355 sets already matched.", True),
+        ("review_summary", "rule_redundancy.tsv finds 313 of 343 sets already matched.", False),
+        ("corrections", "projects/ARBA_REVIEW/rule_redundancy.tsv: ARBA00026480 condition_sets 355, covered_sets 320", True),
+        ("review_summary", "In the sample, 11 of 40 sets are matched; totals are in rule_redundancy.tsv.", False),
+    ],
+)
+def test_prose_quoting_the_redundancy_table_must_match_it(field: str, text: str, fires: bool, tmp_path: Path) -> None:
+    rule = {"rule_id": "ARBA00026480", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10",
+            "source_condition_set_count": 343,
+            "go_annotations": [{"go_id": "GO:0010605",
+                                "go_label": "negative regulation of macromolecule metabolic process"}]}
+    extra: dict[str, Any] = (
+        {"corrections": [{"withdrawn_claim": "x", "correction": "y", "evidence": [text]}]}
+        if field == "corrections" else {field: text}
+    )
+    data = review(id="ARBA00026480", rule=rule, **extra)
+    assert ("redundancy_prose_mismatch" in checks(data, tmp_path)) is fires
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "evidence,expected",
+    [
+        pytest.param("Q704Y3 GO:0002024 IMP PMID:12161756 (assigned by MGI)", False, id="held"),
+        pytest.param("Q704Y3 GO:0002024 IDA PMID:12161756 (assigned by MGI)", True, id="wrong-code"),
+        pytest.param("Q704Y3 GO:0002024 IMP PMID:1 (assigned by MGI)", True, id="wrong-reference"),
+        pytest.param("Q704Y3: no curated annotation under the term", False, id="not-a-receipt"),
+    ],
+)
+def test_unit_evidence_is_looked_up(evidence: str, expected: bool) -> None:
+    from ai_gene_review.validation.rule_review_receipts import check_review_online
+
+    unit = {**UNIT, "most_informative_term_id": "GO:0002024", "term_relation": "NONE_KNOWN", "evidence": [evidence]}
+    data = review(rule={"rule_id": "X", "go_annotations": [{"go_id": "GO:1990845"}]}, biological_units=[unit])
+    report = ValidationReport(is_valid=True)
+    check_review_online(data, report)
+    assert any(issue.check_type == "unit_evidence_not_found" for issue in report.issues) is expected
+
+
+@pytest.mark.parametrize("figure,fires", [("320 of 355", True), ("313 of 343", False)])
+def test_correction_text_backed_by_the_table_must_match_it(figure: str, fires: bool, tmp_path: Path) -> None:
+    rule = {"rule_id": "ARBA00026480", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10",
+            "source_condition_set_count": 343,
+            "go_annotations": [{"go_id": "GO:0010605",
+                                "go_label": "negative regulation of macromolecule metabolic process"}]}
+    correction = {"withdrawn_claim": "x", "correction": f"{figure} sets are covered by rules with more specific terms.",
+                  "evidence": ["projects/ARBA_REVIEW/rule_redundancy.tsv: ARBA00026480 condition_sets 343, covered_sets 313"]}
+    data = review(id="ARBA00026480", rule=rule, corrections=[correction])
+    assert ("redundancy_prose_mismatch" in checks(data, tmp_path)) is fires
+
+
+@pytest.mark.parametrize(
+    "text,expected_warning",
+    [
+        ("320 of 355 sets are covered by rules with more specific terms.", True),
+        ("48 sets are already matched by rules asserting a more specific term.", True),
+        ("313 of 343 sets are covered by rules with more specific terms.", False),
+        ("313 sets are already matched by rules asserting a more specific term.", False),
+        ("In the sample, 11 of 40 sets are matched by a rule for a curated term.", False),
+        ("320 of the rule's sets are already matched by rules asserting a more specific term.", True),
+        ("313 of its sets are covered by more specific rules.", False),
+    ],
+)
+def test_coverage_figure_without_the_file_name_is_still_compared(text: str, expected_warning: bool, tmp_path: Path) -> None:
+    rule = {"rule_id": "ARBA00026480", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10",
+            "source_condition_set_count": 343,
+            "go_annotations": [{"go_id": "GO:0010605",
+                                "go_label": "negative regulation of macromolecule metabolic process"}]}
+    data = review(id="ARBA00026480", rule=rule, review_summary=text)
+    assert ("redundancy_prose_unconfirmed" in checks(data, tmp_path, "warning")) is expected_warning
+    assert "redundancy_prose_mismatch" not in checks(data, tmp_path)
+
+
+def test_correction_naming_the_table_in_its_own_text_is_an_error(tmp_path: Path) -> None:
+    rule = {"rule_id": "ARBA00026480", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10",
+            "source_condition_set_count": 343,
+            "go_annotations": [{"go_id": "GO:0010605",
+                                "go_label": "negative regulation of macromolecule metabolic process"}]}
+    correction = {"withdrawn_claim": "x", "correction": "Per rule_redundancy.tsv, 320 of 355 sets are covered by rules."}
+    assert "redundancy_prose_mismatch" in checks(review(id="ARBA00026480", rule=rule, corrections=[correction]), tmp_path)
+
+
+@pytest.mark.parametrize(
+    "text,expected",
+    [
+        ("600 of 4,603 sets are also matched by a rule for a descendant keyword.", {"redundancy_prose_unconfirmed"}),
+        ("2,661 of 4,603 sets are also matched by a rule for a descendant keyword.", set()),
+        ("None of the 4,603 condition sets is matched by a rule for a descendant keyword.", set()),
+        ("keyword_redundancy.tsv: 600 sets are matched by a rule for a descendant keyword.", {"redundancy_prose_mismatch"}),
+    ],
+)
+def test_coverage_prose_is_compared_with_given_table_figures(text: str, expected: set[str]) -> None:
+    """The comparison itself, with the table's figures passed in: no committed table is read."""
+    from ai_gene_review.validation.rule_review_receipts import _check_coverage_prose
+
+    fired: set[str] = set()
+
+    def add(severity: Any, check: str, message: str, path: str, suggestion: str | None = None) -> None:
+        fired.add(check)
+
+    _check_coverage_prose({"review_summary": text}, 2661, 4603, "keyword_redundancy.tsv", add)
+    assert fired == expected
+
+
+@pytest.mark.parametrize(
+    "text,expected_error,expected_warning",
+    [
+        ("600 of 4,603 sets are also matched by a rule for a descendant keyword.", False, True),
+        ("keyword_redundancy.tsv: 600 of 4,603 sets are also matched by a rule for a descendant keyword.", True, False),
+        ("keyword_redundancy.tsv: 2,661 of 4,603 sets are also matched by a rule for a descendant keyword.", False, False),
+    ],
+)
+def test_keyword_review_is_routed_to_the_keyword_table(
+    text: str, expected_error: bool, expected_warning: bool, tmp_path: Path
+) -> None:
+    """End to end: a KEYWORD review reaches the coverage check with its keyword_redundancy.tsv row."""
+    rule = {"rule_id": "ARBA00022679", "condition_sets": [DICER_SET], "retrieved_date": "2026-11-10",
+            "source_condition_set_count": 4603}
+    data = review(id="ARBA00022679", rule=rule, review_summary=text,
+                  annotation_assessments=[{"annotation_kind": "KEYWORD", "value": "KW-0808", "assessment": "UNDECIDED"}])
+    assert ("redundancy_prose_mismatch" in checks(data, tmp_path)) is expected_error
+    assert ("redundancy_prose_unconfirmed" in checks(data, tmp_path, "warning")) is expected_warning

@@ -121,6 +121,7 @@ manifest:
     - href: https://claude.ai/artifact/44UaWpaBByrMaZcALkgq5R
       title: PseudoCAP seed audit
       description: AI generated
+index_group: CROSS_CUTTING
 ---
 
 # IBA Annotation Quality Project
