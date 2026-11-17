@@ -239,21 +239,24 @@ def ratings_cmd(
 def diff_covers(path: str, diff_text: str) -> bool:
     r"""True if a unified diff has a file header for ``path``.
 
-    Matches the ``---`` old-file header, so git, ``--no-prefix`` and plain
-    ``diff -u`` patches all count; a context line that merely quotes the path
-    does not.
+    Matches the ``---`` old-file or ``+++`` new-file header, so a modified,
+    added (``--- /dev/null``), deleted or renamed file counts, in git,
+    ``--no-prefix`` or plain ``diff -u`` form; a context line that merely
+    quotes the path does not.
 
     >>> diff_covers("x.yaml", "diff --git a/x.yaml b/x.yaml\n--- a/x.yaml\n+++ b/x.yaml\n")
     True
     >>> diff_covers("x.yaml", "--- x.yaml\t2026-11-17\n+++ x.yaml\n")
     True
+    >>> diff_covers("x.yaml", "--- /dev/null\n+++ b/x.yaml\n")
+    True
     >>> diff_covers("x.yaml", "--- a/y.yaml\n+++ b/y.yaml\n  see a/x.yaml here\n")
     False
     """
     for line in diff_text.split("\n"):
-        if line.startswith("--- "):
+        if line.startswith(("--- ", "+++ ")):
             name = line[4:].split("\t")[0]
-            if name in (path, f"a/{path}"):
+            if name in (path, f"a/{path}", f"b/{path}"):
                 return True
     return False
 

@@ -600,6 +600,14 @@ def test_committed_tracker_validates():
             ["missing.patch does not exist"],
         ),
         (
+            {"path": "new.yaml", "landed": False, "preserved_diff": "d.patch"},
+            [],
+        ),
+        (
+            {"path": "moved.yaml", "landed": False, "preserved_diff": "d.patch"},
+            [],
+        ),
+        (
             {"path": "b.yaml", "landed": False, "preserved_diff": "d.patch"},
             ["has no diff of b.yaml"],
         ),
@@ -611,6 +619,9 @@ def test_work_product_problems(tmp_path, product, expected):
 
     (tmp_path / "d.patch").write_text(
         "diff --git a/a.yaml b/a.yaml\n--- a/a.yaml\n+++ b/a.yaml\n context a/b.yaml\n"
+        "diff --git a/new.yaml b/new.yaml\nnew file mode 100644\n"
+        "--- /dev/null\n+++ b/new.yaml\n+x\n"
+        "diff --git a/old.yaml b/moved.yaml\n--- a/old.yaml\n+++ b/moved.yaml\n"
     )
     issue = {"shadow": {"work_products": [{"kind": "GENE_REVIEW", **product}]}}
     problems = work_product_problems(issue, tmp_path)
