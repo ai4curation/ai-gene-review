@@ -26,6 +26,20 @@ script finds candidates to read; it does not decide them.
 Groups with an unreviewed member are reported separately: those cannot diverge
 yet, but they are where divergence will appear once the member is reviewed.
 
+**Scope: molecular function only.** ``WORKLIST`` below is the MF worklist, which
+the builder fills by selecting IMP rows on molecular-function terms, so every
+shared claim this script can see is an MF claim. A clean run therefore does not
+mean a pair agrees -- only that it agrees about molecular function.
+
+This is a real gap, not a theoretical one. ``wbpX`` and ``wbpY`` also share
+``GO:0009103`` lipopolysaccharide biosynthetic process from the same reference
+(PMID:9680202), and they were reviewed ``TOO_GENERAL`` and ``MODIFY`` respectively
+with no argument for the difference -- drift of exactly the kind this script
+exists to find, which it could not see because the term is a biological process.
+It was caught by a reviewer reading the diff. Widening the audit means building a
+process-aspect worklist (the builder takes ``--all-aspects``) and pointing
+``WORKLIST`` at it, or reading shared claims from GOA directly.
+
 Usage::
 
     uv run python projects/PSEUDOCAP/check_shared_claim_consistency.py
@@ -168,6 +182,9 @@ def main() -> int:
         f"summary: {len(groups['divergent'])} divergent, "
         f"{len(groups['consistent'])} consistent, "
         f"{len(groups['incomplete'])} incomplete"
+    )
+    print(
+        "scope: molecular-function shared claims only; process and component claims are not checked"
     )
     # Divergence is a prompt to read, not a build failure: always exit 0.
     return 0

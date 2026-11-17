@@ -97,3 +97,24 @@ Three statements in this file contradicted the paper and were corrected with it:
 Not changed: the IBA-seed assessment table above still reads SOUND, and no
 GO_CENTRAL or PseudoCAP defect is recorded. The node term was never wrong; what
 changed is that the target now has direct evidence for a more specific term.
+
+**A second shared claim, caught in review.** `wbpX` and `wbpY` also share
+`GO:0009103` lipopolysaccharide biosynthetic process from the same 1998 paper,
+and had it as `TOO_GENERAL` here against `MODIFY` to `GO:0009243` there, with
+nothing in either row arguing the difference. Both now read `TOO_GENERAL`: that
+is what `action_consistency.yaml` calls the intended use, a broad term subsumed
+by a more specific accepted term, and the specific term is the `GO:0009243` IDA
+row both genes already carry, so a `MODIFY` proposing it as a replacement would
+add nothing.
+
+Both rows now also say why that term is `TOO_GENERAL` while the three
+`GO:0016757` rows are `ACCEPT`, since both are ancestors of a term asserted
+elsewhere in the review. LPS biosynthesis is imprecise in its own right once
+O-antigen synthesis is asserted — LPS is lipid A plus core plus O antigen, and
+the row does not say which part this gene builds. Glycosyltransferase activity
+is not imprecise in that way: it is a definite claim about what the protein does
+to a substrate, and it is as precise as those rows' own evidence reaches.
+
+The audit script could not see this one: it reads the molecular-function
+worklist, so process claims are out of its scope. That limit is now stated in the
+script and on the project page.

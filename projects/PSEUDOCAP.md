@@ -620,6 +620,18 @@ action is MODIFY. Comparing bare actions would have called `wbpL` and `wbpY`
 consistent back when both read MODIFY, even though they were moving to different
 branches of the ontology.
 
+**The audit covers molecular function only**, because it reads the MF worklist, whose
+builder selects IMP rows on molecular-function terms. A clean run means a pair agrees
+about molecular function, not that it agrees. That limit has already cost something
+real: `wbpX` and `wbpY` also share `GO:0009103` lipopolysaccharide biosynthetic process
+from PMID:9680202 and had it as `TOO_GENERAL` against `MODIFY`, with no argument for the
+difference — the same drift, invisible to the script because the term is a process. A
+reviewer reading the diff caught it. Both now read `TOO_GENERAL`, which is what
+`action_consistency.yaml` calls the intended use: a broad term subsumed by a more
+specific accepted term, here `GO:0009243` O antigen biosynthetic process, which both
+genes already carry. Widening the audit means building a process-aspect worklist (the
+builder takes `--all-aspects`) or reading shared claims from GOA directly.
+
 The check has already paid for itself twice. It is the generalisation of the
 `liuB`/`liuD` drift caught in review on PR #6341, and run across the corpus it
 found a second instance: `wbpX` and `wbpY` share the `GO:0016757` claim from
