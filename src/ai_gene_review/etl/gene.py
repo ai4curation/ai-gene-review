@@ -1250,13 +1250,11 @@ def fetch_goa_data(uniprot_id: str) -> str:
             page += 1
 
         except requests.exceptions.RequestException as e:
-            if page == 1:
-                # First page failed, return empty result
-                return "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
-            else:
-                # Subsequent page failed, use what we have
-                print(f"Warning: Pagination stopped at page {page} due to error: {e}")
-                break
+            # An empty or truncated table would be written over the existing GOA
+            # file and read as "no annotations", so a failed request must fail.
+            raise ValueError(
+                f"QuickGO request for {uniprot_id} failed on page {page}: {e}"
+            ) from e
 
     # Process all collected results
     results = all_results
