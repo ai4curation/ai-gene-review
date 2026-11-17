@@ -191,9 +191,9 @@ The 18 seeds whose citations fail account for 1,030 downstream rows.
 
 | Biology | Seeds (downstream rows) | Rows |
 |---|---|---|
-| Supported independently | GABRA2 (94), GLRA1 (92), GRIN2B (92), GRIK4 (89), GRIA3 (85), Htr3a (79), GRIK5 (78), Grin2d (2), Grik1, Gria2 | 611 |
+| Supported independently | GABRA2 (94), GLRA1 (92), GRIN2B (92), GRIK4 (89), Htr3a (79), GRIK5 (78), Grin2d (2), Grik1, Gria2 | 526 |
 | Partial (afferent axons, not clearly terminals) | GABRA5 (91) | 91 |
-| Presynaptic localization only | GRIA4 (96), GRIA1 (94), GRIN3B (76), Gabra1, Gabra3 | 266 |
+| Presynaptic localization only | GRIA4 (96), GRIA1 (94), GRIA3 (85), GRIN3B (76), Gabra1, Gabra3 | 351 |
 | Not found | GABRB1 (62) | 62 |
 | Not resolved (antibody does not separate paralogs) | Gabrb2 | 0 |
 
@@ -205,9 +205,10 @@ terminals are both independently shown. For these, the fix is a better citation,
 removal.
 
 **No seed is contradicted.** The candidates for a bad seed are the ones with no
-functional presynaptic evidence: GRIA4, GRIA1 and GRIN3B (immunogold only), GABRA5
-(afferent axons rather than terminals) and GABRB1 (nothing found). Together they feed 419
-downstream rows. GABRB1 is the weakest case, but every presynaptic GABA-A receptor
+functional presynaptic evidence: GRIA4, GRIA1, GRIA3 and GRIN3B (immunogold only; the one
+functional AMPA study implicates GluR2-containing receptors and found no presynaptic
+effect with a GluR3-selective agonist), GABRA5 (afferent axons rather than terminals) and
+GABRB1 (nothing found). Together they feed 504 downstream rows. GABRB1 is the weakest case, but every presynaptic GABA-A receptor
 contains some beta subunit, so this is a lack of evidence for beta1 specifically, not
 evidence against it. None of these should be reported as "wrong" without an expert view;
 each should be reported as "citation does not support the term, and we found no
@@ -222,7 +223,8 @@ taken from a GABA-B paper, so every SynGO annotation on a GABA receptor gene was
 for the same slip. [`gaba_receptor_swaps.py`](SYNGO_PROVENANCE/gaba_receptor_swaps.py)
 pulls them (339 rows from 38 papers), reads each paper's title and abstract, and flags a
 GABA-A gene annotated from a paper mostly about GABA-B receptors, or the reverse. It
-flagged three papers; the verdicts are in
+flagged three papers; its output is
+[`gaba_receptor_swaps.yaml`](SYNGO_PROVENANCE/data/gaba_receptor_swaps.yaml) and the verdicts are in
 [`gaba_receptor_swaps-verdicts.yaml`](SYNGO_PROVENANCE/data/gaba_receptor_swaps-verdicts.yaml).
 
 | Paper | What SynGO did | Spread | Verdict |
@@ -236,6 +238,10 @@ biological grounds, not only mis-sourced, and copied into 57 species. Human GABR
 carries `G protein-coupled neurotransmitter receptor activity` (Ensembl IEA, from mouse
 Gabrb1) beside its correct GABA-A annotations. Both cases are `WRONG_GENE_PRODUCT` with
 cause `SYMBOL_COLLISION`, confirmed from the abstracts, which name the subunits studied.
+None of it has reached PAINT: no IBA annotation names any of the three swapped seeds in
+its WITH/FROM. The spread is Ensembl orthology projections, UniProt automatic rows and
+four UniProt ISS rows. Because the swapped rows carry experimental codes, a later PAINT
+pass could still use them.
 
 ## Error categories this audit needs
 
@@ -301,13 +307,13 @@ channel evidence, `PRACTICE_CHANGE` would describe the cohort for a bulk fix.
   HEK-293 conductance study with nothing presynaptic.
 - [x] Separate provenance from biology: a PubMed screen per flagged seed gene
   (`GO_0099507-seed-biology.yaml`). Most seeds are true but mis-sourced; none is
-  contradicted; five lack functional evidence.
+  contradicted; six lack functional evidence.
 - [x] Check every SynGO annotation on a GABA receptor gene for GABA-A/GABA-B swaps
   (`gaba_receptor_swaps.py`): two confirmed (PMID:11498050, PMID:15174078).
 - [ ] Look for the same kind of name collision beyond GABA receptors (for example other
   receptor families whose subunit and receptor-type names share a letter or number).
-- [ ] Ask an expert (or SynGO) about the five seeds without functional evidence (GRIA4,
-  GRIA1, GRIN3B, GABRA5, GABRB1) before calling any of them wrong.
+- [ ] Ask an expert (or SynGO) about the six seeds without functional evidence (GRIA4,
+  GRIA1, GRIA3, GRIN3B, GABRA5, GABRB1) before calling any of them wrong.
 - [x] Count the downstream annotations each seed feeds (`seed_downstream.py`): 1,030
   rows derive from the 18 flagged seeds.
 - [ ] Export confirmed defects (`just export-source-defects`) and send one report to

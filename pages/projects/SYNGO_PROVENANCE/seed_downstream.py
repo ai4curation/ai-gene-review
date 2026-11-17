@@ -91,6 +91,8 @@ def main() -> None:
            "rule_only_rows": dict(rule_only.most_common()),
            "rows_naming_a_non_seed_accession": dict(unmatched.most_common()),
            "seeds": records}
+    accounted = doc["syngo_rows"] + doc["derived_rows_naming_a_seed"] + sum(rule_only.values())
+    assert accounted == doc["all_rows"], f"rows do not reconcile: {accounted} attributed, {doc['all_rows']} fetched"
     out = DATA / f"{go_id.replace(':', '_')}-downstream.yaml"
     with out.open("w") as fh:
         yaml.safe_dump(doc, fh, sort_keys=False, width=120)
