@@ -8,6 +8,7 @@ genes: [TIA1, TIAL1, USP10, TARDBP, HNRNPA2B1, ATXN2, VCP]   # reviewed genes on
 manifest:
   slides:
     - href: STRESS_GRANULES/slides/STRESS_GRANULES-slides.html
+index_group: MAMMAL
 ---
 
 # Stress Granule Assembly Project

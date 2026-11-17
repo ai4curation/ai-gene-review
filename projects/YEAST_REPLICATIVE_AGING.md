@@ -9,6 +9,7 @@ manifest:
   slides:
     - href: YEAST_REPLICATIVE_AGING/slides/YEAST_REPLICATIVE_AGING-slides.html
       description: Yeast replicative aging slides
+index_group: YEAST
 ---
 
 # Yeast Replicative Aging & mRNA Processing

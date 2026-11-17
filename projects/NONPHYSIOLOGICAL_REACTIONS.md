@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [PIPELINE, OBSOLETION]
 genes: [IRC24, NRE1, yueD, atzA, tfdA, pcpB, linA, opd, dhlA]
 species: [yeast, BACCE, BACSU, PSESD, CUPPJ, SPHCR, SPHIU, BREDI, XANAU]
+index_group: CROSS_CUTTING
 ---
 
 # Non-Physiological Reactions in EC, Rhea and GO

@@ -5,6 +5,7 @@ tags: [EVALUATION]
 autolink_gene_symbols: true
 species:
   - mouse
+index_group: CROSS_CUTTING
 ---
 
 # Mouse Genes Annotation Re-Review
