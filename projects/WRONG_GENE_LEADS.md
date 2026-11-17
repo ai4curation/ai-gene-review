@@ -384,8 +384,8 @@ read or the error is plain from the abstract or the record.
 
 | Gene | Row | Outcome |
 |---|---|---|
-| human/SRPRB | SRP receptor complex EXP (ComplexPortal) | **Probable wrong evidence code.** The paper's crystal, PDB 2FH5, pairs human SRα with mouse SRβ (P47758), so on this paper the human SRPRB row is an ortholog inference. `WRONG_EVIDENCE_CODE` / `CHECK`, `PROBABLE`; the membership claim is true and stays ACCEPT. |
-| human/ALDOA | tubulin binding TAS (BHF-UCL) | **Query.** The WASP-binding paper's abstract does not mention tubulin, but a TAS needs only an author statement, which could be in the unread full text. `WRONG_REFERENCE` / `CHECK`, `SUSPECTED`. The review's flat "does not establish" wording and its `MISCITED` reference verdict are softened to match an abstract-only check. |
+| human/SRPRB | SRP receptor complex EXP (ComplexPortal) | **Probable wrong evidence code.** The paper's crystal, PDB 2FH5, pairs human SRα with mouse SRβ (P47758), so on this paper the human SRPRB row is an ortholog inference. `WRONG_EVIDENCE_CODE` / `CHECK`, `PROBABLE`; the membership claim is true and stays ACCEPT. (Separately, the review's two generic membrane rows move from KEEP_AS_NON_CORE to TOO_GENERAL, matching their reason.) |
+| human/ALDOA | tubulin binding TAS (BHF-UCL) | **Query.** The WASP-binding paper's abstract does not mention tubulin, but a TAS needs only an author statement, which could be in the unread full text. `WRONG_REFERENCE` / `CHECK`, `SUSPECTED`. The review's flat "does not establish" wording and its `MISCITED` reference verdict are softened to match an abstract-only check, and the action moves from MARK_AS_OVER_ANNOTATED to **UNDECIDED**, since nothing else in the row argued the term overshoots. |
 | ARATH/FRK1 | defense response to bacterium IDA (TAIR) | **Query.** FRK1 is the paper's MAMP marker gene, and UniProt gave the other marker genes IEP rows, so the observation is probably induction (IEP). `WRONG_EVIDENCE_CODE` / `CHECK`, `SUSPECTED`; the review was already UNDECIDED on this argument. |
 | DROME/RfC4 | three TAS rows (FlyBase) | **Query.** The abstract names no RfC4 and describes only the fly large subunit, Gnf1, which has no row from the paper; but the TAS matches the abstract's statement about the whole RF-C complex. `WRONG_GENE_PRODUCT` / `CHECK`, `SUSPECTED`, Gnf1 named as a candidate only. |
 | ARATH/HSP17.7, CCA1, ERS1, AGO1, ARR5, MLO2, MYB34, RGA; DROME/CycA, GstO1, GstO2, Prx4; rat/Dusp21; human/JAK2; DANRE/tbx5a; ORYSJ/MADS3 | various | **False positives.** Most name the gene only in the full text ("CCA1-OX", "TAP-RGA", "ATR1 / Myb34", "Tbx5", CG numbers for the GSTs, "dPrx4"), by a family name ("Jak-Tyk kinases", "aldolase", "the five receptor isoforms", "AtMLO gene family"), by a form without the U ("DSP21"), or by a historical synonym ("At-HSP17.6A"). The rest are rows a resource made deliberately across a family or a figure on one day (type-A ARRs, Omega GSTs, the four peroxiredoxins, AgBase's floral MADS genes). CCA1's quote, which was only the paper's title, now quotes the Figure 6 result. |
@@ -399,7 +399,10 @@ defines its protein in the abstract as "the cytosolic class II smHSP in Arabidop
 heat shock protein 17.6A. UniProt cites the paper on Q9XIE3, a class I sHSP that UniProt named
 HSP17.6A, and five UniProt rows from it sit on that protein. They now carry a
 `WRONG_GENE_PRODUCT` / `CHECK` query (`PROBABLE`) in the HSP17.6A review, naming O81822 as the
-likely protein; the other class II gene (P29830) is not excluded from the abstract. This lead
+likely protein; the other class II gene (P29830) is not excluded from the abstract. The
+review no longer relies on the paper for any claim about Q9XIE3: those rows, its core function
+and its description now rest on the family-level evidence, and the reference is marked
+`MISCITED`. This lead
 is not counted in the tallies, since it was not one of the 20.
 
 **Why the yield fell.** Outside human, the gene's own UniProt entry is often unreviewed
@@ -409,7 +412,8 @@ peroxiredoxins) fall below the four-folder shared-row threshold.
 
 Across all seven batches (126 leads, each gene counted once under its most severe outcome): 18
 wrong-gene annotations, 5 wrong evidence codes, 8 wrong references, 21 queries pending full
-text, and 74 false positives or no change. No action was changed on an abstract alone.
+text, and 74 false positives or no change. No action was changed to REMOVE or MODIFY on an
+abstract alone.
 
 ## Limitations
 
