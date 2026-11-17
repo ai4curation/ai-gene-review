@@ -118,3 +118,35 @@ to a substrate, and it is as precise as those rows' own evidence reaches.
 The audit script could not see this one: it reads the molecular-function
 worklist, so process claims are out of its scope. That limit is now stated in the
 script and on the project page.
+
+**Two corrections to the entry above, from later review rounds.** The entry is
+left as written and corrected here, because it is a record of what was believed
+when, not a statement of current fact.
+
+*Processivity was overstated.* The paragraph above says the paper "reports the
+opposite mechanism: the WbpX/WbpY mixture synthesises D-Rha oligomers
+*non-processively*". The paper does report that, but hedges it in the same
+breath: [PMID:35166992 "WbpX and WbpY lack the QxxRW sequence found in processive
+enzymes [47] and therefore may act in a non-processive or partially processive
+mechanism."]. The review rows now carry the hedge; this note is where it was
+missing longest, because round 4 corrected the YAML and not the prose beside it.
+
+*The linkage NMR was not run on the lipid-analogue acceptor.* The entry above
+cites the α1-2/α1-3 result without saying which acceptor produced it. The
+transfer assays used the phenylundecyl-diphosphate analogue, but NMR of those
+products failed — [PMID:35166992 "However, the 2D NMR analysis showed that a
+complex mixture of compounds was present and the structures could not be
+resolved (data not shown)."] — and the linkage assignments come from a
+large-scale synthesis on a benzyl D-rhamnoside acceptor, which the authors note
+[PMID:35166992 "It is interesting that the polymerization by WbpX was clearly
+facilitated by replacing the D-GlcNAcα-PP-Und moiety of the acceptor with a
+benzyl group that appeared to enhance the acceptor affinity."] and which may
+[PMID:35166992 "This sequence of WbpZ → WbpY → WbpX action may not be required
+when using a non-natural synthetic D-Rhaα-Bn acceptor."] bypass the native order
+of action. The `GO:0016758` term is unaffected either way, since it asserts
+hexosyl transfer and not a linkage.
+
+Both corrections are the same failure repeated: fixing a claim in one file and
+leaving the identical claim in the file next to it. The lesson applied from
+round 3 onwards is to sweep every instance rather than patch the one that was
+named.
