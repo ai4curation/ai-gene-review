@@ -225,3 +225,17 @@ showing the sequential addition of 4 D-Rha residues"]. That is the evidence
 behind reading WbpX as the chain-extending enzyme of the pair, so confining it
 to the artificial acceptor would have undercut the review's own position. Only
 the linkage resolution depends on the benzyl acceptor.
+
+*Domain count does not predict linkage repertoire here (2026-11-17).* Both
+reviews have said since an early round that WbpX forms two linkages "despite
+carrying only one predicted glycosyltransferase domain", and neither cited the
+sentence that says so. It is [PMID:35166992 "WbdA has 2 or 3 GT domains while
+WbpX has only one predicted GT domain that appears to add several D-Rha residues
+in sequence and also alternate between creating α1-2 and α1-3 linkages."]. The
+other half of the contrast is the sentence immediately after it: [PMID:35166992
+"Thus, WbpX may have a flexible and dynamic catalytic site while WbpY only
+synthesizes the α1-3 linkage although it has 2 proposed GT domains."]. So WbpX
+does more with one domain and WbpY less with two, which is the reason the 1998
+proposal that WbpY contributes two of the three repeat residues cannot be
+inferred from its domain architecture. That proposal is recorded as DISPUTED on
+the wbpY review.
