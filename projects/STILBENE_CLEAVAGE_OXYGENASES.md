@@ -15,6 +15,7 @@ genes:
 manifest:
   slides:
     - href: STILBENE_CLEAVAGE_OXYGENASES/slides/STILBENE_CLEAVAGE_OXYGENASES-slides.html
+index_group: MAMMAL
 ---
 
 # Stilbene Cleavage Oxygenases (SCO / LSD family)

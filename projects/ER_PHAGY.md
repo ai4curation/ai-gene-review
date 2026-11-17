@@ -12,6 +12,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/JUWPntJaSWNzA2RferrHAX
       title: Project brief
+index_group: MAMMAL
 ---
 
 # ER-phagy (Selective ER Autophagy) Project
