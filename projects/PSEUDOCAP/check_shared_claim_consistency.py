@@ -135,6 +135,18 @@ def collect() -> dict[str, list[dict[str, Any]]]:
         actions = {
             s: actions_for_term(str(f), group["term"]) for s, f in folders.items()
         }
+
+        # The worklist names a folder but the review file is not there. That is a
+        # structural absence, not a disagreement about the claim, so it joins the
+        # incomplete cases rather than being reported as divergence: counting it
+        # as divergent would turn a missing file into a content judgement.
+        absent = [s for s, v in actions.items() if v == ["(no review file)"]]
+        if absent:
+            record["unreviewed"] = absent
+            record["reviewed"] = [s for s in symbols if s not in absent]
+            out["incomplete"].append(record)
+            continue
+
         record["actions"] = actions
         bucket = (
             "divergent"

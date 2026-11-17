@@ -626,7 +626,9 @@ about molecular function, not that it agrees. That limit has already cost someth
 real: `wbpX` and `wbpY` also share `GO:0009103` lipopolysaccharide biosynthetic process
 from PMID:9680202 and had it as `TOO_GENERAL` against `MODIFY`, with no argument for the
 difference — the same drift, invisible to the script because the term is a process. A
-reviewer reading the diff caught it. Both now read `TOO_GENERAL`, which is what
+reviewer reading the diff caught it, and a second reviewer pass caught that the first
+fix had reached only the IMP rows while `wbpY` carries an IBA row on the same term
+too. All three rows across the two genes now read `TOO_GENERAL`, which is what
 `action_consistency.yaml` calls the intended use: a broad term subsumed by a more
 specific accepted term, here `GO:0009243` O antigen biosynthetic process, which both
 genes already carry. Widening the audit means building a process-aspect worklist (the
