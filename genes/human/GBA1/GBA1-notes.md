@@ -133,3 +133,25 @@ Rows: GO:0005783 IEA (GO_REF:0000107, Ensembl projection from mouse P17439) and 
 - [PMID:40159502 "The GCase/LIMP-2 transport complex forms within the endoplasmic reticulum (ER) and travels through the trans-Golgi network to the lysosome together"].
 - GBA1 is a soluble lumenal lysosomal hydrolase (FT SIGNAL 1..39) with no KDEL-like motif; ER = biosynthetic transit where the LIMP-2 receptor complex assembles. ER retention of misfolded Gaucher mutants (PMID:18022370 abstract mentions an "endoplasmic reticulum retention mutant") is mutant quality control and not used as support.
 - Outcome: both rows stay KEEP_AS_NON_CORE; supporting_text quotes added to the two bare supported_by entries; dated reason sentence added. No NEW GO:0005788 (transit, not residence).
+
+## 2026-11-06 Retired duplicate review (genes/human/GBA)
+
+`genes/human/GBA`, a duplicate review of the same accession under the old symbol,
+was retired in favour of this folder (PR #6088). Its curation calls were weaker on
+protein binding and process refinement, but it was systematically stricter on
+indirect biological-process rows. These are recorded here so the comparison is not
+lost; this review keeps its own calls, which rest on its source guide's rule of
+retaining positive effects while separating endpoints from the executed chemistry.
+
+Terms the retired GBA review marked MARK_AS_OVER_ANNOTATED that this review keeps
+(KEEP_AS_NON_CORE unless noted): GO:0016241 regulation of macroautophagy,
+GO:0006914 autophagy, GO:0007040 lysosome organization, GO:0009267 cellular
+response to starvation, GO:0009268 response to pH, GO:0032006 regulation of TOR
+signaling, GO:0033574 response to testosterone, GO:0043627 response to estrogen,
+GO:0071548 response to dexamethasone, GO:0097066 response to thyroid hormone,
+GO:0071356 cellular response to tumor necrosis factor, GO:1905165 regulation of
+lysosomal protein catabolic process, GO:0070062 extracellular exosome;
+GO:0042176 regulation of protein catabolic process (TOO_GENERAL here);
+GO:1904457 positive regulation of neuronal action potential (UNDECIDED here).
+For a lysosomal hydrolase the hormone-response and TOR-signalling rows are typical
+indirect over-annotations, so these are candidates for a later re-check.

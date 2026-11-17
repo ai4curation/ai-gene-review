@@ -170,3 +170,7 @@ abstract-only record. These findings inform the description prose and knowledge_
   references, then narrowed the GO:0005575 ND row to the GO-specific fact: LEE1 has no curated
   cellular-component GO assertion even though SGD reports cytoplasmic localization from the global
   GFP survey.
+
+## ND literature-search citations (2026-11-06)
+
+- `existing_annotations[6]` GO:0005575 cellular_component (ND) may be stale. These notes record that SGD reports cytoplasmic localization for LEE1/YPL054W from the Huh et al. 2003 genome-wide GFP localization study [PMID:14562095], which is literature on this gene product in this species identifying a location. The row action is unchanged pending curator review.

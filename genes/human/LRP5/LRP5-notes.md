@@ -118,3 +118,17 @@ PMID:15908424.
 
 These explicit boundaries are based on the cached titles/abstracts or full
 text, not on an inference from paper titles alone.
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IEA (GO_REF:0000120, ARBA00028672 + SL-0095) and EXP (PMID:25920554).
+
+- UniProt: "Endoplasmic reticulum {ECO:0000269|PubMed:25920554}. Note=Chaperoned to the
+  plasma membrane by MESD." [file:human/LRP5/LRP5-uniprot.txt]. PMID:25920554 is an ADPKD
+  variant study; PMC4717208 full text could not be downloaded (PMC efetch, Europe PMC, PMC HTML).
+- Mouse MESD "functions in the endoplasmic reticulum as a specific chaperone for LRP5 and
+  LRP6" [PMID:12581525], so a biosynthetic ER folding pool is expected.
+- Type I receptor (signal 1-31, one TM), no retention motif.
+- Outcome: both rows stay KEEP_AS_NON_CORE on curator deference (HADHB/IFIT2 precedent),
+  with dated reasons; MARK_AS_OVER_ANNOTATED if the full text shows only variant retention.
+  No ER membrane row. Added PMID:12581525 to references.

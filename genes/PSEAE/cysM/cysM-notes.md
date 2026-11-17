@@ -35,3 +35,12 @@ the UniProt entry (PE 3, homology-inferred), and the local PTHR10314 PAINT table
 
 - Cytoplasm -> cytosol MODIFY reason now states that the refinement is an inference from solubility plus the PAINT node, not a localization measurement.
 - The NEW PLP-binding row now leads with the one-PLP-per-monomer measurement.
+
+
+## Comparative cysteine-route audit (2026-11-06)
+
+All seven original payloads/actions preserved, including the inherited PLP-binding NEW. PMID41541697 and PMID41676964 directly establish sulfide-dependent cysteine synthesis and thiosulfate-dependent S-sulfocysteine formation by PA0932/Q9I526. The latter is a separate core activity with its existing proposed MF; no direct cysteine-production reaction from thiosulfate is substituted. Recombinant Q9I526 His-tag assays in E.coli Rosetta(DE3) are distinct from native PAO1 single/double deletions. Growth and auxotrophy conclusions are limited to tested conditions. Cytosol remains inferred, not experimentally localized.
+
+Default Falcon research was attempted normally with --provider falcon and failed with HTTP403. No provider report was fabricated; this section records manual review.
+
+Original GOA payloads, raw UniProt/GOA files and inherited authored proposals are preserved. Current GO checks distinguish the active cysteine synthase MF from obsolete route-specific BP terms GO:0006535 and GO:0019345. Focused gene and helper-history validations are recorded in the audit manifest.

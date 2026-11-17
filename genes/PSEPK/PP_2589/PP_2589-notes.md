@@ -12,3 +12,10 @@ gamma-glutamyl-gamma-aminobutyraldehyde" [PMID:15590624], establishing the
 reaction but not the KT2440 locus. The gene review therefore retains only the
 generic aldehyde-dehydrogenase function and proposes an exact GO term without
 assigning that proposed specificity to PP_2589.
+
+## 2026-11-12 review round
+
+- The proposed new term "4-(gamma-glutamylamino)butanal dehydrogenase
+  activity" now lives only on the E. coli puuC review, where the activity is
+  demonstrated; it was dropped here to avoid a duplicate term request.
+- The description was rewritten as a standalone biological summary.

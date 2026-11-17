@@ -1,0 +1,12 @@
+# TSHB (P01222) Curation Notes
+
+## Summary
+- **Gene**: `TSHB` (`UniProtKB:P01222`), Thyrotropin subunit beta (Thyroid-stimulating hormone subunit beta).
+- **PANTHER subfamily**: `PANTHER:PTHR11515:SF5` (*THYROTROPIN SUBUNIT BETA*) within `PANTHER:PTHR11515` (*GLYCOPROTEIN HORMONE BETA CHAIN*, root PAINT node `PTN000162063`).
+- **Biological role**: Secreted cystine-knot beta subunit synthesized in anterior pituitary thyrotrophs. Non-covalently heterodimerizes with the common glycoprotein hormone alpha subunit (`CGA`, `P01215`, `PANTHER:PTHR11509:SF0`) to form biologically active thyroid-stimulating hormone (thyrotropin, TSH) ([Reactome:R-HSA-378952]; [PMID:2792087]). Secreted heterodimeric TSH binds and activates the thyroid-stimulating hormone receptor (`TSHR`, `P16473`) on thyroid follicular cells, coupling to Gs (adenylyl cyclase/cAMP) and Gq/11 (phospholipase C/IP3) to initiate the thyroid-stimulating hormone signaling pathway (`GO:0038194`) and stimulate thyroid hormone synthesis and secretion ([PMID:36001021]; [Reactome:R-HSA-391375]).
+
+## Ligands in Signaling Pathways Audit (Category A Gap)
+- In GOA, `GO:0038194` (*thyroid-stimulating hormone signaling pathway*) is annotated only to the receptor `TSHR` and the downstream scaffold `PDE4DIP`, whereas neither subunit of the TSH hormone ligand (`TSHB` or `CGA`) is annotated to `GO:0038194`.
+- `TSHB` carries `GO:0005179` (*hormone activity*, `IBA`, `IEA`, `TAS` `PMID:2792087`) and `GO:0005576` (*extracellular region*, `IBA`, `IEA`, `TAS`), which are `ACCEPT`ed as core.
+- `TSHB` carries generic signaling BP terms `GO:0007186` (*G protein-coupled receptor signaling pathway*, `IBA` from `PTN000162063` and `TAS` `PMID:2792087`), `GO:0007267` (*cell-cell signaling*, `TAS` `PMID:2792087`), `GO:0007154` (*cell communication*, `IEA`), and `GO:0023052` (*signaling*, `IEA`). All of these are refined via `MODIFY` to `GO:0038194` (*thyroid-stimulating hormone signaling pathway*), and `GO:0038194` is added as a `NEW` annotation supported by the cryo-EM structure of TSH-bound `TSHR` ([PMID:36001021]) and [Reactome:R-HSA-391375].
+- `GO:0009653` (*anatomical structure morphogenesis*, `TAS` `PMID:2792087`) is `MARK_AS_OVER_ANNOTATED`: `PMID:2792087` characterizes a homozygous G29R mutation in the conserved CAGYC motif of `TSHB` that prevents heterodimerization with `CGA` and causes congenital nongoitrous hypothyroidism (growth/mental retardation secondary to thyroid hormone deficiency), not a direct role of `TSHB` in morphogenesis.
