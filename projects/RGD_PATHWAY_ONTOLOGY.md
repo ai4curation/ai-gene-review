@@ -1251,4 +1251,4 @@ Ninth set: five RNA polymerase II modules (core and initiation, Mediator,
 elongation and termination, capping, 3′ cleavage and polyadenylation), plus
 notes in the Pol I and Pol III modules pointing to the new enzyme module.
 PW:0000127 moves to `has_module`: 132 `has_module`, 3 `related_module_only`, 2
-`no_specific_go_term`, with `modules_compared` at 844.
+`no_specific_go_term`, with `modules_compared` at 847.
