@@ -37,9 +37,11 @@ are REMOVEd and replaced by a single informative NEW GO:0030165 (PDZ domain bind
 
 The SLC26/SulP family transports sulfate, oxalate, and other anions. SLC26A3's
 dominant physiological activity is Cl-/HCO3- exchange; oxalate transport is a
-secondary, family-conserved activity (IBD placed at the PANTHER family node,
-GO_REF:0000033). Kept as non-core: GO:0019531 oxalate transmembrane transporter,
-GO:0019532 oxalate transport.
+secondary activity with direct gene-specific evidence: Slc26a3-knockout mice lose
+intestinal oxalate absorption and show a 66% fall in urinary oxalate
+[PMID:23886857 "DRA mediates a predominance of the apical uptake of oxalate and Cl(-) absorbed in the small and large intestine of mice"].
+Kept as non-core: GO:0019531 oxalate transmembrane transporter, GO:0019532 oxalate
+transport.
 Sulfate is NOT a SLC26A3 substrate: P40879 is not an IBD seed at the sulfate nodes
 (PTN000212046 / PTN000929279), UniProt FUNCTION is silent on sulfate, and the early
 DRA "sulfate transporter" characterization is contested. The sulfate rows
