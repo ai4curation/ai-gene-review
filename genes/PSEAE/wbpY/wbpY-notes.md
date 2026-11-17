@@ -139,9 +139,22 @@ adds one and stops [PMID:35166992 "After 1 h incubation time GST-WbpY added one
 additional D-Rha residue to the WbpX-product indicated by m/z 1064.4 (Fig.
 10A)."], and on WbpX's benzyl-acceptor products it does not act at all
 [PMID:35166992 "the reaction products of WbpX using D-Rhaα-Bn substrate at 2.5 mM
-concentration, was not an acceptor for WbpY"], which is why the authors conclude
-[PMID:35166992 "Thus WbpY is a monofunctional α1,3-D-RhaT."]. So the
-single-residue limit is the **acceptor** for WbpX, which keeps going when given a
-longer one, and the **enzyme** for WbpY, which does not. That asymmetry is the
-result behind reading WbpY as the adapter-building enzyme and WbpX as the
-polymerase, which both reviews state in their core functions.
+concentration, was not an acceptor for WbpY"]. So the single-residue limit is the
+**acceptor** for WbpX, which keeps going when given a longer one, and the
+**enzyme** for WbpY, which does not.
+
+What the authors draw from the second experiment is the adapter role itself:
+[PMID:35166992 "This indicates that a terminal D-Rhaα residue is not sufficient
+and WbpY requires a disaccharide or the presence of the diphosphate-lipid moiety
+in its acceptor. These studies suggest that WbpY is the enzyme that follows WbpZ
+in the pathway to CPA."]. That is the Results-level evidence for reading WbpY as
+the adapter-building enzyme and WbpX as the polymerase, which both reviews state
+in their core functions; the Discussion's adapter/anchor sentence restates it.
+
+*Not* from that experiment: the monofunctional conclusion, which is the linkage
+result and follows the PP-PhU NMR directly [PMID:35166992 "The spectra indicated
+that WbpY transferred a single D-Rha residue in α1-3 linkage to form
+D-Rhaα1-3-D-Rhaα1-3-D-GlcNAcα-PP-PhU (Fig. 12). Thus WbpY is a monofunctional
+α1,3-D-RhaT."]. Monofunctional here means one linkage type, not a narrow acceptor
+range, and `wbpX-notes.md` had it right where an earlier draft of this section did
+not.
