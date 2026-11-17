@@ -136,3 +136,22 @@ modules/nlr_signaling.yaml RIPK2 adaptor annoton (ripk2_ripk2_kinase_adaptor):
      placed those nodes in another family. The deep research "contributes" wording for kinase
      activity is superseded by PMID:30026309/29452636 (dispensable); the module's current
      edit is the better-supported position.
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 EXP (PMID:28656966) and IEA (GO_REF:0000044, SL-0095), both located_in, both
+previously ACCEPT.
+
+Checks:
+- UniProt O43353: "Endoplasmic reticulum {ECO:0000269|PubMed:28656966}", the only basis of the IEA.
+- PMID:28656966 (Bist et al. 2017, full text): endogenous RIPK2 in HCT116 cells fractionated, ER vs
+  PM fractions controlled with markers [PMID:28656966 "The purity of fractions was assessed by detecting organelle-specific markers for ER (PDI) and PM (pan-cadherin)."]
+  [PMID:28656966 "Further separation of the membrane fraction into ER and PM revealed a previously undefined localization pattern for RIP2: a fraction of RIP2 was also localized to the ER"];
+  confocal with mCherry-Sec61beta used ectopic HA-RIP2. The ER is proposed as the site where the
+  ER-anchored E3 ZNRF4 ubiquitinates and degrades RIPK2.
+- Soluble kinase (no signal peptide, TM or retention motif); core_functions place its activity
+  in the cytosol and at the plasma membrane.
+
+Outcome: both rows ACCEPT -> KEEP_AS_NON_CORE. The ER pool is real (marker-controlled
+fraction of endogenous protein) but recruited and regulatory, not where the kinase/scaffold
+function is shown (BRSK2/A1CF precedent; contrast AMBRA1). Stays at the root.

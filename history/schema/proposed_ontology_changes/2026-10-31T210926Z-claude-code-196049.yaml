@@ -1,0 +1,45 @@
+history_version: 1
+target:
+  kind: schema
+  slug: proposed_ontology_changes
+  path: src/ai_gene_review/schema/gene_review.yaml
+session:
+  id: 2026-10-31T210926Z-claude-code-196049
+  timestamp: '2026-10-31T21:09:26Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    model: claude-opus-5
+    agent_tool: claude-code
+links:
+  issues: []
+  prs: []
+  urls: []
+events:
+- type: EDIT
+  outcome: changed
+  sections:
+  - schema
+  - validation
+  - tools
+  - docs
+  summary: 'Add proposed_ontology_changes: structured ontology change requests, modelled
+    on KGCL'
+  details: |
+    Adds a structured home for ontology change requests against terms that already exist. The schema could previously express only one kind of ontology proposal, creation, via proposed_new_terms (740 entries across 647 reviews). Everything else was prose: roughly 30 projects/*_OBSOLETION.md pages with hand-maintained tables of GO ids. source_defects was the wrong target, since it fixes an annotation record rather than a term.
+
+    New class ProposedOntologyChange plus OntologyChangeTypeEnum, whose 15 values each bind to a KGCL class URI via meaning. kgcl_schema is already an indirect dependency through oaklib, so this costs no new dependency. The slot is added to GeneReview and to ModuleReview; module reviews matter because subtree-level obsoletions are usually noticed while curating a pathway. confidence and report_status reuse the source-defect enums deliberately rather than duplicating them. proposed_new_terms is left untouched.
+
+    Validation is ontology_change_policy.py, wired into check_best_practices_rules at WARNING severity like the ND and protein-binding policies. It checks what each change kind needs to be emittable as KGCL at all: a replacement where the kind requires one and none where it forbids one, both values on a value change, subject and predicate on an edge change, no self-replacement, a tracker link once filed, a 20-word floor on COMPLEX_CHANGE and OTHER (which carry no KGCL semantics), and a term proposed for obsoletion that the same review ACCEPTs.
+
+    The DSL is validated by KGCL's own lark grammar rather than a hand-written pattern, which turned out to matter. Writing the renderer against the grammar instead of from memory corrected four wrong forms: KGCL's DSL has no statement for a merge, a mapping predicate change or a mapping removal (it has a NodeDirectMerge class but no merge syntax), a definition change is 'change definition of X to Y' with no from clause, and there is no syntax at all for a non-direct replacement. kgcl_dsl() now renders a statement only when the parser accepts it, so the exporter cannot emit something that looks like KGCL and is not, and the agreement check compares the parsed object's about_node and has_direct_replacement against the slots instead of matching CURIEs with a regex.
+
+    export_ontology_changes.py mirrors export_source_defects.py, writing reports/ontology-changes.tsv plus one Markdown report per ontology, since each ontology has its own tracker. Both paths are gitignored for the same reason the source-defect report is. FIXED and DECLINED rows are excluded from the Markdown and kept in the TSV.
+
+    Backfilled the exocyst-scoped subset of VESICLE_TETHERING_OBSOLETION onto modules/dmel_exocyst.yaml, which already uses the replacement MF GO:7770062: one landed obsoletion of GO:0090522 (FIXED) plus four open mapping removals, two InterPro2GO and two UniRule, all four confirmed still present in the pinned rules/arba/_interpro2go.txt with GO:7770062 absent from it. A QuickGO recheck found all five BP terms in that project now obsolete, where the page's 2026-09-26 audit had only two, and none carries a term replaced by - GO records GO:7770062 only as consider, which is correct because a biological process cannot be replaced outright by a molecular function. The project page is updated accordingly.
+
+    The backfill earned its place as a test: it exposed a false positive in the first version of the agreement check, which required every structured term to appear in the DSL and so flagged a correct bare 'obsolete GO:0090522' for omitting its consider term.
+
+    Known gap, recorded in docs/ontology_changes.md rather than worked around: a project-wide obsoletion has no single home. The vesicle-tethering case spans five terms, eight MOD groups and five flagged mappings; only the exocyst subset belongs on that module, and GO:0099044 and GO:0099041 belong to no module that exists. The obsoletion project pages remain where such an argument is written, and extending the slot to project-page frontmatter is the follow-up.
+
+    Test coverage: 60 new tests plus 8 doctests, all passing; ruff and mypy clean (kgcl_schema added to mypy.ini's ignore_missing_imports list, and its LinkML deprecation warning filtered in pytest.ini following the existing sssom precedent). Two bioreason tests and three rule-review tests fail, but they fail identically on clean main and are unrelated.

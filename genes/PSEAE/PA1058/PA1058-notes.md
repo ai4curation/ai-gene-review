@@ -77,3 +77,12 @@ SUSPECTED. The WRONG_QUALIFIER defects (enables vs contributes_to) rest on
 positive statements in other Mrp papers and stay PROBABLE. The reference
 correctness for PMID:16030218 is changed from MISCITED to UNVERIFIED.
 Annotation actions are unchanged.
+
+## Full-text check of PMID:16030218 (2026-11-05)
+
+The full text of Kosono et al. 2005 was supplied by the user and read. It
+supersedes the earlier notes above that describe this paper as abstract-only.
+The only sha mutant the paper constructs is the PA1054 insertion; the
+cluster-level evidence comes from expressing the whole PA1054-PA1059 cluster,
+or the cluster with PA1054 disrupted, in an antiporter-deficient E. coli
+strain. There is no PA1058 mutant, so the IMP evidence-code defects on PA1058 are CONFIRMED.

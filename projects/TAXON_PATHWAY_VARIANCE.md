@@ -1,10 +1,10 @@
 ---
 title: "Taxon Pathway Variance"
 maturity: IN_PROGRESS
-last_reviewed: 2026-10-10
+last_reviewed: 2026-11-06
 tags: [BIOLOGY_DOMAIN]
 collections: [HOMOLOGY_PROPAGATION]
-species: [worm, DROME, human, DICDI]
+species: [worm, DROME, human, DICDI, CHICK]
 genes:
   - sta-1
   - sta-2
@@ -14,6 +14,9 @@ genes:
   - statA
   - statC
   - JAK1
+  - cec-10
+  - CG3226
+  - BTBD3
 ---
 
 # Taxon Pathway Variance
@@ -85,7 +88,7 @@ JAK-presupposing terms nevertheless reach worm genes by IBA from two families:
 
 | Family | Node | Term | Worm gene | Gene review action |
 |---|---|---|---|---|
-| PIAS (PTHR10782) | PTN000845825 (Eumetazoa) | GO:0046426 negative regulation of receptor signaling pathway via JAK-STAT | gei-17 | REMOVE; family review records a member exception |
+| PIAS (PTHR10782) | PTN000845825 (Eumetazoa) | GO:0046426 negative regulation of cell surface receptor signaling pathway via JAK-STAT | gei-17 | REMOVE; family review records a member exception |
 | STAT (PTHR11801) | PTN000927860 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | sta-2 | REMOVE |
 | STAT (PTHR11801) | PTN000927860 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | sta-1 | REMOVE |
 
@@ -149,19 +152,49 @@ REJECTED), and where in this repo the case was found.
 
 ### Current proposals
 
-| ID | Term | Constraint | Taxon | Blocks | Caveat |
-|---|---|---|---|---|---|
-| TPV-001 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | never_in_taxon | Nematoda (fallback *Caenorhabditis*) | worm STAT IBAs from PTN000927860 | direct evidence is for *C. elegans* |
-| TPV-002 | GO:0046425 regulation of receptor signaling pathway via JAK-STAT | never_in_taxon | Nematoda (fallback *Caenorhabditis*) | gei-17 and nematode PIAS/PTPN2 IBAs, ~100 IEAs | stated separately in case constraints do not propagate over regulates |
-| TPV-003 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | only_in_taxon | Metazoa (fallback: never in Dictyostelia) | Dictyostelium STAT IBAs; non-animal IEAs | ontology prerequisite (see YAML) |
+| ID | Term | Constraint | Taxon | Blocks | Caveat | Status |
+|---|---|---|---|---|---|---|
+| TPV-001 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | never_in_taxon | Nematoda | worm STAT IBAs from PTN000927860 | direct evidence is for *C. elegans* | ACCEPTED, [go-ontology#32689](https://github.com/geneontology/go-ontology/issues/32689) |
+| TPV-002 | GO:0046425 regulation of cell surface receptor signaling pathway via JAK-STAT | never_in_taxon | Nematoda | gei-17 and nematode PIAS/PTPN2 IBAs, ~100 IEAs | stated separately in case constraints do not propagate over regulates | ACCEPTED, [go-ontology#32689](https://github.com/geneontology/go-ontology/issues/32689) |
+| TPV-003 | GO:0007259 cell surface receptor signaling pathway via JAK-STAT | only_in_taxon | Metazoa | Dictyostelium STAT IBAs; non-animal IEAs | ontology prerequisite (see YAML) | ACCEPTED, [go-ontology#32689](https://github.com/geneontology/go-ontology/issues/32689) via [PR #32861](https://github.com/geneontology/go-ontology/pull/32861) |
+| TPV-004 | GO:0030907 MBF transcription complex | only_in_taxon | Fungi | worm cec-10 and *Nematostella* IBAs from PTN000917496; 41 animal and plant TreeGrafter IEAs | pairs with an IRD on PTN000917496 | PROPOSED |
+| TPV-005 | GO:0033309 SBF transcription complex | only_in_taxon | Fungi | the same 41 TreeGrafter IEAs | kept separate from TPV-004 | PROPOSED |
+| TPV-006 | GO:0044548 S100 protein binding | only_in_taxon | Chordata | fly CG3226 and 1,194 InterPro2GO IEAs from IPR037893 | pairs with narrowing the IPR037893 mapping | PROPOSED |
+| TPV-007 | GO:0021987 cerebral cortex development | never_in_taxon | Aves | chicken BTBD3 and KIF14 IBAs, NTRK2 ISS, 1,756 IEAs | avian pallium homology is debated; least certain | PROPOSED |
+| TPV-008 | GO:0005118 sevenless binding | only_in_taxon | Arthropoda | 195 InterPro2GO IEAs from IPR002956: 172 vertebrate (170 GPRC5-family), 10 other animal, 11 bacterial, 1 fungal, 1 plant | matches GO's Arthropoda constraint on sevenless signaling pathway; Metazoa is the fallback | PROPOSED |
 
-GO has no taxon constraint on any of these terms today (checked in QuickGO and OLS).
+TPV-004 to TPV-007 tighten constraints GO already has (Eukaryota, never in Fungi, Bilateria); each
+YAML entry records the existing one. TPV-008 adds a constraint to a term that has none. They come
+from the [RAR_MISANNOTATION](RAR_MISANNOTATION.md) re-examination of Wei et al. 2020, and the counts
+are exact-term QuickGO annotations on 2026-11-05 (TPV-008: 2026-11-07).
 
-TPV-003 has an ontology prerequisite (re-parenting GO:0007260), recorded in its
-`prerequisites` entry in the YAML; not yet requested.
+### Outcome for TPV-001 to TPV-003
+
+All three were requested in
+[go-ontology#32689](https://github.com/geneontology/go-ontology/issues/32689)
+(2026-10-05), with the briefing as the supporting analysis. GO added them on
+2026-11-03: `neverin:6231` on GO:0007259 and GO:0046425 in commit
+[98389d1](https://github.com/geneontology/go-ontology/commit/98389d1bd9ea9c7e60b5a4420b7cf61c9ce5b0be)
+([PR #32857](https://github.com/geneontology/go-ontology/pull/32857)),
+and `onlyin:33208` on GO:0007259 in commit
+[fed722d](https://github.com/geneontology/go-ontology/commit/fed722deb9e08f121365216c338db4cc08fac3e0)
+([PR #32861](https://github.com/geneontology/go-ontology/pull/32861)) after a reviewer
+noticed it had been missed. The Nematoda constraints were taken at phylum level, not the
+*Caenorhabditis* fallback. Commit 98389d1 also renamed GO:0046425 and its positive and negative regulation children
+to insert "cell surface" (go-ontology#14167). Each proposal's `submission` block in the YAML records the issue,
+the commits and the dates.
+
+One loose end: GO applied the Metazoa constraint without the TPV-003 prerequisite
+(re-parenting GO:0007260), so GO:0007260 now inherits it by part_of. GO:0007260 is
+already listed for obsoletion in
+[go-ontology#27064](https://github.com/geneontology/go-ontology/issues/27064), which
+would remove the conflict. If it stays, request the re-parenting there.
 
 ## To do
 
+- [ ] Follow [go-ontology#27064](https://github.com/geneontology/go-ontology/issues/27064).
+  If GO:0007260 is not obsoleted, ask there for it to be re-parented under GO:0097696
+  (the TPV-003 prerequisite), since it now inherits only-in Metazoa by part_of.
 - [ ] Gene reviews for the six members of
   [dicty_jak_independent_stat_signaling](../modules/dicty_jak_independent_stat_signaling.yaml)
   that have none yet: Pyk2 (`splB`, UniProtKB:P18161), Pyk3 (UniProtKB:Q54I36),

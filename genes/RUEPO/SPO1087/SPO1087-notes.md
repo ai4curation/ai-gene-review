@@ -1,0 +1,36 @@
+# Ruegeria pomeroyi DSS-3 SPO1087 / BetT — 2026-11-06
+
+The standard symbol remains the locus SPO1087, as in the fetched UniProt record; betT is recorded as an experimentally assigned alias. The primary studies identify the same locus. The frozen record contains a 400-residue multipass membrane protein with eleven predicted helices, but no PANTHER/InterPro/Pfam family assignment. The 2015 paper calls it BCCT-type; no family ID is invented from that label.
+
+[PMID:26058574, Comparative genomics and mutagenesis analyses of choline metabolism in the marine Roseobacter clade] reports: “Consequentially, the rate of choline depletion was also severely reduced (84%) compared with that of the wild‐type”. This follows deletion-mutant growth and ion-chromatographic measurements of culture-medium choline. It supports a choline-transporter assignment by IMP; it is not an isolated-protein, initial-rate tracer or reconstituted membrane-flux measurement. The co-transcribed betA and insertion design mean that a clean nonpolar deletion/complementation experiment would further resolve downstream effects.
+
+The COS phenotype is not absent: growth remains but slows 38% (0.027 versus 0.043 per hour). This is consistent with a contribution to COS utilization, but does not identify transported cargo. The methods explicitly state: “All amines and ammonium, apart from COS, were quantified using a cation‐exchange ion chromatograph”. Thus no COS depletion or uptake rate was measured. Retained growth cannot prove that BetT excludes COS, and decreased growth cannot prove that it directly transports COS.
+
+[PMID:40801533, Novel regulatory mechanism of choline-O-sulfate and choline catabolism by two BetIs in Alphaproteobacteria] Figure1 labels BetT a choline/COS transporter. The actual work addresses BetI-mediated regulation and confirms co-transcription of betT-betA (SPO1087–1088); neither the diagram nor induction by COS is a new substrate-flux assay. COS cargo remains unresolved, not rejected. The unchanged glycine-betaine growth phenotype similarly does not justify a NOT-transport annotation.
+
+Two NEW proposals are supported: choline transmembrane transporter activity (IMP) and plasma membrane (IC from uptake function plus eleven predicted helices). Choline transport BP is already on the MF's part_of path, so a redundant NEW BP is omitted. No sodium/proton coupling, glycine-betaine exclusion, direct COS transport, osmoprotection or downstream catabolic process is asserted. E.coli BetT P0ABC9 supplies a same-role annotation-convention check, not evidence for target-specific substrate or coupling properties. No GO-CAM index entry was found.
+
+## Identity and source preservation
+
+The standard normal-fetch workflow seeded the review before any edits. Baseline document, non-review annotation payloads and raw SHA256 hashes are in `.cache/module-audit-logs/choline-sulfate-20261106/ruegeria-new-members-baseline.json`. No raw UniProt/GOA or publication cache was edited. Both primary papers are available as normally fetched full text.
+
+The official 2015 supplement and genomic/protein deposits are preserved in `betC-1-source-analysis/` under the betC-1 directory. Twelve locus-specific mutant primers map uniquely to CP000031.2; AAV94383.1 and AAV94387.1 match the complete frozen Q5LUH1 and Q5LUG7 sequences, respectively. The first is betC-1/SPO1083, not the second BetC-like paralog betC-2/SPO2214. The organism is DSS-3 in both studies and records; no strain substitution is required. `verify_identity.py` reproduces the checks. The analysis records exact source URLs, original/derived-file distinctions and hashes.
+
+## Provider and validation
+
+The normal Falcon command was attempted for this gene and failed with HTTP 403 authentication. Its actual stdout/stderr are logged under `.cache/module-audit-logs/choline-sulfate-20261106/falcon-RUEPO-SPO1087.log`. No provider report was fabricated; these are manual research notes. The original annotation payloads and raw hashes are checked again after review, and focused review/history validation is recorded in the same log directory.
+
+
+## PR6105 round1 evidence-scope reassessment (2026-11-06)
+
+This entry supersedes the earlier positive choline-cargo recommendation. The exact prior authored NEW row is preserved in [prior-choline-transport-proposal.yaml](SPO1087-source-analysis/prior-choline-transport-proposal.yaml), with accession, review path, row index and unchanged payload. The authored proposal is withdrawn from active rows as WITHDRAWN_UNRESOLVED; the plasma-membrane NEW is retained independently. No machine GOA row was removed.
+
+The mapped betT::Gm mutant reduces growth-coupled medium choline depletion by 84%. The paper assigns a BCCT transporter, and the frozen target has an eggNOG COG1292 assignment (Choline-glycine betaine transporter) and eleven predicted transmembrane helices. These independent family and architecture observations favor a membrane-transporter candidate; absence of Pfam/PANTHER cross-references is not evidence against it. The complete 400-aa sequence exactly matches the assayed locus and is not rejected for length. However, betT and downstream betA are co-transcribed. Reduced choline oxidation through insertion polarity could reduce the metabolic sink and medium depletion without demonstrating a BetT choline flux defect. The study does not complement betT or measure betA expression in this mutant, and its growth-coupled depletion assay is not an initial-rate transport assay. Family membership does not resolve cargo specificity, so the earlier authored NEW proposal is withdrawn as unresolved, with its exact previous row archived. COS was excluded from the amine quantification method; its 38% growth-rate effect and the 2025 diagram are not direct COS transport evidence. No negative cargo annotation is inferred.
+
+The official [NCBI COG1292 entry](https://www.ncbi.nlm.nih.gov/research/cog/cog/COG1292/) names the group “Choline-glycine betaine transporter”; this broad family assignment supports candidacy, not exact substrate. The methodological COS exclusion is a scope limitation, not positive choline transport evidence. The module should retain SPO1087 only as optional candidate context. No molecular-function core is asserted pending a nonpolar deletion/complementation and direct uptake measurement.
+
+The generic gene validator requires active non-GOA annotations to be NEW; rather than misrepresent an unresolved proposal as asserted, the exact prior row is archived outside active existing_annotations. This leaves one active membrane-location NEW and no machine rows for this previously unannotated protein.
+
+## PR6105 provenance follow-up (2026-11-06)
+
+The standard record-section backfill identified the membrane-architecture quote as `FT:TRANSMEM` and the transporter-family cross-reference as `DR:eggNOG`. The module now gives the optional BetT candidate a free-text transmembrane-transporter descriptor with no GO identifier, cargo or coupling assertion. This records the inferred candidate activity class while retaining the unresolved choline/COS specificity and the production checker's exclusion of BetT as evidence for the required COS-import step. The active membrane-location NEW and the archived withdrawn choline-transporter proposal are unchanged.

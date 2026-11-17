@@ -1,0 +1,9 @@
+# Bacterial chromosomal DNA replication audit
+
+The original seven-part replisome representation omitted helicase loading and primer replacement while claiming chromosome duplication. This revision preserves the duplication boundary and adds those roles plus torsional relief and daughter-DNA unlinking. Fifty-two completed gene reviews ground sampled loader, polymerase, clamp and maturation architectures. The first independent pass corrected three off-claim quotations and added five direct chemistry/bridging quotations, all checked against cached publications.
+
+The PTHR32294 review formerly treated all SF0 alpha subunits as DnaQ-dependent while granting them intrinsic exonuclease activity. Direct MYCTU PHP evidence and BACSU DnaE3/PolC handoff require a finer distinction. The polymerase PAINT node judgment remains unchanged; broad exonuclease transfer is unresolved without a curated clade/residue partition.
+
+Topology roles are generic, with named complex implementations. The reviewed MYCTU GyrA/GyrB alternative is grounded in sequence-verified H37Rv constructs and direct kDNA decatenation, with native chromosome unlinking explicitly a physiological inference. Rate claims and M. smegmatis evidence are not transferred indiscriminately. Native BACSU gap-filling remains unresolved despite measured PolA capacity. The capacity oracle requires compatible strain profiles, whole complexes, curated DnaE roles, and paired catalytic functions on the same protein. A failed panel test is not a claim of pathway absence.
+
+The 97 capacity controls pass. All 1,067 historical rows (1,065 machine assertions and two inherited proposals) and 104 raw source files are preserved. Fourteen new proposals give 1,081 current rows. This module remains DRAFT pending full validation and external review.

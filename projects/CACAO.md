@@ -659,8 +659,9 @@ found, and because two of the figures here were themselves corrections.
    HPA 2, PANTHER 1, GOC 1), and a further ~31 were **misfiled** onto `OTHER`
    when a value already existed (CACAO 18, CollecTF 5, EcoliWiki 3,
    PseudoCAP 3, RGD 2) — so part of the pile was never a schema gap at all.
-   Batch 3's own 7 are re-filed; the remaining ~130 that now have a home are
-   a separate migration. As batch 3 recorded it: 7 of its 29
+   Batch 3's own 7 are re-filed; the remaining ~130 that then had a home
+   became the separate migration done in #6027 (batch 1) and its sequel. As
+   batch 3 recorded it: 7 of its 29
    defects were filed as `OTHER` with the resource named in the explanation,
    as that value instructed, and all 7 were genuinely InterPro2GO or PANTHER
    (the other 22 split 15 `CACAO` and 7 `UNIPROT`). Two earlier counts here
@@ -671,12 +672,35 @@ found, and because two of the figures here were themselves corrections.
    `references[].reference_review` rather than on an annotation review —
    DMS3-30's UniProt `MISSING_STATEMENT` and bchJ's `OUTDATED_STATEMENT` —
    so any count of this corpus has to walk the whole document, not just
-   `existing_annotations`. InterPro2GO is now the single largest *external*
-   source of defects this project has found, so `just export-source-defects`
-   cannot produce the report that matters most. Adding `INTERPRO` (and
-   probably `PANTHER`/`TREEGRAFTER`) would fix that; it is a schema change
-   touching existing reviews, so it was recorded here rather than done in
-   passing.
+   `existing_annotations`. InterPro2GO is the single largest *external*
+   source of defects this project has found, and for as long as no `INTERPRO`
+   value existed `just export-source-defects` could not produce the report
+   that mattered most. #5984 added the value and #6027 re-filed 83 defects
+   onto it, so `reports/source-defects/INTERPRO.md` exists. **Its rank among
+   the per-resource reports is deliberately not stated, and neither is the set
+   of reports larger than it.** Four attempts to say something true about that
+   rank were each falsified within days: "second only to UniProt" (wrong when
+   written); an unordered list of the five that were larger (`main` then added
+   further `INTERPRO` defects and no `PSEUDOCAP` one, reversing the closest
+   pair — the count of them is itself a moving figure, which is the point);
+   that list pinned to
+   `1e0f33a052` (which is `main`'s commit and does not contain the 83 flips,
+   where twelve are larger); and that list pinned to "the tree this PR
+   produces", which changed under it at the very next merge, `INTERPRO`
+   passing `PSEUDOCAP` to sit fifth. The quantity is a function of two trees
+   that both keep moving, and no phrasing fixes that. So the superlative above
+   is scoped to the defects *this project* found and does not survive being
+   restated as a corpus-wide rank, in either direction. No corpus total or
+   ordering is quoted here on purpose: every one of these counts moves
+   whenever `main` moves, which is what the four attempts above record. (A
+   previous sentence here counted how many times this paragraph had been
+   corrected. That count was three when written and is now wrong for the same
+   reason everything else in it was: it increments whenever the page is
+   touched. Deleted rather than bumped.) The ~130 figure above was the
+   estimate made before the migration ran; #6027 itself re-filed 85 defects,
+   83 of them onto `INTERPRO`, and left 112 `resource: OTHER` at that point,
+   of which 45 named no resource at all and so cannot be triaged without
+   reading each explanation.
 2. **`SourceDefectTypeEnum` could not express the same assertion entered
    twice, and had no duplicate-related value at all** — **done in #5984**,
    which added `DUPLICATE_ASSERTION`, named so as not to collide with the

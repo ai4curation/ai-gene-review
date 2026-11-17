@@ -121,12 +121,36 @@ synthesis — the same G1P pool may feed ester-linked G1P-PG. This matches the
 `egsA-notes.md` plan, which proposes `MODIFY` to `GO:0046474` (not `GO:0008611`)
 for the gene itself, precisely because the ether bond is PcrB's work.
 
-## Consistency with the (deliberately stubbed) gene reviews
+## Consistency with the gene reviews
 
-`genes/BACSU/egsA` and `genes/BACSU/pcrB` have worked notes files but their
-`-ai-review.yaml` files are still `status: INITIALIZED` stubs with every row
-`action: PENDING`. **Neither was edited.** The module was written to match the
-planned actions in those notes:
+**Update (2026-11-06, PR #6063).** Both reviews are now complete
+(`status: COMPLETE`), so the section below is a record of the module's original
+rationale rather than current state. The plan table is left as written, but two
+of its rows were superseded when the reviews were done:
+
+- **`pcrB: MODIFY GO:0046474/GO:0006650 -> GO:0008611`** was reversed. The
+  review keeps `GO:0046474` and adds `GO:0008611` *beside* it as a NEW IDA row,
+  because `GO:0008611` is not a descendant of `GO:0046474` (its parents are
+  `GO:0008610`, `GO:0046485`, `GO:0046504`), so replacing would have discarded a
+  true claim rather than refining one. The module's own assertion of
+  `GO:0008611` on the PcrB step is unaffected.
+- **`pcrB NEW non-core GO:0042158`** was dropped. PcrB contributes no atom to
+  the modified lipoprotein: LhaT performs the transfer, the acetyl group comes
+  from acetyl-CoA via YvoF, and HepG is regenerated. The deletion phenotype is
+  necessity, not participation, evidence. The module's placement of
+  `GO:0042158` on LhaT alone was therefore right, and the gene review now
+  agrees with it.
+
+The validation record near the end of this file also predates those reviews:
+`module_validator` now reports **1 warning**, not 3, because the two
+`FUNCTION_UNREVIEWED` coverage notices cleared once the gene reviews gained
+`core_functions`. The remaining warning is the unadjudicated PANTHER family
+review.
+
+`genes/BACSU/egsA` and `genes/BACSU/pcrB` had worked notes files but their
+`-ai-review.yaml` files were still `status: INITIALIZED` stubs with every row
+`action: PENDING` when this module was built. **Neither was edited then.** The
+module was written to match the planned actions in those notes:
 
 | Notes plan | Module |
 |---|---|
@@ -265,8 +289,9 @@ Checked via the OLS MCP on 2026-11-03:
 
 ## Follow-ups for the user
 
-1. Complete `genes/BACSU/egsA` and `genes/BACSU/pcrB` reviews from their notes;
-   that clears the two `FUNCTION_UNREVIEWED` notices.
+1. ~~Complete `genes/BACSU/egsA` and `genes/BACSU/pcrB` reviews from their
+   notes; that clears the two `FUNCTION_UNREVIEWED` notices.~~ **Done, PR
+   #6063.** Both notices cleared; the validator now reports 1 warning.
 2. Create `genes/BACSU/yvoF` (O34993) and a folder for *lhaT*/*ypjA* (P54392).
    LhaT is the more valuable of the two: a membrane enzyme with a brand-new
    function, a donor GO cannot currently express, and a documented
@@ -277,3 +302,63 @@ Checked via the OLS MCP on 2026-11-03:
    here, per the task's scope restriction.
 4. Consider raising the LhaT MF term and the archaeal-type-lipid process term
    with GO.
+
+
+## 2026-11-07 — comparative audit and source limits
+
+This audit corrects several statements above. The native carrier pathway is
+demonstrated principally in *B. subtilis*. The taxon Caryophanales bounds the
+PcrB comparison; it is not a whole-order capacity claim. Q5L3C1 (GEOKA,
+PDB 4NAE/4NAF) and A7X435 (STAA1 Mu3, PDB 3W01/3W02) add independently
+identified prenyltransferase exemplars. FLAJ1 A5FJK8 (PDB 4JEJ) is C20 GGGPS,
+an excluded chemistry comparator. PDB 4MM1 is archaeal O26652 and must not be
+assigned to any of those bacterial proteins.
+
+The 2022 structural review (PMID:35976526) distinguishes C35 PcrB group Ib
+from C20 GGGPS; a shared fold or G1P pocket is insufficient to transfer the
+C35 function. The 2021 membrane review (PMID:34046426) describes upstream
+HepPP use in multiple branches and PcrB/phosphatase/YvoF processing. Its
+unknown-function wording describes the state before the 2025 carrier work,
+not a disagreement with it. Both reviews are cached with full text and mined
+into module references and step evidence. The broad 2023 terpenome review
+(PMID:36941124) has a correction (PMID:37455337); only cached abstract and
+correction metadata are used, with no step or phylogenetic inference from
+unread corrected figures. Direct retrieval failures are recorded in ignored
+audit logs, not treated as evidence.
+
+**Reconstitution correction.** PMID:40626731 explicitly substituted C20
+geranylgeranyl diphosphate for native C35 heptaprenyl diphosphate. G1P was
+supplied, the phosphatase was calf intestinal alkaline phosphatase, and LhaT
+was produced in *E. coli* membranes. Thus this experiment demonstrates the
+downstream reaction sequence using an analogue; it does not test EgsA, identify
+the native phosphatase, resolve donor regioisomer preference, or demonstrate
+transbilayer transport. Native genetics and earlier native lipid chemistry
+provide the complementary C35 pathway evidence. The earlier statement that
+all five steps were reconstituted in one tube was too strong.
+
+**G1P supply correction.** Km asymmetry does not establish physiological
+direction or flux. Purified EgsA is a demonstrated G1PDH; its dedicated supply
+to native PcrB remains unresolved. PMID:42286214 cites engineered *E. coli*
+lipid production without AraM and infers another supply mechanism; it does not
+identify that mechanism or establish it in *B. subtilis*. Existing PANTHER
+review PTHR43622 explicitly describes SF1 as heterogeneous, so the module now
+requires G1PDH activity in addition to family membership. No ancestral node
+is newly asserted.
+
+**Terminal-step scope correction.** Inactive LhaT alleles are documented in
+*B. anthracis*, but the paper leaves the precise cause of absent acetylated
+lipoprotein in other *B. cereus*-group species unresolved. Family membership
+cannot establish this activity. The optional consumer is retained, with an
+explicit lipid-donor-dependent activity requirement; absence of that consumer
+does not itself prove that the complete carrier-synthesis route is present.
+
+Seven gene reviews are being audited: BACSU egsA, pcrB, yvoF and ypjA;
+GEOKA pcrB; STAA1 pcrB; and the FLAJ1 Fjoh_1584 comparator. Source files and
+ordered original annotation payloads are frozen before review. The native
+phosphatase remains an activity-only gap rather than an invented family node.
+
+The configured module Falcon retrieval was attempted on 2026-11-07 and failed
+with HTTP403 authentication. No provider report was fabricated. Literature
+curation above uses directly read primary/review sources and documented access
+limits. YvoF is located at the plasma membrane on activity-fractionation
+evidence; cytoplasmic-side loading remains a separate mechanistic inference.

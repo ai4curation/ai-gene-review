@@ -1,0 +1,7 @@
+# Comparative glutamate-to-P5C audit
+
+2026-11-07 UTC. Added Bacillus ProB/ProJ plus shared ProA and Corynebacterium ProB/ProA; existing E. coli and Pseudomonas reviews were re-read, with two bounded yeast RNA-binding comparators. Nine primary module members span three bacterial phyla, with explicit JH642/168 and ATCC17965/13032 experimental boundaries. The module stops before ProC and does not require physical ProB-ProA channeling.
+
+Seven manually assessed references supply per-step chemistry and comparative context. PMID39514317 challenges obligatory channeling in E. coli; PMID37511294 demonstrates weak in-vitro ProB RNA binding without identifying the binding site or physiological regulation. The family note no longer rejects RNA binding universally. SF3 is not restricted to fungi/protists; the committed inventory contains bacteria and archaea too.
+
+Preservation baselines, consultation manifests and literature leads are under analysis/module_audits/bacterial_glutamate_to_p5c_biosynthesis/. Real Falcon attempts failed and are documented in individual gene notes. All 33 source-based production coverage controls and focused module/family checks pass. The PANTHER member index confirms the representatives; the module has zero validation warnings. All 123 source annotation payloads and their order are preserved. Remaining work: full validation, dedicated PR, independent review, CI and actual merge.

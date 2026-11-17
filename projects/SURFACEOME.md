@@ -13,6 +13,15 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/WCjRqayPU7HqmNMi6YwR78
       title: Project brief
+manual_reviews:
+  - reviewed_by: cmungall
+    date: 2026-11-07
+    status: READY
+    notes: >-
+      Signed off on the plasma-membrane-subdomain convention (ACCEPT-at-own-resolution
+      for multi-source cellular-component rows, with the two guardrails) and its
+      application to GUCY2C, MUC16 and CA9. Scope is this policy decision; the broader
+      project remains IN_PROGRESS.
 ---
 
 # Accessible Surfaceome (SurfaceBench) Comparison
@@ -274,12 +283,12 @@ resolution** to it:
   where the **quoted** evidence on each generic row stops at the generic term —
   e.g. CA9's `GO:0005886` rows quote only *"Human carbonic anhydrase IX (CA IX) is
   an integral membrane protein"*, which does not fix inner vs outer leaflet — while
-  a `NEW GO:0009897` external-side row carries its own topology evidence. (CA9 is
-  not a fully clean exemplar: its generic rows are a mix of IBA/IDA/IEA/TAS, and
-  their shared *reason* argues the ectoenzyme topology directly, so it carries the
-  same `ACCEPT`-while-arguing-the-subdomain tension as GUCY2C and MUC16 below — see
-  the open policy call. The distinction the page intends lives in what each row's
-  **quoted** evidence resolves, not in its reason prose.)
+  a `NEW GO:0009897` external-side row carries its own topology evidence. (CA9's
+  generic rows are a mix of IBA/IDA/IEA/TAS; their shared *reason* has been reworded
+  to stop arguing the ectoenzyme topology, leaving the external-side claim on the
+  `NEW GO:0009897` row per the settled convention below. The distinction the page
+  intends lives in what each row's **quoted** evidence resolves, not in its reason
+  prose.)
 
 The sharp discriminator is **what each row's own evidence resolves**, applied
 per row: if the evidence supporting a generic row already fixes the subdomain
@@ -289,28 +298,39 @@ argues a more specific term is supported is the mismatch CLAUDE.md forbids. Only
 a row whose evidence genuinely stops at the generic term stays `ACCEPT`, with the
 subdomain added as a separately-grounded `NEW` row.
 
-**Open policy call — GUCY2C and MUC16 (curation lead to decide).** Both sit in
-the `ACCEPT`+`NEW` form while bundling a subdomain-resolving quote onto their
-generic rows: GUCY2C's five `GO:0005886` rows share one `supported_by` anchor
-that includes PMID:11950846 *"targeting of GCC to the apical cell surface"* (the
-lead row is `EXP`), and MUC16's IEA PM row names the apical surface. There are two
-defensible readings, and the project has not yet chosen between them:
+**Settled convention — `ACCEPT`-at-own-resolution for multi-source CC rows
+(signed off by cmungall, 2026-11).** For a plasma-membrane term carried by
+several rows whose sources resolve to different levels, `ACCEPT` on a generic row
+is a judgement about what *that row's source* established at its own level (an
+IBA/IEA/Reactome row legitimately asserts only plasma membrane), not a claim the
+term is as precise as the biology allows. The subdomain is added as a separate
+`NEW` row on its own evidence. Two rules make this a disciplined exception rather
+than a licence to leave generic rows vague:
 
-1. **Blanket CLAUDE.md rule** — a row whose own supporting evidence fixes the
-   subdomain should `MODIFY`, so the evidence-bearing row (GUCY2C's `EXP` row,
-   MUC16's IEA row) → `GO:0016324`, or the apical quote moves off the generic
-   rows and onto the `NEW` row.
-2. **`ACCEPT`-at-own-resolution as a sanctioned exception** — for a multi-source
-   CC term the `ACCEPT` is a judgement about what each row's *source* established
-   at its own level (the IBA/IEA/Reactome rows legitimately assert only plasma
-   membrane), not a claim the term is as precise as the biology allows; the
-   apical subdomain is then added as a separate `NEW` row on its own evidence.
-   Under this reading the reasons should say "accepted at the resolution this
-   row's assay supports" rather than "apical is proposed as a more specific term."
+1. **The reason must not argue generality.** It states "accepted at the resolution
+   this row's evidence supports" and cross-references the `NEW` subdomain row —
+   never "apical is proposed as a more specific term," which is the
+   `ACCEPT`-while-arguing-too-general mismatch CLAUDE.md forbids.
+2. **Subdomain-resolving evidence lives on the `NEW` row, not bundled onto the
+   generic rows.** A quote that fixes the subdomain (e.g. apical targeting) is
+   cited on the `NEW GO:0016324` row; the generic rows keep only the evidence that
+   stops at plasma membrane (surface localization, membrane integrality).
 
-Reading 2 is arguably better than the blanket rule for multi-source CC rows, but
-it is a deliberate exception and needs the lead's sign-off before the page states
-it as settled convention. Until then this is flagged, not applied.
+Applied to all three ectoenzyme/mucin cases in this PR:
+- **GUCY2C** — five `GO:0005886` rows `ACCEPT` at source resolution; their shared
+  anchor now carries only the surface-localization quote PMID:23269669, and the
+  apical quote PMID:11950846 sits on the `NEW GO:0016324` row.
+- **MUC16** — generic PM rows `ACCEPT` with the reason no longer arguing apical;
+  the apical microplicae quote (PMID:17898272) moved off the generic row onto the
+  `NEW GO:0016324` row.
+- **CA9** — generic PM rows `ACCEPT` on membrane-integrality evidence, reason
+  reworded to drop the external-side (ectoenzyme) argument; the external-side
+  topology sits on the `NEW GO:0009897` row.
+
+This exception is scoped to **multi-source CC rows**. A single row whose *own*
+evidence fixes the subdomain (a lipid anchor, a TM topology, a contact-site
+mechanism) still `MODIFY`s per the discriminator above — the blanket rule is
+unchanged for those.
 
 The **stable_surface_attachment** set is already handled by the same
 specific-term-first logic and needs no extensions: C3 carries `cell surface`
