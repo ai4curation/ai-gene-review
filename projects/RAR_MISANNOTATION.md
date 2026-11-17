@@ -7,6 +7,7 @@ collections: [HOMOLOGY_PROPAGATION]
 species: [ARATH, worm, DROME, mouse, human, CHICK]
 autolink_exclude: [ddl]
 genes: [At3g08840, KDTA, cec-10, npp-20, CG3226, Gprc5c, BTBD3, LPXA, LPXB, LPXK, LPXD1, LPXD2, LPXC1, LPXC2, LPXC3, LPXC4, LPXC5]
+index_group: CROSS_CUTTING
 ---
 
 # Re-examining the RAR misannotation study (Wei et al. 2020)

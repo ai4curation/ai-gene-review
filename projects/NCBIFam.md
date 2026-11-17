@@ -15,6 +15,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/PRhzN8YSgWkDn7ifMW8qur
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # NCBIFAM / CDD → GO Contribution & Gap Project

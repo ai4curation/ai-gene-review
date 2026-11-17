@@ -12,6 +12,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/3EXdRSggSxqVqzjNGdB2Tx
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 **Bottom line:** many GO annotations reach a gene through a reusable family or signature source. PAINT/IBA places a function at an ancestral node in a PANTHER tree and lets descendants inherit it; InterPro2GO attaches a GO term to every protein that matches an InterPro/Pfam signature. This page catalogs reviews of both sources: whether a PANTHER family is functionally uniform enough for a term to descend family-wide, and whether a Pfam-associated InterPro entry is specific enough for a domain-level GO mapping. We did this because per-gene reviews kept tracing over-propagated annotations back to functionally heterogeneous families, and correcting them one gene at a time leaves the source in place. The catalog currently holds 353 entries (344 PANTHER families, 9 Pfam domains), 218 of them marked complete. Among entries with a determinate coherence call, 151 are heterogeneous, 60 mostly coherent and only 33 fully coherent; another 20 are explicitly unknown and 89 have no recorded coherence call yet. Of 391 term-scope calls, 98 are safe family-wide, 61 only for named subfamilies, 7 depend on a curated residue, and 211 remain unresolved, with 14 not applicable. All 9 Pfam entries were judged not viable for a domain-level GO mapping.

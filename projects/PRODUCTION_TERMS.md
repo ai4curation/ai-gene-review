@@ -3,6 +3,8 @@ title: "\"X production\" Terms — Readouts or Mechanisms?"
 maturity: SCOPING
 tags: [OBSOLETION, BIOLOGY_DOMAIN]
 species: [human, mouse]
+index_group: CROSS_CUTTING
+description: Which GO production terms name a real mechanism, and which only read out shared programmes?
 autolink_exclude: [III]
 ---
 

@@ -50,8 +50,9 @@ from typing import IO, Dict, Iterable, List, Optional, Set, Tuple
 
 import requests
 
-PAINT_BASE = "https://data.pantherdb.org/ftp/downloads/paint/current"
-IBD_GAF_URL = f"{PAINT_BASE}/IBD.gaf"
+# Release- and snapshot-pinned; see PAINT_SNAPSHOT in panther_families.
+from ai_gene_review.etl.panther_families import IBD_GAF_URL, PAINT_BASE
+
 LEAF_GAF_URL = f"{PAINT_BASE}/gene_association.paint_uniprot.gaf.gz"
 # PANTHER's own node -> family table (``PTHRnnnnn:ANn`` ... ``PTN...`` per line).
 TREEGRAFTER_URL = f"{PAINT_BASE}/PAINT_TreeGrafter_Annotations_TOTAL.txt.gz"
