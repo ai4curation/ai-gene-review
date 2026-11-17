@@ -406,3 +406,79 @@ def test_resolve_taxon_name_strain_level_offline():
 def test_resolve_taxon_name_blank_for_nonnumeric():
     assert _resolve_taxon_name("") == ""
     assert _resolve_taxon_name("notanid") == ""
+
+
+# ---------------------------------------------------------------------------
+# GOA fetch control flow: retry-on-500, fail-loud, shortfall guard
+# ---------------------------------------------------------------------------
+
+import requests as _requests  # noqa: E402
+from unittest.mock import Mock as _Mock  # noqa: E402
+from ai_gene_review.etl.gene import fetch_goa_data  # noqa: E402
+
+
+def _ok_response(rows, number_of_hits=None):
+    resp = _Mock()
+    resp.raise_for_status.return_value = None
+    resp.json.return_value = {
+        "results": rows,
+        "numberOfHits": len(rows) if number_of_hits is None else number_of_hits,
+    }
+    return resp
+
+
+def _error_response(status_code):
+    resp = _Mock()
+    err = _requests.exceptions.HTTPError()
+    err.response = _Mock(status_code=status_code)
+    resp.raise_for_status.side_effect = err
+    return resp
+
+
+def _include_fields(call):
+    return [v for (k, v) in call.kwargs["params"] if k == "includeFields"]
+
+
+def test_goa_fetch_retries_without_taxonname_on_500():
+    """A 500 while taxonName is requested drops that field and retries the page;
+    TAXON NAME is then backfilled from taxonId."""
+    row = {"geneProductId": "UniProtKB:P1", "goId": "GO:1", "taxonId": 9606}
+    with patch(
+        "ai_gene_review.etl.gene.requests.get",
+        side_effect=[_error_response(500), _ok_response([row])],
+    ) as mget:
+        tsv = fetch_goa_data("P1")
+    assert "taxonName" in _include_fields(mget.call_args_list[0])  # first try
+    assert "taxonName" not in _include_fields(mget.call_args_list[1])  # retry
+    assert tsv.splitlines()[1].split("\t")[12] == "Homo sapiens"  # backfilled
+
+
+def test_goa_fetch_raises_on_page1_failure_not_taxonname():
+    """A non-taxonName error that exhausts the transient retries raises rather
+    than silently returning a header-only GOA."""
+    with (
+        patch(
+            "ai_gene_review.etl.gene.requests.get",
+            return_value=_error_response(503),
+        ),
+        patch("ai_gene_review.etl.gene.time.sleep"),
+    ):
+        with pytest.raises(ValueError):
+            fetch_goa_data("P1")
+
+
+def test_goa_fetch_raises_on_short_read():
+    """Fewer annotations than numberOfHits raises rather than writing a truncated
+    GOA file."""
+    row = {
+        "geneProductId": "UniProtKB:P1",
+        "goId": "GO:1",
+        "taxonId": 9606,
+        "taxonName": "Homo sapiens",
+    }
+    with patch(
+        "ai_gene_review.etl.gene.requests.get",
+        return_value=_ok_response([row], number_of_hits=5),
+    ):
+        with pytest.raises(ValueError):
+            fetch_goa_data("P1")

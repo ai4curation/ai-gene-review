@@ -22,6 +22,7 @@ from ruamel.yaml.comments import CommentedMap
 from ruamel.yaml.tokens import ScalarToken
 from typing import Tuple, Optional, List, Dict, Any
 import requests
+import time
 import yaml
 import re
 
@@ -920,7 +921,14 @@ def _resolve_taxon_name(taxon_id: str) -> str:
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
         results = response.json().get("results", [])
-        name = results[0].get("scientificName", "") or "" if results else ""
+        name = ""
+        if results:
+            record = results[0]
+            # Only trust the name if the record is for the taxon we asked for
+            # (guard against a merged/secondary id resolving to a different taxon).
+            returned_id = str(record.get("taxonId", taxon_id))
+            if returned_id == taxon_id:
+                name = record.get("scientificName") or ""
         if name:
             _TAXON_NAME_CACHE[taxon_id] = name  # cache successes only
             return name
@@ -1267,8 +1275,11 @@ def _goa_results_to_tsv(results: List[Dict[str, Any]]) -> str:
     16 TSV columns, deduplicates byte-identical rows, and backfills the
     ``TAXON NAME`` column from ``taxonId`` when QuickGO did not supply a
     ``taxonName`` (its ``includeFields=taxonName`` path returns HTTP 500 while
-    ``goName`` and ``name`` still work). A pure function so the projection and
-    backfill are unit-testable without a live API.
+    ``goName`` and ``name`` still work). The projection is deterministic given the
+    results; its only external touchpoint is the ``_resolve_taxon_name`` taxonomy
+    lookup, used solely to backfill ``TAXON NAME`` when ``taxonName`` is absent
+    (and offline for the common taxa), so the function is straightforward to test
+    with synthetic results.
 
     >>> rows = _goa_results_to_tsv([
     ...     {"geneProductId": "UniProtKB:O43511", "goId": "GO:0005886",
@@ -1394,8 +1405,11 @@ def fetch_goa_data(uniprot_id: str) -> str:
     limit = 200  # QuickGO's actual max limit per page (not 400!)
     expected_total = 0
     # Request taxonName as normal; drop it (for the rest of this fetch) only if
-    # QuickGO rejects it, so behaviour reverts automatically once EBI fixes it.
+    # QuickGO rejects it with a 500, so behaviour reverts automatically once EBI
+    # fixes it.
     include_taxon_name = True
+    max_transient_retries = 3  # per page, for errors unrelated to taxonName
+    transient_retries = 0
 
     while True:
         # Build URL with properly formatted parameters
@@ -1416,6 +1430,7 @@ def fetch_goa_data(uniprot_id: str) -> str:
         try:
             response = requests.get(url, params=params, headers=headers, timeout=30)
             response.raise_for_status()
+            transient_retries = 0  # this page fetched OK; reset the per-page budget
 
             # Parse JSON response
             data = response.json()
@@ -1443,14 +1458,24 @@ def fetch_goa_data(uniprot_id: str) -> str:
             page += 1
 
         except requests.exceptions.RequestException as e:
-            if include_taxon_name:
-                # QuickGO's taxonName field is currently 500ing. Drop it for the
-                # rest of this fetch and retry this page; TAXON NAME is backfilled
-                # from taxonId in _goa_results_to_tsv.
+            status = getattr(getattr(e, "response", None), "status_code", None)
+            if include_taxon_name and status == 500:
+                # QuickGO currently 500s specifically on includeFields=taxonName.
+                # Drop it for the rest of this fetch and retry this page; TAXON NAME
+                # is backfilled from taxonId in _goa_results_to_tsv. When EBI fixes
+                # the field this branch never runs and taxonName is used verbatim.
                 include_taxon_name = False
                 continue
-            # Fail loudly rather than silently writing a header-only (page 1) or
-            # truncated (page >= 2) GOA file, which would corrupt the review input.
+            if transient_retries < max_transient_retries:
+                # A genuine transient error (timeout, 5xx other than the taxonName
+                # 500, connection reset): back off and retry the same page rather
+                # than aborting a multi-page fetch on one blip.
+                transient_retries += 1
+                time.sleep(min(2**transient_retries, 8))
+                continue
+            # Out of retries: fail loudly rather than silently writing a header-only
+            # (page 1) or truncated (page >= 2) GOA file, which would corrupt the
+            # review input.
             raise ValueError(
                 f"Could not fetch GOA data for {uniprot_id} from QuickGO "
                 f"(page {page}): {e}"
