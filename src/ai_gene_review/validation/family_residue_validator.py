@@ -464,10 +464,12 @@ def load_previous_release(repo_root: Path, release: str) -> "PreviousRelease | N
     without it, rather than the validator depending on the network.
     """
     from ai_gene_review.etl.panther_families import (
+        DEFAULT_ORGANISMS,
         hmm_classifications_path,
         panther_cache_dir,
         previous_release_members,
         previous_release_names,
+        sequence_classification_path,
     )
 
     cache = panther_cache_dir(repo_root)
@@ -478,6 +480,18 @@ def load_previous_release(repo_root: Path, release: str) -> "PreviousRelease | N
             file=sys.stderr,
         )
         return None
+    missing = [
+        organism
+        for organism in DEFAULT_ORGANISMS
+        if not sequence_classification_path(cache, organism, release).exists()
+    ]
+    if missing:
+        print(
+            f"warning: PANTHER {release} classifications for {', '.join(missing)} are not "
+            f"cached in {cache}, so memberships in those organisms are checked without the "
+            "switch allowance; run `just ensure-panther-members`",
+            file=sys.stderr,
+        )
     return PreviousRelease(
         release,
         previous_release_names(cache, release),
@@ -630,7 +644,13 @@ def check_panther_ids(
         # Resolution first: a non-PANTHER CURIE is not "a family, not a subfamily",
         # it is simply unresolvable, and that is the clearer message.
         if curie not in labels:
-            if previous is not None and curie in previous.labels:
+            # Deferred only when the review still carries the previous release's name
+            # (or no label): a label wrong in both releases fails, as in modules.
+            if (
+                previous is not None
+                and curie in previous.labels
+                and label in (None, previous.labels[curie])
+            ):
                 results.append(
                     scope_failure(term, curie)
                     or ResidueCheck(

@@ -1212,9 +1212,9 @@ def validate_family_members(
                     for accession in sorted(known)
                 )
                 warnings.append(
-                    f"{use.path}: the declared family matched these members in PANTHER "
-                    f"{previous_release} but not in the current release -- {moved}. "
-                    "Remap it from `just panther-release-diff`."
+                    f"{use.path}: the declared family matched at least one of these "
+                    f"members in PANTHER {previous_release} but none in the current "
+                    f"release -- {moved}. Remap it from `just panther-release-diff`."
                 )
                 continue
         if declared_bases & member_bases:
@@ -1448,7 +1448,13 @@ def defer_previous_release_panther_terms(
     the current release, or renamed, still carries the previous release's name until it
     is remapped. Such a term is returned as a warning pointing at the remap report and
     removed from the list, so term validation does not fail on it. A label that matches
-    neither release is kept, and still fails.
+    neither release is kept, and still fails. The family-review check
+    (``check_panther_ids``) applies the same rule.
+
+    The comparison is with the OBO's primary names only. It reproduces the label check
+    it replaces because ``panther.obo`` carries no synonyms and no PANTHER id has a
+    ``term_label_aliases`` entry in ``conf/oak_config.yaml``; if either changes, a label
+    those would accept could be warned about here instead of passing.
 
     >>> cur = {"PANTHER:PTHR1:SF1": "NEW NAME"}
     >>> prev = {"PANTHER:PTHR1:SF1": "OLD NAME", "PANTHER:PTHR1:SF2": "GONE"}
@@ -1957,7 +1963,7 @@ def validate_module_file(
         _previous_release,
     )
 
-    panther_artifacts = project_root / "interpro" / "panther"
+    panther_artifacts = panther_dir or project_root / "interpro" / "panther"
     previous = _previous_release(panther_artifacts)
 
     member_errors, member_warnings = validate_family_members(

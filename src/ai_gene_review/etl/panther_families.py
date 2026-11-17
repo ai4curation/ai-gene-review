@@ -304,6 +304,15 @@ def parse_sequence_classification(lines: Iterable[str]) -> Dict[str, str]:
     return index
 
 
+def sequence_classification_path(cache_dir: Path, organism: str, release: str) -> Path:
+    """Where :func:`fetch_sequence_classification` caches one organism's file.
+
+    >>> sequence_classification_path(Path("c"), "human", "19.0").name
+    'PTHR19.0_human'
+    """
+    return Path(cache_dir) / f"PTHR{release}_{organism}"
+
+
 def fetch_sequence_classification(
     organism: str,
     cache_dir: Path,
@@ -319,11 +328,10 @@ def fetch_sequence_classification(
     """
     cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"PTHR{release}_{organism}"
-    dest = cache_dir / filename
+    dest = sequence_classification_path(cache_dir, organism, release)
     if dest.exists() and not force_download:
         return dest
-    response = requests.get(f"{seq_base(release)}/{filename}", timeout=300)
+    response = requests.get(f"{seq_base(release)}/{dest.name}", timeout=300)
     if response.status_code == 404:
         return None
     response.raise_for_status()
@@ -1091,13 +1099,14 @@ def rewrite_panther_labels(
     names: Dict[str, str],
     skip_curies: Optional[Set[str]] = None,
     allow_divergent: bool = False,
+    previous_names: Optional[Dict[str, str]] = None,
 ) -> Tuple[str, List[Tuple[str, str, str]], List[Tuple[str, str, str]]]:
     """Rewrite PANTHER family/subfamily labels to their official PANTHER names.
 
     Returns ``(new_text, applied, deferred)``, each change a
     ``(curie, old_label, new_label)`` triple.
 
-    Two categories are deliberately NOT rewritten:
+    Three categories are deliberately NOT rewritten:
 
     * ``skip_curies`` -- ids whose *grounding* is disputed. Rewriting their
       label would replace an honestly-wrong label with an authoritative one and
@@ -1106,6 +1115,11 @@ def rewrite_panther_labels(
       unless ``allow_divergent``. When the authored label describes a different
       protein entirely, the likely error is the id, and normalising the label
       would manufacture consistency around a guessed identifier.
+    * during a PANTHER switch (``previous_names``, the previous release's names), a
+      label that equals the previous release's name for its id, returned in
+      ``deferred`` even with ``allow_divergent``. The id was renamed by the bump and
+      may now name something else, so it is remapped from ``just
+      panther-release-diff``, not relabelled.
 
     >>> names = {"PANTHER:PTHR1": "ALDO/KETO REDUCTASE"}
     >>> text = "  term:\\n    id: PANTHER:PTHR1\\n    label: ALDO-KETO REDUCTASE\\n"
@@ -1127,8 +1141,18 @@ def rewrite_panther_labels(
     [('PANTHER:PTHR1', 'SUCCINATE DEHYDROGENASE', 'ALDO/KETO REDUCTASE')]
     >>> new == text
     True
+
+    During a switch, a label still carrying the previous release's name is held back:
+
+    >>> text = "  term:\\n    id: PANTHER:PTHR1\\n    label: ALDO-KETO REDUCTASE\\n"
+    >>> previous = {"PANTHER:PTHR1": "ALDO-KETO REDUCTASE"}
+    >>> new, applied, deferred = rewrite_panther_labels(
+    ...     text, names, allow_divergent=True, previous_names=previous)
+    >>> applied, new == text
+    ([], True)
     """
     skip = skip_curies or set()
+    previous = previous_names or {}
     lines = text.splitlines(keepends=True)
     changes: List[Tuple[str, str, str]] = []
     deferred: List[Tuple[str, str, str]] = []
@@ -1149,6 +1173,9 @@ def rewrite_panther_labels(
             continue
         current = str(yaml.safe_load(f"v: {label_match.group(2)}")["v"])
         if current.strip() == official:
+            continue
+        if previous.get(curie) == current.strip():
+            deferred.append((curie, current, official))
             continue
         if (
             not allow_divergent
@@ -1381,7 +1408,7 @@ def previous_release_members(
     index: Dict[str, str] = {}
     for organism in organisms:
         if cached_only:
-            cached = Path(cache_dir) / f"PTHR{release}_{organism}"
+            cached = sequence_classification_path(cache_dir, organism, release)
             path: Optional[Path] = cached if cached.exists() else None
         else:
             path = fetch_sequence_classification(organism, cache_dir, release=release)

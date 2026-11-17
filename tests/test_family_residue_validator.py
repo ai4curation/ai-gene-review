@@ -1070,6 +1070,13 @@ def test_transition_downgrades_membership_that_matched_the_previous_release():
         ("PANTHER_ID", Outcome.UNRESOLVED), ("PANTHER_MEMBERSHIP", Outcome.UNRESOLVED)]
 
 
+def test_transition_fails_a_gone_id_whose_label_was_never_right():
+    """A gone id is deferred only while it carries the previous release's name, as in modules."""
+    review = _panther_review(sf_id="PANTHER:PTHR00001:SF7", sf_label="COMPLETELY WRONG",
+                             members=())
+    assert _outcomes(review, _previous()) == [("PANTHER_ID", Outcome.FAIL)]
+
+
 def test_transition_does_not_excuse_errors_wrong_in_both_releases():
     """A label or membership that was never right still fails during a switch."""
     wrong_label = _panther_review(sf_label="PLAUSIBLE BUT WRONG")
@@ -1139,5 +1146,7 @@ def test_load_previous_release_is_offline_and_off_when_not_cached(tmp_path, caps
         "HUMAN|HGNC=1|UniProtKB=P00002\tP00002\tX\tPTHR00001:SF7\tOLD SUBFAMILY\n")
     previous = load_previous_release(tmp_path, "99.0")  # other organisms absent: not fetched
     assert previous is not None
+    err = capsys.readouterr().err
+    assert "memberships in those organisms" in err and "mouse" in err and "human," not in err
     assert previous.labels == {"PANTHER:PTHR00001:SF7": "OLD SUBFAMILY"}
     assert previous.members == {"P00002": "PTHR00001:SF7"}
