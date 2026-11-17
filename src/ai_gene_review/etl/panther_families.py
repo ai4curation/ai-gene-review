@@ -39,7 +39,9 @@ network. Regenerate with ``just build-panther-obo`` /
 from __future__ import annotations
 
 import re
+import sys
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Callable, Dict, Iterable, Iterator, List, NamedTuple, Optional, Set, Tuple
 
@@ -1429,3 +1431,160 @@ def previous_release_members(
         ).items():
             index.setdefault(accession, family_sf)
     return index
+
+
+# --------------------------------------------------------------------------- #
+# Loaded artifacts: the current release's, and during a switch the previous one's
+# --------------------------------------------------------------------------- #
+
+
+class PantherArtifacts(NamedTuple):
+    """The pinned release's PANTHER artifacts, as the validators use them."""
+
+    names: Dict[str, str]  # PANTHER:<id> -> official name, from panther.obo
+    members: Dict[str, str]  # UniProt accession -> PTHR family:SF, from the member index
+    gaps: MemberIndexGaps
+    alternates: Dict[str, str]
+
+
+@lru_cache(maxsize=None)
+def panther_artifacts(panther_dir: Path) -> PantherArtifacts:
+    """Load ``panther.obo`` and the member index once per ``interpro/panther`` directory.
+
+    Cached because ``panther.obo`` is 13.8 MB and validators call this once per file.
+    The member index is a build artifact in ``<repo>/.cache/panther``; on a fresh
+    checkout its loaders return empty mappings rather than raising, and ``gaps`` tells
+    an accession PANTHER has no family for from one whose lookup was never done.
+    """
+    members = member_index_path(Path(panther_dir).parents[1])
+    return PantherArtifacts(
+        load_obo_names(Path(panther_dir) / "panther.obo"),
+        load_member_index(members),
+        load_member_index_gaps(members),
+        load_member_index_alternates(members),
+    )
+
+
+class PreviousLabels(NamedTuple):
+    """The names of the PANTHER release being left during a switch.
+
+    ``labels`` maps ``PANTHER:<id>`` to that release's name, escaped as in the OBO.
+    """
+
+    release: str
+    labels: Dict[str, str]
+
+
+class PreviousRelease(NamedTuple):
+    """The PANTHER release being left during a switch (``PANTHER_PREVIOUS_RELEASE``).
+
+    ``labels`` maps ``PANTHER:<id>`` to that release's name; ``members`` maps a UniProt
+    accession to its ``PTHR family:SF`` there. While a switch is in progress, an id,
+    label or membership that matches this release but not the current one is reported
+    as UNRESOLVED (remap pending) instead of FAIL.
+    """
+
+    release: str
+    labels: Dict[str, str]
+    members: Dict[str, str]
+
+
+def switch_release() -> Optional[str]:
+    """The release being left during a PANTHER switch, or None outside one.
+
+    >>> switch_release() is None  # no switch on main
+    True
+    """
+    if PANTHER_PREVIOUS_RELEASE is not None and PANTHER_PREVIOUS_RELEASE == PANTHER_RELEASE:
+        raise ValueError(
+            f"PANTHER_PREVIOUS_RELEASE equals PANTHER_RELEASE ({PANTHER_RELEASE}); "
+            "set it to the release being left, or to None outside a switch"
+        )
+    return PANTHER_PREVIOUS_RELEASE
+
+
+def load_previous_labels(repo_root: Path, release: str) -> Optional[PreviousLabels]:
+    """Load ``release``'s names from the PANTHER cache, offline, or None if not cached.
+
+    Nothing is downloaded: ``just ensure-panther-members`` caches the names file while
+    a switch is on. When it is absent this warns once and returns None, so checks run
+    as they would without the switch allowance rather than depending on the network.
+    Tools that must not run without the allowance check :func:`switch_release` too.
+    """
+    cache = panther_cache_dir(repo_root)
+    if not hmm_classifications_path(cache, release).exists():
+        print(
+            f"warning: PANTHER {release} classifications are not cached in {cache}, so the "
+            "switch allowance is off; run `just ensure-panther-members`",
+            file=sys.stderr,
+        )
+        return None
+    return PreviousLabels(release, previous_release_names(cache, release))
+
+
+def load_previous_release(repo_root: Path, release: str) -> Optional[PreviousRelease]:
+    """Load ``release``'s names and memberships from the PANTHER cache, offline.
+
+    The names come from :func:`load_previous_labels` (and are None with it). Organisms
+    whose classification file is not cached are named in a warning and checked
+    without the allowance.
+    """
+    return _with_members(repo_root, load_previous_labels(repo_root, release))
+
+
+def _with_members(repo_root: Path, labels: Optional[PreviousLabels]) -> Optional[PreviousRelease]:
+    if labels is None:
+        return None
+    cache = panther_cache_dir(repo_root)
+    missing = [
+        organism
+        for organism in DEFAULT_ORGANISMS
+        if not sequence_classification_path(cache, organism, labels.release).exists()
+    ]
+    if missing:
+        print(
+            f"warning: PANTHER {labels.release} classifications for {', '.join(missing)} are "
+            f"not cached in {cache}, so memberships in those organisms are checked without "
+            "the switch allowance; run `just ensure-panther-members`",
+            file=sys.stderr,
+        )
+    members = previous_release_members(cache, labels.release, cached_only=True)
+    return PreviousRelease(labels.release, labels.labels, members)
+
+
+@lru_cache(maxsize=None)
+def _previous_labels_cached(repo_root: Path, release: str) -> Optional[PreviousLabels]:
+    return load_previous_labels(repo_root, release)
+
+
+@lru_cache(maxsize=None)
+def _previous_release_cached(repo_root: Path, release: str) -> Optional[PreviousRelease]:
+    # Built on the labels cache, so a process that both validates and fixes labels
+    # parses the names file once.
+    return _with_members(repo_root, _previous_labels_cached(repo_root, release))
+
+
+def previous_release_labels(panther_dir: Path) -> Optional[PreviousLabels]:
+    """The previous release's names during a switch, or None.
+
+    None outside a switch, and also when the names file is not cached; callers that
+    must tell those apart check :func:`switch_release`. Reads only the names file, not
+    the per-organism member map. Cached per resolved repository, shared with
+    :func:`previous_release`.
+    """
+    release = switch_release()
+    if release is None:
+        return None
+    return _previous_labels_cached(Path(panther_dir).resolve().parents[1], release)
+
+
+def previous_release(panther_dir: Path) -> Optional[PreviousRelease]:
+    """The previous release's names and memberships during a switch, or None.
+
+    For the validators. Cached per resolved repository, so callers that spell the path
+    differently share one load.
+    """
+    release = switch_release()
+    if release is None:
+        return None
+    return _previous_release_cached(Path(panther_dir).resolve().parents[1], release)

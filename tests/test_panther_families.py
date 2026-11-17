@@ -503,3 +503,90 @@ def test_rewrite_holds_back_any_label_on_an_id_renamed_in_the_switch():
     new, applied, deferred = rewrite_panther_labels(text, names, previous_names=previous)
     assert applied == [] and new == text
     assert [(d.curie, d.reason) for d in deferred] == [("PANTHER:PTHR1:SF3", "renamed_in_switch")]
+
+
+def _label_fix_repo(tmp_path: Path, with_member_index: bool) -> Path:
+    """A repository with one module whose PANTHER label is a near miss of the official name."""
+    from ai_gene_review.etl.panther_families import member_index_path
+
+    panther = tmp_path / "interpro" / "panther"
+    panther.mkdir(parents=True)
+    (panther / "panther.obo").write_text("[Term]\nid: PANTHER:PTHR00001\nname: REAL NAME\n")
+    (tmp_path / "modules").mkdir()
+    (tmp_path / "modules" / "m.yaml").write_text(
+        "id: m\nparts:\n- family:\n    preferred_term: x\n    term:\n"
+        "      id: PANTHER:PTHR00001\n      label: REAL NAMES\n"
+    )
+    if with_member_index:
+        index = member_index_path(tmp_path)
+        index.parent.mkdir(parents=True)
+        index.write_text("uniprot_accession\tpanther_family_sf\nP00001\tPTHR00001\n")
+    return tmp_path
+
+
+def test_fix_panther_labels_refuses_apply_with_a_cold_member_index(tmp_path: Path) -> None:
+    """With no member index the grounding guard cannot skip anything, so --apply refuses."""
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = _label_fix_repo(tmp_path, with_member_index=False)
+    before = (repo / "modules" / "m.yaml").read_text()
+    args = ["fix-panther-labels", "--output-dir", str(repo)]
+
+    refused = CliRunner().invoke(app, [*args, "--apply"])
+    assert refused.exit_code == 1
+    assert "member index is empty" in refused.output
+    assert (repo / "modules" / "m.yaml").read_text() == before
+
+    dry_run = CliRunner().invoke(app, args)
+    assert dry_run.exit_code == 0
+    assert "member index is empty" in dry_run.output
+    assert "Would apply 1 label correction(s)" in dry_run.output
+
+
+def test_fix_panther_labels_applies_with_its_caches_built(tmp_path: Path) -> None:
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = _label_fix_repo(tmp_path, with_member_index=True)
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+    assert result.exit_code == 0, result.output
+    assert "⚠" not in result.output
+    assert "label: REAL NAME\n" in (repo / "modules" / "m.yaml").read_text()
+
+
+def test_fix_panther_labels_refuses_apply_in_a_switch_without_the_previous_names(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A switch whose previous-release names are not cached cannot hold back renamed ids."""
+    from typer.testing import CliRunner
+
+    import ai_gene_review.etl.panther_families as panther_families
+    from ai_gene_review.cli import app
+
+    monkeypatch.setattr(panther_families, "PANTHER_PREVIOUS_RELEASE", "18.0")
+    repo = _label_fix_repo(tmp_path, with_member_index=True)
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+    assert result.exit_code == 1
+    assert "PANTHER 18.0 names are not cached" in result.output
+    assert "label: REAL NAMES" in (repo / "modules" / "m.yaml").read_text()
+
+
+def test_previous_release_labels_tells_no_switch_from_an_uncached_one(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import ai_gene_review.etl.panther_families as panther_families
+
+    panther = tmp_path / "interpro" / "panther"
+    assert panther_families.switch_release() is None
+    assert panther_families.previous_release_labels(panther) is None
+
+    monkeypatch.setattr(panther_families, "PANTHER_PREVIOUS_RELEASE", "18.0")
+    assert panther_families.switch_release() == "18.0"
+    assert panther_families.previous_release_labels(panther) is None  # not cached
+
+    monkeypatch.setattr(panther_families, "PANTHER_PREVIOUS_RELEASE", panther_families.PANTHER_RELEASE)
+    with pytest.raises(ValueError, match="equals PANTHER_RELEASE"):
+        panther_families.switch_release()

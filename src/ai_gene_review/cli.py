@@ -5385,7 +5385,9 @@ def fix_panther_labels(
             "--allow-divergent",
             help="Also rewrite labels that describe a different protein than the "
             "id's official name. Held back by default because that pattern "
-            "usually means the ID is wrong; only pass this after checking.",
+            "usually means the ID is wrong; only pass this after checking. "
+            "During a PANTHER switch it does not apply to ids renamed since the "
+            "previous release: those are remapped, never relabelled.",
         ),
     ] = False,
 ):
@@ -5397,16 +5399,24 @@ def fix_panther_labels(
     member are deliberately SKIPPED -- relabelling those would hide a wrong
     family id behind an authoritative-looking name. Fix the id first.
 
+    Both guards read cached data (the member index and, during a PANTHER switch,
+    the previous release's names). When that data is missing a guard cannot
+    act, so --apply refuses to run until `just ensure-panther-members` has
+    built it; a dry run reports the same and continues.
+
     Example:
         ai-gene-review fix-panther-labels --apply
     """
     import yaml
 
     from ai_gene_review.etl.panther_families import (
+        load_member_index_alternates,
         load_obo_names,
+        member_index_path,
+        previous_release_labels,
         rewrite_panther_labels,
+        switch_release,
     )
-    from ai_gene_review.validation.family_residue_validator import previous_release_labels
     from ai_gene_review.validation.module_validator import (
         iter_family_member_uses,
         load_member_index,
@@ -5419,13 +5429,27 @@ def fix_panther_labels(
     # During a PANTHER switch, a label still carrying the previous release's name is
     # held back for remapping rather than relabelled (see rewrite_panther_labels).
     previous = previous_release_labels(repo_root / "interpro" / "panther")
-    previous_names = previous[1] if previous is not None else None
-    from ai_gene_review.etl.panther_families import member_index_path
-
-    from ai_gene_review.etl.panther_families import load_member_index_alternates
-
     member_index = load_member_index(member_index_path(repo_root))
     member_alternates = load_member_index_alternates(member_index_path(repo_root))
+
+    # Without their cached data the guards are silently off: never relabel unguarded.
+    unguarded: list[str] = []
+    switch = switch_release()
+    if switch is not None and previous is None:
+        unguarded.append(
+            f"PANTHER {switch} names are not cached, so labels on ids renamed in the "
+            "switch cannot be held back"
+        )
+    if not member_index:
+        unguarded.append(
+            "the PANTHER member index is empty, so descriptors whose representative "
+            "members contradict their family id cannot be skipped"
+        )
+    for reason in unguarded:
+        typer.echo(f"⚠  {reason}; run `just ensure-panther-members`.", err=True)
+    if unguarded and apply:
+        typer.echo("Refusing --apply until those caches are built.", err=True)
+        raise typer.Exit(1)
     # Same PAINT-corroboration rule the validator applies, so a grounding the
     # validator merely warns about is not treated here as disputed.
     paint_index = load_paint_index(repo_root / "interpro" / "panther")
@@ -5448,7 +5472,11 @@ def fix_panther_labels(
             elif any(a in member_index for a in use.representative_accessions):
                 corroborated.update(use.declared_family_curies)
         new_text, changes, deferred = rewrite_panther_labels(
-            text, names, skip, allow_divergent=allow_divergent, previous_names=previous_names
+            text,
+            names,
+            skip,
+            allow_divergent=allow_divergent,
+            previous_names=None if previous is None else previous.labels,
         )
         for item in deferred:
             if item.reason == "renamed_in_switch":
@@ -5469,8 +5497,9 @@ def fix_panther_labels(
     if renamed and previous is not None:
         typer.echo(
             f"\n⚠  {len(renamed)} label(s) NOT rewritten: they are on ids whose name "
-            f"changed since PANTHER {previous[0]}, so the id may now "
-            "name something else. Remap them from `just panther-release-diff`."
+            f"changed since PANTHER {previous.release}, so the id may now "
+            "name something else. Remap them from `just panther-release-diff`; "
+            "--allow-divergent does not apply to these."
         )
         for path, curie, old, new in renamed:
             typer.echo(f"  {path.name}: {curie}  {old!r} -> now {new!r}")

@@ -176,6 +176,10 @@ On 2026-11-17 it found:
      the window `just fix-panther-labels` holds back, rather than rewrites, any label on
      an id whose name changed between the releases, even with `--allow-divergent`,
      because the id may now name something else. Those go through the remap batches.
+     The hold-back reads the previous release's names from the cache, so with a cold
+     cache (the switch on but its names file absent, or no member index for the
+     grounding guard) `fix-panther-labels --apply` refuses to run rather than
+     relabel unguarded; a dry run reports the same and continues.
 2. The bump PR changes the pinned constants, rebuilds the caches and `panther.obo`
    (2.1), and re-quotes the `panther.obo` quotes the report lists (10 today), so
    `just validate-quotes` stays green. That is too few to need a transition allowance
