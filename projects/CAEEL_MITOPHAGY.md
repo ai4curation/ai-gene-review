@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/MZfV4C54x9an6CVWB5c81V
       title: Project brief
+index_group: WORM
 ---
 
 # C. elegans Mitophagy & Mitochondrial Quality Control Project

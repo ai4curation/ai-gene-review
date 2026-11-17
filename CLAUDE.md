@@ -414,6 +414,18 @@ unread part of the paper could overturn the claim.
   every isozyme an unfractionated assay cannot separate, is a deliberate practice,
   not a slip. A reference-level view (QuickGO by reference, an RGD or MGI
   reference page) shows this in one query.
+- **An annotation pattern is a lead, never the proof.** How a resource annotated
+  a paper (same-day batches, a reciprocal row, which entry cites the paper, a
+  sequence deposit) can tell you where to look and is reason enough to *drop* an
+  accusation, but it does not by itself show that a curator got the gene wrong.
+  To assert a wrong gene (`CONFIRMED`, `REPOINT` or `DELETE_ROW`, or a `REMOVE`
+  that rests on it) either read the whole paper or have it be very obvious from
+  the abstract or the record itself, as in the first bullet. Otherwise record the
+  lead as a `CHECK` query and name the candidate as a candidate.
+  This bullet is a maintainer ruling (2026-11-16). Reviews merged before it are
+  not retroactively defective: the wrong-gene and wrong-reference claims it
+  affected were audited when it was made, and it applies to new and revisited
+  reviews, not as a condition of any other content PR.
 - **Say in `explanation` what depth the claim rests on**, and name a candidate
   correction as a candidate when the intended paper or gene was inferred and not
   read.
@@ -643,12 +655,19 @@ as schema (`src/ai_gene_review/validation/rule_review_receipts.py`); read
   domain)`; the label is the checksum of the id, and it is checked.
 - **Judge the conjunction, not the signature.** A condition set is everything it
   requires together, taxon included. Alternative sets are meant to be disjoint.
-- **Size, generality, redundancy and low recall are not errors.** The "limit of 12
-  condition sets" is the analysis tool's default, not a standard. A true but
-  general term is `MODIFY` or `UNDECIDED`, never `DEPRECATE`.
+- **Judge meaning and parsimony as well as accuracy.** A rule can be true set by
+  set and say nothing. Group the sets into `biological_units`, give each its most
+  informative curated term, and record `biological_meaning`, `parsimony` and
+  `taxonomic_scope` with numbers (`projects/ARBA_REVIEW/rule_redundancy.tsv`).
+  An umbrella term over units with better terms is `SPLIT`.
+- **Size and generality are not evidence that an annotation is false.** The "limit
+  of 12 condition sets" is the analysis tool's default, not a standard. A true but
+  general term is `SPLIT` or `MODIFY`, never `DEPRECATE`; "too many sets" needs a
+  count of sets that do no work.
 - **`DEPRECATE` names a wrongly annotated protein** (accessions in
-  `annotation_assessments[].incorrect_examples`), an obsolete consequent or a
-  withdrawn rule. Before listing a protein as a false positive, look up its
+  `annotation_assessments[].incorrect_examples`), an obsolete consequent, or a rule
+  whose every set is covered by a rule for a more specific term. A rule UniProt no
+  longer serves is `WITHDRAWN`. Before listing a protein as a false positive, look up its
   experimental annotations to the term and its descendants; `--online` does this.
 - **Your notes and deep-research files are not literature.** Cite the paper or
   record they point to, or omit `literature_support`.
@@ -1048,7 +1067,12 @@ renders to `pages/projects/FOO/bar.html`). Use ordinary relative links between a
 project page and its sub-pages (`[x](FOO/bar.md)` from `FOO.md`; `[parent](../FOO.md)`
 from inside `FOO/`); the renderer rewrites `.md`→`.html` and preserves the path.
 
-**Important:** The project index page (`pages/projects/index.html`) is **manually maintained**. When adding a new project, you must manually add a `<div class="project-card">` entry to the index HTML. The `render-projects` command does NOT update the index.
+**Project index.** `render-projects` generates the project index
+(`pages/projects/index.html`) from frontmatter; never edit it by hand, and do not
+commit it (it is gitignored). A project picks its section with `index_group:`, one of
+`WORM`, `YEAST`, `MAMMAL`, `BACTERIA`, `ARCHAEA`, `PLANT`, `OTHER_ORGANISM`, `GO_TRACKER_BACKLOG`, `CROSS_CUTTING` (defined as `INDEX_GROUPS` in `render_projects.py`); a project without one is
+listed under "Not yet grouped". An optional one-line `description:` appears on its card,
+and a `FOO/FOO-pathway.md` page gets a "Pathway diagram" link automatically.
 
 **Collections.** Related projects are grouped under an index page by listing a
 collection key in frontmatter, e.g. `collections: [HOMOLOGY_PROPAGATION]`. Keys

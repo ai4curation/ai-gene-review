@@ -13,6 +13,7 @@ manifest:
     - href: https://claude.ai/artifact/XyN2cmWm1r77VGG1efpgSY
       title: NCBI prokaryotic GO map
       description: how RefSeq, PGAP, SPARCLE, Gene, gene2go, FTP and Datasets fit together
+index_group: CROSS_CUTTING
 ---
 
 # NCBI RefSeq vs UniProt/GOA: prokaryotic GO pipeline comparison

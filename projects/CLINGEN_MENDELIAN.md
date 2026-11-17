@@ -2888,6 +2888,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/4hQjBNnZX7gypVhGru5wBL
       title: Project brief
+index_group: MAMMAL
 ---
 
 # ClinGen Mendelian Disease Genes

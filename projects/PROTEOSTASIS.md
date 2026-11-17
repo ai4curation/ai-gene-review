@@ -101,6 +101,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/X5CfsBDy2fmRP57wscyizk
       title: Project brief
+index_group: MAMMAL
 ---
 # Human Proteostasis Network Project
 

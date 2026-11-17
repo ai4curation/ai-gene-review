@@ -14,6 +14,7 @@ genes:
 description: >-
   Audit of GO annotations contributed by SynGO: which species and cell system each
   experimental row rests on, and whether the term matches the paper.
+index_group: CROSS_CUTTING
 ---
 
 # SynGO Annotation Provenance

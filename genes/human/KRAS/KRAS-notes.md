@@ -89,3 +89,18 @@ region in KRAS", supporting the PIP5K1A-KRAS interaction. The row was marked
 paper: the interaction is credible, but `GO:0005515` is not an informative KRAS
 molecular-function term, and the oncogenic-mutant dependency evidence should not
 be expanded into a new wild-type KRAS process annotation.
+
+## 2026-11-15 re-review of the PMID:23209302 source defect
+
+The `WRONG_GENE_PRODUCT` defect on the MGI row GO:0044877 protein-containing complex
+binding (IDA, PMID:23209302) was withdrawn and the action changed from `REMOVE` to
+`UNDECIDED`. QuickGO by reference shows that MGI annotated sixteen human proteins to
+this term from the paper on 2018-02-19 (RAP1A, RAP1B, RRAS, NRAS, KRAS, GNB1, GNB2, GNB4,
+MB21D2, SLC25A3, KCTD2, KCTD5, PFKP, NDUFA8, NDUFA9, COXFA4), each with an ISO row on the
+mouse ortholog. Fig. 3B of the paper (FLAG-Radil pull-downs analysed by LC-MS/MS) shows
+RAP1A, RAP1B, GNB1, GNB2, GNB4, RRAS, C3orf59 (MB21D2) and SLC25A3 among others; KRAS is
+not in that figure, so it presumably comes from supplementary Table S1 or S2, which were
+not retrievable. A batch made from a mass-spectrometry table is deliberate practice, and
+the absence of KRAS from the main text is not evidence of a mis-attribution
+[PMID:23209302 "a list of proteins that we identified in FLAG-Radil complexes using
+immunoprecipitation and mass spectrometry (Fig. 1 A; Table S1)"].

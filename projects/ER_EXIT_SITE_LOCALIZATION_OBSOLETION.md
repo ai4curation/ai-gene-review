@@ -12,6 +12,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/7CCaYcKNiv414UEVhwVRFX
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Protein Localization to ER Exit Site — Obsoletion
