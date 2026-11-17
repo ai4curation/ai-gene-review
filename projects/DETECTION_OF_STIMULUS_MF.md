@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [OBSOLETION, BIOLOGY_DOMAIN]
 species: [human, mouse, worm, ARATH, DROME]
 collections: [GO_TRACKER_BACKLOG]
+index_group: GO_TRACKER_BACKLOG
 ---
 
 # Detection of Stimulus: Sensor Activity or Process?

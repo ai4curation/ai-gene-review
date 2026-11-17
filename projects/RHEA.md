@@ -12,6 +12,7 @@ manifest:
   slides:
     - href: RHEA/slides/RHEA-slides.html
       description: AI generated
+index_group: CROSS_CUTTING
 ---
 
 # RHEA → GO Contribution & Gap Project

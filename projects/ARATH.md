@@ -295,6 +295,7 @@ genes:
 - Z-ISO
 - ZDS
 - ZTL
+index_group: PLANT
 ---
 
 # Arabidopsis thaliana corpus

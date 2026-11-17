@@ -9,6 +9,7 @@ last_reviewed: 2026-10-05
 manifest:
   slides:
     - href: SPKW/slides/SPKW-slides.html
+index_group: CROSS_CUTTING
 ---
 
 # SwissProt Keywords (SPKW) Unique Terms Project

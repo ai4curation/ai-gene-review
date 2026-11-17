@@ -10,6 +10,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/HpYCKxoFy6C6gRzHn7FTcp
       title: Project brief
+index_group: MAMMAL
 ---
 
 # KW-1110 (Inhibition of host TRAFs by virus) — KW2GO remapping

@@ -13,6 +13,7 @@ sidecars:
 manifest:
   slides:
     - href: TCDB/slides/TCDB-slides.html
+index_group: CROSS_CUTTING
 ---
 
 # TCDB → GO Transporter-Activity Mapping & Gap Project

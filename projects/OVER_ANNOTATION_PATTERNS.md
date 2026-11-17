@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/MrmXAmcMnpxL43743j1ogb
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Over-Annotation Patterns Project

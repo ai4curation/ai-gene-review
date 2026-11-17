@@ -281,6 +281,14 @@ verify-panther-paint *args="":
 check-panther-release:
     uv run ai-gene-review check-panther-release
 
+# Dry-run report of what a PANTHER release bump would change: cited ids gone or
+# renamed, member-based id proposals for every anchor, and panther.obo quotes the
+# rebuilt artifact would break. Edits nothing.
+# Example: just panther-release-diff 20.0
+[group('QC')]
+panther-release-diff target_release *args="":
+    uv run ai-gene-review panther-release-diff {{target_release}} --output-dir . {{args}}
+
 # Fetch and cache a single GO-CAM model to gocams/<id>/<id>-src.yaml
 # Example: just fetch-gocam gomodel:568b0f9600000284
 fetch-gocam model_id *args="":
@@ -366,6 +374,39 @@ descriptions-status organism *args="":
 #   just litscan-module-member --date-from 2026-01-01 --date-to 2026-06-19
 litscan-module-member *args="":
     uv run ai-gene-review litscan module-member {{args}}
+
+# Shadow issue trackers (issues/<tracker>/, see projects/GO_ANNOTATION_TRACKER.md).
+# Read-only mirror of upstream issues: never reference them by URL or org/repo#N
+# in commits or PRs, and never at-mention anyone but cmungall.
+#   just sync-shadow-issues                 # fetch new/updated go-annotation issues
+#   just outstanding-shadow-issues          # what needs triage, shadow work, or rating
+#   just outstanding-shadow-issues go-annotation --queue needs_shadow --study PROSPECTIVE
+#   just show-shadow-issue 6606 --as-of 2026-10-20T00:00:00Z
+
+# Fetch new and updated upstream issues into issues/<tracker>/ (read-only)
+sync-shadow-issues tracker="go-annotation" *args="":
+    uv run ai-gene-review shadow-issues sync {{tracker}} {{args}}
+
+# List shadow issues waiting for triage, shadow work, or rating
+outstanding-shadow-issues tracker="go-annotation" *args="":
+    uv run ai-gene-review shadow-issues outstanding {{tracker}} {{args}}
+
+# Print an issue thread, optionally cut at --as-of or --opening-only for blinded work
+show-shadow-issue number *args="":
+    uv run ai-gene-review shadow-issues show {{number}} {{args}}
+
+# Print the table of all shadow-issue ratings, generated from rating.yaml files
+shadow-ratings tracker="go-annotation":
+    uv run ai-gene-review shadow-issues ratings {{tracker}}
+
+# Validate issue.yaml and rating.yaml files against the shadow_issue schema
+[group('QC')]
+validate-shadow-issues tracker="go-annotation":
+    uv run ai-gene-review shadow-issues validate {{tracker}}
+
+# Check a commit message or PR body file for text that would notify upstream curators.
+check-upstream-refs +files:
+    python3 src/ai_gene_review/shadow_issues/guard.py {{files}}
 
 # Generic provider-selecting entry point documented in AGENTS.md and automation prompts.
 # Supports --provider, --alias, --fallback, --timeout, and --extra-args (which must come last).

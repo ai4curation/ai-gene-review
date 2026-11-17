@@ -18,6 +18,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/96q6dgRv3WdTTC6pcCoT4z
       title: Project brief
+index_group: BACTERIA
 ---
 
 # Antimicrobial Resistance (AMR) Project

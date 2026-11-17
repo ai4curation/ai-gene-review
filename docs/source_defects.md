@@ -162,6 +162,12 @@ manual step. When it is done, set `report_status: REPORTED` and
 - **`PANTHER` is not `GO_CENTRAL`.** `GO_CENTRAL` is PAINT's own IBD/IBA
   curation. A term can sit on a PANTHER node without PAINT ever asserting it,
   and the two are fixed in different places; a gene can carry rows from both.
+- **`SYNGO` is not `GO_CENTRAL`.** A row SynGO curated from a paper is
+  `SYNGO`. SynGO annotations were also used as seeds in GO Phylogenetic
+  Annotation (PMID:31171447), so an IBA that PAINT propagated from a SynGO seed
+  is `GO_CENTRAL`, even when the seed it rests on is the defect. File the seed
+  as `SYNGO` and the propagated rows as `GO_CENTRAL`, and say in each
+  explanation that the other exists.
 - **`GOC` is for the ontology, not an annotation.** When the defect is in a term
   itself - its label, definition, or placement in the graph - the annotations
   using it may all be reasonable. That is a `GOC` defect.
@@ -193,16 +199,27 @@ the intended gene and something else went wrong.
 - `ORTHOLOG_TRANSFER_AS_EXPERIMENTAL` - an experiment in another species was
   recorded on this gene with an experimental code (IDA, IMP) rather than ISO.
   The experiment may be sound; the evidence code misstates how it reaches the
-  gene. Pair it with `defect_type: WRONG_EVIDENCE_CODE`. When it is a
-  resource's documented convention (SynGO maps rodent annotations to the human
-  ortholog by design, PMID:31171447), raise it once, not row by row.
+  gene. Pair it with `defect_type: WRONG_EVIDENCE_CODE`. The fix has two
+  parts, and the defect should name both: the evidence code becomes ISO, and
+  `With/From` names the gene that was actually assayed (the rodent ortholog,
+  for SynGO). Changing the code alone leaves an ISO with no source. When it is
+  a resource's documented convention (SynGO maps rodent annotations to the
+  human ortholog by design, PMID:31171447), raise it once for the cohort, as
+  for `PRACTICE_CHANGE`: give the date range and the row count, not one defect
+  per row.
 - `CONTEXT_NOT_ASSAYED` - the work shows the activity but not the context the
   term asserts, most often a precomposed "X involved in Y" term annotated from
   a protein expressed in heterologous cells. Pair it with
   `defect_type: WRONG_TERM` and put the plain activity term in
-  `corrected_value`. GO has no explicit rule on heterologous-system evidence;
-  the point here is narrower: when the context is part of the term, evidence
-  that cannot reach the context does not support the term.
+  `corrected_value`. As of 2026-11 we found no explicit GO rule on evidence
+  from heterologous systems; the point here is narrower: when the context is
+  part of the term, evidence that cannot reach the context does not support
+  the term. In a gene review the same row is a MODIFY that decomposes the
+  precomposed term, recorded in `review.decomposed_into` (see
+  [INVOLVED_IN_PRECOMPOSITION](../projects/INVOLVED_IN_PRECOMPOSITION.md)).
+  Before dropping the context, check whether another paper does assay it: if
+  one does, the claim is true but mis-sourced, and the fix is to re-source the
+  row rather than generalise it.
 
 Use `OTHER` when the mechanism is identifiable but unlisted, and `UNKNOWN` when
 it is not identifiable at all. Prefer naming a mechanism where one fits: a

@@ -47,14 +47,30 @@ import requests
 import yaml
 
 PANTHER_RELEASE = "19.0"
+
+
+def hmm_url(release: str = PANTHER_RELEASE) -> str:
+    """URL of one release's HMM classification file (family and subfamily names).
+
+    >>> hmm_url("20.0").rsplit("/", 2)[1:]
+    ['20.0', 'PANTHER20.0_HMM_classifications']
+    """
+    return f"https://data.pantherdb.org/ftp/hmm_classifications/{release}/PANTHER{release}_HMM_classifications"
+
+
+def seq_base(release: str = PANTHER_RELEASE) -> str:
+    """Folder holding one release's per-organism sequence classification files."""
+    return (
+        f"https://data.pantherdb.org/ftp/sequence_classifications/{release}/"
+        "PANTHER_Sequence_Classification_files"
+    )
+
+
 # Release-pinned paths, not current_release/: the file names embed the release,
 # so current_release/ would 404 (or silently change) when PANTHER moves on.
-HMM_BASE = f"https://data.pantherdb.org/ftp/hmm_classifications/{PANTHER_RELEASE}"
-HMM_URL = f"{HMM_BASE}/PANTHER{PANTHER_RELEASE}_HMM_classifications"
-SEQ_BASE = (
-    f"https://data.pantherdb.org/ftp/sequence_classifications/{PANTHER_RELEASE}/"
-    "PANTHER_Sequence_Classification_files"
-)
+HMM_URL = hmm_url()
+SEQ_BASE = seq_base()
+
 # PAINT is published apart from the library, as dated snapshots under each release
 # (paint/<release>/<date>/). Pin one: paint/current/ changes without notice, and
 # would move to the next release before PANTHER_RELEASE does. Bump both together.
@@ -281,21 +297,25 @@ def parse_sequence_classification(lines: Iterable[str]) -> Dict[str, str]:
 
 
 def fetch_sequence_classification(
-    organism: str, cache_dir: Path, force_download: bool = False
+    organism: str,
+    cache_dir: Path,
+    force_download: bool = False,
+    release: str = PANTHER_RELEASE,
 ) -> Optional[Path]:
     """Download one organism's sequence classification, or None if absent.
 
     PANTHER publishes these per organism under fixed slugs (``human``,
     ``e_coli``, ``pseudomonas``, ...). An unknown slug 404s, which is reported as
-    ``None`` rather than raising so callers can sweep a candidate list.
+    ``None`` rather than raising so callers can sweep a candidate list. File names
+    embed the release, so several releases can share one ``cache_dir``.
     """
     cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"PTHR{PANTHER_RELEASE}_{organism}"
+    filename = f"PTHR{release}_{organism}"
     dest = cache_dir / filename
     if dest.exists() and not force_download:
         return dest
-    response = requests.get(f"{SEQ_BASE}/{filename}", timeout=300)
+    response = requests.get(f"{seq_base(release)}/{filename}", timeout=300)
     if response.status_code == 404:
         return None
     response.raise_for_status()
