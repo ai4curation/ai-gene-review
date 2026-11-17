@@ -212,7 +212,8 @@ reduced mIPSC frequency, and the authors propose presynaptic beta1 receptors as 
 explanation, PMID:24281383). Together they feed 413 downstream rows. GABRA5 (91 rows) has
 functional evidence, but on afferent axons rather than the presynaptic terminal membrane
 the term specifies. Conventional heteromeric GABA-A receptors contain beta subunits (rho
-subunits, by contrast, can assemble without them, PMID:9153229), but that does not say whether a given presynaptic receptor contains beta1, beta2 or beta3.
+subunits, by contrast, can assemble without them, PMID:9153229), but that does not say
+whether a given presynaptic receptor contains beta1, beta2 or beta3.
 None of these should be reported as "wrong" without an expert view; each should be
 reported as "citation does not support the term, and we found no direct functional
 evidence".
@@ -244,23 +245,33 @@ cause `SYMBOL_COLLISION`, confirmed from the abstracts, which name the subunits 
 PMID:15174078 was also read in full; its receptor antibodies target GABA(B1) and GABA(B2). SynGO's
 other rat Gabrb1 paper, PMID:16469775 (also read in full), is a genuine GABA-A beta1 study
 of fast IPSCs and is correctly attributed.
-The swapped seeds reached PAINT for one term only. PAINT lists its donors by MGI or RGD
-identifier, and all three swapped genes (mouse Gabrb1 MGI:95619, rat Gabrb1 RGD:2649,
-rat Gabrb2 RGD:2650) are among the eleven donors of the `GO:0098982` GABA-ergic synapse IBA
-at PTN008566841, which gives 241 IBA rows. For mouse Gabrb1 and rat Gabrb2 the swapped
-SynGO rows are their only experimental support for that term; rat Gabrb1 also has the
-genuine PMID:16469775 rows. The IBA itself is sound: seven of the other eight donors
-(mouse Gabrb2, Gabrb3, Gabrd and Gabrr1; rat Gabrb3, Gabrd and Gabrr2) carry their own
-experimental SynGO rows for the term from other papers (QuickGO, 2026-11-17; mouse Gabrr3
-has no reviewed UniProt entry and was not checked), and GABA-A receptors are at GABAergic
-synapses. A correction removes donors without changing the node. No IBA on the G protein-coupled
-receptor, presynaptic active zone membrane, postsynaptic specialization membrane,
-Schaffer collateral - CA1 synapse or glutamatergic synapse terms names a swapped gene
-([`swap_iba_donors.py`](SYNGO_PROVENANCE/swap_iba_donors.py), output
-[`gaba_receptor_swaps-iba.yaml`](SYNGO_PROVENANCE/data/gaba_receptor_swaps-iba.yaml)). An earlier version of
-this page said no IBA used the seeds; that check searched WITH/FROM for UniProt accessions,
-which PAINT does not use. Outside PAINT, the spread is Ensembl orthology projections,
-UniProt automatic rows and four UniProt ISS rows.
+
+The swapped seeds did reach PAINT, through three IBA terms. PAINT lists its donors by MGI
+or RGD identifier, so [`swap_iba_donors.py`](SYNGO_PROVENANCE/swap_iba_donors.py) takes
+each swapped gene's identifier, lists every IBA that names it, and keeps those whose term
+is a swapped term or an ancestor of one (output
+[`gaba_receptor_swaps-iba.yaml`](SYNGO_PROVENANCE/data/gaba_receptor_swaps-iba.yaml),
+QuickGO and UniProt, 2026-11-17):
+
+| IBA term (PAINT node) | Swapped genes among the donors | Donors whose only support is the swap |
+|---|---|---|
+| `GO:0098982` GABA-ergic synapse (PTN008566841, 241 rows) | mouse Gabrb1 MGI:95619, rat Gabrb1 RGD:2649, rat Gabrb2 RGD:2650 | mouse Gabrb1, rat Gabrb2 |
+| `GO:0045211` postsynaptic membrane (PTN008360792, 39 rows) | rat Gabrb1 (its swapped postsynaptic specialization membrane row is a descendant) | rat Gabrb1 |
+| `GO:0005886` plasma membrane (PTN001054635) | rat Gabrb1, rat Gabrb2 | none |
+
+Each node keeps independent support. For GABA-ergic synapse, eight of the nine other
+donors have their own experimental rows for the term (mouse Gabrr3 has no reviewed
+UniProt entry and was not checked); for postsynaptic membrane, all three other donors do
+(rat Gabrb3, human GABRB3 and bovine GABRB1); plasma membrane has dozens. So correcting
+the seeds removes donors without changing any node. Mouse Gabrb1 is a donor to no other IBA, and no
+IBA anywhere uses the G protein-coupled neurotransmitter receptor activity row. The
+script records each donor's support, so the roster can be re-checked. An earlier version
+of this page said no IBA used the seeds; that check searched WITH/FROM for UniProt
+accessions, which PAINT does not use, and a later one looked only at the swapped terms
+themselves. Outside PAINT, the spread is Ensembl orthology projections, UniProt automatic
+rows and four UniProt ISS rows; the ISS rows copy rat Gabrb2's postsynaptic specialization
+membrane, which rat Gabrb2 also has from an independent IDA (PMID:9464994), so the term
+can stand on those rows once the swapped support is removed.
 
 ## Ontology issues behind these annotations
 
@@ -379,8 +390,9 @@ channel evidence, `PRACTICE_CHANGE` would describe the cohort for a bulk fix.
   contradicted; five lack direct functional evidence and one (GABRA5) has it on axons.
 - [x] Check every SynGO annotation on a GABA receptor gene for GABA-A/GABA-B swaps
   (`gaba_receptor_swaps.py`): two confirmed (PMID:11498050, PMID:15174078).
-- [x] Check whether the swapped seeds are PAINT donors (`swap_iba_donors.py`): all three
-  are donors of the GO:0098982 IBA at PTN008566841 and of no other IBA; the node stands.
+- [x] Check whether the swapped seeds are PAINT donors (`swap_iba_donors.py`): they feed
+  three IBA terms (GABA-ergic synapse, postsynaptic membrane, plasma membrane); every node
+  keeps independent support.
 - [ ] Raise with the GO editors that GABA-A receptor activity is disconnected from the
   GABA-gated channel branch (cite #31035 as the parallel case). The pre/post scope
   difference is noted but may be deliberate.
