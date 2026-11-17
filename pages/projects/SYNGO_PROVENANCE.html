@@ -736,6 +736,90 @@ None of it has reached PAINT: no IBA annotation names any of the three swapped s
 its WITH/FROM. The spread is Ensembl orthology projections, UniProt automatic rows and<br />
 four UniProt ISS rows. Because the swapped rows carry experimental codes, a later PAINT<br />
 pass could still use them.</p>
+<h2 id="ontology-issues-behind-these-annotations">Ontology issues behind these annotations</h2>
+<p>The annotations above sit on a part of GO where several independent classification axes<br />
+are combined in precomposed terms. These are questions for the GO editors, not row-level<br />
+corrections. Term structure was read from OLS and annotation counts from QuickGO on<br />
+2026-11-17.</p>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Gating</th>
+<th>Ion</th>
+<th>Receptor</th>
+<th>Context</th>
+<th>Annotations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GO:0004890</code> GABA-A receptor activity</td>
+<td>none</td>
+<td>none</td>
+<td>GABA receptor activity</td>
+<td>none</td>
+<td>21,889</td>
+</tr>
+<tr>
+<td><code>GO:0022851</code> GABA-gated chloride ion channel activity</td>
+<td>transmitter-gated, extracellular ligand-gated</td>
+<td>chloride</td>
+<td>neurotransmitter receptor activity</td>
+<td>none</td>
+<td>2,515</td>
+</tr>
+<tr>
+<td><code>GO:1904315</code> transmitter-gated ... involved in regulation of postsynaptic membrane potential</td>
+<td>transmitter-gated, extracellular ligand-gated</td>
+<td>monoatomic ion</td>
+<td>neurotransmitter receptor activity</td>
+<td>postsynaptic</td>
+<td>3,513</td>
+</tr>
+<tr>
+<td><code>GO:0099507</code> ligand-gated ... involved in regulation of presynaptic membrane potential</td>
+<td>ligand-gated only</td>
+<td>monoatomic ion</td>
+<td>none</td>
+<td>presynaptic</td>
+<td>1,497</td>
+</tr>
+</tbody>
+</table>
+<ol>
+<li><strong>GABA-A receptor activity is disconnected from the channel branch.</strong> <code>GO:0004890</code> has<br />
+   no channel or chloride ancestor and no children; its definition says "GABA-A receptors<br />
+   function as chloride channels", and its comment asks curators to also annotate chloride<br />
+   channel activity. <code>GO:0022851</code> GABA-gated chloride ion channel activity is not under<br />
+<code>GO:0016917</code> GABA receptor activity. So the most used term (21,889 annotations) cannot be<br />
+   connected to the channel terms by reasoning. Open ticket<br />
+<a href="https://github.com/geneontology/go-ontology/issues/31035">geneontology/go-ontology#31035</a><br />
+   (2025-11-07) raises the same problem for acetylcholine receptor activity, where<br />
+   nicotinic channels get annotated to a term meant for the muscarinic GPCRs. We found no<br />
+   ticket for the GABA case.</li>
+<li><strong>The pre- and postsynaptic twins are not parallel.</strong> <code>GO:1904315</code> is a transmitter-gated,<br />
+   extracellular-ligand-gated neurotransmitter receptor activity; <code>GO:0099507</code> is only a<br />
+   ligand-gated ion channel activity. A GABA-A subunit annotated with <code>GO:0099507</code> gains a<br />
+   context and loses the transmitter gating and receptor classification its other terms<br />
+   carry. We found no ticket on this asymmetry.</li>
+<li><strong>The precomposed context terms are already on GO's obsoletion list.</strong><br />
+<code>GO:0099507</code> is listed in the open ticket<br />
+<a href="https://github.com/geneontology/go-ontology/issues/14324">geneontology/go-ontology#14324</a><br />
+   ("Function involved in process to OBSOLETE", 2017), which follows the general proposal<br />
+<a href="https://github.com/geneontology/go-ontology/issues/14138">#14138</a> (closed 2022) to stop<br />
+   precomposing molecular functions with processes.<br />
+<a href="https://github.com/geneontology/go-ontology/issues/31205">#31205</a> (closed 2025-12-11)<br />
+   obsoleted 11 "channel activity involved in X" terms, replacing each with its plain<br />
+   activity, but not <code>GO:0099507</code> or <code>GO:1904315</code>, which carry most of SynGO's annotations<br />
+   (1,497 and 3,513).</li>
+</ol>
+<p>For the audit this means the <code>CONTEXT_NOT_ASSAYED</code> fix is low-cost: replacing <code>GO:0099507</code><br />
+with the specific activity a GABA-A subunit already carries (<code>GO:0022851</code>) gains chloride<br />
+selectivity and transmitter gating, and loses only the untested context. If GO goes ahead<br />
+with #14324, the same replacement would happen for every row, and the precomposed term's<br />
+own problems (the asymmetry above, and evidence that can only reach half of it) would go<br />
+with it.</p>
 <h2 id="error-categories-this-audit-needs">Error categories this audit needs</h2>
 <p>The repository's source-defect vocabulary records <em>what</em> is wrong (<code>defect_type</code>) and,<br />
 optionally, <em>how</em> it arose (<code>cause</code>). These cases needed two causes the vocabulary did not<br />
@@ -801,6 +885,9 @@ channel evidence, <code>PRACTICE_CHANGE</code> would describe the cohort for a b
   contradicted; six lack functional evidence.</li>
 <li>[x] Check every SynGO annotation on a GABA receptor gene for GABA-A/GABA-B swaps<br />
   (<code>gaba_receptor_swaps.py</code>): two confirmed (PMID:11498050, PMID:15174078).</li>
+<li>[ ] Raise the two ontology issues without tickets with the GO editors: GABA-A receptor<br />
+  activity disconnected from the channel branch (cite #31035 as the parallel case), and<br />
+  the <code>GO:0099507</code>/<code>GO:1904315</code> asymmetry (cite #14324).</li>
 <li>[ ] Look for the same kind of name collision beyond GABA receptors (for example other<br />
   receptor families whose subunit and receptor-type names share a letter or number).</li>
 <li>[ ] Ask an expert (or SynGO) about the six seeds without functional evidence (<a href="../../genes/human/GRIA4/GRIA4-ai-review.html">GRIA4</a>,<br />
@@ -820,9 +907,9 @@ channel evidence, <code>PRACTICE_CHANGE</code> would describe the cohort for a b
     <strong>Local changes</strong> ·
 
     Last committed source:
-    <time datetime="2026-11-17T03:52:42Z">17 Nov 2026, 03:52 UTC</time>
-    · <a href="https://github.com/ai4curation/ai-gene-review/commit/d7b5c01c8ef3bc8527e974b4d5ab13b22a49eba0" aria-label="View source change d7b5c01c8ef3bc8527e974b4d5ab13b22a49eba0">d7b5c01c8ef3</a>
-    · <a href="https://github.com/ai4curation/ai-gene-review/blob/d7b5c01c8ef3bc8527e974b4d5ab13b22a49eba0/projects/SYNGO_PROVENANCE.md">View committed source</a>
+    <time datetime="2026-11-17T04:01:23Z">17 Nov 2026, 04:01 UTC</time>
+    · <a href="https://github.com/ai4curation/ai-gene-review/commit/d0965f8cb7d24117b1bd5d5bbda93f8e393a34b4" aria-label="View source change d0965f8cb7d24117b1bd5d5bbda93f8e393a34b4">d0965f8cb7d2</a>
+    · <a href="https://github.com/ai4curation/ai-gene-review/blob/d0965f8cb7d24117b1bd5d5bbda93f8e393a34b4/projects/SYNGO_PROVENANCE.md">View committed source</a>
 
 </small>
 

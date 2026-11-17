@@ -246,6 +246,53 @@ its WITH/FROM. The spread is Ensembl orthology projections, UniProt automatic ro
 four UniProt ISS rows. Because the swapped rows carry experimental codes, a later PAINT
 pass could still use them.
 
+## Ontology issues behind these annotations
+
+The annotations above sit on a part of GO where several independent classification axes
+are combined in precomposed terms. These are questions for the GO editors, not row-level
+corrections. Term structure was read from OLS and annotation counts from QuickGO on
+2026-11-17.
+
+| Term | Gating | Ion | Receptor | Context | Annotations |
+|---|---|---|---|---|---|
+| `GO:0004890` GABA-A receptor activity | none | none | GABA receptor activity | none | 21,889 |
+| `GO:0022851` GABA-gated chloride ion channel activity | transmitter-gated, extracellular ligand-gated | chloride | neurotransmitter receptor activity | none | 2,515 |
+| `GO:1904315` transmitter-gated ... involved in regulation of postsynaptic membrane potential | transmitter-gated, extracellular ligand-gated | monoatomic ion | neurotransmitter receptor activity | postsynaptic | 3,513 |
+| `GO:0099507` ligand-gated ... involved in regulation of presynaptic membrane potential | ligand-gated only | monoatomic ion | none | presynaptic | 1,497 |
+
+1. **GABA-A receptor activity is disconnected from the channel branch.** `GO:0004890` has
+   no channel or chloride ancestor and no children; its definition says "GABA-A receptors
+   function as chloride channels", and its comment asks curators to also annotate chloride
+   channel activity. `GO:0022851` GABA-gated chloride ion channel activity is not under
+   `GO:0016917` GABA receptor activity. So the most used term (21,889 annotations) cannot be
+   connected to the channel terms by reasoning. Open ticket
+   [geneontology/go-ontology#31035](https://github.com/geneontology/go-ontology/issues/31035)
+   (2025-11-07) raises the same problem for acetylcholine receptor activity, where
+   nicotinic channels get annotated to a term meant for the muscarinic GPCRs. We found no
+   ticket for the GABA case.
+2. **The pre- and postsynaptic twins are not parallel.** `GO:1904315` is a transmitter-gated,
+   extracellular-ligand-gated neurotransmitter receptor activity; `GO:0099507` is only a
+   ligand-gated ion channel activity. A GABA-A subunit annotated with `GO:0099507` gains a
+   context and loses the transmitter gating and receptor classification its other terms
+   carry. We found no ticket on this asymmetry.
+3. **The precomposed context terms are already on GO's obsoletion list.**
+   `GO:0099507` is listed in the open ticket
+   [geneontology/go-ontology#14324](https://github.com/geneontology/go-ontology/issues/14324)
+   ("Function involved in process to OBSOLETE", 2017), which follows the general proposal
+   [#14138](https://github.com/geneontology/go-ontology/issues/14138) (closed 2022) to stop
+   precomposing molecular functions with processes.
+   [#31205](https://github.com/geneontology/go-ontology/issues/31205) (closed 2025-12-11)
+   obsoleted 11 "channel activity involved in X" terms, replacing each with its plain
+   activity, but not `GO:0099507` or `GO:1904315`, which carry most of SynGO's annotations
+   (1,497 and 3,513).
+
+For the audit this means the `CONTEXT_NOT_ASSAYED` fix is low-cost: replacing `GO:0099507`
+with the specific activity a GABA-A subunit already carries (`GO:0022851`) gains chloride
+selectivity and transmitter gating, and loses only the untested context. If GO goes ahead
+with #14324, the same replacement would happen for every row, and the precomposed term's
+own problems (the asymmetry above, and evidence that can only reach half of it) would go
+with it.
+
 ## Error categories this audit needs
 
 The repository's source-defect vocabulary records *what* is wrong (`defect_type`) and,
@@ -313,6 +360,9 @@ channel evidence, `PRACTICE_CHANGE` would describe the cohort for a bulk fix.
   contradicted; six lack functional evidence.
 - [x] Check every SynGO annotation on a GABA receptor gene for GABA-A/GABA-B swaps
   (`gaba_receptor_swaps.py`): two confirmed (PMID:11498050, PMID:15174078).
+- [ ] Raise the two ontology issues without tickets with the GO editors: GABA-A receptor
+  activity disconnected from the channel branch (cite #31035 as the parallel case), and
+  the `GO:0099507`/`GO:1904315` asymmetry (cite #14324).
 - [ ] Look for the same kind of name collision beyond GABA receptors (for example other
   receptor families whose subunit and receptor-type names share a letter or number).
 - [ ] Ask an expert (or SynGO) about the six seeds without functional evidence (GRIA4,
