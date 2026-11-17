@@ -3,6 +3,7 @@ title: "Organelle Lifecycle Modules"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 autolink_exclude: [ftsZ, FtsZ]
+index_group: CROSS_CUTTING
 ---
 
 # Organelle Lifecycle Modules

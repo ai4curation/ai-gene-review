@@ -4,6 +4,8 @@ maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [human, mouse, rat]
 genes: [MIR155, XIST, KCNQ1OT1, SNORD3A, SNORD116-1, TERC, Mir30e, Mir100, Mir127, Mir26a-1, Mir384]
+index_group: MAMMAL
+description: Which RNAcentral sequences to review, intake rankings for human, mouse and rat, and review of Rfam2GO family mappings
 ---
 
 # Non-coding RNA curation

@@ -11,6 +11,7 @@ manifest:
     - href: https://claude.ai/artifact/44UaWpaBByrMaZcALkgq5R
       title: Seed audit visual
       description: AI generated
+index_group: BACTERIA
 ---
 
 # PseudoCAP annotation review: P. aeruginosa seeds of PAINT IBAs

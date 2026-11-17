@@ -16,6 +16,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/3mEMoeKTFksZXuPqF9xaif
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Allergens Project

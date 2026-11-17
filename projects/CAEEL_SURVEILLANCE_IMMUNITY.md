@@ -16,6 +16,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/LutdJKrV9RuXA3LXAA4yzR
       title: Project brief
+index_group: WORM
 ---
 
 # C. elegans Surveillance Immunity Project

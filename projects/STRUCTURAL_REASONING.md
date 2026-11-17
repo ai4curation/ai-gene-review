@@ -5,6 +5,7 @@ last_reviewed: 2026-10-10
 tags: [PIPELINE, BIOLOGY_DOMAIN]
 species: [human]
 genes: [SLC10A1, SLC10A2, SLC10A4, SLC10A6, SLC10A7]
+index_group: CROSS_CUTTING
 ---
 
 # Structural Reasoning in Annotation Review
