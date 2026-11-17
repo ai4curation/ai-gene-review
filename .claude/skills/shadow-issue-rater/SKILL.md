@@ -26,11 +26,20 @@ and use they/them for them.
 
 ## 1. Read the shadow work without the self-rating
 
-Do not open `self-rating.yaml` until you have scored. Read `issue.yaml` (triage,
+Do not open `self-rating.yaml` until you have scored. (The rater workflow removes
+every `self-rating.yaml` from its checkout before you start; do not recover one
+from git.) Read `issue.yaml` (triage,
 shadow, prior_work), `shadow.md`, and the diff of the work products listed in
 `shadow.work_products`. A product with `landed: false` did not reach main as
 written, so the current file does not show the shadow work: read its
 `preserved_diff` instead, and do not read the current file before scoring.
+
+To check that a preserved diff is the worker's real output, not a
+reconstruction: each `index <old>..<new>` line names git blobs, and
+`git cat-file -t <blob>` should print `blob` for both. `git apply --check` of
+the diff against a checkout of the old blobs' commit should succeed. When two
+preserved diffs chain (a later follow-up edited the same file), the first
+diff's new blob is the second's old blob.
 
 ## 2. Establish what upstream did
 
@@ -42,8 +51,16 @@ Compare with the repo's cached `GENE-goa.tsv`. A fix not yet visible is usually
 release lag; say so, do not guess.
 
 Fill `resolution` in `issue.yaml`: `status`, `resolved_at`, `summary`, and
-`evidence` (`kind`, `ref` such as `comment:<id>`, `checked_at` for every downstream
-check, `note`). Do not touch `triage` or `shadow`.
+`evidence` (`kind`, `ref` such as `comment:<id>`, `note`). Every downstream check
+(`GOA_DIFF`, `MAPPING_RELEASE`) also needs `checked_at` and the release it saw:
+`source_release` as the source names it (`GO 2026-08-05`, `PAINT 19.0/2026-08-28`)
+and `source_release_date`; validation fails without them. Find them from the GO
+release metadata (`https://current.geneontology.org/metadata/release-date.json`),
+the PAINT snapshot listing (`https://data.pantherdb.org/ftp/downloads/paint/`),
+or the UniProt release. If a fix postdates every `source_release_date`, nothing
+can show it yet. For a PAINT issue, `ai-gene-review shadow-issues paint-diff OLD
+NEW` lists the node annotations (IBD, IRD, IKR) that changed between two
+`<FAMILY>-paint.tsv` slices. Do not touch `triage` or `shadow`.
 
 ## 3. Score
 
@@ -58,13 +75,15 @@ Write `rating.yaml`:
 - `self_rating_seen`: `NEVER`, `BEFORE_SCORING` (your scores may be influenced),
   or `AFTER_SCORING`. Say how it happened in `summary` if not `NEVER`;
 - `outcome`, and the dimensions `triage`, `diagnosis`, `actions`, `downstream`
-  (`PENDING_RELEASE` when upstream acted but the change is not yet released),
-  `added_value`, `harm`;
+  (`PENDING_RELEASE` when upstream acted but no release you checked postdates the
+  change; only `downstream` takes that value), `added_value`, `harm`;
 - `summary`.
 
 If the issue already has a `rating.yaml`, do not read it (or its report)
-before scoring; write yours as `rating-<label>.yaml` with `report-<label>.md`,
-and the coordinator decides which is primary (the most independent one).
+before scoring; write yours as `rating-<label>.yaml` with `report-<label>.md`
+(`rating-second.yaml` for the `needs_second_rating` queue), and the coordinator
+decides which is primary (the most independent one). Second ratings are what
+`ai-gene-review shadow-issues agreement` compares, so keep yours independent.
 
 Judge term by term. Score only what the evidence shows: if the thread does not
 say whether upstream made a change, that is unknown, not a "no". Score
@@ -77,6 +96,18 @@ verifying it. Spot-check two or three of the worker's key factual claims, and ru
 `shadow.saw_prior_work: true` means the worker started from the repo's own
 conclusion), and for RETROSPECTIVE issues whether the title alone gave the kind
 away.
+
+## Re-rating after a release
+
+An issue whose primary downstream score is `PENDING_RELEASE` waits in the
+`pending_release` queue. Once a release of the checked source postdates
+upstream's fix, re-check downstream: append new `evidence` entries (never edit
+the old ones; they record what was visible then), then record the new downstream
+score as an `adjudications` entry on `rating.yaml`: `dimension: downstream`,
+`rater_value` (the score as originally written, which validation checks),
+`adjudicated_value`, `by` (you), `at`, and a `reason` citing the new evidence.
+The last adjudication of a dimension is the one that counts. Add a dated section
+to `report.md` saying what the release showed; leave the earlier text as it was.
 
 ## 4. Write the report
 

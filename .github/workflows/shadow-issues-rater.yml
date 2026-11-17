@@ -85,6 +85,20 @@ jobs:
       - name: Install just
         run: uv tool install rust-just
 
+      # The rater must score without the worker's self-assessment. Removing the
+      # files is a structural barrier, not only an instruction. skip-worktree
+      # keeps the deletions out of anything the rater commits; the files stay in
+      # git, and nothing in this job restores them.
+      - name: Hide worker self-ratings from the rater
+        run: |
+          mapfile -t files < <(git ls-files -- 'issues/*/*/self-rating.yaml')
+          if [ "${#files[@]}" -gt 0 ]; then
+            git update-index --skip-worktree -- "${files[@]}"
+            rm -- "${files[@]}"
+          fi
+          echo "Hid ${#files[@]} self-rating files"
+          test -z "$(git status --porcelain -- issues)"
+
       - name: Rate one shadow issue
         id: rater
         uses: anthropics/claude-code-action@be7b93b1907a4abad570368f3c74b6fe3807510b # v1
@@ -110,18 +124,30 @@ jobs:
             Read CLAUDE.md, then .claude/skills/shadow-issue-rater/SKILL.md, and follow the
             skill exactly. If issues/go-annotation/tracker.yaml does not exist, stop and report.
 
-            Pick the work: if ISSUE is set, rate that issue. Otherwise run
-            `just outstanding-shadow-issues go-annotation --queue needs_rating --limit 20`
-            and rate the first listed issue (prospective issues come first) whose folder no
-            open PR touches. List touched folders with:
+            The workers' self-rating.yaml files have been removed from this checkout so
+            that you score without them. Do not recover them from git; set
+            `self_rating_seen: NEVER`.
+
+            Pick the work: if ISSUE is set, rate that issue. Otherwise take the first of
+            these queues that has an issue whose folder no open PR touches, listing each
+            with `just outstanding-shadow-issues go-annotation --queue QUEUE --limit 20`
+            (prospective issues come first):
+            1. `needs_rating`: write the primary rating.yaml.
+            2. `pending_release`: only if a release of the source checked (GO, PAINT,
+               UniProt) now postdates upstream's fix; otherwise skip the issue. Re-rate
+               downstream as the skill's "Re-rating after a release" section says.
+            3. `needs_second_rating`: write a second, independent rating as
+               rating-second.yaml with report-second.md, without reading rating.yaml or
+               report.md first.
+            List touched folders with:
             `gh pr list --repo $REPO --state open --limit 100 --json files --jq '.[].files[].path' | grep '^issues/go-annotation/' | cut -d/ -f3 | sort -u`
-            If the queue is empty, report that and stop.
+            If no queue has work, report that and stop.
 
             Record `rater: shadow-issues-rater`, `rater_model: MODEL`, `rater_run: RUN_URL`.
             Set `independence` by comparing MODEL with the worker's model in
             `shadow.worker` (DIFFERENT_MODEL, or SAME_MODEL_SEPARATE_RUN). Write the report
-            as issues/go-annotation/NNN/report.md; there is no artifact tool in this run, so
-            leave `report_url` unset.
+            beside the rating (report.md, or report-second.md); there is no artifact tool
+            in this run, so leave `report_url` unset.
 
             Never notify upstream: in every commit message, PR title or body, issue, or
             comment, never write an upstream issue URL or geneontology/<repo>#NNN, and never

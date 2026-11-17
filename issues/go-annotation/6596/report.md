@@ -138,3 +138,23 @@ next PAINT/GOA release.
 
 `shadow.started_at` 2026-11-10T01:46:36Z to `completed_at` 02:00:00Z: about
 13.5 minutes of wall time for the worker run. Token cost not recorded.
+
+## 2026-11-17 addendum: adjudications and a release re-check
+
+This report is the rater's reasoning as written, and two of its scores are
+disputed beside it, in `adjudications` in `rating.yaml` (2026-11-11), not by
+editing them:
+
+- **downstream PARTIAL → PENDING_RELEASE.** No GO or PAINT release postdates the
+  curator's 2026-10-02 fix, so no part of it can be seen downstream. Reading the
+  unchanged P53598 row as release lag but the unchanged O13750 row as "no fix"
+  treats the same pre-fix data two ways.
+- **added_value SUBSTANTIAL → SOME.** The about 18 fungal recipients said above to
+  be still wrong are the pre-fix data, so that claim cannot be checked yet. The
+  verified added value is the root-placement diagnosis and the corrected 2017
+  precedent.
+
+On 2026-11-17 the newest PAINT snapshot was still 2026-08-28 and the GO release
+2026-08-05, and QuickGO still showed the pre-fix IBA (dated 20260528) on both
+P53598 and O13750 (see `resolution.evidence`). The issue stays in the
+`pending_release` queue until a release after 2026-10-02 appears.

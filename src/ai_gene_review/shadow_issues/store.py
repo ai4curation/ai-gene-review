@@ -403,12 +403,20 @@ def iter_issue_folders(tracker_dir: Path) -> list[Path]:
 def report_for(rating_path: Path) -> Path:
     """The report that must accompany a rating file.
 
+    ``rating.yaml`` pairs with ``report.md`` and ``rating-<label>.yaml`` with
+    ``report-<label>.md``; only the leading role word changes, never the label.
+
     >>> report_for(Path("6596/rating.yaml")).name, report_for(Path("6596/rating-same-model.yaml")).name
     ('report.md', 'report-same-model.md')
+    >>> report_for(Path("6596/rating-rerating.yaml")).name
+    'report-rerating.md'
     """
-    return rating_path.with_name(
-        rating_path.name.replace("rating", "report", 1).replace(".yaml", ".md")
-    )
+    stem = rating_path.stem
+    if rating_path.suffix != ".yaml" or not (
+        stem == "rating" or stem.startswith("rating-")
+    ):
+        raise ValueError(f"{rating_path.name} is not a rating file")
+    return rating_path.with_name("report" + stem.removeprefix("rating") + ".md")
 
 
 def rating_files(folder: Path) -> list[Path]:
@@ -423,7 +431,30 @@ def rating_files(folder: Path) -> list[Path]:
     return ([primary] if primary.exists() else []) + others
 
 
-QUEUES = ("untriaged", "in_progress", "needs_shadow", "needs_rating")
+def effective_score(rating: dict[str, Any], dimension: str) -> str | None:
+    """A rating's score on one dimension, after any adjudication of it.
+
+    >>> effective_score({"downstream": "PARTIAL", "adjudications": [{"dimension": "downstream",
+    ...     "rater_value": "PARTIAL", "adjudicated_value": "PENDING_RELEASE"}]}, "downstream")
+    'PENDING_RELEASE'
+    >>> effective_score({"downstream": "AGREE"}, "downstream")
+    'AGREE'
+    """
+    score = rating.get(dimension)
+    for ruling in rating.get("adjudications") or []:
+        if ruling["dimension"] == dimension:
+            score = ruling["adjudicated_value"]
+    return score
+
+
+QUEUES = (
+    "untriaged",
+    "in_progress",
+    "needs_shadow",
+    "needs_rating",
+    "pending_release",
+    "needs_second_rating",
+)
 
 
 def queue_for(
@@ -435,7 +466,12 @@ def queue_for(
     - ``in_progress``: shadow work started but not finished; resume it.
     - ``needs_shadow``: in scope, and our work has not started.
     - ``needs_rating``: our work is done, upstream has closed the issue, and no
-      rating exists yet.
+      primary ``rating.yaml`` exists yet.
+    - ``pending_release``: the primary rating's downstream score, after any
+      adjudication, is ``PENDING_RELEASE``; re-rate once a release postdates
+      upstream's fix.
+    - ``needs_second_rating``: rated exactly once; a second, independent rating
+      would let the raters be compared (``shadow-issues agreement``).
     """
     triage, shadow = issue["triage"], issue["shadow"]
     if triage["status"] == "UNTRIAGED":
@@ -444,12 +480,16 @@ def queue_for(
         return "in_progress"
     if triage.get("in_scope") and shadow["status"] == "NOT_STARTED":
         return "needs_shadow"
-    if (
-        shadow["status"] == "DONE"
-        and source["state"] == "closed"
-        and not (folder / "rating.yaml").exists()
-    ):
+    if shadow["status"] != "DONE" or source["state"] != "closed":
+        return None
+    ratings = rating_files(folder)
+    if not ratings or ratings[0].name != "rating.yaml":
         return "needs_rating"
+    primary = yaml.safe_load(ratings[0].read_text())
+    if effective_score(primary, "downstream") == "PENDING_RELEASE":
+        return "pending_release"
+    if len(ratings) == 1:
+        return "needs_second_rating"
     return None
 
 

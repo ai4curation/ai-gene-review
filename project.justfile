@@ -399,6 +399,10 @@ show-shadow-issue number *args="":
 shadow-ratings tracker="go-annotation":
     uv run ai-gene-review shadow-issues ratings {{tracker}}
 
+# Inter-rater agreement per dimension, over shadow issues rated more than once
+shadow-agreement tracker="go-annotation":
+    uv run ai-gene-review shadow-issues agreement {{tracker}}
+
 # Validate issue.yaml and rating.yaml files against the shadow_issue schema
 [group('QC')]
 validate-shadow-issues tracker="go-annotation":

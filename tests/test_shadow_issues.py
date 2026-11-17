@@ -189,62 +189,108 @@ def test_snapshot_hides_later_comments_and_edits(config, tracker_dir):
 
 
 @pytest.mark.parametrize(
-    "triage,shadow,state,rated,expected",
+    "triage,shadow,state,ratings,expected",
     [
         (
             {"status": "UNTRIAGED"},
             {"status": "NOT_STARTED"},
             "open",
-            False,
+            {},
             "untriaged",
         ),
         (
             {"status": "TRIAGED", "in_scope": True},
             {"status": "NOT_STARTED"},
             "open",
-            False,
+            {},
             "needs_shadow",
         ),
         (
             {"status": "TRIAGED", "in_scope": False},
             {"status": "NOT_STARTED"},
             "open",
-            False,
+            {},
             None,
         ),
         (
             {"status": "TRIAGED", "in_scope": True},
             {"status": "IN_PROGRESS"},
             "closed",
-            False,
+            {},
             "in_progress",
         ),
         (
             {"status": "TRIAGED", "in_scope": True},
             {"status": "DONE"},
             "open",
-            False,
+            {},
             None,
         ),
         (
             {"status": "TRIAGED", "in_scope": True},
             {"status": "DONE"},
             "closed",
-            False,
+            {},
             "needs_rating",
         ),
         (
             {"status": "TRIAGED", "in_scope": True},
             {"status": "DONE"},
             "closed",
-            True,
+            {"rating.yaml": "AGREE"},
+            "needs_second_rating",
+        ),
+        (
+            {"status": "TRIAGED", "in_scope": True},
+            {"status": "DONE"},
+            "closed",
+            {"rating.yaml": "AGREE", "rating-second.yaml": "AGREE"},
             None,
+        ),
+        (
+            {"status": "TRIAGED", "in_scope": True},
+            {"status": "DONE"},
+            "closed",
+            {"rating.yaml": "PENDING_RELEASE", "rating-second.yaml": "AGREE"},
+            "pending_release",
+        ),
+        # An adjudication to PENDING_RELEASE counts, not the raw score.
+        (
+            {"status": "TRIAGED", "in_scope": True},
+            {"status": "DONE"},
+            "closed",
+            {
+                "rating.yaml": ("PARTIAL", "PENDING_RELEASE"),
+                "rating-second.yaml": "AGREE",
+            },
+            "pending_release",
+        ),
+        # Only a second rating: still waiting for the primary one.
+        (
+            {"status": "TRIAGED", "in_scope": True},
+            {"status": "DONE"},
+            "closed",
+            {"rating-second.yaml": "AGREE"},
+            "needs_rating",
         ),
     ],
 )
-def test_queue_for(tmp_path, triage, shadow, state, rated, expected):
-    if rated:
-        (tmp_path / "rating.yaml").write_text("{}")
+def test_queue_for(tmp_path, triage, shadow, state, ratings, expected):
+    for name, downstream in ratings.items():
+        rating = {"downstream": downstream}
+        if isinstance(downstream, tuple):
+            score, ruling = downstream
+            rating = {
+                "downstream": score,
+                "adjudications": [
+                    {
+                        "dimension": "downstream",
+                        "rater_value": score,
+                        "adjudicated_value": ruling,
+                    }
+                ],
+            }
+        (tmp_path / name).write_text(yaml.safe_dump(rating))
     assert (
         queue_for(tmp_path, {"state": state}, {"triage": triage, "shadow": shadow})
         == expected
@@ -560,7 +606,8 @@ def test_adjudication_is_shown_and_checked(config, tracker_dir):
     rating_path = tracker_dir / "101" / "rating.yaml"
     root = str(tracker_dir.parent)
     runner = CliRunner()
-    rating_path.write_text(yaml.safe_dump({**RATING, "adjudications": [ruling]}))
+    scored = {**RATING, "downstream": "PARTIAL"}
+    rating_path.write_text(yaml.safe_dump({**scored, "adjudications": [ruling]}))
     result = runner.invoke(
         app, ["shadow-issues", "validate", "example", "--root", root]
     )
@@ -568,13 +615,198 @@ def test_adjudication_is_shown_and_checked(config, tracker_dir):
     result = runner.invoke(app, ["shadow-issues", "ratings", "example", "--root", root])
     assert "PARTIAL → PENDING_RELEASE*" in result.output
 
-    rating_path.write_text(
-        yaml.safe_dump({**RATING, "adjudications": [{**ruling, "dimension": "vibes"}]})
+    for change, error in [
+        ({"dimension": "vibes"}, "vibes"),
+        # rater_value must restate the score it disputes.
+        ({"rater_value": "AGREE"}, "rater_value AGREE but the rating has PARTIAL"),
+        # Both values must be values of the dimension's own enum.
+        ({"adjudicated_value": "SUBSTANTIAL"}, "SUBSTANTIAL is not a downstream value"),
+        (
+            {"dimension": "harm", "rater_value": "NONE", "adjudicated_value": "AGREE"},
+            "AGREE is not a harm value",
+        ),
+    ]:
+        rating_path.write_text(
+            yaml.safe_dump(
+                {**scored, "harm": "NONE", "adjudications": [{**ruling, **change}]}
+            )
+        )
+        result = runner.invoke(
+            app, ["shadow-issues", "validate", "example", "--root", root]
+        )
+        assert result.exit_code == 1 and error in result.output, (change, result.output)
+
+
+def test_pending_release_is_only_a_downstream_value(config, tracker_dir):
+    store_issue(config, tracker_dir, make_issue(), [])
+    (tracker_dir / "101" / "report.md").write_text("# report\n")
+    (tracker_dir / "101" / "rating.yaml").write_text(
+        yaml.safe_dump({**RATING, "actions": "PENDING_RELEASE"})
     )
-    result = runner.invoke(
-        app, ["shadow-issues", "validate", "example", "--root", root]
+    result = CliRunner().invoke(
+        app, ["shadow-issues", "validate", "example", "--root", str(tracker_dir.parent)]
     )
-    assert result.exit_code == 1 and "vibes" in result.output
+    assert result.exit_code == 1 and "PENDING_RELEASE" in result.output
+
+
+@pytest.mark.parametrize(
+    "evidence,error",
+    [
+        ({"kind": "THREAD", "ref": "comment:1"}, None),
+        (
+            {
+                "kind": "GOA_DIFF",
+                "ref": "QuickGO",
+                "checked_at": "2026-11-11T00:00:00Z",
+                "source_release": "GO 2026-08-05",
+                "source_release_date": "2026-08-05",
+            },
+            None,
+        ),
+        (
+            {
+                "kind": "GOA_DIFF",
+                "ref": "QuickGO",
+                "checked_at": "2026-11-11T00:00:00Z",
+            },
+            "needs source_release_date",
+        ),
+        (
+            {
+                "kind": "MAPPING_RELEASE",
+                "ref": "PAINT",
+                "source_release_date": "2026-08-28",
+            },
+            "needs checked_at",
+        ),
+    ],
+)
+def test_downstream_evidence_names_its_release(config, tracker_dir, evidence, error):
+    """A downstream check is only meaningful with the release it looked at."""
+    store_issue(config, tracker_dir, make_issue(), [])
+    path = tracker_dir / "101" / "issue.yaml"
+    issue = yaml.safe_load(path.read_text())
+    issue["resolution"] = {
+        "status": "RESOLVED",
+        "summary": "fixed",
+        "evidence": [evidence],
+    }
+    path.write_text(yaml.safe_dump(issue))
+    result = CliRunner().invoke(
+        app, ["shadow-issues", "validate", "example", "--root", str(tracker_dir.parent)]
+    )
+    if error is None:
+        assert result.exit_code == 0, result.output
+    else:
+        assert result.exit_code == 1 and error in result.output, result.output
+
+
+def test_agreement_compares_raters(config, tracker_dir):
+    """Inter-rater agreement is counted per dimension over issues rated twice."""
+    store_issue(config, tracker_dir, make_issue(), [])
+    folder = tracker_dir / "101"
+    for name, extra in [
+        ("rating", {"actions": "AGREE"}),
+        ("rating-second", {"actions": "PARTIAL", "outcome": "PARTIAL"}),
+    ]:
+        (folder / f"{name}.yaml").write_text(yaml.safe_dump({**RATING, **extra}))
+        (folder / f"{name.replace('rating', 'report')}.md").write_text("# r\n")
+    result = CliRunner().invoke(
+        app,
+        ["shadow-issues", "agreement", "example", "--root", str(tracker_dir.parent)],
+    )
+    assert result.exit_code == 0, result.output
+    assert "issues rated twice or more: 1" in result.output
+    assert "| outcome | 1 | 0 | 0% |" in result.output
+    assert "| triage | 1 | 1 | 100% |" in result.output
+    assert "| actions | 1 | 0 | 0% |" in result.output
+    # A dimension neither rater scored is not counted.
+    assert "| harm | 0 | 0 | - |" in result.output
+
+
+def test_ratings_links_resolve_outside_the_projects_folder(config, tracker_dir):
+    store_issue(config, tracker_dir, make_issue(), [])
+    (tracker_dir / "101" / "rating.yaml").write_text(yaml.safe_dump(RATING))
+    (tracker_dir / "101" / "report.md").write_text("# r\n")
+    root = str(tracker_dir.parent)
+    result = CliRunner().invoke(
+        app, ["shadow-issues", "ratings", "example", "--root", root]
+    )
+    assert (
+        "(https://github.com/ai4curation/ai-gene-review/blob/main/issues/example/101/report.md)"
+        in result.output
+    )
+    result = CliRunner().invoke(
+        app,
+        [
+            "shadow-issues",
+            "ratings",
+            "example",
+            "--root",
+            root,
+            "--link-base",
+            "../issues",
+        ],
+    )
+    assert "(../issues/example/101/report.md)" in result.output
+
+
+@pytest.mark.parametrize(
+    "name,expected",
+    [
+        ("rating.yaml", "report.md"),
+        ("rating-same-model.yaml", "report-same-model.md"),
+        # Only the leading "rating" is the role; a label containing it is kept.
+        ("rating-rerating.yaml", "report-rerating.md"),
+    ],
+)
+def test_report_for(name, expected):
+    from ai_gene_review.shadow_issues.store import report_for
+
+    assert report_for(Path("x") / name).name == expected
+
+
+def test_report_for_rejects_other_files():
+    from ai_gene_review.shadow_issues.store import report_for
+
+    with pytest.raises(ValueError):
+        report_for(Path("x/self-rating.yaml"))
+
+
+def test_paint_diff(tmp_path):
+    """paint-diff lists node annotations added, removed or changed between two slices."""
+    header = "family\tnode\tgo_id\taspect\tevidence\tnegated\tseeds\ttaxon\tdate\n"
+    old = tmp_path / "old.tsv"
+    new = tmp_path / "new.tsv"
+    old.write_text(
+        header
+        + "PTHR1\tPTN1\tGO:0004776\tF\tIBD\tfalse\tUniProtKB:A\ttaxon:\t20260528\n"
+        + "PTHR1\tPTN1\tGO:0004775\tF\tIBD\tfalse\tUniProtKB:A\ttaxon:\t20260528\n"
+        + "PTHR1\tPTN2\tGO:0006099\tP\tIBD\tfalse\tUniProtKB:A\ttaxon:\t20260528\n"
+    )
+    new.write_text(
+        header
+        + "PTHR1\tPTN1\tGO:0004775\tF\tIBD\tfalse\tUniProtKB:A|UniProtKB:B\ttaxon:\t20261002\n"
+        + "PTHR1\tPTN2\tGO:0006099\tP\tIBD\tfalse\tUniProtKB:A\ttaxon:\t20260528\n"
+        + "PTHR1\tPTN3\tGO:0004776\tF\tIKR\ttrue\tUniProtKB:C\ttaxon:\t20261002\n"
+    )
+    result = CliRunner().invoke(
+        app, ["shadow-issues", "paint-diff", str(old), str(new)]
+    )
+    assert result.exit_code == 0, result.output
+    lines = result.output.splitlines()
+    assert "removed\tPTN1\tGO:0004776\tIBD\t\t20260528" in lines
+    assert "added\tPTN3\tGO:0004776\tIKR\tNOT\t20261002" in lines
+    assert (
+        "changed\tPTN1\tGO:0004775\tIBD\t\t20260528 -> 20261002\tseeds +UniProtKB:B"
+        in lines
+    )
+    assert not any("PTN2" in line for line in lines)
+
+    result = CliRunner().invoke(
+        app, ["shadow-issues", "paint-diff", str(old), str(new), "--go", "GO:0004775"]
+    )
+    assert [line.split("\t")[0] for line in result.output.splitlines()] == ["changed"]
 
 
 def test_committed_tracker_validates():
@@ -593,6 +825,13 @@ def test_committed_tracker_validates():
     "product,expected",
     [
         ({"path": "a.yaml"}, []),
+        ({"path": "gone.yaml"}, ["gone.yaml does not exist"]),
+        # A product that did not land may be absent (main never had it).
+        ({"path": "gone.yaml", "landed": False, "preserved_diff": "d.patch"}, []),
+        (
+            {"path": "pure-rename.yaml", "landed": False, "preserved_diff": "d.patch"},
+            [],
+        ),
         ({"path": "a.yaml", "landed": False}, ["no preserved_diff"]),
         ({"path": "a.yaml", "landed": False, "preserved_diff": "d.patch"}, []),
         (
@@ -617,8 +856,13 @@ def test_work_product_problems(tmp_path, product, expected):
     """A product that did not land must point at a committed diff."""
     from ai_gene_review.shadow_issues.cli import work_product_problems
 
+    (tmp_path / "a.yaml").write_text("x\n")
     (tmp_path / "d.patch").write_text(
         "diff --git a/a.yaml b/a.yaml\n--- a/a.yaml\n+++ b/a.yaml\n context a/b.yaml\n"
+        "diff --git a/gone.yaml b/gone.yaml\n--- a/gone.yaml\n+++ b/gone.yaml\n"
+        # A pure rename has no ---/+++ headers, only git's rename lines.
+        "diff --git a/was.yaml b/pure-rename.yaml\nsimilarity index 100%\n"
+        "rename from was.yaml\nrename to pure-rename.yaml\n"
         "diff --git a/new.yaml b/new.yaml\nnew file mode 100644\n"
         "--- /dev/null\n+++ b/new.yaml\n+x\n"
         "diff --git a/old.yaml b/moved.yaml\n--- a/old.yaml\n+++ b/moved.yaml\n"
