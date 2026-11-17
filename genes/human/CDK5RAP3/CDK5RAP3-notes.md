@@ -47,3 +47,7 @@ Many bare `protein binding` IPI entries from IntAct/HT interactome screens (PMID
 - KEEP_AS_NON_CORE: NF-kB binding, p53/ARF/MDM2 roles, G2/M checkpoint, p38/MAPK regulation, apoptotic nuclear changes, cyclin binding, liver development, erythrocyte differentiation, ER UPR, cell proliferation, neuron differentiation/brain development (NAS), cytoplasm/nucleus/centrosome/cytoskeleton/membrane localizations.
 - MARK_AS_OVER_ANNOTATED: all bare `protein binding`.
 - Negated annotations (NOT nucleolus, NOT positive regulation of ubiquitin-dependent protein catabolic process) ACCEPT as informative negatives.
+
+## 2026-11-15 ORGANELLES tethering route (rule 7): checked, no row added
+
+- Evaluated a GO:0098554 cytoplasmic side of ER membrane row alongside UFL1 (which gets one). CDK5RAP3 has no TM or signal feature, and its GO:0005789 IDA rows (PMID:36543799, PMID:38383785, PMID:38383789) stay ACCEPT. But condition (c) is not met: the dependence on record is on UFL1, which is soluble [PMID:20228063 "knockdown led to dramatic reduction of C53/LZAP and DDRGK1 proteins"], and no cached paper shows CDK5RAP3 released or destabilised when DDRGK1 is lost. A UFBP1/DDRGK1 knockout imaging CDK5RAP3, as done for UFL1 in PMID:36543799, would settle it.

@@ -54,7 +54,7 @@ should fix, in a form from which a report to that resource can be generated.
 | `requested_change` | no | `REPOINT` (replace with `corrected_value`), `DELETE_VALUE` (drop the value, keep the record), `DELETE_ROW`, `ADD` (add `corrected_value`, which the record lacks), or `CHECK` (the right change depends on information we could not see; the explanation gives the alternatives). |
 | `asserted_value` | yes | What the source says now, as a CURIE (`AGI_LocusCode:AT2G45160`, `PMID:32213638`). For `requested_change: ADD` nothing wrong is asserted, so this names the record that lacks the value (the same CURIE as `record`, e.g. `UniProtKB:Q96PV0` for a missing isoform); group `ADD` rows separately when analysing asserted values. |
 | `corrected_value` / `corrected_label` | no | What it should say, when known. Leave unset when the value is wrong but the right one is unknown. |
-| `cause` | no | `SYMBOL_COLLISION`, `LEGACY_ALIAS`, `IDENTIFIER_TRANSPOSITION`, `SEQUENCE_MISMAPPING`, `CONTAMINANT`, `OVER_PROPAGATION`, `SCOPE_OVER_REACH`, `LABEL_WITHOUT_DEFINITION`, `SPECULATION_AS_ASSERTION`, `PRACTICE_CHANGE`, `OTHER`, `UNKNOWN`. The first five are gene-identity confusions; the next five are pipeline and process mechanisms - see [Choosing a cause](#choosing-a-cause). |
+| `cause` | no | `SYMBOL_COLLISION`, `LEGACY_ALIAS`, `IDENTIFIER_TRANSPOSITION`, `SEQUENCE_MISMAPPING`, `CONTAMINANT`, `OVER_PROPAGATION`, `SCOPE_OVER_REACH`, `LABEL_WITHOUT_DEFINITION`, `SPECULATION_AS_ASSERTION`, `PRACTICE_CHANGE`, `ORTHOLOG_TRANSFER_AS_EXPERIMENTAL`, `CONTEXT_NOT_ASSAYED`, `OTHER`, `UNKNOWN`. The first five are gene-identity confusions; the next seven are pipeline, process and evidence mechanisms - see [Choosing a cause](#choosing-a-cause). |
 | `confidence` | yes | `CONFIRMED` (file as a correction), `PROBABLE` (file as a query), `SUSPECTED` |
 | `explanation` | yes | Self-contained text a curator at the resource can act on. |
 | `supported_by` | no | Verbatim quotes, checked like any other `supporting_text`. |
@@ -162,6 +162,12 @@ manual step. When it is done, set `report_status: REPORTED` and
 - **`PANTHER` is not `GO_CENTRAL`.** `GO_CENTRAL` is PAINT's own IBD/IBA
   curation. A term can sit on a PANTHER node without PAINT ever asserting it,
   and the two are fixed in different places; a gene can carry rows from both.
+- **`SYNGO` is not `GO_CENTRAL`.** A row SynGO curated from a paper is
+  `SYNGO`. SynGO annotations were also used as seeds in GO Phylogenetic
+  Annotation (PMID:31171447), so an IBA that PAINT propagated from a SynGO seed
+  is `GO_CENTRAL`, even when the seed it rests on is the defect. File the seed
+  as `SYNGO` and the propagated rows as `GO_CENTRAL`, and say in each
+  explanation that the other exists.
 - **`GOC` is for the ontology, not an annotation.** When the defect is in a term
   itself - its label, definition, or placement in the graph - the annotations
   using it may all be reasonable. That is a `GOC` defect.
@@ -190,6 +196,30 @@ the intended gene and something else went wrong.
 - `PRACTICE_CHANGE` - a curation programme's convention changed, so a dated
   cohort shares a defect that is not a per-row judgement. Give the date range
   and row count; these are fixable in bulk.
+- `ORTHOLOG_TRANSFER_AS_EXPERIMENTAL` - an experiment in another species was
+  recorded on this gene with an experimental code (IDA, IMP) rather than ISO.
+  The experiment may be sound; the evidence code misstates how it reaches the
+  gene. Pair it with `defect_type: WRONG_EVIDENCE_CODE`. The fix has two
+  parts, and the defect should name both: the evidence code becomes ISO, and
+  `With/From` names the gene that was actually assayed (the rodent ortholog,
+  for SynGO). Changing the code alone leaves an ISO with no source. When it is
+  a resource's documented convention (SynGO maps rodent annotations to the
+  human ortholog by design, PMID:31171447), raise it once for the cohort, as
+  for `PRACTICE_CHANGE`: give the date range and the row count, not one defect
+  per row.
+- `CONTEXT_NOT_ASSAYED` - the work shows the activity but not the context the
+  term asserts, most often a precomposed "X involved in Y" term annotated from
+  a protein expressed in heterologous cells. Pair it with
+  `defect_type: WRONG_TERM` and put the plain activity term in
+  `corrected_value`. As of 2026-11 we found no explicit GO rule on evidence
+  from heterologous systems; the point here is narrower: when the context is
+  part of the term, evidence that cannot reach the context does not support
+  the term. In a gene review the same row is a MODIFY that decomposes the
+  precomposed term, recorded in `review.decomposed_into` (see
+  [INVOLVED_IN_PRECOMPOSITION](../projects/INVOLVED_IN_PRECOMPOSITION.md)).
+  Before dropping the context, check whether another paper does assay it: if
+  one does, the claim is true but mis-sourced, and the fix is to re-source the
+  row rather than generalise it.
 
 Use `OTHER` when the mechanism is identifiable but unlisted, and `UNKNOWN` when
 it is not identifiable at all. Prefer naming a mechanism where one fits: a

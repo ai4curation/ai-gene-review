@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [PIPELINE, BIOLOGY_DOMAIN]
 species: [human, mouse, DROME, SCHPO, worm]
 genes: [TFRC, CLTC, AP2M1, DNM2, ATP6V1A, EHD1, TSG101, RAB7A, Rab7, CTSD, APOB, LDLR, PCSK9, LIPA, ASGR1, ASGR2, ALB, FCGRT, B2M, SNAP23, SORL1, VPS35, VPS26A, VPS29, Vps35, Vps26, Vps29, RAB9A, AP1B1, AP1G1, apl2, apb-1, dpy-23]
+index_group: CROSS_CUTTING
 ---
 
 # Agent-Based Modeling of Intracellular Trafficking

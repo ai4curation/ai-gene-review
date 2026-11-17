@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/NzeqEauDrdbesCvTHPj76c
       title: Project brief
+index_group: WORM
 ---
 
 # C. elegans Proteostasis Network Project
