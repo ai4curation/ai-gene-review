@@ -281,6 +281,14 @@ verify-panther-paint *args="":
 check-panther-release:
     uv run ai-gene-review check-panther-release
 
+# Dry-run report of what a PANTHER release bump would change: cited ids gone or
+# renamed, member-based id proposals for every anchor, and panther.obo quotes the
+# rebuilt artifact would break. Edits nothing.
+# Example: just panther-release-diff 20.0
+[group('QC')]
+panther-release-diff target_release *args="":
+    uv run ai-gene-review panther-release-diff {{target_release}} --output-dir . {{args}}
+
 # Fetch and cache a single GO-CAM model to gocams/<id>/<id>-src.yaml
 # Example: just fetch-gocam gomodel:568b0f9600000284
 fetch-gocam model_id *args="":
