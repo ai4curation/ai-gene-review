@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/NgFAjNB3S9TtgRvwFg4LBS
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Biomolecular Condensates
