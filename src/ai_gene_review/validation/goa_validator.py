@@ -908,6 +908,14 @@ class GOAValidator:
             for ann in existing_by_tuple.get(seeding_key(goa_ann), [])
         }
 
+        # A review can cover several gene products of one gene (an ncRNA gene's
+        # precursor and mature sequences). Record which products asserted each
+        # seeded row when they are not just the review's own id.
+        review_id = yaml_data.get("id", "")
+        products_by_key: Dict[tuple, set] = {}
+        for goa_ann in goa_annotations:
+            products_by_key.setdefault(seeding_key(goa_ann), set()).add(goa_ann.db_object_id)
+
         # Stable ordering prevents a refresh from assigning a legacy review to a
         # different donor merely because QuickGO changed its response order.
         for goa_ann in sorted(goa_annotations, key=seeding_key):
@@ -1002,6 +1010,10 @@ class GOAValidator:
             isoform = getattr(goa_ann, "isoform", "")
             if isinstance(isoform, str) and isoform:
                 new_annotation["isoform"] = isoform
+            elif review_id:
+                products = products_by_key[seeding_key(goa_ann)]
+                if products != {review_id}:
+                    new_annotation["gene_products"] = sorted(products)
 
             # Add optional review section placeholder
             # This signals that the annotation needs review

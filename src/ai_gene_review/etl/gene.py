@@ -15,6 +15,7 @@ Example:
           CFAP300-goa.csv
 """
 
+from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
 from ruamel.yaml import YAML
@@ -1250,13 +1251,10 @@ def fetch_goa_data(uniprot_id: str) -> str:
             page += 1
 
         except requests.exceptions.RequestException as e:
-            if page == 1:
-                # First page failed, return empty result
-                return "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
-            else:
-                # Subsequent page failed, use what we have
-                print(f"Warning: Pagination stopped at page {page} due to error: {e}")
-                break
+            # A failed request is not "no annotations", and a partial result is
+            # not the full set: either would let a QuickGO outage overwrite a
+            # real GOA file.
+            raise ValueError(f"QuickGO request failed for {uniprot_id} (page {page}): {e}") from e
 
     # Process all collected results
     results = all_results
@@ -1421,221 +1419,169 @@ def fetch_rnacentral_data_by_id(rnacentral_id: str) -> str:
         raise ValueError(f"Failed to parse RNAcentral JSON response: {e}")
 
 
-def resolve_gene_to_rnacentral_via_hgnc(gene_symbol: str) -> Optional[str]:
-    """Resolve a human gene symbol to an RNAcentral ID using HGNC API.
+RNACENTRAL_SEARCH_URL = "https://www.ebi.ac.uk/ebisearch/ws/rest/rnacentral"
+QUICKGO_ANNOTATION_SEARCH_URL = "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
+# ECO:0000269 "experimental evidence used in manual assertion"; with descendant
+# usage this covers EXP, IDA, IMP, IGI, IPI, IEP and the HTP family.
+EXPERIMENTAL_EVIDENCE_ECO = "ECO:0000269"
 
-    This is the most reliable method for human genes as HGNC maintains
-    authoritative cross-references to RNAcentral.
+# RNAcentral ``rna_type`` values mapped to the review schema's ProductTypeEnum.
+RNACENTRAL_RNA_TYPE_TO_PRODUCT_TYPE = {
+    "miRNA": "MIRNA",
+    "pre_miRNA": "MIRNA",
+    "pre miRNA": "MIRNA",
+    "lncRNA": "LNCRNA",
+    "lnc_RNA": "LNCRNA",
+    "antisense_RNA": "ANTISENSE_RNA",
+    "antisense RNA": "ANTISENSE_RNA",
+    "snoRNA": "SNORNA",
+    "scaRNA": "SNORNA",
+    "snRNA": "SNRNA",
+    "tRNA": "TRNA",
+    "rRNA": "RRNA",
+    "piRNA": "PIRNA",
+}
 
-    Args:
-        gene_symbol: Human gene symbol (e.g., "KCNQ1OT1", "XIST")
 
-    Returns:
-        RNAcentral ID without species suffix (e.g., "URS0000759CF4") or None if not found
+def product_type_for_rna_type(rna_type: str) -> str:
+    """Map an RNAcentral ``rna_type`` to a ``ProductTypeEnum`` value.
 
-    Raises:
-        ValueError: If HGNC API request fails
-
-    Example:
-        >>> rna_id = resolve_gene_to_rnacentral_via_hgnc("KCNQ1OT1")  # doctest: +SKIP
-        >>> print(rna_id)  # doctest: +SKIP
-        URS0000759CF4
+    >>> product_type_for_rna_type("pre miRNA")
+    'MIRNA'
+    >>> product_type_for_rna_type("snoRNA")
+    'SNORNA'
+    >>> product_type_for_rna_type("ribozyme")
+    'OTHER_NCRNA'
     """
-    try:
-        url = f"https://rest.genenames.org/fetch/symbol/{gene_symbol}"
-        headers = {"Accept": "application/json"}
-        response = requests.get(url, headers=headers, timeout=30)
-        response.raise_for_status()
-
-        data = response.json()
-        docs = data.get("response", {}).get("docs", [])
-
-        if not docs:
-            return None
-
-        # Get the first RNAcentral ID from the cross-references
-        rna_central_ids = docs[0].get("rna_central_id", [])
-        if rna_central_ids:
-            return rna_central_ids[0]
-
-        return None
-
-    except requests.exceptions.RequestException as e:
-        raise ValueError(f"Failed to query HGNC API for gene {gene_symbol}: {e}")
+    return RNACENTRAL_RNA_TYPE_TO_PRODUCT_TYPE.get(rna_type, "OTHER_NCRNA")
 
 
-def fetch_rnacentral_data(gene_symbol: str, organism: str) -> str:
-    """Fetch ncRNA data from RNAcentral API.
+@dataclass
+class RNAcentralCandidate:
+    """An RNAcentral sequence (``URS…_taxid``) matching a gene symbol in one species."""
 
-    Args:
-        gene_symbol: Gene symbol to search for
-        organism: Organism name (e.g., "human", "mouse") or NCBI taxon ID
+    id: str
+    description: str
+    rna_type: str
+    goa_rows: int = 0
+    experimental_rows: int = 0
 
-    Returns:
-        RNAcentral data in JSON format as text
 
-    Raises:
-        ValueError: If RNAcentral data cannot be fetched
+def rnacentral_gene_query(gene_symbol: str, taxon_id: str) -> str:
+    """Build the EBI Search query for a gene symbol restricted to one taxon.
 
-    Example:
-        >>> data = fetch_rnacentral_data("SNORD3A", "human")  # doctest: +SKIP
-        >>> assert "rnacentral_id" in data  # doctest: +SKIP
+    >>> rnacentral_gene_query("MIR155", "9606")
+    'gene:"MIR155" AND TAXONOMY:"9606"'
     """
-    # Map common organism names to NCBI taxonomy IDs
-    organism_to_taxon = {
-        "human": "9606",
-        "mouse": "10090",
-        "rat": "10116",
-        "yeast": "559292",
-        "fly": "7227",
-        "worm": "6239",
-        "zebrafish": "7955",
-        "chicken": "9031",
-        "pig": "9823",
-        "dog": "9615",
-        "cow": "9913",
-    }
-
-    # Get taxon ID
-    taxon_id = organism_to_taxon.get(organism.lower(), organism)
-    if not taxon_id.isdigit():
-        # Try to resolve organism code to taxon ID
-        resolved_taxon = resolve_organism_code_to_taxon(organism)
-        if resolved_taxon:
-            taxon_id = resolved_taxon
-        else:
-            raise ValueError(f"Could not resolve organism '{organism}' to NCBI taxon ID")
-
-    # Search RNAcentral API for the gene symbol
-    # Use text search endpoint first to find matching entries
-    search_url = "https://rnacentral.org/api/v1/rna"
-
-    # Build query parameters - try different approaches
-    params = {
-        "description": gene_symbol,
-        "format": "json",
-        "page_size": 100  # Get up to 100 results
-    }
-
-    headers = {
-        "Accept": "application/json",
-        "User-Agent": "ai-gene-review/1.0"
-    }
-
-    try:
-        response = requests.get(search_url, params=params, headers=headers, timeout=30)  # type: ignore[arg-type]
-        response.raise_for_status()
-
-        data = response.json()
-
-        # If no results found, try alternative search strategies
-        if not data.get("results"):
-            # Try searching with a broader query using sequence or any field
-            alt_params = {
-                "length_gte": "20",  # At least 20 nucleotides
-                "length_lte": "5000",  # Maximum reasonable RNA length
-                "format": "json",
-                "page_size": 20  # Smaller page size for broader search
-            }
-
-            # Add description filter if gene symbol is provided
-            if gene_symbol:
-                alt_params["description"] = f"*{gene_symbol}*"
-
-            alt_response = requests.get(search_url, params=alt_params, headers=headers, timeout=30)  # type: ignore[arg-type]
-            alt_response.raise_for_status()
-            alt_data = alt_response.json()
-
-            # For now, just return the alternative results even if no species filtering
-            if alt_data.get("results"):
-                data = alt_data
-
-        # Return the JSON data as formatted text
-        import json
-        return json.dumps(data, indent=2, ensure_ascii=False)
-
-    except requests.exceptions.Timeout as e:
-        raise ValueError(f"RNAcentral API request timed out after 30 seconds for gene {gene_symbol}: {e}")
-    except requests.exceptions.RequestException as e:
-        raise ValueError(f"Failed to fetch RNAcentral data for gene {gene_symbol} in {organism}: {e}")
-    except json.JSONDecodeError as e:
-        raise ValueError(f"Failed to parse RNAcentral JSON response: {e}")
+    return f'gene:"{gene_symbol}" AND TAXONOMY:"{taxon_id}"'
 
 
-def resolve_gene_to_rnacentral(gene_symbol: str, organism: str) -> Optional[str]:
-    """Resolve a gene symbol to an RNAcentral ID.
+def rank_rnacentral_candidates(
+    candidates: List[RNAcentralCandidate],
+) -> List[RNAcentralCandidate]:
+    """Keep candidates that carry GO annotations, most experimental rows first.
 
-    For human genes, uses HGNC API for reliable cross-reference mapping.
-    For other organisms, attempts to use RNAcentral API directly.
+    The sequence worth reviewing is the one GOA annotates. Which one that is
+    depends on the annotating group: MGI annotates miRNA precursors, while
+    BHF-UCL, ARUK-UCL and RGD annotate the mature 5p/3p miRNAs.
 
-    Args:
-        gene_symbol: Gene symbol to search for
-        organism: Organism name or NCBI taxon ID
-
-    Returns:
-        RNAcentral ID (e.g., "URS0000000001_9606") or None if not found
-
-    Raises:
-        ValueError: If gene cannot be resolved to RNAcentral ID
-
-    Example:
-        >>> rna_id = resolve_gene_to_rnacentral("KCNQ1OT1", "human")  # doctest: +SKIP
-        >>> print(rna_id)  # doctest: +SKIP
-        URS0000759CF4_9606
+    >>> pre = RNAcentralCandidate("URS000062749E_9606", "hsa-mir-155 precursor", "pre miRNA", 2, 0)
+    >>> mature = RNAcentralCandidate("URS0000338542_9606", "hsa-miR-155-5p", "miRNA", 132, 105)
+    >>> bare = RNAcentralCandidate("URS0000000001_9606", "hsa-miR-155-3p", "miRNA", 0, 0)
+    >>> [c.id for c in rank_rnacentral_candidates([pre, bare, mature])]
+    ['URS0000338542_9606', 'URS000062749E_9606']
     """
-    # Map organism names to taxon IDs
-    organism_to_taxon = {
-        "human": "9606",
-        "mouse": "10090",
-        "rat": "10116",
-        "yeast": "559292",
-        "fly": "7227",
-        "worm": "6239",
-        "zebrafish": "7955",
-    }
+    annotated = [c for c in candidates if c.goa_rows > 0]
+    return sorted(annotated, key=lambda c: (-c.experimental_rows, -c.goa_rows, c.id))
 
-    # Get taxon ID
-    taxon_id = organism_to_taxon.get(organism.lower(), organism)
 
-    # For human genes, use HGNC API (most reliable)
-    if organism.lower() == "human":
-        rna_id = resolve_gene_to_rnacentral_via_hgnc(gene_symbol)
-        if rna_id:
-            # Add species suffix if not present
-            if "_" not in rna_id:
-                return f"{rna_id}_{taxon_id}"
-            return rna_id
-        else:
-            raise ValueError(
-                f"Could not find RNAcentral ID for human gene {gene_symbol} in HGNC. "
-                "The gene may not be an ncRNA or may not have RNAcentral cross-references."
-            )
+def count_goa_rows(product_id: str, evidence_eco: Optional[str] = None) -> int:
+    """Count QuickGO annotations on a gene product, optionally by evidence branch.
 
-    # For non-human organisms, try RNAcentral API
-    # (Note: This approach is less reliable and may need improvement for specific organisms)
-    try:
-        data_text = fetch_rnacentral_data(gene_symbol, organism)
-        import json
-        data = json.loads(data_text)
+    >>> count_goa_rows("URS0000338542_9606") > 0  # doctest: +SKIP
+    True
+    """
+    params = {"geneProductId": product_id, "limit": "1"}
+    if evidence_eco:
+        params["evidenceCode"] = evidence_eco
+        params["evidenceCodeUsage"] = "descendants"
+    response = requests.get(
+        QUICKGO_ANNOTATION_SEARCH_URL,
+        params=params,
+        headers={"Accept": "application/json"},
+        timeout=60,
+    )
+    response.raise_for_status()
+    return int(response.json()["numberOfHits"])
 
-        results = data.get("results", [])
-        if results:
-            # Return the first result's RNAcentral ID
-            first_result = results[0]
-            rna_id = first_result.get("rnacentral_id")
-            # Add species suffix if not present
-            if rna_id and "_" not in rna_id:
-                if taxon_id.isdigit():
-                    rna_id = f"{rna_id}_{taxon_id}"
-            return rna_id
 
-        raise ValueError(
-            f"Could not find RNAcentral ID for gene {gene_symbol} in {organism}. "
-            "No matching entries found in RNAcentral database."
+def search_rnacentral_candidates(gene_symbol: str, taxon_id: str) -> List[RNAcentralCandidate]:
+    """Find RNAcentral sequences whose gene field names ``gene_symbol`` in one taxon.
+
+    One gene can map to several sequences: a miRNA gene has a precursor and
+    mature 5p/3p arms, each with its own ``URS`` id.
+
+    >>> [c.id for c in search_rnacentral_candidates("MIR155", "9606")][:1]  # doctest: +SKIP
+    ['URS000062749E_9606']
+    """
+    response = requests.get(
+        RNACENTRAL_SEARCH_URL,
+        params={
+            "query": rnacentral_gene_query(gene_symbol, taxon_id),
+            "fields": "description,rna_type",
+            "size": "100",
+            "format": "json",
+        },
+        timeout=60,
+    )
+    response.raise_for_status()
+    return [
+        RNAcentralCandidate(
+            id=entry["id"],
+            description=entry["fields"]["description"][0],
+            rna_type=entry["fields"]["rna_type"][0],
         )
-    except ValueError:
-        # Re-raise ValueError with context
-        raise
+        for entry in response.json()["entries"]
+    ]
+
+
+def resolve_gene_to_rnacentral(gene_symbol: str, organism: str) -> List[RNAcentralCandidate]:
+    """Resolve a gene symbol to the GO-annotated RNAcentral sequences of one species.
+
+    Returns the annotated candidates ranked by :func:`rank_rnacentral_candidates`;
+    the first is the review's primary id. A tie for first place is an error, since
+    picking among equally annotated sequences (e.g. Rfam-only snoRNA copies) would
+    be arbitrary.
+
+    >>> [c.id for c in resolve_gene_to_rnacentral("MIR155", "human")][:1]  # doctest: +SKIP
+    ['URS0000338542_9606']
+
+    Raises:
+        ValueError: if no sequence for the symbol in this species carries GO annotations,
+            or several tie for first place.
+    """
+    taxon_id = resolve_taxon_term(organism)["id"].removeprefix("NCBITaxon:")
+    candidates = search_rnacentral_candidates(gene_symbol, taxon_id)
+    for candidate in candidates:
+        candidate.goa_rows = count_goa_rows(candidate.id)
+        if candidate.goa_rows:
+            candidate.experimental_rows = count_goa_rows(candidate.id, EXPERIMENTAL_EVIDENCE_ECO)
+    ranked = rank_rnacentral_candidates(candidates)
+    if not ranked:
+        found = ", ".join(f"{c.id} ({c.description})" for c in candidates) or "none"
+        raise ValueError(
+            f"No GO-annotated RNAcentral sequence for {gene_symbol} in taxon {taxon_id}. "
+            f"Sequences found: {found}. Pass --rnacentral-id to choose one explicitly."
+        )
+    tied = [c for c in ranked if (c.experimental_rows, c.goa_rows) == (ranked[0].experimental_rows, ranked[0].goa_rows)]
+    if len(tied) > 1:
+        found = ", ".join(f"{c.id} ({c.description})" for c in tied)
+        raise ValueError(
+            f"{len(tied)} RNAcentral sequences for {gene_symbol} tie at {ranked[0].goa_rows} GOA rows "
+            f"({ranked[0].experimental_rows} experimental): {found}. "
+            "Pass --rnacentral-id to choose one explicitly."
+        )
+    return ranked
 
 
 def fetch_gene_data_ncRNA(
@@ -1679,23 +1625,29 @@ def fetch_gene_data_ncRNA(
     gene_dir = base_path / "genes" / organism / dir_name
     gene_dir.mkdir(parents=True, exist_ok=True)
 
-    # Resolve RNAcentral ID if not provided
+    # Resolve RNAcentral ID if not provided: the primary id is the GO-annotated
+    # sequence with the most experimental rows; other annotated sequences of the
+    # same gene (e.g. the other miRNA arm, or the precursor) are reported.
+    other_candidates: List[RNAcentralCandidate] = []
     if rnacentral_id is None:
-        rnacentral_id = resolve_gene_to_rnacentral(gene_name, organism)
-        if rnacentral_id is None:
-            raise ValueError(f"Could not resolve gene {gene_name} to RNAcentral ID in {organism}")
+        ranked = resolve_gene_to_rnacentral(gene_name, organism)
+        rnacentral_id = ranked[0].id
+        other_candidates = ranked[1:]
+        print(
+            f"  Resolved {gene_name} to {rnacentral_id} ({ranked[0].description}; "
+            f"{ranked[0].goa_rows} GOA rows, {ranked[0].experimental_rows} experimental)"
+        )
+        for other in other_candidates:
+            print(
+                f"  + Including rows from {other.id} ({other.description}; "
+                f"{other.goa_rows} GOA rows, {other.experimental_rows} experimental)"
+            )
 
     # Determine file paths
     rnacentral_file = gene_dir / f"{file_prefix}-rnacentral.json"
     goa_file = gene_dir / f"{file_prefix}-goa.tsv"
 
-    # Fetch RNAcentral data
-    # If we have the RNAcentral ID, fetch directly by ID (more reliable)
-    # Otherwise fall back to searching by gene name
-    if rnacentral_id:
-        rnacentral_data = fetch_rnacentral_data_by_id(rnacentral_id)
-    else:
-        rnacentral_data = fetch_rnacentral_data(gene_name, organism)
+    rnacentral_data = fetch_rnacentral_data_by_id(rnacentral_id)
 
     # Download publications from RNAcentral to publications folder
     import json
@@ -1731,9 +1683,10 @@ def fetch_gene_data_ncRNA(
         # Continue if publication download fails
         pass
 
-    # Fetch GOA data using the RNAcentral ID
-    # QuickGO API accepts RNAcentral IDs just like UniProt IDs
-    goa_data = fetch_goa_data(rnacentral_id)
+    # Fetch GOA data for every annotated sequence of the gene: the review covers
+    # the gene, and seeding records which sequence each row came from.
+    # QuickGO accepts RNAcentral ids, comma-separated, just like UniProt ids.
+    goa_data = fetch_goa_data(",".join([rnacentral_id, *(c.id for c in other_candidates)]))
 
     # Check for differences
     rnacentral_differs = _compare_file_content(rnacentral_file, rnacentral_data)
@@ -1751,6 +1704,7 @@ def fetch_gene_data_ncRNA(
         "goa_updated": False,
         "rnacentral_differences": rnacentral_differs,
         "goa_differences": goa_differs,
+        "other_annotated_candidates": [c.id for c in other_candidates],
     }
 
     # Handle RNAcentral file
@@ -1799,7 +1753,9 @@ def fetch_gene_data_ncRNA(
             yaml_data = {
                 "id": rnacentral_id,
                 "gene_symbol": gene_name,
-                "product_type": "OTHER_NCRNA",  # Default, should be updated based on RNA type
+                "product_type": product_type_for_rna_type(
+                    json.loads(rnacentral_data)["results"][0]["rna_type"]
+                ),
                 "status": "INITIALIZED",
                 "taxon": {"id": taxon_id, "label": taxon_label},
                 "description": f"TODO: Add description for {gene_name}",
