@@ -9,6 +9,7 @@ manifest:
   slides:
     - href: YEAST_METABOLIC_ENGINEERING/slides/YEAST_METABOLIC_ENGINEERING-slides.html
       description: Yeast metabolic engineering slides
+index_group: YEAST
 ---
 
 # Yeast Metabolic Engineering & Bioproduction

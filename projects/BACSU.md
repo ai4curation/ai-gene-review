@@ -16,6 +16,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/AuQCDtu8bJ3pAjSXuMRzAB
       title: Project brief
+index_group: BACTERIA
 ---
 
 # Bacillus subtilis project
