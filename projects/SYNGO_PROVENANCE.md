@@ -86,15 +86,15 @@ query URL, retrieval date and a sorted table to `SYNGO_PROVENANCE/data/reference
    location terms to rat Grin2b; the one human claim is the GRIN2B triple, and human GRIN2A
    has none. That reads as a mapping slip on one gene, not a family-wide practice.
    Recorded as a CONFIRMED `WRONG_GENE_PRODUCT` defect requesting a repoint to GRIN2A.
-2. **GRIN3B, PMID:22564863 — probable wrong term.** Now cached with full text. It is a
+2. **GRIN3B, PMID:22564863 — the paper does not support the term.** Now cached with full text. It is a
    pharmacology study of open-channel blockers on rat GluN1/GluN2A, GluN1/GluN2A/GluN3A and
    GluN1/GluN2A/GluN3B receptors expressed in *Xenopus* oocytes; the word "presynaptic"
    does not occur in it. The reference-level view
    ([`PMID_22564863.yaml`](SYNGO_PROVENANCE/data/reference_level/PMID_22564863.yaml))
    shows the GRIN3B triple is SynGO's only annotation from the paper. The paper supports
    channel activity for the GluN3B-containing receptor, not a presynaptic role.
-3. **GRIN2D, PMID:8886398 — probable wrong term, on the rat gene.** Now cached (abstract
-   only): memantine and MK-801 block of rat NR1a/NR2A, NR1a/NR2B and NR1a/NR2D receptors in
+3. **GRIN2D, PMID:8886398 — the paper does not support the term, on the rat gene.** Read in full from a PDF supplied
+   by the project owner: memantine and MK-801 block of rat NR1a/NR2A, NR1a/NR2B and NR1a/NR2D receptors in
    transfected HEK 293 cells, with no presynaptic content. The reference-level view
    ([`PMID_8886398.yaml`](SYNGO_PROVENANCE/data/reference_level/PMID_8886398.yaml)) shows
    one SynGO claim from the paper, on rat Grin2d (UniProtKB:Q62645), and no human row.
@@ -144,14 +144,16 @@ not as 18 row-level defect claims. The SynGO paper (PMID:31171447) documents no 
 for heterologous-cell evidence; its portal is a JavaScript application with no bulk
 download reachable from here, so SynGO's own assay records were not compared.
 
-**Evidence depth.** Nine papers were read in full: five from cached full text, three
-from their PubMed Central article pages, and PMID:19666514 from a PDF supplied by the
-project owner. The other ten were read as abstracts only, because their full text could
-not be fetched from this environment (publishers block XML download, and the PMC pages
-were not reachable). Each verdict records its `evidence_depth` and a `confidence`. A
-"no presynaptic context" verdict is `CONFIRMED` only when the full text was read (5
-papers), and `PROBABLE` when it rests on the abstract (7 papers), since a full text can
-hold an experiment its abstract omits. Read in full, PMID:20026616 mentions presynaptic
+**Evidence depth.** Seventeen papers were read in full: five from cached full text, three
+from their PubMed Central article pages, and nine from PDF or HTML copies supplied by the
+project owner (PMID:19666514 first, then the eight that had been read as abstracts). Each
+verdict records its `evidence_depth` and a `confidence`; a "no presynaptic context"
+verdict is `CONFIRMED` only when the full text was read. All 12 such verdicts and both
+postsynaptic verdicts are now read in full, and none changed: every one of the eight
+papers added on 2026-11-17 is an HEK 293 study (one adds a neuroblastoma line, one a
+neuron-HEK co-culture with the receptor on the postsynaptic side), with no presynaptic
+experiment. Two papers remain abstract-only: PMID:17620617, a supported verdict, and the
+erratum notice PMID:8137830, whose verdict rests on the two PubMed records. Read in full, PMID:20026616 mentions presynaptic
 receptors only as background and as a prediction in its discussion; its experiments are
 all in oocytes.
 
@@ -224,8 +226,16 @@ channel evidence, `PRACTICE_CHANGE` would describe the cohort for a bulk fix.
 - [ ] Before sending the question to SynGO, look for per-annotation assay types in the
   supplementary tables of PMID:31171447 and in the SynGO release files. They would show
   directly whether `GO:0099507` was a default term for channel evidence.
-- [ ] Read the full text of the ten abstract-only papers (needs institutional access or
-  supplied PDFs) and upgrade or revise their `PROBABLE` verdicts.
+- [x] Read the full text of the abstract-only papers with flagged verdicts (eight, from
+  copies supplied by the project owner, 2026-11-17); all verdicts confirmed.
+- [ ] Read PMID:8404844, the paper the GLRA1 erratum citation should point to, to see
+  whether it shows anything presynaptic for GLRA1.
+- [ ] Separate provenance from biology: for each flagged seed gene, look for independent
+  evidence that it regulates presynaptic membrane potential, and classify the claim as
+  true but mis-sourced, unsupported, or contradicted. Only the last two are bad seeds.
+- [ ] Count the downstream annotations each seed feeds (Ensembl orthology projection
+  `GO_REF:0000107`, RGD and GO_Central ISO, UniProt rules), so bad seeds can be ranked
+  by impact.
 - [ ] Export confirmed defects (`just export-source-defects`) and send one report to
   SynGO, with two convention questions kept separate from the row-level defects: the ISO
   question, and the use of `GO:0099507` for channel evidence without presynaptic context.
