@@ -149,3 +149,7 @@ These notes are the manual research journal instead.
 - Searched PubMed for 2023-2026 `SET6`/`YPL165C`/`Set6` yeast papers and found no newer
   direct SET6 publication beyond the already-cached Hamey and Wilkins 2023 methylation-network
   synthesis.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[6], GO:0008150 biological_process (ND, GO_REF:0000015), ACCEPT: the ND may be stale. These notes cite PMID:14718668, a chemogenomic heterozygous-deletion screen that UniProt curates (ECO:0000269) as SET6 being "Involved in resistance to compounds that target ergosterol biosynthesis, including fenpropimorph, dyclonine, and alverine citrate". That is a loss-of-function phenotype for this gene product in S. cerevisiae tied to a drug response, so a curator should decide whether it supports a BP annotation. UniProt itself suggests the effect may reflect compound availability. The review action was left unchanged.

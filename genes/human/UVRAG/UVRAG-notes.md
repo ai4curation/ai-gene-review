@@ -27,3 +27,11 @@ The DNA repair and centrosome/chromosome annotations are experimentally supporte
 ## Falcon
 
 Falcon deep research was started for UVRAG on 2026-06-02. The run timed out after the configured 600 seconds and did not produce `UVRAG-deep-research-falcon.md`; the review therefore relies on local UniProt, GOA, Reactome, and cached publication evidence.
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095, located_in) and IDA (PMID:24056303, part_of). Both stay KEEP_AS_NON_CORE; reasons extended and quotes added.
+- The IEA maps UniProt "Endoplasmic reticulum {ECO:0000269|PubMed:24056303}", so both rows rest on one paper. PMID:24056303 is abstract-only in the cache, but the abstract says it directly: [PMID:24056303 "UVRAG, a beclin-1-binding autophagic factor, as a phosphatidylinositol-3-phosphate (PtdIns(3)P)-binding protein that depends on PtdIns(3)P for its ER localization"], and UVRAG "acts as an integral component of the RINT-1-containing ER tethering complex"; "autophagy caused the dissociation of UVRAG from the ER tether".
+- UVRAG has no TM or signal peptide (C2 domain, coiled coil), so this is a recruited peripheral pool. It stays at the root, with no ER membrane row.
+- The part_of qualifier on the IDA reads as membership of the ER-bound RINT-1 tether and is left unchanged.
+- The GO:0005783 that appears as a proposed replacement on the Reactome ERGIC-membrane row was not touched.

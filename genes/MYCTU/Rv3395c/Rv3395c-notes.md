@@ -20,3 +20,10 @@
   as a CC_DARK knowledge gap; there is no experimental localization either way.
 - Evidence-code issue: the MTBBASE row from PMID:20615954 is coded IDA, but the evidence is
   a deletion/complementation phenotype (IMP). Recorded as a source_defect.
+
+
+## 2026-11-07 annotation-reviewer consultation
+
+Reassessed every inherited row and core claim against PMID20615954 publisher Results/Methods, cached primary evidence, PMID37530405 and PMID39706264. Assay species are separated in [source-scope.md](../../../analysis/module_audits/bacterial_imuabc_damage_induced_mutagenesis/mycobacteria-consultation/source-scope.md). Earlier statements that all 2010 experiments were in M. tuberculosis are superseded: target deletions and yeast interactions coexist with M. smegmatis individual-deletion and catalytic/clamp-mutant assays. Newer accessory assembly and imaging experiments also use M. smegmatis. No Myxococcus ATPase result is transferred to ImuA′, and no new proposal is added. Original payloads/order and inherited proposal presence are preserved.
+
+Actual Falcon attempt failed with HTTP 403 authentication; manual primary-source fallback was used without creating a provider-named report. PAINT-loss checks found no IRD/IKR on the inspected ImuB/DnaE2 lineages; Rv3395c has no PANTHER family and was not assessable. Ontology check shows TLS is part of DNA replication, so absence of a major replicase role cannot refute that parent. Focused validation and preservation evidence are recorded in the consultation directory.

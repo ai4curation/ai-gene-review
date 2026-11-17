@@ -11,3 +11,13 @@ the informative annotations; generic lipid metabolism is less useful.
 
 Whether another phosphatidylglycerol-phosphate phosphatase compensates for
 PgpA in KT2440 remains an experimental question.
+
+## 2026-11 update
+
+Re-reviewed to completion alongside the E. coli exemplar in `genes/ECOLI/` used by the
+module `bacterial_phosphatidylglycerol_cardiolipin_biosynthesis`. Broad parent terms
+(membrane, phospholipid or lipid biosynthesis, generic transferase or catalytic activity)
+that were previously kept as non-core are now refined with MODIFY to the specific terms
+the gene carries, so that same-term rows are treated the same way across the PSEPK and
+E. coli orthologues. Every row now cites vetted family-level or curated evidence. No
+deep-research provider key was available.

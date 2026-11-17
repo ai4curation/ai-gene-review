@@ -1,12 +1,504 @@
 window.searchData = [
   {
-    "id": "ARBA00026249",
-    "rule_id": "ARBA00026249",
-    "description": "Rule predicting thioredoxin-disulfide reductase (NADPH) activity based on InterPro domains and CATH FunFam classifications. The rule uses three alternative condition sets targeting the same enzymatic function.",
-    "review_summary": "This rule exhibits mixed redundancy with InterPro2GO curation. Condition set 1 (IPR005982-based) is completely redundant with existing InterPro2GO mapping. Condition set 2 (eukaryotic FunFam 3.50.50.60:FF:000064) is also redundant, being a complete subset of CS1 with zero unique coverage. However, condition set 3 (Rattus FunFams) provides SUBSTANTIAL unique value by capturing ~19 proteins that are COMPLETELY DISJOINT from IPR005982. These proteins lack the specific thioredoxin reductase InterPro domain but are predicted to have this function based on FunFam homology. This represents a valuable use case for automated rules - identifying functionally similar proteins that lack canonical domain annotations. The rule should be MODIFIED rather than deprecated, retaining only the unique CS3 coverage while removing redundant CS1 and CS2.",
+    "id": "ARBA00000900",
+    "rule_id": "ARBA00000900",
+    "description": "Assigns the catalytic activity EC 2.3.2.27 (RING-type E3 ubiquitin transferase) through 304 alternative condition sets built from InterPro entries, PANTHER families and CATH FunFams, 55 of them with a taxon.",
+    "review_summary": "7 of the 304 live condition sets were examined: the first six and the one bacterial set. They select RING-finger, U-box, Bre1, SIAH and plant ATL families and the bacterial novel E3 ligase effectors, and every reviewed match carries EC 2.3.2.27 (254 of 254, summed over sets). The rule contains no HECT-domain condition. The other 297 sets were not examined.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 7,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00000900/ARBA00000900-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00001096",
+    "rule_id": "ARBA00001096",
+    "description": "Assigns the catalytic activity alpha-D-glucose 6-phosphate = beta-D-glucose 6-phosphate (RHEA:16249, EC 5.1.3.15) to proteins matching three InterPro entries together: IPR025532 Glucose-6-phosphate 1-epimerase, IPR008183 Aldose 1-/Glucose-6-phosphate 1-epimerase and IPR011013 Galactose mutarotase-like domain superfamily.",
+    "review_summary": "The single condition set was examined. The rule annotates 9,242 TrEMBL entries. The most specific condition, the family IPR025532, is nested in the other two, so the conjunction selects the same proteins as IPR025532 alone. All five Swiss-Prot members carry EC 5.1.3.15, one from a published assay and four by similarity to it.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.8,
+    "num_condition_sets": 1,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": "REDUNDANT",
+    "literature_support": "MODERATE",
+    "review_link": "../ARBA00001096/ARBA00001096-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00001712",
+    "rule_id": "ARBA00001712",
+    "description": "Assigns the catalytic activity alpha-D-galactose = beta-D-galactose (RHEA:28675, EC 5.1.3.3, galactose mutarotase) through two alternative condition sets: InterPro IPR008183 and IPR011013 in Metazoa, or CATH FunFam 2.70.98.10:FF:000003 in Eukaryota.",
+    "review_summary": "Both live condition sets were checked against Swiss-Prot. Each matches six reviewed entries and all six carry EC 5.1.3.3 (GALM orthologues, e.g. human Q96C23). The Metazoa restriction in set 1 is needed: across all taxa IPR008183 has 32 Swiss-Prot members of which only 18 carry EC 5.1.3.3, the others including glucose-6-phosphate 1-epimerases (EC 5.1.3.15, e.g. yeast Q03161) and the sulfoquinovose mutarotase P32139. Checked against Swiss-Prot by UniProtKB query on 2026-11-09; TrEMBL matches were counted but not inspected.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.8,
+    "num_condition_sets": 2,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": "ACCEPTABLE",
+    "literature_support": null,
+    "review_link": "../ARBA00001712/ARBA00001712-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00004173",
+    "rule_id": "ARBA00004173",
+    "description": "Assigns the UniProt subcellular location Mitochondrion (SL-0173) through 1,525 alternative condition sets built from CATH FunFam, InterPro and PANTHER signatures, each with a taxon condition. UniProt converts the location to GO:0005739 (mitochondrion) by GO_REF:0000044.",
+    "review_summary": "All 1,525 live condition sets were screened with two UniProtKB queries each (2026-11-10): the Swiss-Prot entries that match the whole conjunction, and how many of them have the subcellular location Mitochondrion (SL-0173). 1,524 sets match at least one Swiss-Prot entry and 1 match none. In 1,513 sets every Swiss-Prot match has the location and in 11 sets some do not (sets 43, 209, 251, 365, 378, 456, 484, 549, 718, 1084, 1384); set 1312 matches no Swiss-Prot entry. The search is at entry level and does not see locations scoped to one isoform. Summed over sets there are 18,954 set-level matches, 18,884 with the location. Sets 1 and 789 were read in detail; they and the sets with incomplete agreement are recorded in the rule block. Set 1 (cytochrome b) is sound. Three sets match plastid-encoded ATP synthase subunits whose curated location is the chloroplast thylakoid membrane: set 251 (33 of 41 Swiss-Prot matches, in rosids), set 456 (5 of 10, in Liliopsida) and set 484 (7 of 12, in Solanaceae). Set 1384 matches ATP-dependent 6-phosphofructokinases, 6 of 8 recorded as Cytoplasm, and set 1084 matches amphibian adenylosuccinate synthetase isozyme 1, 3 of 6 recorded as Cytoplasm; in both cases the Swiss-Prot location comes from a HAMAP rule, not an experiment. Set 365 also matches four apicoplast lipoyl synthases. Set 789 is defective in a different way: it requires the thiolase-type FunFam 3.40.47.10:FF:000016 together with the SCP2 FunFam 3.30.1050.10:FF:000001, but in the reviewed mouse and human entries the mitochondrial location belongs to the short SCP2 isoform, which lacks the region matched by the first FunFam, while the full-length SCPx isoform is recorded as Peroxisome only. The rule therefore gives Mitochondrion to full-length SCPx proteins such as Drosophila ScpX (Q9VJ43). In sets 43, 209, 378, 549 and 718 the entries without the location have only a generic or rule-derived location comment, which does not show the protein is absent from mitochondria. ARBA rules are mined from Swiss-Prot annotation, and precision on the 562,320 unreviewed entries the rule annotates was not measured.",
     "action": "MODIFY",
     "status": "COMPLETE",
-    "confidence": 0.92,
+    "confidence": 0.75,
+    "num_condition_sets": 14,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0005739",
+        "label": "mitochondrion"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0005739 (mitochondrion)"
+    ],
+    "go_term_labels": [
+      "mitochondrion"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00004173/ARBA00004173-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00004218",
+    "rule_id": "ARBA00004218",
+    "description": "ARBA rule assigning the subcellular location \"Cytoplasmic vesicle, secretory vesicle, acrosome\" through 38 alternative condition sets, each a conjunction of family signatures with a taxon condition.",
+    "review_summary": "All 38 live condition sets are recorded. Three were checked against Swiss-Prot (sets 1, 2 and 4): each is a narrow conjunction defining one protein family, and the human member of each family carries a curated acrosome location in UniProt (CD46 and DLD experimentally, SCNN1A by similarity). Set 3 is the zona-pellucida-binding protein family by its InterPro names. The other 34 sets were not checked against annotated proteins, so no verdict is given.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 38,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00004218/ARBA00004218-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00004725",
+    "rule_id": "ARBA00004725",
+    "description": "ARBA rule assigning the pathway comment \"Pyrimidine metabolism; UMP biosynthesis via de novo pathway\" through 26 alternative condition sets built from InterPro, CATH FunFam, PANTHER and taxon conditions.",
+    "review_summary": "All 26 live condition sets are recorded with their official labels. By those labels the InterPro sets name dihydroorotate dehydrogenase, orotidine 5'-phosphate decarboxylase, orotate phosphoribosyltransferase, aspartate carbamoyltransferase and dihydroorotase families, which are enzymes of de novo UMP biosynthesis. The sets were not checked against the curated pathway comments of their Swiss-Prot members, so no verdict is given. UniProt reports 7889 unreviewed proteins for the rule.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 26,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00004725/ARBA00004725-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00004841",
+    "rule_id": "ARBA00004841",
+    "description": "Assigns the pathway comment \"Glycan metabolism; heparin biosynthesis\" to chordate proteins that carry both the sulfotransferase domain (IPR000863) and the heparan sulphate N-deacetylase domain (IPR021930), or CATH FunFam 3.40.50.300:FF:000176. Both sets identify the bifunctional heparan sulfate N-deacetylase/N-sulfotransferases (NDST1-4).",
+    "review_summary": "Both live condition sets were checked against Swiss-Prot. Each matches 12 reviewed entries, all NDST family members (e.g. human P52848 NDST1, P52849 NDST2, O95803 NDST3, Q9H3R1 NDST4), and all 12 carry the pathway comment. Checked against Swiss-Prot by UniProtKB query on 2026-11-09; TrEMBL matches were counted but not inspected.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.8,
+    "num_condition_sets": 2,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00004841/ARBA00004841-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00005098",
+    "rule_id": "ARBA00005098",
+    "description": "Assigns the pathway comment \"Nitrogen metabolism; urea cycle; L-ornithine and urea from L-arginine: step 1/1\" (the arginase step) through nine alternative condition sets: InterPro arginase signatures in Chordata, a PANTHER subfamily in Bacteria, and seven CATH FunFams of superfamily 3.40.800.10, each with its own taxon.",
+    "review_summary": "All nine live condition sets were checked against Swiss-Prot. Every reviewed match of every set carries the pathway comment (16, 13, 9, 8, 6, 6, 6, 4 and 3 entries for sets 1 to 9). Set 9 uses a FunFam whose CATH label is \"Agmatinase\", but its three mammalian Swiss-Prot members are AGMAT orthologues (human Q9BSE5, mouse A2AS89, rat Q0D2L3), which Swiss-Prot curates as guanidino acid hydrolase with arginase activity (EC 3.5.3.1, PubMed:36543883) and with this pathway comment. Checked against Swiss-Prot by UniProtKB query on 2026-11-09; TrEMBL matches were counted but not inspected.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.8,
+    "num_condition_sets": 9,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00005098/ARBA00005098-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00022438",
+    "rule_id": "ARBA00022438",
+    "description": "Assigns the UniProt keyword Aminopeptidase (KW-0031) through 90 alternative condition sets built from InterPro entries, PANTHER subfamilies and CATH FunFams, 38 of them with a taxon condition.",
+    "review_summary": "All 90 live condition sets were checked against Swiss-Prot. Every set has reviewed matches (2 to 507 per set) and every reviewed match inspected carries the keyword Aminopeptidase; for set 1, the first 500 of 507 matches were inspected. Checked against Swiss-Prot by UniProtKB query on 2026-11-09; TrEMBL matches were counted but not inspected.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.8,
+    "num_condition_sets": 90,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00022438/ARBA00022438-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00022487",
+    "rule_id": "ARBA00022487",
+    "description": "Assigns the UniProt keyword KW-0719 (Serine esterase) through 65 alternative condition sets built from InterPro, PANTHER and CATH FunFam signatures.",
+    "review_summary": "All 65 live condition sets were screened with two UniProtKB queries each (2026-11-10): the Swiss-Prot entries that match the whole conjunction, and how many of them carry KW-0719 Serine esterase. Every set matches at least one Swiss-Prot entry. Summed over sets there are 1,028 set-level matches (an entry that matches several sets is counted once per set) and 1,028 of them carry the keyword. No set has a Swiss-Prot match without the keyword. All 65 sets are recorded in the rule block with official signature names. 46 of the 65 sets have a taxon condition. ARBA rules are mined from Swiss-Prot annotation, so this screen shows that no set conflicts with curated keywords; it does not measure precision on the 83,725 unreviewed entries the rule annotates.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.6,
+    "num_condition_sets": 65,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00022487/ARBA00022487-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00022603",
+    "rule_id": "ARBA00022603",
+    "description": "Assigns the UniProt keyword Methyltransferase (KW-0489) from 624 alternative condition sets of InterPro, FunFam, PANTHER and taxon conditions.",
+    "review_summary": "Not yet reviewed. The rule was fetched from UniProt on 2026-11-10 and has 624 condition sets; none has been examined, so no verdict is given.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 0,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00022603/ARBA00022603-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00022670",
+    "rule_id": "ARBA00022670",
+    "description": "Assigns the UniProt keyword Protease (KW-0645) through 1010 alternative condition sets. About half are single InterPro entries or PANTHER families; the rest are conjunctions of two or three conditions, some with a taxon.",
+    "review_summary": "The first 10 of the 1010 live condition sets were examined. They select ClpP, HslV, leucyl aminopeptidase, peptidase M48 and signal peptidase II families, and every reviewed match carries the Protease keyword (5150 of 5150, summed over sets). The other 1000 sets were not examined.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 10,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00022670/ARBA00022670-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00022679",
+    "rule_id": "ARBA00022679",
+    "description": "Assigns the UniProt keyword KW-0808 (Transferase) through 4,603 alternative condition sets built from InterPro, PANTHER and CATH FunFam signatures.",
+    "review_summary": "461 of the 4,603 live condition sets (every tenth set, starting with set 1) were screened with two UniProtKB queries each (2026-11-10): the Swiss-Prot entries that match the whole conjunction, and how many of them carry KW-0808 Transferase. Every screened set matches at least one Swiss-Prot entry. Summed over the screened sets there are 21,413 set-level matches (an entry that matches several sets is counted once per set) and 21,413 of them carry the keyword. No screened set has a Swiss-Prot match without the keyword. 10 sets are recorded in the rule block with official signature names; the other screened sets were checked by count only and their signatures were not read. 385 of the 4,603 sets have a taxon condition. ARBA rules are mined from Swiss-Prot annotation, so this screen shows that no screened set conflicts with curated keywords; it does not measure precision on the 12,487,598 unreviewed entries the rule annotates.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 10,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00022679/ARBA00022679-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00022722",
+    "rule_id": "ARBA00022722",
+    "description": "Assigns the UniProt keyword Nuclease (KW-0540) through 538 alternative condition sets built from InterPro entries, PANTHER families and CATH FunFams. 326 sets are conjunctions of two or more conditions and 153 carry a taxon condition.",
+    "review_summary": "The first 287 of 538 live condition sets (CS1 to CS287) were queried against Swiss-Prot on 2026-11-09; the remaining 251 were not examined. Every one of the 287 sets has reviewed matches, and every reviewed match inspected carries the keyword Nuclease (17216 matches summed over sets, up to 500 inspected per set). TrEMBL matches were not inspected. Because nearly half of the sets were not examined, no verdict is given.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 287,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00022722/ARBA00022722-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00022759",
+    "rule_id": "ARBA00022759",
+    "description": "Assigns the UniProt keyword Endonuclease (KW-0255) through 320 alternative condition sets. Each set is one to three InterPro entries or PANTHER families, in about a third of the sets with a taxon.",
+    "review_summary": "11 of the 320 live condition sets were examined: the first six and five that contain a domain shared with non-nuclease proteins. In each of the eleven, every reviewed match carries the Endonuclease keyword (4008 of 4008, summed over sets). The five sets with a broadly shared domain each pair it with a signature for a known endonuclease: FEN1, the nidovirus NendoU domain, UV-damage endonuclease UvdE, plant MORC proteins and retroviral polymerase polyproteins. The remaining 309 sets were not examined.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 11,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00022759/ARBA00022759-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00022777",
+    "rule_id": "ARBA00022777",
+    "description": "Assigns the UniProt keyword KW-0418 (Kinase) through 1,392 alternative condition sets built from InterPro, PANTHER and CATH FunFam signatures.",
+    "review_summary": "All 1,392 live condition sets were screened with two UniProtKB queries each (2026-11-10): the Swiss-Prot entries that match the whole conjunction, and how many of them carry KW-0418 Kinase. Every screened set matches at least one Swiss-Prot entry. Summed over the screened sets there are 46,549 set-level matches (an entry that matches several sets is counted once per set) and 46,549 of them carry the keyword. No screened set has a Swiss-Prot match without the keyword. 10 sets are recorded in the rule block with official signature names; the other screened sets were checked by count only and their signatures were not read. 171 of the 1,392 sets have a taxon condition. ARBA rules are mined from Swiss-Prot annotation, so this screen shows that no screened set conflicts with curated keywords; it does not measure precision on the 3,762,398 unreviewed entries the rule annotates.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 10,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00022777/ARBA00022777-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00022801",
+    "rule_id": "ARBA00022801",
+    "description": "ARBA rule assigning the UniProt keyword Hydrolase (KW-0378) through 4171 alternative condition sets built from InterPro, PANTHER and taxon conditions.",
+    "review_summary": "The live rule has 4171 condition sets and UniProt reports 10,279,889 unreviewed proteins for it. Four sets (1-4) were examined: by the official InterPro names they describe DEAD-box helicases, dUTPase and the tetrahydrofolate dehydrogenase/cyclohydrolase family, all of which are hydrolases. No false positive has been identified. 4167 sets were not examined, so no verdict is given.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 4,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00022801/ARBA00022801-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00022806",
+    "rule_id": "ARBA00022806",
+    "description": "ARBA rule assigning the UniProt keyword Helicase (KW-0347) through 335 alternative condition sets built from InterPro, PANTHER and taxon conditions.",
+    "review_summary": "The live rule has 335 condition sets, 91 of which carry a taxon condition; UniProt reports 753,214 unreviewed proteins. Two sets (1 and 2) were read: both are DEAD-box helicase signatures by their official InterPro names. No set was checked against annotated proteins and 333 were not examined, so no verdict is given.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 2,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00022806/ARBA00022806-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00022825",
+    "rule_id": "ARBA00022825",
+    "description": "Assigns the UniProt keyword Serine protease (KW-0720) through 244 alternative condition sets, each one to three InterPro entries or PANTHER families, in part with a taxon.",
+    "review_summary": "The first 10 of the 244 live condition sets were examined. They select ClpP, subtilisin (peptidase S8), Lon, kallikrein-related trypsin-family and proteinase K-like families, and every reviewed match carries the Serine protease keyword (3533 of 3533, summed over sets). The other 234 sets were not examined.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 10,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00022825/ARBA00022825-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00022912",
+    "rule_id": "ARBA00022912",
+    "description": "Assigns the UniProt keyword KW-0904 (Protein phosphatase) through 214 alternative condition sets built from InterPro, PANTHER and CATH FunFam signatures.",
+    "review_summary": "All 214 live condition sets were screened with two UniProtKB queries each (2026-11-10): the Swiss-Prot entries that match the whole conjunction, and how many of them carry KW-0904 Protein phosphatase. Every set matches at least one Swiss-Prot entry. Summed over sets there are 2,248 set-level matches (an entry that matches several sets is counted once per set) and 2,248 of them carry the keyword. No set has a Swiss-Prot match without the keyword. All 214 sets are recorded in the rule block with official signature names. 61 of the 214 sets have a taxon condition. ARBA rules are mined from Swiss-Prot annotation, so this screen shows that no set conflicts with curated keywords; it does not measure precision on the 345,960 unreviewed entries the rule annotates.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.6,
+    "num_condition_sets": 214,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00022912/ARBA00022912-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00023002",
+    "rule_id": "ARBA00023002",
+    "description": "Assigns the UniProt keyword KW-0560 Oxidoreductase through 2158 alternative condition sets of InterPro, PANTHER and CATH FunFam signatures, some with a taxon condition.",
+    "review_summary": "Four of the 2158 live condition sets were examined (sets 2, 4, 456 and 521); the rest were not read. In each examined set every matching Swiss-Prot entry carries the Oxidoreductase keyword (951 of 951, 743 of 743, 13 of 13 and 10 of 10). An earlier report of the keyword on copper chaperone for superoxide dismutase (Drosophila Ccs, E1JH26) could not be reproduced: the entry is now in Swiss-Prot without the keyword, and no live condition set matches its signatures and taxon.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 4,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00023002/ARBA00023002-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00023137",
+    "rule_id": "ARBA00023137",
+    "description": "ARBA rule assigning the UniProt keyword Tyrosine-protein kinase (KW-0829) through 100 alternative condition sets built from InterPro, CATH FunFam, PANTHER and taxon conditions.",
+    "review_summary": "The live rule has 100 condition sets; UniProt reports 177,623 unreviewed proteins. Five sets were examined. The bacterial and plant sets (sets 37, 86, 92, 95) match Swiss-Prot proteins that carry the Tyrosine-protein kinase keyword by curation. Swiss-Prot also gives this keyword to dual-specificity kinases such as MAP2K1 (Q02750). No false positive has been identified. 95 sets were not examined, so no verdict is given.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 5,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00023137/ARBA00023137-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00023239",
+    "rule_id": "ARBA00023239",
+    "description": "Assigns the UniProt keyword KW-0456 Lyase through 908 alternative condition sets of InterPro, PANTHER and CATH FunFam signatures, some with a taxon condition.",
+    "review_summary": "None of the 908 live condition sets has been examined, and no protein wrongly given the keyword has been identified. The review is open.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 0,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00023239/ARBA00023239-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00026249",
+    "rule_id": "ARBA00026249",
+    "description": "ARBA rule assigning GO:0004791 thioredoxin-disulfide reductase (NADPH) activity through three condition sets: three thioredoxin reductase InterPro signatures together, a thioredoxin reductase FunFam in Eukaryota, and a second thioredoxin reductase FunFam in Glires.",
+    "review_summary": "All three live condition sets were examined. Set 1 rests on IPR005982 (Thioredoxin reductase), which InterPro2GO already maps to GO:0004791. The FunFams of sets 2 and 3 each hold 18 Swiss-Prot proteins, all annotated to GO:0004791. The annotation is correct for what the rule matches. Most of the rule duplicates InterPro2GO: sets 1 and 3 add nothing to the IPR005982 and IPR006338 mappings, and set 2 adds 136 UniProtKB proteins that carry neither signature.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.75,
     "num_condition_sets": 3,
     "num_entries": 0,
     "go_terms": [
@@ -27,29 +519,59 @@ window.searchData = [
       "IPR005982 (Thioredoxin reductase)"
     ],
     "funfam_ids": [
-      "3.50.50.60:FF:000190 (Thioredoxin reductase)",
       "3.30.390.30:FF:000004 (Thioredoxin reductase 1, cytoplasmic)",
+      "3.50.50.60:FF:000190 (Thioredoxin reductase)",
       "3.50.50.60:FF:000064 (Thioredoxin reductase)"
     ],
     "condition_types": [
       "InterPro id",
-      "taxon",
-      "FunFam id"
+      "FunFam id",
+      "taxon"
     ],
-    "parsimony_assessment": "ACCEPTABLE",
+    "parsimony_assessment": null,
     "literature_support": "STRONG",
     "review_link": "../ARBA00026249/ARBA00026249-review.html",
     "is_reviewed": true
   },
   {
+    "id": "ARBA00026302",
+    "rule_id": "ARBA00026302",
+    "description": "Assigns GO:1901137 carbohydrate derivative biosynthetic process through 188 alternative condition sets built from InterPro entries, PANTHER families and CATH FunFams; 94 sets carry a taxon condition.",
+    "review_summary": "All 188 live condition sets were queried. Each set was turned into a UniProtKB query and its Swiss-Prot matches were inspected on 2026-11-09. A match counts as supported when it carries the term or an is_a/part_of descendant with evidence other than ARBA; annotations placed by ARBA rules on Swiss-Prot entries were not counted. In 164 sets every reviewed match is supported; in 24 sets some are not; 0 sets have reviewed matches but none supported; 0 sets have no reviewed match. The partly supported sets were not adjudicated match by match, so no verdict is given. QuickGO lists 75875 annotations attributed to this rule, while the rule statistics served by UniProt report zero proteins.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 188,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:1901137",
+        "label": "carbohydrate derivative biosynthetic process"
+      }
+    ],
+    "go_term_ids": [
+      "GO:1901137 (carbohydrate derivative biosynthetic process)"
+    ],
+    "go_term_labels": [
+      "carbohydrate derivative biosynthetic process"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00026302/ARBA00026302-review.html",
+    "is_reviewed": true
+  },
+  {
     "id": "ARBA00026372",
     "rule_id": "ARBA00026372",
-    "description": "This rule predicts GO:0051998 (protein carboxyl O-methyltransferase activity) using 5 condition sets that identify two mechanistically distinct enzyme families: isoprenylcysteine carboxyl methyltransferases (ICMT) and protein-L-isoaspartate methyltransferases (PIMT). These enzymes share a common chemistry (methylating carboxyl groups on proteins) but differ fundamentally in substrate specificity, cellular location, biological function, and mechanism.",
-    "review_summary": "ARBA00026372 exhibits severe structural flaws that undermine its biological validity. The rule conflates two mechanistically distinct enzyme families - isoprenylcysteine carboxyl methyltransferases (ICMT) and protein-L-isoaspartate methyltransferases (PIMT) - under a single overly broad GO term. While both enzymes methylate carboxyl groups on proteins, they differ fundamentally in substrate specificity, cellular location, biological function, and mechanism. ICMT enzymes are integral ER membrane proteins that modify prenylated C-terminal cysteines to enhance membrane affinity of signaling proteins like Ras. PIMT enzymes are cytosolic repair enzymes that methylate isoaspartyl residues in damaged proteins as part of a repair cycle. The complete DISJOINT nature of condition sets identifying these two families (Jaccard=0.000 between CS1 and CS2, CS1 and CS5) confirms they represent separate protein families that should not be annotated with the same specific GO term. Additionally, condition set 1 contains internal redundancy (IPR025770 is a complete subset of IPR007269), and the rule uses the generic parent term GO:0051998 when specific child terms GO:0004671 (for ICMT) and GO:0004719 (for PIMT) exist. The average Jaccard similarity of 0.097 across domain pairs reflects the fundamental heterogeneity of this rule.",
-    "action": "DEPRECATE",
+    "description": "Assigns GO:0051998 (protein carboxyl O-methyltransferase activity) through six alternative condition sets covering three enzyme families: isoprenylcysteine carboxyl methyltransferases (sets 1, 3, 4), protein-L-isoaspartate O-methyltransferases (sets 2, 5) and leucine carboxyl methyltransferase 1 (set 6).",
+    "review_summary": "All six live condition sets were examined. They match 40 reviewed entries in total and every one carries GO:0051998 or a descendant, 39 by manual evidence. GO:0051998 is the common parent of the specific activities of the three families, so the annotation is true for every family the rule covers. More specific terms exist for each family and are already supplied by InterPro2GO for two of them.",
+    "action": "ACCEPT",
     "status": "COMPLETE",
-    "confidence": 0.95,
-    "num_condition_sets": 5,
+    "confidence": 0.8,
+    "num_condition_sets": 6,
     "num_entries": 0,
     "go_terms": [
       {
@@ -63,36 +585,914 @@ window.searchData = [
     "go_term_labels": [
       "protein carboxyl O-methyltransferase activity"
     ],
-    "interpro_ids": [
-      "IPR007269 (Isoprenylcysteine carboxyl methyltransferase)",
-      "IPR025770 (Protein-S-isoprenylcysteine O-methyltransferase)"
-    ],
-    "funfam_ids": [
-      "3.40.50.150:FF:000027 (Protein-L-isoaspartate O-methyltransferase)",
-      "3.40.50.150:FF:000235 (Protein-L-isoaspartate O-methyltransferase)",
-      "1.20.120.1630:FF:000018 (Protein-S-isoprenylcysteine O-methyltransferase)",
-      "1.20.120.1630:FF:000007 (Protein-S-isoprenylcysteine O-methyltransferase)"
-    ],
-    "condition_types": [
-      "InterPro id",
-      "PANTHER id",
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": "OVERLY_COMPLEX",
-    "literature_support": "CONTRADICTED",
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
     "review_link": "../ARBA00026372/ARBA00026372-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00026480",
+    "rule_id": "ARBA00026480",
+    "description": "Assigns GO:0010605 negative regulation of macromolecule metabolic process through 343 alternative condition sets built from InterPro entries, PANTHER families and CATH FunFams; 107 sets carry a taxon condition. GO:0010605 is a high-level grouping term whose descendants include negative regulation of gene expression, mRNA catabolism and RNA-mediated gene silencing.",
+    "review_summary": "All 343 live condition sets were queried. Each set was turned into a UniProtKB query and its Swiss-Prot matches were inspected on 2026-11-09. A match counts as supported when it carries the term or an is_a/part_of descendant with evidence other than ARBA; annotations placed by ARBA rules on Swiss-Prot entries were not counted. Every set has reviewed matches. In 249 sets every reviewed match is supported; in 94 sets some are not, and no set is wholly unsupported. Summed over sets, 2649 reviewed matches were inspected: 2116 supported (1364 by non-IEA evidence), 403 carrying the term only from ARBA and 130 not carrying it. The sets read in detail identify well-known negative regulators: CS2 Dicer, CS3 HP1 chromobox proteins, CS4 Hes/Hey repressors in mouse, CS21 the ZFP36L1/ZFP36L2 mRNA-destabilising proteins. CS15 shows what a partly supported set looks like: six Pumilio-family proteins are supported and four NOP9 nucleolar proteins carry the term only from ARBA. The partly supported sets were not adjudicated one by one, and UniProt reports zero proteins for the rule, so no verdict is given.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 343,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0010605",
+        "label": "negative regulation of macromolecule metabolic process"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0010605 (negative regulation of macromolecule metabolic process)"
+    ],
+    "go_term_labels": [
+      "negative regulation of macromolecule metabolic process"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00026480/ARBA00026480-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00026572",
+    "rule_id": "ARBA00026572",
+    "description": "Assigns GO:0006139 nucleobase-containing compound metabolic process through 773 alternative condition sets of InterPro, PANTHER and CATH FunFam signatures, some with a taxon condition.",
+    "review_summary": "None of the 773 live condition sets has been examined, and no wrongly annotated protein has been identified. GO:0006139 is a high-level term; a set that selects DNA repair proteins, aminoacyl-tRNA synthetases or nucleotide biosynthesis enzymes would be annotated correctly but generally. The review is open.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 0,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0006139",
+        "label": "nucleobase-containing compound metabolic process"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0006139 (nucleobase-containing compound metabolic process)"
+    ],
+    "go_term_labels": [
+      "nucleobase-containing compound metabolic process"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00026572/ARBA00026572-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00026647",
+    "rule_id": "ARBA00026647",
+    "description": "Assigns GO:0010629 negative regulation of gene expression through 131 alternative condition sets of InterPro and CATH FunFam signatures, 59 of them with a taxon condition.",
+    "review_summary": "One of the 131 live condition sets was examined (set 106, a histone acetyltransferase FunFam in Saccharomycetaceae). Its Swiss-Prot matches include ESA1 and SAS3, both experimentally annotated to descendants of GO:0010629 (rDNA heterochromatin formation; silent mating-type cassette and subtelomeric heterochromatin formation). No wrongly annotated protein has been identified. The review is open.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 1,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0010629",
+        "label": "negative regulation of gene expression"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0010629 (negative regulation of gene expression)"
+    ],
+    "go_term_labels": [
+      "negative regulation of gene expression"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00026647/ARBA00026647-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00026698",
+    "rule_id": "ARBA00026698",
+    "description": "Assigns GO:0007034 vacuolar transport through 40 alternative condition sets, each a conjunction of InterPro or CATH FunFam signatures with a taxon. The sets cover ESCRT-III/Snf7-family proteins, ESCRT-I and ESCRT-II subunits, Vps4, sortilin/Vps10 and plant vacuolar sorting receptors, vacuolar syntaxins, GGA/VHS adaptors, NEDD4/Rsp5-type ubiquitin ligases and a few other families.",
+    "review_summary": "All 40 live condition sets were examined. 26 sets match Swiss-Prot entries, and in every one of them at least one matched entry carries GO:0007034 or a descendant with experimental evidence; no matched Swiss-Prot entry lacks the term. The other 14 sets (numbers 2, 4, 10, 12, 15, 17, 26, 28, 32, 34, 35, 37, 38, 40) are Archaea or Bacteria copies of eukaryotic sets and match no UniProtKB entry, so they annotate nothing. The first InterPro condition, IPR005024 (Vacuolar-sorting protein SNF7-like), is itself mapped to GO:0007034 by InterPro2GO.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.8,
+    "num_condition_sets": 40,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0007034",
+        "label": "vacuolar transport"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0007034 (vacuolar transport)"
+    ],
+    "go_term_labels": [
+      "vacuolar transport"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": "STRONG",
+    "review_link": "../ARBA00026698/ARBA00026698-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00026708",
+    "rule_id": "ARBA00026708",
+    "description": "Assigns GO:0007031 (peroxisome organization) through 12 alternative condition sets that identify peroxins (PEX5, PEX7, PEX11, PEX12, PEX14/PEX33, the PEX28-PEX32 family), the dynamin-related fission GTPases DNM1/DRP3/DNM1L and VPS1, plant FIS1, and the fungal kinases KIN4 and FRK1.",
+    "review_summary": "All 12 live condition sets were examined by retrieving the Swiss-Prot entries that match the whole conjunction and looking up their curated annotations. Every set has at least one Swiss-Prot match with an experimental annotation to GO:0007031 or an is_a/part_of descendant (protein import into peroxisome matrix and its steps, peroxisome fission, peroxisome inheritance). The dynamin, VPS1 and FIS1 sets match proteins that also act in mitochondrial fission; their peroxisome annotations are experimental. Set 8 matches S. cerevisiae KIN4 and FRK1, annotated to peroxisome inheritance by IGI from one paper. Sets 7 and 12 have no taxon condition; set 7 also matches Toxoplasma gondii DrpA (S8EYU3), which has no curated annotation to the term. The check uses Swiss-Prot, the source ARBA rules are mined from, and does not measure precision on unreviewed entries.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.7,
+    "num_condition_sets": 12,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0007031",
+        "label": "peroxisome organization"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0007031 (peroxisome organization)"
+    ],
+    "go_term_labels": [
+      "peroxisome organization"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00026708/ARBA00026708-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00026799",
+    "rule_id": "ARBA00026799",
+    "description": "Assigns GO:0003951 (NAD+ kinase activity) from five alternative condition sets: one InterPro and PANTHER conjunction for the NAD kinase family, and four CATH FunFams each limited to a taxon.",
+    "review_summary": "All five condition sets of the rule as served on 2026-11-10 were turned into UniProtKB queries. In every set the reviewed matches are NAD kinases by curated EC number (698 of 704 across the sets), and sets 1 and 5 include members with experimental GO:0003951 annotations. The one soft spot is in set 1, which also matches the mitochondrial NADH kinase POS5 and its S. pombe ortholog; these are curated as NADH kinases (EC 2.7.1.86), and NAD+ kinase activity is not annotated for POS5.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.75,
+    "num_condition_sets": 5,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0003951",
+        "label": "NAD+ kinase activity"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0003951 (NAD+ kinase activity)"
+    ],
+    "go_term_labels": [
+      "NAD+ kinase activity"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00026799/ARBA00026799-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00026991",
+    "rule_id": "ARBA00026991",
+    "description": "Assigns GO:0015980 (energy derivation by oxidation of organic compounds) through 69 alternative condition sets built from InterPro entries, PANTHER families and CATH FunFams, most with a taxon. The sets cover enzymes of glycolysis, the tricarboxylic acid cycle, respiratory electron transport and glycogen metabolism.",
+    "review_summary": "All 69 live condition sets were checked against Swiss-Prot. In all but one, every reviewed match carries GO:0015980 or a descendant. Set 29 (pyruvate:ferredoxin oxidoreductase FunFams) has 9 reviewed matches of which 4 carry the term; the other 5 are annotated to electron transport chain only. One set is too wide as written: set 1 requires only the thiamin diphosphate-binding fold in Thermoproteota, a condition met by 51 unreviewed acetolactate synthases, which are biosynthetic enzymes.",
+    "action": "MODIFY",
+    "status": "COMPLETE",
+    "confidence": 0.6,
+    "num_condition_sets": 69,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0015980",
+        "label": "energy derivation by oxidation of organic compounds"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0015980 (energy derivation by oxidation of organic compounds)"
+    ],
+    "go_term_labels": [
+      "energy derivation by oxidation of organic compounds"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00026991/ARBA00026991-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00027164",
+    "rule_id": "ARBA00027164",
+    "description": "Assigns GO:0006401 (RNA catabolic process) through 52 alternative condition sets built from InterPro, PANTHER and CATH FunFam signatures of RNA decay factors, most of them with a taxon condition.",
+    "review_summary": "All 52 live condition sets were examined by retrieving the Swiss-Prot entries that match the whole conjunction and looking up their curated annotations to GO:0006401 and its is_a/part_of descendants. In 51 sets at least one Swiss-Prot match has an experimental annotation (IDA, IMP, IGI, IPI or EXP). The exception is set 28 (three pelota FunFams), whose two Swiss-Prot matches, Arabidopsis PEL1 (Q9ZT87) and PEL2 (Q9M2H7), carry GO:0070481 nuclear-transcribed mRNA catabolic process, non-stop decay by IEP only. The matched families include exosome subunits, decapping enzymes, deadenylases, the SKI2 and MTR4 helicases, TRAMP and terminal uridylyl transferases, and ZFP36-type zinc finger proteins. The check uses Swiss-Prot, the source ARBA rules are mined from, so it shows that no set lacks curated support; it does not measure precision on unreviewed entries.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.7,
+    "num_condition_sets": 52,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0006401",
+        "label": "RNA catabolic process"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0006401 (RNA catabolic process)"
+    ],
+    "go_term_labels": [
+      "RNA catabolic process"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00027164/ARBA00027164-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00027169",
+    "rule_id": "ARBA00027169",
+    "description": "Assigns GO:0120114 Sm-like protein family complex through 27 alternative condition sets of InterPro and CATH FunFam signatures, some with a taxon. The sets cover Sm and Lsm proteins and other protein components of the U1, U2, U5, U6, U7 and U11/U12 snRNPs.",
+    "review_summary": "All 27 live condition sets were examined. Every set matches Swiss-Prot entries, and in each at least one matched entry carries GO:0120114 or a descendant with experimental evidence; no matched Swiss-Prot entry lacks the term. Spliceosomal snRNPs are subclasses of GO:0120114 (GO:0030532 small nuclear ribonucleoprotein complex is_a GO:0120114), so snRNP proteins without an Sm fold, such as SF3B1, PRPF8, BRR2 and Snu114, are correctly covered.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.8,
+    "num_condition_sets": 27,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0120114",
+        "label": "Sm-like protein family complex"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0120114 (Sm-like protein family complex)"
+    ],
+    "go_term_labels": [
+      "Sm-like protein family complex"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": "STRONG",
+    "review_link": "../ARBA00027169/ARBA00027169-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00027389",
+    "rule_id": "ARBA00027389",
+    "description": "Assigns GO:0042546 cell wall biogenesis through 34 alternative condition sets. Every set combines one to three InterPro, PANTHER or CATH FunFam conditions with a taxon condition; the taxa range from single fungal and plant clades to Bacteria and \"not Vertebrata\".",
+    "review_summary": "All 34 live condition sets were queried against Swiss-Prot, counting a match as supported when it carries GO:0042546 or a descendant with evidence other than ARBA. In 22 sets every reviewed match is supported; in 12 sets (CS2, CS3, CS4, CS6, CS7, CS8, CS10, CS11, CS20, CS21, CS22, CS32) only some are; no set is without support. The partly supported sets include mycobacterial cell-envelope lipid enzymes whose curated terms are descendants of GO:0042546, such as FadD26 P9WQ43 and PpsA P9WQE7 with GO:0071770 by IDA from PMID:15749014, and two sets where support is thin: CS11 (fungal mannose-1-phosphate guanylyltransferases, 1 of 12 supported) and CS20 (phosphoglucosamine mutase GlmM in Pseudomonadota, 71 of 316). An unsupported match is one without curated annotation, not one shown to be wrong, so these counts do not settle whether CS11 and CS20 are sound.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 34,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0042546",
+        "label": "cell wall biogenesis"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0042546 (cell wall biogenesis)"
+    ],
+    "go_term_labels": [
+      "cell wall biogenesis"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00027389/ARBA00027389-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00027399",
+    "rule_id": "ARBA00027399",
+    "description": "Assigns GO:0008236 (serine-type peptidase activity) through 45 alternative condition sets built from InterPro entries, PANTHER families and CATH FunFams, most with a taxon. The sets cover coagulation and complement proteases, trypsin-family enzymes, subtilisin-like proprotein convertases, HtrA/DegP proteases, tripeptidyl peptidases and others.",
+    "review_summary": "All 45 live condition sets were checked against Swiss-Prot. They match 292 reviewed entries in total and every one carries GO:0008236 or a descendant, 225 by manual evidence. One set is wrong: set 13 selects BMP1 and the tolloid-like proteins, which are zinc metalloproteases. They carry a serine-type endopeptidase term only through a Reactome TAS annotation, and the rule passes that term on to 134 unreviewed entries. The other sets were checked by counts only.",
+    "action": "MODIFY",
+    "status": "COMPLETE",
+    "confidence": 0.7,
+    "num_condition_sets": 45,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0008236",
+        "label": "serine-type peptidase activity"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0008236 (serine-type peptidase activity)"
+    ],
+    "go_term_labels": [
+      "serine-type peptidase activity"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00027399/ARBA00027399-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00027430",
+    "rule_id": "ARBA00027430",
+    "description": "ARBA rule assigning GO:0006066 alcohol metabolic process through 83 alternative condition sets built from InterPro, CATH FunFam, PANTHER and taxon conditions.",
+    "review_summary": "The live rule has 83 condition sets. Three (sets 2, 4 and 5) were read for the identity of their InterPro families; none was checked against annotated proteins. In GO, ethanol metabolic process (GO:0006067), thiamine metabolic process (GO:0006772), thiamine biosynthetic process (GO:0009228) and cholesterol metabolic process (GO:0008203) are is_a descendants of GO:0006066, so enzymes of those pathways are correctly described by the term. No false positive has been identified. No verdict is given.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 3,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0006066",
+        "label": "alcohol metabolic process"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0006066 (alcohol metabolic process)"
+    ],
+    "go_term_labels": [
+      "alcohol metabolic process"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00027430/ARBA00027430-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00027624",
+    "rule_id": "ARBA00027624",
+    "description": "Assigns GO:0031090 organelle membrane through 472 alternative condition sets built from InterPro entries, PANTHER families and CATH FunFams; 107 sets carry a taxon condition.",
+    "review_summary": "The first 60 of 472 live condition sets (CS1 to CS60) were queried; the other 412 were not examined. Each set was turned into a UniProtKB query and its Swiss-Prot matches were inspected on 2026-11-09. A match counts as supported when it carries the term or an is_a/part_of descendant with evidence other than ARBA; annotations placed by ARBA rules on Swiss-Prot entries were not counted. Of the 60, 50 are fully supported, 10 partly, 0 have reviewed matches but none supported, and 0 have no reviewed match. With most of the rule unexamined, no verdict is given. UniProt reports zero proteins for the rule and QuickGO lists no annotation attributed to it.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 60,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0031090",
+        "label": "organelle membrane"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0031090 (organelle membrane)"
+    ],
+    "go_term_labels": [
+      "organelle membrane"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00027624/ARBA00027624-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00027651",
+    "rule_id": "ARBA00027651",
+    "description": "Assigns GO:0004721 phosphoprotein phosphatase activity through 82 alternative condition sets of InterPro, PANTHER and CATH FunFam signatures, half with a taxon condition.",
+    "review_summary": "One of the 82 live condition sets was examined (set 1, receptor-type protein tyrosine phosphatases). Its Swiss-Prot matches are experimentally annotated to GO:0004725 protein tyrosine phosphatase activity, a child of the rule's term, and the set matches no prokaryotic protein. No wrongly annotated protein has been identified. The review is open.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 1,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0004721",
+        "label": "phosphoprotein phosphatase activity"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0004721 (phosphoprotein phosphatase activity)"
+    ],
+    "go_term_labels": [
+      "phosphoprotein phosphatase activity"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00027651/ARBA00027651-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00027723",
+    "rule_id": "ARBA00027723",
+    "description": "ARBA rule assigning GO:0016740 transferase activity through 1340 alternative condition sets built from InterPro, CATH FunFam, PANTHER and taxon conditions.",
+    "review_summary": "The live rule has 1340 condition sets, 227 of which carry a taxon condition. No condition set was examined against annotated proteins, so none is recorded here and no verdict is given. The term is the general parent of all transferase activities; that makes the annotation uninformative where a specific activity is known, not wrong.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 0,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0016740",
+        "label": "transferase activity"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0016740 (transferase activity)"
+    ],
+    "go_term_labels": [
+      "transferase activity"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00027723/ARBA00027723-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00027853",
+    "rule_id": "ARBA00027853",
+    "description": "Assigns GO:0006720 isoprenoid metabolic process through 89 alternative condition sets built from InterPro entries, PANTHER families and CATH FunFams, 70 of them with a taxon condition. The sets cover terpene synthases and cyclases, prenyl diphosphate synthases, carotenoid synthesis and cleavage enzymes, gibberellin and abscisic acid oxidases, mevalonate pathway enzymes and retinoid-metabolising enzymes.",
+    "review_summary": "All 89 live condition sets were queried. Each set was turned into a UniProtKB query and its Swiss-Prot matches were inspected on 2026-11-09. A match counts as supported when it carries the term or an is_a/part_of descendant with evidence other than ARBA; annotations placed by ARBA rules on Swiss-Prot entries were not counted. Every set has reviewed matches. In 75 sets every reviewed match is supported and in 14 sets (CS1, CS5, CS7, CS9, CS18, CS22, CS25, CS30, CS35, CS37, CS42, CS47, CS58, CS72) some are not. One of these is a demonstrable defect: CS18 (PANTHER PTHR43734 in Pseudomonadati) matches GlpB, a glycerol-3-phosphate dehydrogenase subunit with no isoprenoid role, in 8 of its 22 reviewed matches. Two further matches are doubtful: Q6PQJ9, a 3-oxo-Delta(4,5)-steroid 5-beta-reductase that carries the term only from this rule (CS37), and Q54E48, an NADH dehydrogenase assembly factor homologue (CS1). The retinoid-related sets on ADH7, hormone-sensitive lipase, PNPLA2, LRP1 and CYP2C family members are supported by curated annotation in the isoprenoid branch. QuickGO lists 9043 annotations attributed to this rule, while the rule statistics served by UniProt report zero proteins.",
+    "action": "MODIFY",
+    "status": "COMPLETE",
+    "confidence": 0.6,
+    "num_condition_sets": 89,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0006720",
+        "label": "isoprenoid metabolic process"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0006720 (isoprenoid metabolic process)"
+    ],
+    "go_term_labels": [
+      "isoprenoid metabolic process"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00027853/ARBA00027853-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00027994",
+    "rule_id": "ARBA00027994",
+    "description": "ARBA rule assigning GO:0006338 chromatin remodeling through 167 alternative condition sets built from InterPro, CATH FunFam, PANTHER and taxon conditions.",
+    "review_summary": "The live rule has 167 condition sets. Four (sets 1, 7, 13 and 19) were read for the identity of their signatures; each is a conjunction or a family-specific entry naming histone methyltransferases or bromodomain proteins. In GO, histone modifying activity (GO:0140993), histone deacetylase activity (GO:0004407) and ATP-dependent chromatin remodeler activity (GO:0140658) all sit under GO:0006338 through part_of, so a rule that covers histone modifiers and ATP-dependent remodelers together follows the ontology. A reported false positive on human UBR7 (Q8N806) could not be reproduced: no live condition set matches its signatures and it carries no chromatin annotation in QuickGO. 163 sets were not examined, so no verdict is given.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 4,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0006338",
+        "label": "chromatin remodeling"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0006338 (chromatin remodeling)"
+    ],
+    "go_term_labels": [
+      "chromatin remodeling"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00027994/ARBA00027994-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00028131",
+    "rule_id": "ARBA00028131",
+    "description": "Assigns GO:0004175 (endopeptidase activity) through 104 alternative condition sets built from InterPro entries, PANTHER families and CATH FunFams, most with a taxon. The sets cover caspases, papain-like and legumain cysteine peptidases, aspartic peptidases, proteasome subunits, signal peptidases, trypsin- and subtilisin-like serine peptidases and several metallopeptidase families.",
+    "review_summary": "All 104 live condition sets were checked against Swiss-Prot. They match 1063 reviewed entries in total and every one carries GO:0004175 or a descendant, 630 by manual evidence. One set is weakly founded: set 14 is the single InterPro entry IPR003675, which matches 56399 unreviewed entries. Of its 40 reviewed matches only 10, all CAAX prenyl protease 2 orthologues, have a manual annotation; the other 30, which include lysostaphin resistance protein A and proteins named as uncharacterised, carry the term only from this rule.",
+    "action": "MODIFY",
+    "status": "COMPLETE",
+    "confidence": 0.55,
+    "num_condition_sets": 104,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0004175",
+        "label": "endopeptidase activity"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0004175 (endopeptidase activity)"
+    ],
+    "go_term_labels": [
+      "endopeptidase activity"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00028131/ARBA00028131-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00028334",
+    "rule_id": "ARBA00028334",
+    "description": "Assigns GO:0010468 regulation of gene expression through 929 alternative condition sets of InterPro, PANTHER and CATH FunFam signatures, some with a taxon condition.",
+    "review_summary": "None of the 929 live condition sets has been examined, and no wrongly annotated protein has been identified. The review is open.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 0,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0010468",
+        "label": "regulation of gene expression"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0010468 (regulation of gene expression)"
+    ],
+    "go_term_labels": [
+      "regulation of gene expression"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00028334/ARBA00028334-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00028538",
+    "rule_id": "ARBA00028538",
+    "description": "ARBA rule that assigned GO:0046467 membrane lipid biosynthetic process through 51 alternative condition sets built from InterPro, CATH FunFam and taxon conditions. GO has made the term obsolete and UniProt no longer serves the rule.",
+    "review_summary": "GO:0046467 is obsolete in GO, and UniProt returned 404 for this rule on 2026-11-09. The 51 condition sets recorded are those of the last version reviewed. Nine of them (sets 2, 5, 12, 15, 19, 26, 31, 37 and 45) were checked against Swiss-Prot members and their GO annotations. In each case a matched protein carries a curated annotation to a lipid biosynthetic process: the ceramidases, sphingomyelinase and glucosylceramidase are annotated to biosynthesis of their products ceramide and sphingosine; protein kinase D and the chloroplast phosphoglycerate kinases are annotated to sphingolipid and galactolipid biosynthesis; and the Bacteroidota set selects serine palmitoyltransferases. So these sets reflect existing annotations rather than fold-level errors. The other 42 sets were not checked.",
+    "action": "DEPRECATE",
+    "status": "COMPLETE",
+    "confidence": 0.95,
+    "num_condition_sets": 51,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0046467",
+        "label": "obsolete membrane lipid biosynthetic process"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0046467 (obsolete membrane lipid biosynthetic process)"
+    ],
+    "go_term_labels": [
+      "obsolete membrane lipid biosynthetic process"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00028538/ARBA00028538-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00028584",
+    "rule_id": "ARBA00028584",
+    "description": "Assigns GO:0005778 (peroxisomal membrane) through 16 alternative condition sets covering peroxins (PEX2/10, PEX4, PEX11, PEX12, PEX13, PEX14 and the fungal DysF-domain peroxins), peroxisomal ABC transporters, PMP34 (SLC25A17), ATAD1, fatty acyl-CoA reductase, NBR1 and a Penicillium transporter FunFam, each with a taxon restriction.",
+    "review_summary": "All 16 live condition sets were examined. They match 83 reviewed entries in total; 82 carry GO:0005778 or a descendant, 77 by manual evidence. Fourteen sets are supported by experimental localisation of at least one reviewed match. Two are weaker: the NBR1 set rests on Reactome TAS annotations only, and the Penicillium transporter set includes sorT (B6HNK5), which has no peroxisomal annotation.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.65,
+    "num_condition_sets": 16,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0005778",
+        "label": "peroxisomal membrane"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0005778 (peroxisomal membrane)"
+    ],
+    "go_term_labels": [
+      "peroxisomal membrane"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": "STRONG",
+    "review_link": "../ARBA00028584/ARBA00028584-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00028655",
+    "rule_id": "ARBA00028655",
+    "description": "Assigns GO:0006661 (phosphatidylinositol biosynthetic process) from eleven alternative condition sets covering PI synthase, phosphoinositide kinases and phosphatases, and two lipid-transfer protein families.",
+    "review_summary": "All eleven condition sets of the rule as served on 2026-11-10 were queried in UniProtKB, and the reviewed matches of each were looked up in QuickGO. Sets 8 and 9 select PI synthase, the enzyme that forms phosphatidylinositol. Sets 1 to 7 and 10 select phosphoinositide kinases, phosphatases and transfer proteins. In every one of those sets the reviewed human, mouse or Arabidopsis members carry GO:0006661 itself on curated evidence: Reactome TAS from the pathways R-HSA-1660499, R-HSA-1660516, R-HSA-1483248 and R-HSA-1483226, MGI IDA and IGI for the mouse PIP5K1 kinases (PMID:20622009), and TIGR TAS for the plant PI 4-kinases. The rule therefore reproduces what curators annotated, and transfers it to orthologs. Set 11 is the exception: its FunFam is the FYVE zinc finger, and besides MTMR3 and MTMR4 it matches Lst2 homologs, which have no phosphatase domain and carry the term only from this rule.",
+    "action": "MODIFY",
+    "status": "COMPLETE",
+    "confidence": 0.7,
+    "num_condition_sets": 11,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0006661",
+        "label": "phosphatidylinositol biosynthetic process"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0006661 (phosphatidylinositol biosynthetic process)"
+    ],
+    "go_term_labels": [
+      "phosphatidylinositol biosynthetic process"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00028655/ARBA00028655-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00028665",
+    "rule_id": "ARBA00028665",
+    "description": "Assigns GO:0048468 (cell development) through 392 alternative condition sets. Every set is a conjunction of one to three InterPro entries, PANTHER families or CATH FunFams with a taxon.",
+    "review_summary": "The first 10 of the 392 live condition sets were examined. Six match reviewed entries, and 78 of 79 of those entries carry GO:0048468 or a descendant, 48 by manual evidence. Four of the ten repeat the conditions of a neighbouring set for Archaea or Bacteria and match no UniProtKB entry. The other 382 sets were not examined.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 10,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0048468",
+        "label": "cell development"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0048468 (cell development)"
+    ],
+    "go_term_labels": [
+      "cell development"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00028665/ARBA00028665-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00028985",
+    "rule_id": "ARBA00028985",
+    "description": "Assigns GO:0016070 (RNA metabolic process) through 375 alternative condition sets built from InterPro entries, PANTHER families and CATH FunFams, about a quarter of them with a taxon.",
+    "review_summary": "The first 10 of the 375 live condition sets were examined. They select aminoacyl-tRNA synthetases, RNase III helicases, pseudouridine synthases, terminal nucleotidyltransferases, plant RNA-editing factors and queuine tRNA-ribosyltransferases. In the sets for which both counts were obtained, 2794 of 2794 reviewed matches carry GO:0016070 or a descendant. The other 365 sets were not examined.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 10,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0016070",
+        "label": "RNA metabolic process"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0016070 (RNA metabolic process)"
+    ],
+    "go_term_labels": [
+      "RNA metabolic process"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00028985/ARBA00028985-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00029057",
+    "rule_id": "ARBA00029057",
+    "description": "ARBA rule assigning GO:0065003 protein-containing complex assembly through 88 alternative condition sets built from InterPro, CATH FunFam, PANTHER and taxon conditions.",
+    "review_summary": "The live rule has 88 condition sets. Three (sets 4, 5 and 6) were read for the identity of their InterPro families: gamma-tubulin complex component proteins, dynein regulatory complex proteins and Rubisco accumulation factor 1. None was checked against annotated proteins, and 85 sets were not examined. No false positive has been identified. No verdict is given.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 3,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0065003",
+        "label": "protein-containing complex assembly"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0065003 (protein-containing complex assembly)"
+    ],
+    "go_term_labels": [
+      "protein-containing complex assembly"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00029057/ARBA00029057-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00035048",
+    "rule_id": "ARBA00035048",
+    "description": "Assigns GO:0005681 (spliceosomal complex) through 19 alternative condition sets, each one or two InterPro entries or CATH FunFams with a taxon. The sets cover spliceosomal cyclophilins, DEAH-box helicases, Sm proteins, snRNP proteins and other splicing factors.",
+    "review_summary": "All 19 live condition sets were examined. They match 86 reviewed entries in total; 85 carry GO:0005681 or a descendant, 70 by manual evidence. Every set has at least two reviewed matches with a manual annotation to the term or to a more specific spliceosomal complex. The rule is sound for the proteins that can be checked.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.75,
+    "num_condition_sets": 19,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0005681",
+        "label": "spliceosomal complex"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0005681 (spliceosomal complex)"
+    ],
+    "go_term_labels": [
+      "spliceosomal complex"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00035048/ARBA00035048-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00035068",
+    "rule_id": "ARBA00035068",
+    "description": "Assigns GO:0004438 phosphatidylinositol-3-phosphate phosphatase activity through two condition sets: CATH FunFam 2.30.29.30:FF:000038 in Primates (MTM1, MTMR1, MTMR2) and CATH FunFam 3.30.40.10:FF:000073 in Eukaryota (the FYVE-domain region of MTMR3 and MTMR4).",
+    "review_summary": "Both live condition sets were checked against Swiss-Prot. Set 1 is supported: its 5 reviewed matches all carry GO:0004438 with non-electronic evidence. Set 2 is not specific to myotubularins. Of its 19 reviewed matches, 6 are MTMR3 or MTMR4 experimentally annotated to GO:0004438, for example Q9NYA4 MTMR4 by IDA from PMID:11302699, and 13 are insect Lst2 homologues that have a FYVE domain but no phosphatase domain and carry GO:0004438 only from this rule (e.g. Q9VB70, IEA GO_REF:0000117 with ARBA:ARBA00035068). In UniProtKB as a whole, 126 of 3192 matches of set 2 (3.9%) lack the myotubularin phosphatase domain IPR010569.",
+    "action": "MODIFY",
+    "status": "COMPLETE",
+    "confidence": 0.8,
+    "num_condition_sets": 2,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0004438",
+        "label": "phosphatidylinositol-3-phosphate phosphatase activity"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0004438 (phosphatidylinositol-3-phosphate phosphatase activity)"
+    ],
+    "go_term_labels": [
+      "phosphatidylinositol-3-phosphate phosphatase activity"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00035068/ARBA00035068-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00043370",
+    "rule_id": "ARBA00043370",
+    "description": "Assigns GO:0140115 (export across plasma membrane) through 14 alternative condition sets that identify efflux transporters: bacterial SMR and Emr multidrug exporters, fungal MFS and ABC drug exporters, plant ABCB auxin transporters, metazoan ABCG2, sodium-exporting P-type ATPases, Na+/K+-ATPase alpha subunits, fungal Na+/H+ antiporters and Na+/Ca2+ exchangers.",
+    "review_summary": "All 14 live condition sets were examined by retrieving the Swiss-Prot entries that match the whole conjunction and looking up their curated annotations. Every set has at least one Swiss-Prot match with an experimental annotation to GO:0140115 or an is_a/part_of descendant: xenobiotic detoxification by transmembrane export across the plasma membrane (GO:1990961), sodium, potassium or calcium ion export across plasma membrane (GO:0036376, GO:0097623, GO:1990034), auxin export across the plasma membrane (GO:0010315) and L-cysteine export across plasma membrane (GO:0033228). In several sets only some of the reviewed matches are annotated; for example 4 of 47 in set 3 and 2 of 8 in set 12. The check uses Swiss-Prot, the source ARBA rules are mined from, and does not measure precision on unreviewed entries. The curator concern in geneontology/go-annotation issue 6140 could not be read during this review, so the set or protein it refers to is not identified here.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.6,
+    "num_condition_sets": 14,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0140115",
+        "label": "export across plasma membrane"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0140115 (export across plasma membrane)"
+    ],
+    "go_term_labels": [
+      "export across plasma membrane"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00043370/ARBA00043370-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00045851",
+    "rule_id": "ARBA00045851",
+    "description": "Assigns a FUNCTION comment describing assembly of a p53/TP53 suppression complex that tethers SIRT1 and MDM2, and a possible role in spermatogenesis, to proteins of the MORN repeat-containing protein 3 family across Eukaryota.",
+    "review_summary": "Both condition sets were read. Set 1 (IPR003409 (MORN repeat) AND IPR052472 (MORN repeat-containing protein 3) AND PANTHER:PTHR46511:SF1) has no taxon condition. A query on the PANTHER family (a superset of the required subfamily, so an upper bound) returns 1,648 UniProtKB entries (release 2026_04): 874 vertebrate, 233 arthropod, 75 Viridiplantae and 25 fungal; all 100 plant and fungal entries carry the subfamily. The comment the rule assigns names p53/TP53 and MDM2. No Viridiplantae or fungal entry in UniProtKB matches the Mdm2/Mdm4 family (IPR016495), and one Viridiplantae and no fungal entry matches the p53 family (IPR002117), so in those lineages the text describes partners that are not there. The Drosophila entry A1ZB08 carries the comment with evidence ECO:0000256 ARBA:ARBA00045851. The mechanism itself was shown for mammalian MORN3 (PMID:29681526), and the spermatogenesis role in mouse (PMID:25248657).",
+    "action": "MODIFY",
+    "status": "COMPLETE",
+    "confidence": 0.8,
+    "num_condition_sets": 2,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00045851/ARBA00045851-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00047230",
+    "rule_id": "ARBA00047230",
+    "description": "Assigns GO:0052629 phosphatidylinositol-3,5-bisphosphate 3-phosphatase activity to primate and eukaryotic myotubularin-family proteins through four alternative condition sets: the myotubularin-like phosphatase domain together with the protein-tyrosine phosphatase active site (Primates), and three myotubularin FunFams (Primates, Haplorrhini, Eukaryota).",
+    "review_summary": "All four live condition sets were examined. Every Swiss-Prot entry matching any set carries GO:0052629, and each set contains members annotated from experiments (for example MTMR2, MTMR3, MTMR4, MTMR6, MTMR8, MTM1, MTMR1). In set 1 the active-site condition is what separates the active myotubularins from the catalytically inactive family members: of 63 Swiss-Prot entries with IPR010569, 37 also have IPR016130, and the six human entries without it are the proteins UniProt names \"Inactive phosphatidylinositol 3-phosphatase\" (MTMR5, 9, 10, 11, 12, 13).",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.85,
+    "num_condition_sets": 4,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0052629",
+        "label": "phosphatidylinositol-3,5-bisphosphate 3-phosphatase activity"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0052629 (phosphatidylinositol-3,5-bisphosphate 3-phosphatase activity)"
+    ],
+    "go_term_labels": [
+      "phosphatidylinositol-3,5-bisphosphate 3-phosphatase activity"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": "STRONG",
+    "review_link": "../ARBA00047230/ARBA00047230-review.html",
     "is_reviewed": true
   },
   {
     "id": "ARBA00047239",
     "rule_id": "ARBA00047239",
-    "description": "Rule predicts GO:0032206 (positive regulation of telomere maintenance) using 9 condition sets covering diverse protein families: TRiC chaperonin subunits, TRF2 (shelterin), ATM kinase, PARP enzymes, RTEL1 helicase, MAPK, RuvB-like helicase, and SLX4 endonuclease. The rule combines OR logic across mechanistically distinct families involved in telomere biology, but contains significant redundancy, questionable domain choices, and taxonomic errors.",
-    "review_summary": "ARBA00047239 attempts to capture diverse mechanisms of telomere maintenance regulation but suffers from critical flaws: (1) Complete redundancy in CS3 where both ATM FunFams match identical proteins (Jaccard=1.0); (2) Multiple subset relationships indicating redundant domain coverage; (3) Taxonomic errors mixing archaeal thermosome with eukaryotic CCT under Primates; (4) Overly narrow and scientifically unjustified taxonomic restrictions (Haplorrhini, Homo, Mus); (5) Inclusion of broad multifunctional families (ATM, MAPK, RUVBL) where family membership does not predict telomere function; (6) Functional misclassification where ATM primarily triggers senescence at dysfunctional telomeres (negative regulation) rather than promoting maintenance; (7) Very low average Jaccard similarity (0.043) across condition sets indicating poor biological coherence; (8) Most condition sets are completely disjoint (no protein overlap), suggesting the rule captures unrelated protein families rather than functionally coherent mechanisms. Strong biological support exists for SLX4, RTEL1, and specific PARP family members (tankyrases, PARP1/2), but rule design undermines accuracy through permissive OR logic and inadequate domain specificity.",
-    "action": "MODIFY",
+    "description": "Assigns GO:0032206 positive regulation of telomere maintenance through eight alternative condition sets of CATH FunFams, most with a taxon condition: TRF2 (Mammalia), ATM (Eukaryota), tankyrase (Primates), MAPK1/MAPK3 (Haplorrhini), T-complex protein 1 subunit eta (Catarrhini), RTEL1, RuvB-like helicase (Mus) and SLX4 (Metazoa).",
+    "review_summary": "All eight live condition sets were examined. In each set the Swiss-Prot matches carry GO:0032206 or a descendant with experimental evidence: TERF2 (IDA), ATM (IMP, telomere lengthening), TNKS (IDA, via telomerase), MAPK1 and MAPK3 (IMP), CCT subunits (IMP, via telomerase), RTEL1 (IMP), mouse RUVBL1 and RUVBL2 (IMP, in response to DNA damage) and SLX4 (IDA). The FunFam conjunctions are narrow: each selects two to six Swiss-Prot proteins of a single orthologous group or pair of paralogs.",
+    "action": "ACCEPT",
     "status": "COMPLETE",
-    "confidence": 0.35,
-    "num_condition_sets": 9,
+    "confidence": 0.8,
+    "num_condition_sets": 8,
     "num_entries": 0,
     "go_terms": [
       {
@@ -106,88 +1506,145 @@ window.searchData = [
     "go_term_labels": [
       "positive regulation of telomere maintenance"
     ],
-    "interpro_ids": [
-      "IPR002194 (Chaperonin TCP-1, conserved site)",
-      "IPR054827 (Thermosome subunit alpha)"
-    ],
-    "funfam_ids": [
-      "1.25.40.210:FF:000002 (Telomeric repeat-binding factor 2)",
-      "1.10.560.10:FF:000045 (T-complex protein 1 subunit eta)",
-      "3.30.1010.10:FF:000015 (Serine-protein kinase ATM)",
-      "1.25.40.20:FF:000009 (Poly [ADP-ribose] polymerase)",
-      "3.40.50.300:FF:000431 (Regulator of telomere elongation helicase 1)",
-      "1.10.560.10:FF:000017 (T-complex protein 1 subunit eta)",
-      "1.10.510.10:FF:000624 (Mitogen-activated protein kinase)",
-      "1.10.8.60:FF:000010 (RuvB-like helicase)",
-      "3.30.710.10:FF:000116 (SLX4 structure-specific endonuclease subunit)",
-      "1.10.150.50:FF:000012 (Poly [ADP-ribose] polymerase)",
-      "1.20.1160.20:FF:000006 (Regulator of telomere elongation helicase 1)",
-      "1.10.1070.11:FF:000011 (Serine-protein kinase ATM)",
-      "1.10.10.60:FF:000129 (Telomeric repeat-binding factor 2)",
-      "1.20.1160.20:FF:000009 (Regulator of telomere elongation helicase 1)"
-    ],
-    "condition_types": [
-      "InterPro id",
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": "OVERLY_COMPLEX",
-    "literature_support": "MODERATE",
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": "STRONG",
     "review_link": "../ARBA00047239/ARBA00047239-review.html",
     "is_reviewed": true
   },
   {
     "id": "ARBA00047244",
     "rule_id": "ARBA00047244",
-    "description": "Rule predicting amide catabolic process (GO:0043605) based on four condition sets: (1) urease domains (beta/gamma subunits and active site) across all organisms, (2) PM20D1 FunFams in Eukaryota, (3) ureide pathway hydrolases in Viridiplantae, and (4) (S)-ureidoglycine aminohydrolase in Streptophyta. The rule captures mechanistically diverse enzymes that share the common chemistry of amide bond hydrolysis but serve distinct biological functions.",
-    "review_summary": "This rule captures four mechanistically distinct enzyme families that share the common chemistry of amide bond hydrolysis: (1) ureases with dinuclear Ni(II) centers hydrolyzing urea for nitrogen mobilization and pH modulation, (2) PM20D1 bidirectional synthase/hydrolases regulating thermogenic N-acyl amino acids, (3-4) plant ureide pathway Mn2+-dependent hydrolases (AAH, UAH, UGlyAH) liberating nitrogen from purine catabolites. Condition sets 1, 3, and 4 are strongly supported by extensive structural, biochemical, and genetic evidence demonstrating amide catabolism as the core or primary function. Condition set 2 (PM20D1) is technically accurate but potentially misleading\u2014PM20D1's primary role is thermogenic lipid signaling, not general amide catabolism. While GO:0043605 is biochemically correct for all four sets, more specific annotations would improve biological utility: GO:0043419 (urea catabolic process) for urease, pathway-specific terms for ureide enzymes, and lipid metabolism terms for PM20D1. The rule demonstrates both strength (mechanistic accuracy) and weakness (biological context obscured by overly general annotation).",
+    "description": "ARBA rule that assigned GO:0043605 amide catabolic process through four condition sets: urease signatures, PM20D1 FunFams in Eukaryota, ureide-pathway hydrolase FunFams in Viridiplantae, and an (S)-ureidoglycine aminohydrolase FunFam in Streptophyta. UniProt no longer serves the rule and the GO term is obsolete.",
+    "review_summary": "UniProt returned 404 for this rule on 2026-11-09, and GO:0043605 is now obsolete in GO. The condition sets recorded here are those of the last version reviewed and could not be re-read. Nothing found in that version showed a wrong annotation.",
     "action": "DEPRECATE",
     "status": "COMPLETE",
-    "confidence": 0.8,
+    "confidence": 0.9,
     "num_condition_sets": 4,
     "num_entries": 0,
     "go_terms": [
       {
         "id": "GO:0043605",
-        "label": "amide catabolic process"
+        "label": "obsolete amide catabolic process"
       }
     ],
     "go_term_ids": [
-      "GO:0043605 (amide catabolic process)"
+      "GO:0043605 (obsolete amide catabolic process)"
     ],
     "go_term_labels": [
-      "amide catabolic process"
+      "obsolete amide catabolic process"
     ],
-    "interpro_ids": [
-      "IPR002019 (Urease, beta subunit-like)",
-      "IPR002026 (Urease, gamma/gamma-beta subunit)",
-      "IPR017950 (Urease active site)"
-    ],
-    "funfam_ids": [
-      "3.40.630.10:FF:000044 (Allantoate amidohydrolase)",
-      "2.60.120.10:FF:000137 ((S)-ureidoglycine aminohydrolase)",
-      "1.10.150.900:FF:000003 (N-fatty-acyl-amino acid synthase/hydrolase PM20D1)",
-      "3.30.70.360:FF:000012 (Putative ureidoglycolate hydrolase)",
-      "3.40.630.10:FF:000027 (N-fatty-acyl-amino acid synthase/hydrolase PM20D1)"
-    ],
-    "condition_types": [
-      "InterPro id",
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": "OVERLY_COMPLEX",
-    "literature_support": "STRONG",
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
     "review_link": "../ARBA00047244/ARBA00047244-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00049204",
+    "rule_id": "ARBA00049204",
+    "description": "Assigns the superoxide dismutase reaction 2 superoxide + 2 H(+) = H2O2 + O2 (RHEA:20696, EC 1.15.1.1) through 23 alternative condition sets. Sets 1 and 3 to 8 and the FunFams of superfamilies 1.10.287.990 and 3.55.40.20 identify iron/manganese superoxide dismutases; set 2 and the FunFams of superfamily 2.60.40.200 identify copper/zinc superoxide dismutases. Most sets carry a taxon condition.",
+    "review_summary": "All 23 live condition sets were checked against Swiss-Prot. Each has at least two reviewed matches (2 to 54 per set) and every reviewed match of every set carries EC 1.15.1.1. Checked against Swiss-Prot by UniProtKB query on 2026-11-09; TrEMBL matches were counted but not inspected.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.85,
+    "num_condition_sets": 23,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00049204/ARBA00049204-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00052213",
+    "rule_id": "ARBA00052213",
+    "description": "Assigns 3-oxopropanoate + NADP(+) + CoA = malonyl-CoA + NADPH + H(+) (EC 1.2.1.75) to archaeal proteins matching CATH FunFam 3.40.50.720:FF:000411. The FunFam contains both malonyl-CoA reductases and their aspartate-semialdehyde dehydrogenase paralogs, and the rule has no condition that separates them.",
+    "review_summary": "The rule is right for about half of the proteins it annotates. Of 38 rule-annotated archaeal entries (UniProt, 2026-10-15), 17 match the MCR-type CDD models and are malonyl-CoA reductases, 17 match the archaeal/fungal ASD-type models and are aspartate-semialdehyde dehydrogenases, and 4 match neither. In each genome both paralogs receive the malonyl-CoA reductase annotation. Gene reviews in this repository document both sides: Msed_0709 (the real M. sedula MCR, curated in Swiss-Prot and not rule-annotated) and Msed_1700 (its ASD paralog, misannotated by this rule).",
+    "action": "MODIFY",
+    "status": "COMPLETE",
+    "confidence": 0.5,
+    "num_condition_sets": 1,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": "ACCEPTABLE",
+    "literature_support": "MODERATE",
+    "review_link": "../ARBA00052213/ARBA00052213-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00067001",
+    "rule_id": "ARBA00067001",
+    "description": "Assigns EC 1.2.1.75 in the recommended name (displayed as \"malonyl CoA reductase (malonate semialdehyde-forming)\") to archaeal proteins matching CATH FunFam 3.40.50.720:FF:000411. The FunFam contains both malonyl-CoA reductases and their aspartate-semialdehyde dehydrogenase paralogs, and the rule has no condition that separates them.",
+    "review_summary": "The rule is right for about half of the proteins it annotates. Of 38 rule-annotated archaeal entries (UniProt, 2026-10-15), 17 match the MCR-type CDD models and are malonyl-CoA reductases, 17 match the archaeal/fungal ASD-type models and are aspartate-semialdehyde dehydrogenases, and 4 match neither. In each genome both paralogs receive the malonyl-CoA reductase annotation. Gene reviews in this repository document both sides: Msed_0709 (the real M. sedula MCR, curated in Swiss-Prot and not rule-annotated) and Msed_1700 (its ASD paralog, misannotated by this rule).",
+    "action": "MODIFY",
+    "status": "COMPLETE",
+    "confidence": 0.5,
+    "num_condition_sets": 1,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": "ACCEPTABLE",
+    "literature_support": "MODERATE",
+    "review_link": "../ARBA00067001/ARBA00067001-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00085337",
+    "rule_id": "ARBA00085337",
+    "description": "Assigns GO:0045454 (cell redox homeostasis) through 14 alternative condition sets, each one to three CATH FunFams with a taxon. The sets cover nitric oxide synthases in Primates, fungal and plant thioredoxins, peroxiredoxins, glutathione reductase, KRIT1, selenide water dikinase 1, the yeast mitochondrial porin and fungal SCO1-like proteins.",
+    "review_summary": "All 14 live condition sets were examined. Eleven match reviewed entries, 32 in total, and every one carries GO:0045454, 30 by manual evidence. The KRIT1, mitochondrial porin and SCO1 sets, which could look out of place beside thioredoxins and peroxiredoxins, each rest on an experimental annotation of the protein. The nitric oxide synthase set rests on a Reactome TAS annotation only and is the least supported. Three sets match no UniProtKB entry.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.7,
+    "num_condition_sets": 14,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0045454",
+        "label": "cell redox homeostasis"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0045454 (cell redox homeostasis)"
+    ],
+    "go_term_labels": [
+      "cell redox homeostasis"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00085337/ARBA00085337-review.html",
     "is_reviewed": true
   },
   {
     "id": "ARBA00085883",
     "rule_id": "ARBA00085883",
-    "description": "Rule predicting proteoglycan catabolic process (GO:0030167) based on four condition sets: (1) beta-galactosidase in Eukaryota, (2) alpha-L-iduronidase, (3) beta-hexosaminidase in Mus, and (4) N-acetylglucosamine-6-sulfatase in Metazoa. These enzymes are lysosomal hydrolases involved in sequential degradation of glycosaminoglycan (GAG) chains that constitute proteoglycans. However, beta-galactosidase and beta-hexosaminidase are primarily known for ganglioside degradation, raising questions about annotation specificity.",
-    "review_summary": "This rule captures four lysosomal glycosidases and sulfatases that participate in proteoglycan catabolism through degradation of glycosaminoglycan chains. Condition set 2 (alpha-L-iduronidase) and condition set 4 (N-acetylglucosamine-6-sulfatase) are strongly appropriate\u2014these enzymes are exclusively or primarily involved in degrading dermatan sulfate, heparan sulfate, and related GAG chains, with well-characterized mucopolysaccharidosis phenotypes when deficient. Condition sets 1 (beta-galactosidase) and 3 (beta-hexosaminidase) are technically correct but biologically problematic\u2014while these enzymes do participate in keratan sulfate degradation, their primary biological roles and clinical significance relate to ganglioside catabolism (GM1 and GM2 respectively). The taxonomic scope is inconsistent and raises questions: condition set 1 uses broad Eukaryota scope, condition set 3 uses narrow Mus restriction (creating false negatives), and condition set 4 uses appropriate Metazoa scope. The rule demonstrates a tension between biochemical accuracy (all four enzymes can cleave bonds in GAG chains) and biological interpretation (two are primarily ganglioside-degrading enzymes with secondary GAG functions). More specific annotations or hierarchical annotation strategies would improve utility.",
-    "action": "MODIFY",
+    "description": "Assigns GO:0030167 proteoglycan catabolic process through four alternative condition sets of CATH FunFams: beta-galactosidase (Euarchontoglires), alpha-L-iduronidase (no taxon condition), beta-hexosaminidase (Mus) and N-acetylglucosamine-6-sulfatase (Eukaryota).",
+    "review_summary": "All four live condition sets were examined. The Swiss-Prot matches of every set carry a descendant of GO:0030167 with experimental evidence: beta-galactosidase GLB1 (keratan sulfate proteoglycan catabolic process, IMP), alpha-L-iduronidase (dermatan sulfate and heparan sulfate proteoglycan catabolic process, IDA and IMP), mouse HEXA and HEXB (dermatan sulfate proteoglycan catabolic process, IGI) and N-acetylglucosamine-6-sulfatase (heparan sulfate proteoglycan catabolic process, IDA and IMP). Beta-galactosidase and beta-hexosaminidase also degrade gangliosides; that is a further function, not a reason to withhold this one.",
+    "action": "ACCEPT",
     "status": "COMPLETE",
-    "confidence": 0.6,
+    "confidence": 0.8,
     "num_condition_sets": 4,
     "num_entries": 0,
     "go_terms": [
@@ -203,30 +1660,78 @@ window.searchData = [
       "proteoglycan catabolic process"
     ],
     "interpro_ids": [],
-    "funfam_ids": [
-      "3.20.20.80:FF:000017 (Beta-galactosidase)",
-      "2.60.40.1500:FF:000001 (Alpha-L-iduronidase)",
-      "2.60.120.260:FF:000115 (Beta-galactosidase)",
-      "3.40.720.10:FF:000012 (N-acetylglucosamine-6-sulfatase)",
-      "3.20.20.80:FF:000049 (Beta-hexosaminidase A)",
-      "3.30.379.10:FF:000001 (Beta-hexosaminidase subunit beta)",
-      "3.20.20.80:FF:000059 (Alpha-L-iduronidase)",
-      "2.60.40.10:FF:001526 (Alpha-L-iduronidase)"
-    ],
-    "condition_types": [
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": "REDUNDANT",
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
     "literature_support": "STRONG",
     "review_link": "../ARBA00085883/ARBA00085883-review.html",
     "is_reviewed": true
   },
   {
+    "id": "ARBA00086620",
+    "rule_id": "ARBA00086620",
+    "description": "Assigns GO:0043935 (sexual sporulation resulting in formation of a cellular spore) through four alternative condition sets, each a CATH FunFam with a taxon restriction: 14-3-3 proteins in Saccharomycetes, a syntaxin FunFam in Saccharomycetales, a chitin deacetylase FunFam in Eukaryota excluding Dictyostelia, and the sporulation protein kinase mde3 FunFam in Fungi.",
+    "review_summary": "All four live condition sets were examined. Each matches two reviewed proteins, and all eight carry an experimentally supported annotation to a descendant of GO:0043935 (ascospore formation, ascospore wall assembly or prospore assembly). The rule is sound for the proteins that can be checked.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.75,
+    "num_condition_sets": 4,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0043935",
+        "label": "sexual sporulation resulting in formation of a cellular spore"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0043935 (sexual sporulation resulting in formation of a cellular spore)"
+    ],
+    "go_term_labels": [
+      "sexual sporulation resulting in formation of a cellular spore"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00086620/ARBA00086620-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00087037",
+    "rule_id": "ARBA00087037",
+    "description": "Assigns GO:0005608 (laminin-121 trimer) through two condition sets, each a conjunction of three CATH FunFams with fungi excluded. Set 1 matches laminin subunit beta-2 and set 2 matches laminin subunit gamma-1.",
+    "review_summary": "Both live condition sets were examined. Set 1 matches three Swiss-Prot entries, all laminin subunit beta-2 (human P55268, rat P15800, mouse Q61292); human and mouse LAMB2 are experimentally annotated to laminin-121 trimer. Set 2 matches two Swiss-Prot entries, laminin subunit gamma-1 of human (P11047) and mouse (P02468), both annotated to the term by TAS. GO defines laminin-121 as the alpha1, beta2, gamma1 complex, so both families are subunits of it. Gamma-1 is also a subunit of other laminin trimers; the rule records only this one.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.7,
+    "num_condition_sets": 2,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0005608",
+        "label": "laminin-121 trimer"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0005608 (laminin-121 trimer)"
+    ],
+    "go_term_labels": [
+      "laminin-121 trimer"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00087037/ARBA00087037-review.html",
+    "is_reviewed": true
+  },
+  {
     "id": "ARBA00088058",
     "rule_id": "ARBA00088058",
-    "description": "Rule predicts GO:0051010 (microtubule plus-end binding) for proteins containing CAP-Gly domains (CLIP proteins), EB/RP family proteins, CLASP proteins, or CKAP5, in five condition sets with taxon-specific targeting across Glires, Primates, Fungi, and broader Eukaryota.",
-    "review_summary": "ACCEPT with modifications. The core biological annotation is sound - these are bona fide microtubule plus-end binding proteins. However, the rule requires cleanup to remove redundant FunFams before deployment. After removing the three redundant/subset FunFams identified, this would be a well-structured rule capturing legitimate taxon-specific diversification of plus-end tracking protein families.\n",
+    "description": "Assigns GO:0051010 (microtubule plus-end binding) through five condition sets: CLIP1/CLIP2 CAP-Gly FunFams in Glires, EB1 (MAPRE1) FunFams in Eukaryota, CLASP1/CLASP2 FunFams in Primates, the fungal EB FunFam (BIM1, mal3) and the CKAP5 FunFam in Dikarya (alp14, dis1).",
+    "review_summary": "All five live condition sets were examined. Every Swiss-Prot entry that matches a full conjunction is curated to GO:0051010 itself, and each set has at least one match with experimental evidence: CLIP1 and CLIP2 of mouse and rat (set 1), MAPRE1 of human, mouse and rat (set 2), human CLASP1 and CLASP2 (set 3), S. cerevisiae BIM1 and S. pombe mal3 (set 4), and S. pombe dis1 (set 5; alp14 by TAS).",
     "action": "ACCEPT",
     "status": "COMPLETE",
     "confidence": 0.85,
@@ -245,34 +1750,52 @@ window.searchData = [
       "microtubule plus-end binding"
     ],
     "interpro_ids": [],
-    "funfam_ids": [
-      "1.25.10.10:FF:000019 (Cytoskeleton-associated protein 5)",
-      "2.30.30.190:FF:000001 (Putative CAP-Gly domain-containing linker protein 1)",
-      "1.25.10.10:FF:000005 (CLIP-associating protein 1 isoform 2)",
-      "2.30.30.190:FF:000002 (CAP-Gly domain containing linker protein 1)",
-      "1.20.5.1430:FF:000001 (microtubule-associated protein RP/EB family member 1)",
-      "1.10.418.10:FF:000028 (RP/EB family microtubule-associated protein)",
-      "1.10.418.10:FF:000007 (Microtubule-associated protein, RP/EB family, member 2)",
-      "1.25.10.10:FF:000001 (CLIP-associating protein 1 isoform 2)"
-    ],
-    "condition_types": [
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": "REDUNDANT",
-    "literature_support": "STRONG",
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
     "review_link": "../ARBA00088058/ARBA00088058-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00088072",
+    "rule_id": "ARBA00088072",
+    "description": "Withdrawn ARBA rule. UniProt no longer serves it, and its condition sets were never recorded in this repository. It is reported to have assigned GO:0160103 tRNA (guanine(26)-N2/guanine(27)-N2)-dimethyltransferase activity.",
+    "review_summary": "rest.uniprot.org/arba/ARBA00088072 returns HTTP 404 (\"Resource not found\"), so the rule is withdrawn. Its conditions are unknown, and nothing can be said about which proteins it annotated or whether those annotations were right.",
+    "action": "DEPRECATE",
+    "status": "COMPLETE",
+    "confidence": 0.95,
+    "num_condition_sets": 0,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0160103",
+        "label": "tRNA (guanine(26)-N2/guanine(27)-N2)-dimethyltransferase activity"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0160103 (tRNA (guanine(26)-N2/guanine(27)-N2)-dimethyltransferase activity)"
+    ],
+    "go_term_labels": [
+      "tRNA (guanine(26)-N2/guanine(27)-N2)-dimethyltransferase activity"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00088072/ARBA00088072-review.html",
     "is_reviewed": true
   },
   {
     "id": "ARBA00089174",
     "rule_id": "ARBA00089174",
-    "description": "Rule predicting adaptive thermogenesis (GO:1990845) based on two alternative condition sets: PM20D1 FunFams in Eukaryota, and TRPV1 FunFams in Mus. The rule captures two mechanistically distinct pathways to thermogenic regulation.",
-    "review_summary": "This rule captures two mechanistically distinct pathways to adaptive thermogenesis: (1) PM20D1 functions as a bidirectional synthase/hydrolase regulating N-acyl amino acids (NAAs) that act as mitochondrial uncouplers for UCP1-independent thermogenesis, and (2) TRPV1 acts as a thermosensory and metabolic signaling node that activates thermogenic gene programs via Ca2+\u2192CaMKII/AMPK\u2192SIRT1\u2192PRDM16\u2192UCP1 pathway. Critically, PM20D1 is a direct thermogenic executor while TRPV1 is a thermogenic regulator\u2014 TRPV1's primary functions are nociception and temperature sensation, with thermogenesis being a secondary role. PM20D1 operates cooperatively with FAAH in NAA homeostasis. Both mechanisms are supported by murine studies, with PM20D1 human genetic associations. Two modifications recommended: (a) restrict PM20D1's Eukaryota scope to Mammalia, (b) consider GO:1990847 (positive regulation of adaptive thermogenesis) for precision. The TRPV1 Mus restriction may be overly conservative\u2014evidence exists in rats and other mammals.",
-    "action": "MODIFY",
+    "description": "Assigns GO:1990845 (adaptive thermogenesis) to Mus proteins that match both CATH FunFams 1.10.287.70:FF:000074 and 1.25.40.20:FF:000018, which are named for transient receptor potential cation channel subfamily V member 1.",
+    "review_summary": "The live rule has one condition set and it was examined. Its Swiss-Prot matches are mouse Trpv1 (Q704Y3) and mouse Trpv4 (Q9EPK8); both are annotated by IMP to GO:0002024 diet induced thermogenesis, an is_a/part_of descendant of adaptive thermogenesis. Seven unreviewed Mus entries also match. The PM20D1 condition set described in the previous version of this review is no longer in the rule.",
+    "action": "ACCEPT",
     "status": "COMPLETE",
-    "confidence": 0.85,
-    "num_condition_sets": 2,
+    "confidence": 0.75,
+    "num_condition_sets": 1,
     "num_entries": 0,
     "go_terms": [
       {
@@ -287,29 +1810,21 @@ window.searchData = [
       "adaptive thermogenesis"
     ],
     "interpro_ids": [],
-    "funfam_ids": [
-      "1.10.287.70:FF:000074 (Transient receptor potential cation channel subfamily V member 1)",
-      "1.25.40.20:FF:000018 (Transient receptor potential cation channel subfamily V member 1)",
-      "3.40.630.10:FF:000027 (N-fatty-acyl-amino acid synthase/hydrolase PM20D1)",
-      "1.10.150.900:FF:000003 (N-fatty-acyl-amino acid synthase/hydrolase PM20D1)"
-    ],
-    "condition_types": [
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": "REDUNDANT",
-    "literature_support": "STRONG",
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
     "review_link": "../ARBA00089174/ARBA00089174-review.html",
     "is_reviewed": true
   },
   {
     "id": "ARBA00089175",
     "rule_id": "ARBA00089175",
-    "description": "This rule predicts GO:1990849 (vacuolar localization) for eukaryotic proteins containing two specific CATH FunFam domains: 1.20.58.900:FF:000013 and 2.30.29.30:FF:000315, both associated with pleckstrin homology domain-containing family M member 1 (PLEKHM1). The rule targets the eukaryotic domain (NCBITaxon:2759).",
-    "review_summary": "ARBA00089175 targets a very specific set of proteins (PLEKHM1 family) for vacuolar localization annotation. The rule shows complete domain redundancy between its two FunFam conditions, which both identify the same 3 SwissProt proteins. While the biological basis appears sound (PLEKHM1 proteins are known to localize to lysosomes/vacuoles), the rule design is overly complex given the complete overlap of the two domains. The taxonomic restriction to Eukaryota is appropriate. Deep research is needed to validate whether GO:1990849 (a biological process term for vacuolar localization/transport) is the most appropriate term versus a cellular component term for vacuolar membrane or lumen localization.",
-    "action": "ACCEPT",
+    "description": "ARBA rule assigning GO:1990849 vacuolar localization to eukaryotic proteins that carry two CATH FunFams named for pleckstrin homology domain-containing family M member 1 (PLEKHM1).",
+    "review_summary": "The single condition set was examined. It matches 116 UniProtKB proteins, all metazoan, including human, mouse and rat PLEKHM1. Human and mouse PLEKHM1 are experimentally annotated to GO:0032418 lysosome localization, which is an is_a child of the rule's term GO:1990849. The rule is therefore correct for what it matches but asserts the parent of the term the evidence supports.",
+    "action": "MODIFY",
     "status": "COMPLETE",
-    "confidence": 0.8,
+    "confidence": 0.7,
     "num_condition_sets": 1,
     "num_entries": 0,
     "go_terms": [
@@ -325,14 +1840,8 @@ window.searchData = [
       "vacuolar localization"
     ],
     "interpro_ids": [],
-    "funfam_ids": [
-      "2.30.29.30:FF:000315 (pleckstrin homology domain-containing family M member 1 isoform X1)",
-      "1.20.58.900:FF:000013 (pleckstrin homology domain-containing family M member 1 isoform X1)"
-    ],
-    "condition_types": [
-      "taxon",
-      "FunFam id"
-    ],
+    "funfam_ids": [],
+    "condition_types": [],
     "parsimony_assessment": "ACCEPTABLE",
     "literature_support": "STRONG",
     "review_link": "../ARBA00089175/ARBA00089175-review.html",
@@ -341,11 +1850,11 @@ window.searchData = [
   {
     "id": "ARBA00089176",
     "rule_id": "ARBA00089176",
-    "description": "This rule predicts GO:1990840 (response to lectin) for primate proteins using two distinct condition sets. Condition set 1 requires non-specific serine/threonine protein kinase domains (FunFams 1.10.510.10:FF:000011 and 3.30.200.20:FF:000069) in Primates (NCBITaxon:9443). Condition set 2 requires E1A binding protein p300 domains (FunFams 1.10.246.20:FF:000001 and 1.20.1020.10:FF:000001) in Catarrhini (NCBITaxon:9526, Old World monkeys and apes).",
-    "review_summary": "ARBA00089176 predicts \"response to lectin\" for two mechanistically distinct protein families in primates: serine/threonine kinases and p300/CBP histone acetyltransferases. The rule shows multiple concerning features: (1) very low overlap between domain conditions and existing GO:1990840 annotations (3-9% for kinases, 3-40% for p300), suggesting poor predictive accuracy; (2) complete redundancy in condition set 2 (Jaccard 1.0 for p300 domains); (3) lack of obvious mechanistic connection between these two protein families and lectin response; (4) questionable taxonomic specificity to primates/Catarrhini for what might be a conserved cellular response. The biological rationale for this rule is unclear and requires deep research validation to determine if there is experimental evidence linking these specific protein families to lectin response pathways.",
-    "action": "DEPRECATE",
+    "description": "ARBA rule assigning GO:1990840 response to lectin through two condition sets: two PAK-family kinase FunFams in Primates, and two p300/CBP FunFams in Catarrhini.",
+    "review_summary": "Both live condition sets were examined. Set 1 selects PAK kinases in Primates and set 2 selects p300/CBP in Catarrhini. All five human proteins they match (PAK1, PAK2, PAK3, EP300, CREBBP) carry GO:0002223 stimulatory C-type lectin receptor signaling pathway, a descendant of GO:1990840, as a Reactome traceable author statement (R-HSA-5621481). The other two Swiss-Prot matches are ape PAK3 orthologues. The rule therefore extends a curated human pathway annotation to primate orthologues, using the parent term.",
+    "action": "ACCEPT",
     "status": "COMPLETE",
-    "confidence": 0.25,
+    "confidence": 0.6,
     "num_condition_sets": 2,
     "num_entries": 0,
     "go_terms": [
@@ -361,29 +1870,21 @@ window.searchData = [
       "response to lectin"
     ],
     "interpro_ids": [],
-    "funfam_ids": [
-      "1.10.246.20:FF:000001 (E1A binding protein p300)",
-      "1.20.1020.10:FF:000001 (E1A binding protein p300)",
-      "3.30.200.20:FF:000069 (Non-specific serine/threonine protein kinase)",
-      "1.10.510.10:FF:000011 (Non-specific serine/threonine protein kinase)"
-    ],
-    "condition_types": [
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": "OVERLY_COMPLEX",
-    "literature_support": "WEAK",
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": "MODERATE",
     "review_link": "../ARBA00089176/ARBA00089176-review.html",
     "is_reviewed": true
   },
   {
     "id": "ARBA00089180",
     "rule_id": "ARBA00089180",
-    "description": "Rule predicts GO:1990858 \"cellular response to lectin\" based on two disjoint condition sets: (1) two serine/threonine protein kinase domains in Primates, and (2) two E1A binding protein p300 acetyltransferase domains in Catarrhini (Old World primates). Analysis reveals complete disjunction between condition sets (Jaccard=0.0), complete redundancy within condition set 2 (Jaccard=1.0), and very low coverage of the predicted GO term (3-40% containment, 3-4% Jaccard for all domain-GO pairs).",
-    "review_summary": "ARBA00089180 attempts to predict lectin response function by identifying proteins with general signaling domain architectures. The rule exhibits three critical flaws: (1) Complete redundancy in condition set 2 where two p300 domains always co-occur in the same 5 proteins, making one domain unnecessary; (2) Complete disjunction between condition sets, which combine unrelated protein families (kinases vs acetyltransferases) to predict the same specific function; and (3) Very poor GO term coverage, with only 3-40% containment and 3-4% Jaccard similarity between domains and the predicted GO term. While literature confirms that p300/CBP and certain kinases like Raf-1 do participate in C-type lectin receptor signaling pathways, these proteins are multifunctional components operating in hundreds of cellular processes. The rule conflates participation in lectin signaling with being a lectin-response-specific protein, leading to systematic over-annotation. Domain architecture alone cannot distinguish lectin-specific functions from the myriad other roles these proteins execute.",
-    "action": "DEPRECATE",
+    "description": "Assigns GO:1990858 cellular response to lectin through two alternative condition sets of CATH FunFams with a taxon: a pair of FunFams that together select group I p21-activated kinases (PAK1, PAK2, PAK3) in Primates, and a pair that selects CREBBP and EP300 in Catarrhini.",
+    "review_summary": "Both live condition sets were examined. Set 1 matches five primate Swiss-Prot entries, all PAK1, PAK2 or PAK3; set 2 matches human CREBBP and EP300. The five human proteins are annotated by Reactome (TAS, R-HSA-5621481) to GO:0002223 stimulatory C-type lectin receptor signaling pathway, a child of the rule's term. There is no experimental GO evidence for the term on any matched protein, and the rule assigns the parent rather than the curated child.",
+    "action": "MODIFY",
     "status": "COMPLETE",
-    "confidence": 0.95,
+    "confidence": 0.6,
     "num_condition_sets": 2,
     "num_entries": 0,
     "go_terms": [
@@ -399,19 +1900,212 @@ window.searchData = [
       "cellular response to lectin"
     ],
     "interpro_ids": [],
-    "funfam_ids": [
-      "1.10.246.20:FF:000001 (E1A binding protein p300)",
-      "1.20.1020.10:FF:000001 (E1A binding protein p300)",
-      "3.30.200.20:FF:000069 (Non-specific serine/threonine protein kinase)",
-      "1.10.510.10:FF:000011 (Non-specific serine/threonine protein kinase)"
-    ],
-    "condition_types": [
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": "OVERLY_COMPLEX",
-    "literature_support": "CONTRADICTED",
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": "WEAK",
     "review_link": "../ARBA00089180/ARBA00089180-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00089391",
+    "rule_id": "ARBA00089391",
+    "description": "Assigns GO:1903711 (spermidine transmembrane transport) to fungal proteins in CATH FunFam 1.20.1730.10:FF:000006 (Urea active transporter), the family of the DUR3 polyamine and urea transporter.",
+    "review_summary": "The live rule has one condition set, FunFam 1.20.1730.10:FF:000006 in Fungi, and it was examined. Its Swiss-Prot matches are S. cerevisiae DUR3 (P33413), C. albicans DUR3 (A0A1D8PDB5, named Spermidine transporter DUR3) and S. pombe dur3-1 (O94469). P33413 has spermidine transmembrane transporter activity by IDA and IMP from PMID:17218313, and A0A1D8PDB5 by IMP from PMID:22033918; GO:0015606 is part_of GO:1903711. The MFS multidrug transporter set that an earlier version of the rule contained (FunFam 1.20.1250.20:FF:000011 in Taphrinomycotina) is no longer in the rule.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.75,
+    "num_condition_sets": 1,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:1903711",
+        "label": "spermidine transmembrane transport"
+      }
+    ],
+    "go_term_ids": [
+      "GO:1903711 (spermidine transmembrane transport)"
+    ],
+    "go_term_labels": [
+      "spermidine transmembrane transport"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": "MODERATE",
+    "review_link": "../ARBA00089391/ARBA00089391-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00089395",
+    "rule_id": "ARBA00089395",
+    "description": "A withdrawn rule. As recorded before withdrawal it had one condition set, CATH FunFam 1.20.1250.20:FF:000011 in Taphrinomycotina, and the earlier analysis of it recorded the consequent as GO:1903710 spermine transmembrane transport.",
+    "review_summary": "UniProt no longer serves this rule: rest.uniprot.org/arba/ARBA00089395 returned \"Resource not found\" on 2026-11-09. Its annotation can therefore not be re-examined. For the record, the two recorded conditions match 10 Swiss-Prot entries, all S. pombe major facilitator transporters, and only one of them (Q7Z9I0) carries GO:1903710.",
+    "action": "DEPRECATE",
+    "status": "COMPLETE",
+    "confidence": 0.9,
+    "num_condition_sets": 1,
+    "num_entries": 0,
+    "go_terms": [],
+    "go_term_ids": [],
+    "go_term_labels": [],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00089395/ARBA00089395-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00090047",
+    "rule_id": "ARBA00090047",
+    "description": "Withdrawn rule. As last recorded it assigned GO:1904498 (protein localization to mitotic actomyosin contractile ring) to Taphrinomycotina proteins in CATH FunFam 1.20.58.2220:FF:000006 (Cytokinesis protein sepA), the family of S. pombe for3 (Formin-3) and cdc12.",
+    "review_summary": "UniProt returned HTTP 404 for this rule on 2026-11-09, so it has been withdrawn. The condition set and the GO term are those recorded in the previous version of this review and could not be re-read. The FunFam is named for Aspergillus nidulans sepA (P78621); its Swiss-Prot members in Taphrinomycotina are S. pombe for3 (O94532, Formin-3) and cdc12 (Q10059). No protein in Taphrinomycotina has a curated annotation to GO:1904498.",
+    "action": "DEPRECATE",
+    "status": "COMPLETE",
+    "confidence": 0.9,
+    "num_condition_sets": 1,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:1904498",
+        "label": "protein localization to mitotic actomyosin contractile ring"
+      }
+    ],
+    "go_term_ids": [
+      "GO:1904498 (protein localization to mitotic actomyosin contractile ring)"
+    ],
+    "go_term_labels": [
+      "protein localization to mitotic actomyosin contractile ring"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00090047/ARBA00090047-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00090252",
+    "rule_id": "ARBA00090252",
+    "description": "Assigns GO:0000055 (ribosomal large subunit export from nucleus) to two groups of budding-yeast ribosomal proteins: ubiquitin-ribosomal protein eL40 fusions in Saccharomycotina, and ribosomal protein uL1 (L10a) in Saccharomycetes. Each condition set requires two CATH FunFams and a taxon.",
+    "review_summary": "Both live condition sets were examined. Set 2 (uL1) is supported: Saccharomyces cerevisiae RPL1A and RPL1B carry GO:0000055 with IMP evidence from SGD. Set 1 (eL40) has no manual support: its two reviewed matches, RPL40A and RPL40B, carry the term only through this rule. Nothing checked shows the eL40 annotation to be wrong, so the rule is left undecided on that set.",
+    "action": "UNDECIDED",
+    "status": "IN_PROGRESS",
+    "confidence": null,
+    "num_condition_sets": 2,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0000055",
+        "label": "ribosomal large subunit export from nucleus"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0000055 (ribosomal large subunit export from nucleus)"
+    ],
+    "go_term_labels": [
+      "ribosomal large subunit export from nucleus"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00090252/ARBA00090252-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00090718",
+    "rule_id": "ARBA00090718",
+    "description": "Assigns GO:0047545 ((S)-2-hydroxyglutarate dehydrogenase activity) to proteins that have the FAD dependent oxidoreductase domain (IPR006076), the FAD/NAD(P)-binding domain superfamily (IPR036188) and membership of PANTHER family PTHR43104 (L-2-hydroxyglutarate dehydrogenase, mitochondrial).",
+    "review_summary": "The live rule has one condition set, a three-way conjunction that selects the L-2-hydroxyglutarate dehydrogenase family. All 17 reviewed entries that match it carry GO:0047545, 14 of them by manual evidence, including experimentally characterised enzymes from human, Arabidopsis, Drosophila and Escherichia coli. The rule is sound.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.85,
+    "num_condition_sets": 1,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0047545",
+        "label": "(S)-2-hydroxyglutarate dehydrogenase activity"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0047545 ((S)-2-hydroxyglutarate dehydrogenase activity)"
+    ],
+    "go_term_labels": [
+      "(S)-2-hydroxyglutarate dehydrogenase activity"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00090718/ARBA00090718-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00092121",
+    "rule_id": "ARBA00092121",
+    "description": "ARBA rule that assigned GO:1903833 positive regulation of cellular response to amino acid starvation to fungal proteins in CATH FunFam 3.10.20.30:FF:000003 (Developmentally-regulated GTP-binding protein 1). UniProt no longer serves the rule.",
+    "review_summary": "UniProt returned 404 for this rule on 2026-11-09. The condition set recorded is that of the last version reviewed. The family is not unrelated to the process: the two yeast members of the FunFam, Rbg1 and Rbg2, are annotated by SGD to GO:0034198 cellular response to amino acid starvation with genetic-interaction evidence. The rule asserted the regulation term GO:1903833 rather than GO:0034198.",
+    "action": "DEPRECATE",
+    "status": "COMPLETE",
+    "confidence": 0.9,
+    "num_condition_sets": 1,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:1903833",
+        "label": "positive regulation of cellular response to amino acid starvation"
+      }
+    ],
+    "go_term_ids": [
+      "GO:1903833 (positive regulation of cellular response to amino acid starvation)"
+    ],
+    "go_term_labels": [
+      "positive regulation of cellular response to amino acid starvation"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": null,
+    "review_link": "../ARBA00092121/ARBA00092121-review.html",
+    "is_reviewed": true
+  },
+  {
+    "id": "ARBA00095398",
+    "rule_id": "ARBA00095398",
+    "description": "Assigns GO:0034517 (ribophagy) to Saccharomycotina proteins that match both 60S ribosomal protein L12 (uL11) CATH FunFams, 1.10.10.250:FF:000002 and 3.30.1550.10:FF:000002.",
+    "review_summary": "The rule has one condition set and it was examined. Its Swiss-Prot matches are S. cerevisiae RPL12A (P0CX53) and RPL12B (P0CX54) and C. albicans RPL12 (Q5AJF7). SGD annotates both S. cerevisiae proteins to ribophagy by IGI from PMID:39934334, \"Rpl12 is a conserved ribophagy receptor\", with the qualifier acts_upstream_of_or_within. The C. albicans protein has no curated ribophagy annotation, and the 159 unreviewed matches across Saccharomycotina rest on transfer from the two S. cerevisiae paralogs.",
+    "action": "ACCEPT",
+    "status": "COMPLETE",
+    "confidence": 0.6,
+    "num_condition_sets": 1,
+    "num_entries": 0,
+    "go_terms": [
+      {
+        "id": "GO:0034517",
+        "label": "ribophagy"
+      }
+    ],
+    "go_term_ids": [
+      "GO:0034517 (ribophagy)"
+    ],
+    "go_term_labels": [
+      "ribophagy"
+    ],
+    "interpro_ids": [],
+    "funfam_ids": [],
+    "condition_types": [],
+    "parsimony_assessment": null,
+    "literature_support": "MODERATE",
+    "review_link": "../ARBA00095398/ARBA00095398-review.html",
     "is_reviewed": true
   },
   {
@@ -8711,58 +10405,6 @@ window.searchData = [
     "is_reviewed": false
   },
   {
-    "id": "ARBA00026708",
-    "rule_id": "ARBA00026708",
-    "description": "",
-    "review_summary": "",
-    "action": null,
-    "status": "NOT_REVIEWED",
-    "confidence": null,
-    "num_condition_sets": 11,
-    "num_entries": 0,
-    "go_terms": [
-      {
-        "id": "GO:0007031",
-        "label": "peroxisome organization"
-      }
-    ],
-    "go_term_ids": [
-      "GO:0007031 (peroxisome organization)"
-    ],
-    "go_term_labels": [
-      "peroxisome organization"
-    ],
-    "interpro_ids": [
-      "IPR013083 (Zinc finger, RING/FYVE/PHD-type)",
-      "IPR017375 (Peroxisome assembly protein 12)",
-      "IPR015943 (WD40/YVTN repeat-like-containing domain superfamily)",
-      "IPR044536 (Peroxisomal targeting signal 2 receptor)",
-      "IPR010482 (TECPR1-like, DysF domain)",
-      "IPR001680 (WD40 repeat)",
-      "IPR008733 (Peroxisomal biogenesis factor 11)",
-      "IPR006845 (Pex, N-terminal)"
-    ],
-    "funfam_ids": [
-      "3.40.50.300:FF:000473 (Vacuolar sorting-associated 1 protein)",
-      "3.30.40.10:FF:000266 (Peroxisome assembly protein 12)",
-      "1.10.510.10:FF:000397 (Serine/threonine-protein kinase KIN4)",
-      "2.130.10.10:FF:000372 (Peroxisomal biogenesis factor 7)",
-      "1.25.40.10:FF:000167 (Mitochondrial fission 1 protein)",
-      "1.20.120.1240:FF:000002 (Dynamin-1-like protein isoform 1)",
-      "1.25.40.10:FF:000218 (Peroxisomal targeting signal receptor)"
-    ],
-    "condition_types": [
-      "InterPro id",
-      "PANTHER id",
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": null,
-    "literature_support": null,
-    "review_link": null,
-    "is_reviewed": false
-  },
-  {
     "id": "ARBA00026711",
     "rule_id": "ARBA00026711",
     "description": "",
@@ -10820,52 +12462,6 @@ window.searchData = [
       "3.40.50.360:FF:000023 (NADPH--cytochrome P450 reductase)"
     ],
     "condition_types": [
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": null,
-    "literature_support": null,
-    "review_link": null,
-    "is_reviewed": false
-  },
-  {
-    "id": "ARBA00026799",
-    "rule_id": "ARBA00026799",
-    "description": "",
-    "review_summary": "",
-    "action": null,
-    "status": "NOT_REVIEWED",
-    "confidence": null,
-    "num_condition_sets": 6,
-    "num_entries": 0,
-    "go_terms": [
-      {
-        "id": "GO:0003951",
-        "label": "NAD+ kinase activity"
-      }
-    ],
-    "go_term_ids": [
-      "GO:0003951 (NAD+ kinase activity)"
-    ],
-    "go_term_labels": [
-      "NAD+ kinase activity"
-    ],
-    "interpro_ids": [
-      "IPR016064 (NAD kinase/diacylglycerol kinase-like domain superfamily)",
-      "IPR002504 (NAD kinase)"
-    ],
-    "funfam_ids": [
-      "3.40.50.10330:FF:000014 (NAD kinase a)",
-      "3.40.50.10330:FF:000021 (NAD kinase 2, mitochondrial)",
-      "2.60.200.30:FF:000002 (NAD kinase)",
-      "2.60.200.30:FF:000003 (NAD kinase b)",
-      "3.40.50.10330:FF:000004 (NAD kinase)",
-      "2.60.200.30:FF:000009 (Poly(P)/ATP NAD kinase)",
-      "2.60.200.30:FF:000001 (NAD kinase)"
-    ],
-    "condition_types": [
-      "InterPro id",
-      "PANTHER id",
       "taxon",
       "FunFam id"
     ],
@@ -41806,55 +43402,6 @@ window.searchData = [
     "is_reviewed": false
   },
   {
-    "id": "ARBA00028584",
-    "rule_id": "ARBA00028584",
-    "description": "",
-    "review_summary": "",
-    "action": null,
-    "status": "NOT_REVIEWED",
-    "confidence": null,
-    "num_condition_sets": 9,
-    "num_entries": 0,
-    "go_terms": [
-      {
-        "id": "GO:0005778",
-        "label": "peroxisomal membrane"
-      }
-    ],
-    "go_term_ids": [
-      "GO:0005778 (peroxisomal membrane)"
-    ],
-    "go_term_labels": [
-      "peroxisomal membrane"
-    ],
-    "interpro_ids": [
-      "IPR010482 (TECPR1-like, DysF domain)"
-    ],
-    "funfam_ids": [
-      "1.20.1560.10:FF:000036 (ATP-binding cassette sub-family D member 3)",
-      "1.10.8.10:FF:000033 (Next to BRCA1 gene 1 protein)",
-      "1.10.10.10:FF:000296 (Peroxisomal membrane protein PEX14)",
-      "3.40.50.300:FF:000800 (ATP-binding cassette sub-family D member 1)",
-      "3.30.60.90:FF:000007 (Next to BRCA1 gene 1 protein)",
-      "3.40.50.300:FF:000636 (ATP-binding cassette sub-family D member 3)",
-      "2.60.40.10:FF:000199 (next to BRCA1 gene 1 protein-like)",
-      "2.30.30.40:FF:000109 (Peroxisomal biogenesis factor 13)",
-      "1.50.40.10:FF:000045 (peroxisomal membrane protein PMP34 isoform X1)",
-      "1.50.40.10:FF:000023 (peroxisomal membrane protein PMP34 isoform X1)",
-      "3.40.50.720:FF:000477 (Peroxisomal 2,4-dienoyl-CoA reductase)",
-      "3.30.40.10:FF:000266 (Peroxisome assembly protein 12)"
-    ],
-    "condition_types": [
-      "InterPro id",
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": null,
-    "literature_support": null,
-    "review_link": null,
-    "is_reviewed": false
-  },
-  {
     "id": "ARBA00028587",
     "rule_id": "ARBA00028587",
     "description": "",
@@ -70272,42 +71819,6 @@ window.searchData = [
     "is_reviewed": false
   },
   {
-    "id": "ARBA00035068",
-    "rule_id": "ARBA00035068",
-    "description": "",
-    "review_summary": "",
-    "action": null,
-    "status": "NOT_REVIEWED",
-    "confidence": null,
-    "num_condition_sets": 2,
-    "num_entries": 0,
-    "go_terms": [
-      {
-        "id": "GO:0004438",
-        "label": "phosphatidylinositol-3-phosphate phosphatase activity"
-      }
-    ],
-    "go_term_ids": [
-      "GO:0004438 (phosphatidylinositol-3-phosphate phosphatase activity)"
-    ],
-    "go_term_labels": [
-      "phosphatidylinositol-3-phosphate phosphatase activity"
-    ],
-    "interpro_ids": [],
-    "funfam_ids": [
-      "3.30.40.10:FF:000073 (myotubularin-related protein 4 isoform X2)",
-      "2.30.29.30:FF:000038 (Myotubularin 1, isoform CRA_a)"
-    ],
-    "condition_types": [
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": null,
-    "literature_support": null,
-    "review_link": null,
-    "is_reviewed": false
-  },
-  {
     "id": "ARBA00035069",
     "rule_id": "ARBA00035069",
     "description": "",
@@ -75472,60 +76983,6 @@ window.searchData = [
     "funfam_ids": [
       "1.10.287.210:FF:000002 (Syncytin-2)",
       "3.40.50.300:FF:000088 (Ras-related C3 botulinum toxin substrate 1)"
-    ],
-    "condition_types": [
-      "InterPro id",
-      "PANTHER id",
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": null,
-    "literature_support": null,
-    "review_link": null,
-    "is_reviewed": false
-  },
-  {
-    "id": "ARBA00043370",
-    "rule_id": "ARBA00043370",
-    "description": "",
-    "review_summary": "",
-    "action": null,
-    "status": "NOT_REVIEWED",
-    "confidence": null,
-    "num_condition_sets": 12,
-    "num_entries": 0,
-    "go_terms": [
-      {
-        "id": "GO:0140115",
-        "label": "export across plasma membrane"
-      }
-    ],
-    "go_term_ids": [
-      "GO:0140115 (export across plasma membrane)"
-    ],
-    "go_term_labels": [
-      "export across plasma membrane"
-    ],
-    "interpro_ids": [
-      "IPR005829 (Sugar transporter, conserved site)",
-      "IPR020846 (Major facilitator superfamily domain)"
-    ],
-    "funfam_ids": [
-      "1.20.1560.10:FF:000009 (ABC transporter B family member 1)",
-      "2.70.150.10:FF:000016 (Calcium-transporting P-type ATPase putative)",
-      "3.40.1110.10:FF:000039 (Sodium P-type ATPase)",
-      "2.40.30.170:FF:000003 (Multidrug resistance protein A)",
-      "1.20.1420.30:FF:000003 (sodium/calcium exchanger 1 isoform X1)",
-      "1.20.5.170:FF:000068 (Sodium/potassium-transporting ATPase subunit beta)",
-      "3.40.50.300:FF:000054 (ABC multidrug transporter atrF)",
-      "1.20.1250.20:FF:000172 (MFS multidrug resistance transporter)",
-      "3.40.50.1000:FF:000028 (Calcium-transporting P-type ATPase, putative)",
-      "1.20.1530.20:FF:000015 (Na(+)/H(+) antiporter 2)",
-      "1.20.1720.10:FF:000009 (MFS multidrug transporter)",
-      "1.10.3730.20:FF:000001 (Quaternary ammonium compound resistance transporter SugE)",
-      "1.20.1420.30:FF:000001 (sodium/calcium exchanger 1 isoform X1)",
-      "1.20.1720.10:FF:000002 (Multidrug resistance protein B)",
-      "1.20.1110.10:FF:000015 (Sodium ion P-type ATPase)"
     ],
     "condition_types": [
       "InterPro id",
@@ -91833,46 +93290,6 @@ window.searchData = [
     "condition_types": [
       "InterPro id",
       "PANTHER id",
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": null,
-    "literature_support": null,
-    "review_link": null,
-    "is_reviewed": false
-  },
-  {
-    "id": "ARBA00047230",
-    "rule_id": "ARBA00047230",
-    "description": "",
-    "review_summary": "",
-    "action": null,
-    "status": "NOT_REVIEWED",
-    "confidence": null,
-    "num_condition_sets": 3,
-    "num_entries": 0,
-    "go_terms": [
-      {
-        "id": "GO:0052629",
-        "label": "phosphatidylinositol-3,5-bisphosphate 3-phosphatase activity"
-      }
-    ],
-    "go_term_ids": [
-      "GO:0052629 (phosphatidylinositol-3,5-bisphosphate 3-phosphatase activity)"
-    ],
-    "go_term_labels": [
-      "phosphatidylinositol-3,5-bisphosphate 3-phosphatase activity"
-    ],
-    "interpro_ids": [
-      "IPR000387 (Tyrosine-specific protein phosphatases domain)",
-      "IPR010569 (Myotubularin-like, phosphatase domain)"
-    ],
-    "funfam_ids": [
-      "3.30.40.10:FF:000073 (myotubularin-related protein 4 isoform X2)",
-      "2.30.29.30:FF:000038 (Myotubularin 1, isoform CRA_a)"
-    ],
-    "condition_types": [
-      "InterPro id",
       "taxon",
       "FunFam id"
     ],
@@ -139720,53 +141137,6 @@ window.searchData = [
     "is_reviewed": false
   },
   {
-    "id": "ARBA00085337",
-    "rule_id": "ARBA00085337",
-    "description": "",
-    "review_summary": "",
-    "action": null,
-    "status": "NOT_REVIEWED",
-    "confidence": null,
-    "num_condition_sets": 9,
-    "num_entries": 0,
-    "go_terms": [
-      {
-        "id": "GO:0045454",
-        "label": "cell redox homeostasis"
-      }
-    ],
-    "go_term_ids": [
-      "GO:0045454 (cell redox homeostasis)"
-    ],
-    "go_term_labels": [
-      "cell redox homeostasis"
-    ],
-    "interpro_ids": [],
-    "funfam_ids": [
-      "3.50.50.60:FF:000141 (Glutathione reductase)",
-      "1.25.40.20:FF:000120 (krev interaction trapped protein 1 isoform X1)",
-      "3.40.50.80:FF:000003 (Nitric oxide synthase)",
-      "1.20.80.10:FF:000016 (Krev interaction trapped protein 1)",
-      "3.40.30.10:FF:000063 (2-Cys peroxiredoxin BAS1, chloroplastic)",
-      "3.40.30.10:FF:000104 (Thioredoxin)",
-      "2.40.160.10:FF:000016 (Por1p)",
-      "2.30.29.30:FF:000227 (krev interaction trapped protein 1 isoform X1)",
-      "3.30.390.30:FF:000003 (Glutathione reductase)",
-      "3.40.30.10:FF:000250 (Thioredoxin F-type, chloroplastic)",
-      "3.90.1230.10:FF:000001 (Nitric oxide synthase, brain)",
-      "3.40.30.10:FF:000003 (Peroxiredoxin 1)",
-      "3.40.30.10:FF:000013 (Blast:Protein SCO1 homolog, mitochondrial)"
-    ],
-    "condition_types": [
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": null,
-    "literature_support": null,
-    "review_link": null,
-    "is_reviewed": false
-  },
-  {
     "id": "ARBA00085338",
     "rule_id": "ARBA00085338",
     "description": "",
@@ -186717,46 +188087,6 @@ window.searchData = [
     "is_reviewed": false
   },
   {
-    "id": "ARBA00086620",
-    "rule_id": "ARBA00086620",
-    "description": "",
-    "review_summary": "",
-    "action": null,
-    "status": "NOT_REVIEWED",
-    "confidence": null,
-    "num_condition_sets": 5,
-    "num_entries": 0,
-    "go_terms": [
-      {
-        "id": "GO:0043935",
-        "label": "sexual sporulation resulting in formation of a cellular spore"
-      }
-    ],
-    "go_term_ids": [
-      "GO:0043935 (sexual sporulation resulting in formation of a cellular spore)"
-    ],
-    "go_term_labels": [
-      "sexual sporulation resulting in formation of a cellular spore"
-    ],
-    "interpro_ids": [],
-    "funfam_ids": [
-      "1.10.510.10:FF:000624 (Mitogen-activated protein kinase)",
-      "1.20.58.70:FF:000008 (Syntaxin family protein)",
-      "3.20.20.370:FF:000008 (Chitin deacetylase)",
-      "1.20.190.20:FF:000002 (14-3-3 protein epsilon)",
-      "3.30.740.10:FF:000001 (Dynein light chain)",
-      "3.30.200.20:FF:001493 (Sporulation protein kinase mde3)"
-    ],
-    "condition_types": [
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": null,
-    "literature_support": null,
-    "review_link": null,
-    "is_reviewed": false
-  },
-  {
     "id": "ARBA00086621",
     "rule_id": "ARBA00086621",
     "description": "",
@@ -202068,42 +203398,6 @@ window.searchData = [
     ],
     "condition_types": [
       "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": null,
-    "literature_support": null,
-    "review_link": null,
-    "is_reviewed": false
-  },
-  {
-    "id": "ARBA00087037",
-    "rule_id": "ARBA00087037",
-    "description": "",
-    "review_summary": "",
-    "action": null,
-    "status": "NOT_REVIEWED",
-    "confidence": null,
-    "num_condition_sets": 1,
-    "num_entries": 0,
-    "go_terms": [
-      {
-        "id": "GO:0005608",
-        "label": "laminin-121 trimer"
-      }
-    ],
-    "go_term_ids": [
-      "GO:0005608 (laminin-121 trimer)"
-    ],
-    "go_term_labels": [
-      "laminin-121 trimer"
-    ],
-    "interpro_ids": [],
-    "funfam_ids": [
-      "2.10.25.10:FF:000011 (Cadherin EGF LAG seven-pass G-type receptor)",
-      "2.10.25.10:FF:000065 (Laminin subunit beta 1)",
-      "2.10.25.10:FF:000333 (netrin-4 isoform X2)"
-    ],
-    "condition_types": [
       "FunFam id"
     ],
     "parsimony_assessment": null,
@@ -287493,42 +288787,6 @@ window.searchData = [
     "is_reviewed": false
   },
   {
-    "id": "ARBA00089391",
-    "rule_id": "ARBA00089391",
-    "description": "",
-    "review_summary": "",
-    "action": null,
-    "status": "NOT_REVIEWED",
-    "confidence": null,
-    "num_condition_sets": 2,
-    "num_entries": 0,
-    "go_terms": [
-      {
-        "id": "GO:1903711",
-        "label": "spermidine transmembrane transport"
-      }
-    ],
-    "go_term_ids": [
-      "GO:1903711 (spermidine transmembrane transport)"
-    ],
-    "go_term_labels": [
-      "spermidine transmembrane transport"
-    ],
-    "interpro_ids": [],
-    "funfam_ids": [
-      "1.20.1730.10:FF:000006 (Urea active transporter)",
-      "1.20.1250.20:FF:000011 (MFS multidrug transporter, putative)"
-    ],
-    "condition_types": [
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": null,
-    "literature_support": null,
-    "review_link": null,
-    "is_reviewed": false
-  },
-  {
     "id": "ARBA00089392",
     "rule_id": "ARBA00089392",
     "description": "",
@@ -287630,41 +288888,6 @@ window.searchData = [
       "2.70.170.10:FF:000007 (Gamma-aminobutyric acid type A receptor rho2 subunit)",
       "1.20.58.390:FF:000032 (gamma-aminobutyric acid receptor subunit epsilon)",
       "2.70.170.10:FF:000003 (Putative gamma-aminobutyric acid receptor subunit gamma-2)"
-    ],
-    "condition_types": [
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": null,
-    "literature_support": null,
-    "review_link": null,
-    "is_reviewed": false
-  },
-  {
-    "id": "ARBA00089395",
-    "rule_id": "ARBA00089395",
-    "description": "",
-    "review_summary": "",
-    "action": null,
-    "status": "NOT_REVIEWED",
-    "confidence": null,
-    "num_condition_sets": 1,
-    "num_entries": 0,
-    "go_terms": [
-      {
-        "id": "GO:1903710",
-        "label": "spermine transmembrane transport"
-      }
-    ],
-    "go_term_ids": [
-      "GO:1903710 (spermine transmembrane transport)"
-    ],
-    "go_term_labels": [
-      "spermine transmembrane transport"
-    ],
-    "interpro_ids": [],
-    "funfam_ids": [
-      "1.20.1250.20:FF:000011 (MFS multidrug transporter, putative)"
     ],
     "condition_types": [
       "taxon",
@@ -311430,41 +312653,6 @@ window.searchData = [
     "is_reviewed": false
   },
   {
-    "id": "ARBA00090047",
-    "rule_id": "ARBA00090047",
-    "description": "",
-    "review_summary": "",
-    "action": null,
-    "status": "NOT_REVIEWED",
-    "confidence": null,
-    "num_condition_sets": 1,
-    "num_entries": 0,
-    "go_terms": [
-      {
-        "id": "GO:1904498",
-        "label": "protein localization to mitotic actomyosin contractile ring"
-      }
-    ],
-    "go_term_ids": [
-      "GO:1904498 (protein localization to mitotic actomyosin contractile ring)"
-    ],
-    "go_term_labels": [
-      "protein localization to mitotic actomyosin contractile ring"
-    ],
-    "interpro_ids": [],
-    "funfam_ids": [
-      "1.20.58.2220:FF:000006 (Cytokinesis protein sepA)"
-    ],
-    "condition_types": [
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": null,
-    "literature_support": null,
-    "review_link": null,
-    "is_reviewed": false
-  },
-  {
     "id": "ARBA00090048",
     "rule_id": "ARBA00090048",
     "description": "",
@@ -318586,44 +319774,6 @@ window.searchData = [
     "interpro_ids": [],
     "funfam_ids": [
       "2.60.40.10:FF:000813 (Vesicle-associated protein 1-1)"
-    ],
-    "condition_types": [
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": null,
-    "literature_support": null,
-    "review_link": null,
-    "is_reviewed": false
-  },
-  {
-    "id": "ARBA00090252",
-    "rule_id": "ARBA00090252",
-    "description": "",
-    "review_summary": "",
-    "action": null,
-    "status": "NOT_REVIEWED",
-    "confidence": null,
-    "num_condition_sets": 2,
-    "num_entries": 0,
-    "go_terms": [
-      {
-        "id": "GO:0000055",
-        "label": "ribosomal large subunit export from nucleus"
-      }
-    ],
-    "go_term_ids": [
-      "GO:0000055 (ribosomal large subunit export from nucleus)"
-    ],
-    "go_term_labels": [
-      "ribosomal large subunit export from nucleus"
-    ],
-    "interpro_ids": [],
-    "funfam_ids": [
-      "3.10.20.90:FF:000014 (Ubiquitin-60S ribosomal L40 fusion)",
-      "3.30.190.20:FF:000006 (Ribosomal protein)",
-      "4.10.1060.50:FF:000001 (ubiquitin-60S ribosomal protein L40)",
-      "3.30.190.20:FF:000009 (Ribosomal protein L10a)"
     ],
     "condition_types": [
       "taxon",
@@ -335401,40 +336551,6 @@ window.searchData = [
     ],
     "condition_types": [
       "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": null,
-    "literature_support": null,
-    "review_link": null,
-    "is_reviewed": false
-  },
-  {
-    "id": "ARBA00090718",
-    "rule_id": "ARBA00090718",
-    "description": "",
-    "review_summary": "",
-    "action": null,
-    "status": "NOT_REVIEWED",
-    "confidence": null,
-    "num_condition_sets": 1,
-    "num_entries": 0,
-    "go_terms": [
-      {
-        "id": "GO:0047545",
-        "label": "(S)-2-hydroxyglutarate dehydrogenase activity"
-      }
-    ],
-    "go_term_ids": [
-      "GO:0047545 ((S)-2-hydroxyglutarate dehydrogenase activity)"
-    ],
-    "go_term_labels": [
-      "(S)-2-hydroxyglutarate dehydrogenase activity"
-    ],
-    "interpro_ids": [],
-    "funfam_ids": [
-      "3.40.50.720:FF:000041 (D-3-phosphoglycerate dehydrogenase)"
-    ],
-    "condition_types": [
       "FunFam id"
     ],
     "parsimony_assessment": null,
@@ -386466,41 +387582,6 @@ window.searchData = [
     "interpro_ids": [],
     "funfam_ids": [
       "1.10.472.10:FF:000080 (G1/S-specific cyclin)"
-    ],
-    "condition_types": [
-      "taxon",
-      "FunFam id"
-    ],
-    "parsimony_assessment": null,
-    "literature_support": null,
-    "review_link": null,
-    "is_reviewed": false
-  },
-  {
-    "id": "ARBA00092121",
-    "rule_id": "ARBA00092121",
-    "description": "",
-    "review_summary": "",
-    "action": null,
-    "status": "NOT_REVIEWED",
-    "confidence": null,
-    "num_condition_sets": 1,
-    "num_entries": 0,
-    "go_terms": [
-      {
-        "id": "GO:1903833",
-        "label": "positive regulation of cellular response to amino acid starvation"
-      }
-    ],
-    "go_term_ids": [
-      "GO:1903833 (positive regulation of cellular response to amino acid starvation)"
-    ],
-    "go_term_labels": [
-      "positive regulation of cellular response to amino acid starvation"
-    ],
-    "interpro_ids": [],
-    "funfam_ids": [
-      "3.10.20.30:FF:000003 (Developmentally-regulated GTP-binding protein 1)"
     ],
     "condition_types": [
       "taxon",
