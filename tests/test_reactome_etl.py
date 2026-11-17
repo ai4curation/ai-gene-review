@@ -2,6 +2,7 @@
 
 import re
 
+from ai_gene_review.etl import reactome
 from ai_gene_review.etl.reactome import ReactomePathway
 
 
@@ -42,3 +43,32 @@ def test_reactome_markdown_omits_empty_participants():
     pathway = ReactomePathway(stable_id="R-HSA-1", display_name="Test", summary="S.")
 
     assert "## Participants" not in pathway.to_markdown()
+
+
+def test_forced_recache_keeps_an_existing_participants_section(tmp_path, monkeypatch):
+    """Re-downloading an entry must not drop the participants reviews quote."""
+    calls = []
+
+    def fake_fetch(
+        reactome_id, use_cache=True, cache_dir=None, include_participants=False
+    ):
+        calls.append(include_participants)
+        return ReactomePathway(
+            stable_id=reactome_id,
+            display_name="Event",
+            participants=["UniProt:P11346 Raf"] if include_participants else [],
+        )
+
+    monkeypatch.setattr(reactome, "fetch_reactome_data", fake_fetch)
+
+    # A fresh entry is cached without participants unless asked for.
+    assert reactome.cache_reactome_pathway("R-DME-1", output_dir=tmp_path)
+    assert "## Participants" not in (tmp_path / "R-DME-1.md").read_text()
+
+    # An entry that has the section keeps it on a forced re-download.
+    (tmp_path / "R-DME-2.md").write_text(
+        "# Event\n\n## Participants\n\n- UniProt:P11346 Raf\n"
+    )
+    assert reactome.cache_reactome_pathway("R-DME-2", output_dir=tmp_path, force=True)
+    assert "- UniProt:P11346 Raf" in (tmp_path / "R-DME-2.md").read_text()
+    assert calls == [False, True]

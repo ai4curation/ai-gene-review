@@ -78,6 +78,7 @@ DEFAULT_GLOBS = (
     "models/**/*.yaml",
     "projects/**/*.yaml",
     "genes/*/*/*-predictions-review.yaml",
+    "issues/*/*/issue.yaml",
 )
 
 #: Directories excluded from the default scope: frozen experiment snapshots whose
