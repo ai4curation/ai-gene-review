@@ -598,6 +598,34 @@ gene is where parallel batches drifted apart in tier 2. The largest are
 PMID:18086184 across five sigma factors including femA, and `GO:0015562` on
 opmQ/pvdR/pvdT, which carries three separate references for the same term.
 
+### Auditing shared claims automatically
+
+The "re-read as groups" step is now mechanical:
+[`check_shared_claim_consistency.py`](PSEUDOCAP/check_shared_claim_consistency.py)
+compares the review actions on each shared term across its members and reports
+the groups that disagree.
+
+Divergence is a prompt to read, not a verdict. Two of the current divergences are
+deliberate: `ccoQ1`/`ccoQ2` sit at `MARK_AS_OVER_ANNOTATED` on `GO:0004129` while
+the six catalytic cbb3 subunits are `ACCEPT`, because the Q chains are accessory
+and absent from the cryo-EM models; and `tse6` is `REMOVE` against `tsi6`'s
+`ACCEPT` on `GO:0097351` because of a recorded `WRONG_GENE_PRODUCT` defect. Both
+are argued in the rows themselves, which is what makes them fine.
+
+The check has already paid for itself twice. It is the generalisation of the
+`liuB`/`liuD` drift caught in review on PR #6341, and run across the corpus it
+found a second instance: `wbpX` and `wbpY` share the `GO:0016757` claim from
+PMID:9680202, and `wbpY` had refined it to `GO:0016758` citing direct enzymology
+in PMID:35166992 **for both enzymes**, while `wbpX` accepted the generic term on
+the stated ground that the donor and linkage "have not been shown biochemically"
+and never cited that paper. The paper is titled for both enzymes and its full text
+is cached; `wbpX` now matches `wbpY`.
+
+Note what the automated checks could not see here. `just validate` and
+`quote_check` passed on both reviews throughout: every quote was verbatim and every
+term resolved. What was wrong was a claim about the state of the evidence, visible
+only by reading two files against each other.
+
 ### The cbb3 oxidases: one phenotype, eight subunits
 
 PseudoCAP entered the identical `GO:0004129` IMP row
