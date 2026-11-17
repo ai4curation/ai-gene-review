@@ -38,7 +38,11 @@ network. Regenerate with ``just build-panther-obo`` /
 
 from __future__ import annotations
 
+import json
 import re
+import urllib.error
+import urllib.parse
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Dict, Iterable, Iterator, List, NamedTuple, Optional, Set, Tuple
@@ -1205,6 +1209,8 @@ def rewrite_panther_labels(
 
 UNIPROT_ACCESSIONS_URL = "https://rest.uniprot.org/uniprotkb/accessions"
 UNIPROT_BATCH_SIZE = 100
+#: The one status that says the request itself is unusable rather than untimely.
+HTTP_BAD_REQUEST = 400
 
 
 def _best_panther_xref(cross_references: Iterable[dict]) -> Optional[str]:
@@ -1235,6 +1241,97 @@ def _best_panther_xref(cross_references: Iterable[dict]) -> Optional[str]:
     return sorted(families)[0] if families else None
 
 
+#: A UniProt chain (``-PRO_0000437526``) or isoform (``-2``) suffix on a cited id.
+SEQUENCE_SUFFIX_RE = re.compile(r"-(?:PRO_\d+|\d+)$")
+
+
+def parent_accession(cited: str) -> str:
+    """Strip a chain or isoform suffix, giving the entry ``cited`` belongs to.
+
+    Modules and family reviews legitimately cite UniProt *chain* ids for
+    cleavage products (``P57764-PRO_0000437526`` is the gasdermin-D N-terminal
+    fragment) and isoform ids for splice variants. Neither is a UniProtKB entry
+    accession: ``/uniprotkb/accessions`` rejects the whole request with HTTP 400
+    if one appears in it. They also carry no PANTHER cross-reference of their
+    own, so the parent entry's family is the answer wanted, not a workaround.
+
+    Stripping a trailing ``-<digits>`` is safe because a UniProtKB accession
+    never contains a hyphen: both the six-character form (``P0AEK4``) and the
+    ten-character form (``A0A0B4J2F0``) are alphanumeric throughout, so a
+    hyphen can only start a suffix.
+
+    >>> parent_accession("P57764-PRO_0000437526")
+    'P57764'
+    >>> parent_accession("Q9UJF2-2")
+    'Q9UJF2'
+    >>> parent_accession("P0AEK4")
+    'P0AEK4'
+    """
+    return SEQUENCE_SUFFIX_RE.sub("", cited)
+
+
+def _request_panther_xrefs(batch: List[str]) -> Dict[str, str]:
+    """One ``/uniprotkb/accessions`` call: entry accession -> best PANTHER id."""
+    query = urllib.parse.urlencode(
+        {
+            "accessions": ",".join(batch),
+            "fields": "accession,xref_panther",
+            "format": "json",
+        }
+    )
+    with urllib.request.urlopen(
+        f"{UNIPROT_ACCESSIONS_URL}?{query}", timeout=120
+    ) as handle:
+        payload = json.load(handle)
+    found: Dict[str, str] = {}
+    for record in payload.get("results", []):
+        accession = record.get("primaryAccession")
+        best = _best_panther_xref(record.get("uniProtKBCrossReferences", []))
+        if accession and best:
+            found[accession] = best
+    return found
+
+
+def _panther_xrefs_tolerating_bad_ids(batch: List[str]) -> Dict[str, str]:
+    """Query ``batch``, retrying one accession at a time if it is rejected.
+
+    The endpoint fails the entire request when any id in it is unusable, so
+    without this one bad accession would abort the index build and make
+    ``validate-families`` report "membership not indexed yet" for every family
+    in the corpus. External interface, hence the tolerance: an id UniProt will
+    not answer for is left unresolved (and recorded as absent by the caller)
+    rather than taking the build down with it.
+
+    Only a 400 earns that tolerance. The caller writes each accession missing
+    from the result under ``UNRESOLVED_MARKER``, which
+    :func:`load_member_index_gaps` reads as ``absent`` -- both sources consulted,
+    no family -- and :func:`incremental_member_index` then takes as settled and
+    does not re-query without ``--rebuild``. A 400 means the id itself is
+    unusable, so that record is true; a 429 or 5xx means "ask again later", and
+    swallowing it would turn one throttled request into a sticky false absence
+    for up to a whole batch. Those propagate, as ``URLError`` and timeouts
+    already do, which also keeps a rate-limited batch from immediately firing a
+    batch's worth of un-backed-off single requests.
+    """
+    try:
+        return _request_panther_xrefs(batch)
+    except urllib.error.HTTPError as err:
+        if err.code != HTTP_BAD_REQUEST:
+            raise
+        if len(batch) == 1:
+            return {}
+    # Fall through only for a rejected batch of more than one: find out which
+    # id the endpoint will not answer for, and keep the rest.
+    found: Dict[str, str] = {}
+    for accession in batch:
+        try:
+            found.update(_request_panther_xrefs([accession]))
+        except urllib.error.HTTPError as err:
+            if err.code != HTTP_BAD_REQUEST:
+                raise
+    return found
+
+
 def fetch_panther_from_uniprot(accessions: Iterable[str]) -> Dict[str, str]:
     """Resolve accession -> PANTHER family/subfamily via the UniProt REST API.
 
@@ -1242,31 +1339,23 @@ def fetch_panther_from_uniprot(accessions: Iterable[str]) -> Dict[str, str]:
     proteomes, which leaves most curated bacterial accessions unresolvable. Those
     are exactly the entries the family-membership check would otherwise skip, so
     this fills the gap for any organism UniProt knows about.
-    """
-    import json
-    import urllib.parse
-    import urllib.request
 
-    pending = sorted(set(accessions))
+    Chain and isoform ids are resolved through their parent entry (see
+    :func:`parent_accession`) and returned under the id as cited, so the member
+    index stays keyed by what the YAML actually says. Each parent is asked for
+    once however many of its chains and isoforms are cited.
+    """
+    cited_by_parent: Dict[str, List[str]] = {}
+    for cited in sorted(set(accessions)):
+        cited_by_parent.setdefault(parent_accession(cited), []).append(cited)
+
+    parents = sorted(cited_by_parent)
     resolved: Dict[str, str] = {}
-    for start in range(0, len(pending), UNIPROT_BATCH_SIZE):
-        batch = pending[start : start + UNIPROT_BATCH_SIZE]
-        query = urllib.parse.urlencode(
-            {
-                "accessions": ",".join(batch),
-                "fields": "accession,xref_panther",
-                "format": "json",
-            }
-        )
-        with urllib.request.urlopen(
-            f"{UNIPROT_ACCESSIONS_URL}?{query}", timeout=120
-        ) as handle:
-            payload = json.load(handle)
-        for record in payload.get("results", []):
-            accession = record.get("primaryAccession")
-            best = _best_panther_xref(record.get("uniProtKBCrossReferences", []))
-            if accession and best:
-                resolved[accession] = best
+    for start in range(0, len(parents), UNIPROT_BATCH_SIZE):
+        batch = parents[start : start + UNIPROT_BATCH_SIZE]
+        for parent, family_sf in _panther_xrefs_tolerating_bad_ids(batch).items():
+            for cited in cited_by_parent.get(parent, ()):
+                resolved[cited] = family_sf
     return resolved
 
 
