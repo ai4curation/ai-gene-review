@@ -71,12 +71,24 @@ def actions_for_term(folder: str, term_id: str) -> list[str]:
     phosphotransferase activity, a different reaction class, because it is a
     WecA-type initiating enzyme rather than a glycosyltransferase.
 
-    An empty list means the review has no row for that term, which is itself
-    worth seeing: the claim is in GOA for the gene but absent from its review.
+    Two empty-ish results are kept distinct, because they mean different things
+    and conflating them would report "no row" for a review that is simply not
+    there: ``["(no review file)"]`` when the review does not exist, against
+    ``["(no row)"]`` when it exists but says nothing about the term -- the
+    latter being worth seeing, since the claim is in GOA for the gene and absent
+    from its review.
+
+    ``NEW`` rows are deliberately excluded. A ``NEW`` row proposes an annotation
+    GOA does not have, so it is an addition rather than a verdict on the shared
+    claim, and counting it would make a member that proposes an extra row look
+    as though it disagreed about the existing one. The exclusion only bites when
+    a ``NEW`` row sits on the shared term itself; the usual case, as with the
+    ``GO:0016758`` rows on ``wbpX`` and ``wbpY``, puts it on a different term
+    that no shared claim names.
     """
     path = GENES / folder / f"{folder}-ai-review.yaml"
     if not path.exists():
-        return []
+        return ["(no review file)"]
     with open(path, encoding="utf-8") as handle:
         doc = yaml.safe_load(handle)
     verdicts = set()
@@ -85,7 +97,7 @@ def actions_for_term(folder: str, term_id: str) -> list[str]:
             continue
         review = row.get("review") or {}
         action = review.get("action")
-        if not action:
+        if not action or action == "NEW":
             continue
         replacements = sorted(
             term.get("id", "?")
@@ -93,7 +105,7 @@ def actions_for_term(folder: str, term_id: str) -> list[str]:
             if term.get("id")
         )
         verdicts.add(f"{action}->{'+'.join(replacements)}" if replacements else action)
-    return sorted(verdicts)
+    return sorted(verdicts) or ["(no row)"]
 
 
 def collect() -> dict[str, list[dict[str, Any]]]:
@@ -145,10 +157,7 @@ def main() -> int:
     groups = collect()
 
     def show(record: dict[str, Any]) -> str:
-        pairs = ", ".join(
-            f"{s}={'/'.join(a) if a else '(no row)'}"
-            for s, a in record["actions"].items()
-        )
+        pairs = ", ".join(f"{s}={'/'.join(a)}" for s, a in record["actions"].items())
         return f"  {record['term']:13} {record['reference']:16} {pairs}"
 
     if groups["divergent"]:
