@@ -24,3 +24,11 @@
 - The best supported KT2440-specific process term to add is `GO:1900192 positive regulation of single-species biofilm formation`.
 - K1-T6SS regulation is real and experimentally supported in KT2440, but I am treating it as secondary/non-core until direct GacA target promoters are mapped in this strain.
 - I did not find direct KT2440 evidence in the examined sources showing purified GacA binding a specific promoter or explicitly identifying the cognate `rsmY`/`rsmZ`-like promoters. Any direct promoter-binding language in the review should therefore stay conservative.
+
+## 2026-11-11 re-review (Gac phosphorelay module completion)
+
+- Earlier supporting_text entries in the review were paraphrases rather than quotations; all were replaced with verbatim quotes from cached publications and the UniProt record.
+- Direct transcriptional targets in KT2440: Rsm-titrating sRNAs. Huertas-Rosales et al. 2021 identified KT2440 rsmY and rsmZ and found conserved GacA binding sites upstream of both [PMID:33693029 "conserved GacA binding sites, involved in transcriptional regulation of Rsm-titrating RNAs in other Pseudomonas species (Brencic et al., 2009) could be identified in the regions upstream rsmY and rsmZ"]. This is the best KT2440-level support for GacA as a sequence-specific transcriptional activator. The adhesin and T6SS outputs are downstream and probably indirect (via Rsm proteins, RpoS and FleQ) [PMID:27489550 "the two component system GacS/GacA is essential for the expression of rpoS in KT2440"].
+- Cognate-kinase biochemistry comes from the E. coli orthologs [PMID:11022030 "Phosphorylated BarA, in turn, acts as an efficient phosphoryl group donor to UvrY but not to the non-cognate response regulators ArcA, PhoB, or CpxR."].
+- Action changes: GO:0003677 DNA binding is TOO_GENERAL (entailed by GO:0000976, accepted). GO:0000976 is ACCEPTED, not non-core: the LuxR-type HTH domain and the conserved upstream GacA boxes support it. GO:0006355 is MODIFIED to GO:0045893 because GacA is an activator.
+- Deep research: the codex and falcon files in this folder were used; no new provider run.

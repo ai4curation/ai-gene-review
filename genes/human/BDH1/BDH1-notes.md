@@ -58,3 +58,15 @@
 - GO:0099617 matrix side of mitochondrial inner membrane (CC, current)
 - GO:0005739 mitochondrion (CC, current)
 - GO:0051287 NAD binding (MF, current)
+
+## 2026-11-11
+
+Re-audited all 17 GOA rows and promoted the review to COMPLETE for the
+`ketone_body_oxidation` module (BDH1 is the animal exemplar of the oxidation
+step and the reference protein of PANTHER PTHR43313). Changes: GO:0016616
+re-actioned to TOO_GENERAL (entailed by GO:0003858, the reason already argued
+redundancy); all six GO:0005759 mitochondrial matrix rows KEEP_AS_NON_CORE
+(UniProt records a by-similarity matrix location, but the active enzyme is
+defined by its phosphatidylcholine-dependent association with the matrix face
+of the inner membrane); the MitoCoP HTP mitochondrion row stays ACCEPT under
+the root-organelle policy. No deep-research provider file exists for BDH1.
