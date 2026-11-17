@@ -1057,6 +1057,62 @@ Possible upstream errors found in this set:
   cone photoreceptor disc membrane (`GO:0120201`) in the others. The CNG channel
   is in the outer segment plasma membrane, not the discs.
 
+### Ninth set: RNA polymerase II transcription
+
+The ninth set carries out the RNA polymerase II plan in
+[broad_pathway_split_plans.md](RGD_PATHWAY_ONTOLOGY/broad_pathway_split_plans.md).
+Every module cites PW:0000127, which moves it from `related_module_only` to
+`has_module` (132 `has_module`, 3 `related_module_only`, 2
+`no_specific_go_term`). Where RGD has a child pathway for the step, the module
+cites it too: PW:0001274 (initiation), PW:0001331 (elongation), PW:0001332
+(termination), PW:0001578 (capping) and PW:0001579 (3′-end processing). With
+the Pol I and Pol III modules, all three nuclear RNA polymerases are now modelled.
+
+- [`modules/rna_polymerase_ii_core_and_initiation.yaml`](../modules/rna_polymerase_ii_core_and_initiation.yaml):
+  TFIID and TFIIA at the promoter, TFIIB, TFIIF, TFIIE with the XPB translocase
+  and the CAK kinase of TFIIH, and the 12-subunit enzyme. The five subunits shared
+  with Pol I and III are written as in those modules. The TFIIH core is pointed to
+  in `nucleotide_excision_repair`, not modelled again, because that node is a
+  repair step.
+- [`modules/mediator_complex.yaml`](../modules/mediator_complex.yaml): the
+  26-subunit core, with coactivator activity on the complex rather than on its
+  subunits, and the CDK8 kinase module, which negatively regulates the core.
+- [`modules/rna_polymerase_ii_elongation_and_termination.yaml`](../modules/rna_polymerase_ii_elongation_and_termination.yaml):
+  pausing by DSIF and NELF, release by P-TEFb and the super elongation complex,
+  elongation by PAF1C, SPT6, FACT and TFIIS, and poly(A)-coupled termination by
+  XRN2. FACT, PAF1C and DSIF, which the Pol I and III modules leave out as general
+  elongation factors, are modelled here.
+- [`modules/pre_mrna_capping.yaml`](../modules/pre_mrna_capping.yaml): four
+  Rhea-grounded steps: RNGTT triphosphatase and guanylyltransferase, RNMT:RAMAC
+  N7 methylation, and CMTR1 cap1 methylation (added on evidence). The nuclear
+  cap-binding complex is left out because it only binds the finished cap.
+- [`modules/pre_mrna_3prime_cleavage_polyadenylation.yaml`](../modules/pre_mrna_3prime_cleavage_polyadenylation.yaml):
+  mPSF, CstF, CF IIm and an optional CFIm, the CPSF73 cleavage core with RBBP6
+  (added on reconstitution evidence), and the canonical poly(A) polymerases with
+  PABPN1. Histone mRNA 3′ processing is mentioned, not modelled.
+- **Ontology requests**: a `proposed_new_terms` entry for mRNA polyadenylation
+  signal binding, and two `proposed_ontology_changes` entries. One corrects the
+  methylation chemistry in the definition of 7-methylguanosine mRNA capping; the
+  other adds the missing Rhea cross-reference to the cap guanine-N7
+  methyltransferase term.
+
+Possible upstream errors found in this set:
+
+- **GOA.**
+  - Several Mediator subunits (MED4, MED14, MED16, MED17, MED24, MED30) carry
+    "enables" coactivator or receptor-binding rows from assays of the purified
+    complex; "contributes_to" would fit. CDK8 has no experimental row for
+    serine/threonine kinase activity, only the parent protein kinase activity.
+  - RNGTT's inorganic triphosphate phosphatase row (IDA) reports an RNA
+    5′-triphosphatase assay. NCBP1's capping process row rests on a structure of
+    the cap-binding complex bound to a cap analogue.
+  - CPSF1 and NUDT21 carry AU-rich element binding rows for binding AAUAAA and
+    UGUA, which are not AU-rich elements in the term's sense.
+  - XRN2 has a termination-site sequence-specific DNA binding row (IDA) from a
+    paper that measures its recruitment; XRN2 is an exoribonuclease (suspected).
+- **RGD.** The definition of PW:0001332 (Pol II termination) cross-references
+  GO:0006386, which is termination of RNA polymerase III transcription.
+
 ## Next steps
 
 - Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
@@ -1085,9 +1141,9 @@ Possible upstream errors found in this set:
   polymerase transcription and calcium-mediated signaling, which match only by
   gene overlap) now have split plans in
   [broad_pathway_split_plans.md](RGD_PATHWAY_ONTOLOGY/broad_pathway_split_plans.md),
-  with a suggested order: Pol II core and Mediator, the cytoplasmic ribosome and
-  translation initiation, the spliceosome, Polycomb and COMPASS, then ribosome
-  biogenesis.
+  with a suggested order. The RNA polymerase II plan is done (ninth set); next are
+  the cytoplasmic ribosome and translation initiation, the spliceosome, Polycomb
+  and COMPASS, then ribosome biogenesis.
 - Add the obligatory PMCA subunits NPTN and BSG to
   `plasma_membrane_calcium_extrusion`.
 - Factor a human DNA gap-filling module (PCNA, RFC, Pol delta, LIG1) out of the
@@ -1122,6 +1178,7 @@ Possible upstream errors found in this set:
 - [x] Model the remaining mid-sized mammalian pathways and IL-10 (9 modules, sixth set)
 - [x] Split chromatin remodeling and calcium transport by family, and cover kinin signaling (10 modules and one extension, seventh set)
 - [x] Model the remaining calcium transport families (6 modules, eighth set)
+- [x] Split RNA polymerase II transcription into five modules (ninth set)
 
 ## Notes
 
@@ -1187,3 +1244,11 @@ unchanged at 131 `has_module`, 4 `related_module_only` and 2
 `no_specific_go_term`. The triage inputs were re-downloaded after the cache was
 lost; PW is still release 2026-05-16, GO the 2026-07-26 release, and the summary
 counts other than `modules_compared` (now 839) did not change.
+
+### 2026-11-17
+
+Ninth set: five RNA polymerase II modules (core and initiation, Mediator,
+elongation and termination, capping, 3′ cleavage and polyadenylation), plus
+notes in the Pol I and Pol III modules pointing to the new enzyme module.
+PW:0000127 moves to `has_module`: 132 `has_module`, 3 `related_module_only`, 2
+`no_specific_go_term`, with `modules_compared` at 844.
