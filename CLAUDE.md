@@ -1039,6 +1039,13 @@ link to a review page when its HTML exists on disk, so run `just render-all`
 first if you need those links in a local build. The propagation browser links
 whenever the review YAML exists.
 
+### GO-CAM review pages
+```bash
+just render-gocams     # every gocams/<id>/<id>-review.yaml, plus an index
+```
+Output: `pages/gocams/<id>.html` and `pages/gocams/index.html`. Like gene HTML,
+this is a gitignored build product rendered by the Pages workflow; do not commit it.
+
 ### Project pages
 Project docs live in `projects/`. Render with:
 ```bash

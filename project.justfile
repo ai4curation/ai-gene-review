@@ -1788,7 +1788,7 @@ stage-pages:
     uv run python -m ai_gene_review.tools.stage_pages --manifest _site-manifest.json
 
 # Build the complete disposable publication tree without Git blob limits.
-build-pages: render-all render-projects render-prediction-eval render-bioreason-eval render-modules render-dashboard (deploy-browser "pages") (deploy-predictions-browser "pages") (deploy-propagation-browser "pages") stage-pages
+build-pages: render-all render-projects render-prediction-eval render-bioreason-eval render-modules render-gocams render-dashboard (deploy-browser "pages") (deploy-predictions-browser "pages") (deploy-propagation-browser "pages") stage-pages
 
 # Render prediction evaluation table from *-predictions-review.yaml files
 render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM Prediction Evaluation':
@@ -1891,6 +1891,10 @@ render-project project:
 # Render module YAML files to HTML with an inline tree browser
 render-modules:
     uv run ai-gene-review render-modules --all
+
+# Render GO-CAM reviews (gocams/*/*-review.yaml) to pages/gocams/ with an index
+render-gocams:
+    uv run ai-gene-review render-gocams
 
 # Regenerate the gene review status dashboard (pages/dashboard.html)
 render-dashboard:
