@@ -158,6 +158,32 @@ def test_feedback_pages(repo: Path) -> None:
     assert (output_dir / "source-defects.tsv").is_file()
 
 
+def test_feedback_reads_only_root(
+    repo: Path,
+    tmp_path_factory: pytest.TempPathFactory,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A root without genes/ or modules/ yields no proposals, whatever the cwd holds."""
+    elsewhere = tmp_path_factory.mktemp("elsewhere")
+    (repo / "genes").rename(elsewhere / "genes")
+    monkeypatch.chdir(elsewhere)
+    output_dir = repo / "pages" / "feedback"
+    render_feedback(root=repo, output_dir=output_dir)
+
+    assert (
+        "widget holdase activity"
+        not in (output_dir / "proposed-new-terms.html").read_text()
+    )
+    tsv_lines = (output_dir / "proposed-new-terms.tsv").read_text().splitlines()
+    assert len(tsv_lines) == 1 and tsv_lines[0].startswith("source_path")
+
+
+def test_hub_links_follow_output_depth(repo: Path) -> None:
+    page = render_rules(root=repo, output_dir=repo / "a" / "b" / "c").read_text()
+    assert 'href="../../../index.html">AI Gene Review<' in page
+    assert 'href="../../../rules/curated/CR-0001.yaml">CR-0001<' in page
+
+
 def test_rules_page(repo: Path) -> None:
     page = render_rules(root=repo, output_dir=repo / "pages" / "rules").read_text()
     assert 'href="../../rules/curated/CR-0001.yaml">CR-0001<' in page

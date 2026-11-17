@@ -17,6 +17,7 @@ from ai_gene_review.render_hubs import (
     OBSOLETION_TAG,
     collection_members,
     projects_where,
+    rule_review_count,
 )
 from ai_gene_review.render_modules import iter_module_files
 
@@ -41,9 +42,7 @@ COUNTERS: dict[str, Callable[[Path], int]] = {
     "families": _glob_count("interpro/*/*/*-review.yaml"),
     "gocam_reviews": _glob_count("gocams/*/*-review.yaml"),
     "prediction_reviews": _glob_count("genes/*/*/*predictions-review.yaml"),
-    "rule_reviews": _glob_count(
-        "rules/arba/*/*-review.yaml", "rules/unirule/*/*-review.yaml"
-    ),
+    "rule_reviews": rule_review_count,
     "curated_rules": _glob_count("rules/curated/CR-*.yaml"),
     "projects": _count_projects,
     # The module renderer's own document filter, so the number matches its index.

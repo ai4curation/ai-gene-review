@@ -25,19 +25,37 @@ from typing import Any
 import markdown
 import yaml
 
-from ai_gene_review.render_modules import _environment, clean_rendered_html
+from ai_gene_review.render_modules import (
+    _environment,
+    clean_rendered_html,
+    relative_href,
+)
 from ai_gene_review.render_projects import collect_project_rows, load_collections
 from ai_gene_review.tools import (
     export_ontology_changes,
     export_proposed_terms,
     export_source_defects,
 )
+from ai_gene_review.tools.export_source_defects import CLOSED_DEFECTS
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 OBSOLETION_TAG = "OBSOLETION"
 MAPPINGS_COLLECTION = "MAPPINGS"
-#: Report states that need no further action, as in ``export_source_defects``.
-CLOSED_DEFECTS = ("FIXED", "DECLINED")
+#: Where reviews of UniProt annotation rules live, by rule system.
+RULE_REVIEW_GLOBS = {
+    "arba": "rules/arba/*/*-review.yaml",
+    "unirule": "rules/unirule/*/*-review.yaml",
+}
+
+
+def rule_review_count(root: Path, system: str | None = None) -> int:
+    """Count rule reviews under ``root``, for one rule system or for all of them.
+
+    >>> rule_review_count(Path("/nonexistent"))
+    0
+    """
+    systems = [system] if system else list(RULE_REVIEW_GLOBS)
+    return sum(len(list(root.glob(RULE_REVIEW_GLOBS[s]))) for s in systems)
 
 
 def projects_where(projects_dir: Path, key: str, value: str) -> list[dict[str, Any]]:
@@ -161,13 +179,15 @@ def render_feedback(
         )
 
     terms_tsv = output_dir / "proposed-new-terms.tsv"
-    # expand_inputs falls back to paths relative to the working directory when
-    # given no inputs, so pass only the directories that exist under root.
     term_inputs = [d for d in (root / "genes", root / "modules") if d.is_dir()]
-    export_proposed_terms.export_proposed_terms(
-        export_proposed_terms.expand_inputs(term_inputs) if term_inputs else [],
-        terms_tsv,
-    )
+    if term_inputs:
+        export_proposed_terms.export_proposed_terms(term_inputs, terms_tsv)
+    else:
+        # The exporter treats no inputs as "use ./genes and ./modules", which
+        # would report the working directory's corpus instead of root's.
+        terms_tsv.write_text(
+            "\t".join(export_proposed_terms.COLUMNS) + "\n", encoding="utf-8"
+        )
     with terms_tsv.open(encoding="utf-8", newline="") as handle:
         terms = list(csv.DictReader(handle, delimiter="\t"))
     written.append(
@@ -201,7 +221,13 @@ def render_feedback(
                     mapping_index=load_collections(projects_dir)[MAPPINGS_COLLECTION][
                         "index"
                     ],
-                    rule_reviews=len(list(root.glob("rules/arba/*/*-review.yaml"))),
+                    rule_reviews=rule_review_count(root),
+                    home_href=relative_href(
+                        output_dir / "index.html", root / "index.html"
+                    ),
+                    arba_href=relative_href(
+                        output_dir / "index.html", root / "rules/arba/index.html"
+                    ),
                 )
             ),
         )
@@ -237,14 +263,19 @@ def render_rules(
     index = output_dir / "index.html"
     rules = curated_rules(root / "rules" / "curated")
     for rule in rules:
-        rule["href"] = Path("../..", rule["path"].relative_to(root)).as_posix()
+        rule["href"] = relative_href(index, rule["path"])
     return _write(
         index,
         clean_rendered_html(
             env.get_template("rules_hub.html.j2").render(
                 rules=rules,
-                arba_reviews=len(list(root.glob("rules/arba/*/*-review.yaml"))),
-                unirule_reviews=len(list(root.glob("rules/unirule/*/*-review.yaml"))),
+                arba_reviews=rule_review_count(root, "arba"),
+                unirule_reviews=rule_review_count(root, "unirule"),
+                home_href=relative_href(index, root / "index.html"),
+                arba_href=relative_href(index, root / "rules/arba/index.html"),
+                unirule_href=relative_href(index, root / "rules/unirule/index.html")
+                if (root / "rules/unirule/index.html").is_file()
+                else None,
                 has_function_requirements=(
                     root / "projects" / "FUNCTION_REQUIREMENT_RULES.md"
                 ).is_file(),
