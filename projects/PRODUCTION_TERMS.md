@@ -252,12 +252,13 @@ across TNF, IL-6, IL-8 and IL-2.
 
 ## What this repo's reviews and GO-CAMs show
 
-**Review actions.** 1,236 `existing_annotations` rows in 304 gene reviews use a
-production-named term:
+**Review actions.** 1,253 `existing_annotations` rows in 308 gene reviews use a
+production-named term (counted against the corpus as of this branch's merge of
+`main`; the corpus grows, so re-run the script rather than trusting the figure):
 
 | | ACCEPT | KEEP_AS_NON_CORE | MARK_AS_OVER_ANNOTATED | UNDECIDED | MODIFY | NEW | REMOVE |
 |---|---|---|---|---|---|---|---|
-| regulation terms (1,215 rows) | 279 | 799 | 72 | 30 | 20 | 8 | 7 |
+| regulation terms (1,232 rows) | 279 | 815 | 73 | 30 | 20 | 8 | 7 |
 | production terms (21 rows) | 2 | 15 | 2 | 1 | 1 | 0 | 0 |
 
 Reviewers already read most of these rows as readouts: two-thirds are
