@@ -25,7 +25,7 @@ from typing import Any
 
 import yaml
 
-from ai_gene_review.etl.panther_families import panther_artifacts
+from ai_gene_review.etl.panther_families import panther_artifacts, previous_release
 from ai_gene_review.validation.family_gene_crosscheck import (
     check_family_gene_disagreement,
     check_pruning_conflicts,
@@ -175,13 +175,14 @@ def main() -> int:
     result["schema_returncode"] = schema.returncode
     panther = ROOT / "interpro/panther"
     labels, members, gaps, alternates = panther_artifacts(panther)
+    previous = previous_release(panther)  # same switch allowance as validate-families
     paint = load_paint_index(panther)
     cache = frozen_sequence_cache()
     checks, sources, quotes = [], [], []
     for path, document in docs.items():
         try:
             outcomes = (
-                check_panther_ids(document, labels, members, gaps, alternates)
+                check_panther_ids(document, labels, members, gaps, alternates, previous)
                 + check_term_assessment_site_refs(document)
                 + check_node_assessments(document, paint)
                 + check_anchor_residues(document, cache)

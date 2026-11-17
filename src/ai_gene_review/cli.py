@@ -5003,10 +5003,10 @@ def refresh_panther_members(
 
     repo_root = output_dir or Path.cwd()
     from ai_gene_review.etl.panther_families import (
-        PANTHER_PREVIOUS_RELEASE,
         fetch_hmm_classifications,
         hmm_url,
         panther_cache_dir,
+        switch_release,
     )
 
     cache = cache_dir or panther_cache_dir(repo_root)
@@ -5015,11 +5015,12 @@ def refresh_panther_members(
     # During a PANTHER switch, validators read the previous release's names and
     # memberships from this cache without downloading anything; warm it here. Only the
     # default organisms: they are what the validators read, whatever --organism says.
-    if PANTHER_PREVIOUS_RELEASE is not None:
-        fetch_hmm_classifications(cache, url=hmm_url(PANTHER_PREVIOUS_RELEASE))
+    previous_release = switch_release()  # raises on a misconfigured switch
+    if previous_release is not None:
+        fetch_hmm_classifications(cache, url=hmm_url(previous_release))
         for slug in DEFAULT_ORGANISMS:
-            fetch_sequence_classification(slug, cache, release=PANTHER_PREVIOUS_RELEASE)
-        typer.echo(f"cached PANTHER {PANTHER_PREVIOUS_RELEASE} classifications for the switch allowance")
+            fetch_sequence_classification(slug, cache, release=previous_release)
+        typer.echo(f"cached PANTHER {previous_release} classifications for the switch allowance")
 
     # Every representative member, grounded or not -- an ungrounded descriptor's
     # members are the ones whose real family most needs resolving -- plus the
@@ -5450,10 +5451,12 @@ def fix_panther_labels(
             "members contradict their family id cannot be skipped"
         )
     for reason in unguarded:
-        typer.echo(f"⚠  {reason}; run `just ensure-panther-members`.", err=True)
-    if unguarded and apply:
-        typer.echo("Refusing --apply until those caches are built.", err=True)
-        raise typer.Exit(1)
+        typer.echo(f"⚠  {reason}.", err=True)
+    if unguarded:
+        typer.echo("Build the missing caches with `just ensure-panther-members`.", err=True)
+        if apply:
+            typer.echo("Refusing --apply until they are built.", err=True)
+            raise typer.Exit(1)
     # Same PAINT-corroboration rule the validator applies, so a grounding the
     # validator merely warns about is not treated here as disputed.
     paint_index = load_paint_index(repo_root / "interpro" / "panther")

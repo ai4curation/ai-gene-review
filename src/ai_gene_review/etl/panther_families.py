@@ -1465,18 +1465,23 @@ class PantherArtifacts(NamedTuple):
     alternates: Dict[str, str]
 
 
-@lru_cache(maxsize=None)
 def panther_artifacts(panther_dir: Path) -> PantherArtifacts:
     """Load ``panther.obo`` and the member index once per ``interpro/panther`` directory.
 
-    Cached because ``panther.obo`` is 13.8 MB and validators call this once per file.
-    The member index is a build artifact in ``<repo>/.cache/panther``; on a fresh
-    checkout its loaders return empty mappings rather than raising, and ``gaps`` tells
-    an accession PANTHER has no family for from one whose lookup was never done.
+    ``panther_dir`` is ``<repo>/interpro/panther``. Cached per resolved directory,
+    because ``panther.obo`` is 13.8 MB and validators call this once per file. The
+    member index is a build artifact in ``<repo>/.cache/panther``; on a fresh checkout
+    its loaders return empty mappings rather than raising, and ``gaps`` tells an
+    accession PANTHER has no family for from one whose lookup was never done.
     """
-    members = member_index_path(Path(panther_dir).parents[1])
+    return _panther_artifacts_cached(Path(panther_dir).resolve())
+
+
+@lru_cache(maxsize=None)
+def _panther_artifacts_cached(panther_dir: Path) -> PantherArtifacts:
+    members = member_index_path(panther_dir.parents[1])
     return PantherArtifacts(
-        load_obo_names(Path(panther_dir) / "panther.obo"),
+        load_obo_names(panther_dir / "panther.obo"),
         load_member_index(members),
         load_member_index_gaps(members),
         load_member_index_alternates(members),
@@ -1510,7 +1515,7 @@ class PreviousRelease(NamedTuple):
 def switch_release() -> Optional[str]:
     """The release being left during a PANTHER switch, or None outside one.
 
-    >>> switch_release() is None  # no switch on main
+    >>> switch_release() == PANTHER_PREVIOUS_RELEASE  # None outside a switch
     True
     """
     if PANTHER_PREVIOUS_RELEASE is not None and PANTHER_PREVIOUS_RELEASE == PANTHER_RELEASE:
@@ -1524,6 +1529,8 @@ def switch_release() -> Optional[str]:
 def load_previous_labels(repo_root: Path, release: str) -> Optional[PreviousLabels]:
     """Load ``release``'s names from the PANTHER cache, offline, or None if not cached.
 
+    ``repo_root`` is the repository root (the cache is ``<repo>/.cache/panther``), not
+    the ``interpro/panther`` directory that :func:`previous_release_labels` takes.
     Nothing is downloaded: ``just ensure-panther-members`` caches the names file while
     a switch is on. When it is absent this warns once and returns None, so checks run
     as they would without the switch allowance rather than depending on the network.
@@ -1543,7 +1550,8 @@ def load_previous_labels(repo_root: Path, release: str) -> Optional[PreviousLabe
 def load_previous_release(repo_root: Path, release: str) -> Optional[PreviousRelease]:
     """Load ``release``'s names and memberships from the PANTHER cache, offline.
 
-    The names come from :func:`load_previous_labels` (and are None with it). Organisms
+    ``repo_root`` is the repository root, as for :func:`load_previous_labels`. The names
+    come from :func:`load_previous_labels` (and are None with it). Organisms
     whose classification file is not cached are named in a warning and checked
     without the allowance.
     """
@@ -1585,6 +1593,7 @@ def _previous_release_cached(repo_root: Path, release: str) -> Optional[Previous
 def previous_release_labels(panther_dir: Path) -> Optional[PreviousLabels]:
     """The previous release's names during a switch, or None.
 
+    ``panther_dir`` is ``<repo>/interpro/panther``, as for :func:`panther_artifacts`.
     None outside a switch, and also when the names file is not cached; callers that
     must tell those apart check :func:`switch_release`. Reads only the names file, not
     the per-organism member map. Cached per resolved repository, shared with

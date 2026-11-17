@@ -590,3 +590,42 @@ def test_previous_release_labels_tells_no_switch_from_an_uncached_one(
     monkeypatch.setattr(panther_families, "PANTHER_PREVIOUS_RELEASE", panther_families.PANTHER_RELEASE)
     with pytest.raises(ValueError, match="equals PANTHER_RELEASE"):
         panther_families.switch_release()
+
+
+def test_switch_release_doctest_holds_during_a_switch(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The doctest must not pin the no-switch state, or the bump PR breaks `just test`."""
+    import doctest
+
+    import ai_gene_review.etl.panther_families as panther_families
+
+    monkeypatch.setattr(panther_families, "PANTHER_PREVIOUS_RELEASE", "18.0")
+    (example,) = doctest.DocTestFinder().find(
+        panther_families.switch_release, "switch_release", globs=vars(panther_families)
+    )
+    assert doctest.DocTestRunner().run(example).failed == 0
+
+
+def test_fix_panther_labels_holds_back_a_renamed_id_during_a_switch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """With the previous names cached, a label carrying the old name is kept for remapping."""
+    from typer.testing import CliRunner
+
+    import ai_gene_review.etl.panther_families as panther_families
+    from ai_gene_review.cli import app
+
+    monkeypatch.setattr(panther_families, "PANTHER_PREVIOUS_RELEASE", "18.0")
+    repo = _label_fix_repo(tmp_path, with_member_index=True)
+    module = repo / "modules" / "m.yaml"
+    module.write_text(module.read_text().replace("label: REAL NAMES", "label: OLD NAME"))
+    cache = panther_families.panther_cache_dir(repo)
+    panther_families.hmm_classifications_path(cache, "18.0").write_text("PTHR00001\tOLD NAME\n")
+    before = module.read_text()
+
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+
+    assert result.exit_code == 0, result.output
+    assert "1 label(s) NOT rewritten" in result.output
+    assert "changed since PANTHER 18.0" in result.output
+    assert "Applied 0 label correction(s)" in result.output
+    assert module.read_text() == before
