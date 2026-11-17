@@ -20,6 +20,7 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap
 from ruamel.yaml.tokens import ScalarToken
+from functools import lru_cache
 from typing import Tuple, Optional, List, Dict, Any
 import requests
 import yaml
@@ -859,6 +860,42 @@ MODEL_ORGANISM_TAXA: Dict[str, Tuple[str, str]] = {
 }
 
 
+# Reverse of MODEL_ORGANISM_TAXA keyed by numeric NCBI taxon id, for offline
+# resolution of the common campaign taxa (e.g. 9606 -> "Homo sapiens").
+_TAXON_ID_TO_LABEL: Dict[str, str] = {
+    curie.split(":", 1)[1]: label for curie, label in MODEL_ORGANISM_TAXA.values()
+}
+
+
+@lru_cache(maxsize=None)
+def _resolve_taxon_name(taxon_id: str) -> str:
+    """Resolve a numeric NCBI taxon id to its NCBITaxon label.
+
+    Used to backfill the GOA ``TAXON NAME`` column when QuickGO's
+    ``includeFields=taxonName`` path is unavailable (it returns HTTP 500 while
+    ``goName`` and ``name`` still work). The common campaign taxa resolve
+    offline from :data:`MODEL_ORGANISM_TAXA`; anything else is looked up in
+    NCBITaxon. A lookup failure yields an empty string rather than aborting the
+    whole fetch over one cosmetic label.
+
+    >>> _resolve_taxon_name("9606")
+    'Homo sapiens'
+    >>> _resolve_taxon_name("")
+    ''
+    """
+    taxon_id = (taxon_id or "").strip()
+    if not taxon_id.isdigit():
+        return ""
+    if taxon_id in _TAXON_ID_TO_LABEL:
+        return _TAXON_ID_TO_LABEL[taxon_id]
+    try:
+        from ai_gene_review.taxon import ncbitaxon_label
+
+        return ncbitaxon_label(f"NCBITaxon:{taxon_id}")
+    except Exception:
+        return ""
+
+
 def taxon_curie_from_uniprot_record(uniprot_data: str) -> Optional[str]:
     r"""Return the NCBITaxon CURIE from a UniProt flat-file ``OX`` line.
 
@@ -1177,12 +1214,120 @@ def fetch_uniprot_data(uniprot_id: str) -> str:
     return response.text
 
 
+GOA_TSV_HEADER = (
+    "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\t"
+    "GO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\t"
+    "TAXON NAME\tASSIGNED BY\tGENE NAME\tDATE"
+)
+
+
+def _goa_results_to_tsv(results: List[Dict[str, Any]]) -> str:
+    r"""Convert QuickGO annotation-search JSON results to the GOA TSV.
+
+    Sorts (IBA first, then newest date, then GO id), projects each result to the
+    16 TSV columns, deduplicates byte-identical rows, and backfills the
+    ``TAXON NAME`` column from ``taxonId`` when QuickGO did not supply a
+    ``taxonName`` (its ``includeFields=taxonName`` path returns HTTP 500 while
+    ``goName`` and ``name`` still work). A pure function so the projection and
+    backfill are unit-testable without a live API.
+
+    >>> rows = _goa_results_to_tsv([
+    ...     {"geneProductId": "UniProtKB:O43511", "goId": "GO:0005886",
+    ...      "goName": "plasma membrane", "goEvidence": "IDA",
+    ...      "taxonId": 9606, "symbol": "SLC26A4"},
+    ... ]).splitlines()
+    >>> rows[0].split("\t")[12]
+    'TAXON NAME'
+    >>> rows[1].split("\t")[12]
+    'Homo sapiens'
+    """
+    if not results:
+        return GOA_TSV_HEADER + "\n"
+
+    # Sort results: IBA first, then by most recent date (descending), then by GO ID
+    sorted_results = sorted(
+        results,
+        key=lambda x: (
+            0 if x.get("goEvidence", "") == "IBA" else 1,  # IBA annotations first
+            -(
+                int(x.get("date") or "0") if (x.get("date") or "").isdigit() else 0
+            ),  # Negative for descending date
+            x.get("goId") or "",  # Then by GO ID
+        ),
+    )
+
+    tsv_lines = [GOA_TSV_HEADER]
+    # Extensions are not represented in the TSV; collapse rows that become identical
+    # after projection while retaining annotations that differ in any exported field.
+    seen_tsv_rows: set[str] = set()
+
+    for result in sorted_results:
+        # Extract database and ID from geneProductId
+        gene_product_id = result.get("geneProductId", "")
+        if ":" in gene_product_id:
+            db, prod_id = gene_product_id.split(":", 1)
+        else:
+            db, prod_id = "", gene_product_id
+
+        # Extract WITH/FROM information
+        with_from_list = []
+        with_from_data = result.get("withFrom")
+        if with_from_data:
+            for wf in with_from_data:
+                for xref in wf.get("connectedXrefs", []):
+                    with_from_list.append(
+                        f"{xref.get('db', '')}:{xref.get('id', '')}"
+                    )
+        with_from = "|".join(with_from_list) if with_from_list else ""
+
+        taxon_id = result.get("taxonId", "")
+        # QuickGO supplies taxonName via includeFields; backfill from taxonId when
+        # that field is unavailable (its endpoint currently 500s for taxonName).
+        taxon_name = result.get("taxonName") or _resolve_taxon_name(str(taxon_id))
+
+        # Build TSV row
+        row = [
+            db,  # GENE PRODUCT DB
+            prod_id,  # GENE PRODUCT ID
+            result.get("symbol", ""),  # SYMBOL
+            result.get("qualifier", ""),  # QUALIFIER
+            result.get("goId", ""),  # GO TERM
+            result.get("goName", ""),  # GO NAME
+            result.get("goAspect", ""),  # GO ASPECT
+            result.get("evidenceCode", ""),  # ECO ID
+            result.get("goEvidence", ""),  # GO EVIDENCE CODE
+            result.get("reference", ""),  # REFERENCE
+            with_from,  # WITH/FROM
+            str(taxon_id),  # TAXON ID
+            taxon_name,  # TAXON NAME
+            result.get("assignedBy", ""),  # ASSIGNED BY
+            result.get("name", ""),  # GENE NAME
+            result.get("date", ""),  # DATE
+        ]
+
+        # QuickGO can supply an ECO term without a legacy GO evidence code
+        # (for example CACAO's ECO:0007744). Keep that column empty, rather
+        # than inventing a GO code or failing on the JSON null. Other optional
+        # display fields can also be null.
+        tsv_row = "\t".join("" if value is None else str(value) for value in row)
+        if tsv_row in seen_tsv_rows:
+            continue
+        seen_tsv_rows.add(tsv_row)
+        tsv_lines.append(tsv_row)
+
+    return "\n".join(tsv_lines) + "\n"
+
+
 def fetch_goa_data(uniprot_id: str) -> str:
     """Fetch Gene Ontology Annotation (GOA) data from QuickGO API.
 
     Fetches ALL annotations using pagination if necessary. Byte-identical TSV rows
     are deduplicated after projection, so annotations that differ only in fields the
     TSV does not represent (such as annotation extensions) collapse to one row.
+
+    The ``TAXON NAME`` column is backfilled from ``taxonId`` because QuickGO's
+    ``includeFields=taxonName`` request currently returns HTTP 500 (``goName`` and
+    ``name`` are unaffected, so they are still requested directly).
 
     Args:
         uniprot_id: UniProt accession ID
@@ -1206,7 +1351,6 @@ def fetch_goa_data(uniprot_id: str) -> str:
         params = [
             ("geneProductId", uniprot_id),
             ("includeFields", "goName"),
-            ("includeFields", "taxonName"),
             ("includeFields", "name"),
             ("limit", str(limit)),
         ]
@@ -1251,90 +1395,20 @@ def fetch_goa_data(uniprot_id: str) -> str:
 
         except requests.exceptions.RequestException as e:
             if page == 1:
-                # First page failed, return empty result
-                return "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
+                # First page failed: fail loudly rather than silently writing an
+                # empty (header-only) GOA file, which would discard every
+                # annotation and corrupt the review's input.
+                raise ValueError(
+                    f"Could not fetch GOA data for {uniprot_id} from QuickGO: {e}"
+                ) from e
             else:
                 # Subsequent page failed, use what we have
                 print(f"Warning: Pagination stopped at page {page} due to error: {e}")
                 break
 
-    # Process all collected results
-    results = all_results
-
-    if not results:
-        # Return header only if no data
-        return "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
-
-    # Sort results: IBA first, then by most recent date (descending), then by GO ID
-    sorted_results = sorted(
-        results,
-        key=lambda x: (
-            0 if x.get("goEvidence", "") == "IBA" else 1,  # IBA annotations first
-            -(
-                int(x.get("date") or "0") if (x.get("date") or "").isdigit() else 0
-            ),  # Negative for descending date
-            x.get("goId") or "",  # Then by GO ID
-        ),
-    )
-
-    # Convert JSON to TSV format
-    tsv_lines = [
-        "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE"
-    ]
-    # Extensions are not represented in the TSV; collapse rows that become identical
-    # after projection while retaining annotations that differ in any exported field.
-    seen_tsv_rows: set[str] = set()
-
-    for result in sorted_results:
-        # Extract database and ID from geneProductId
-        gene_product_id = result.get("geneProductId", "")
-        if ":" in gene_product_id:
-            db, prod_id = gene_product_id.split(":", 1)
-        else:
-            db, prod_id = "", gene_product_id
-
-        # Extract WITH/FROM information
-        with_from_list = []
-        with_from_data = result.get("withFrom")
-        if with_from_data:
-            for wf in with_from_data:
-                for xref in wf.get("connectedXrefs", []):
-                    with_from_list.append(
-                        f"{xref.get('db', '')}:{xref.get('id', '')}"
-                    )
-        with_from = "|".join(with_from_list) if with_from_list else ""
-
-        # Build TSV row
-        row = [
-            db,  # GENE PRODUCT DB
-            prod_id,  # GENE PRODUCT ID
-            result.get("symbol", ""),  # SYMBOL
-            result.get("qualifier", ""),  # QUALIFIER
-            result.get("goId", ""),  # GO TERM
-            result.get("goName", ""),  # GO NAME
-            result.get("goAspect", ""),  # GO ASPECT
-            result.get("evidenceCode", ""),  # ECO ID
-            result.get("goEvidence", ""),  # GO EVIDENCE CODE
-            result.get("reference", ""),  # REFERENCE
-            with_from,  # WITH/FROM
-            str(result.get("taxonId", "")),  # TAXON ID
-            result.get("taxonName", ""),  # TAXON NAME
-            result.get("assignedBy", ""),  # ASSIGNED BY
-            result.get("name", ""),  # GENE NAME
-            result.get("date", ""),  # DATE
-        ]
-
-        # QuickGO can supply an ECO term without a legacy GO evidence code
-        # (for example CACAO's ECO:0007744). Keep that column empty, rather
-        # than inventing a GO code or failing on the JSON null. Other optional
-        # display fields can also be null.
-        tsv_row = "\t".join("" if value is None else str(value) for value in row)
-        if tsv_row in seen_tsv_rows:
-            continue
-        seen_tsv_rows.add(tsv_row)
-        tsv_lines.append(tsv_row)
-
-    return "\n".join(tsv_lines) + "\n"
+    # Convert all collected results to TSV (empty results -> header only, which is
+    # the correct output for an accession QuickGO knows but has no annotations for).
+    return _goa_results_to_tsv(all_results)
 
 
 def fetch_rnacentral_data_by_id(rnacentral_id: str) -> str:

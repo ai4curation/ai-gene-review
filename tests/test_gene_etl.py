@@ -316,3 +316,83 @@ def test_accession_fetch_records_uniprot_gene_name(mock_fetch_uniprot, mock_fetc
     )
     assert review["id"] == "L0R8F8"
     assert review["gene_symbol"] == "MIEF1"
+
+
+# ---------------------------------------------------------------------------
+# GOA JSON -> TSV conversion and taxon-name backfill
+# ---------------------------------------------------------------------------
+
+from ai_gene_review.etl.gene import (  # noqa: E402
+    GOA_TSV_HEADER,
+    _goa_results_to_tsv,
+    _resolve_taxon_name,
+)
+
+
+def test_goa_empty_results_is_header_only():
+    """No annotations yields the header row only (the demerged-accession case)."""
+    out = _goa_results_to_tsv([])
+    assert out == GOA_TSV_HEADER + "\n"
+
+
+def test_goa_taxon_name_backfilled_from_taxon_id():
+    """TAXON NAME is backfilled from taxonId when QuickGO omits taxonName.
+
+    QuickGO's includeFields=taxonName path returns HTTP 500, so results arrive
+    without a taxonName; the human taxon id must still resolve to 'Homo sapiens'.
+    """
+    results = [
+        {
+            "geneProductId": "UniProtKB:P12345",
+            "symbol": "SLC26A2",
+            "qualifier": "enables",
+            "goId": "GO:0015116",
+            "goName": "sulfate transmembrane transporter activity",
+            "goAspect": "molecular_function",
+            "evidenceCode": "ECO:0000501",
+            "goEvidence": "IEA",
+            "reference": "GO_REF:0000002",
+            "taxonId": 9606,  # no taxonName supplied
+            "assignedBy": "InterPro",
+            "name": "Sulfate transporter",
+            "date": "20240101",
+        }
+    ]
+    lines = _goa_results_to_tsv(results).splitlines()
+    assert lines[0] == GOA_TSV_HEADER
+    cols = lines[1].split("\t")
+    assert cols[0] == "UniProtKB"  # GENE PRODUCT DB
+    assert cols[1] == "P12345"  # GENE PRODUCT ID
+    assert cols[4] == "GO:0015116"  # GO TERM
+    assert cols[5] == "sulfate transmembrane transporter activity"  # GO NAME
+    assert cols[11] == "9606"  # TAXON ID
+    assert cols[12] == "Homo sapiens"  # TAXON NAME (backfilled)
+    assert cols[14] == "Sulfate transporter"  # GENE NAME
+
+
+def test_goa_existing_taxon_name_is_preserved():
+    """A taxonName already supplied by QuickGO is used verbatim, not overwritten."""
+    results = [
+        {"geneProductId": "UniProtKB:P1", "goId": "GO:1", "taxonId": 9606,
+         "taxonName": "Homo sapiens (custom)"},
+    ]
+    cols = _goa_results_to_tsv(results).splitlines()[1].split("\t")
+    assert cols[12] == "Homo sapiens (custom)"
+
+
+def test_goa_rows_deduplicated_after_projection():
+    """Rows identical after projection (e.g. differing only in extensions) collapse."""
+    base = {"geneProductId": "UniProtKB:P1", "goId": "GO:1", "taxonId": 9606,
+            "goEvidence": "IDA"}
+    results = [dict(base, extensions=["a"]), dict(base, extensions=["b"])]
+    body = [ln for ln in _goa_results_to_tsv(results).splitlines()[1:]]
+    assert len(body) == 1
+
+
+def test_resolve_taxon_name_human_offline():
+    assert _resolve_taxon_name("9606") == "Homo sapiens"
+
+
+def test_resolve_taxon_name_blank_for_nonnumeric():
+    assert _resolve_taxon_name("") == ""
+    assert _resolve_taxon_name("notanid") == ""
