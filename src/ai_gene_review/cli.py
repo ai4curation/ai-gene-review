@@ -5119,8 +5119,10 @@ def panther_release_diff(
     Lists cited PANTHER family and subfamily ids that are gone or renamed in the
     target release, and, for every module family descriptor and family-review
     subfamily that names representative members, the id those members fall into
-    in the target release. Edits nothing; proposals are for curators to check.
-    Downloads both releases' classification files into <repo>/.cache/panther.
+    in the target release, and the quotes of interpro/panther/panther.obo that the
+    rebuilt artifact would break. Edits nothing; proposals are for curators to
+    check. Downloads both releases' classification files into <repo>/.cache/panther
+    and renders the target release's OBO there.
 
     Example:
         ai-gene-review panther-release-diff 20.0
@@ -5135,24 +5137,33 @@ def panther_release_diff(
         fetch_sequence_classification,
         hmm_url,
         parse_hmm_classifications,
+        write_panther_obo,
     )
     from ai_gene_review.etl.panther_release_diff import (
         DEFAULT_SCAN_GLOBS,
+        broken_obo_quotes,
         build_report,
         cited_ids,
         collect_anchors,
     )
+    from ai_gene_review.validation.quote_check import default_files
 
+    if target_release == PANTHER_RELEASE:
+        raise typer.BadParameter(
+            f"{target_release} is the pinned release; give the release to compare with"
+        )
     repo_root = output_dir or Path.cwd()
     cache = repo_root / ".cache" / "panther"
     anchors = collect_anchors(repo_root)
     accessions = {accession for anchor in anchors for accession in anchor.members}
     organisms = list(organism or DEFAULT_ORGANISMS)
 
-    def names(release: str) -> dict:
+    def entries(release: str) -> list:
         path = fetch_hmm_classifications(cache, url=hmm_url(release))
-        entries = parse_hmm_classifications(path.read_text(errors="replace").splitlines())
-        return {entry.accession: entry.name for entry in entries}
+        return parse_hmm_classifications(path.read_text(errors="replace").splitlines())
+
+    def names(release: str) -> dict:
+        return {entry.accession: entry.name for entry in entries(release)}
 
     def member_index(release: str) -> dict:
         paths = []
@@ -5174,6 +5185,15 @@ def panther_release_diff(
         anchors,
         member_index(PANTHER_RELEASE),
         member_index(target_release),
+        broken_obo_quotes(
+            # validate-quotes' files, plus gene reviews, whose quotes `just validate` checks.
+            sorted(set(default_files(repo_root)) | set(repo_root.glob("genes/*/*/*-ai-review.yaml"))),
+            repo_root,
+            repo_root / "interpro" / "panther" / "panther.obo",
+            write_panther_obo(
+                entries(target_release), cache / f"panther-{target_release}.obo", release=target_release
+            ),
+        ),
     )
     out = output or (
         repo_root / "reports" / f"panther-release-diff-{PANTHER_RELEASE}-to-{target_release}.yaml"

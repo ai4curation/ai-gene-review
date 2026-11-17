@@ -282,7 +282,8 @@ check-panther-release:
     uv run ai-gene-review check-panther-release
 
 # Dry-run report of what a PANTHER release bump would change: cited ids gone or
-# renamed, and member-based id proposals for every anchor. Edits nothing.
+# renamed, member-based id proposals for every anchor, and panther.obo quotes the
+# rebuilt artifact would break. Edits nothing.
 # Example: just panther-release-diff 20.0
 [group('QC')]
 panther-release-diff target_release *args="":

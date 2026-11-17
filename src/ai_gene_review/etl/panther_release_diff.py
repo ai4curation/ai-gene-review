@@ -5,11 +5,20 @@ done by relabelling ids (see ``docs/panther_node_anchoring_plan.md``, Phase 2). 
 module compares the pinned release with a target release and reports, without editing
 anything:
 
-1. every PANTHER family or subfamily id cited in the scanned files, with its status in
-   the target release (unchanged, renamed, gone); and
+1. every PANTHER family or subfamily id cited in modules and family reviews, with its
+   status in the target release (unchanged, renamed, gone);
 2. every anchor that names representative members (module family descriptors and
    family-review subfamilies), with the family or subfamily those members fall into in
-   each release, and a proposed id when the members agree.
+   each release, and a proposed id when the members agree; and
+3. every ``supporting_text`` quote of ``interpro/panther/panther.obo`` that verifies
+   today but would not once that committed artifact is rebuilt for the target release.
+
+Two kinds of file are deliberately not scanned for ids. Rule reviews (``rules/``) cite
+PANTHER ids inside ``rule.condition_sets``, a verbatim transcription of the published
+upstream rule that must not be rewritten; they change when the rule is re-fetched.
+Gene reviews (``genes/``) mention subfamilies in prose and quote UniProt's
+``DR PANTHER`` lines, which move on UniProt's schedule rather than with this
+repository's pinned release.
 
 The report is the input for remapping: a proposal is a suggestion for a curator, never
 applied automatically, because re-pointing a family is a judgement about evolutionary
@@ -29,14 +38,16 @@ import yaml
 from ai_gene_review.etl.panther_families import label_drift
 from ai_gene_review.validation.module_validator import iter_family_member_uses
 
-PANTHER_ID_RE = re.compile(r"\bPTHR\d{5}(?::SF\d+)?\b")
+PANTHER_ID_RE = re.compile(r"\bPTHR\d+(?::SF\d+)?\b")
 
-# Files whose PANTHER ids are claims this repo makes (not fetched metadata).
+# Files whose PANTHER ids are claims this repo makes and may remap (see module docstring).
 DEFAULT_SCAN_GLOBS: Tuple[str, ...] = (
     "modules/**/*.yaml",
     "interpro/panther/*/*-review.yaml",
-    "rules/**/*.yaml",
 )
+
+# The committed artifact rebuilt at a bump, whose quotes the bump can break.
+OBO_REFERENCE = "file:interpro/panther/panther.obo"
 
 
 @dataclass(frozen=True)
@@ -44,7 +55,7 @@ class IdChange:
     """How one family or subfamily id fares in the target release."""
 
     accession: str
-    status: str  # unchanged | renamed | gone | not_in_current
+    status: str  # unchanged | renamed | gone | new_in_target | unknown
     current_name: Optional[str] = None
     target_name: Optional[str] = None
     drift: Optional[str] = None  # label_drift() of a rename: cosmetic | partial | divergent
@@ -55,19 +66,26 @@ def classify_id(
 ) -> IdChange:
     """Compare one bare id's name in the current and target releases.
 
+    ``drift`` reuses :func:`label_drift` to compare two official names across releases;
+    ``divergent`` here means the id now names something else, not that it was wrong.
+    An id absent from the current release is ``new_in_target`` when the target has it
+    (a citation ahead of the pin) and ``unknown`` when neither release has it.
+
     >>> cur = {"PTHR1:SF1": "PROTEIN SUFA", "PTHR1:SF2": "TISSUE ALPHA-L-FUCOSIDASE",
     ...        "PTHR1:SF3": "X"}
     >>> tgt = {"PTHR1:SF1": "IRON-SULFUR CLUSTER ASSEMBLY PROTEIN SUFA",
-    ...        "PTHR1:SF2": "SODIUM/HYDROGEN EXCHANGER 2"}
+    ...        "PTHR1:SF2": "SODIUM/HYDROGEN EXCHANGER 2", "PTHR1:SF4": "Y"}
     >>> classify_id("PTHR1:SF1", cur, tgt).drift
     'cosmetic'
     >>> classify_id("PTHR1:SF2", cur, tgt).drift
     'divergent'
-    >>> classify_id("PTHR1:SF3", cur, tgt).status, classify_id("PTHR9", cur, tgt).status
-    ('gone', 'not_in_current')
+    >>> [classify_id(a, cur, tgt).status for a in ("PTHR1:SF3", "PTHR1:SF4", "PTHR9")]
+    ['gone', 'new_in_target', 'unknown']
     """
     if accession not in current:
-        return IdChange(accession, "not_in_current", target_name=target.get(accession))
+        if accession in target:
+            return IdChange(accession, "new_in_target", target_name=target[accession])
+        return IdChange(accession, "unknown")
     name = current[accession]
     if accession not in target:
         return IdChange(accession, "gone", current_name=name)
@@ -83,9 +101,9 @@ def cited_ids(paths: Iterable[Path], root: Path) -> Dict[str, Set[str]]:
 
     >>> import tempfile
     >>> d = Path(tempfile.mkdtemp())
-    >>> _ = (d / "m.yaml").write_text("id: PANTHER:PTHR10024:SF344\\nalso: PTHR10024\\n")
+    >>> _ = (d / "m.yaml").write_text("id: PANTHER:PTHR10024:SF344\\nalso: PTHR100245\\n")
     >>> cited_ids([d / "m.yaml"], d)
-    {'PTHR10024:SF344': {'m.yaml'}, 'PTHR10024': {'m.yaml'}}
+    {'PTHR10024:SF344': {'m.yaml'}, 'PTHR100245': {'m.yaml'}}
     """
     found: Dict[str, Set[str]] = {}
     for path in paths:
@@ -160,8 +178,9 @@ def family_review_anchors(data: Any, file: str) -> List[Anchor]:
 class Remap:
     """Where an anchor's members fall in the target release, and what that suggests."""
 
-    # Bump-driven: remap | split | unresolved. Pre-existing or out of scope, counted
-    # but not listed: unchanged | split_in_current | not_classified | multiple_declared.
+    # Bump-driven, listed: see BUMP_DRIVEN. Pre-existing or out of scope, counted but
+    # not listed: unchanged | split_in_current | not_classified | family_only |
+    # multiple_declared.
     status: str
     proposed: Optional[str] = None
     current: Dict[str, str] = field(default_factory=dict)
@@ -170,11 +189,22 @@ class Remap:
 
 
 # Remap statuses the bump itself causes; only these anchors are listed in the report.
-BUMP_DRIVEN = frozenset({"remap", "split", "unresolved"})
+BUMP_DRIVEN = frozenset({"remap", "split", "unresolved", "family_only_in_target"})
 
 
-def _at_level(family_sf: str, subfamily_level: bool) -> str:
-    return family_sf if subfamily_level else family_sf.split(":", 1)[0]
+def _levels(assignments: Iterable[str], subfamily_level: bool) -> Set[str]:
+    """Members' ids at the declared level.
+
+    A classification row may record only a bare family (no subfamily recorded, not "no
+    subfamily exists"); at subfamily level such a row says nothing, so it is ignored
+    rather than read as a proposal to coarsen the anchor to its family.
+
+    >>> sorted(_levels(["PTHR1:SF2", "PTHR1"], True)), sorted(_levels(["PTHR1:SF2", "PTHR1"], False))
+    (['PTHR1:SF2'], ['PTHR1'])
+    """
+    if subfamily_level:
+        return {value for value in assignments if ":" in value}
+    return {value.split(":", 1)[0] for value in assignments}
 
 
 def propose_remap(
@@ -182,10 +212,10 @@ def propose_remap(
 ) -> Remap:
     """Propose the target-release id for an anchor from its members' classification.
 
-    A proposal is made only when every member found in the target release agrees.
-    Members split across ids, or missing from the classification files, are told
-    apart from the same state already present in the current release, which the
-    bump did not cause.
+    A proposal is made only when every member classified at the declared level in the
+    target release agrees. Members split across ids, missing from the classification
+    files or recorded only at family level are told apart from the same state already
+    present in the current release, which the bump did not cause.
 
     >>> a = Anchor("m.yaml", "$", ("PTHR1:SF5",), ("P1", "P2"))
     >>> propose_remap(a, {"P1": "PTHR1:SF5"}, {"P1": "PTHR1:SF5", "P2": "PTHR1:SF5"}).status
@@ -200,6 +230,11 @@ def propose_remap(
     'split_in_current'
     >>> propose_remap(a, {"P1": "PTHR1:SF5"}, {}).status, propose_remap(a, {}, {}).status
     ('unresolved', 'not_classified')
+    >>> r = propose_remap(a, {"P1": "PTHR1:SF5"}, {"P1": "PTHR1"})
+    >>> r.status, r.proposed
+    ('family_only_in_target', None)
+    >>> propose_remap(a, {"P1": "PTHR1:SF5"}, {"P1": "PTHR1", "P2": "PTHR1:SF9"}).proposed
+    'PTHR1:SF9'
     >>> fam = Anchor("m.yaml", "$", ("PTHR1",), ("P1",))
     >>> propose_remap(fam, {"P1": "PTHR2:SF1"}, {"P1": "PTHR1:SF3"}).mismatched_in_current
     True
@@ -210,26 +245,21 @@ def propose_remap(
         return Remap("multiple_declared", current=current, target=target)
     declared = anchor.declared[0]
     subfamily_level = ":" in declared
-    mismatched = bool(current) and declared not in {
-        _at_level(v, subfamily_level) for v in current.values()
-    }
+    current_levels = _levels(current.values(), subfamily_level)
+    mismatched = bool(current_levels) and declared not in current_levels
+
+    def remap(status: str, proposed: Optional[str] = None) -> Remap:
+        return Remap(status, proposed, current, target, mismatched)
+
     if not target:
-        status = "unresolved" if current else "not_classified"
-        return Remap(status, current=current, target=target, mismatched_in_current=mismatched)
-    levels = {_at_level(v, subfamily_level) for v in target.values()}
-    if len(levels) > 1:
-        already_split = len({_at_level(v, subfamily_level) for v in current.values()}) > 1
-        status = "split_in_current" if already_split else "split"
-        return Remap(status, current=current, target=target, mismatched_in_current=mismatched)
-    (proposed,) = levels
-    status = "unchanged" if proposed == declared else "remap"
-    return Remap(
-        status,
-        None if status == "unchanged" else proposed,
-        current,
-        target,
-        mismatched,
-    )
+        return remap("unresolved" if current else "not_classified")
+    target_levels = _levels(target.values(), subfamily_level)
+    if not target_levels:
+        return remap("family_only_in_target" if current_levels else "family_only")
+    if len(target_levels) > 1:
+        return remap("split_in_current" if len(current_levels) > 1 else "split")
+    (proposed,) = target_levels
+    return remap("unchanged") if proposed == declared else remap("remap", proposed)
 
 
 def collect_anchors(root: Path) -> List[Anchor]:
@@ -244,6 +274,39 @@ def collect_anchors(root: Path) -> List[Anchor]:
     return anchors
 
 
+def broken_obo_quotes(
+    files: Iterable[Path], root: Path, current_obo: Path, target_obo: Path
+) -> List[Dict[str, Any]]:
+    """Quotes of ``panther.obo`` that verify against ``current_obo`` but not ``target_obo``.
+
+    Uses the same matching rule as ``just validate-quotes``, so each entry is a quote
+    that would start failing when the committed artifact is rebuilt for the target
+    release. Quotes that already fail today are not the bump's doing and are skipped.
+    """
+    from ai_gene_review.validation.local_source_text import quote_matches
+    from ai_gene_review.validation.quote_check import iter_quotes
+
+    broken: List[Dict[str, Any]] = []
+    for path in files:
+        text = path.read_text(errors="replace")
+        if OBO_REFERENCE not in text:
+            continue
+        for quote in iter_quotes(yaml.safe_load(text)):
+            if quote.reference_id != OBO_REFERENCE:
+                continue
+            if quote_matches(quote.text, current_obo) and not quote_matches(
+                quote.text, target_obo
+            ):
+                broken.append(
+                    {
+                        "file": str(path.relative_to(root)),
+                        "path": quote.path,
+                        "ids": [f"PANTHER:{i}" for i in sorted(set(PANTHER_ID_RE.findall(quote.text)))],
+                    }
+                )
+    return broken
+
+
 def build_report(
     current_release: str,
     target_release: str,
@@ -253,14 +316,18 @@ def build_report(
     anchors: Iterable[Anchor],
     current_index: Mapping[str, str],
     target_index: Mapping[str, str],
+    obo_quotes: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """Assemble the dry-run report as plain data (ready for YAML)."""
+    if current_release == target_release:
+        raise ValueError(f"target release {target_release} is the pinned release")
     changes = [classify_id(acc, current_names, target_names) for acc in sorted(cited)]
     id_counts = Counter(
         f"renamed_{c.drift}" if c.status == "renamed" else c.status for c in changes
     )
     remaps = [(anchor, propose_remap(anchor, current_index, target_index)) for anchor in anchors]
     remap_counts = Counter(remap.status for _, remap in remaps)
+    quotes = obo_quotes or []
     return {
         "current_release": current_release,
         "target_release": target_release,
@@ -270,6 +337,8 @@ def build_report(
             "anchors": len(remaps),
             "anchor_remaps": dict(sorted(remap_counts.items())),
             "anchors_mismatched_in_current": sum(r.mismatched_in_current for _, r in remaps),
+            "obo_quotes_broken": len(quotes),
+            "obo_quote_files": len({q["file"] for q in quotes}),
         },
         "ids": [
             {
@@ -297,4 +366,5 @@ def build_report(
             for anchor, remap in remaps
             if remap.status in BUMP_DRIVEN or remap.mismatched_in_current
         ],
+        "obo_quotes": quotes,
     }
