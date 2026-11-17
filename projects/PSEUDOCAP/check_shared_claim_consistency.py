@@ -71,6 +71,14 @@ def actions_for_term(folder: str, term_id: str) -> list[str]:
     phosphotransferase activity, a different reaction class, because it is a
     WecA-type initiating enzyme rather than a glycosyltransferase.
 
+    The verdict also carries ``NOT`` when the row is negated. A negated row
+    asserts the opposite claim, so an ``ACCEPT`` of ``NOT|enables X`` and an
+    ``ACCEPT`` of ``enables X`` are the sharpest disagreement a shared claim can
+    hold, and on the bare action they compare equal. ``thrH`` is the corpus
+    example: its ``GO:0004413`` row is ``negated: true``, and were that term ever
+    shared with a member that accepts it positively, the two would currently
+    report as consistent.
+
     Three empty-ish results are kept distinct, because they mean different things
     and conflating them would report "no row" for a review that is simply not
     there: ``["(no review file)"]`` when the review does not exist, against
@@ -110,7 +118,10 @@ def actions_for_term(folder: str, term_id: str) -> list[str]:
             for term in review.get("proposed_replacement_terms") or []
             if term.get("id")
         )
-        verdicts.add(f"{action}->{'+'.join(replacements)}" if replacements else action)
+        verdict = f"{action}->{'+'.join(replacements)}" if replacements else action
+        if row.get("negated"):
+            verdict = f"NOT:{verdict}"
+        verdicts.add(verdict)
     if verdicts:
         return sorted(verdicts)
     # Excluding NEW rows created a third empty case, distinct from the other two:

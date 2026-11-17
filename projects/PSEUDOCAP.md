@@ -616,9 +616,29 @@ sugar-1-phosphate and is not a glycosyltransferase in GO's sense at all. Each is
 argued in the rows themselves, which is what makes them fine.
 
 The verdict the script compares is the action *plus the replacement term* where the
-action is MODIFY. Comparing bare actions would have called `wbpL` and `wbpY`
-consistent back when both read MODIFY, even though they were moving to different
-branches of the ontology.
+action is MODIFY, and prefixed with `NOT:` where the row is negated. Comparing bare
+actions would have called `wbpL` and `wbpY` consistent back when both read MODIFY,
+even though they were moving to different branches of the ontology; and an `ACCEPT`
+of `NOT|enables X` against an `ACCEPT` of `enables X` is the sharpest disagreement a
+shared claim can hold while looking identical on the action alone. No current shared
+claim has a negated member — `thrH`'s `GO:0004413` row is the corpus's only one — so
+this changes no output today.
+
+Each group lands in one of four buckets, and the two empty-ish ones mean different
+things to a reader:
+
+- **divergent** — every member ruled on the claim, and they disagree. Read it.
+- **consistent** — every member ruled, and they agree.
+- **incomplete** — a member cannot be compared because its review does not exist.
+  That is curation backlog: someone has to review the gene, and divergence can only
+  appear once they have.
+- **no verdict** — every member is reviewed, but none rules on the claim (the only
+  rows on the term are `NEW` proposals, which assert an addition rather than judge
+  the shared claim). Nothing to chase; the group is complete and simply has no
+  verdict to compare.
+
+Conflating the last two would send a reader looking for a missing review that is not
+missing, which is why they are counted separately.
 
 **The audit covers molecular function only**, because it reads the MF worklist, whose
 builder selects IMP rows on molecular-function terms. A clean run means a pair agrees
