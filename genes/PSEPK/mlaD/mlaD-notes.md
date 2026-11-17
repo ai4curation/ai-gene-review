@@ -19,3 +19,11 @@ module therefore use direction-neutral phospholipid transfer. Second, the
 adjacent ttg2 solvent-tolerance context does not establish a direct
 MlaD-specific toluene-tolerance function, so it remains pathway context rather
 than a core annotation.
+
+
+## 2026-11-07 Mla comparative re-review
+
+- Refine true broad phospholipid transport to supported intermembrane transfer; keep target assays distinct from ortholog evidence.
+- Every original annotation row, source payload, qualifier, historical NEW action and lifecycle state is retained in order; no additional rows were proposed.
+- Existing genuine OpenScientist research was reused and preserved byte-for-byte; comparative mechanism is explicitly distinguished from target-specific assays.
+- Source scope and official API provenance: `analysis/module_audits/bacterial_mla_intermembrane_phospholipid_transport/existing-review-consultation/evidence.md`. Existing notes above are historical; this dated entry supersedes narrower claims corrected here.

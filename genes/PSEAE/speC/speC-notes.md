@@ -43,3 +43,20 @@ O14977 reads: "AZI is an enzymatically inactive ODC homolog that counteracts the
 negative effect of ODC antizymes". A GO_CENTRAL defect (MISSING_NEGATION on the AZIN1
 subclade) is recorded on the speC ODC IBA row. It does not affect speC itself, whose
 IBA is correct.
+
+## 2026-11-13 merge of the bacterial_putrescine_biosynthesis review (PR #6233)
+
+Deep research: no provider run (no API keys in this session); the review was built
+from the UniProt record and the cached publication.
+
+- speC encodes the ODC of the direct ornithine route; ODC and ADC activities are
+  similar and either suffices for growth; the double mutant is a putrescine auxotroph.
+  [PMID:12634339 "A mutant defective in both speA and speC was a putrescine auxotroph."]
+- The UniProt entry is unreviewed (PE 3); its name is submitter-imported and its
+  pathway/similarity lines are ARBA, so only family signatures (InterPro IPR002433,
+  PRINTS ORNDCRBXLASE, CDD PLPDE_III_ODC, PTHR11482:SF6) are cited.
+- Q9HVQ3 is itself a PAINT seed for PTN000159726 (ODC activity), from the IMP row.
+- Reconciled with the PseudoCAP review above: every row verdict agreed; that review's
+  description, AZIN1 source defect and reference adjudication were kept, and the
+  family-signature quotes from this review were added as support on the rows that
+  had none.

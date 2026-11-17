@@ -47,14 +47,48 @@ import requests
 import yaml
 
 PANTHER_RELEASE = "19.0"
+
+
+def hmm_url(release: str = PANTHER_RELEASE) -> str:
+    """URL of one release's HMM classification file (family and subfamily names).
+
+    >>> hmm_url("20.0").rsplit("/", 2)[1:]
+    ['20.0', 'PANTHER20.0_HMM_classifications']
+    """
+    return f"https://data.pantherdb.org/ftp/hmm_classifications/{release}/PANTHER{release}_HMM_classifications"
+
+
+def seq_base(release: str = PANTHER_RELEASE) -> str:
+    """Folder holding one release's per-organism sequence classification files."""
+    return (
+        f"https://data.pantherdb.org/ftp/sequence_classifications/{release}/"
+        "PANTHER_Sequence_Classification_files"
+    )
+
+
 # Release-pinned paths, not current_release/: the file names embed the release,
 # so current_release/ would 404 (or silently change) when PANTHER moves on.
-HMM_BASE = f"https://data.pantherdb.org/ftp/hmm_classifications/{PANTHER_RELEASE}"
-HMM_URL = f"{HMM_BASE}/PANTHER{PANTHER_RELEASE}_HMM_classifications"
-SEQ_BASE = (
-    f"https://data.pantherdb.org/ftp/sequence_classifications/{PANTHER_RELEASE}/"
-    "PANTHER_Sequence_Classification_files"
-)
+HMM_URL = hmm_url()
+SEQ_BASE = seq_base()
+
+# PAINT is published apart from the library, as dated snapshots under each release
+# (paint/<release>/<date>/). Pin one: paint/current/ changes without notice, and
+# would move to the next release before PANTHER_RELEASE does. Bump both together.
+PAINT_SNAPSHOT = "2026-08-28"
+PAINT_ROOT = "https://data.pantherdb.org/ftp/downloads/paint"
+PAINT_BASE = f"{PAINT_ROOT}/{PANTHER_RELEASE}/{PAINT_SNAPSHOT}"
+
+
+def paint_cache_dir(cache_root: Path) -> Path:
+    """Folder under ``cache_root`` for files from the pinned PAINT snapshot.
+
+    Keyed by release and snapshot, so a bump downloads afresh instead of reusing
+    files fetched from an earlier snapshot.
+
+    >>> paint_cache_dir(Path("c")).name == f"paint-{PANTHER_RELEASE}-{PAINT_SNAPSHOT}"
+    True
+    """
+    return Path(cache_root) / f"paint-{PANTHER_RELEASE}-{PAINT_SNAPSHOT}"
 
 FAMILY_RE = re.compile(r"^PTHR\d+$")
 SUBFAMILY_RE = re.compile(r"^(PTHR\d+):(SF\d+)$")
@@ -263,21 +297,25 @@ def parse_sequence_classification(lines: Iterable[str]) -> Dict[str, str]:
 
 
 def fetch_sequence_classification(
-    organism: str, cache_dir: Path, force_download: bool = False
+    organism: str,
+    cache_dir: Path,
+    force_download: bool = False,
+    release: str = PANTHER_RELEASE,
 ) -> Optional[Path]:
     """Download one organism's sequence classification, or None if absent.
 
     PANTHER publishes these per organism under fixed slugs (``human``,
     ``e_coli``, ``pseudomonas``, ...). An unknown slug 404s, which is reported as
-    ``None`` rather than raising so callers can sweep a candidate list.
+    ``None`` rather than raising so callers can sweep a candidate list. File names
+    embed the release, so several releases can share one ``cache_dir``.
     """
     cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"PTHR{PANTHER_RELEASE}_{organism}"
+    filename = f"PTHR{release}_{organism}"
     dest = cache_dir / filename
     if dest.exists() and not force_download:
         return dest
-    response = requests.get(f"{SEQ_BASE}/{filename}", timeout=300)
+    response = requests.get(f"{seq_base(release)}/{filename}", timeout=300)
     if response.status_code == 404:
         return None
     response.raise_for_status()
@@ -792,7 +830,7 @@ def build_member_index(
 # PAINT slice integrity
 # --------------------------------------------------------------------------- #
 
-IBD_GAF_URL = "https://data.pantherdb.org/ftp/downloads/paint/current/IBD.gaf"
+IBD_GAF_URL = f"{PAINT_BASE}/IBD.gaf"
 
 # GAF columns (0-based) needed to key a node annotation.
 _GAF_COL_OBJECT_ID = 1
@@ -1185,3 +1223,90 @@ def fetch_panther_from_uniprot(accessions: Iterable[str]) -> Dict[str, str]:
             if accession and best:
                 resolved[accession] = best
     return resolved
+
+
+# --------------------------------------------------------------------------- #
+# Release drift: has PANTHER moved past the pinned release or PAINT snapshot?
+# --------------------------------------------------------------------------- #
+
+HMM_ROOT = "https://data.pantherdb.org/ftp/hmm_classifications"
+# Smallest oai endpoint that reports the release the API serves (as product.version).
+API_VERSION_URL = "https://pantherdb.org/services/oai/pantherdb/supportedannotdatasets"
+
+
+def _release_key(release: str) -> Tuple[int, ...]:
+    """Sort key for a release string.
+
+    >>> _release_key("19.0") < _release_key("20.0") < _release_key("20.10")
+    True
+    """
+    return tuple(int(part) for part in release.split("."))
+
+
+def same_release(served: object, pinned: str) -> bool:
+    """Whether a release reported by the PANTHER API is the pinned one.
+
+    The API reports ``19`` where the FTP paths say ``19.0``.
+
+    >>> same_release(19, "19.0"), same_release("19.0", "19.0"), same_release(20, "19.0")
+    (True, True, False)
+    """
+    text = str(served)
+    return _release_key(text if "." in text else f"{text}.0") == _release_key(pinned)
+
+
+def newer_releases(listing_html: str, pinned: str) -> List[str]:
+    """Release folders (``NN.N/``) in an FTP listing that are newer than ``pinned``.
+
+    >>> newer_releases('<a href="18.0/"><a href="19.0/"><a href="20.0/"><a href="current/">', "19.0")
+    ['20.0']
+    """
+    found = set(re.findall(r'href="(\d+\.\d+)/"', listing_html))
+    return sorted((r for r in found if _release_key(r) > _release_key(pinned)), key=_release_key)
+
+
+def newer_snapshots(listing_html: str, pinned: str) -> List[str]:
+    """Dated PAINT snapshot folders in an FTP listing that are newer than ``pinned``.
+
+    >>> html = '<a href="2026-06-02/"><a href="2026-08-28/"><a href="2026-11-01/">'
+    >>> newer_snapshots(html, "2026-08-28")
+    ['2026-11-01']
+    """
+    dates = set(re.findall(r'href="(\d{4}-\d{2}-\d{2})/"', listing_html))
+    return sorted(d for d in dates if d > pinned)
+
+
+def panther_release_drift(timeout: int = 60) -> Tuple[List[str], List[str]]:
+    """Compare the pinned release and PAINT snapshot with what PANTHER serves now.
+
+    Returns ``(stale, notices)``. ``stale`` lists ways the pinned data is no longer
+    what PANTHER serves, which call for a bump: a newer PAINT snapshot, PAINT or the
+    tree API on another release. ``notices`` lists newer library releases (family and
+    subfamily classifications) that may not be in PAINT or the API yet. Needs the
+    network; raises on an HTTP error rather than reporting "no drift".
+    """
+
+    def get(url: str) -> requests.Response:
+        response = requests.get(url, timeout=timeout)
+        response.raise_for_status()
+        return response
+
+    stale: List[str] = []
+    notices: List[str] = []
+    for snapshot in newer_snapshots(get(f"{PAINT_ROOT}/{PANTHER_RELEASE}/").text, PAINT_SNAPSHOT):
+        stale.append(
+            f"PAINT snapshot {PANTHER_RELEASE}/{snapshot} is newer than the pinned {PAINT_SNAPSHOT}"
+        )
+    for release in newer_releases(get(f"{PAINT_ROOT}/").text, PANTHER_RELEASE):
+        stale.append(f"PAINT has a {release} folder, newer than the pinned {PANTHER_RELEASE}")
+    if f"Pthr_GO_{PANTHER_RELEASE}.tsv" not in get(f"{PAINT_ROOT}/current/").text:
+        stale.append(f"paint/current/ no longer holds PANTHER {PANTHER_RELEASE} data")
+    served = get(API_VERSION_URL).json()["search"]["product"]["version"]
+    if not same_release(served, PANTHER_RELEASE):
+        stale.append(f"the PANTHER API serves release {served}, not the pinned {PANTHER_RELEASE}")
+    for release in newer_releases(get(f"{HMM_ROOT}/").text, PANTHER_RELEASE):
+        notices.append(
+            f"PANTHER {release} family classifications are published; "
+            "PAINT and the tree API may not serve it yet"
+        )
+    return stale, notices

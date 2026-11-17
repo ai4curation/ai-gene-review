@@ -1,0 +1,139 @@
+{% macro term_cell(t) -%}
+{%- if t -%}
+{%- if t.label %}{{ t.label }}<br>{% endif %}<span class="id">{{ t.id }}</span>
+{%- endif -%}
+{%- endmacro %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ review.title or model_id }} - GO-CAM review</title>
+    {% include "_gocam_style.html.j2" %}
+</head>
+<body>
+<div class="page">
+    <div class="panel">
+        <div class="crumbs"><a href="{{ index_href }}">GO-CAM reviews</a></div>
+        <h1>{{ review.title or model_id }}</h1>
+        <div class="meta">
+            <span>Model <a href="{{ model_iri }}">{{ model_id }}</a></span>
+            {% if review.taxon %}<span>Taxon {{ review.taxon }}</span>{% endif %}
+            {% if review.status %}<span>Review status {{ review.status }}</span>{% endif %}
+            <span>{{ activities | length }} activities:
+                <span class="verdict-OK">{{ counts.OK }} OK</span>,
+                <span class="verdict-UNCERTAIN">{{ counts.UNCERTAIN }} uncertain</span>,
+                <span class="verdict-WRONG">{{ counts.WRONG }} wrong</span></span>
+            <span><a href="{{ review_href }}">Review YAML</a></span>
+        </div>
+    </div>
+
+    {% if review.summary or review.description or review.notes %}
+    <div class="panel">
+        <h2>Summary</h2>
+        {% if review.description %}<p>{{ review.description }}</p>{% endif %}
+        {% if review.summary %}<p>{{ review.summary }}</p>{% endif %}
+        {% if review.notes %}<p class="muted">{{ review.notes }}</p>{% endif %}
+    </div>
+    {% endif %}
+
+    <div class="panel">
+        <h2>Activities</h2>
+        <div class="table-wrap">
+        <table>
+            <thead>
+            <tr>
+                <th>Gene product</th>
+                <th>Molecular function</th>
+                <th>Process</th>
+                <th>Location</th>
+                <th>Verdict</th>
+                <th>Gene review</th>
+                <th>Notes</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for a in activities %}
+            <tr id="{{ a.activity_id | replace('/', '-') | replace(':', '-') }}">
+                <td>{{ term_cell(a.gene_product_term) }}</td>
+                <td>{{ term_cell(a.mf_term) }}</td>
+                <td>{{ term_cell(a.bp_term) }}</td>
+                <td>{{ term_cell(a.cc_term) }}</td>
+                <td>
+                    {% if a.verdict %}<span class="verdict verdict-{{ a.verdict }}">{{ a.verdict }}</span>{% endif %}
+                    {% for flag in a.qc_flags or [] %}<br><span class="flag">{{ flag }}</span>{% endfor %}
+                </td>
+                <td>
+                    {% if a.consistency %}{{ a.consistency }}{% endif %}
+                    {% if a.gene_review_href %}<br><a href="{{ a.gene_review_href }}">review</a>{% endif %}
+                </td>
+                <td>
+                    {% if a.notes %}<details><summary>Notes</summary><p>{{ a.notes }}</p></details>{% endif %}
+                    {% if a.supporting_text and a.supporting_text not in (a.evidence or []) | map(attribute="supporting_text") | list %}
+                    <blockquote>{{ a.supporting_text }}</blockquote>
+                    {% endif %}
+                    {% if a.evidence %}
+                    <details><summary>Evidence ({{ a.evidence | length }})</summary>
+                        {% for e in a.evidence %}
+                        <p><span class="id">{{ e.source_id }}</span> {{ e.statement or "" }}</p>
+                        {% if e.supporting_text %}<blockquote>{{ e.supporting_text }}</blockquote>{% endif %}
+                        {% endfor %}
+                    </details>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+    {% if defects %}
+    <div class="panel">
+        <h2>Source defects ({{ defects | length }})</h2>
+        <p class="muted">Errors in the GO-CAM model itself, recorded for reporting to the resource.</p>
+        <div class="table-wrap">
+        <table>
+            <thead>
+            <tr><th>Type</th><th>Slot</th><th>Asserted</th><th>Corrected</th><th>Change</th><th>Confidence</th><th>Explanation</th></tr>
+            </thead>
+            <tbody>
+            {% for d in defects %}
+            <tr>
+                <td>{{ d.defect_type or "" }}</td>
+                <td>{{ d.slot or "" }}</td>
+                <td><span class="id">{{ d.asserted_value or "" }}</span></td>
+                <td><span class="id">{{ d.corrected_value or "" }}</span>{% if d.corrected_label %}<br>{{ d.corrected_label }}{% endif %}</td>
+                <td>{{ d.requested_change or "" }}</td>
+                <td>{{ d.confidence or "" }}</td>
+                <td>{{ d.explanation or "" }}
+                    {% for s in d.supported_by or [] %}{% if s.supporting_text %}<blockquote><span class="id">{{ s.reference_id or s.source_id or "" }}</span> {{ s.supporting_text }}</blockquote>{% endif %}{% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if modules %}
+    <div class="panel">
+        <h2>Modules that use this model</h2>
+        <ul>
+        {% for m in modules %}<li><a href="{{ m.href }}">{{ m.title }}</a></li>{% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if review.references %}
+    <div class="panel">
+        <h2>References</h2>
+        <ul>
+        {% for r in review.references %}<li><span class="id">{{ r.id }}</span> {{ r.title or "" }}</li>{% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>

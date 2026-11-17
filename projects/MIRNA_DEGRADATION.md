@@ -19,6 +19,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/XL9eBPWsypGXtYqjeLMxwJ
       title: Project brief
+index_group: MAMMAL
 ---
 # MicroRNA Degradation / TDMD Project
 

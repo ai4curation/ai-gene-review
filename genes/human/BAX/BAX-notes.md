@@ -58,3 +58,19 @@ Key curation decisions:
   imported annotation: SARS-CoV 7a top-level apoptosis, a cell-screen
   mitochondrial-potential row, a BAD/BCL2/BCL-XL negative regulation of binding
   row, and APP/AICD cell-periphery localization.
+
+## 2026-11-15: source-defect re-review
+
+- Withdrew the `WRONG_REFERENCE` source defect on the GO:0043065 IDA row citing
+  PMID:17464193 (UniProt). QuickGO by reference shows UniProt curated the whole
+  paper on 2017-06-30: the three screen hits named in the abstract (TCTN3/C10orf61,
+  C3orf38/MGC26717, UBE2Z/FLJ13855), CASP7 (the Western-blot readout) and BAX. That
+  is a deliberate annotation of the proteins assayed in the paper, BAX most
+  likely as the pro-apoptotic positive control, and an IDA from a control
+  experiment is not a reference error. The full text could not be read (publisher
+  403), so the row's action is unchanged.
+- Retyped the defect on the GO:0005737 IDA row citing PMID:16302269 (the BOK
+  nuclear-export paper) from `WRONG_REFERENCE` to `WRONG_GENE_PRODUCT`, still a
+  `SUSPECTED` query: the PMID is the paper the curator was annotating, so the only
+  open question is whether BAX was fractionated as a comparator or the row is a
+  stray copy of the BOK cytoplasm row made the same day.
