@@ -194,7 +194,7 @@ The 18 seeds whose citations fail account for 1,030 downstream rows.
 | Supported independently | GABRA2 (94), GLRA1 (92), GRIN2B (92), GRIK4 (89), Htr3a (79), GRIK5 (78), Grin2d (2), Grik1, Gria2 | 526 |
 | Partial (afferent axons, not clearly terminals) | GABRA5 (91) | 91 |
 | Presynaptic localization only | GRIA4 (96), GRIA1 (94), GRIA3 (85), GRIN3B (76), Gabra1, Gabra3 | 351 |
-| Not found | GABRB1 (62) | 62 |
+| Indirect only (a presynaptic role proposed, not shown) | GABRB1 (62) | 62 |
 | Not resolved (antibody does not separate paralogs) | Gabrb2 | 0 |
 
 So most of the flagged seeds are **true claims with the wrong citation**. That includes
@@ -204,15 +204,18 @@ GluN2B-containing NMDA receptors and homomeric alpha1 glycine receptors on calyx
 terminals are both independently shown. For these, the fix is a better citation, not
 removal.
 
-**No seed is contradicted.** The candidates for a bad seed are the ones with no
+**No seed is contradicted.** The candidates for a bad seed are the ones without direct
 functional presynaptic evidence: GRIA4, GRIA1, GRIA3 and GRIN3B (immunogold only; the one
 functional AMPA study implicates GluR2-containing receptors and found no presynaptic
-effect with a GluR3-selective agonist), GABRA5 (afferent axons rather than terminals) and
-GABRB1 (nothing found). Together they feed 504 downstream rows. GABRB1 is the weakest case, but every presynaptic GABA-A receptor
-contains some beta subunit, so this is a lack of evidence for beta1 specifically, not
-evidence against it. None of these should be reported as "wrong" without an expert view;
-each should be reported as "citation does not support the term, and we found no
-independent functional evidence".
+effect with a GluR3-selective agonist) and GABRB1 (indirect only: Gabrb1 mutant mice have
+reduced mIPSC frequency, and the authors propose presynaptic beta1 receptors as one
+explanation, PMID:24281383). Together they feed 413 downstream rows. GABRA5 (91 rows) has
+functional evidence, but on afferent axons rather than the presynaptic terminal membrane
+the term specifies. Conventional heteromeric GABA-A receptors contain beta subunits, but
+that does not say whether a given presynaptic receptor contains beta1, beta2 or beta3.
+None of these should be reported as "wrong" without an expert view; each should be
+reported as "citation does not support the term, and we found no direct functional
+evidence".
 
 ## GABA-B findings recorded on GABA-A genes
 
@@ -229,8 +232,8 @@ flagged three papers; its output is
 
 | Paper | What SynGO did | Spread | Verdict |
 |---|---|---|---|
-| PMID:11498050, mice lacking GABA(B(1)) | Gave mouse **Gabrb1** the same three terms as Gabbr1, including `GO:0099528` G protein-coupled neurotransmitter receptor activity | 58 Ensembl rows per term, 57 species, including human GABRB1 | Wrong gene; the GPCR activity is biologically impossible for a GABA-A subunit |
-| PMID:15174078, GABA(B1) and GABA(B2) in rat globus pallidus | Recorded the locations on rat **Gabrb1** and **Gabrb2**, not on Gabbr1/Gabbr2 | 4 rows from Gabrb1, including the only presynaptic location on human GABRB1 | Wrong gene; the full text uses GABA(B1) and GABA(B2) antibodies only |
+| PMID:11498050, mice lacking GABA(B(1)) | Gave mouse **Gabrb1** the same 12 records as Gabbr1 (three terms), including `GO:0099528` G protein-coupled neurotransmitter receptor activity | 58 derived records per term in 57 species (all Ensembl, except 17 UniProt records for GABA-ergic synapse), including human GABRB1, which GO's inference then also gives `GO:0007186` G protein-coupled receptor signaling pathway | Wrong gene; the GPCR activity is biologically impossible for a GABA-A subunit |
+| PMID:15174078, GABA(B1) and GABA(B2) in rat globus pallidus | Recorded 18 records on rat **Gabrb1** (6) and **Gabrb2** (12), none on Gabbr1/Gabbr2 | 12 records from Gabrb1 (Ensembl and UniProt), including the only presynaptic location on human GABRB1; 4 UniProt ISS records from Gabrb2 | Wrong gene; re-curate against Gabbr1/Gabbr2, re-checking compartments (much of the glutamatergic-synapse labelling is perisynaptic) |
 | PMID:15749345, GABA-A and GABA-B receptors in monkey globus pallidus | Annotated macaque GABBR1 only | none | Not a swap (flagged because the paper covers both families) |
 
 The first case is the clearest bad seed in this audit: an annotation that is wrong on
@@ -238,7 +241,7 @@ biological grounds, not only mis-sourced, and copied into 57 species. Human GABR
 carries `G protein-coupled neurotransmitter receptor activity` (Ensembl IEA, from mouse
 Gabrb1) beside its correct GABA-A annotations. Both cases are `WRONG_GENE_PRODUCT` with
 cause `SYMBOL_COLLISION`, confirmed from the abstracts, which name the subunits studied;
-PMID:15174078 was also read in full and uses only GABA(B1) and GABA(B2) antibodies. SynGO's
+PMID:15174078 was also read in full; its receptor antibodies target GABA(B1) and GABA(B2). SynGO's
 other rat Gabrb1 paper, PMID:16469775 (also read in full), is a genuine GABA-A beta1 study
 of fast IPSCs and is correctly attributed.
 None of it has reached PAINT: no IBA annotation names any of the three swapped seeds in
@@ -248,7 +251,7 @@ pass could still use them.
 
 ## Ontology issues behind these annotations
 
-The annotations above sit on a part of GO where several independent classification axes
+The annotations above sit on a part of GO where several partly overlapping classification axes
 are combined in precomposed terms. These are questions for the GO editors, not row-level
 corrections. Term structure was read from OLS and annotation counts from QuickGO on
 2026-11-17.
@@ -264,17 +267,21 @@ corrections. Term structure was read from OLS and annotation counts from QuickGO
    no channel or chloride ancestor and no children; its definition says "GABA-A receptors
    function as chloride channels", and its comment asks curators to also annotate chloride
    channel activity. `GO:0022851` GABA-gated chloride ion channel activity is not under
-   `GO:0016917` GABA receptor activity. So the most used term (21,889 annotations) cannot be
-   connected to the channel terms by reasoning. Open ticket
+   `GO:0016917` GABA receptor activity. So the most used term (21,889 annotations) is not
+   connected to the GABA-gated channel term through the GABA receptor branch; the two meet
+   only at signaling receptor activity. Open ticket
    [geneontology/go-ontology#31035](https://github.com/geneontology/go-ontology/issues/31035)
    (2025-11-07) raises the same problem for acetylcholine receptor activity, where
    nicotinic channels get annotated to a term meant for the muscarinic GPCRs. We found no
    ticket for the GABA case.
-2. **The pre- and postsynaptic twins are not parallel.** `GO:1904315` is a transmitter-gated,
-   extracellular-ligand-gated neurotransmitter receptor activity; `GO:0099507` is only a
-   ligand-gated ion channel activity. A GABA-A subunit annotated with `GO:0099507` gains a
-   context and loses the transmitter gating and receptor classification its other terms
-   carry. We found no ticket on this asymmetry.
+2. **The pre- and postsynaptic twins differ in scope.** `GO:1904315` is a transmitter-gated,
+   extracellular-ligand-gated neurotransmitter receptor activity; `GO:0099507` is any
+   ligand-gated ion channel activity. That breadth may be deliberate: presynaptic
+   ligand-gated channels include channels opened by intracellular ligands, such as the
+   calcium-activated BK channels supported in this same audit (PMID:11739569). The
+   consequence for GABA-A subunits is that a `GO:0099507` row adds a context and says
+   less about the channel than their other terms. This is a point about how the term is
+   used, not necessarily an ontology error.
 3. **The precomposed context terms are already on GO's obsoletion list.**
    `GO:0099507` is listed in the open ticket
    [geneontology/go-ontology#14324](https://github.com/geneontology/go-ontology/issues/14324)
@@ -290,8 +297,7 @@ For the audit this means the `CONTEXT_NOT_ASSAYED` fix is low-cost: replacing `G
 with the specific activity a GABA-A subunit already carries (`GO:0022851`) gains chloride
 selectivity and transmitter gating, and loses only the untested context. If GO goes ahead
 with #14324, the same replacement would happen for every row, and the precomposed term's
-own problems (the asymmetry above, and evidence that can only reach half of it) would go
-with it.
+own problems (evidence that can reach only half of it) would go with it.
 
 ## Error categories this audit needs
 
@@ -357,16 +363,17 @@ channel evidence, `PRACTICE_CHANGE` would describe the cohort for a bulk fix.
   HEK-293 conductance study with nothing presynaptic.
 - [x] Separate provenance from biology: a PubMed screen per flagged seed gene
   (`GO_0099507-seed-biology.yaml`). Most seeds are true but mis-sourced; none is
-  contradicted; six lack functional evidence.
+  contradicted; five lack direct functional evidence and one (GABRA5) has it on axons.
 - [x] Check every SynGO annotation on a GABA receptor gene for GABA-A/GABA-B swaps
   (`gaba_receptor_swaps.py`): two confirmed (PMID:11498050, PMID:15174078).
-- [ ] Raise the two ontology issues without tickets with the GO editors: GABA-A receptor
-  activity disconnected from the channel branch (cite #31035 as the parallel case), and
-  the `GO:0099507`/`GO:1904315` asymmetry (cite #14324).
+- [ ] Raise with the GO editors that GABA-A receptor activity is disconnected from the
+  GABA-gated channel branch (cite #31035 as the parallel case). The pre/post scope
+  difference is noted but may be deliberate.
 - [ ] Look for the same kind of name collision beyond GABA receptors (for example other
   receptor families whose subunit and receptor-type names share a letter or number).
-- [ ] Ask an expert (or SynGO) about the six seeds without functional evidence (GRIA4,
-  GRIA1, GRIA3, GRIN3B, GABRA5, GABRB1) before calling any of them wrong.
+- [ ] Ask an expert (or SynGO) about the five seeds without direct functional evidence
+  (GRIA4, GRIA1, GRIA3, GRIN3B, GABRB1), and about GABRA5's axonal evidence, before
+  calling any of them wrong.
 - [x] Count the downstream annotations each seed feeds (`seed_downstream.py`): 1,030
   rows derive from the 18 flagged seeds.
 - [ ] Export confirmed defects (`just export-source-defects`) and send one report to
