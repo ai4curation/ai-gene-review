@@ -126,6 +126,14 @@ def test_build_report_end_to_end(repo: Path) -> None:
         (("PTHR1:SF3",), {"P1": "PTHR1", "P2": "PTHR1"}, "family_only_in_target", None),
         (("PTHR1:SF3",), {"P1": "PTHR1", "P2": "PTHR1:SF7"}, "remap", "PTHR1:SF7"),
         (("PTHR1:SF3",), {"P1": "PTHR1", "P2": "PTHR1:SF3"}, "unchanged", None),
+        # Family first: a bare row folds into a subfamily id of its own family...
+        (("PTHR1:SF3",), {"P1": "PTHR9:SF1", "P2": "PTHR9"}, "remap", "PTHR9:SF1"),
+        # ...but a bare row left in the old family disagrees with a member that moved.
+        (("PTHR1:SF3",), {"P1": "PTHR1", "P2": "PTHR9:SF1"}, "split", None),
+        (("PTHR1:SF3",), {"P1": "PTHR9", "P2": "PTHR8"}, "split", None),
+        # Never propose coarsening a subfamily anchor to a bare family id.
+        (("PTHR1:SF3",), {"P1": "PTHR9", "P2": "PTHR9"}, "moved_family_only", None),
+        (("PTHR1",), {"P1": "PTHR9", "P2": "PTHR9:SF2"}, "remap", "PTHR9"),
     ],
 )
 def test_propose_remap(declared, target, status, proposed) -> None:
@@ -200,3 +208,13 @@ def test_propose_remap_bare_row_in_another_family_is_a_disagreement() -> None:
     remap = propose_remap(anchor, {"P1": "PTHR1:SF3", "P2": "PTHR1:SF3"},
                           {"P1": "PTHR9", "P2": "PTHR1:SF3"})
     assert remap.status == "split"
+
+
+def test_report_lists_a_family_only_move_without_a_proposal() -> None:
+    anchor = Anchor("a.yaml", "$", ("PTHR1:SF3",), ("P1",))
+    report = build_report("19.0", "20.0", {}, {}, {}, [anchor],
+                          {"P1": "PTHR1:SF3"}, {"P1": "PTHR9"})
+    (entry,) = report["anchors"]
+    assert entry["status"] == "moved_family_only"
+    assert "proposed" not in entry
+    assert entry["members_20.0"] == {"P1": "PTHR9"}

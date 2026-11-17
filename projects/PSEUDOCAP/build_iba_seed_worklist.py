@@ -13,7 +13,9 @@ its only seed: if the PseudoCAP annotation is wrong, so is the IBD.
 Inputs are downloaded into the git-ignored ``.cache/paint/`` directory:
 
 * PAINT ``IBD.gaf`` and ``gene_association.paint_uniprot.gaf.gz`` from the pinned
-  snapshot (``PAINT_BASE``), in a ``paint-<release>-<snapshot>/`` subfolder
+  snapshot (``PAINT_BASE``), in a ``paint-<release>-<snapshot>/`` subfolder. Copies
+  that earlier runs left directly in ``.cache/paint/`` are no longer read and can be
+  deleted; the snapshot's files are downloaded afresh.
 * PAO1 proteome (UniProt REST, organism_id 208964)
 * PAO1 experimental annotations (QuickGO, ECO:0000269/ECO:0000006 descendants)
 * ``go-basic.obo``
@@ -45,7 +47,8 @@ OUT = Path(__file__).resolve().parent / "iba_seed_worklist.yaml"
 TAXON = "208964"
 
 # PAINT files come from the repo's pinned release and snapshot, cached per snapshot.
-PAINT_DIR = paint_cache_dir(CACHE).name
+PAINT_CACHE = paint_cache_dir(CACHE)
+PAINT_DIR = PAINT_CACHE.relative_to(CACHE).as_posix()
 SOURCES = {
     f"{PAINT_DIR}/IBD.gaf": f"{PAINT_BASE}/IBD.gaf",
     f"{PAINT_DIR}/leaf.gaf.gz": f"{PAINT_BASE}/gene_association.paint_uniprot.gaf.gz",
@@ -120,7 +123,7 @@ def main() -> None:
     # node-term seedings by PAO1 proteins
     seedings = []
     n_seeds: dict[tuple[str, str], int] = {}
-    for line in open(CACHE / PAINT_DIR / "IBD.gaf"):
+    for line in open(PAINT_CACHE / "IBD.gaf"):
         if line.startswith("!"):
             continue
         f = line.rstrip("\n").split("\t")
@@ -135,7 +138,7 @@ def main() -> None:
     nodes = {k[0] for k in keys}
     leaf = collections.Counter()
     leaf_taxa = collections.defaultdict(set)
-    with gzip.open(CACHE / PAINT_DIR / "leaf.gaf.gz", "rt") as fh:
+    with gzip.open(PAINT_CACHE / "leaf.gaf.gz", "rt") as fh:
         for line in fh:
             if line.startswith("!"):
                 continue

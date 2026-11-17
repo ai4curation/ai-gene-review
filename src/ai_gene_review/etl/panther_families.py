@@ -1265,6 +1265,9 @@ def newer_releases(listing_html: str, pinned: str) -> List[str]:
     return sorted((r for r in found if _release_key(r) > _release_key(pinned)), key=_release_key)
 
 
+_SNAPSHOT_HREF = re.compile(r'href="(\d{4}-\d{2}-\d{2})/"')
+
+
 def newer_snapshots(listing_html: str, pinned: str) -> List[str]:
     """Dated PAINT snapshot folders in an FTP listing that are newer than ``pinned``.
 
@@ -1272,8 +1275,17 @@ def newer_snapshots(listing_html: str, pinned: str) -> List[str]:
     >>> newer_snapshots(html, "2026-08-28")
     ['2026-11-01']
     """
-    dates = set(re.findall(r'href="(\d{4}-\d{2}-\d{2})/"', listing_html))
-    return sorted(d for d in dates if d > pinned)
+    return sorted(d for d in set(_SNAPSHOT_HREF.findall(listing_html)) if d > pinned)
+
+
+def snapshot_present(listing_html: str, pinned: str) -> bool:
+    """Whether an FTP listing still holds the ``pinned`` dated PAINT snapshot folder.
+
+    >>> html = '<a href="2026-06-02/"><a href="2026-08-28/">'
+    >>> snapshot_present(html, "2026-08-28"), snapshot_present(html, "2026-08-2")
+    (True, False)
+    """
+    return pinned in _SNAPSHOT_HREF.findall(listing_html)
 
 
 def panther_release_drift(timeout: int = 60) -> Tuple[List[str], List[str]]:
@@ -1294,7 +1306,7 @@ def panther_release_drift(timeout: int = 60) -> Tuple[List[str], List[str]]:
     stale: List[str] = []
     notices: List[str] = []
     snapshots = get(f"{PAINT_ROOT}/{PANTHER_RELEASE}/").text
-    if f'href="{PAINT_SNAPSHOT}/"' not in snapshots:
+    if not snapshot_present(snapshots, PAINT_SNAPSHOT):
         stale.append(
             f"the pinned PAINT snapshot {PANTHER_RELEASE}/{PAINT_SNAPSHOT} is not on the FTP "
             "site; check PAINT_SNAPSHOT (bump it together with PANTHER_RELEASE)"

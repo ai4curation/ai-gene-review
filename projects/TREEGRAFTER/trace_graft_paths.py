@@ -37,15 +37,19 @@ the term is still in the graft node's current TreeGrafter set. The online API
 proved too slow for a full run (many families time out).
 
 Downloads (see https://data.pantherdb.org/ftp/downloads/):
-  TreeGrafter/PANTHER19.0_data_trees_hmms_only.tar.gz  (3 GB; only
-      PANTHER19.0_data/Tree_MSF/*.tree is needed)
-  paint/19.0/2026-08-28/IBD.gaf  (the snapshot ai_gene_review pins as PAINT_BASE)
-  paint/19.0/2026-08-28/PAINT_TreeGrafter_Annotations_TOTAL.txt.gz
+  TreeGrafter/PANTHER<release>_data_trees_hmms_only.tar.gz  (3 GB; only
+      PANTHER<release>_data/Tree_MSF/*.tree is needed)
+  paint/<release>/<snapshot>/IBD.gaf
+  paint/<release>/<snapshot>/PAINT_TreeGrafter_Annotations_TOTAL.txt.gz
+where <release> and <snapshot> are the ones the repo pins: PANTHER_RELEASE and
+PAINT_SNAPSHOT in ai_gene_review.etl.panther_families (PAINT_BASE is that folder).
+The script stays standard-library only, so it runs under a bare python3 and does
+not import them.
 
 Run:
   python3 projects/TREEGRAFTER/trace_graft_paths.py
   python3 projects/TREEGRAFTER/trace_graft_paths.py --all \
-      --panther-trees PANTHER19.0_data/Tree_MSF --ibd-gaf IBD.gaf \
+      --panther-trees PANTHER<release>_data/Tree_MSF --ibd-gaf IBD.gaf \
       --paint-total PAINT_TreeGrafter_Annotations_TOTAL.txt.gz
 """
 from __future__ import annotations

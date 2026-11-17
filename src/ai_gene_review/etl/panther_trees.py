@@ -76,7 +76,22 @@ def compact_tree(tree: dict) -> dict[str, Any]:
     return {"leaves": leaves, "under": under}
 
 
-def served_release(payload: dict) -> str | None:
+def _reported_version(payload: Any) -> Any:
+    """The raw ``search.product.version`` of a ``treeinfo`` response, or None if absent.
+
+    >>> _reported_version({"search": {"product": {"version": "beta"}}})
+    'beta'
+    >>> _reported_version({"search": None}) is None, _reported_version([]) is None
+    (True, True)
+    """
+    for key in ("search", "product", "version"):
+        if not isinstance(payload, dict):
+            return None
+        payload = payload.get(key)
+    return payload
+
+
+def served_release(payload: Any) -> str | None:
     """The release a ``treeinfo`` response says it serves, or None if it names none usable.
 
     >>> served_release({"search": {"product": {"version": 19}}})
@@ -85,8 +100,10 @@ def served_release(payload: dict) -> str | None:
     True
     >>> served_release({"search": {"product": {"version": "beta"}}}) is None
     True
+    >>> served_release({"search": None}) is None
+    True
     """
-    version = payload.get("search", {}).get("product", {}).get("version")
+    version = _reported_version(payload)
     if version is None or not re.fullmatch(r"\d+(\.\d+)*", str(version)):
         return None
     return str(version)
@@ -115,7 +132,7 @@ def load_family(family: str, cache_dir: Path = DEFAULT_CACHE) -> dict[str, Any] 
                     # Not a transient failure: refuse at once rather than retry.
                     print(
                         f"{family}: the PANTHER API response names no usable release "
-                        f"({served!r}); tree not used",
+                        f"(version {_reported_version(payload)!r}); tree not used",
                         file=sys.stderr,
                     )
                     return None
