@@ -10,6 +10,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/CHJ3zFu9zViWjXBSaCmQLS
       title: Project brief
+index_group: MAMMAL
 ---
 
 # cGAS-STING Cytosolic DNA Sensing Project

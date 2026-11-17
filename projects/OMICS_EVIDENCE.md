@@ -35,6 +35,7 @@ genes:
   - AT5G02500
   - BCAT3
   - OST1
+index_group: CROSS_CUTTING
 ---
 
 # Omics and High-Throughput Evidence in GO Annotation

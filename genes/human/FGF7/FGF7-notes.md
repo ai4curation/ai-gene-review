@@ -31,3 +31,16 @@
 ## Module relevance (fgfr_signaling)
 - Module annoton uses GO:0005104 FGFR binding for the paracrine ligand; for FGF7 the IBA-supported, more specific child GO:0005111 (type 2 FGFR binding) is correct and consistent with the module's "selective for FGFR2 IIIb" description.
 - Heparin binding (GO:0008201) is not in human GOA (only rat/mouse ISO); proposed NEW with PMID:2915979 heparin-Sepharose purification evidence.
+
+## 2026-11-15 ORGANELLES Golgi batch 2 (Golgi apparatus rows)
+
+- One Golgi row: IEA GO_REF:0000107 (Ensembl projection from mouse Fgf7, ENSMUSP00000069681).
+- Donor traced in QuickGO: MGI IDA on mouse Fgf7 (P36363) to GO:0005794 from PMID:12837279,
+  made 2011-04-07, the same day as the same IDA on mouse Fgf22 (Q9ESS2) from the same paper.
+- PMID:12837279 (Beyer et al. 2003, Exp Cell Res) is a FGF22 paper; abstract-only in the cache,
+  no PMCID. The abstract describes transient expression of tagged FGF22 in COS-1 and MCF-7 cells
+  and does not mention FGF7 localization, so FGF7 was presumably a tagged comparator.
+- Verdict: KEEP_AS_NON_CORE -> UNDECIDED under the unreadable-donor rule (CD247). The two
+  readings (marker-confirmed biosynthetic pool vs perinuclear overexpression signal, i.e.
+  transit only) are set out in the row's reason. No human or endogenous FGF7 Golgi data found.
+- No sub-compartment row; no core_functions change (Golgi was not there).

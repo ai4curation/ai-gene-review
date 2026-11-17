@@ -15,6 +15,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/732CHnKMbyydt26H9ByLRQ
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Mitochondrion–ER Membrane Tethering — Obsoletion & Replacement (GO:1990456)

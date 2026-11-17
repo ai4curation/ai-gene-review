@@ -83,3 +83,9 @@
   over-annotation, because changed DR4 transcript or surface expression after a
   stretch assay does not make DR4 a performer of the mechanical-stimulus
   response.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0005886 / Reactome:R-HSA-141156: defect withdrawn (evidence depth: DB_RECORD). Reactome ContentService lists TNFRSF10A (UniProt:O00220) as a participant of R-HSA-141156 inside the plasma-membrane complex TNFSF10:TNFRSF10A,B:FADD:CASP8, so the TAS row is a regular export of a participant compartment. The defect relied on the summary text alone; deleted, and the reason now says the reference is correctly keyed.

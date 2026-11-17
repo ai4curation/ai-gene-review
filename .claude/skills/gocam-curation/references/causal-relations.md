@@ -5,7 +5,7 @@ activity. Two things must be right: the **directness** and the **direction**.
 
 ## Direct vs indirect
 
-- **Direct** (`directly positively regulates` `RO:0002413`,
+- **Direct** (`directly positively regulates` `RO:0002629`,
   `directly negatively regulates` `RO:0002630`): a **single step** — the upstream
   activity acts immediately on the downstream one (kinase phosphorylates its
   substrate; ligand activity activates a receptor).

@@ -255,8 +255,8 @@ is a candidate for its own phase. Because the branches cut across the ontology
   ubiquitin-like ligase-substrate).
 - [ ] Decide handling of the propagated bulk (IBA vs TreeGrafter/ARBA) for
   adaptor terms; cross-reference [IBA_REVIEW](IBA_REVIEW.md).
-- [ ] Add the project card to `pages/projects/index.html` when the project
-  leaves SCOPING (the index is manually maintained).
+- [ ] Set `index_group:` in the frontmatter when the project leaves SCOPING, so it
+  appears in the right section of the generated project index.
 
 ## Sources
 
