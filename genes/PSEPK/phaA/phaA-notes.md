@@ -67,3 +67,10 @@ Only 2 IEA annotations:
 - polyhydroxyalkanoate biosynthetic process - need to check if a broader PHA term exists
 - GO:0005737 (cytoplasm) - PHA granules are cytoplasmic
 - carbon storage/reserve metabolic process terms
+
+
+## 2026-11-07 comparative source audit
+
+Completed all existing annotations for phaA; preserved ordered source payloads and provider artifacts. Genuine existing provider reports were read as leads, with primary evidence and exact strain boundaries prioritized. Evidence, ontology snapshots, PAINT limits and supplementary provenance are under analysis/module_audits/bacterial_mcl_pha_synthesis_and_mobilization/psepk-consultation/. No new GO row added. PAINT target-leaf unavailable is not evidence of absence of evolutionary loss.
+
+Non-amino-acyl transfer and PHA biosynthesis remain supported. PHB-specific assignment is generalized without claiming absolute inability to accept C4 substrates. Granule location remains qualified; KCTC1639/KT2442/P. putida U findings are not native KT2440 isozyme-specific assays.

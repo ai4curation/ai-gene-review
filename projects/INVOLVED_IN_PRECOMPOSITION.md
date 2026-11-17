@@ -3,6 +3,7 @@ title: "\"X involved in Y\" — Precomposed GO Terms and Their Decomposition"
 maturity: SCOPING
 tags: [OBSOLETION, PIPELINE]
 species: [human, mouse, DROME, worm, DICDI, yeast]
+index_group: MAMMAL
 ---
 
 # "X involved in Y" — Precomposed GO Terms and Their Decomposition

@@ -9,6 +9,7 @@ manifest:
   slides:
     - href: YEAST_EPIGENETICS_HISTONE_INHERITANCE/slides/YEAST_EPIGENETICS_HISTONE_INHERITANCE-slides.html
       description: Yeast epigenetics and histone inheritance slides
+index_group: YEAST
 ---
 
 # Yeast Epigenetics & Histone Inheritance
