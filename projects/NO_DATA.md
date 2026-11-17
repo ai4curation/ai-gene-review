@@ -404,10 +404,11 @@ in PubMed on 2026-11-15, and the queries and hits are appended to its notes file
   rat/Pik3c2a BP: knockdown in rat INS1 cells impairs insulin secretion
   (PMID:21127054), so the `REMOVE` stands.
 - **Accepted (3).** rat/Actl7a BP: the only rat paper is a Tes co-IP from rat
-  testis (PMID:21278383). rat/Aph1a BP: the rat papers show complex membership,
-  Jagged-1 binding and localization, and the functional siRNA work used human
-  cells. In both, the process rows rest on mouse or human work and are carried
-  by ISO rows. ARATH/PGR3 CC: no paper localizes the Arabidopsis protein (the one
+  testis (PMID:21278383). rat/Aph1a BP: the rat papers show complex membership
+  (co-IP from rat brain), Jagged-1 binding and localization of the complex and its
+  activity; none identifies a process (the abstract of PMID:12297508 does not
+  name the cells used for its siRNA experiments). In both, the process rows
+  rest on mouse or human work and are carried by ISO rows. ARATH/PGR3 CC: no paper localizes the Arabidopsis protein (the one
   that did, PMID:33431870, is retracted); the chloroplast location is inferred
   from the transit peptide and the protein's action on plastid RNAs, and is
   carried by the chloroplast IEA row and the chloroplast stroma IC row. All
