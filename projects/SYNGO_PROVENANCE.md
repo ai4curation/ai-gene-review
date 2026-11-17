@@ -14,6 +14,7 @@ genes:
 description: >-
   Audit of GO annotations contributed by SynGO: which species and cell system each
   experimental row rests on, and whether the term matches the paper.
+index_group: CROSS_CUTTING
 ---
 
 # SynGO Annotation Provenance
@@ -169,8 +170,8 @@ evidence for the first error category below, not an inference.
 ## Error categories this audit needs
 
 The repository's source-defect vocabulary records *what* is wrong (`defect_type`) and,
-optionally, *how* it arose (`cause`). These cases need two causes the vocabulary does not
-had. They are added by #6449 as `ORTHOLOG_TRANSFER_AS_EXPERIMENTAL` and
+optionally, *how* it arose (`cause`). These cases needed two causes the vocabulary did not
+have. #6449 added them as `ORTHOLOG_TRANSFER_AS_EXPERIMENTAL` and
 `CONTEXT_NOT_ASSAYED`, with a `SYNGO` resource value.
 
 1. **Ortholog transfer recorded as experimental evidence** ("implicit ISO"). A study in
@@ -190,7 +191,12 @@ had. They are added by #6449 as `ORTHOLOG_TRANSFER_AS_EXPERIMENTAL` and
    context is the claim, so evidence that cannot reach it does not support the term. As
    a defect it is `defect_type: WRONG_TERM`, with `corrected_value` the plain activity
    term (for example `GO:0015276` ligand-gated monoatomic ion channel activity, or the
-   receptor-specific child the gene already carries). In a gene review this is a MODIFY
+   receptor-specific child the gene already carries). Before generalising, check for
+   an independent paper that does assay the presynaptic context; if there is one, the
+   claim is true but mis-sourced, so re-source the row instead of dropping the context.
+   GRIK4/GRIK5 need this check, because presynaptic kainate autoreceptors are
+   established from other work (PMID:17620617 supports the GluK2/GluK3 case in this
+   same cohort). In a gene review this is a MODIFY
    that decomposes a precomposed term, so the row records `review.decomposed_into` with
    `context_dropped: true`: the context was never assayed.
 
@@ -215,7 +221,7 @@ channel evidence, `PRACTICE_CHANGE` would describe the cohort for a bulk fix.
 - [ ] For each suspected case, run `reference_level.py` (how SynGO annotated the whole
   paper) before recording a defect, as for PMID:19666514.
 - [ ] Re-run the inventory once the GRIN reviews merge.
-- [ ] Schema PR #6449: a `SYNGO` value for `SourceResourceEnum` and the two causes above.
+- [x] Schema PR #6449 (merged): a `SYNGO` value for `SourceResourceEnum` and the two causes above.
 - [ ] Before sending the question to SynGO, look for per-annotation assay types in the
   supplementary tables of PMID:31171447 and in the SynGO release files. They would show
   directly whether `GO:0099507` was a default term for channel evidence.

@@ -22,6 +22,8 @@ manual_reviews:
       for multi-source cellular-component rows, with the two guardrails) and its
       application to GUCY2C, MUC16 and CA9. Scope is this policy decision; the broader
       project remains IN_PROGRESS.
+index_group: MAMMAL
+description: All 147 SurfaceBench proteins reviewed; how well public GO annotations call extracellular accessibility (in progress)
 ---
 
 # Accessible Surfaceome (SurfaceBench) Comparison

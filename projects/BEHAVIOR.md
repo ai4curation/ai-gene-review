@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/YLcccJMkX5QNmHL4d5pWez
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Behaviour Annotation Project

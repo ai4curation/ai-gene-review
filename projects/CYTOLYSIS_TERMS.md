@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [OBSOLETION, BIOLOGY_DOMAIN]
 species: [human, DROME, LAMBD, BPT4, BPT7, BPP2]
 collections: [GO_TRACKER_BACKLOG]
+index_group: GO_TRACKER_BACKLOG
 ---
 
 # Cytolysis: Phenotype, Self-Lysis or Killing Another Cell?

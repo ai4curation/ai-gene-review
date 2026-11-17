@@ -3,6 +3,8 @@ title: "No Data (ND): what an ND annotation is telling us"
 maturity: SCOPING
 tags: [PIPELINE]
 species: [yeast, SCHPO, DROME, CANAL, worm, DANRE, ARATH, human, mouse]
+index_group: CROSS_CUTTING
+description: Partitions ND annotations into stale, inferable, existence, true-gap, ontology-blocked, negative and bookkeeping cases, and couples true gaps to knowledge_gaps
 ---
 
 # No Data (ND): what an ND annotation is telling us

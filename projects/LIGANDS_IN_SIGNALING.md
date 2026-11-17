@@ -41,6 +41,7 @@ manifest:
     - href: https://claude.ai/artifact/J3MezLgjhawKdowHbNDKRJ
       title: Ligand gap report
       description: AI generated
+index_group: CROSS_CUTTING
 ---
 
 # Ligands in signaling pathways
