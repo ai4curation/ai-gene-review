@@ -246,8 +246,8 @@ Enforcement, all built on `src/ai_gene_review/shadow_issues/guard.py`:
   and `review-followup.patch`, since a squash merge would otherwise lose them.
   In `issue.yaml` those work products carry `landed: false` and a
   `preserved_diff`, so a rater reads the patch rather than the current file.
-  The history records for those edits are kept, each with a second event
-  recording that the edit did not land.
+  The history records for those edits are kept, and a later record for each
+  target says the edit was superseded at the merge.
 
 ## Next steps
 

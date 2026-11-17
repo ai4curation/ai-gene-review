@@ -237,7 +237,9 @@ def ratings_cmd(
 
 
 def work_product_problems(issue: dict, repo_root: Path) -> list[str]:
-    """Check that a work product that did not land names an existing preserved diff.
+    """Check that a work product that did not land names a preserved diff of its path.
+
+    Paths are repository-relative, so ``repo_root`` is the parent of ``--root``.
 
     >>> work_product_problems({"shadow": {"work_products": [
     ...     {"kind": "GENE_REVIEW", "path": "x.yaml", "landed": False}]}}, Path("."))
@@ -255,6 +257,8 @@ def work_product_problems(issue: dict, repo_root: Path) -> list[str]:
             )
         elif diff and not (repo_root / diff).exists():
             problems.append(f"preserved_diff {diff} does not exist")
+        elif diff and f"a/{product['path']} " not in (repo_root / diff).read_text():
+            problems.append(f"preserved_diff {diff} has no diff of {product['path']}")
     return problems
 
 

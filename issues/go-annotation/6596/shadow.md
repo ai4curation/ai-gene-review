@@ -106,7 +106,6 @@ The worker's edits to `genes/yeast/LSC1/LSC1-ai-review.yaml` and
 `interpro/panther/PTHR11117/PTHR11117-review.yaml` did not land as written. Before
 this work merged, main gained its own review of the family, and the merge took
 main's versions of those files. The worker's original diff is preserved in
-`shadow-work.patch` in this folder (a later follow-up from PR review is in
-`review-followup.patch`); rate against those, not against the current files,
-and do not read the current files before scoring. The history record listed
-above is kept, with an added event saying the edit did not land.
+`shadow-work.patch` in this folder; rate against that, not against the current
+files, and do not read the current files before scoring. The history record
+listed above is kept; a later record beside it says the edit did not land.

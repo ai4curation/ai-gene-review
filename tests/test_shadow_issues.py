@@ -599,13 +599,17 @@ def test_committed_tracker_validates():
             {"path": "a.yaml", "landed": False, "preserved_diff": "missing.patch"},
             ["missing.patch does not exist"],
         ),
+        (
+            {"path": "b.yaml", "landed": False, "preserved_diff": "d.patch"},
+            ["has no diff of b.yaml"],
+        ),
     ],
 )
 def test_work_product_problems(tmp_path, product, expected):
     """A product that did not land must point at a committed diff."""
     from ai_gene_review.shadow_issues.cli import work_product_problems
 
-    (tmp_path / "d.patch").write_text("diff\n")
+    (tmp_path / "d.patch").write_text("diff --git a/a.yaml b/a.yaml\n")
     issue = {"shadow": {"work_products": [{"kind": "GENE_REVIEW", **product}]}}
     problems = work_product_problems(issue, tmp_path)
     assert len(problems) == len(expected)
