@@ -186,3 +186,17 @@ def test_broken_obo_quotes_lists_only_quotes_the_rebuild_breaks(tmp_path: Path) 
 
     assert broken == [{"file": "f-review.yaml", "path": "evidence[1].supporting_text",
                        "ids": ["PANTHER:PTHR1:SF2"]}]
+
+
+def test_propose_remap_family_only_in_both_releases_is_pre_existing() -> None:
+    """Bare rows in the anchor's own family in both releases: counted, not listed."""
+    anchor = Anchor("f", "$", ("PTHR1:SF3",), ("P1",))
+    remap = propose_remap(anchor, {"P1": "PTHR1"}, {"P1": "PTHR1"})
+    assert (remap.status, remap.proposed) == ("family_only", None)
+
+
+def test_propose_remap_bare_row_in_another_family_is_a_disagreement() -> None:
+    anchor = Anchor("f", "$", ("PTHR1:SF3",), ("P1", "P2"))
+    remap = propose_remap(anchor, {"P1": "PTHR1:SF3", "P2": "PTHR1:SF3"},
+                          {"P1": "PTHR9", "P2": "PTHR1:SF3"})
+    assert remap.status == "split"

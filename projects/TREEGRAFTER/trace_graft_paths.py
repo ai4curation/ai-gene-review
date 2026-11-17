@@ -39,8 +39,8 @@ proved too slow for a full run (many families time out).
 Downloads (see https://data.pantherdb.org/ftp/downloads/):
   TreeGrafter/PANTHER19.0_data_trees_hmms_only.tar.gz  (3 GB; only
       PANTHER19.0_data/Tree_MSF/*.tree is needed)
-  paint/current/IBD.gaf
-  paint/current/PAINT_TreeGrafter_Annotations_TOTAL.txt.gz
+  paint/19.0/2026-08-28/IBD.gaf  (the snapshot ai_gene_review pins as PAINT_BASE)
+  paint/19.0/2026-08-28/PAINT_TreeGrafter_Annotations_TOTAL.txt.gz
 
 Run:
   python3 projects/TREEGRAFTER/trace_graft_paths.py
@@ -163,6 +163,8 @@ def trace(case: dict) -> dict:
     root = tree["search"]["tree_topology"]["annotation_node"]
     nodes, parent = index(root)
     out = {"case": case["case"], "gene": case["gene"], "family": case["family"],
+           # the release the live API served this tree from
+           "panther_release": tree["search"].get("product", {}).get("version"),
            "family_name": root.get("sf_name", ""), "term": f"{case['term']} {case['label']}",
            "family_leaves": len(leaves_under(root)), "grafts": []}
     ibd_nodes: dict = {}

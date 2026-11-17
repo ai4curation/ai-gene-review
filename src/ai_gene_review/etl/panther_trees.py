@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import gzip
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -75,6 +76,22 @@ def compact_tree(tree: dict) -> dict[str, Any]:
     return {"leaves": leaves, "under": under}
 
 
+def served_release(payload: dict) -> str | None:
+    """The release a ``treeinfo`` response says it serves, or None if it names none usable.
+
+    >>> served_release({"search": {"product": {"version": 19}}})
+    '19'
+    >>> served_release({"search": {}}) is None
+    True
+    >>> served_release({"search": {"product": {"version": "beta"}}}) is None
+    True
+    """
+    version = payload.get("search", {}).get("product", {}).get("version")
+    if version is None or not re.fullmatch(r"\d+(\.\d+)*", str(version)):
+        return None
+    return str(version)
+
+
 def load_family(family: str, cache_dir: Path = DEFAULT_CACHE) -> dict[str, Any] | None:
     """Return the compact tree for a PANTHER family, from cache or the PANTHER API.
 
@@ -93,7 +110,15 @@ def load_family(family: str, cache_dir: Path = DEFAULT_CACHE) -> dict[str, Any] 
             r = requests.get(TREE_URL, params={"family": family}, timeout=300)
             if r.status_code == 200:
                 payload = r.json()
-                served = payload["search"]["product"]["version"]
+                served = served_release(payload)
+                if served is None:
+                    # Not a transient failure: refuse at once rather than retry.
+                    print(
+                        f"{family}: the PANTHER API response names no usable release "
+                        f"({served!r}); tree not used",
+                        file=sys.stderr,
+                    )
+                    return None
                 if not same_release(served, PANTHER_RELEASE):
                     print(
                         f"{family}: the PANTHER API serves release {served}, but this repo "

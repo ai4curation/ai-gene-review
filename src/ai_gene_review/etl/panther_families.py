@@ -1293,7 +1293,13 @@ def panther_release_drift(timeout: int = 60) -> Tuple[List[str], List[str]]:
 
     stale: List[str] = []
     notices: List[str] = []
-    for snapshot in newer_snapshots(get(f"{PAINT_ROOT}/{PANTHER_RELEASE}/").text, PAINT_SNAPSHOT):
+    snapshots = get(f"{PAINT_ROOT}/{PANTHER_RELEASE}/").text
+    if f'href="{PAINT_SNAPSHOT}/"' not in snapshots:
+        stale.append(
+            f"the pinned PAINT snapshot {PANTHER_RELEASE}/{PAINT_SNAPSHOT} is not on the FTP "
+            "site; check PAINT_SNAPSHOT (bump it together with PANTHER_RELEASE)"
+        )
+    for snapshot in newer_snapshots(snapshots, PAINT_SNAPSHOT):
         stale.append(
             f"PAINT snapshot {PANTHER_RELEASE}/{snapshot} is newer than the pinned {PAINT_SNAPSHOT}"
         )

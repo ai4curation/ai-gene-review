@@ -192,19 +192,26 @@ class Remap:
 BUMP_DRIVEN = frozenset({"remap", "split", "unresolved", "family_only_in_target"})
 
 
-def _levels(assignments: Iterable[str], subfamily_level: bool) -> Set[str]:
-    """Members' ids at the declared level.
+def _levels(assignments: Iterable[str], declared: str) -> Set[str]:
+    """Members' ids at the level of the ``declared`` id.
 
     A classification row may record only a bare family (no subfamily recorded, not "no
-    subfamily exists"); at subfamily level such a row says nothing, so it is ignored
-    rather than read as a proposal to coarsen the anchor to its family.
+    subfamily exists"). Against a subfamily anchor, a bare row in the anchor's own
+    family says nothing, so it is ignored rather than read as a proposal to coarsen
+    the anchor; a bare row in another family is still evidence that the member moved,
+    so it is kept.
 
-    >>> sorted(_levels(["PTHR1:SF2", "PTHR1"], True)), sorted(_levels(["PTHR1:SF2", "PTHR1"], False))
-    (['PTHR1:SF2'], ['PTHR1'])
+    >>> sorted(_levels(["PTHR1:SF2", "PTHR1"], "PTHR1:SF5"))
+    ['PTHR1:SF2']
+    >>> sorted(_levels(["PTHR1:SF2", "PTHR9"], "PTHR1:SF5"))
+    ['PTHR1:SF2', 'PTHR9']
+    >>> sorted(_levels(["PTHR1:SF2", "PTHR1"], "PTHR1"))
+    ['PTHR1']
     """
-    if subfamily_level:
-        return {value for value in assignments if ":" in value}
-    return {value.split(":", 1)[0] for value in assignments}
+    family = declared.split(":", 1)[0]
+    if ":" not in declared:
+        return {value.split(":", 1)[0] for value in assignments}
+    return {value for value in assignments if ":" in value or value != family}
 
 
 def propose_remap(
@@ -235,6 +242,8 @@ def propose_remap(
     ('family_only_in_target', None)
     >>> propose_remap(a, {"P1": "PTHR1:SF5"}, {"P1": "PTHR1", "P2": "PTHR1:SF9"}).proposed
     'PTHR1:SF9'
+    >>> propose_remap(a, {"P1": "PTHR1:SF5"}, {"P1": "PTHR9", "P2": "PTHR1:SF5"}).status
+    'split'
     >>> fam = Anchor("m.yaml", "$", ("PTHR1",), ("P1",))
     >>> propose_remap(fam, {"P1": "PTHR2:SF1"}, {"P1": "PTHR1:SF3"}).mismatched_in_current
     True
@@ -244,8 +253,7 @@ def propose_remap(
     if len(anchor.declared) != 1:
         return Remap("multiple_declared", current=current, target=target)
     declared = anchor.declared[0]
-    subfamily_level = ":" in declared
-    current_levels = _levels(current.values(), subfamily_level)
+    current_levels = _levels(current.values(), declared)
     mismatched = bool(current_levels) and declared not in current_levels
 
     def remap(status: str, proposed: Optional[str] = None) -> Remap:
@@ -253,7 +261,7 @@ def propose_remap(
 
     if not target:
         return remap("unresolved" if current else "not_classified")
-    target_levels = _levels(target.values(), subfamily_level)
+    target_levels = _levels(target.values(), declared)
     if not target_levels:
         return remap("family_only_in_target" if current_levels else "family_only")
     if len(target_levels) > 1:
