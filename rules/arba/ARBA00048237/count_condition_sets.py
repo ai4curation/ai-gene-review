@@ -5,9 +5,10 @@ then split by lineage and by whether the entry is reviewed. Reviewed matches are
 listed with their EC numbers and protein names so the in-sample support can be
 read directly. Writes counts.json next to this script and prints a summary.
 
-UniProtKB indexes PANTHER at family level only: the set 2 query
-``xref:"panther-PTHR10982:SF21"`` returns the same entries as the family
-PTHR10982, so set 2 counts are an upper bound.
+PTHR10982 has a single subfamily, SF21, in the PANTHER release UniProtKB uses,
+so ``xref:"panther-PTHR10982:SF21"`` and ``xref:panther-PTHR10982`` return the
+same entries; an unknown subfamily id returns none, so the set 2 query does
+filter at subfamily level.
 
 Usage: python count_condition_sets.py
 """

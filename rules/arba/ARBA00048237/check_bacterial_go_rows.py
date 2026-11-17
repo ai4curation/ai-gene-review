@@ -4,8 +4,9 @@
    by reference (GO_REF:0000003 is EC2GO, GO_REF:0000117 is ARBA).
 2. For each EC2GO row, look the entry up in the current UniProtKB release and
    record whether it still carries EC 2.3.1.86, and on what evidence.
-3. For the first entry that no longer carries it, read its UniSave history and
-   report which versions carried EC 2.3.1.86 and with what evidence line.
+3. For an evenly spread sample of the entries that no longer carry it, read
+   the last six UniSave versions and report which carried EC 2.3.1.86 and
+   whether the evidence was ARBA00048237.
 
 Writes RESULTS-bacterial-rows.md next to this script.
 
@@ -34,6 +35,8 @@ QUICKGO = "https://www.ebi.ac.uk/QuickGO/services/annotation/downloadSearch?" + 
     }
 )
 UNIPROT = "https://rest.uniprot.org/uniprotkb/search"
+#: Entries whose UniSave history is read, spread evenly over the sorted accession list.
+SAMPLE = 20
 
 
 def fetch(url: str, accept: str = "application/json") -> tuple[bytes, dict]:
@@ -94,16 +97,24 @@ def main() -> None:
                 without.append(e["primaryAccession"])
 
     history: list[str] = []
-    if without:
-        acc = without[0]
-        versions = json.loads(fetch(f"https://rest.uniprot.org/unisave/{acc}?format=json")[0])["results"][:12]
+    sample = without[:: max(1, len(without) // SAMPLE)][:SAMPLE]
+    attributed = 0
+    for acc in sample:
+        versions = json.loads(fetch(f"https://rest.uniprot.org/unisave/{acc}?format=json")[0])["results"][:6]
+        sources: list[str] = []
         for v in versions:
             txt = fetch(
                 f"https://rest.uniprot.org/unisave/{acc}?format=txt&versions={v['entryVersion']}", "text/plain"
             )[0].decode()
-            hits = [ln.strip() for ln in txt.splitlines() if "EC=2.3.1.86" in ln or "ARBA00048237" in ln]
-            history.append(f"- {acc} version {v['entryVersion']} ({v.get('lastReleaseDate', '')}): "
-                           + (" / ".join(hits) if hits else "no EC 2.3.1.86"))
+            if "EC=2.3.1.86" not in txt:
+                continue
+            ev = "ARBA00048237" if "ARBA:ARBA00048237" in txt else "other"
+            sources.append(f"v{v['entryVersion']} ({v.get('lastReleaseDate', '')}): {ev}")
+        if any(x.endswith("ARBA00048237") for x in sources):
+            attributed += 1
+        history.append(f"- {acc}: " + ("; ".join(sources) if sources else "EC 2.3.1.86 not in the last 6 versions"))
+    history.insert(0, f"{attributed} of {len(sample)} sampled entries carried EC 2.3.1.86 from ARBA00048237 in an earlier version.")
+    history.insert(1, "")
 
     lines = [
         "# Bacterial GO:0004321 rows and their EC source",
@@ -119,7 +130,7 @@ def main() -> None:
         "",
         *[f"- {k}: {v}" for k, v in status.most_common()],
         "",
-        "History of the first entry that no longer carries EC 2.3.1.86:",
+        f"UniSave history of {len(sample)} of the {len(without)} entries that no longer carry EC 2.3.1.86:",
         "",
         *history,
     ]
