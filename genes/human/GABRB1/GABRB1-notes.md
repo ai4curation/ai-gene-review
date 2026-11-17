@@ -101,6 +101,15 @@ PMID:11498050, PMID:15174078, PMID:23934111, PMID:27273810, PMID:10449790.
   the swap alone.
 - Mouse Gabbr1 is UniProtKB:Q9WV18 and rat Gabbr1 is UniProtKB:Q9Z0U4 (UniProt REST,
   2026-11-17).
+- The GO:0098982 GABA-ergic synapse IBA (PTN008566841) lists eleven donors (Alliance gene API,
+  2026-11-17): mouse Gabrr3 MGI:3588203, Gabrb1 MGI:95619, Gabrb2 MGI:95620, Gabrb3 MGI:95621,
+  Gabrd MGI:95622, Gabrr1 MGI:95625; rat Gabrb1 RGD:2649, Gabrb2 RGD:2650, Gabrb3 RGD:2651,
+  Gabrd RGD:61901, Gabrr2 RGD:61902. Mouse Gabrb1 and rat Gabrb2 support the term only through
+  the swapped SynGO seeds; the others have their own SynGO experimental rows (mouse Gabrr3 has
+  no reviewed UniProt entry and was not checked). The per-seed IBA count is in
+  projects/SYNGO_PROVENANCE/data/gaba_receptor_swaps-iba.yaml.
+- Curation follow-up: audit SynGO's GABA-B annotations on every GABRB gene's orthologs for the
+  same symbol collision (the Ensembl projections reach about 57 species).
 
 ### Open points
 
