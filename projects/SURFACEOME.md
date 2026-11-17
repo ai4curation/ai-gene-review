@@ -28,54 +28,71 @@ description: All 147 SurfaceBench proteins reviewed; how well public GO annotati
 
 # Accessible Surfaceome (SurfaceBench) Comparison
 
-> **Status: INCOMPLETE — handed off mid-analysis (2026-10-21).** See
-> [Handoff](#handoff-next-steps) at the bottom before continuing.
+> **Status: IN PROGRESS.** All 147 SurfaceBench proteins are reviewed; the
+> public-GO scoring analysis and the inner-leaflet / subdomain cleanup are
+> ongoing. See [Next steps](#next-steps) at the bottom.
 
-## Background
+## What this is
 
-The Deliverome Project preprint *The accessible human surfaceome*
-(<https://deliverome.org/paper/accessible-surfaceome/>; viewer
-<https://surfaceome.deliverome.org/>; code
-<https://github.com/Deliverome-Project/accessible-surfaceome>; data Zenodo record
-23445521, v1.3.0) uses an LLM pipeline to call which human proteins are
-**accessible on the extracellular face of an intact cell**. It releases:
+The Deliverome Project's preprint *The accessible human surfaceome*
+([paper](https://deliverome.org/paper/accessible-surfaceome/),
+[viewer](https://surfaceome.deliverome.org/)) ships **SurfaceBench**: 147 human
+proteins where five public resources (UniProt, GO, SURFY, CSPA, HPA) disagree on
+whether the protein is reachable from outside an intact cell, hand-curated as
+`yes` (68) / `contextual` (31) / `no` (48)
+([benchmark](https://surfaceome.deliverome.org/benchmark/)). The paper reports GO
+as a weak baseline (42.2% on SurfaceBench).
 
-- a catalog of 1,783 `canonical` + 1,252 `likely` surface proteins (5,332 genes
-  given a "deep dive" in total), and
-- **SurfaceBench**: 147 proteins on which five public databases (UniProt, GO,
-  SURFY, CSPA, HPA) disagree, curated as `yes` (68) / `contextual` (31) / `no` (48)
-  (<https://surfaceome.deliverome.org/benchmark/>).
+**What we did.** We reviewed all 147 SurfaceBench proteins in ai-gene-review, then
+asked how well *public GO annotations* answer the "accessible surface" question and
+why the paper's GO baseline scored so low.
 
-The paper reports GO as a weak baseline (42.2% on SurfaceBench). This project
-(a) makes sure every SurfaceBench protein has an ai-gene-review human review,
-(b) checks our localization calls against the benchmark, and (c) asks how well
-**public GO annotations** can answer the "accessible surface" question, and why
-the paper's GO baseline scored so low.
+**What we found.**
 
-## 1. Coverage
+- Scored with the paper's own outward-component rule, public GO lands at ~52%.
+  Adding "plasma membrane **and** a transmembrane receptor / transporter / channel
+  function" lifts it to **~69%** — most of the gap is GO's *missing terms*, not
+  wrong annotations.
+- The hard misses are GO coverage gaps, not errors: GPI-anchored and integral-PM
+  proteins lost their specific GO terms to obsoletion, and adhesion / junction
+  proteins and ectoenzymes have no receptor / transporter / channel function to
+  key on.
+- Several SurfaceBench `no` labels are **definitional disagreements**, not GO
+  errors — surface-bound secreted ligands (thrombin, transferrin, VEGFA) and the
+  ER–PM-junction IP3R pool. These are documented under
+  [Disputed labels](#disputed-benchmark-labels) rather than counted against GO.
+- A reusable **plasma-membrane-subdomain convention** came out of this work (how to
+  record apical / leaflet / contact-site localization), signed off and applied to
+  GUCY2C, MUC16, CA9 and the inner-leaflet kinase set.
 
-From `scripts/overlap.py` (`results/catalog_overlap.tsv`):
+## Coverage
 
-| Catalog tier | Catalog genes | With a human review |
+All 147 SurfaceBench proteins have an ai-gene-review. **"ai-gene-review" means a
+review document in *this* repository** (one `GENE-ai-review.yaml`, written with our
+AI-assisted curation workflow) — not an independent, external human curation.
+
+Coverage of the wider Deliverome catalog (many of these genes carry a review for
+reasons beyond this project — the SLC-transporter campaign accounts for most of the
+canonical growth):
+
+| Deliverome tier | Catalog genes | With an ai-gene-review |
 |---|---|---|
-| canonical | 1,783 | 286 |
-| likely | 1,252 | 164 |
-| low / uncertain / no | 2,297 | 318 |
+| canonical | 1,783 | 451 |
+| likely | 1,252 | 188 |
+| low / uncertain / no | 2,297 | 362 |
 
-**SurfaceBench: 147/147 reviewed.** 43 already existed; the other 104 were
-created in this project (branch `surfacebench-reviews`, one commit per batch).
-The new reviews were written by parallel agents; no automated deep-research
-provider was available (no API keys), so each gene's research and provenance is in
-`genes/human/GENE/GENE-notes.md`. All pass `just validate`, and each has a history record.
+_(as of 2026-11-17; regenerate with the coverage script — see [Methods](#methods--reproducing).)_
 
-Edits to existing reviews prompted by the benchmark: **HSPA1A** and **HMGB1**
-plasma-membrane/cell-surface rows changed ACCEPT → KEEP_AS_NON_CORE, because their
-surface pool is stress- or activation-induced and core locations are
-nucleus/cytosol.
+Two existing reviews were corrected during the benchmark pass: **HSPA1A** and
+**HMGB1** plasma-membrane / cell-surface rows moved ACCEPT → KEEP_AS_NON_CORE,
+because their surface pool is stress- or activation-induced and their core
+location is nucleus / cytosol.
 
-## 2. How the paper scored GO
+## How the paper scored GO
 
-From `src/accessible_surfaceome/sources/go.py` in the authors' code:
+The authors' GO source rule
+([their code](https://github.com/Deliverome-Project/accessible-surfaceome), commit
+`80930d0`) is:
 
 - Surface if any **non-IEA**, non-NOT annotation to `GO:0009986` cell surface,
   `GO:0009897` external side of plasma membrane, or `GO:0005887` integral
@@ -103,11 +120,13 @@ Two problems found:
    *This is an inference from matching the column against the annotations, not a
    statement in the paper or code — confirm with the authors.*
 
-## 3. Public GO annotations vs SurfaceBench
+## Public GO annotations vs SurfaceBench
 
-`scripts/score_gaf.py` on `goa_human.gaf` (downloaded 2026-10-21; header
-`!date-generated: 2026-05-21T08:10`). Accuracy uses the paper's convention
-(yes+contextual = surface, n=147), and separately yes vs no only (n=116).
+How several candidate "is it surface?" rules, applied to the current public GO
+annotations, score against the benchmark. Accuracy uses the paper's convention
+(yes+contextual = surface, n=147), and separately yes vs no only (n=116). (Rules
+and the exact GAF snapshot are in [Methods](#methods--reproducing); numbers are
+from the 2026-10-21 run.)
 
 | Rule (public annotations) | yes | ctx | no called surface | Acc (147) | Acc yes/no (116) |
 |---|---|---|---|---|---|
@@ -134,17 +153,17 @@ benchmark rewards that.
   - Orphan or unknown MF: GPRC5D, GPNMB, SEZ6, DLK1, GYPA, TM4SF1.
 - `no` called surface (5): ITPR1, ITPR3 (ER channels with a PM annotation),
   F2, TF, VEGFA (secreted ligands with cell-surface annotations). These five are
-  disputed labels rather than clear GO errors; see §6. ITPR1 in particular has
+  disputed labels rather than clear GO errors; see [Disputed labels](#disputed-benchmark-labels) below. ITPR1 in particular has
   experimental evidence for a functional, outward-facing PM pool.
 - `contextual` (18 not called surface): mostly lysosomal/secretory-pathway
   proteins with a minor surface pool (LAMP1/2, CD68, PMEL, TYRP1, TGOLN2, STIM1).
 
 Per-gene calls: `results/gaf_per_gene.tsv`.
 
-## 4. Our review calls vs SurfaceBench (secondary)
+## Our review calls vs SurfaceBench
 
-`scripts/score_reviews.py`, using accepted, kept, modified (replacement term) and
-new rows plus `core_functions` locations:
+The same rules applied to our reviews (the accepted, kept, modified and new rows,
+plus `core_functions` locations) rather than to raw public GO:
 
 | Rule (our reviews) | yes | ctx | no called surface | Acc (147) | Acc yes/no (116) |
 |---|---|---|---|---|---|
@@ -157,6 +176,15 @@ cytoplasmic-side terms), but they follow GO convention and do not add cell
 surface to every TM receptor. A blanket addition would conflict with the repo rule
 against manufacturing annotations (see CLAUDE.md "Do not add what curators
 deliberately declined to add").
+
+**How the reviews used `GO:0009986` cell surface.** On its own evidence, where the
+gene genuinely sits on / is bound at the surface — not as a blanket surface call.
+34 of the 147 reviews carry the term: 52 rows ACCEPT it, 25 KEEP_AS_NON_CORE, 2
+MODIFY, and 3 are NEW (the GARP-presented TGFB1 pool, the DLL3 tumour pool, and the
+ectoenzyme/complement cases), the rest in `core_functions` locations. The general
+"is this protein accessible at the surface?" inference across the benchmark is left
+to the scoring rule above, deliberately: assigning `cell surface` to every TM
+receptor would be manufacturing annotations the curators declined to make.
 
 Review-level calls worth expert eyes:
 
@@ -172,7 +200,7 @@ Review-level calls worth expert eyes:
   - CD24 interaction row: FGFR1 where the paper studies FGR.
   - ABCB9 ER row: cites mis-keyed PMID 1101155 (should be 11011155).
 
-## 5. Why "plasma membrane" is ambiguous for accessibility
+## Why "plasma membrane" is ambiguous
 
 1. **Inner-leaflet / peripheral cytoplasmic** proteins (KRAS, LYN, BTK, JAKs):
    cytoplasmic-side terms exist but are rarely used.
@@ -196,7 +224,7 @@ Review-level calls worth expert eyes:
 8. **Evidence artifacts**: PM from membrane-fraction proteomics (HDA), and
    Reactome TAS assigning PM to a whole complex (the APOB/LDL case).
 
-## 6. Disputed benchmark labels: location and function vs targetability
+## Disputed benchmark labels
 
 Three questions are easy to run together:
 
@@ -260,7 +288,7 @@ Use a `part_of` extension only when GO lacks a specific term:
   **ALPG** `external side of plasma membrane` part_of `testis` (UBERON:0000473),
   because GO has no "germ-cell surface" term. This is the idiom for "surface only
   in cell type / tissue X" when no specific CC term exists. KLK2 gets neither: it
-  is secreted (a disputed benchmark label; see §6), with no surface row.
+  is secreted (a disputed benchmark label; see [Disputed labels](#disputed-benchmark-labels)), with no surface row.
 - `BFO:0000066` (occurs_in) + a CC — mainly for an MF/activity row localised to a
   compartment.
 - `RO:0002233` (has input) + a `UniProtKB:…` partner — substrate/partner context,
@@ -393,7 +421,10 @@ a prose `reason`. Converting those to `part_of CL/UBERON` extensions where the
 cell type or tissue is known is a worthwhile structural cleanup (candidate for a
 follow-up pass; not done corpus-wide here).
 
-## Reproducing
+## Methods / reproducing
+
+Scripts live in `projects/SURFACEOME/scripts/` (`overlap.py` for the coverage
+table, `score_gaf.py` and `score_reviews.py` for the rule tables). To regenerate:
 
 ```bash
 projects/SURFACEOME/scripts/fetch_inputs.sh   # Zenodo v1.3.0 files + current goa_human.gaf.gz -> data/ (git-ignored)
@@ -404,9 +435,9 @@ projects/SURFACEOME/scripts/run_all.sh        # writes results/*.tsv and *.txt
 `runoak -i sqlite:obo:go` call). Results drift as GO and the GAF are updated; the
 numbers above are from the run on 2026-10-21.
 
-## Handoff: next steps
+## Next steps
 
-The work is incomplete. In priority order:
+In priority order:
 
 1. **Extend the public-GO rule (R2)** in `scripts/score_gaf.py`, then re-run:
    - count cell-adhesion MF as TM evidence (e.g. `GO:0098631` cell adhesion
@@ -417,9 +448,9 @@ The work is incomplete. In priority order:
    - do **not** add rules whose only purpose is to remove ITPR1/ITPR3 (for
      example, dropping IBA PM rows). ITPR1 has a real, outward-facing PM pool, so
      that would make GO match a disputed label by discarding a true annotation
-     (§6). Instead, report the score with and without the disputed labels.
-   - Report every change in a new row in §3; never tune on per-gene names.
-2. **Confirm the `db_go` finding** (§2, point 2) with the authors before
+     (see [Disputed labels](#disputed-benchmark-labels)). Instead, report the score with and without the disputed labels.
+   - Report every change in a new row in the public-GO table; never tune on per-gene names.
+2. **Confirm the `db_go` finding** (point 2 under "How the paper scored GO") with the authors before
    publicizing it. Their code is pinned at commit `80930d0` (cloned 2026-10-21).
 3. **Inner-leaflet proteins → cytoplasmic-side term (partly done).** The clean
    lipid-anchored set — **KRAS, NRAS, RAC1, RHOA, LYN, HCK, BTK** — has been
@@ -438,9 +469,9 @@ The work is incomplete. In priority order:
    **Still open:** the transiently-recruited kinases BRAF, MAP2K1, SYK, IKBKB,
    LRRK2 — the inner-side call is softer there (they are recruited to the
    cytoplasmic face rather than constitutively lipid-anchored), so they were
-   deliberately left for a separate judgement. Re-running §3/§4 scores after this
+   deliberately left for a separate judgement. Re-running the rule-score tables after this
    change is a to-do.
-4. **Expert-review the flagged review calls** in §4 (DLL3, LGR5, IZUMO4, F2,
+4. **Expert-review the flagged review calls** under "Our review calls" (DLL3, LGR5, IZUMO4, F2,
    the source defects).
 5. **Optional:** compare against UniProt topology (`TOPO_DOM Extracellular`,
    `LIPID GPI-anchor`) as a non-GO reference. The paper's best single database was
