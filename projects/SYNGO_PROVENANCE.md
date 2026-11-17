@@ -160,13 +160,58 @@ all in oocytes.
 One reference is simply mis-keyed. PMID:8137830 is the 1994 erratum notice for the 1993
 EMBO J glycine receptor paper, PMID:8404844, found by PubMed search. The two cached records
 confirm each other: PMID:8137830 says "Erratum for EMBO J. 1993 Oct;12(10):3729-37" and
-PMID:8404844 says "Erratum in EMBO J. 1994 Mar 15;13(6):1493". That paper is itself a
-HEK-293 study with no presynaptic content.
+PMID:8404844 says "Erratum in EMBO J. 1994 Mar 15;13(6):1493". That paper, read in full
+from a copy supplied by the project owner, is itself a HEK-293 study of glycine receptor
+chloride conductance with no presynaptic content, so correcting the PMID would not make
+the citation support the term.
 
 **What the rows themselves record.** The row listing keeps each row's ECO code and
 WITH/FROM. None of the 99 rows has a WITH/FROM, including all 48 human rows: no orthology
 source is recorded for any human annotation made from a rodent paper. That is the
 evidence for the first error category below, not an inference.
+
+## Biology check: are the flagged seeds wrong, or only mis-sourced?
+
+A failed citation does not make a claim false. The question that matters for the
+annotations downstream is whether each flagged gene really has the activity the term
+asserts, from any source. That is recorded per seed in
+[`GO_0099507-seed-biology.yaml`](SYNGO_PROVENANCE/data/term_audit/GO_0099507-seed-biology.yaml),
+from one PubMed screen per gene (method in the file header; it is a screen, not a
+systematic review).
+
+**Why it matters: the seeds are copied.** Of the 1,497 annotations to `GO:0099507` in
+QuickGO (2026-11-17), 99 are SynGO's own. Almost all the rest are copies of SynGO's human
+and mouse seeds into other species: 1,194 Ensembl orthology projections
+(`GO_REF:0000107`, about 100 taxa), plus RGD and GO_Central ISO rows and UniProt rows
+that name a seed in their WITH/FROM. There are no IBA rows for this term. Each human or
+mouse seed is copied to 60-100 other annotations; the rat seeds are not projected.
+[`seed_downstream.py`](SYNGO_PROVENANCE/seed_downstream.py) recomputes this and writes
+[`GO_0099507-downstream.yaml`](SYNGO_PROVENANCE/data/term_audit/GO_0099507-downstream.yaml).
+The 18 seeds whose citations fail account for 1,030 downstream rows.
+
+| Biology | Seeds (downstream rows) | Rows |
+|---|---|---|
+| Supported independently | GABRA2 (94), GLRA1 (92), GRIN2B (92), GRIK4 (89), GRIA3 (85), Htr3a (79), GRIK5 (78), Grin2d (2), Grik1, Gria2 | 611 |
+| Partial (afferent axons, not clearly terminals) | GABRA5 (91) | 91 |
+| Presynaptic localization only | GRIA4 (96), GRIA1 (94), GRIN3B (76), Gabra1, Gabra3 | 266 |
+| Not found | GABRB1 (62) | 62 |
+| Not resolved (antibody does not separate paralogs) | Gabrb2 | 0 |
+
+So most of the flagged seeds are **true claims with the wrong citation**. That includes
+the two with the worst provenance: GRIN2B (wrong subunit on the cited paper) and GLRA1
+(an erratum notice, whose corrected paper does not support the term either). Presynaptic
+GluN2B-containing NMDA receptors and homomeric alpha1 glycine receptors on calyx of Held
+terminals are both independently shown. For these, the fix is a better citation, not
+removal.
+
+**No seed is contradicted.** The candidates for a bad seed are the ones with no
+functional presynaptic evidence: GRIA4, GRIA1 and GRIN3B (immunogold only), GABRA5
+(afferent axons rather than terminals) and GABRB1 (nothing found). Together they feed 419
+downstream rows. GABRB1 is the weakest case, but every presynaptic GABA-A receptor
+contains some beta subunit, so this is a lack of evidence for beta1 specifically, not
+evidence against it. None of these should be reported as "wrong" without an expert view;
+each should be reported as "citation does not support the term, and we found no
+independent functional evidence".
 
 ## Error categories this audit needs
 
@@ -228,14 +273,15 @@ channel evidence, `PRACTICE_CHANGE` would describe the cohort for a bulk fix.
   directly whether `GO:0099507` was a default term for channel evidence.
 - [x] Read the full text of the abstract-only papers with flagged verdicts (eight, from
   copies supplied by the project owner, 2026-11-17); all verdicts confirmed.
-- [ ] Read PMID:8404844, the paper the GLRA1 erratum citation should point to, to see
-  whether it shows anything presynaptic for GLRA1.
-- [ ] Separate provenance from biology: for each flagged seed gene, look for independent
-  evidence that it regulates presynaptic membrane potential, and classify the claim as
-  true but mis-sourced, unsupported, or contradicted. Only the last two are bad seeds.
-- [ ] Count the downstream annotations each seed feeds (Ensembl orthology projection
-  `GO_REF:0000107`, RGD and GO_Central ISO, UniProt rules), so bad seeds can be ranked
-  by impact.
+- [x] Read PMID:8404844, the paper the GLRA1 erratum citation should point to: an
+  HEK-293 conductance study with nothing presynaptic.
+- [x] Separate provenance from biology: a PubMed screen per flagged seed gene
+  (`GO_0099507-seed-biology.yaml`). Most seeds are true but mis-sourced; none is
+  contradicted; five lack functional evidence.
+- [ ] Ask an expert (or SynGO) about the five seeds without functional evidence (GRIA4,
+  GRIA1, GRIN3B, GABRA5, GABRB1) before calling any of them wrong.
+- [x] Count the downstream annotations each seed feeds (`seed_downstream.py`): 1,030
+  rows derive from the 18 flagged seeds.
 - [ ] Export confirmed defects (`just export-source-defects`) and send one report to
   SynGO, with two convention questions kept separate from the row-level defects: the ISO
   question, and the use of `GO:0099507` for channel evidence without presynaptic context.
