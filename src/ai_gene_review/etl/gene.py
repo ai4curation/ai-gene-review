@@ -20,7 +20,6 @@ from pathlib import Path
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap
 from ruamel.yaml.tokens import ScalarToken
-from functools import lru_cache
 from typing import Tuple, Optional, List, Dict, Any
 import requests
 import yaml
@@ -880,18 +879,25 @@ _TAXON_ID_TO_UNIPROT_NAME: Dict[str, str] = {
 }
 
 
-@lru_cache(maxsize=None)
+# Successful UniProt-taxonomy resolutions, memoized for the process. Only
+# successes are cached: a transient lookup blip must not blank a taxon for the
+# rest of a batch fetch.
+_TAXON_NAME_CACHE: Dict[str, str] = {}
+_TAXON_NAME_WARNED: set[str] = set()
+
+
 def _resolve_taxon_name(taxon_id: str) -> str:
     """Resolve a numeric NCBI taxon id to QuickGO's ``TAXON NAME`` string.
 
-    Used to backfill the GOA ``TAXON NAME`` column when QuickGO's
-    ``includeFields=taxonName`` path is unavailable (it returns HTTP 500 while
+    Used to backfill the GOA ``TAXON NAME`` column when QuickGO does not supply a
+    ``taxonName`` (its ``includeFields=taxonName`` path returns HTTP 500 while
     ``goName`` and ``name`` still work). QuickGO's ``taxonName`` is the
     UniProt-style organism scientific name (carrying strain qualifiers), so this
     resolves against the UniProt taxonomy API -- what QuickGO mirrors -- rather
     than the NCBITaxon label, keeping the column byte-faithful for every species.
-    Common taxa resolve offline from a verified table; a lookup failure yields an
-    empty string rather than aborting the whole fetch over one cosmetic label.
+    Common taxa resolve offline from a verified table. A lookup failure yields an
+    empty string (warned once, not cached) rather than aborting the whole fetch
+    over one cosmetic label.
 
     >>> _resolve_taxon_name("9606")
     'Homo sapiens'
@@ -905,6 +911,8 @@ def _resolve_taxon_name(taxon_id: str) -> str:
         return ""
     if taxon_id in _TAXON_ID_TO_UNIPROT_NAME:
         return _TAXON_ID_TO_UNIPROT_NAME[taxon_id]
+    if taxon_id in _TAXON_NAME_CACHE:
+        return _TAXON_NAME_CACHE[taxon_id]
     try:
         # UniProt taxonomy API scientificName -- the string QuickGO mirrors.
         url = "https://rest.uniprot.org/taxonomy/stream"
@@ -912,10 +920,18 @@ def _resolve_taxon_name(taxon_id: str) -> str:
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
         results = response.json().get("results", [])
-        if results:
-            return results[0].get("scientificName", "") or ""
+        name = results[0].get("scientificName", "") or "" if results else ""
+        if name:
+            _TAXON_NAME_CACHE[taxon_id] = name  # cache successes only
+            return name
     except Exception:
         pass
+    if taxon_id not in _TAXON_NAME_WARNED:
+        _TAXON_NAME_WARNED.add(taxon_id)
+        print(
+            f"Warning: could not resolve a taxon name for NCBITaxon:{taxon_id}; "
+            "leaving its TAXON NAME column empty"
+        )
     return ""
 
 
@@ -1303,10 +1319,14 @@ def _goa_results_to_tsv(results: List[Dict[str, Any]]) -> str:
                     )
         with_from = "|".join(with_from_list) if with_from_list else ""
 
-        taxon_id = result.get("taxonId", "")
+        # QuickGO can send an explicit null taxonId (as it does for taxonName/
+        # name/date in the CACAO fixture); keep the column empty rather than the
+        # literal string "None".
+        taxon_id = result.get("taxonId")
+        taxon_id_str = "" if taxon_id is None else str(taxon_id)
         # QuickGO supplies taxonName via includeFields; backfill from taxonId when
         # that field is unavailable (its endpoint currently 500s for taxonName).
-        taxon_name = result.get("taxonName") or _resolve_taxon_name(str(taxon_id))
+        taxon_name = result.get("taxonName") or _resolve_taxon_name(taxon_id_str)
 
         # Build TSV row
         row = [
@@ -1321,7 +1341,7 @@ def _goa_results_to_tsv(results: List[Dict[str, Any]]) -> str:
             result.get("goEvidence", ""),  # GO EVIDENCE CODE
             result.get("reference", ""),  # REFERENCE
             with_from,  # WITH/FROM
-            str(taxon_id),  # TAXON ID
+            taxon_id_str,  # TAXON ID
             taxon_name,  # TAXON NAME
             result.get("assignedBy", ""),  # ASSIGNED BY
             result.get("name", ""),  # GENE NAME
@@ -1348,9 +1368,12 @@ def fetch_goa_data(uniprot_id: str) -> str:
     are deduplicated after projection, so annotations that differ only in fields the
     TSV does not represent (such as annotation extensions) collapse to one row.
 
-    The ``TAXON NAME`` column is backfilled from ``taxonId`` because QuickGO's
-    ``includeFields=taxonName`` request currently returns HTTP 500 (``goName`` and
-    ``name`` are unaffected, so they are still requested directly).
+    ``taxonName`` is requested from QuickGO as before; while QuickGO's
+    ``includeFields=taxonName`` path returns HTTP 500, the request is retried
+    once without it and the ``TAXON NAME`` column is backfilled from ``taxonId``
+    (``goName`` and ``name`` are unaffected). When EBI restores the endpoint the
+    retry never triggers and ``taxonName`` is used verbatim, so the behaviour
+    reverts automatically.
 
     Args:
         uniprot_id: UniProt accession ID
@@ -1359,24 +1382,29 @@ def fetch_goa_data(uniprot_id: str) -> str:
         GOA data in TSV format
 
     Raises:
-        ValueError: If GOA data cannot be fetched
+        ValueError: If GOA data cannot be fetched, or if pagination fails partway
+            (an incomplete fetch is raised rather than written as a truncated
+            GOA file).
     """
     # Use QuickGO search endpoint with JSON format
     url = "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
 
-    all_results = []
+    all_results: List[Dict[str, Any]] = []
     page = 1
     limit = 200  # QuickGO's actual max limit per page (not 400!)
+    expected_total = 0
+    # Request taxonName as normal; drop it (for the rest of this fetch) only if
+    # QuickGO rejects it, so behaviour reverts automatically once EBI fixes it.
+    include_taxon_name = True
 
     while True:
         # Build URL with properly formatted parameters
         # QuickGO expects multiple includeFields parameters, not an array
-        params = [
-            ("geneProductId", uniprot_id),
-            ("includeFields", "goName"),
-            ("includeFields", "name"),
-            ("limit", str(limit)),
-        ]
+        params = [("geneProductId", uniprot_id), ("includeFields", "goName")]
+        if include_taxon_name:
+            params.append(("includeFields", "taxonName"))
+        params.append(("includeFields", "name"))
+        params.append(("limit", str(limit)))
 
         # Only add page parameter if page > 1 (API doesn't like page=1)
         if page > 1:
@@ -1392,6 +1420,8 @@ def fetch_goa_data(uniprot_id: str) -> str:
             # Parse JSON response
             data = response.json()
             results = data.get("results", [])
+            # Note: pageInfo.total is unreliable, use numberOfHits instead
+            expected_total = data.get("numberOfHits", 0) or 0
 
             if not results:
                 # No more results, stop pagination
@@ -1399,35 +1429,39 @@ def fetch_goa_data(uniprot_id: str) -> str:
 
             all_results.extend(results)
 
-            # Check if we've fetched all results
-            # Note: pageInfo.total is unreliable, use numberOfHits instead
-            total_annotations = data.get("numberOfHits", 0)
-
             # Debug output
             print(f"  Page {page}: fetched {len(results)} annotations (total so far: {len(all_results)})")
 
             # Stop if:
             # 1. We got fewer results than requested (last page)
             # 2. We have fetched all known annotations
-            if len(results) < limit or len(all_results) >= total_annotations:
+            if len(results) < limit or len(all_results) >= expected_total:
                 # We have all results
-                print(f"  Total annotations fetched: {len(all_results)} out of {total_annotations}")
+                print(f"  Total annotations fetched: {len(all_results)} out of {expected_total}")
                 break
 
             page += 1
 
         except requests.exceptions.RequestException as e:
-            if page == 1:
-                # First page failed: fail loudly rather than silently writing an
-                # empty (header-only) GOA file, which would discard every
-                # annotation and corrupt the review's input.
-                raise ValueError(
-                    f"Could not fetch GOA data for {uniprot_id} from QuickGO: {e}"
-                ) from e
-            else:
-                # Subsequent page failed, use what we have
-                print(f"Warning: Pagination stopped at page {page} due to error: {e}")
-                break
+            if include_taxon_name:
+                # QuickGO's taxonName field is currently 500ing. Drop it for the
+                # rest of this fetch and retry this page; TAXON NAME is backfilled
+                # from taxonId in _goa_results_to_tsv.
+                include_taxon_name = False
+                continue
+            # Fail loudly rather than silently writing a header-only (page 1) or
+            # truncated (page >= 2) GOA file, which would corrupt the review input.
+            raise ValueError(
+                f"Could not fetch GOA data for {uniprot_id} from QuickGO "
+                f"(page {page}): {e}"
+            ) from e
+
+    # A short read with no error is also a corrupt fetch; refuse to write it.
+    if expected_total and len(all_results) < expected_total:
+        raise ValueError(
+            f"Incomplete GOA fetch for {uniprot_id}: got {len(all_results)} of "
+            f"{expected_total} annotations; refusing to write a truncated file"
+        )
 
     # Convert all collected results to TSV (empty results -> header only, which is
     # the correct output for an accession QuickGO knows but has no annotations for).
