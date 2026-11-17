@@ -138,7 +138,7 @@ def collect() -> dict[str, list[dict[str, Any]]]:
 
         missing = [s for s, f in folders.items() if not f]
         if missing:
-            record["unreviewed"] = missing
+            record["uncomparable"] = {s: "(not reviewed)" for s in missing}
             record["reviewed"] = [s for s in symbols if folders[s]]
             out["incomplete"].append(record)
             continue
@@ -154,13 +154,18 @@ def collect() -> dict[str, list[dict[str, Any]]]:
         # join the incomplete cases. Leaving either in the comparison would make
         # a single such member read as divergence, and a group where every member
         # is like that read as agreement on a claim nobody ruled on.
-        absent = [
-            s
+        absent = {
+            s: v[0]
             for s, v in actions.items()
             if v in (["(no review file)"], ["(only a NEW row)"])
-        ]
+        }
         if absent:
-            record["unreviewed"] = absent
+            # Keep *why* each member cannot be compared. Flattening both to
+            # "unreviewed" would throw away the distinction actions_for_term
+            # exists to draw: a gene with no review file has not been looked at,
+            # while one whose only row is NEW has been reviewed and simply makes
+            # no ruling on this claim.
+            record["uncomparable"] = absent
             record["reviewed"] = [s for s in symbols if s not in absent]
             out["incomplete"].append(record)
             continue
@@ -204,11 +209,14 @@ def main() -> int:
     if not args.quiet:
         if groups["incomplete"]:
             print()
-            print("INCOMPLETE -- groups with an unreviewed member:")
+            print("INCOMPLETE -- groups with a member that cannot be compared:")
             for record in groups["incomplete"]:
+                why = ", ".join(
+                    f"{s} {reason}" for s, reason in record["uncomparable"].items()
+                )
                 print(
                     f"  {record['term']:13} {record['reference']:16} "
-                    f"reviewed={record['reviewed']} unreviewed={record['unreviewed']}"
+                    f"reviewed={record['reviewed']} uncomparable: {why}"
                 )
         if groups["consistent"]:
             print()
