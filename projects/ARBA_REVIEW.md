@@ -8,6 +8,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/TAqNknNyGr8Rxdxobpwtfb
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # ARBA Rule Review

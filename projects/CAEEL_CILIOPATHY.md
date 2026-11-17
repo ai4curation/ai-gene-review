@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/6FL1QHUfX93w3d1czhc48e
       title: Project brief
+index_group: WORM
 ---
 
 # C. elegans Ciliopathy/IFT Pathway Project
