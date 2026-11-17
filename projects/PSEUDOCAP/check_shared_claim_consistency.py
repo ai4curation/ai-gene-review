@@ -227,9 +227,9 @@ def collect() -> dict[str, list[dict[str, Any]]]:
 def diverges(actions: dict[str, list[str]]) -> bool:
     """True when two comparable members reached different verdicts.
 
-    One member cannot disagree with itself, so a group with a single comparable
-    member is never divergent; that is why this is not simply ``len(set) > 1``
-    on a possibly-empty mapping.
+    A group with one comparable member, or none, yields a set of size one or
+    zero and so is never divergent -- which is what the callers want, since one
+    member cannot disagree with itself.
     """
     return len({tuple(v) for v in actions.values()}) > 1
 
