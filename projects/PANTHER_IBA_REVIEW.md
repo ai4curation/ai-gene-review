@@ -10,6 +10,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/EDHYPVzokF7aKvMNqYpdbG
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # PANTHER IBA family review
