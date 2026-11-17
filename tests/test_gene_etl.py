@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
+import requests
 import yaml
 from ai_gene_review.etl.gene import fetch_gene_data
 
@@ -482,3 +483,56 @@ def test_goa_fetch_raises_on_short_read():
     ):
         with pytest.raises(ValueError):
             fetch_goa_data("P1")
+
+
+# ---------------------------------------------------------------------------
+# Fail loudly on a persistent QuickGO outage (from #6488), reconciled with the
+# retry-on-500 behaviour above: a single recoverable page is retried (see
+# test_goa_fetch_retries_without_taxonname_on_500), but a persistent outage must
+# still raise rather than write an empty or truncated GOA file.
+# ---------------------------------------------------------------------------
+
+
+class _FailingResponse:
+    """A QuickGO response that fails the way the service did on 2026-11-17."""
+
+    status_code = 500
+
+    def raise_for_status(self) -> None:
+        err = requests.exceptions.HTTPError("500 Server Error")
+        err.response = self  # carry the status so the 500 is recognised
+        raise err
+
+
+def test_fetch_goa_data_raises_on_persistent_quickgo_error(monkeypatch):
+    """A persistent QuickGO error (every page) must raise rather than come back
+    as an empty or truncated GOA table."""
+    from ai_gene_review.etl import gene
+
+    monkeypatch.setattr(gene.requests, "get", lambda *a, **k: _FailingResponse())
+    monkeypatch.setattr(gene.time, "sleep", lambda *a, **k: None)
+    with pytest.raises(ValueError, match="QuickGO"):
+        gene.fetch_goa_data("P00000")
+
+
+@patch("ai_gene_review.etl.gene.fetch_uniprot_data")
+def test_fetch_gene_data_keeps_existing_goa_file_when_quickgo_errors(
+    mock_fetch_uniprot, monkeypatch, tmp_path
+):
+    """Re-fetching during a QuickGO outage must not blank an existing GOA file."""
+    from ai_gene_review.etl import gene
+
+    gene_dir = tmp_path / "genes" / "SCHPO" / "dca7"
+    gene_dir.mkdir(parents=True)
+    (gene_dir / "dca7-ai-review.yaml").write_text("id: O74763\ngene_symbol: dca7\n")
+    goa_file = gene_dir / "dca7-goa.tsv"
+    goa_file.write_text("GO TERM\tGO NAME\nGO:0005634\tnucleus\n")
+    mock_fetch_uniprot.return_value = (
+        "ID   DCA7_SCHPO Reviewed; 500 AA.\nAC   O74763;\nOS   Schizosaccharomyces pombe.\n"
+    )
+    monkeypatch.setattr(gene.requests, "get", lambda *a, **k: _FailingResponse())
+    monkeypatch.setattr(gene.time, "sleep", lambda *a, **k: None)
+
+    with pytest.raises(ValueError, match="QuickGO"):
+        fetch_gene_data(("SCHPO", "dca7"), base_path=tmp_path, seed_annotations=False)
+    assert goa_file.read_text() == "GO TERM\tGO NAME\nGO:0005634\tnucleus\n"

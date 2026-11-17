@@ -655,12 +655,19 @@ as schema (`src/ai_gene_review/validation/rule_review_receipts.py`); read
   domain)`; the label is the checksum of the id, and it is checked.
 - **Judge the conjunction, not the signature.** A condition set is everything it
   requires together, taxon included. Alternative sets are meant to be disjoint.
-- **Size, generality, redundancy and low recall are not errors.** The "limit of 12
-  condition sets" is the analysis tool's default, not a standard. A true but
-  general term is `MODIFY` or `UNDECIDED`, never `DEPRECATE`.
+- **Judge meaning and parsimony as well as accuracy.** A rule can be true set by
+  set and say nothing. Group the sets into `biological_units`, give each its most
+  informative curated term, and record `biological_meaning`, `parsimony` and
+  `taxonomic_scope` with numbers (`projects/ARBA_REVIEW/rule_redundancy.tsv`).
+  An umbrella term over units with better terms is `SPLIT`.
+- **Size and generality are not evidence that an annotation is false.** The "limit
+  of 12 condition sets" is the analysis tool's default, not a standard. A true but
+  general term is `SPLIT` or `MODIFY`, never `DEPRECATE`; "too many sets" needs a
+  count of sets that do no work.
 - **`DEPRECATE` names a wrongly annotated protein** (accessions in
-  `annotation_assessments[].incorrect_examples`), an obsolete consequent or a
-  withdrawn rule. Before listing a protein as a false positive, look up its
+  `annotation_assessments[].incorrect_examples`), an obsolete consequent, or a rule
+  whose every set is covered by a rule for a more specific term. A rule UniProt no
+  longer serves is `WITHDRAWN`. Before listing a protein as a false positive, look up its
   experimental annotations to the term and its descendants; `--online` does this.
 - **Your notes and deep-research files are not literature.** Cite the paper or
   record they point to, or omit `literature_support`.
@@ -1032,6 +1039,13 @@ link to a review page when its HTML exists on disk, so run `just render-all`
 first if you need those links in a local build. The propagation browser links
 whenever the review YAML exists.
 
+### GO-CAM review pages
+```bash
+just render-gocams     # every gocams/<id>/<id>-review.yaml, plus an index
+```
+Output: `pages/gocams/<id>.html` and `pages/gocams/index.html`. Like gene HTML,
+this is a gitignored build product rendered by the Pages workflow; do not commit it.
+
 ### Project pages
 Project docs live in `projects/`. Render with:
 ```bash
@@ -1179,6 +1193,20 @@ GitHub Pages officially supports a 1 GB site. Our existing temporary policy
 allows larger deployments below the 10 GB absolute artifact cutoff; that is not
 a hosting-capacity guarantee. A completed upload can be redeployed without
 rendering via `deploy-existing-pages.yaml`, while the artifact is retained.
+
+## Upstream issue trackers: never notify curators
+
+`issues/<tracker>/` mirrors upstream trackers (first geneontology/go-annotation)
+for retrospective and prospective evaluation; see `projects/GO_ANNOTATION_TRACKER.md`
+and `just outstanding-shadow-issues`. In any commit message, PR title or body, issue,
+or comment, never write an upstream issue URL or the shorthand `geneontology/<repo>#N`,
+and never at-mention anyone except cmungall: GitHub turns these into cross-references
+and notifications on the curators' issues. Name an upstream issue as
+`issues/go-annotation/N` or "go-annotation N". Never paste mirrored thread text into a
+PR body. A Claude Code hook (on Bash and GitHub MCP tools), a commit-msg hook, and a
+check on PR text and comments enforce this
+(`src/ai_gene_review/shadow_issues/guard.py`); `just check-upstream-refs FILE` checks a
+body file first.
 
 ## General guidelines
 
