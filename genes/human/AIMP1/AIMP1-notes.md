@@ -209,3 +209,8 @@ Outcome: KEEP_AS_NON_CORE stays, consistent with the ER rows. Root only. If Figu
 ### 2026-11-13 review follow-up (PR #6353)
 
 - The GO:0005794 reason no longer relies on a Figure 2 reading of PMID:17525271, which is abstract-only in the cache and cannot be checked; the root claim now rests on curator deference to the mouse P31230 line curated from that paper. Action unchanged (KEEP_AS_NON_CORE).
+
+## 2026-11-15 ORGANELLES follow-up (ER row wording)
+
+- The GO:0005783 IEA row's reason and propagation comment relied on a reading of Figure 2 of PMID:17525271 (endogenous AIMP1 with calnexin in HeLa cells). The cached copy of that paper is abstract-only, so the reading cannot be verified here. Both now rest on curator deference: the UniProt item "Endoplasmic reticulum {ECO:0000250|UniProtKB:P31230}" is by similarity to mouse, whose location is curated from that paper. The action (KEEP_AS_NON_CORE) is unchanged, matching the Golgi row fixed in #6353.
+- Follow-up from the #6432 review: tried to retrieve the full text of PMID:17525271 (PMC1899434; DOI 10.2353/ajpath.2007.061266). The PMC full-text service returned only the abstract, and the Europe PMC full-text XML endpoint returned HTTP 500, so Figure 2 could not be re-read. The rows stay on curator deference. If the full text becomes readable, either restore the marker reading or move the ER and Golgi rows to MARK_AS_OVER_ANNOTATED, as their reasons say.

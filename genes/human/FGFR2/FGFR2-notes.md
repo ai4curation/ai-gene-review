@@ -192,3 +192,16 @@ for PMID:23597563 and PMID:26267536. Fragment boundaries, the unread erratum and
 unread original panels remain limits. Proximity evidence in PMID:25241761 is
 unchanged. All inherited quotations/reference associations are preserved; no
 new publication quotation, source cache or experiment suggestion is added.
+
+## 2026-11-15 ORGANELLES Golgi batch 2 (Golgi apparatus rows)
+
+- One Golgi row: IEA GO_REF:0000044 (UniProt SL-0132). In the UniProt SUBCELLULAR LOCATION
+  line the "Golgi apparatus" item carries no ECO tag (uncited assertion).
+- UniProt references with location content: PMID:17311277 (Citores et al. 2007; abstract-only):
+  transient FGFR transfection of COS cells, ligand-independent phosphorylation of intracellular
+  immature receptor forms, STAT1 phosphorylated and trapped on Golgi membranes. PMID:16844695
+  (read earlier in author-posted full text): glycosylation-deficient and C278F mutant FGFR2
+  retained intracellularly in transfected MC3T3-E1/COS7 cells.
+- No endogenous or minor-pool wild-type Golgi evidence found. Verdict: KEEP_AS_NON_CORE ->
+  MARK_AS_OVER_ANNOTATED (rule 7: transit or overexpressed/mutant retention). Close call noted
+  in the reason. Added PMID:17311277 to references.

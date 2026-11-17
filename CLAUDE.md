@@ -266,6 +266,16 @@ the organism, is `REMOVE`, even on an IDA row. There is no numeric cutoff; state
 the judgement in `reason`. See the promiscuous-activity tiers in
 `projects/ENZYME_SPECIFICITY.md`.
 
+**A term in another EC class names a different reaction, not a broader one.**
+Watch for synthase/synthetase swaps: `GO:0004321` fatty-acyl-CoA synthase is
+the fatty acid synthase reaction (EC 2.3.1.86), while an acyl-CoA synthetase is
+a ligase (EC 6.2.1). When a kept, MODIFYed or TOO_GENERAL term's EC class differs from every
+EC on the protein's UniProt record, `just validate` warns (`ec_class_conflict`,
+`src/ai_gene_review/validation/ec_class_consistency.py`). Fix it with `REMOVE`
+and `source_defects`, or say in `reason` why the activity is genuine (a
+multifunctional or moonlighting enzyme). `just ec-class-audit` lists every hit
+in the corpus.
+
 **Decomposing precomposed "X involved in Y" terms.** When you MODIFY such a term to its genus X, say where Y
 went in `review.decomposed_into`: `gocam_associations` or `module_associations` (Y is a mechanism with a
 model), `in_core_functions` (Y is central to the gene), or `context_dropped: true` (Y is peripheral context or
@@ -377,6 +387,48 @@ Therefore:
 - Reserve confident "this reference is about organism/gene X" caveats for cases where the
   **cached abstract explicitly states it** (e.g. "in nontransformed mammalian cells"). Do
   not infer the organism or assay details that the abstract does not state.
+
+### Claiming a wrong gene or wrong reference: judge what the evidence can show
+
+A `WRONG_GENE_PRODUCT` or `WRONG_REFERENCE` source defect goes to the resource as a
+correction request, so its confidence must match what you actually saw. This is a
+judgement, not a rule keyed to whether the full text was read: ask whether the
+unread part of the paper could overturn the claim.
+
+- **It could not, so the claim can be confident from a title, abstract or record.**
+  A PMID whose title is on an unrelated subject (a thyroid-surgery paper on an
+  *E. coli* gene), especially when a near-identical PMID is the obvious intended
+  paper; a paper that predates the cloning of the gene; an abstract that defines
+  the entity as another protein ("p43, the precursor of EMAP II"; an 802-residue
+  enzyme when the annotated protein has 532); a WITH/FROM allele that belongs to
+  another gene; the identical row already present on the right gene.
+- **It could, so the claim is a query at most.** The title or abstract foregrounds
+  a paralog, another family member or another organism; the abstract "does not
+  mention" the gene; a TAS is faulted because the paper "does not assay" the
+  process (a TAS needs only an author statement, which may sit in a table); a
+  Reactome event summary does not name the gene (check the participant list,
+  including complexes and sets). Use `SUSPECTED` or `PROBABLE`, `requested_change:
+  CHECK`, and not `REMOVE`.
+- **Before claiming a mis-attribution, look at how the resource annotated the
+  paper as a whole.** The same row made on the same day across a family, or on
+  every isozyme an unfractionated assay cannot separate, is a deliberate practice,
+  not a slip. A reference-level view (QuickGO by reference, an RGD or MGI
+  reference page) shows this in one query.
+- **An annotation pattern is a lead, never the proof.** How a resource annotated
+  a paper (same-day batches, a reciprocal row, which entry cites the paper, a
+  sequence deposit) can tell you where to look and is reason enough to *drop* an
+  accusation, but it does not by itself show that a curator got the gene wrong.
+  To assert a wrong gene (`CONFIRMED`, `REPOINT` or `DELETE_ROW`, or a `REMOVE`
+  that rests on it) either read the whole paper or have it be very obvious from
+  the abstract or the record itself, as in the first bullet. Otherwise record the
+  lead as a `CHECK` query and name the candidate as a candidate.
+  This bullet is a maintainer ruling (2026-11-16). Reviews merged before it are
+  not retroactively defective: the wrong-gene and wrong-reference claims it
+  affected were audited when it was made, and it applies to new and revisited
+  reviews, not as a condition of any other content PR.
+- **Say in `explanation` what depth the claim rests on**, and name a candidate
+  correction as a candidate when the intended paper or gene was inferred and not
+  read.
 
 ### Do not add what curators deliberately declined to add
 
@@ -563,6 +615,8 @@ PANTHER's own HMM classifications. Two rules follow:
 
 PTN ancestral nodes (`PANTHER:PTN...`) are checked separately, against PAINT data — see
 `validate_paint_ptns`. Their label is conventionally just the bare id.
+For where a function sits in a family, cite the PTN; subfamily ids are renumbered and
+renamed between PANTHER releases (see `docs/panther_node_anchoring_plan.md`).
 
 **If you cannot be sure, assert no id.** A family descriptor's `term` is optional.
 When you cannot establish that a PANTHER family corresponds to what the descriptor
@@ -1006,7 +1060,12 @@ renders to `pages/projects/FOO/bar.html`). Use ordinary relative links between a
 project page and its sub-pages (`[x](FOO/bar.md)` from `FOO.md`; `[parent](../FOO.md)`
 from inside `FOO/`); the renderer rewrites `.md`→`.html` and preserves the path.
 
-**Important:** The project index page (`pages/projects/index.html`) is **manually maintained**. When adding a new project, you must manually add a `<div class="project-card">` entry to the index HTML. The `render-projects` command does NOT update the index.
+**Project index.** `render-projects` generates the project index
+(`pages/projects/index.html`) from frontmatter; never edit it by hand, and do not
+commit it (it is gitignored). A project picks its section with `index_group:`, one of
+`WORM`, `YEAST`, `MAMMAL`, `BACTERIA`, `ARCHAEA`, `PLANT`, `OTHER_ORGANISM`, `GO_TRACKER_BACKLOG`, `CROSS_CUTTING` (defined as `INDEX_GROUPS` in `render_projects.py`); a project without one is
+listed under "Not yet grouped". An optional one-line `description:` appears on its card,
+and a `FOO/FOO-pathway.md` page gets a "Pathway diagram" link automatically.
 
 **Collections.** Related projects are grouped under an index page by listing a
 collection key in frontmatter, e.g. `collections: [HOMOLOGY_PROPAGATION]`. Keys

@@ -27,3 +27,7 @@
 - `ATP binding` and `D-glucose binding` are mechanistically true but substantially less informative than the specific catalytic term `glucokinase activity`.
 
 - For cellular component, `cytosol` is the more specific GO term for a soluble bacterial cytoplasmic enzyme, while `cytoplasm` is acceptable but broader.
+
+## 2026-11-13 update: binding and cytoplasm rows harmonized
+
+The ATP binding (GO:0005524) and D-glucose binding (GO:0005536) rows change from MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE: both are true (HAMAP MF_00524 maps the ATP-binding segment at residues 7-12), but peripheral to glucokinase activity. The cytoplasm row (GO:0005737) changes from MODIFY to TOO_GENERAL, because cytosol is already accepted. These actions match the other KT2440 ED/gluconeogenesis enzyme reviews.

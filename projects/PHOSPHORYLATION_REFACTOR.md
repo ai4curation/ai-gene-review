@@ -14,6 +14,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/FZZCXiuP5Hpq5kY7s6nMFh
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Phosphorylation Annotation Refactor Project

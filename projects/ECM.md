@@ -12,6 +12,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/GsehR2DwujN5p72k3Y33K4
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Extracellular Matrix (ECM) Project
