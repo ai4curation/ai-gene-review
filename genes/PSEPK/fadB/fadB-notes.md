@@ -32,3 +32,9 @@
 - The GO:0004300 IEA row now quotes its own Rhea 20724 (3E) reaction; the
   GO:0018812 reason now states that it is an is_a child of GO:0004300.
 - UniProt FUNCTION quotes now start at "Catalyzes the formation of".
+
+## 2026-11-06 comparative primary-source re-review
+
+Read the genuine Falcon and function-hypothesis reports. Primary32826213 confirms native PP2136 fitness but not purified chain-length kinetics; its hexanoate section notes moderate defects/redundancy. Epimerase is UNDECIDED:36763117 traces the negative PHA-supply argument to12115060, a P.oleovorans recombinant-Ecoli endpoint, not a direct KT2440 GO0008692 assay. Conserved hydratase/NAD-dehydrogenase/isomerase functions and inferred FadBA assembly are retained; NAD binding is not peripheral. True broad rows are refined rather than dropped.
+
+All original annotation payloads, including historical proposals, and raw/provider/prediction artifacts are preserved. Source-scope details and exact quotes are in `../fadB/fadB-source-analysis/primary-scope.md` (for fadB, its local source-analysis directory). Shared publication caches were not refreshed. New normal publications36763117 and12115060 were fetched; acquired full articles remain ignored. PAINT-losses cannot assess these targets because they are not cached tree leaves. Focused validations, renders and new helper histories accompany the handoff.

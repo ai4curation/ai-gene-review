@@ -28,3 +28,10 @@ Changes from the previous review:
 
 Relative for review next: mouse Zdhhc23 (Q5Y5T3), the ortholog in the same PANTHER subfamily SF475 and PAINT node PTN008583751, which has knockout data. The repo has no review of it.
 Family review interpro/panther/PTHR22883 places ZDHHC23 in SF475, which agrees with UniProt. No module in modules/ mentions ZDHHC23 or PTHR22883.
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+- Row: GO:0005783 IBA (GO_REF:0000033, `is_active_in`, node PTN000525256). Stays MARK_AS_OVER_ANNOTATED; the reason was corrected and extended.
+- No PTHR22883 PAINT tsv in `interpro/panther/`, so the seeds were read from the GOA with/from list and looked up in UniProt. Human ZDHHC1, 4, 6, 9, 11, 12, 14 and 22 have curated ER-membrane locations, several from PMID:16647879 (Ohno et al. 2006, a survey of tagged DHHCs, abstract-only: "Most DHHC proteins are localized in the ER and/or Golgi").
+- Correction: the old reason implied the ER donors were only distant (ZDHHC6-type, yeast) paralogs. The list includes ZDHHC22 (ER + Golgi membrane), ZDHHC23's partner in BK-channel S-acylation. Current PANTHER puts ZDHHC22 in PTHR12246, not PTHR22883.
+- ZDHHC23's own data (PMID:22399288): tagged protein mainly Golgi (GM130) and TGN; ER was co-assayed only for BK channels. UniProt records only Golgi/TGN membrane. Hence over-annotation, with UNDECIDED as the close alternative until ZDHHC23 is co-stained with an ER marker. No ER membrane row is added.

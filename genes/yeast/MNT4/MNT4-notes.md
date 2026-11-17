@@ -206,3 +206,7 @@ established, and the `GO:0006493 protein O-linked glycosylation` IBA remains
 over-annotated because the transfer is sound for MNN1/MNT2/MNT3 but unsafe for
 MNT4. Searched current MNT4/Mnt4/YNR059W literature and found no newer direct
 yeast MNT4 paper that changes this boundary.
+
+## ND literature-search citations (2026-11-06)
+
+- `existing_annotations[10]` GO:0005575 cellular_component (ND) may be stale. These notes record that high-throughput fluorescent-tag localization screens (as summarized on SGD) placed MNT4 fusions in the ER and vacuole; a genome-wide localization study on this gene product in this species identifies a location even if it conflicts with the Golgi family inference. The specific screen papers were not identified here; the row action is unchanged pending curator review.

@@ -37,3 +37,19 @@ abstract-only except the interactome papers).
 ## 2026-11-03 PR #5929 review round
 
 - Cytoplasm -> cytosol MODIFY reason now states that the refinement is an inference from solubility plus the PAINT node, not a localization measurement.
+
+
+## Comparative cysteine-route audit (2026-11-06)
+
+Retained all fifteen original row payloads and decisions, including true secondary cysteine degradation and the supported sulfide-dependent synthase activity. Corrected the Fe-S rationale: CysM does catalytically mobilize sulfur in the crude-extract reconstitution (PMID8663055); the concern is unproven physiological Fe-S assembly specialization, not an absence of chemical participation. The desulfhydrase branch is not described as literal reversal of the net OAS+sulfide reaction. PMID16546401 supports failure to form a CysE complex. Thiosulfate yields S-sulfocysteine, and conversion to cysteine requires a separate reaction.
+
+Default Falcon research was attempted normally with --provider falcon and failed with HTTP403. No provider report was fabricated; this section records manual review.
+
+Original GOA payloads, raw UniProt/GOA files and inherited authored proposals are preserved. Current GO checks distinguish the active cysteine synthase MF from obsolete route-specific BP terms GO:0006535 and GO:0019345. Focused gene and helper-history validations are recorded in the audit manifest.
+
+The whole-gene core now separately represents S-sulfocysteine synthase using the same proposed MF as PAO1. Evidence is curated P16703 reaction text plus BW25113/pDES branch genetics (PMID:22607201), not a fabricated purified E.coli CysM thiosulfate assay. That paper directly assays downstream reductases. PMID:28756590 remains abstract-only and reports slow ΔcysM growth on thiosulfate; the branch is not universally necessary. No annotation row was added for the NTR core.
+
+
+## 2026-11-06 PR #6120 round-1 follow-up
+
+Merged the two chemically identical S-sulfo-L-cysteine synthase proposals into one. The fuller mechanistic justification is retained. The support union retains the curated target reaction and PMID22607201; two differently wrapped copies of the same UniProt sentence count as one evidence item. No annotation row was removed or changed.

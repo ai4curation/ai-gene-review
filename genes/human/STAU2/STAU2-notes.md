@@ -167,3 +167,12 @@ The BioReason "deep research" document makes several claims that need verificati
    the real UniProt FUNCTION annotation.
 
 7. **Empty GO predictions**: BioReason provided NO GO term predictions (all subsections empty).
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+Row: GO:0005783 IEA (GO_REF:0000044), the only ER row. No sub-compartment rows.
+
+- Human UniProt SUBCELLULAR LOCATION block (including "Endoplasmic reticulum" and the RNP-granule note "associated with microtubules, polysomes and the endoplasmic reticulum") carries only {ECO:0000250}: a by-similarity line.
+- Donor: mouse Q8CJ67 (UniProt REST, 2026-11-06) has "Endoplasmic reticulum {ECO:0000269|PubMed:15166236}". PMID:15166236 (Macchi et al. 2004) is abstract-only; abstract: [PMID:15166236 "This is in contrast to wild type Stau2 that mostly localizes in the cytosol."] - no ER result stated. Rat Q68SB1 has the same text unattributed. The oligodendrocyte RNP-granule note matches PMID:15525674 (Thomas et al. 2005), abstract-only (PMC full text not retrievable via the PubMed MCP); its abstract mentions microfilaments and microtubules, not ER. Fetched to check, not cited, deleted.
+- PMID:12140260 (human, abstract-only) shows ribosome association, not ER.
+- Outcome: KEEP_AS_NON_CORE -> UNDECIDED (batch 2 rule: projection whose donor paper cannot be read). If an ER pool is real it is a recruited RNP pool on rough ER (no signal peptide or TM), KEEP_AS_NON_CORE at root. Settling experiment: endogenous STAU2 co-stained or co-fractionated with calnexin/Sec61 in neurons. The old supporting quote cited this notes file; replaced with the UniProt text and PMID:15166236.

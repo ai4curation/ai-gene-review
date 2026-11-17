@@ -1,0 +1,30 @@
+# dnaQ: manual annotation review
+
+## 2026-11-06 replication audit
+
+Normal accession-aware fetch seeded P03007 (Escherichia coli K-12); the pristine machine payloads and two raw-source hashes were frozen in `.cache/module-audit-logs/chromosomal-replication-20261106/ecoli-seeded-baseline.json` before editing. This is a new review of an already named module exemplar, not a re-review of pre-existing ECOLI curation.
+
+The central activity is **3′ to 5′ proofreading exonucleolysis**. DnaQ is the epsilon proofreading subunit of Escherichia coli DNA polymerase III. Its 3′ to 5′ exonuclease removes incorrectly incorporated terminal nucleotides and promotes replication fidelity. Epsilon associates with the DnaE alpha polymerase and HolE theta subunit in the polymerase core and also improves productive DNA synthesis. Polymerization and proofreading are catalyzed by different subunits.
+
+Primary anchor: [PMID:6393125](https://pubmed.ncbi.nlm.nih.gov/6393125/), “We find that epsilon has 3'----5' exonuclease activity indistinguishable from that of polIII core”
+
+All seeded annotations were assessed, including repair, regulation, localization and protein-complex claims outside the narrow replication-module steps. Bare protein-binding rows retain their original interaction provenance; REMOVE means the term is uninformative, not that the interaction is false. Experimental assertions are not rejected merely because an abstract omits the individual target. Full-text and abstract-only availability are recorded in references; no inaccessible target table is claimed to have been inspected.
+
+`just paint-losses ECOLI dnaQ` reported no applicable IRD or IKR. IBA judgments concern inherited functions and target biology, not donor counts. The default Falcon research command was attempted and failed with HTTP403 authentication/access failure. No provider report was authored or fabricated; these are manual notes.
+
+Original rows: 42; current rows: 42; inherited NEW: 0; added NEW: 0. Actions: {'MODIFY': 4, 'ACCEPT': 13, 'REMOVE': 25}.
+
+
+## PR #6117 round-1 follow-up (2026-11-06)
+
+- Refine machine exonuclease row and core to DNA-specific GO:0008296; retain the original term payload.
+- Refine remaining broad machine replication row consistently to the supported process, preserving original payload.
+
+All historical annotation payloads, inherited NEW proposals, and frozen raw/provider files are preserved. Source confidence distinguishes direct target assays from comparative Pseudomonas evidence. No publication cache was refreshed.
+
+
+## PR6117 second review round, 2026-11-06
+
+- Updated broad exonuclease MODIFY replacements directly to GO:0008296, matching the core DNA-specific proofreading activity without an intermediate GO:0008408 step.
+
+The earlier use of “inherited NEW” described inheritance from a review-round snapshot, not upstream main or machine GOA. Independent git ancestry and the pristine seed baseline establish that the HolD replication and Bacillus DnaB DNA-binding proposals were authored in 47acac27a0. Their complete initial and pre-revision rows are preserved in `analysis/module_audits/bacterial_chromosomal_dna_replication/round2-authored-proposal-revisions.yaml`; only the two explicitly authorized authored proposals are revised. The pristine seed baseline, all machine payloads and raw/source files remain frozen. No native N-terminal measurement is newly asserted.

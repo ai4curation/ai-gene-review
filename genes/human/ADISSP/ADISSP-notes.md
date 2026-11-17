@@ -587,3 +587,12 @@ sites read identically.
 
 **This is the last push.** Everything remaining in the thread is commentary on the harness's own
 prose, which is where the criterion draws the line.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[11], GO:0005575 cellular_component (ND, GO_REF:0000015), currently ACCEPT: may be stale.
+  Section 7 above records that the human protein itself was shown to leave the cell: PMID:36496438 reports
+  "acute expression of ADISSP in the liver and its secretion into circulation" from a human ADISSP adenovirus,
+  and PMID:42030391 states that Adissp is secreted by human adipocytes and is present in human circulation.
+  Section 11 already argued this ND is stale. That is literature on the human gene product identifying a
+  location (extracellular region), so the ND row needs re-review. The action was not changed.

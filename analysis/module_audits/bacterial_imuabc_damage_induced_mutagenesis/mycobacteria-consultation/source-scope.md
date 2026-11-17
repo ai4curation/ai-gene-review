@@ -1,0 +1,11 @@
+# Mycobacterial assay-scope audit
+
+Reviewed 2026-11-07. The frozen PMID20615954 cache includes abstract/discussion but omits Results/Methods despite its full-text flag. The publisher Results and Methods were read at https://www.pnas.org/doi/10.1073/pnas.1002614107 . M. tuberculosis H37Rv experiments removed imuB alone or imuA′–imuB together and measured induced mutagenesis. Individual ImuA′ deletion, DnaE2 catalytic mutants, clamp-motif function and MMC-tolerance experiments used M. smegmatis. Yeast two-hybrid assays used M. tuberculosis proteins in yeast. These are complementary evidence, not three assays performed in the same organism.
+
+PMID37530405 (https://elifesciences.org/articles/75628) uses M. smegmatis fluorescent reporters and purified homologs. ImuB and DnaE2 form damage-associated foci; ImuA′ fluorescence is diffuse. Purified ImuA′–ImuB and clamp-containing assemblies support adaptor function. Fluorescent ImuA′/ImuB constructs rescue mutagenesis but not all MMC-tolerance phenotypes, limiting conclusions about fully native behavior. Colocalization does not establish simultaneous action of every mutasome component.
+
+PMID39706264 (https://pmc.ncbi.nlm.nih.gov/articles/PMC11791113/) uses M. smegmatis proteins expressed in E. coli and M. smegmatis complementation. It establishes the importance of the ImuB RecA-NT interface for ImuA′ interaction and mutagenesis. Its residue coordinates are M. smegmatis coordinates, not automatically M. tuberculosis positions. Stable accessory subcomplexes are demonstrated; native M. tuberculosis complete-complex dynamics remain unresolved.
+
+PMID38591662 assays Myxococcus xanthus ImuA ATPase/DNA binding and a truncated ImuB. It does not assay M. tuberculosis ImuA′. No ATPase, DNA-binding or RecA-inhibitory annotation is transferred to Rv3395c on this basis.
+
+Current QuickGO snapshots are in ontology.json. GO0006301 DNA damage tolerance is part_of GO0006260 DNA replication; consequently a nonessential specialist polymerase can participate in replication without being the main replicase. GO0006281 is not an ancestor of GO0042276, although its textual definition mentions bypass. Selecting error-prone translesion synthesis is a mechanism-specific branch correction, not a claim that historical repair terminology was biologically meaningless.

@@ -57,3 +57,9 @@ Biallelic SRP68 variants -> severe congenital neutropenia (SCN10) [PMID:32273475
 - SRP and ribosomes are assembled in the same condensate (nucleolus), suggesting coordinated biogenesis [PMID:38858088 "the SRP and ribosomes are assembled in the same biomolecular condensate: the nucleolus"].
 - Disease: biallelic germline SRP68 loss-of-function variants cause severe congenital neutropenia, with patient granulopoiesis defects, ER stress (spliced XBP1) and p53-pathway activation [PMID:32273475 (Haematologica 2021; abstract not in PubMed, verified by title/journal/MeSH "Neutropenia"; Congenital Bone Marrow Failure Syndromes)]. Reference added (already cited in description).
 - SRP68 remains best classified as a non-enzymatic RNA-binding S-domain scaffold; SRP54 is the signal-sequence/receptor GTPase subunit (consistent with existing review framing).
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095 curated from PMID:28369529), EXP (PMID:28369529), TAS (PMID:10618370).
+- PMID:28369529 (full text): ["Both wild-type SRP72 and SRP68 showed uniform coincidence with an ER marker"]; F590L loses ER co-localization. PMID:10618370: GFP-SRP68 ["SRP68 also accumulated in the ER, consistent with its affinity for the ER-bound SRP receptor."]. Both are tagged/overexpressed constructs, consistent with the textbook SRP cycle.
+- Outcome: all three stay ACCEPT (core, recruited pool where the targeting hand-over happens; AMBRA1 precedent). No TM or signal peptide, so root only.

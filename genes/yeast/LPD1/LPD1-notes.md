@@ -10,3 +10,8 @@
 - IMP 'enables' GO:0004375 (P-protein) and GO:0004591 (E1 of KGDH) -> MODIFY to GO:0004148; whole-complex phenotypes mis-assigned as subunit MF.
 - protein binding (Kgd2, Kgd4) x6 -> REMOVE; captured by complex membership.
 - RCA cytosol (GLYCLEAV-PWY, PYRUVDEHYD-PWY) -> REMOVE.
+
+## 2026-11-10 glycine cleavage module completion pass (Claude, AI-assisted)
+
+- Every row now carries a verbatim supporting quote; truncated UniProt quotes were completed to the end of the claim.
+- Broad parent rows shared across the module's P/H/T/L reviews were harmonized: glycine metabolic/catabolic process (and amino acid metabolic process) -> MODIFY to GO:0019464; for the L proteins 2-oxoglutarate metabolic process and tricarboxylic acid cycle -> MODIFY to GO:0120551, generic oxidoreductase parents -> MODIFY to GO:0004148, FAD binding ACCEPT.

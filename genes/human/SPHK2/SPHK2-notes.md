@@ -155,3 +155,10 @@ association → ACCEPT. Lysosomal membrane (HDA proteomics, isoform 2) → KEEP_
    direct, mechanistically-supported second function).
 </content>
 </invoke>
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IEA (GO_REF:0000120, Q9JIA7 + SL-0095) and ISS (GO_REF:0000024, from Q9JIA7; GOA lists it twice, 2019 and 2024). Human UniProt ER line is ECO:0000250 from Q9JIA7; mouse ER is a UniProt IDA on PMID:16118219 (QuickGO, 2026-11-06).
+- PMID:16118219 (abstract only): ["Serum starvation increased the proportion of SphK2 in the endoplasmic reticulum"]; built on overexpressed SphK2; knockdown of SphK2 reduces sphingosine recycling into ceramide.
+- SPHK2 is soluble; UniProt REGION 1-175 "Required for binding to sulfatide and phosphoinositides and for membrane localization" (ECO:0000269 PubMed:19168031).
+- Outcome: both stay KEEP_AS_NON_CORE (close call vs MARK_AS_OVER_ANNOTATED, stated in reason); recruited, stimulus-regulated pool; root only.
