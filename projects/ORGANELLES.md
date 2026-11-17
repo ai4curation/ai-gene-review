@@ -349,9 +349,9 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
   - [x] Follow-ups to #6297 and #6353 (2026-11-15): abstract-only sweep of ER
         batch 1 (AIMP1 reworded), UFSP2 caveat, UFL1 tethering row; CDK5RAP3
         checked and left without one
-  - [ ] Sweep ER batches 2-4 and Golgi batch 1 for reasons that rest on a figure
-        reading from an abstract-only cached paper (only ER batch 1 was swept,
-        2026-11-15)
+  - [ ] Sweep ER batches 2-4 and Golgi batches 1-2 for reasons that rest on a
+        figure reading from an abstract-only cached paper (only ER batch 1 was
+        swept, 2026-11-15)
   - [ ] Retry the AIMP1 full text (PMID:17525271, PMC1899434): restore the Figure 2
         marker reading or move its ER and Golgi rows to MARK_AS_OVER_ANNOTATED
   - [ ] Write the Golgi rule after more batches; promote "curator deference
@@ -360,6 +360,23 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-17 (UFSP2 core function; review follow-ups from #6432)
+
+- **UFSP2's core functions now name the ER, not its cytoplasmic face.** The
+  60S-recycling core function listed GO:0098554 beside GO:0005783 (2026-11-11
+  entry below). By the standard UFL1 uses (#6432), a face-level location belongs in
+  `core_functions` only when an assay places the activity itself there, and no
+  assay places UFSP2's deUFMylation on the cytoplasmic leaflet: the face is an IC
+  inference from topology and the partner, as UFSP2's own row says. The
+  GO:0098554 IC row stays. Rule of thumb for the tethering route: the row records
+  where the protein sits; the core function names the face only when the activity
+  is shown there.
+- **Open item updated:** the abstract-only sweep still owed now covers ER batches
+  2-4 and Golgi batches 1-2.
+- **History note.** The GFRA1 record added in #6432 cites `a8f60d2418`, a branch
+  commit squashed away when #6433 merged; the change it describes is in #6433.
+  History records are append-only, so the record stays as written.
 
 ## 2026-11-15 (follow-ups to the tethering and Golgi batch 1 PRs)
 

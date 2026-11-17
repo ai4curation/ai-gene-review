@@ -43,3 +43,7 @@ off-membrane pool is evident; a partner-dependent release test exists for the wo
 ### 2026-11-15 follow-up (ORGANELLES follow-ups PR)
 
 - Condition (d), the literature half: besides UniProt showing no signal peptide, transit peptide or TM segment, the worm orthologue is cytosolic when its partner is absent [PMID:24603482 "By contrast, ODR-8 was diffusely cytosolic when expressed alone"] (Fig 8E), so ODR-8/UFSP2 is made as a soluble cytosolic protein and reaches the ER membrane through ODR-4. Like the release test, this used overexpressed worm proteins in HeLa cells, so the review's caveat now names both the release and the localisation tests.
+
+## 2026-11-17 ORGANELLES follow-up: core-function location
+
+- The 60S-recycling core function no longer lists GO:0098554 (cytoplasmic side of ER membrane); it keeps GO:0005783. The face-level location is an IC inference from topology and the ODR4 partner, and no assay places the deUFMylation itself on the cytoplasmic leaflet [PMID:38383785 "ER-membrane-tethered deUFMylase UFSP2"] (a tethering statement, which resolves the membrane but not the face). This matches UFL1, whose core functions stay at GO:0005789 for the same reason (#6432 review). The NEW GO:0098554 IC row is unchanged.
