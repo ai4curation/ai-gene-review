@@ -5235,9 +5235,13 @@ def panther_release_diff(
     accessions = {accession for anchor in anchors for accession in anchor.members}
     organisms = list(organism or DEFAULT_ORGANISMS)
 
+    parsed: dict = {}
+
     def entries(release: str) -> list:
-        path = fetch_hmm_classifications(cache, url=hmm_url(release))
-        return parse_hmm_classifications(path.read_text(errors="replace").splitlines())
+        if release not in parsed:
+            path = fetch_hmm_classifications(cache, url=hmm_url(release))
+            parsed[release] = parse_hmm_classifications(path.read_text(errors="replace").splitlines())
+        return parsed[release]
 
     def names(release: str) -> dict:
         return {entry.accession: entry.name for entry in entries(release)}
