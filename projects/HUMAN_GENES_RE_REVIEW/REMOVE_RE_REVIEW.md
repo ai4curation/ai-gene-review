@@ -450,7 +450,7 @@ are `UNDECIDED`, like their source row.
   right and NADP is wrong. A rule in `rules/curated/` would correct it for
   every member of the signature, not only human GAPDH.
 - **Other organisms.** The mouse and rat reviews had the same pass on 14
-  November 2026: 110 of 469 substantive REMOVE rows changed. See
+  November 2026: 108 of 469 substantive REMOVE rows changed. See
   [Re-review of REMOVE actions in mouse and rat](../MOUSE_GENES_RE_REVIEW/REMOVE_RE_REVIEW.md).
   The other model organism reviews were not touched.
 - **Human rows put in question by the mouse and rat pass.** In eleven places a

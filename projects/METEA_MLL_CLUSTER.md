@@ -15,6 +15,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/9sHNCzSVUdc8vmkyqRJLSh
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Methylorubrum extorquens MLL Cluster Curation Project

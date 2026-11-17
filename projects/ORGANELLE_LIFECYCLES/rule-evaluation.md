@@ -2,13 +2,15 @@
 
 [Back to the project](../ORGANELLE_LIFECYCLES.md)
 
-**Bottom line:** every eukaryote-wide rule candidate was evaluated with the module engine against
+**Bottom line:** every eukaryote-wide rule candidate, and the lineage-scoped acidocalcisome rule, was evaluated with the module engine against
 PANTHER's release-19 sequence classification files for 24 organisms. Three things show up. First,
-in lineages that certainly have the organelle, several rules fail on a single selector that holds
-only the human protein or misses one lineage's subfamily; those are selector defects, not biology,
-and are listed below for fixing. Second, the lineages with reduced or absent organelles (the
+in lineages that certainly have the organelle, several rules failed on a single selector that held
+only the human protein or missed one lineage's subfamily; those are selector defects, not biology. The
+two largest, MPP and Pex2, are fixed (#6416, #6418) and the results below are rerun with the fixes; the
+rest are listed below for fixing. Second, the lineages with reduced or absent organelles (the
 mitosome-bearing *Giardia* and *Entamoeba*, the hydrogenosome-bearing *Trichomonas*, the non-ciliated
-lineages for the cilium) fail as expected, so the rules discriminate. Third, the engine cannot evaluate
+lineages for the cilium, the lineages without VTC for the acidocalcisome) fail as expected, so the rules
+discriminate. Third, the engine cannot evaluate
 a protein-complex step from family selectors, because it compiles the complex into one atom without its
 units; the census supplies the units itself.
 
@@ -17,7 +19,9 @@ units; the census supplies the units itself.
 [selector_census.py](selector_census.py) compiles each module with `ai_gene_review.module_logic`, so
 optional parts, variant sets and module references count as the engine reads them. A step holds in an
 organism when one of its PANTHER family or subfamily ids selects a protein in that organism's
-classification file; a protein-complex step holds when every active unit's ids do. The per-organism
+classification file; a protein-complex step holds when every active unit's ids do. A step that also
+requires an InterPro domain holds only when a selected protein carries that domain in UniProt's InterPro
+cross-references, which the script fetches once and caches. The per-organism
 counts, the verdicts and the engine's innermost gaps are in
 [selector-census.yaml](selector-census.yaml). Regenerate both with:
 
@@ -28,7 +32,8 @@ uv run python projects/ORGANELLE_LIFECYCLES/selector_census.py \
     vacuolar_atpase_acidification er_cotranslational_translocation \
     er_oxidative_protein_folding autophagosome_core_biogenesis \
     intraflagellar_transport_core golgi_copi_vesicle_coat nuclear_pore_transport_core \
-    lipid_droplet_neutral_lipid_storage phagosome_maturation synaptic_vesicle_cycle \
+    lipid_droplet_neutral_lipid_storage acidocalcisome_polyphosphate_storage \
+    phagosome_maturation synaptic_vesicle_cycle \
     -o projects/ORGANELLE_LIFECYCLES/selector-census.yaml
 ```
 
@@ -45,9 +50,9 @@ disagreement between the two sources rather than a wrong selector.
 
 | Module | Hs | Dm | Ce | Nv | Ta | Mb | Bd | Cr | Pp | Tb | Lm | Gi | Tv | Pt | Ph | Pf | Tp | At | Os | Sc | Sp | Nc | Dd | Eh |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `mitochondrial_protein_import` | ✓ | 2 | 2 | 5 | 3 | 4 | 2 | 2 | 2 | 6 | 6 | 10 | 7 | 3 | 2 | 2 | 3 | 2 | 2 | 2 | 2 | 2 | 3 | 10 |
+| `mitochondrial_protein_import` | ✓ | ✓ | ✓ | 3 | 1 | 2 | ✓ | ✓ | ✓ | 4 | 4 | 9 | 5 | 1 | ✓ | ✓ | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | 1 | 9 |
 | `mitochondrial_iron_sulfur_cluster_assembly` | ✓ | ✓ | ✓ | ✓ | 1 | 1 | 1 | 1 | 1 | ✓ | ✓ | 2 | 2 | ✓ | 2 | 1 | 3 | 1 | 1 | ✓ | ✓ | ✓ | ✓ | 4 |
-| `peroxisomal_protein_import` | ✓ | 1 | 2 | 4 | 4 | 7 | 2 | 1 | ✓ | 3 | 3 | 10 | 8 | 4 | 2 | 10 | 8 | ✓ | 1 | 1 | 1 | 1 | 1 | 9 |
+| `peroxisomal_protein_import` | ✓ | ✓ | 2 | 4 | 3 | 7 | 1 | ✓ | ✓ | 2 | 2 | 10 | 8 | 4 | 1 | 10 | 8 | ✓ | 1 | 1 | 1 | ✓ | ✓ | 9 |
 | `escrt_iii_intralumenal_vesicle_formation` | ✓ | ✓ | ✓ | ✓ | ✓ | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | 2 | ✓ | 1 | ✓ | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `vacuolar_atpase_acidification` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `er_cotranslational_translocation` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 3 | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 1 | ✓ | ✓ | 1 |
@@ -57,6 +62,7 @@ disagreement between the two sources rather than a wrong selector.
 | `golgi_copi_vesicle_coat` | ✓ | ✓ | ✓ | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 3 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 1 | ✓ | 1 | ✓ | ✓ | 1 |
 | `nuclear_pore_transport_core` | ✓ | ✓ | 1 | 2 | 2 | 1 | ✓ | ✓ | ✓ | 1 | 1 | 2 | 3 | 2 | ✓ | 3 | ✓ | 1 | 1 | ✓ | ✓ | ✓ | ✓ | 3 |
 | `lipid_droplet_neutral_lipid_storage` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 1 | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 1 |
+| `acidocalcisome_polyphosphate_storage` | 1 | 1 | 1 | 1 | 1 | 1 | ✓ | ✓ | 1 | ✓ | ✓ | 1 | 1 | 1 | 1 | ✓ | ✓ | 1 | 1 | ✓ | ✓ | ✓ | 1 | 1 |
 | `phagosome_maturation` | 3 | 1 | 1 | 1 | 2 | 1 | 2 | 3 | 3 | 4 | 4 | 7 | 3 | 3 | 4 | 3 | 5 | 5 | 4 | 2 | 4 | 2 | 3 | 4 |
 | `synaptic_vesicle_cycle` | ✓ | ✓ | ✓ | ✓ | 1 | 3 | 3 | 2 | 3 | 4 | 4 | 4 | 4 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 4 |
 
@@ -72,28 +78,16 @@ gaps are listed in the [full gap list](#full-gap-list) but not yet triaged; seve
 fail there too (Nup88, for example, in ten lineages). Gap names are the engine's.
 
 - `mitochondrial_protein_import`
-  - Drosophila melanogaster: `mpp_beta_peptidase`, `mpp_alpha_subunit`
-  - Caenorhabditis elegans: `mpp_beta_peptidase`, `mpp_alpha_subunit`
-  - Saccharomyces cerevisiae: `mpp_beta_peptidase`, `mpp_alpha_subunit`
-  - Schizosaccharomyces pombe: `mpp_beta_peptidase`, `mpp_alpha_subunit`
-  - Neurospora crassa: `mpp_beta_peptidase`, `mpp_alpha_subunit`
-  - Arabidopsis thaliana: `mpp_beta_peptidase`, `mpp_alpha_subunit`
-  - Oryza sativa: `mpp_beta_peptidase`, `mpp_alpha_subunit`
-  - Chlamydomonas reinhardtii: `mpp_beta_peptidase`, `mpp_alpha_subunit`
-  - Dictyostelium discoideum: `tim44_tether`, `mpp_beta_peptidase`, `mpp_alpha_subunit`
+  - Dictyostelium discoideum: `tim44_tether`
 - `mitochondrial_iron_sulfur_cluster_assembly`
   - Arabidopsis thaliana: `isd11_subunit`
   - Oryza sativa: `isd11_subunit`
   - Chlamydomonas reinhardtii: `isd11_subunit`
 - `peroxisomal_protein_import`
-  - Drosophila melanogaster: `pex2_e3_unit`
-  - Caenorhabditis elegans: `pex14_importomer_unit`, `pex2_e3_unit`
+  - Caenorhabditis elegans: `pex14_importomer_unit`, `pex10_e3_unit`
   - Saccharomyces cerevisiae: `pex2_e3_unit`
   - Schizosaccharomyces pombe: `pex2_e3_unit`
-  - Neurospora crassa: `pex2_e3_unit`
   - Oryza sativa: `pex1_atpase_unit`
-  - Chlamydomonas reinhardtii: `pex2_e3_unit`
-  - Dictyostelium discoideum: `pex2_e3_unit`
 - `er_cotranslational_translocation`
   - Schizosaccharomyces pombe: `srp_receptor_beta`
 - `autophagosome_core_biogenesis`
@@ -106,21 +100,29 @@ fail there too (Nup88, for example, in ten lineages). Gap names are the engine's
   - Arabidopsis thaliana: `sec13`
   - Oryza sativa: `cse1_exportin`
 
-The two largest are:
+Two defects found by the first run are fixed, and the matrix and lists above are rerun with the fixes:
 
-- **MPP.** `mitochondrial_protein_import` selects the MPP beta and alpha subunits by the subfamilies
-  `PTHR11851:SF103` and `SF192`, the mammalian and primate subfamilies, which hold none of the other
-  organisms' proteins in PANTHER's files. Every other lineage's MPP is elsewhere in PTHR11851 (beta
-  mostly in SF149, alpha mostly in SF49), so the rule fails in every non-human genome on MPP, and in some
-  on further steps as well. Both of those subfamilies are mixed: SF149 also holds proteins that serve as
-  cytochrome bc1 core protein I (fission-yeast Q9P7X1, on a branch where PAINT records loss of MPP
-  activity), and SF49 holds bacterial M16 proteases, so widening the selectors to them over-matches.
-- **Pex2.** `peroxisomal_protein_import` selects Pex2 by the family `PTHR48178`, which in these files
-  holds only the human, moss, Arabidopsis and rice proteins. This one is mostly a disagreement between
-  sources rather than a wrong selector: PANTHER's files put the fly, worm, Dictyostelium and Chlamydomonas
-  Pex2 proteins in `PTHR23350:SF4` (a subfamily named Peroxisome biogenesis factor 2 in the Pex10-named
-  family), while UniProt puts them in `PTHR48178:SF1`; *Neurospora* (Q7SEZ3) and *Trypanosoma* (Q582U7)
-  Pex2 are in SF4 in both PANTHER's files and UniProt's cross-references. Yeast PEX2 is not in PANTHER's yeast file at all, though UniProt places it in `PTHR48178`.
+- **MPP (#6416).** `mitochondrial_protein_import` selected the MPP beta and alpha subunits only by
+  `PTHR11851:SF103` and `SF192`, the mammalian and primate subfamilies, which hold none of the other 23
+  organisms' proteins in PANTHER's files, so the rule failed on MPP in every non-human genome. The beta
+  step now also selects SF149, and the alpha step SF49, SF203 and SF194. The rule is now met in 13
+  organisms. Both added subfamilies are mixed. SF149 also holds proteins that serve as cytochrome bc1 core
+  protein I, such as *Euglena* P43264. Its fission-yeast member, Q9P7X1, is named a probable MPP beta by
+  UniProt and `qcr1` in the committed entries table, and lies on a branch where PAINT records loss of MPP
+  activity, so fission yeast's pass on the beta step is not evidence of MPP beta activity. SF49 also
+  holds bacterial M16 proteases, which the module's Eukaryota context leaves out of scope.
+- **Pex2 (#6418).** `peroxisomal_protein_import` selected Pex2 only by the family `PTHR48178`, which in
+  these files holds the human, moss, Arabidopsis and rice proteins. PANTHER's files put the fly, worm,
+  Dictyostelium and Chlamydomonas Pex2 proteins in `PTHR23350:SF4` (named Peroxisome biogenesis factor 2,
+  in the Pex10-named family), while UniProt puts them in `PTHR48178:SF1`. *Neurospora* Pex2 (Q7SEZ3) and
+  *Trypanosoma* Pex2 (Q582U7) are in SF4 in both sources: in PANTHER's `PTHR19.0_neurospora` and
+  `PTHR19.0_t_brucei` classification files, and in UniProt's PANTHER cross-references. The Pex2 step now
+  selects both, and the Pex10 step is narrowed from the whole `PTHR23350` family to its Pex10 subfamily
+  SF0, so the two steps no longer share a selector. Fly, Chlamydomonas, *Neurospora* and Dictyostelium now
+  meet the rule. Both yeasts still fail on Pex2: budding-yeast PEX2 (P32800) is not in PANTHER's yeast
+  file, though UniProt places it in `PTHR48178`, and the census finds no fission-yeast protein in either
+  Pex2 selector. *C. elegans* now fails on Pex10 because its PEX10 (C0HKD7) is missing from PANTHER's worm
+  file; the whole-family selector had let the worm SF6 RING protein Q18355 pass in its place.
 
 - **ISD11.** The iron-sulfur rule selects ISD11 by the family `PTHR13166`, which recovers it in only
   part of the eukaryotes: it holds no protein from Arabidopsis, rice, moss, Chlamydomonas, Monosiga,
@@ -137,12 +139,38 @@ intermediate chain DYNC2I2 and Trichoplax on IFT74; moss fails on 8 steps and Th
 module's notes already record. Fly and worm both build IFT-dependent sensory cilia, so their gaps are
 lineage-specific placements, divergent orthologs or real losses; which is not checked here.
 
+## The acidocalcisome rule
+
+`acidocalcisome_polyphosphate_storage` is scoped to the lineages that make polyphosphate with the VTC
+complex. It needs a VTC-domain subunit of `PTHR46140:SF1` (InterPro IPR018966; Vtc4 in most lineages)
+and an acidifying pump (the H+-PPase `PTHR31998` or the V-ATPase rule). It is met in the nine organisms
+with such a subunit: the chytrid, Chlamydomonas, *Trypanosoma*, *Leishmania*,
+*Plasmodium*, Thalassiosira and the three fungi. Every other organism fails on the Vtc4 step alone. The
+domain requirement excludes the Vtc1-like proteins, which have only the DUF202 membrane domain.
+Dictyostelium's two `PTHR46140:SF1` proteins (Q54JW8, Q54ZD5) are of that kind, so without the domain the
+rule would pass there on the wrong protein. The domain does not exclude every non-catalytic VTC subunit:
+the entries table places Toxoplasma Vtc2 in `PTHR46140:SF1`, so *Plasmodium*'s pass, on the putative VTC
+protein C6KT60, does not establish a catalytic Vtc4 there. The other passes are on proteins named Vtc4,
+or on the Chlamydomonas, Leishmania and Thalassiosira VTC-domain proteins (the module lists them).
+
+The failures in animals and land plants are expected, since neither has VTC. A failure does not mean the
+organism lacks acidocalcisomes. Dictyostelium has polyphosphate-rich mass-dense granules with an H+-PPase
+activity (PMID:11748243), but no VTC-domain protein and no `PTHR31998` protein in these files, and it makes
+polyphosphate with a bacterial-type PPK1 (PMID:17940044). Paramecium and Phytophthora have no Vtc4-type
+protein in these files either, and whether they have acidocalcisomes is not checked here. The three fungi
+pass on their polyphosphate-filled vacuole, which the rule does not distinguish from an acidocalcisome.
+
 ## Expected failures
 
 - **Reduced mitochondria.** *Giardia* and *Entamoeba* (mitosomes) and *Trichomonas* (hydrogenosomes)
-  fail `mitochondrial_protein_import` on 7 to 10 steps and the iron-sulfur rule on 2 to 4. That fits
-  reduced import machinery, but the counts also include the MPP and other selector defects above, so
-  they are not yet a clean description of what these organelles keep.
+  fail `mitochondrial_protein_import` on 5 to 9 steps and the iron-sulfur rule on 2 to 4. That fits
+  reduced import machinery. With the MPP selectors fixed the counts no longer include that defect: the
+  census finds an MPP beta but no MPP alpha in *Giardia* and *Entamoeba*, and both in *Trichomonas*.
+  Other selector defects may still be among these gaps, so the counts are not yet a clean description
+  of what these organelles keep.
+- **Kinetoplastids.** *Trypanosoma* and *Leishmania* fail the import rule on TOM40, TIM23, Tim17 and
+  Tim44. As `coverage.yaml` records, kinetoplastids replace the TIM23/TIM22 pair with a single
+  Tim17-family translocase, so the rule needs a lineage variant set before it can be read there.
 - **Peroxisomes.** The same three lineages and *Plasmodium* fail `peroxisomal_protein_import` on 8 to 10
   steps.
 - **Cilia.** Every non-ciliated lineage (Arabidopsis, rice, both yeasts, *Neurospora*, Dictyostelium,
@@ -154,16 +182,16 @@ lineage-specific placements, divergent orthologs or real losses; which is not ch
 `module_logic` compiles a protein-complex annoton into one atom from the participant's `gene`,
 `gene_product` or `family` slots, and its `active_units` are not read. A family-keyed oracle therefore
 sees no selector for the complex, and the step can never hold. The census works around this by reading
-the units itself. A fix in the engine, compiling a complex into an AND over its units, would let any
-oracle evaluate these steps.
+the units itself. It also reports, per module, any complex whose units mix family-keyed and gene-keyed
+selectors (`mixed_complex_steps` in the census), because such a complex is evaluated on its family-keyed
+units alone; none of the 15 modules has one. A fix in the engine, compiling a complex into an AND over
+its units, would let any oracle evaluate these steps.
 
 ## Full gap list
 
 Every step that fails in at least one organism, with the organisms it fails in (codes as in the matrix). Generated from the census; steps whose gaps sit inside a variant set are listed under the variant set's id.
 
 - `mitochondrial_protein_import`
-  - `mpp_alpha_subunit` (23): Dm, Ce, Nv, Ta, Mb, Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh
-  - `mpp_beta_peptidase` (23): Dm, Ce, Nv, Ta, Mb, Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh
   - `tim44_tether` (7): Nv, Tb, Lm, Gi, Tp, Dd, Eh
   - `tim17_subunit` (5): Tb, Lm, Gi, Tv, Eh
   - `tim23_channel` (5): Tb, Lm, Gi, Tv, Eh
@@ -173,22 +201,23 @@ Every step that fails in at least one organism, with the organisms it fails in (
   - `erv1_oxidase` (3): Gi, Tv, Eh
   - `pam16_regulator` (3): Mb, Gi, Eh
   - `pam18_j_protein` (3): Nv, Mb, Eh
+  - `mpp_alpha_subunit` (2): Gi, Eh
 - `mitochondrial_iron_sulfur_cluster_assembly`
   - `isd11_subunit` (11): Mb, Bd, Cr, Pp, Gi, Tv, Ph, Tp, At, Os, Eh
   - `frataxin_activator` (4): Gi, Pf, Tp, Eh
   - `hscb_cochaperone` (4): Ta, Ph, Tp, Eh
   - `glrx5_carrier` (2): Tv, Eh
 - `peroxisomal_protein_import`
-  - `pex2_e3_unit` (20): Dm, Ce, Nv, Ta, Mb, Bd, Cr, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, Sc, Sp, Nc, Dd, Eh
   - `pex14_importomer_unit` (10): Ce, Nv, Mb, Gi, Tv, Pt, Ph, Pf, Tp, Eh
+  - `pex2_e3_unit` (9): Nv, Gi, Tv, Pt, Pf, Tp, Sc, Sp, Eh
   - `pex1_atpase_unit` (8): Nv, Ta, Mb, Gi, Tv, Pf, Os, Eh
   - `pex3_family_membrane_docking` (8): Mb, Tb, Lm, Gi, Tv, Pt, Pf, Eh
+  - `pex10_e3_unit` (7): Ce, Mb, Gi, Tv, Pf, Tp, Eh
   - `pex13_importomer_unit` (7): Nv, Tb, Lm, Gi, Pf, Tp, Eh
   - `pex19_family_cargo_recognition` (7): Ta, Gi, Tv, Pt, Pf, Tp, Eh
   - `pex12_e3_unit` (6): Ta, Mb, Gi, Pf, Tp, Eh
   - `pex5_family_pts1_binding` (6): Mb, Bd, Gi, Tv, Pf, Tp
   - `pex6_atpase_unit` (6): Mb, Gi, Tv, Pf, Tp, Eh
-  - `pex10_e3_unit` (5): Gi, Tv, Pf, Tp, Eh
 - `escrt_iii_intralumenal_vesicle_formation`
   - `vps20_chmp6_nucleator` (3): Gi, Pt, Pf
   - `snf7_chmp4_polymer` (2): Mb, Gi
@@ -243,6 +272,8 @@ Every step that fails in at least one organism, with the organisms it fails in (
   - `sec13` (1): At
 - `lipid_droplet_neutral_lipid_storage`
   - `dgat_family` (3): Gi, Tv, Eh
+- `acidocalcisome_polyphosphate_storage`
+  - `vtc4_catalytic_subunit` (15): Hs, Dm, Ce, Nv, Ta, Mb, Pp, Gi, Tv, Pt, Ph, At, Os, Dd, Eh
 - `phagosome_maturation`
   - `rilp_rab7_effector` (23): Dm, Ce, Nv, Ta, Mb, Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh
   - `lamp_proteins` (18): Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh

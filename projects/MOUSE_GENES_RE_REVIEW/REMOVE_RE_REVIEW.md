@@ -17,9 +17,9 @@ and `genes/rat` was read again against the current review rules (14 November
 rat). 629 are bare `protein binding` rows, which the protein-binding policy
 removes as uninformative; they were audited by script and none changed
 action. The other 469 rows, in 163 reviews, were read one at a time.
-**110 of them (23%) no longer say REMOVE**, 359 stand, and 16 errors in
-source records were written down as structured `source_defects`. 48 review
-files were edited (36 mouse, 12 rat). No row was changed to REMOVE.
+**108 of them (23%) no longer say REMOVE**, 361 stand, and 16 errors in
+source records were written down as structured `source_defects`. 45 review
+files were edited (36 mouse, 9 rat). No row was changed to REMOVE.
 
 The row-level record is in
 [`remove_rereview_changes.yaml`](remove_rereview_changes.yaml): every changed
@@ -82,9 +82,9 @@ the effect of Hsp60 does not depend on MyD88.
 | Bare protein binding (unchanged) | 431 | 198 | 629 |
 | Substantive rows read | 328 | 141 | 469 |
 | Reviews with substantive rows | 96 | 67 | 163 |
-| Rows that no longer say REMOVE | 84 | 26 | 110 |
-| REMOVE rows at end | 675 | 313 | 988 |
-| Review files edited | 36 | 12 | 48 |
+| Rows that no longer say REMOVE | 84 | 24 | 108 |
+| REMOVE rows at end | 675 | 315 | 990 |
+| Review files edited | 36 | 9 | 45 |
 
 **Retired rows.** 27 of the REMOVE rows, all in rat reviews, are marked
 `retired`: GOA no longer carries the annotation, and the review keeps the row
@@ -96,11 +96,11 @@ Twelve are substantive rows, and eleven of those changed, all in rat/Prkaa2.
 | `MARK_AS_OVER_ANNOTATED` | 32 | 8 | 40 |
 | `KEEP_AS_NON_CORE` | 32 | 0 | 32 |
 | `MODIFY` | 6 | 14 | 20 |
-| `ACCEPT` | 4 | 3 | 7 |
+| `ACCEPT` | 4 | 1 | 5 |
 | `UNDECIDED` | 7 | 0 | 7 |
 | `TOO_GENERAL` | 3 | 1 | 4 |
 
-What was wrong with the 110 rows:
+What was wrong with the 108 rows:
 
 | Pattern | Rows | What was done |
 |---|---|---|
@@ -112,7 +112,6 @@ What was wrong with the 110 rows:
 | An experimental row that records a real observation as participation in a process | 14 | `MARK_AS_OVER_ANNOTATED` |
 | Ancestor of a kept term | 4 | `TOO_GENERAL` |
 | The reason conceded that the claim is true | 2 | Kept or refined |
-| A no-data row removed because inferred rows cover the aspect | 2 | `ACCEPT` |
 | The paper behind the row, or behind its source row, could not be examined | 3 | `UNDECIDED` |
 
 ## Rows changed
@@ -215,7 +214,7 @@ what was measured is not removed as false.
 | mouse/App | protein phosphorylation | IMP | Dephosphorylation of an NMDA receptor subunit downstream of amyloid-beta. |
 | mouse/Mpo | mitochondrion | HDA | One hit in a mitochondrial proteome survey of vascularised tissues. |
 
-### Other changes (11)
+### Other changes (9)
 
 | Review | Term (rows) | Evidence | Now | Basis |
 |---|---|---|---|---|
@@ -224,11 +223,10 @@ what was measured is not removed as false.
 | rat/Prkaa2 | steroid metabolic process (1) | IEA | `TOO_GENERAL` | Entailed by cholesterol metabolic process. |
 | mouse/Dnajb11 | positive regulation of ATP-dependent activity (1) | ISO | `ACCEPT` | ERdj3 stimulates the ATPase activity of BiP; the row had been removed because a function term covers the same biology. |
 | mouse/Ghr | growth factor binding (1) | ISO | `MODIFY` → peptide hormone binding | The receptor binds growth hormone; the review accepts the specific term. |
-| rat/Actl7a, rat/Aph1a | biological_process (2) | ND | `ACCEPT`, `nd_case: INFERABLE` | No study of the rat protein identifies a process; the process rows are transfers from orthologs. |
 | mouse/Trp53 | receptor tyrosine kinase binding; protein heterodimerization activity (2) | IEA | `UNDECIDED` | Transfers of human physical-interaction rows; the cached abstracts do not describe the interactions. |
 | mouse/Hsp90aa1 | positive regulation of cytotoxic T cell differentiation (1) | TAS | `UNDECIDED` | An author statement may stand anywhere in the full text, so the row is not removed on the strength of the abstract, which speaks of the cytotoxic action of nitric oxide and not of T cells (suspected source defect). |
 
-## REMOVE rows kept, with a corrected record (24)
+## REMOVE rows kept, with a corrected record (23)
 
 | Review | Rows | What changed |
 |---|---|---|
@@ -237,7 +235,6 @@ what was measured is not removed as false.
 | mouse/Mtor | 6 rows for RNA polymerase III promoter DNA binding | Reason rewritten: the donor is a chromatin immunoprecipitation result (PMID:20233713), and occupancy is not sequence-specific DNA binding. The rows had been called electronic mis-assignments. |
 | rat/Casp3, rat/Ptk7 | 4 rows with no stated reason | Reason written. |
 | mouse/Pax6 | nervous system process | Reason no longer says that the human review removes the term; it records it as too general. |
-| rat/Pik3c2a | biological_process (ND) | `nd_case: STALE` recorded; a study in rat insulinoma cells identifies a process. |
 
 ## Source defects
 
@@ -260,7 +257,8 @@ policy. None changed action.
 
 ## What REMOVE means in the mouse and rat sets now
 
-The 359 substantive rows that stand rest on a biological argument. The common
+The 361 substantive rows that stand rest on a biological argument, apart
+from the seven that main settled separately (see Follow-ups). The common
 ones:
 
 - **A target-specific argument against a transfer:** a divergent paralog
@@ -295,9 +293,11 @@ eight of them are marked as close calls.
   PMID:11584023 (mouse Dnajb11), PMID:12855682 (mouse Hsp90aa1) and
   PMID:12887892 (Sirt2).
 - **Changes on main after the pass.** Before this pass was merged, main
-  changed five of the rows it had left as REMOVE (mouse Lamp1, mouse and rat
-  Map2k4, two rat Tardbp rows) and added 13 mouse and rat reviews. Those are
-  not counted here.
+  changed seven of the rows it counts as standing. Five are mouse Lamp1,
+  mouse and rat Map2k4 and two rat Tardbp rows. The other two are the no-data
+  rows of rat Actl7a and rat Aph1a, which the no-data sweep accepted; this
+  pass had reached the same result, and main's version stands. Main also
+  added mouse and rat reviews. None of that is counted here.
 - **Source defects beyond this pass.** Only the cases established here were
   structured; other REMOVE rows describe an error in a source record in their
   reason without a structured defect.
