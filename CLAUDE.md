@@ -422,6 +422,10 @@ unread part of the paper could overturn the claim.
   that rests on it) either read the whole paper or have it be very obvious from
   the abstract or the record itself, as in the first bullet. Otherwise record the
   lead as a `CHECK` query and name the candidate as a candidate.
+  This bullet is a maintainer ruling (2026-11-16). Reviews merged before it are
+  not retroactively defective: the wrong-gene and wrong-reference claims it
+  affected were audited when it was made, and it applies to new and revisited
+  reviews, not as a condition of any other content PR.
 - **Say in `explanation` what depth the claim rests on**, and name a candidate
   correction as a candidate when the intended paper or gene was inferred and not
   read.
