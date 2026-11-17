@@ -230,14 +230,17 @@ flagged three papers; its output is
 | Paper | What SynGO did | Spread | Verdict |
 |---|---|---|---|
 | PMID:11498050, mice lacking GABA(B(1)) | Gave mouse **Gabrb1** the same three terms as Gabbr1, including `GO:0099528` G protein-coupled neurotransmitter receptor activity | 58 Ensembl rows per term, 57 species, including human GABRB1 | Wrong gene; the GPCR activity is biologically impossible for a GABA-A subunit |
-| PMID:15174078, GABA(B1) and GABA(B2) in rat globus pallidus | Recorded the locations on rat **Gabrb1** and **Gabrb2**, not on Gabbr1/Gabbr2 | 4 rows from Gabrb1, including the only presynaptic location on human GABRB1 | Wrong gene |
+| PMID:15174078, GABA(B1) and GABA(B2) in rat globus pallidus | Recorded the locations on rat **Gabrb1** and **Gabrb2**, not on Gabbr1/Gabbr2 | 4 rows from Gabrb1, including the only presynaptic location on human GABRB1 | Wrong gene; the full text uses GABA(B1) and GABA(B2) antibodies only |
 | PMID:15749345, GABA-A and GABA-B receptors in monkey globus pallidus | Annotated macaque GABBR1 only | none | Not a swap (flagged because the paper covers both families) |
 
 The first case is the clearest bad seed in this audit: an annotation that is wrong on
 biological grounds, not only mis-sourced, and copied into 57 species. Human GABRB1 now
 carries `G protein-coupled neurotransmitter receptor activity` (Ensembl IEA, from mouse
 Gabrb1) beside its correct GABA-A annotations. Both cases are `WRONG_GENE_PRODUCT` with
-cause `SYMBOL_COLLISION`, confirmed from the abstracts, which name the subunits studied.
+cause `SYMBOL_COLLISION`, confirmed from the abstracts, which name the subunits studied;
+PMID:15174078 was also read in full and uses only GABA(B1) and GABA(B2) antibodies. SynGO's
+other rat Gabrb1 paper, PMID:16469775 (also read in full), is a genuine GABA-A beta1 study
+of fast IPSCs and is correctly attributed.
 None of it has reached PAINT: no IBA annotation names any of the three swapped seeds in
 its WITH/FROM. The spread is Ensembl orthology projections, UniProt automatic rows and
 four UniProt ISS rows. Because the swapped rows carry experimental codes, a later PAINT
