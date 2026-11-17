@@ -393,6 +393,16 @@ def test_resolve_taxon_name_human_offline():
     assert _resolve_taxon_name("9606") == "Homo sapiens"
 
 
+def test_resolve_taxon_name_strain_level_offline():
+    """TAXON NAME must be QuickGO's UniProt-style name (with strain), not the
+    NCBITaxon label. 559292 resolves offline and must carry the strain qualifier
+    exactly as QuickGO (and the committed genes/yeast/*-goa.tsv) spell it."""
+    assert (
+        _resolve_taxon_name("559292")
+        == "Saccharomyces cerevisiae (strain ATCC 204508 / S288c)"
+    )
+
+
 def test_resolve_taxon_name_blank_for_nonnumeric():
     assert _resolve_taxon_name("") == ""
     assert _resolve_taxon_name("notanid") == ""

@@ -860,40 +860,63 @@ MODEL_ORGANISM_TAXA: Dict[str, Tuple[str, str]] = {
 }
 
 
-# Reverse of MODEL_ORGANISM_TAXA keyed by numeric NCBI taxon id, for offline
-# resolution of the common campaign taxa (e.g. 9606 -> "Homo sapiens").
-_TAXON_ID_TO_LABEL: Dict[str, str] = {
-    curie.split(":", 1)[1]: label for curie, label in MODEL_ORGANISM_TAXA.values()
+# QuickGO's GOA ``TAXON NAME`` column is the UniProt-style organism scientific
+# name (which carries strain qualifiers), NOT the NCBITaxon label -- the two
+# differ for every strain-level taxon (e.g. 559292 is
+# "Saccharomyces cerevisiae (strain ATCC 204508 / S288c)" in QuickGO but
+# "Saccharomyces cerevisiae S288C" in NCBITaxon). These strings are verified
+# against the UniProt taxonomy API (what QuickGO mirrors) and kept here so the
+# common taxa resolve offline and stay byte-faithful to QuickGO. Distinct from
+# MODEL_ORGANISM_TAXA, whose NCBITaxon labels are the right source for the review
+# YAML's ``taxon`` slot but the wrong source for this column.
+_TAXON_ID_TO_UNIPROT_NAME: Dict[str, str] = {
+    "9606": "Homo sapiens",
+    "10090": "Mus musculus",
+    "10116": "Rattus norvegicus",
+    "559292": "Saccharomyces cerevisiae (strain ATCC 204508 / S288c)",
+    "7227": "Drosophila melanogaster",
+    "6239": "Caenorhabditis elegans",
+    "7955": "Danio rerio",
 }
 
 
 @lru_cache(maxsize=None)
 def _resolve_taxon_name(taxon_id: str) -> str:
-    """Resolve a numeric NCBI taxon id to its NCBITaxon label.
+    """Resolve a numeric NCBI taxon id to QuickGO's ``TAXON NAME`` string.
 
     Used to backfill the GOA ``TAXON NAME`` column when QuickGO's
     ``includeFields=taxonName`` path is unavailable (it returns HTTP 500 while
-    ``goName`` and ``name`` still work). The common campaign taxa resolve
-    offline from :data:`MODEL_ORGANISM_TAXA`; anything else is looked up in
-    NCBITaxon. A lookup failure yields an empty string rather than aborting the
-    whole fetch over one cosmetic label.
+    ``goName`` and ``name`` still work). QuickGO's ``taxonName`` is the
+    UniProt-style organism scientific name (carrying strain qualifiers), so this
+    resolves against the UniProt taxonomy API -- what QuickGO mirrors -- rather
+    than the NCBITaxon label, keeping the column byte-faithful for every species.
+    Common taxa resolve offline from a verified table; a lookup failure yields an
+    empty string rather than aborting the whole fetch over one cosmetic label.
 
     >>> _resolve_taxon_name("9606")
     'Homo sapiens'
+    >>> _resolve_taxon_name("559292")
+    'Saccharomyces cerevisiae (strain ATCC 204508 / S288c)'
     >>> _resolve_taxon_name("")
     ''
     """
     taxon_id = (taxon_id or "").strip()
     if not taxon_id.isdigit():
         return ""
-    if taxon_id in _TAXON_ID_TO_LABEL:
-        return _TAXON_ID_TO_LABEL[taxon_id]
+    if taxon_id in _TAXON_ID_TO_UNIPROT_NAME:
+        return _TAXON_ID_TO_UNIPROT_NAME[taxon_id]
     try:
-        from ai_gene_review.taxon import ncbitaxon_label
-
-        return ncbitaxon_label(f"NCBITaxon:{taxon_id}")
+        # UniProt taxonomy API scientificName -- the string QuickGO mirrors.
+        url = "https://rest.uniprot.org/taxonomy/stream"
+        params = {"query": f"id:{taxon_id}", "format": "json", "size": "1"}
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        results = response.json().get("results", [])
+        if results:
+            return results[0].get("scientificName", "") or ""
     except Exception:
-        return ""
+        pass
+    return ""
 
 
 def taxon_curie_from_uniprot_record(uniprot_data: str) -> Optional[str]:
