@@ -27,3 +27,8 @@ The inherited NEW complex-membership row remains a conserved-assembly inference 
 ### 2026-10-29: qualification of the earlier NirD cofactor statement
 
 The earlier statement that the adjacent KT2440 NirD lacks an Fe-S cluster is an inference from the NirD-specific sequence/family evidence and the characterized **M. tuberculosis** homolog, not a direct measurement of Q88M68 cofactor occupancy. PMID:22965870 states that its Mtb protein "does not contain any Fe-S cluster or other cofactors that might be involved in electron transfer." The current NirD review retains that distinction and does not present the Mtb structure as a KT2440 experiment.
+
+
+## Module completion pass, 2026-11-03
+
+Resolved the remaining UNDECIDED row so the review can be COMPLETE for the bacterial assimilatory nitrate reduction module. GO:0050661 NADP binding (UniRule IEA): UNDECIDED -> MARK_AS_OVER_ANNOTATED. Native activity was measured with methyl viologen only [PMID:38000372 "3 mM methyl viologen, 1 mM KNO2, 17 mM Na2S2O4"]; characterized family members use NADH, so NAD binding is not proposed either.

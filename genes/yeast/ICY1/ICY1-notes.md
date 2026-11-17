@@ -105,3 +105,7 @@ NOT known (knowledge gaps — the real deliverable):
 - core_functions: minimal/empty — no defensible molecular function to assert.
 - knowledge_gaps: REQUIRED, primary deliverable (unknown MF, BP, mechanism of the
   petite-negative/invasive-growth phenotypes, reality of cytoskeleton interaction).
+
+## ND literature-search citations (2026-11-06)
+
+- `existing_annotations[3]` GO:0008150 biological_process (ND) may be stale. The search record above cites S. cerevisiae ICY1 literature with mutant phenotypes tied to specific processes: icy1 deletion cells cannot grow without mtDNA and ICY1 is a high-copy suppressor of tim18 petite-negativity [PMID:14504216], and icy1 deletion gives an invasive-growth defect with elongated morphology [PMID:12673624]. A curator should decide whether either supports a process annotation (e.g. invasive growth) before the ND is kept as accepted; the row action is unchanged.

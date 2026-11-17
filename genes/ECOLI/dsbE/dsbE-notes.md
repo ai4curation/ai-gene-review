@@ -27,3 +27,14 @@
 - GO:0017004 rows: MODIFY -> GO:0018063 cytochrome c-heme linkage (descendant of GO:0017004).
 - Locations plasma membrane and periplasmic space: ACCEPT.
 - Fetched PMIDs 11256948, 11350062, 11843181 (UniProt RX lines).
+
+
+## 2026-11-06 system I comparative reassessment
+
+Provides periplasmic protein-disulfide reducing activity to the cytochrome c maturation pathway. The E. coli evidence is distinguished from heterologous ortholog assays and engineered expression constructs.
+
+Specific reassessment: Provides periplasmic protein-disulfide reducing activity to the cytochrome c maturation pathway. Exact physiological thiol-exchange partners vary among characterized systems.
+
+PMID:11843181 directly reports weak insulin reduction by leaderless E. coli DsbE; PMID:28634234 directly assays R. capsulatus apocytochrome/CcmH disulfides. The exact relay is not silently transferred between species.
+
+Default Falcon was genuinely attempted and failed with HTTP403 authentication; no provider report was created. Manual literature assessment is recorded here. Original seed rows (including inherited NEW), raw UniProt/GOA, and existing provider files are preserved against original-members-baseline.json. Focused validation and helper history are recorded in the original-panel audit ledger.

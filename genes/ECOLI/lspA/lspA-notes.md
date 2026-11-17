@@ -21,3 +21,15 @@ Manual synthesis:
   aspartic-type endopeptidase activity`. That is accurate but broad; a
   dedicated `lipoprotein signal peptidase activity` child term would capture
   the signal peptidase II substrate and cleavage context.
+
+
+## 2026-11-07 source and ontology audit
+
+Reviewed all original rows, references and core activity. Original annotation payloads/order and historical NEW actions are preserved; no row was added or retired. See `analysis/module_audits/bacterial_lipoprotein_maturation/ecoli-bacsu-consultation/evidence.md` for the complete source/construct and ontology rationale. All genuine Falcon attempts returned authentication HTTP403; manual synthesis is recorded here without creating provider output. Final PAINT lineage inspection reported no IRD/IKR loss; initial cold-cache download races were retried sequentially and logged. Protected publication/provider/raw files remain unchanged.
+
+Current GO:0009003 signal peptidase activity is active and supplies the substrate-directed core genus; GO:0004190 remains a correct mechanistic assertion. Generic endopeptidase refines to both; proteolysis refines to protein processing. The specific proposal retains only lipidated-prolipoprotein/Cys context. Bacillus downstream LhaT acetylation prevents an inference that all products remain diacylated.
+
+
+## PR 6184 source adjudication, 2026-11-07
+
+The lipoprotein signal peptidase proposal now uses GO:0009003 as its substrate-defined parent, matching the PSEPK proposal. GO:0004190 describes the independent aspartic catalytic mechanism and remains valid; no corresponding original annotation or core activity was removed or changed.

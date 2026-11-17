@@ -20,3 +20,7 @@ Quote hygiene: 31 UniProtKB quotes ended "...histamine and 1-methylhistamine." b
 Description rewritten to remove curation commentary.
 
 Open question: tight-junction IDA (PMID:18855986) needs full-text adjudication.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[33], GO:0008150 biological_process (ND, ACCEPT, nd_case INFERABLE): may be stale. The gene's Falcon report cites rat-specific primary literature, Luk et al. 1980 (doi:10.1172/jci109836), which measures diamine oxidase (histaminase) activity deaminating histamine in rat ileal mucosa and plasma and links DAO to putrescine/polyamine metabolism during mucosal maturation and recovery. The review also carries rat IDA enzyme rows (putrescine oxidase activity, PMID:7626074; diamine oxidase activity, PMID:9399025). Rat literature therefore identifies histamine/putrescine (diamine) catabolism for this gene product; a curator should check whether a process term (for example histamine or putrescine catabolic process) replaces the ND. Action not changed here.

@@ -14,3 +14,22 @@ Tat module. The Tat-specific process, Tat-complex membership, and plasma-membran
 location and TatA transporter activity are retained. Generic protein transport
 is kept as a correct non-core parent, while generic membrane is marked as a
 redundant over-annotation. No row remains PENDING or UNDECIDED.
+
+## 2026-11-10 harmonization pass
+
+Re-reviewed alongside the newly reviewed E. coli tatA/tatB/tatC so that rows
+sharing a term get the same action in every Tat subunit review. Changes from
+the earlier pass: transporter-activity rows (GO:0008320, GO:0009977) are
+MARK_AS_OVER_ANNOTATED with a WRONG_QUALIFIER source defect for all three
+subunits, because the activity belongs to the assembled TatABC complex (the
+earlier pass mixed ACCEPT, KEEP_AS_NON_CORE and MARK_AS_OVER_ANNOTATED across
+siblings); GO:0065002 and GO:0015031 are MODIFY to GO:0043953; GO:0016020 is
+MODIFY to GO:0005886. TatB/TatC-family members get a NEW ISS GO:0005048 signal
+sequence receptor activity row matching the E. coli IDA proposal. No provider
+deep research was generated; the review uses the UniProt/HAMAP record,
+PMID:23530902 for the KT2440 systems, and E. coli literature for the conserved
+subunit roles.
+
+2026-11-11 (PR #6246 follow-up): TatA transporter rows now follow the same
+contributes_to reading as TatB/TatC, and the core function uses the proposed
+term "Tat translocon conduit assembly activity", matching E. coli tatA.

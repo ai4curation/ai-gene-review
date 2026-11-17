@@ -138,3 +138,31 @@ keeps the same action because the claim stands on that other evidence, and carri
 source defect. Added PMID:26901662 to references; revised the PMID:17157249 review note.
 Stay at the root: MitoCarta's "MIM" is the only sub-mitochondrial line and the presequence
 was shown non-functional.
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095) and ISS (GO_REF:0000024, WITH UniProtKB:P32020),
+both located_in, both KEEP_AS_NON_CORE. No ER sub-compartment rows. Mitochondrion rows from
+batch 4 untouched.
+
+Checks:
+- UniProt P22307: "[Isoform SCP2]: ... Endoplasmic reticulum {ECO:0000250|UniProtKB:P32020}";
+  "[Isoform SCPx]: Peroxisome" only. So both ER rows rest on mouse P32020.
+- UniProt REST P32020 (2026-11-05): [Isoform SCP2] "Endoplasmic reticulum {ECO:0000269|PubMed:11003606}"
+  (sole source; the 2016 paper PMID:26901662 supports Mitochondrion/Peroxisome/Cytoplasm only,
+  and only cites earlier ER pools).
+- PMID:11003606 (abstract-only, mouse L-cell fibroblasts stably overexpressing SCP-2):
+  [PMID:11003606 "Indirect immunofluorescence double labeling and laser scanning confocal microscopy detected SCP-2 in peroxisomes > endoplasmic reticulum > mitochondria > lysosomes."]
+  plus SCP-2 stimulation of microsomal phosphatidic acid synthesis in vitro.
+- Soluble protein, PTS1 -AKL, no signal peptide/TM: any ER pool is on the cytosolic face.
+
+Outcome: actions unchanged (KEEP_AS_NON_CORE), close call against MARK_AS_OVER_ANNOTATED
+(overexpression-only localization) stated in the ISS reason. ISS summary corrected (donor is
+mouse, not rat). Isoform restriction recorded as a source defect (Gene_Product_Form_ID ->
+P22307-2) on the ISS row. Stays at the root. Added PMID:11003606 to references.
+core_functions[1] still lists GO:0005783 for the lipid-transfer function; left as is (the
+microsomal transfer data are the functional link), but worth a second look.
+- Correction (2026-11-06): settled in review of PR #6028. GO:0005783 was removed from the
+  lipid-transfer core function's locations (cytosol only), and its description now names
+  donor and acceptor membranes rather than an ER location, since no assay places the transfer
+  activity at the ER.
