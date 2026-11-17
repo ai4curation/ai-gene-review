@@ -5002,8 +5002,24 @@ def refresh_panther_members(
     from ai_gene_review.validation.prose_panther_scan import collect_claims
 
     repo_root = output_dir or Path.cwd()
-    cache = cache_dir or (repo_root / ".cache" / "panther")
+    from ai_gene_review.etl.panther_families import (
+        PANTHER_PREVIOUS_RELEASE,
+        fetch_hmm_classifications,
+        hmm_url,
+        panther_cache_dir,
+    )
+
+    cache = cache_dir or panther_cache_dir(repo_root)
     organisms = list(organism) if organism else list(DEFAULT_ORGANISMS)
+
+    # During a PANTHER switch, validators read the previous release's names and
+    # memberships from this cache without downloading anything; warm it here. Only the
+    # default organisms: they are what the validators read, whatever --organism says.
+    if PANTHER_PREVIOUS_RELEASE is not None:
+        fetch_hmm_classifications(cache, url=hmm_url(PANTHER_PREVIOUS_RELEASE))
+        for slug in DEFAULT_ORGANISMS:
+            fetch_sequence_classification(slug, cache, release=PANTHER_PREVIOUS_RELEASE)
+        typer.echo(f"cached PANTHER {PANTHER_PREVIOUS_RELEASE} classifications for the switch allowance")
 
     # Every representative member, grounded or not -- an ungrounded descriptor's
     # members are the ones whose real family most needs resolving -- plus the
@@ -5390,6 +5406,7 @@ def fix_panther_labels(
         load_obo_names,
         rewrite_panther_labels,
     )
+    from ai_gene_review.validation.family_residue_validator import previous_release_labels
     from ai_gene_review.validation.module_validator import (
         iter_family_member_uses,
         load_member_index,
@@ -5399,6 +5416,10 @@ def fix_panther_labels(
 
     repo_root = output_dir or Path.cwd()
     names = load_obo_names(repo_root / "interpro" / "panther" / "panther.obo")
+    # During a PANTHER switch, a label still carrying the previous release's name is
+    # held back for remapping rather than relabelled (see rewrite_panther_labels).
+    previous = previous_release_labels(repo_root / "interpro" / "panther")
+    previous_names = previous[1] if previous is not None else None
     from ai_gene_review.etl.panther_families import member_index_path
 
     from ai_gene_review.etl.panther_families import load_member_index_alternates
@@ -5412,6 +5433,7 @@ def fix_panther_labels(
 
     total = 0
     held_back: list[tuple[Path, str, str, str, bool]] = []
+    renamed: list[tuple[Path, str, str, str]] = []
     for path in targets:
         text = path.read_text()
         doc = yaml.safe_load(text)
@@ -5426,12 +5448,13 @@ def fix_panther_labels(
             elif any(a in member_index for a in use.representative_accessions):
                 corroborated.update(use.declared_family_curies)
         new_text, changes, deferred = rewrite_panther_labels(
-            text, names, skip, allow_divergent=allow_divergent
+            text, names, skip, allow_divergent=allow_divergent, previous_names=previous_names
         )
-        held_back.extend(
-            (path, curie, old, new, curie in corroborated)
-            for curie, old, new in deferred
-        )
+        for item in deferred:
+            if item.reason == "renamed_in_switch":
+                renamed.append((path, item.curie, item.old, item.new))
+            else:
+                held_back.append((path, item.curie, item.old, item.new, item.curie in corroborated))
         if not changes:
             continue
         total += len(changes)
@@ -5442,6 +5465,15 @@ def fix_panther_labels(
             typer.echo(f"  (skipped {len(skip)} id(s) with disputed grounding)")
         if apply:
             path.write_text(new_text)
+
+    if renamed and previous is not None:
+        typer.echo(
+            f"\n⚠  {len(renamed)} label(s) NOT rewritten: they are on ids whose name "
+            f"changed since PANTHER {previous[0]}, so the id may now "
+            "name something else. Remap them from `just panther-release-diff`."
+        )
+        for path, curie, old, new in renamed:
+            typer.echo(f"  {path.name}: {curie}  {old!r} -> now {new!r}")
 
     if held_back:
         typer.echo(

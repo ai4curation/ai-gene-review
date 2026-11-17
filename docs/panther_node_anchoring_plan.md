@@ -151,7 +151,31 @@ On 2026-11-17 it found:
 
 1. A transition PR (before the switch, or with it) lets validators accept an id that is
    valid in the previous release but changed in the new one, as a warning carrying the
-   report's proposal, instead of an error.
+   report's proposal, instead of an error. It is switched on by setting
+   `PANTHER_PREVIOUS_RELEASE` in `etl/panther_families.py`.
+   - **Family reviews: done.** `check_panther_ids` reports such ids, labels and
+     memberships as UNRESOLVED. In a simulated bump to 20.0 over all family reviews
+     (PANTHER checks only, 2026-11-17), total failures go from 67 today to 2,400 without
+     the allowance (2,333 new: 547 ids, 1,182 labels, 604 memberships) and stay at 67
+     with it. Those 67 are the same set as today's except for one swap: a new, real
+     failure (P0ABZ4, first classified in 20.0, sits outside its declared subfamily,
+     which the bump did not change) and one existing failure that 20.0 resolves.
+     Release-independent scope errors (a family id in a subfamily slot, another
+     family's subfamily) still fail during the window. The previous release is read
+     from the cache only; `just ensure-panther-members` fills it while a switch is on,
+     and without it the allowance is off with a warning.
+   - **Modules: done.** PANTHER terms whose label matches the previous release are
+     set aside with a warning before OAK term validation
+     (`defer_previous_release_panther_terms`), and `validate_family_members` treats a
+     family that matched the members in the previous release as a warning. In a
+     simulated bump over all modules (2026-11-17), term errors go from 2 today to 463
+     without it and stay at 2 with it; membership errors go from 55 to 56 without it
+     and stay at 55 with it.
+   - **Labels are not laundered.** In both halves an id is deferred only while it
+     carries the previous release's name; a label wrong in both releases fails. During
+     the window `just fix-panther-labels` holds back, rather than rewrites, any label on
+     an id whose name changed between the releases, even with `--allow-divergent`,
+     because the id may now name something else. Those go through the remap batches.
 2. The bump PR changes the pinned constants, rebuilds the caches and `panther.obo`
    (2.1), and re-quotes the `panther.obo` quotes the report lists (10 today), so
    `just validate-quotes` stays green. That is too few to need a transition allowance

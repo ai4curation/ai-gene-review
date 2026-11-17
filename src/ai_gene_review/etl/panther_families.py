@@ -79,6 +79,14 @@ PAINT_ROOT = "https://data.pantherdb.org/ftp/downloads/paint"
 PAINT_BASE = f"{PAINT_ROOT}/{PANTHER_RELEASE}/{PAINT_SNAPSHOT}"
 
 
+# The release being left during a PANTHER switch, or None outside one. The bump PR sets
+# it; the last remap PR clears it (docs/panther_node_anchoring_plan.md, Phase 2). While
+# it is set, validators report an id, label or membership that was right in this
+# release, but changed in PANTHER_RELEASE, as unresolved rather than as a failure, so
+# remaps can land in batches instead of one PR.
+PANTHER_PREVIOUS_RELEASE: Optional[str] = None
+
+
 def paint_cache_dir(cache_root: Path) -> Path:
     """Folder under ``cache_root`` for files from the pinned PAINT snapshot.
 
@@ -296,6 +304,15 @@ def parse_sequence_classification(lines: Iterable[str]) -> Dict[str, str]:
     return index
 
 
+def sequence_classification_path(cache_dir: Path, organism: str, release: str) -> Path:
+    """Where :func:`fetch_sequence_classification` caches one organism's file.
+
+    >>> sequence_classification_path(Path("c"), "human", "19.0").name
+    'PTHR19.0_human'
+    """
+    return Path(cache_dir) / f"PTHR{release}_{organism}"
+
+
 def fetch_sequence_classification(
     organism: str,
     cache_dir: Path,
@@ -311,11 +328,10 @@ def fetch_sequence_classification(
     """
     cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"PTHR{release}_{organism}"
-    dest = cache_dir / filename
+    dest = sequence_classification_path(cache_dir, organism, release)
     if dest.exists() and not force_download:
         return dest
-    response = requests.get(f"{seq_base(release)}/{filename}", timeout=300)
+    response = requests.get(f"{seq_base(release)}/{dest.name}", timeout=300)
     if response.status_code == 404:
         return None
     response.raise_for_status()
@@ -1078,18 +1094,29 @@ def load_subfamily_counts(path: Path) -> Dict[str, int]:
     return counts
 
 
+class DeferredLabel(NamedTuple):
+    """A label :func:`rewrite_panther_labels` held back, and why."""
+
+    curie: str
+    old: str
+    new: str
+    reason: str  # "divergent" | "renamed_in_switch"
+
+
 def rewrite_panther_labels(
     text: str,
     names: Dict[str, str],
     skip_curies: Optional[Set[str]] = None,
     allow_divergent: bool = False,
-) -> Tuple[str, List[Tuple[str, str, str]], List[Tuple[str, str, str]]]:
+    previous_names: Optional[Dict[str, str]] = None,
+) -> Tuple[str, List[Tuple[str, str, str]], List[DeferredLabel]]:
     """Rewrite PANTHER family/subfamily labels to their official PANTHER names.
 
-    Returns ``(new_text, applied, deferred)``, each change a
-    ``(curie, old_label, new_label)`` triple.
+    Returns ``(new_text, applied, deferred)``. Each applied change is a
+    ``(curie, old_label, new_label)`` triple; each deferred one a
+    :class:`DeferredLabel`, which also says why it was held back.
 
-    Two categories are deliberately NOT rewritten:
+    Three categories are deliberately NOT rewritten:
 
     * ``skip_curies`` -- ids whose *grounding* is disputed. Rewriting their
       label would replace an honestly-wrong label with an authoritative one and
@@ -1098,6 +1125,11 @@ def rewrite_panther_labels(
       unless ``allow_divergent``. When the authored label describes a different
       protein entirely, the likely error is the id, and normalising the label
       would manufacture consistency around a guessed identifier.
+    * during a PANTHER switch (``previous_names``, the previous release's names), any
+      label on an id whose name changed between the releases, returned in ``deferred``
+      (reason ``renamed_in_switch``) even with ``allow_divergent``. The id may now name
+      something else, so it is remapped from ``just panther-release-diff``, not
+      relabelled; that holds a typo on such an id until the remap too.
 
     >>> names = {"PANTHER:PTHR1": "ALDO/KETO REDUCTASE"}
     >>> text = "  term:\\n    id: PANTHER:PTHR1\\n    label: ALDO-KETO REDUCTASE\\n"
@@ -1115,15 +1147,25 @@ def rewrite_panther_labels(
     >>> new, applied, deferred = rewrite_panther_labels(text, names)
     >>> applied
     []
-    >>> deferred
-    [('PANTHER:PTHR1', 'SUCCINATE DEHYDROGENASE', 'ALDO/KETO REDUCTASE')]
+    >>> [(d.curie, d.old, d.reason) for d in deferred]
+    [('PANTHER:PTHR1', 'SUCCINATE DEHYDROGENASE', 'divergent')]
     >>> new == text
     True
+
+    During a switch, a label on an id the switch renamed is held back, whatever it says:
+
+    >>> text = "  term:\\n    id: PANTHER:PTHR1\\n    label: ALDO-KETO REDUCTASE\\n"
+    >>> previous = {"PANTHER:PTHR1": "ALDO KETO REDUCTASE"}
+    >>> new, applied, deferred = rewrite_panther_labels(
+    ...     text, names, allow_divergent=True, previous_names=previous)
+    >>> applied, new == text, deferred[0].reason
+    ([], True, 'renamed_in_switch')
     """
     skip = skip_curies or set()
+    previous = previous_names or {}
     lines = text.splitlines(keepends=True)
     changes: List[Tuple[str, str, str]] = []
-    deferred: List[Tuple[str, str, str]] = []
+    deferred: List[DeferredLabel] = []
     for index, line in enumerate(lines):
         match = _LABEL_ID_RE.match(line.rstrip("\n"))
         if not match or index + 1 >= len(lines):
@@ -1142,12 +1184,15 @@ def rewrite_panther_labels(
         current = str(yaml.safe_load(f"v: {label_match.group(2)}")["v"])
         if current.strip() == official:
             continue
+        if previous.get(curie, official) != official:
+            deferred.append(DeferredLabel(curie, current, official, "renamed_in_switch"))
+            continue
         if (
             not allow_divergent
             and not is_placeholder_label(current, curie)
             and label_drift(current, official) == "divergent"
         ):
-            deferred.append((curie, current, official))
+            deferred.append(DeferredLabel(curie, current, official, "divergent"))
             continue
         lines[index + 1] = f"{expected_indent}label: {emit_yaml_scalar(official)}\n"
         changes.append((curie, current, official))
@@ -1310,3 +1355,77 @@ def panther_release_drift(timeout: int = 60) -> Tuple[List[str], List[str]]:
             "PAINT and the tree API may not serve it yet"
         )
     return stale, notices
+
+
+# --------------------------------------------------------------------------- #
+# Transition window: the previous release's names and memberships
+# --------------------------------------------------------------------------- #
+
+
+def panther_cache_dir(repo_root: Path) -> Path:
+    """The git-ignored folder holding PANTHER downloads and the member index.
+
+    >>> panther_cache_dir(Path("/repo")).as_posix()
+    '/repo/.cache/panther'
+    """
+    return Path(repo_root) / MEMBER_INDEX_RELPATH.parent
+
+
+def hmm_classifications_path(cache_dir: Path, release: str) -> Path:
+    """Where :func:`fetch_hmm_classifications` caches one release's names file.
+
+    >>> hmm_classifications_path(Path("c"), "19.0").name
+    'PANTHER19.0_HMM_classifications'
+    """
+    return Path(cache_dir) / hmm_url(release).rsplit("/", 1)[-1]
+
+
+def previous_release_names(cache_dir: Path, release: str) -> Dict[str, str]:
+    r"""``PANTHER:<id> -> name`` for every family and subfamily in ``release``.
+
+    Read from that release's HMM classification file (downloaded into ``cache_dir``
+    once if absent). Keys and values match :func:`load_obo_names` on an OBO written by
+    :func:`write_panther_obo`: names go through :func:`escape_obo_value`, as they do in
+    the committed artifact, so the two can be compared directly.
+
+    >>> import tempfile
+    >>> d = Path(tempfile.mkdtemp())
+    >>> _ = hmm_classifications_path(d, "99.0").write_text("PTHR1:SF1\tA ! B\n")
+    >>> previous_release_names(d, "99.0")
+    {'PANTHER:PTHR1:SF1': 'A \\! B'}
+    """
+    path = fetch_hmm_classifications(cache_dir, url=hmm_url(release))
+    entries = parse_hmm_classifications(path.read_text(errors="replace").splitlines())
+    return {f"PANTHER:{entry.accession}": escape_obo_value(entry.name) for entry in entries}
+
+
+def previous_release_members(
+    cache_dir: Path,
+    release: str,
+    organisms: Iterable[str] = DEFAULT_ORGANISMS,
+    cached_only: bool = False,
+) -> Dict[str, str]:
+    """UniProt accession -> ``PTHR family:SF`` in ``release``, for the given organisms.
+
+    Not pruned to cited accessions: it backs a temporary allowance, and every
+    accession a review cites must be answerable from it. For the default organisms
+    that means about 305 MB of classification files on a cold cache and about 300,000
+    accessions in memory (measured for 19.0), paid once per validation process during
+    a switch.
+    ``cached_only`` reads only files already in ``cache_dir`` and downloads nothing,
+    so a validator never depends on the network.
+    """
+    index: Dict[str, str] = {}
+    for organism in organisms:
+        if cached_only:
+            cached = sequence_classification_path(cache_dir, organism, release)
+            path: Optional[Path] = cached if cached.exists() else None
+        else:
+            path = fetch_sequence_classification(organism, cache_dir, release=release)
+        if path is None:
+            continue
+        for accession, family_sf in parse_sequence_classification(
+            path.read_text(errors="replace").splitlines()
+        ).items():
+            index.setdefault(accession, family_sf)
+    return index
