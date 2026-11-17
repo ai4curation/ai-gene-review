@@ -80,7 +80,11 @@ def ancestor_closure(parents: Dict[str, Set[str]]):
 def candidates(gaf: Path, obo: Path, genes_dir: Path) -> List[dict]:
     parents, names = load_obo(obo)
     ancestors = ancestor_closure(parents)
-    reviewed = {p.name.lower() for p in genes_dir.iterdir() if p.is_dir()} if genes_dir.is_dir() else set()
+    # Folders such as ``CycA__P14785`` review the gene ``CycA``: compare on the symbol part.
+    reviewed = (
+        {p.name.split("__")[0].lower() for p in genes_dir.iterdir() if p.is_dir()}
+        if genes_dir.is_dir() else set()
+    )
 
     symbol: Dict[str, str] = {}
     iba: Dict[str, Set[str]] = defaultdict(set)
@@ -97,8 +101,9 @@ def candidates(gaf: Path, obo: Path, genes_dir: Path) -> List[dict]:
             if "NOT" in qualifier or term in ROOTS:
                 continue
             (iba if code == "IBA" else other)[gene_id].add(term)
-            if code in EXPERIMENTAL and ref.startswith("PMID:"):
-                exp_pmids[gene_id].add(ref)
+            if code in EXPERIMENTAL:
+                # GAF column 6 can hold several pipe-separated references (FB:... | PMID:...).
+                exp_pmids[gene_id].update(r for r in ref.split("|") if r.startswith("PMID:"))
 
     rows = []
     for gene_id, terms in iba.items():

@@ -94,3 +94,9 @@
   NEW row (clamp) and not added: comparator check (QuickGO, 2026-11-16) finds it only on PRKN and
   its electronic orthologs, not on mammalian Syt1 or complexins, and the clamp is already covered
   by the accepted GO:2000300 row.
+- Protein-binding rows: `Syt1-goa.tsv` has six GO:0005515 IPI rows for PMID:11069931, and the
+  review has four. The two missing rows repeat the UniProtKB:Q24211 and UniProtKB:Q24212
+  WITH/FROM pairs of the IntAct rows and differ only in assigned_by (UniProt). The review stub
+  is seeded with one row per term, evidence code, reference and WITH/FROM, so the collapse is
+  deterministic and drops no distinct claim. All four rows are REMOVE under the protein-binding
+  policy.
