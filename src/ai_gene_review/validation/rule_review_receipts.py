@@ -316,6 +316,8 @@ def coverage_claims(text: str) -> List[Tuple[int, Optional[int]]]:
     []
     >>> coverage_claims("None of the rule's 320 sets are matched by a rule; no specific rules cover 39 sets.")
     []
+    >>> coverage_claims("No more than 38 of its sets are covered by rules; at most 40 sets are covered by rules.")
+    []
     """
     claims: List[Tuple[int, Optional[int]]] = []
     for sentence in re.split(r"(?<=[.;])\s+", " ".join(text.split())):
@@ -323,7 +325,9 @@ def coverage_claims(text: str) -> List[Tuple[int, Optional[int]]]:
             continue
         for match in _COVERAGE_CLAIM.finditer(sentence):
             before = sentence[:match.start()]
-            if re.search(r"\b(?:none|no|not\s+one)\s+(?:of\s+)?(?:the\s+)?(?:rule's\s+)?$", before, re.IGNORECASE) or (
+            if re.search(r"\b(?:none|no|not\s+one)\s+(?:of\s+)?(?:the\s+)?(?:rule's\s+)?$", before, re.IGNORECASE) or re.search(
+                    r"\b(?:no|not)\s+(?:more|fewer|less)\s+than\s+$|\b(?:at\s+(?:most|least)|up\s+to|about|roughly)\s+$",
+                    before, re.IGNORECASE) or (
                     match.group(3) and re.search(r"\bno\s+(?:\w+\s+){0,3}$", before, re.IGNORECASE)):
                 continue  # "none of the 90 sets is matched by a rule" claims zero, not ninety
             first, second, cover, bracket = (int(g.replace(",", "")) if g else None for g in match.groups())
