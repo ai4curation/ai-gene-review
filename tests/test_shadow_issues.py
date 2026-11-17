@@ -668,8 +668,18 @@ def test_pending_release_is_only_a_downstream_value(config, tracker_dir):
                 "kind": "GOA_DIFF",
                 "ref": "QuickGO",
                 "checked_at": "2026-11-11T00:00:00Z",
+                "source_release": "GO 2026-08-05",
             },
             "needs source_release_date",
+        ),
+        (
+            {
+                "kind": "GOA_DIFF",
+                "ref": "QuickGO",
+                "checked_at": "2026-11-11T00:00:00Z",
+                "source_release_date": "2026-08-05",
+            },
+            "needs source_release",
         ),
         (
             {
@@ -722,6 +732,7 @@ def test_agreement_compares_raters(config, tracker_dir):
     assert "| actions | 1 | 0 | 0% |" in result.output
     # A dimension neither rater scored is not counted.
     assert "| harm | 0 | 0 | - |" in result.output
+    assert "raw agreement" in result.output
 
 
 def test_ratings_links_resolve_outside_the_projects_folder(config, tracker_dir):
@@ -798,7 +809,7 @@ def test_paint_diff(tmp_path):
     assert "removed\tPTN1\tGO:0004776\tIBD\t\t20260528" in lines
     assert "added\tPTN3\tGO:0004776\tIKR\tNOT\t20261002" in lines
     assert (
-        "changed\tPTN1\tGO:0004775\tIBD\t\t20260528 -> 20261002\tseeds +UniProtKB:B"
+        "changed\tPTN1\tGO:0004775\tIBD\t\tseeds +UniProtKB:B\tdate 20260528 -> 20261002"
         in lines
     )
     assert not any("PTN2" in line for line in lines)
@@ -807,6 +818,63 @@ def test_paint_diff(tmp_path):
         app, ["shadow-issues", "paint-diff", str(old), str(new), "--go", "GO:0004775"]
     )
     assert [line.split("\t")[0] for line in result.output.splitlines()] == ["changed"]
+
+
+def test_paint_diff_shows_every_changed_column(tmp_path):
+    """A change outside date and seeds is still shown, not an empty 'changed' line."""
+    header = "family\tnode\tgo_id\taspect\tevidence\tnegated\tseeds\ttaxon\tdate\n"
+    old, new = tmp_path / "old.tsv", tmp_path / "new.tsv"
+    old.write_text(
+        header + "PTHR1\tPTN1\tGO:1\tF\tIBD\tfalse\tUniProtKB:A\ttaxon:\t20260528\n"
+    )
+    new.write_text(
+        header + "PTHR1\tPTN1\tGO:1\tF\tIBD\tfalse\tUniProtKB:A\ttaxon:9606\t20260528\n"
+    )
+    result = CliRunner().invoke(
+        app, ["shadow-issues", "paint-diff", str(old), str(new)]
+    )
+    assert result.output.splitlines() == [
+        "changed\tPTN1\tGO:1\tIBD\t\ttaxon taxon: -> taxon:9606"
+    ]
+
+
+def test_paint_diff_rejects_a_repeated_key(tmp_path):
+    """Two rows with one key would silently drop one, so reading the slice fails."""
+    from ai_gene_review.shadow_issues.cli import read_paint_slice
+
+    header = "family\tnode\tgo_id\taspect\tevidence\tnegated\tseeds\ttaxon\tdate\n"
+    row = "PTHR1\tPTN1\tGO:1\tF\tIBD\tfalse\tUniProtKB:A\ttaxon:{}\t20260528\n"
+    path = tmp_path / "dup.tsv"
+    path.write_text(header + row.format("1") + row.format("2"))
+    with pytest.raises(ValueError, match="more than one row"):
+        read_paint_slice(path)
+
+
+def test_ratings_shows_only_the_last_adjudication(config, tracker_dir):
+    """A re-rating appends a ruling; the table shows the raw score and the final one."""
+    store_issue(config, tracker_dir, make_issue(), [])
+    rating = {
+        **RATING,
+        "downstream": "PARTIAL",
+        "adjudications": [
+            {
+                "dimension": "downstream",
+                "rater_value": "PARTIAL",
+                "adjudicated_value": v,
+                "adjudicator": "x",
+                "date": "2026-11-17",
+                "reason": "r",
+            }
+            for v in ("PENDING_RELEASE", "AGREE")
+        ],
+    }
+    (tracker_dir / "101" / "rating.yaml").write_text(yaml.safe_dump(rating))
+    (tracker_dir / "101" / "report.md").write_text("# r\n")
+    result = CliRunner().invoke(
+        app, ["shadow-issues", "ratings", "example", "--root", str(tracker_dir.parent)]
+    )
+    assert "| PARTIAL → AGREE* |" in result.output, result.output
+    assert "PENDING_RELEASE" not in result.output
 
 
 def test_committed_tracker_validates():

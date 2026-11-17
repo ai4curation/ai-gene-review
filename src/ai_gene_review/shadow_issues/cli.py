@@ -17,6 +17,7 @@ from ai_gene_review.shadow_issues.guard import find_notification_hazards
 from ai_gene_review.shadow_issues.store import (
     ISSUES_DIR,
     QUEUES,
+    effective_score,
     issue_dir,
     iter_issue_folders,
     load_issue,
@@ -249,13 +250,12 @@ def ratings_cmd(
         _, issue = load_issue(folder)
         for rating_path in ratings:
             rating = yaml.safe_load(rating_path.read_text())
-            for ruling in rating.get("adjudications", []):
-                # Show the ruling, marked, beside the score as the rater wrote it
-                # (validate checks that rater_value restates that score).
-                dimension = ruling["dimension"]
-                rating[dimension] = (
-                    f"{rating.get(dimension, '-')} → {ruling['adjudicated_value']}*"
-                )
+            for dimension in DIMENSIONS:
+                # Show the final ruling, marked, beside the score as the rater
+                # wrote it; the last adjudication of a dimension is the one that counts.
+                final = effective_score(rating, dimension)
+                if final != rating.get(dimension):
+                    rating[dimension] = f"{rating.get(dimension, '-')} → {final}*"
             row = [
                 f"{tracker} {folder.name}",
                 rating_path.stem,
@@ -272,12 +272,15 @@ def ratings_cmd(
 def agreement_cmd(
     tracker: TrackerArg = "go-annotation", root: RootOpt = ISSUES_DIR
 ) -> None:
-    """Inter-rater agreement per dimension, over issues rated more than once.
+    """Raw inter-rater agreement per dimension, over issues rated more than once.
 
     Compares the scores as the raters wrote them, not adjudicated values: the
     question is whether independent raters agree, not whether they were right.
     An issue counts for a dimension when at least two of its ratings scored it,
-    and agrees when all of those scores are equal.
+    and agrees when all of those scores are equal. This is raw agreement, not
+    chance-corrected: most scores are AGREE or NONE, so independent guesses
+    would often agree too. Report Cohen's or Fleiss' kappa once the sample is
+    large enough to estimate it.
     """
     compared: Counter[str] = Counter()
     agreed: Counter[str] = Counter()
@@ -295,21 +298,27 @@ def agreement_cmd(
             agreed[dimension] += len(set(scores)) == 1
     typer.echo(f"{tracker}: issues rated twice or more: {rated_twice}")
     typer.echo("")
-    typer.echo("| dimension | compared | agreed | agreement |")
+    typer.echo("| dimension | compared | agreed | raw agreement |")
     typer.echo("|---|---|---|---|")
     for dimension in DIMENSIONS:
         n, k = compared[dimension], agreed[dimension]
-        share = f"{100 * k // n}%" if n else "-"
+        share = f"{round(100 * k / n)}%" if n else "-"
         typer.echo(f"| {dimension} | {n} | {k} | {share} |")
 
 
 def read_paint_slice(path: Path) -> dict[tuple[str, str, str, str], dict[str, str]]:
-    """Rows of a ``<FAMILY>-paint.tsv`` slice, keyed by node, term, evidence and negation."""
+    """Rows of a ``<FAMILY>-paint.tsv`` slice, keyed by node, term, evidence and negation.
+
+    PAINT makes one assertion per key, so a repeated key is an error, not a row to drop.
+    """
+    rows: dict[tuple[str, str, str, str], dict[str, str]] = {}
     with path.open(newline="") as fh:
-        return {
-            (row["node"], row["go_id"], row["evidence"], row["negated"]): row
-            for row in csv.DictReader(fh, delimiter="\t")
-        }
+        for row in csv.DictReader(fh, delimiter="\t"):
+            key = (row["node"], row["go_id"], row["evidence"], row["negated"])
+            if key in rows:
+                raise ValueError(f"{path}: more than one row for {key}")
+            rows[key] = row
+    return rows
 
 
 @shadow_issues_app.command("paint-diff")
@@ -330,7 +339,8 @@ def paint_diff_cmd(
     earlier slice from git (``git show REV:interpro/panther/F/F-paint.tsv``) and
     the later one by re-running ``just fetch-panther-paint F`` after the pinned
     PAINT snapshot moves on. Output columns: change, node, term, evidence, NOT,
-    date (``old -> new`` when changed), and seed changes.
+    then the date of an added or removed row, or each changed column of a
+    changed row (``date old -> new``, ``seeds +added -dropped``, and so on).
     """
     before, after = read_paint_slice(old), read_paint_slice(new)
 
@@ -348,16 +358,23 @@ def paint_diff_cmd(
         elif key not in before:
             typer.echo(f"added\t{label(key)}\t{after[key]['date']}")
         elif before[key] != after[key]:
-            old_seeds = set(before[key]["seeds"].split("|"))
-            new_seeds = set(after[key]["seeds"].split("|"))
-            seeds = " ".join(
-                [f"+{s}" for s in sorted(new_seeds - old_seeds)]
-                + [f"-{s}" for s in sorted(old_seeds - new_seeds)]
-            )
-            typer.echo(
-                f"changed\t{label(key)}\t{before[key]['date']} -> {after[key]['date']}"
-                + (f"\tseeds {seeds}" if seeds else "")
-            )
+            changes = []
+            for column in after[key]:
+                was, now = before[key].get(column, ""), after[key][column]
+                if was == now:
+                    continue
+                if column == "seeds":
+                    old_seeds, new_seeds = set(was.split("|")), set(now.split("|"))
+                    changes.append(
+                        "seeds "
+                        + " ".join(
+                            [f"+{s}" for s in sorted(new_seeds - old_seeds)]
+                            + [f"-{s}" for s in sorted(old_seeds - new_seeds)]
+                        )
+                    )
+                else:
+                    changes.append(f"{column} {was} -> {now}")
+            typer.echo("\t".join(["changed", label(key), *changes]))
 
 
 def diff_covers(path: str, diff_text: str) -> bool:
@@ -428,30 +445,40 @@ def evidence_problems(issue: dict[str, Any]) -> list[str]:
     """Downstream evidence must say when it was checked and which release it saw.
 
     >>> evidence_problems({"resolution": {"evidence": [{"kind": "GOA_DIFF", "ref": "QuickGO"}]}})
-    ['GOA_DIFF evidence QuickGO needs checked_at', 'GOA_DIFF evidence QuickGO needs source_release_date']
+    ... # doctest: +NORMALIZE_WHITESPACE
+    ['GOA_DIFF evidence QuickGO needs checked_at',
+     'GOA_DIFF evidence QuickGO needs source_release',
+     'GOA_DIFF evidence QuickGO needs source_release_date']
     """
     problems = []
     for item in (issue.get("resolution") or {}).get("evidence") or []:
         if item["kind"] not in DOWNSTREAM_EVIDENCE:
             continue
-        for field in ("checked_at", "source_release_date"):
+        for field in ("checked_at", "source_release", "source_release_date"):
             if not item.get(field):
                 problems.append(f"{item['kind']} evidence {item['ref']} needs {field}")
     return problems
 
 
 @cache
-def dimension_values(dimension: str) -> frozenset[str]:
-    """The permissible values of a ShadowRating dimension, from its enum in the schema.
+def dimension_values() -> dict[str, frozenset[str]]:
+    """The permissible values of each ShadowRating dimension, from its enum in the schema.
 
-    >>> "PENDING_RELEASE" in dimension_values("downstream"), "PENDING_RELEASE" in dimension_values("actions")
+    >>> values = dimension_values()
+    >>> "PENDING_RELEASE" in values["downstream"], "PENDING_RELEASE" in values["actions"]
     (True, False)
     """
     from linkml_runtime.utils.schemaview import SchemaView
 
     view = SchemaView(str(SCHEMA))
-    enum = view.get_enum(view.induced_slot(dimension, "ShadowRating").range)
-    return frozenset(enum.permissible_values)
+    return {
+        dimension: frozenset(
+            view.get_enum(
+                view.induced_slot(dimension, "ShadowRating").range
+            ).permissible_values
+        )
+        for dimension in DIMENSIONS
+    }
 
 
 def adjudication_problems(rating: dict[str, Any]) -> list[str]:
@@ -466,7 +493,7 @@ def adjudication_problems(rating: dict[str, Any]) -> list[str]:
         dimension = ruling.get("dimension")
         if dimension not in DIMENSIONS:
             continue  # the schema's RatingDimensionEnum already reports it
-        allowed = dimension_values(dimension)
+        allowed = dimension_values()[dimension]
         for field in ("rater_value", "adjudicated_value"):
             if ruling.get(field) not in allowed:
                 problems.append(

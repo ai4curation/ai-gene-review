@@ -101,9 +101,11 @@ why), and `just shadow-ratings` shows it as `rater → adjudicated*`.
 `rating.yaml` files. An issue rated once waits in `needs_second_rating`; the
 rater workflow takes it when the other queues are empty and writes
 `rating-second.yaml` without reading the first rating.
-`ai-gene-review shadow-issues agreement` reports inter-rater agreement per
+`ai-gene-review shadow-issues agreement` reports raw inter-rater agreement per
 dimension over the issues rated more than once, on the scores as the raters
-wrote them.
+wrote them. Raw agreement overstates reliability, because most scores are
+`AGREE` or `NONE`; once the sample is large enough, report Cohen's kappa (two
+raters) or Fleiss' kappa (more) alongside it.
 
 Throughput is one shadowed issue a day and one rating a day. Only issues that
 have been shadowed can be rated, so the 837 closed backfilled issues are rated

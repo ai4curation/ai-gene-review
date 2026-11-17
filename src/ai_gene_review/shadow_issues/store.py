@@ -442,7 +442,7 @@ def effective_score(rating: dict[str, Any], dimension: str) -> str | None:
     """
     score = rating.get(dimension)
     for ruling in rating.get("adjudications") or []:
-        if ruling["dimension"] == dimension:
+        if ruling.get("dimension") == dimension:
             score = ruling["adjudicated_value"]
     return score
 
@@ -485,7 +485,9 @@ def queue_for(
     ratings = rating_files(folder)
     if not ratings or ratings[0].name != "rating.yaml":
         return "needs_rating"
-    primary = yaml.safe_load(ratings[0].read_text())
+    primary = (
+        yaml.safe_load(ratings[0].read_text()) or {}
+    )  # validate reports a bad file
     if effective_score(primary, "downstream") == "PENDING_RELEASE":
         return "pending_release"
     if len(ratings) == 1:
