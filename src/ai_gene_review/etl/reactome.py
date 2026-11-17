@@ -8,6 +8,8 @@ from typing import Optional
 import requests
 import yaml
 
+PARTICIPANTS_HEADING = "## Participants"
+
 
 @dataclass
 class ReactomePathway:
@@ -71,7 +73,7 @@ class ReactomePathway:
         if self.participants:
             lines = "\n".join(f"- {name}" for name in self.participants)
             body_parts.append(
-                "\n## Participants\n\n"
+                f"\n{PARTICIPANTS_HEADING}\n\n"
                 "Reference entities of all participants, including members of "
                 "complexes and sets (Reactome ContentService).\n\n"
                 f"{lines}\n"
@@ -257,7 +259,7 @@ def cache_reactome_pathway(
     reactome_id: str,
     output_dir: Path = Path("reactome"),
     force: bool = False,
-    include_participants: bool = False,
+    include_participants: Optional[bool] = None,
 ) -> bool:
     """Cache a single Reactome pathway to the filesystem.
 
@@ -266,7 +268,10 @@ def cache_reactome_pathway(
         output_dir: Directory to save cached pathway
         force: Force re-download even if already cached
         include_participants: Also cache the participants' reference
-            entities, for events where a review depends on who takes part
+            entities, for events where a review depends on who takes part.
+            Left unset, an entry that already has a Participants section
+            keeps one, so a forced re-download cannot silently drop text
+            that reviews quote.
 
     Returns:
         True if successfully cached, False otherwise
@@ -288,6 +293,11 @@ def cache_reactome_pathway(
     if output_file.exists() and not force:
         print(f"Reactome {reactome_id} already cached (use force=True to re-download)")
         return True
+
+    if include_participants is None:
+        include_participants = (
+            output_file.exists() and PARTICIPANTS_HEADING in output_file.read_text()
+        )
 
     # Fetch pathway data
     print(f"Fetching Reactome {reactome_id}...")
