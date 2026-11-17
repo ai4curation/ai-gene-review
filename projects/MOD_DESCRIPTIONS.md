@@ -24,15 +24,15 @@ deep-research source, scores it against our review, and acts on what it finds.
 
 | | Worm (WormBase) | Yeast (SGD) | Fly (FlyBase) |
 |---|---|---|---|
-| Genes reviewed (at the time of each run) | 452 | 890 | 539 |
-| With a curated MOD description | 385 (85%) | 890 (100%) | 345 (64%) |
+| Genes reviewed (at the time of each run) | 452 | 890 | 539 (+8 new reviews) |
+| With a curated MOD description | 385 (85%) | 890 (100%) | 345 (64%) (+8) |
 | Median MOD text length (words) | 75 | 33 | 37 |
 | MOD text correctness, 1-5 (UniProt) | 4.2 (4.5) | 4.8 (4.6) | 4.7 (4.6) |
-| Description-text defects recorded (MOD + UniProt) | 131 (90 + 41) | 92 (47 + 45) | 75 (39 + 36) |
-| Of which cite a quoted paper as evidence | 121 | 84 | 72 |
-| Of which recorded as `CONFIRMED` | 50 | 40 | 27 |
+| Description-text defects recorded (MOD + UniProt) | 131 (90 + 41) | 92 (47 + 45) | 85 (43 + 42) |
+| Of which cite a quoted paper as evidence | 121 | 84 | 82 |
+| Of which recorded as `CONFIRMED` | 50 | 40 | 32 |
 | Reviews edited in the follow-up | about 60 | 249 | 124 |
-| NEW annotation rows | 1 | 2 | 1 |
+| NEW annotation rows | 1 | 2 | 1 (+2 in new reviews) |
 
 What we learned:
 
@@ -44,9 +44,9 @@ What we learned:
   FlyBase score above UniProt on correctness; WormBase scores below it. UniProt is
   often the more informative source, especially for fly.
 - **Most errors are stale, transferred or copied text, in both MOD and UniProt
-  descriptions.** There are 298 recorded defects, 176 in MOD text and 122 in UniProt
-  text: 195 wrong or outdated statements, 102 omissions and one wrong citation. 277 cite
-  a quoted paper as evidence, and 117 carry the reviewer's `CONFIRMED` confidence (the
+  descriptions.** There are 308 recorded defects, 180 in MOD text and 128 in UniProt
+  text: 204 wrong or outdated statements, 103 omissions and one wrong citation. 287 cite
+  a quoted paper as evidence, and 122 carry the reviewer's `CONFIRMED` confidence (the
   rest are `PROBABLE`, apart from one `SUSPECTED`); the two measures do not coincide. Typical cases are a claim later
   overturned (FlyBase says amon cleaves Slit; Tolkin is the Slit protease), text carried
   over from another species (UniProt gives fly SCAP the mammalian sterol-sensing
@@ -58,10 +58,12 @@ What we learned:
   counts the `WRONG_STATEMENT`, `OUTDATED_STATEMENT` and `MISSING_STATEMENT` defects
   (plus one worm `WRONG_REFERENCE`) on the cited MOD and UniProt files in `genes/worm`,
   `genes/yeast` and `genes/DROME`, and writes them with their quotes and evidence to
-  [defect-tally.yaml](MOD_DESCRIPTIONS/defect-tally.yaml) (as of 2026-11-16). Other source
+  [defect-tally.yaml](MOD_DESCRIPTIONS/defect-tally.yaml) (as of 2026-11-17). Other source
   defects in those folders, mostly on GO annotations, are left out. The total was 262 on
-  2026-11-02; reviews merged by 2026-11-15 added 10, and the nine new worm reviews of
-  2026-11-16 added 26 (see [More worm genes](#more-worm-genes-2026-11-16)).
+  2026-11-02; reviews merged by 2026-11-15 added 10, the nine new worm reviews of
+  2026-11-16 added 26 (see [More worm genes](#more-worm-genes-2026-11-16)), and the eight
+  new fly reviews added 10 (see
+  [Fly: new reviews](#fly-new-reviews-of-genes-with-non-duplicative-iba-rows)).
 - **Gaps rarely become annotations.** 794 gap and discrepancy findings produced 3
   NEW rows (yeast MIH1 and HOG1, fly Tango5); the fourth, worm fshr-1, came from the
   hand comparison. Most gaps are mutant phenotypes, which show that the gene is needed,
@@ -562,6 +564,86 @@ each other only.
     orthologs (ey given PAX4, tin given NKX2-2), in
     [alliance-automated-regressions](MOD_DESCRIPTIONS/alliance-automated-regressions.md).
 
+## Fly: new reviews of genes with non-duplicative IBA rows
+
+The earlier runs scored MOD text against reviews that already existed. This batch
+(2026-11-16) used the FlyBase description as the deep-research source for eight **new**
+reviews. No Falcon or Perplexity report was run; the reviewers' own literature reading
+filled the gaps. The batch tests two things at once: the FlyBase text, and the IBA
+(PAINT) rows that nothing else on the gene already asserts.
+
+- **Selection.** [iba_novel_candidates.py](MOD_DESCRIPTIONS/iba_novel_candidates.py)
+  reads the FlyBase GAF from the GO Consortium and `go-basic.obo`. It lists unreviewed
+  genes with an IBA row that no other annotation covers, either by the same term or a
+  more specific one, of any evidence code. There are 5,755 such genes. With at least two
+  such rows and ten experimental PMIDs, 185 remain. Eight of these, all with a FlyBase
+  description, were chosen for a substantive IBA molecular-function call. The other 177
+  are the worklist for later batches, in
+  [fly-iba-novel-candidates.yaml](MOD_DESCRIPTIONS/fly-iba-novel-candidates.yaml). That
+  list does not check whether FlyBase text exists.
+- **Method.** Reviews followed the standard workflow: `just mod-description-deep-research`,
+  a `reference_review` and any `source_defects` on the FlyBase file, a scored
+  descriptions sidecar, and a history record. Four parallel agents reviewed two genes
+  each, and all eight reviews pass `just validate` in the merged branch.
+
+| Gene | Non-duplicative IBA rows: verdict | FlyBase text | Description defects |
+|---|---|---|---|
+| puc | 5: 4 ACCEPT, 1 non-core (MAPK Tyr phosphatase names half the reaction) | DISPUTED | FlyBase: "serine/threonine" phosphatase; Puc is a dual-specificity MKP (CONFIRMED) |
+| Pka-R1 | 5: all ACCEPT (cAMP binding, PKA inhibitor, C-subunit binding) | DISPUTED | FlyBase: actin/microtubule and NMJ/molting/ethanol sentences (2, PROBABLE); UniProt: no FUNCTION text (MISSING) |
+| Atg18a | 7: 3 ACCEPT, 2 non-core, 1 MODIFY (term now obsolete), 1 over-annotated (nucleophagy, yeast-only) | UNVERIFIED | none |
+| Syt1 | 6: 4 ACCEPT, plasma membrane over-annotated (seeded by Syt4/Syt7/Syt-alpha), dense core granule UNDECIDED | VERIFIED | UniProt: "may have a regulatory role" (OUTDATED, CONFIRMED) |
+| tim | 5: 4 REMOVE, DNA binding over-annotated | DISPUTED | FlyBase: "DNA replication" (PROBABLE) |
+| Sirt1 | 9: 5 ACCEPT (H3K9/H3K14/H4K16 deacetylase, corepressor), 1 non-core, 2 over-annotated, 1 REMOVE (subtelomeric heterochromatin) | VERIFIED | UniProt: PEV direction inverted, Polycomb sentence inverted (CONFIRMED); ex10-allele phenotypes (OUTDATED) |
+| mei-9 | 6: 3 ACCEPT (NEF1 complex, ICL repair, 3'-flap endonuclease), 1 non-core, 2 over-annotated | VERIFIED | UniProt: meiotic mismatch repair (OUTDATED) |
+| Fadd | 4: caspase binding ACCEPT; death receptor binding and CD95 DISC REMOVE; extrinsic apoptosis over-annotated | VERIFIED | none |
+
+What the batch showed:
+
+- **About two-thirds of non-duplicative IBA rows hold.** Of 47 rows, 31 are kept: 25
+  ACCEPT, 5 KEEP_AS_NON_CORE, and 1 MODIFY to the replacement of an obsoleted term.
+  The other 16 are not: 8 MARK_AS_OVER_ANNOTATED, 7 REMOVE, 1 UNDECIDED. The failures
+  cluster where the PAINT node sits above a lineage-specific function:
+  - **tim:** all five replication-fork IBDs sit at the eukaryote root of PTHR22940
+    (PTN000533813), above the metazoan tim/timeout duplication (PTN008585095). PAINT
+    records no loss on the insect TIM clade, but timeout is the paralog needed for
+    chromosome integrity (PMID:20153199), and mammals have lost the tim1-type gene
+    (PMID:17065608).
+  - **Fadd:** vertebrate death-receptor biology. Flies have no CD95, and the fly TNF
+    receptors lack a death domain.
+  - **Sirt1:** yeast Sir2 heterochromatin terms.
+  - **Atg18a:** the yeast-only nucleophagy term.
+  - **Syt1:** a family-level plasma membrane node seeded by other synaptotagmins.
+
+  Each failed row suggests a PAINT change, a loss or a node move, that is worth raising
+  upstream.
+- **FlyBase text was right in 4 of 8 cases and compact in all**: correctness 4.0, utility
+  3.2, compactness 5.0, completeness 2.5, specificity 3.1, for 18–34 words. These are
+  lower than the 4.7 correctness of the earlier fly run, which scored mostly
+  well-reviewed genes. The tim case points to a new failure mode: FlyBase's "DNA
+  replication" claim traces to no paper and seems to restate the IBA rows that the
+  review rejects. Hand-written MOD text can therefore echo the computational
+  annotations under test, so it is no independent check on them.
+- **The automated text is weaker on these genes** (correctness 3.2, against 4.3 for the
+  earlier run). It leads with IBA terms; for example, "Predicted to enable DNA binding
+  activity" opens the tim text. Concordance across sources is 3.6, against 4.34. The
+  sidecars hold 31 findings: 14 discrepancies, 13 gaps and 4 insights.
+- **NEW rows remain rare.** There are 2 in eight reviews, both direct assays: Atg18a at
+  the phagophore assembly site (IDA, PMID:24374083), and Fadd protein-macromolecule
+  adaptor activity, bridging dSTING to Dredd (IDA, PMID:41904322).
+- **Tooling problems seen in this run.**
+  - On 2026-11-16, QuickGO returned HTTP 500 for every request that included
+    `includeFields=taxonName`. `fetch_goa_data` (`src/ai_gene_review/etl/gene.py`)
+    treats a first-page error as "no annotations", so `just fetch-gene` wrote header-only
+    GOA files without failing. Its docstring says it raises `ValueError`. The reviewers
+    re-fetched with that one field dropped and the taxon name filled from taxon 7227.
+    `fetch-gene` should fail loudly, or retry without the field.
+  - For puc, the default accession choice picked A0A0B4LHX7, the first UniProt search
+    hit, which has no GOA rows; Q9VHV8 carries the annotations. For genes with only
+    unreviewed entries, check that the fetched accession is the one with the GOA rows.
+    Atg18a resolved correctly to M9PER1, which carries all 31 rows; Q9VSF0 has 13.
+  - QuickGO already serves GO:0034045 as obsolete with replacement GO:7770114
+    phagophore membrane, which the `go-basic.obo` release does not yet have.
+
 ## Mouse (MGI): not used
 
 MGI's `MOD_provided_gene_description` is a summary of mutant phenotypes, not a
@@ -622,4 +704,8 @@ descriptions fetcher would have asked the Alliance API for `MGI:MGI:106913`.
 - [x] Yeast: score descriptions (890 COMPLETE)
 - [x] Yeast: act on gap and discrepancy findings (89 source defects, 249 reviews edited)
 - [x] Fly: fetch, score and act on findings (345 FlyBase files, 73 source defects, 124 reviews edited)
+- [x] Fly: 8 new reviews of genes with non-duplicative IBA rows, using FlyBase text as the deep-research source (47 IBA rows judged, 10 source defects)
+- [ ] Fly: continue with [fly-iba-novel-candidates.yaml](MOD_DESCRIPTIONS/fly-iba-novel-candidates.yaml) (177 genes)
+- [ ] Raise the tim, Fadd and Sirt1 PAINT over-propagations with PANTHER/PAINT curators
+- [ ] Make `fetch-gene` fail (or retry) when QuickGO errors, instead of writing an empty GOA file
 - [x] Mouse (MGI): sampled and not used, because the note is a phenotype summary; rat (RGD) has only automated text; zebrafish and frog have none

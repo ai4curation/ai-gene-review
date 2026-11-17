@@ -77,6 +77,13 @@ lint-caches:
 fix-caches:
 	uv run python -m ai_gene_review.tools.cache_lint --fix
 
+# Report the terms the committed term-validator cache cannot answer offline
+# (cache misses need the ontology service, so an outage can hit them; #5731).
+# Pass files or directories; add --check to exit 1 on a miss, --warm to fill the
+# cache online first (then review, `just lint-caches` and commit cache/).
+ontology-cache-coverage *args:
+	uv run python -m ai_gene_review.tools.ontology_cache_coverage {{args}}
+
 # Exercise the DISMECH_METABOLIC_ALIGNMENT page generator's refusals: each case breaks one
 # thing in a copy of the committed reports and checks the generator refuses with the message
 # it declares, or still renders with the clause it declares.

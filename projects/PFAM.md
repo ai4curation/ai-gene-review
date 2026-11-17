@@ -1,5 +1,6 @@
 ---
 title: "Pfam → GO Mapping: A Precision Gap-Filling Experiment"
+collections: [MAPPINGS]
 maturity: MATURE
 tags: [PIPELINE, EVALUATION]
 sidecars:

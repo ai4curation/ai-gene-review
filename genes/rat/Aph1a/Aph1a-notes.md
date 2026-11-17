@@ -25,3 +25,8 @@
 The core function listed only ER membrane, which is where the complex assembles. The rat-brain fractionation (PMID:20126630) puts gamma-secretase activity mainly with the early endosome marker syntaxin 13 and partly with the plasma membrane marker N-cadherin, so the core locations are now early endosome and plasma membrane, and the early endosome IDA row is ACCEPT.
 
 The plasma membrane ISO row now also moves from KEEP_AS_NON_CORE to ACCEPT, so its reason agrees with the core function, which names plasma membrane as a location.
+
+## ND re-check (2026-11-15)
+
+- PubMed searched 2026-11-15 through E-utilities: (Aph1a OR "Aph-1a" OR "APH-1A" OR "Aph-1alpha") AND (rat OR rats OR Rattus), All Fields: 13 hits. The rat material is co-immunoprecipitation of APH-1 with nicastrin and presenilin from rat brain (PMID:12297508; its abstract places the co-IP in human cell lines and rat brain and does not name the cells used for its siRNA experiments, and the full text could not be retrieved here), Aph-1 binding Jagged-1 in rat embryo microsomes (PMID:20145246), detection of APH1a in rat sympathetic neurons (PMID:37031474), and subcellular fractionation of rat brain (PMID:20126630), which places Aph-1 and gamma-secretase activity in synaptic and endosomal compartments: a location result, from which RGD made only CC annotations; PMID:16249316 and PMID:16718279 concern Aph-1b, and the rest use human or other cells.
+- No paper on rat Aph1a identifies a biological process of the protein; the gamma-secretase process rows rest on human and mouse work and are carried here by ISO/IEA. The BP ND row therefore follows the evidence-code guideline and is ACCEPT with nd_case INFERABLE (projects/NO_DATA.md), replacing the earlier REMOVE.

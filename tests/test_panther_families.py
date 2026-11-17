@@ -222,7 +222,7 @@ def test_rewrite_panther_labels_defers_divergent_labels():
     text = "  term:\n    id: PANTHER:PTHR1\n    label: SUCCINATE DEHYDROGENASE\n"
     new, changes, deferred = rewrite_panther_labels(text, NAMES)
     assert changes == []
-    assert deferred == [("PANTHER:PTHR1", "SUCCINATE DEHYDROGENASE", "REAL NAME")]
+    assert deferred == [("PANTHER:PTHR1", "SUCCINATE DEHYDROGENASE", "REAL NAME", "divergent")]
     assert new == text
 
 
@@ -469,3 +469,37 @@ def test_repo_member_overrides_are_reflected_in_index():
         if accession in index:
             assert index[accession] == family_sf, accession
             assert accession not in alternates, accession
+
+
+def test_previous_release_differs_from_the_pinned_release():
+    """During a switch the allowance compares two releases; equal ones would make it a no-op."""
+    from ai_gene_review.etl.panther_families import PANTHER_PREVIOUS_RELEASE, PANTHER_RELEASE
+    assert PANTHER_PREVIOUS_RELEASE != PANTHER_RELEASE
+
+
+def test_rewrite_holds_back_previous_release_names_even_with_allow_divergent():
+    """During a switch a label carrying the previous release's name is remapped, not relabelled."""
+    from ai_gene_review.etl.panther_families import rewrite_panther_labels
+    names = {"PANTHER:PTHR1:SF3": "HELICASE AND POLYMERASE-CONTAINING PROTEIN TEBICHI",
+             "PANTHER:PTHR1:SF4": "NEW COSMETIC NAME"}
+    previous = {"PANTHER:PTHR1:SF3": "DNA POLYMERASE NU", "PANTHER:PTHR1:SF4": "NEW COSMETIC NAME"}
+    text = (
+        "- term:\n    id: PANTHER:PTHR1:SF3\n    label: DNA POLYMERASE NU\n"
+        "- term:\n    id: PANTHER:PTHR1:SF4\n    label: NEW COSMETIC NAMES\n"
+    )
+    new, applied, deferred = rewrite_panther_labels(
+        text, names, allow_divergent=True, previous_names=previous)
+    assert [(d.curie, d.reason) for d in deferred] == [("PANTHER:PTHR1:SF3", "renamed_in_switch")]
+    assert [c for c, _, _ in applied] == ["PANTHER:PTHR1:SF4"]
+    assert "label: DNA POLYMERASE NU" in new
+
+
+def test_rewrite_holds_back_any_label_on_an_id_renamed_in_the_switch():
+    """A cosmetic variant of the previous name is held too: the id itself changed."""
+    from ai_gene_review.etl.panther_families import rewrite_panther_labels
+    names = {"PANTHER:PTHR1:SF3": "IRON-SULFUR CLUSTER ASSEMBLY PROTEIN SUFA"}
+    previous = {"PANTHER:PTHR1:SF3": "PROTEIN SUFA"}
+    text = "- term:\n    id: PANTHER:PTHR1:SF3\n    label: Protein SufA\n"
+    new, applied, deferred = rewrite_panther_labels(text, names, previous_names=previous)
+    assert applied == [] and new == text
+    assert [(d.curie, d.reason) for d in deferred] == [("PANTHER:PTHR1:SF3", "renamed_in_switch")]

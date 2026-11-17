@@ -1,5 +1,6 @@
 ---
 title: "KW-1110 (Inhibition of host TRAFs by virus) — KW2GO remapping"
+collections: [MAPPINGS]
 maturity: COMPLETE
 tags: [PIPELINE, OBSOLETION]
 manifest:
