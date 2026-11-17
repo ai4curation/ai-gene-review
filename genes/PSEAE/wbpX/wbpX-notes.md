@@ -214,3 +214,14 @@ would be single residues rather than stretches, which fits WbpY as a possible
 source without showing it is one. The wbpY question is sharpened accordingly, and
 WbpX's exclusivity is now recorded as the reason the polymer is as pure as it is
 rather than as a bare specificity fact.
+
+*What the benzyl scoping does and does not cover (2026-11-17).* The correction
+above scopes the α1-2/α1-3 **linkage** assignment to the benzyl acceptor, which
+is right. It does not scope WbpX's sequential multi-residue addition, and the
+review's description had been reading it that way. The paper shows that result
+on the near-native acceptor: given the isolated WbpY product on
+phenylundecyl-diphosphate, [PMID:35166992 "Four different products resulted,
+showing the sequential addition of 4 D-Rha residues"]. That is the evidence
+behind reading WbpX as the chain-extending enzyme of the pair, so confining it
+to the artificial acceptor would have undercut the review's own position. Only
+the linkage resolution depends on the benzyl acceptor.
