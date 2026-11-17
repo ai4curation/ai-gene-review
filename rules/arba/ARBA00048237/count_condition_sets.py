@@ -97,6 +97,29 @@ def reviewed(query: str) -> list[dict]:
     return out
 
 
+def set1_family_check() -> dict[str, int]:
+    """Counts behind the set 1 PANTHER and family-condition argument.
+
+    Set 1 matches that lack the fungal FAS family signature IPR050830, how many
+    of those are fungal, how many of the fungal ones PANTHER assigns to
+    PTHR11712:SF336, and what requiring IPR050830 in set 1 would remove.
+    """
+    set1 = "(" + " AND ".join(SETS[1]) + ")"
+    no_fam = f"{set1} NOT xref:interpro-IPR050830"
+    fungi = LINEAGES["Fungi"]
+    other = LINEAGES["Eukaryota_not_Fungi"]
+    return {
+        "set 1 matches": count(set1),
+        "set 1 without IPR050830": count(no_fam),
+        "set 1 without IPR050830, Fungi": count(f"{no_fam} AND {fungi}"),
+        "set 1 without IPR050830, Fungi, PTHR11712:SF336": count(
+            f'{no_fam} AND {fungi} AND xref:"panther-PTHR11712:SF336"'
+        ),
+        "set 1 without IPR050830, other eukaryotes": count(f"{no_fam} AND {other}"),
+        "set 1, other eukaryotes": count(f"{set1} AND {other}"),
+    }
+
+
 def main() -> None:
     """Query every set and write counts.json."""
     release = None
@@ -128,7 +151,9 @@ def main() -> None:
         lin = [t.split(" (")[0] for t in rec["Taxonomic lineage"].split(", ")]
         rec["lineage"] = " > ".join(lin[2:4])
         non_fungal.append({k: rec[k] for k in ("Entry", "Organism", "lineage", "Protein names", "PANTHER", "Length")})
-    out = {"uniprot_release": release, "retrieved": time.strftime("%Y-%m-%d"), "sets": results, "union": union_row, "non_fungal": non_fungal}
+    family_check = set1_family_check()
+    print(f"set 1 family check: {family_check}")
+    out = {"family_check": family_check, "uniprot_release": release, "retrieved": time.strftime("%Y-%m-%d"), "sets": results, "union": union_row, "non_fungal": non_fungal}
     Path(__file__).with_name("counts.json").write_text(json.dumps(out, indent=1) + "\n")
     print("release:", release)
     write_results(out)
@@ -165,6 +190,8 @@ def write_results(out: dict) -> None:
                 continue
             seen.add(r["accession"])
             lines.append(f"- {r['accession']} {r['organism']}: {r['name']} (EC {', '.join(r['ec'])})")
+    lines += ["", "Set 1 and the fungal FAS family signature IPR050830 (`set1_family_check`):", ""]
+    lines += [f"- {k}: {v}" for k, v in out["family_check"].items()]
     lines += ["", "Matches outside Fungi (any set):", "",
               "| Accession | Organism | Lineage | Protein name | PANTHER | Length |", "|---|---|---|---|---|---:|"]
     for r in out.get("non_fungal", []):

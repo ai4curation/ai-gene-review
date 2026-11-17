@@ -45,6 +45,15 @@ Reviewed matches and their EC numbers:
 - P34229 Yarrowia lipolytica (strain CLIB 122 / E 150): Fatty acid synthase subunit beta (EC 2.3.1.86)
 - Q9UUG0 Schizosaccharomyces pombe (strain 972 / ATCC 24843): Fatty acid synthase subunit beta (EC 2.3.1.86)
 
+Set 1 and the fungal FAS family signature IPR050830 (`set1_family_check`):
+
+- set 1 matches: 1730
+- set 1 without IPR050830: 113
+- set 1 without IPR050830, Fungi: 100
+- set 1 without IPR050830, Fungi, PTHR11712:SF336: 82
+- set 1 without IPR050830, other eukaryotes: 13
+- set 1, other eukaryotes: 71
+
 Matches outside Fungi (any set):
 
 | Accession | Organism | Lineage | Protein name | PANTHER | Length |
