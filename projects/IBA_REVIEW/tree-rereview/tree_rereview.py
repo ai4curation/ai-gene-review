@@ -32,6 +32,7 @@ Usage (from the repository root):
     uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py status
     uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py worklist        # needs-curator.yaml
     uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py requote         # complete the quotes of applied rows
+    uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py references      # list quoted tree files under references
 """
 
 from __future__ import annotations
@@ -55,7 +56,14 @@ import yaml
 
 from ai_gene_review.etl.gene_phylo import read_iba_rows, read_paint_slice, resolve_seed
 from ai_gene_review.etl.panther_release import DEFAULT_DB, PantherRelease
-from ai_gene_review.tools.review_row_edit import RowEdit, RowEditError, alias_count, apply_row_edits, one_paragraph
+from ai_gene_review.tools.review_row_edit import (
+    RowEdit,
+    RowEditError,
+    add_reference,
+    alias_count,
+    apply_row_edits,
+    one_paragraph,
+)
 from ai_gene_review.validation.family_residue_validator import PLACEMENT_DISPUTES, TREE_LISTING_SUFFIXES
 from ai_gene_review.validation.tree_evidence import (
     OVERRULING_ACTIONS,
@@ -276,10 +284,9 @@ def _seed_line(seed: dict[str, Any], names: dict[str, str]) -> str:
     parts.append(relation)
     if "mrca" in seed:
         parts.append(f"joins the gene at {seed['mrca']} ({seed.get('mrca_event', '').lower()})")
-    if seed.get("duplications_between"):
-        parts.append(f"{seed['duplications_between']} duplications between")
-    if seed.get("transfers_between"):
-        parts.append(f"{seed['transfers_between']} horizontal-transfer nodes between")
+    for key, noun in (("duplications_between", "duplication"), ("transfers_between", "horizontal-transfer node")):
+        if seed.get(key):
+            parts.append(f"{seed[key]} {noun}{'' if seed[key] == 1 else 's'} between")
     if "identity" in seed:
         text = f"identity {round(seed['identity'] * 100)}% over {seed.get('aligned', '?')} columns"
         if "covers_target" in seed and "covers_seed" in seed:
@@ -703,6 +710,40 @@ def quote_source(row: dict[str, Any]) -> tuple[str, str, str] | None:
     return in_extract[1]["summary"], extract_path.read_text(encoding="utf-8"), f"file:{organism}/{name}/{name}-phylo.yaml"
 
 
+def tree_reference(unit: str, release_name: str = "19.0") -> tuple[str, str]:
+    """Reference id and title of a gene's tree extract or a family's node listing.
+
+    >>> tree_reference("human/CIRBP")
+    ('file:human/CIRBP/CIRBP-phylo.yaml', 'Placement of the IBA rows of CIRBP in the PANTHER 19.0 tree and family alignment')
+    >>> tree_reference("PTHR48034")
+    ('file:interpro/panther/PTHR48034/PTHR48034-tree-nodes.yaml', 'Nodes of the PTHR48034 PAINT slice in the PANTHER 19.0 tree')
+    """
+    if "/" in unit:
+        organism, name = unit.split("/")
+        return (
+            f"file:{organism}/{name}/{name}-phylo.yaml",
+            f"Placement of the IBA rows of {name} in the PANTHER {release_name} tree and family alignment",
+        )
+    return (
+        f"file:interpro/panther/{unit}/{unit}-tree-nodes.yaml",
+        f"Nodes of the {unit} PAINT slice in the PANTHER {release_name} tree",
+    )
+
+
+def tree_file_of(unit: str) -> Path:
+    """The tree extract of a gene or the node listing of a family."""
+    return gene_paths(unit)[1] if "/" in unit else family_paths(unit)[1]
+
+
+def with_tree_reference(text: str, unit: str) -> str:
+    """``text`` with the unit's tree file listed under ``references``; unchanged when that cannot be placed."""
+    release_name = str((load(tree_file_of(unit)) or {}).get("panther_release") or "19.0")
+    try:
+        return add_reference(text, *tree_reference(unit, release_name))
+    except RowEditError:
+        return text
+
+
 def matching_rows(document: dict[str, Any], row: dict[str, Any]) -> list[dict[str, Any]]:
     """The rows of a review that an edit for ``row`` would reach.
 
@@ -982,7 +1023,7 @@ def history_details(unit: str, rows: list[dict[str, Any]], unshared: bool = Fals
         "",
         f"Each row now quotes {source} in supported_by; the quotes were assembled from the "
         "file's sentences by projects/IBA_REVIEW/tree-rereview/tree_rereview.py and checked "
-        "verbatim. The review validates after the edit.",
+        "verbatim. The file is listed under references. The review validates after the edit.",
     ]
     if unshared:
         lines += ["", UNSHARED]
@@ -1038,7 +1079,7 @@ def apply_batch(batch: str, jobs: int = 4, pr: str = "") -> Counter[str]:
             if row.get("verifier") and not row["verifier"]["agrees"]:
                 row["outcome_detail"] = CORRECTED_BY_VERIFIER
         if text != originals[gene]:
-            review_path.write_text(text, encoding="utf-8")
+            review_path.write_text(with_tree_reference(text, gene), encoding="utf-8")
     changed = [gene for gene, rows in by_gene.items() if any(row["outcome"] == "applied" for row in rows)]
     with ThreadPoolExecutor(max_workers=jobs) as pool:
         results = dict(zip(changed, pool.map(lambda gene: validate(review_path_of(gene)), changed)))
@@ -1060,6 +1101,72 @@ def apply_batch(batch: str, jobs: int = 4, pr: str = "") -> Counter[str]:
     if not valid:
         raise SystemExit(f"history records of batch {batch} do not validate:\n{output}")
     return Counter(row["outcome"] for row in record["rows"])
+
+
+def cites(value: Any, reference: str) -> bool:
+    """True when any ``reference_id`` inside ``value`` is ``reference``.
+
+    >>> cites({"a": [{"supported_by": [{"reference_id": "file:x", "supporting_text": "t"}]}]}, "file:x")
+    True
+    >>> cites({"references": [{"id": "file:x"}]}, "file:x")
+    False
+    """
+    if isinstance(value, dict):
+        return value.get("reference_id") == reference or any(cites(item, reference) for item in value.values())
+    if isinstance(value, list):
+        return any(cites(item, reference) for item in value)
+    return False
+
+
+def list_tree_references(pr: str = "", jobs: int = 4) -> list[str]:
+    """List under ``references`` the tree file that a review's rows quote, wherever it is not listed yet.
+
+    Reviews list the file sources they cite; the rows that quote a tree extract or node
+    listing were written before this script added the entry itself. Returns the units changed.
+    """
+    units = sorted(
+        str(path.parent.relative_to(ROOT / "genes")) for path in (ROOT / "genes").glob("*/*/*-phylo.yaml")
+    ) + sorted(path.parent.name for path in (ROOT / "interpro" / "panther").glob("*/*-tree-nodes.yaml"))
+    originals: dict[str, str] = {}
+    for unit in units:
+        review_path = review_path_of(unit)
+        if not review_path.exists():
+            continue
+        text = review_path.read_text(encoding="utf-8")
+        reference = tree_reference(unit)[0]
+        if reference not in text or not cites(yaml.load(text, Loader=Loader), reference):
+            continue
+        new = with_tree_reference(text, unit)
+        if new != text:
+            originals[unit] = text
+            review_path.write_text(new, encoding="utf-8")
+    changed = list(originals)
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
+        results = dict(zip(changed, pool.map(lambda unit: validate(review_path_of(unit)), changed)))
+    scaffolder = _new_history()
+    written: list[Path] = []
+    for unit in changed:
+        if not results[unit][0]:
+            review_path_of(unit).write_text(originals[unit], encoding="utf-8")
+            raise SystemExit(f"{unit} no longer validates with its tree file listed under references:\n{results[unit][1][-2000:]}")
+        name = tree_file_of(unit).name
+        target = (
+            ["--kind", "gene", "--organism", unit.split("/")[0], "--slug", unit.split("/")[1], "--sections", "references"]
+            if "/" in unit else
+            ["--kind", "other", "--slug", unit, "--path", f"interpro/panther/{unit}/{unit}-review.yaml", "--sections", "references"]
+        )
+        written.append(write_history(scaffolder, [
+            *target, "--event", "EDIT", "--outcome", "changed", "--agent-tool", "claude-code", *(["--pr", pr] if pr else []),
+            "--summary", "List the tree file the review quotes under references",
+            "--details", (
+                f"Rows of this review quote {name} in supported_by. The file is now listed under the top-level "
+                "references, as the other file sources the review cites are. Nothing else changed."
+            ),
+        ]))
+    valid, output = validate_history(written)
+    if not valid:
+        raise SystemExit(f"history records do not validate:\n{output}")
+    return changed
 
 
 WORKLIST = HERE / "needs-curator.yaml"
@@ -1285,9 +1392,10 @@ def main(argv: list[str] | None = None) -> int:
     done.add_argument("--pr", default="", help="pull request number or URL for the history records")
     commands.add_parser("status")
     commands.add_parser("worklist")
-    again = commands.add_parser("requote")
-    again.add_argument("--jobs", type=int, default=4)
-    again.add_argument("--pr", default="", help="pull request number or URL for the history records")
+    for name in ("requote", "references"):
+        again = commands.add_parser(name)
+        again.add_argument("--jobs", type=int, default=4)
+        again.add_argument("--pr", default="", help="pull request number or URL for the history records")
     args = parser.parse_args(argv)
 
     if args.command == "plan":
@@ -1317,6 +1425,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{WORKLIST.relative_to(ROOT)}: {made['counts']}")
     elif args.command == "requote":
         print("\n".join(requote(args.pr, args.jobs)) or "every applied row already quotes what it has to")
+    elif args.command == "references":
+        listed = list_tree_references(args.pr, args.jobs)
+        print(f"{len(listed)} reviews now list their tree file under references")
     else:
         print(status())
     return 0

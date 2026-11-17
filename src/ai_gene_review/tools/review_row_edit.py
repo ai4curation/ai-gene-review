@@ -640,6 +640,53 @@ def apply_row_edits(text: str, edits: Sequence[RowEdit]) -> str:
     return _edited(text, edits, rewrite=True)
 
 
+def _plain_or_quoted(value: str) -> str:
+    """A string as an unquoted YAML scalar when it loads back unchanged, otherwise as JSON.
+
+    >>> _plain_or_quoted("PAINT nodes of PTHR1"), _plain_or_quoted("a: b"), _plain_or_quoted("x #1")
+    ('PAINT nodes of PTHR1', '"a: b"', '"x #1"')
+    """
+    return value if value == value.strip() and _loads_to(value, value) else json.dumps(value, ensure_ascii=False)
+
+
+def add_reference(text: str, reference_id: str, title: str) -> str:
+    """Return ``text`` with ``reference_id`` listed under the top-level ``references``.
+
+    The entry (``id`` and ``title``) goes directly under the last one. A reference that is
+    already listed leaves the text as it is. Like a row edit, the result is loaded and
+    compared with the original data plus the new entry, and refused if anything else
+    differs. A document without a block-style, non-empty ``references`` list is refused.
+
+    >>> print(add_reference("references:\\n- id: PMID:1\\n  title: A paper\\n", "file:a/b.yaml", "A tree"), end="")
+    references:
+    - id: PMID:1
+      title: A paper
+    - id: file:a/b.yaml
+      title: A tree
+    """
+    data = yaml.load(text, Loader=yaml.CSafeLoader)
+    root = yaml.compose(text, Loader=yaml.CSafeLoader)
+    listed = data.get("references") if isinstance(data, dict) else None
+    if isinstance(listed, list) and any(isinstance(item, dict) and item.get("id") == reference_id for item in listed):
+        return text
+    references = _block_sequence(_fields(root).get("references"), "the top-level references list")
+    _refuse_shared(references, _shared_nodes(root), "the top-level references list")
+    pad = " " * _dash_column(text, _key(root, "references"), "the top-level references list")
+    lines = [f"{pad}- id: {_scalar_text(reference_id)}", f"{pad}  title: {_plain_or_quoted(title)}"]
+    result = _apply(text, [_insertion(text, references, lines, len(pad))])
+    try:
+        reloaded = yaml.load(result, Loader=yaml.CSafeLoader)
+    except yaml.YAMLError as error:
+        raise RowEditError(f"the edited text is not valid YAML: {error}") from error
+    expected = _unshared(data)
+    expected["references"] = [*expected["references"], {"id": reference_id, "title": title}]
+    if reloaded != expected:
+        raise RowEditError("the edited text differs from the original by more than the new reference")
+    if loads_strictly(text) and not loads_strictly(result):
+        raise RowEditError("the edited text is rejected by the YAML 1.2 loader")
+    return result
+
+
 def _edited(text: str, edits: Sequence[RowEdit], rewrite: bool) -> str:
     """Make the edits and check the result against the original data plus the changes."""
     data = yaml.load(text, Loader=yaml.CSafeLoader)

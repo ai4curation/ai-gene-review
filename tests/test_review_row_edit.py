@@ -12,6 +12,7 @@ from ai_gene_review.tools.review_row_edit import (
     RowEdit,
     RowEditError,
     _expected,
+    add_reference,
     apply_row_edits,
     block_scalar,
 )
@@ -547,3 +548,45 @@ def test_a_negated_node_assessment_gets_its_support_list_and_a_new_verdict() -> 
 def test_node_assessment_edits_that_do_not_apply_are_refused(edit: RowEdit, message: str) -> None:
     with pytest.raises(RowEditError, match=message):
         apply_row_edits(FAMILY, [edit])
+
+
+# --- the reference list ----------------------------------------------------------------
+
+WITH_REFERENCES = REVIEW.replace(
+    "core_functions: []\n",
+    "references:\n- id: PMID:1\n  title: A paper\n  findings: []\n- id: file:human/TEST/TEST-uniprot.txt\n  title: UniProt record\n\n# notes\ncore_functions: []\n",
+)
+TITLE = "Placement of the IBA rows of TEST in the PANTHER 19.0 tree and family alignment"
+
+
+def test_a_reference_is_added_at_the_end_of_the_list_and_nothing_else_moves() -> None:
+    out = add_reference(WITH_REFERENCES, OWN, TITLE)
+    removed, added = changed_lines(WITH_REFERENCES, out)
+    assert removed == []
+    assert added == [f"- id: {OWN}", f"  title: {TITLE}"]
+    data = yaml.safe_load(out)
+    assert data["references"][-1] == {"id": OWN, "title": TITLE}
+    assert data["references"][:-1] == yaml.safe_load(WITH_REFERENCES)["references"]
+    # It lands directly under the last entry, before the blank line and the comment.
+    assert f"  title: UniProt record\n- id: {OWN}\n  title: {TITLE}\n\n# notes\n" in out
+
+
+def test_a_reference_already_listed_is_left_alone() -> None:
+    once = add_reference(WITH_REFERENCES, OWN, TITLE)
+    assert add_reference(once, OWN, "Another title") == once
+
+
+def test_a_title_a_plain_scalar_cannot_hold_is_quoted() -> None:
+    title = "Tree placement: the IBA rows of TEST #1"
+    out = add_reference(WITH_REFERENCES, OWN, title)
+    assert yaml.safe_load(out)["references"][-1] == {"id": OWN, "title": title}
+
+
+@pytest.mark.parametrize(
+    "text",
+    [REVIEW, REVIEW.replace("core_functions: []\n", "references: []\ncore_functions: []\n")],
+    ids=["no-list", "empty-flow-list"],
+)
+def test_a_review_without_a_block_reference_list_is_refused(text: str) -> None:
+    with pytest.raises(RowEditError, match="references"):
+        add_reference(text, OWN, TITLE)

@@ -28,16 +28,23 @@ are read against the family's node listing (`<PTHR>-tree-nodes.yaml`) in the sam
 with two additions from the release tree: where each seed sits, and how many leaves of
 each subfamily the review names as affected lie below the node.
 
-## Status (2026-11-16)
+## Status (2026-11-17)
 
 | | Batches | Rows read | Applied | Left for adjudication |
 |---|---:|---:|---:|---:|
-| Gene reviews, candidate genes (`g001` to `g012`) | 12 of 73 | 278 | 228 | 48, and 2 not read |
+| Gene reviews, candidate genes (`g001` to `g012`) | 12 of 73 | 278 | 229 | 47, and 2 not read |
 | Gene reviews, the rest (`g013` to `g073`) | 0 of 61 | 0 | | |
 | Family reviews (`f001` to `f018`) | 18 of 18 | 386 | 321 | 65 |
 
 `tree_rereview.py status` prints the current counts. Results and what they show are in
-[tree-evidence.md](../tree-evidence.md#the-re-read).
+[tree-evidence.md](../tree-evidence.md#the-re-read). What is left for a curator is in
+[`needs-curator.yaml`](needs-curator.yaml).
+
+The plan is fixed in its batches, not in its rows. A batch names genes or families; its
+rows are looked up when the batch is read, so a review that another change has edited in
+the meantime brings its rows as they then are, and the counts above can drift from the
+totals in `plan.yaml`. Making a record again for a batch that has been applied would
+leave out its applied rows, which no longer need reading, so a batch is recorded once.
 
 ## Method
 
@@ -48,13 +55,18 @@ One batch at a time:
    review on the same term, next to the extract's facts for that row: where the PAINT node
    sits, where the gene sits, each seed with its relation to the gene and its identity in
    the family alignment, PAINT losses on the path, and the extract's summary by numbered
-   sentence.
+   sentence. Under the summary it names the sentences that stand against the verdict
+   (`MUST QUOTE AND ADDRESS`).
 2. **Reading.** An agent reads the dossier, and nothing else, and returns one reading per
    row (below), the summary sentences to quote, and one or two sentences on what the tree
-   shows. It edits nothing.
+   shows. It edits nothing. The instructions it works from are in
+   [`workflows/`](workflows/).
 3. **Verification.** A second agent tries to fault the first: every correction, every row
    on the candidate list, and one in four of the rest. It checks the reading against the
-   definitions and every fact in the sentence against the dossier.
+   definitions and every fact in the sentence against the dossier. Where it faults a
+   reading that only needs another reading, quote or sentence, it supplies the corrected
+   one, which is then used whole; such a row is recorded with `verifier.agrees: false` and
+   `outcome_detail: applied as corrected by the verifier`.
 4. **Applying.** `tree_rereview.py apply` makes the edits from this one checkout:
    - quotes are assembled from the extract's own sentences and checked verbatim, so an
      agent never types a quote;
@@ -62,35 +74,95 @@ One batch at a time:
      (`src/ai_gene_review/tools/review_row_edit.py`) and is refused if the reloaded file
      differs from the original by anything but the edit;
    - the review is validated afterwards and put back as it was if it no longer validates;
-   - a history record is scaffolded for every review that changed.
+   - a history record is scaffolded for every review that changed, and checked against
+     the history schema.
 
 | Reading | Meaning | What the script does |
 |---|---|---|
 | `SUPPORTS` | The verdict argues about placement and the tree agrees | Quote the row; add the sentence to the reason |
 | `NOT_A_TREE_ARGUMENT` | The verdict rests on something the tree cannot settle, and the tree contradicts nothing the review says | Quote the row; add the sentence |
 | `PAINT_ALREADY_REMOVED` | PAINT has itself removed the term on the path; the cached row is stale | Quote the row, including the loss; add the sentence |
-| `REASON_CONTRADICTED` | The review says something about placement, relatedness or the seeds that the tree contradicts, but the verdict stands on other stated grounds | If the verifier agrees: quote the row and replace the reason with the corrected one |
+| `REASON_CONTRADICTED` | The review says something about placement, relatedness or the seeds that the tree contradicts, but the verdict stands on other stated grounds | If the verifier agrees and the claim is in the reason only: quote the row and replace the reason with the corrected one |
 | `VERDICT_UNSUPPORTED` | The tree contradicts the argument the verdict depends on | Nothing. Listed for adjudication |
 | `LOSS_APPLIES`, `LOSS_TOO_BROAD` | For the 13 kept rows under a PAINT loss | Nothing. Listed for adjudication |
 | `CANNOT_TELL` | The dossier is not enough | Nothing. Listed for adjudication |
 
-A row is also left for adjudication when the verifier disagrees with its reading, or when
-the edit cannot be placed. No verdict is changed by the script.
+### What the script will not do
+
+An edit is a quote plus a sentence, or a quote plus a corrected reason. Everything else
+is left for a curator, with the reason in the run record:
+
+- **No verdict is changed, and no failure mode.** A reading may propose either; the row
+  then goes to adjudication. Six rows of the first batches had failure modes changed by
+  the script before this rule. All six were checked by hand: two were put back (`DROME/mam`,
+  `SCHPO/cab4`) and four were kept.
+- **A contradicted claim outside the reason is not half-corrected.** The script rewrites
+  `reason` (`assessment_reason` in a family review) and nothing else. When the claim the
+  tree contradicts is also in the summary, in a failure mode, in a source note or in
+  `affected_subfamilies`, rewriting the reason alone would leave the row contradicting
+  itself, so the row is left alone. A row with no reason at all is left alone too.
+- **Quoting around an adverse fact.** A reading must quote more than the sentence that
+  names the term, and must quote every sentence that stands against the verdict: that the
+  gene is itself a seed, that it is inside the clade the seeds span, that seeds share its
+  own branch below the node, that every seed is an ortholog although the row claims a
+  paralog; for a family review, that the seeds bracket a node assessed as `TOO_DEEP`. The
+  same rule is a validation warning for every gene review
+  (`tree_evidence_adverse_unquoted`, [docs/phylo.md](../../../docs/phylo.md)).
+- **An edit that would reach more than one row.** A row is matched by term, evidence code
+  and negation (by node, term and negation in a family review). When a review has several
+  such rows the edit is not made.
+- **A value shared through a YAML anchor**, from either the row that defines it or a row
+  that refers to it. Only a shared `supported_by` list is handled: it is written out in
+  full in each row that used it, and the history record says so.
+
+A row is also left for adjudication when the verifier disagrees with its reading without
+supplying a usable correction.
+
+### A review that disputes the placement itself
+
+The relation between a gene and a seed ("ortholog", "one-to-one ortholog") is read from
+the family and subfamily PANTHER placed the gene in. A review whose argument is that this
+placement is the error (the gene lacks the domain that defines the family, the subfamily
+lumps proteins of different architecture, the alignment covers a small part of the gene)
+is not refuted by the relation, because the relation is the thing disputed. Such a row is
+`NOT_A_TREE_ARGUMENT`: the sentence says that the tree places the seeds as orthologs and
+that the review disputes that placement, and the failure mode `WRONG_ORTHOLOG_OR_PARALOG`,
+whose definition includes a wrong family or subfamily, stays. A seed with a
+horizontal-transfer node between it and the gene is never a one-to-one ortholog.
 
 ## Files
 
 - `plan.yaml`, `plan-families.yaml`: the batches. Made once and kept.
 - `runs/<batch>.yaml`: one record per batch. Every row with its reading, the sentence, the
-  verifier's check where there was one, and the outcome: `applied`, `adjudicate` (with the
-  reason) or `not_read`.
-- `tree_rereview.py`: `plan`, `dossier`, `inputs`, `record`, `apply`, `status`.
+  verifier's check where there was one, and the outcome: `applied`, `adjudicate` or
+  `not_read`, with the reason in `outcome_detail`. `quotes_added` lists sentences added to
+  a row's quotes afterwards (`requote`), and `correction` says what was put right by hand
+  after review.
+- `needs-curator.yaml`: what the re-read leaves for a curator, from the run records: every
+  row left for adjudication or not read, and every applied row on which the reader left a
+  note. An applied row quotes its tree file, so it leaves the work list and the validator's
+  warnings; the note, often about a verdict or failure mode that no longer fits, would
+  otherwise be lost in a run record.
+- `workflows/`: the instructions the reading and verifying agents work from, as workflow
+  scripts. They define the readings.
+- `tree_rereview.py`: `plan`, `dossier`, `inputs`, `record`, `apply`, `finish`, `status`,
+  `worklist`, and two repair commands for rows applied before a rule existed: `requote`
+  (add the sentences a row must quote) and `references` (list the quoted tree file under
+  the review's `references`; `apply` now does this itself). Tests are in
+  `tests/test_tree_rereview.py`.
 
 ## Reproduce
 
 ```bash
 uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py status
 uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py dossier g001 --out /tmp/dossiers
+uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py worklist
 ```
+
+A batch is run in three steps: `inputs g013 g014 --out DIR` writes the dossiers and the
+arguments for the workflow in `workflows/`; the workflow returns the readings; `finish
+--journal JOURNAL --date YYYY-MM-DD --pr N` records them, applies them, writes the history
+records with the pull request linked, and renews `needs-curator.yaml`.
 
 The readings themselves are agent output and are not regenerated by a command; the run
 records are their record.
