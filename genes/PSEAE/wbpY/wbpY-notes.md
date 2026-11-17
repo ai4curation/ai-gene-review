@@ -128,3 +128,20 @@ describe only part of what this enzyme does. For WbpX the reverse holds: that
 term would describe it exactly, so `GO:0016758` is the reluctant stop there. Both
 reviews' core functions say so; this file is where the reasoning was missing for
 the gene it is about.
+
+*The reciprocal swap, and why WbpY stops (2026-11-17).* The bullets above record
+that each enzyme alone adds one residue to the WbpZ product, without saying what
+happens when the acceptor is already elongated. The paper runs that swap both
+ways, and the answer is asymmetric: [PMID:35166992 "This suggests that WbpY
+transfers one D-Rha residue to D-Rhaα1-3-D-GlcNAcα-PP-PhU. Subsequently, WbpX
+transfers additional D-Rha residues."]. Given the isolated WbpX product, WbpY
+adds one and stops [PMID:35166992 "After 1 h incubation time GST-WbpY added one
+additional D-Rha residue to the WbpX-product indicated by m/z 1064.4 (Fig.
+10A)."], and on WbpX's benzyl-acceptor products it does not act at all
+[PMID:35166992 "the reaction products of WbpX using D-Rhaα-Bn substrate at 2.5 mM
+concentration, was not an acceptor for WbpY"], which is why the authors conclude
+[PMID:35166992 "Thus WbpY is a monofunctional α1,3-D-RhaT."]. So the
+single-residue limit is the **acceptor** for WbpX, which keeps going when given a
+longer one, and the **enzyme** for WbpY, which does not. That asymmetry is the
+result behind reading WbpY as the adapter-building enzyme and WbpX as the
+polymerase, which both reviews state in their core functions.
