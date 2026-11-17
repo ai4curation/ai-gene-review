@@ -581,6 +581,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#two-questions-both-with-receipts" class="md-nav__link">
+    <span class="md-ellipsis">
+      Two questions, both with receipts
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-a-receipt-is" class="md-nav__link">
     <span class="md-ellipsis">
       What a receipt is
@@ -705,6 +714,46 @@ of the errors were detectable from the file.</p>
 <p>The "limit of 12 condition sets" is <code>max_condition_sets=12</code> in
 <code>src/ai_gene_review/etl/rule_analysis.py</code>, the number of sets the overlap analysis
 reads by default. It says nothing about whether a rule is right.</p>
+<h2 id="two-questions-both-with-receipts">Two questions, both with receipts</h2>
+<p>A rule review answers two questions, and a verdict needs both.</p>
+<ol>
+<li><strong>Accuracy.</strong> Is the annotation true for the proteins each condition set
+   matches? This is what most of this page is about.</li>
+<li><strong>Meaning and parsimony.</strong> Is the rule a useful biological statement, made
+   with conditions that are necessary and sufficient? A rule can be accurate set
+   by set and still say nothing: 343 families under one umbrella term, each of
+   which curators annotate with a more specific descendant.</li>
+</ol>
+<p>The audit found the first question answered from memory. The corrections that
+followed answered it from evidence and dropped the second question, which left
+reviews that test a rule the way one tests a classifier and say nothing about
+its biology. Both are required.</p>
+<p>The second question is answered in three fields:</p>
+<ul>
+<li><code>biological_units</code>: the families, complexes or pathways the condition sets
+  resolve into. Each unit lists its sets, example proteins, and the most
+  informative GO term that curated annotation puts on its members, with the
+  annotation (accession, GO id, evidence code, reference) in <code>evidence</code>, and
+  <code>term_relation</code> saying how that term relates to the rule's consequent.</li>
+<li><code>biological_meaning.assessment</code>: <code>COHERENT</code> (the consequent is the most
+  informative term true of all the units), <code>TRUE_BUT_UNINFORMATIVE</code> (units carry
+  more specific descendants), <code>HETEROGENEOUS</code> (the best term of some units lies
+  outside the consequent), or <code>NOT_ASSESSED</code> with the reason.</li>
+<li><code>parsimony</code>, <code>go_specificity</code>, <code>taxonomic_scope</code>: the rule-level judgements,
+  with numbers. The receipts are <code>projects/ARBA_REVIEW/rule_redundancy.tsv</code>
+  (how many descendants the consequent has, and how many of the rule's sets are
+  already matched by a rule asserting a more specific term, so emit nothing),
+  per-set match counts, and <code>rules/arba/_interpro2go.txt</code> (whether one InterPro
+  family already maps to the consequent).</li>
+</ul>
+<p>Size and generality are not evidence that an annotation is false. They are what
+the second question is about. "343 sets is too many" is not a finding;
+"320 of 355 sets are covered by rules for more specific terms" is, and so is
+"each of these six families is curated to a descendant of the consequent". A
+taxon restriction that follows where the training annotations happen to be
+(Primates, because the support is human Reactome TAS) rather than where the
+biology is, is narrow coverage; say so in <code>taxonomic_scope</code>, and do not call the
+annotation wrong.</p>
 <h2 id="what-a-receipt-is">What a receipt is</h2>
 <table>
 <thead>
@@ -739,6 +788,22 @@ reads by default. It says nothing about whether a rule is right.</p>
 <td>the UniProtKB query, the count and the release</td>
 </tr>
 <tr>
+<td>"The term is too general for this family"</td>
+<td>a <code>biological_units</code> entry: the family's curated annotation to a descendant of the consequent</td>
+</tr>
+<tr>
+<td>"These proteins match the conditions and should not carry the term, though the rule does not annotate them"</td>
+<td>accessions in <code>would_match_examples</code> (typically reviewed entries). They show what the rule does to unreviewed relatives and are weaker than <code>incorrect_examples</code>, which lists proteins that carry the rule's annotation</td>
+</tr>
+<tr>
+<td>"N of M sets are covered"</td>
+<td>the row of <code>projects/ARBA_REVIEW/rule_redundancy.tsv</code> (GO rules) or <code>keyword_redundancy.tsv</code> (keyword rules); prose that names the file must quote its figures</td>
+</tr>
+<tr>
+<td>"These sets do no work"</td>
+<td>the set numbers with a match count of 0, or <code>sets_covered_by_more_specific_rule</code> from <code>rule_redundancy.tsv</code></td>
+</tr>
+<tr>
 <td>"The literature says"</td>
 <td>a PMID or DOI, and a <code>supporting_text</code> that is verbatim in the cached paper</td>
 </tr>
@@ -752,13 +817,30 @@ the paper or database record the lead points to.</p>
 <li><strong>UNDECIDED is the verdict for a rule that was not examined.</strong> A rule with
   hundreds of condition sets that nobody read set by set is UNDECIDED, however
   general its term. Say which sets were sampled and what they showed.</li>
-<li><strong>ACCEPT covers the whole rule.</strong> Every condition set served at <code>retrieved_date</code>
-  is recorded and supported.</li>
-<li><strong>MODIFY and SPLIT name the change.</strong> A specific set, protein or term, in
+<li><strong>ACCEPT covers the whole rule, on both questions.</strong> Every condition set served
+  at <code>retrieved_date</code> is recorded and supported, <code>biological_meaning</code> is
+  <code>COHERENT</code>, and <code>parsimony</code> is <code>PARSIMONIOUS</code> or <code>ACCEPTABLE</code>.</li>
+<li><strong>SPLIT is the verdict for an umbrella term.</strong> At least two <code>biological_units</code>,
+  each with its own more informative term; <code>suggested_modifications</code> says which
+  sets go to which term. A sample is enough to show this for a large rule: state
+  the sample, and let <code>confidence</code> reflect it.</li>
+<li><strong>MODIFY names the change.</strong> A specific set, protein, term or taxon, in
   <code>suggested_modifications</code>.</li>
-<li><strong>DEPRECATE needs a wrongly annotated protein, an obsolete consequent or a
-  withdrawn rule.</strong> A true but general term, a redundant rule and a rule with low
-  recall are not wrong.</li>
+<li><strong>DEPRECATE is for a rule that is still served and should go</strong>: a wrongly
+  annotated protein (accessions in <code>incorrect_examples</code>), an obsolete consequent,
+  or a rule that does no work because every condition set is also matched by a
+  rule asserting a more specific term (<code>sets_covered_by_more_specific_rule</code> equal
+  to the number of sets, as <code>rule_redundancy.tsv</code> gives it). The validator checks
+  only that count. The judgement has a second half it cannot check: nothing in
+  the rule is worth re-homing. A rule that emits nothing but has uncovered sets
+  selecting families worth keeping under their own terms is SPLIT (ARBA00026480,
+  ARBA00027624, ARBA00026572). This ground is for GO rules only: UniProt keeps
+  the most specific ARBA GO term on a protein, but keywords from different rules
+  stack and a parent keyword is not derived from a child, so a covered keyword
+  set still does work and is not a parsimony defect. A true but general term whose
+  sets are not all covered is SPLIT or MODIFY; low recall alone is not a defect.</li>
+<li><strong>WITHDRAWN records that UniProt no longer serves the rule</strong> (<code>rule.withdrawn</code>).
+  It is a fact about the rule, not a verdict, and needs no confidence.</li>
 <li><strong>Read condition sets as conjunctions.</strong> A set is the proteins that match all its
   conditions, including the taxon. Judge that set, never one of its signatures.
   Alternative sets are expected to be disjoint.</li>
@@ -846,9 +928,69 @@ the paper or database record the lead points to.</p>
 <td><code>literature_support</code> is STRONG, MODERATE or CONTRADICTED and the block itself (its <code>supported_by</code> or <code>notes</code>) names no publication or curated pathway record</td>
 </tr>
 <tr>
+<td><code>verdict_without_meaning</code></td>
+<td>error</td>
+<td>a verdict (ACCEPT, MODIFY, SPLIT, MERGE, DEPRECATE) with no <code>biological_meaning</code>, or ACCEPT/SPLIT with <code>NOT_ASSESSED</code></td>
+</tr>
+<tr>
+<td><code>accept_of_uninformative_rule</code></td>
+<td>error</td>
+<td>ACCEPT with <code>biological_meaning</code> <code>TRUE_BUT_UNINFORMATIVE</code> or <code>HETEROGENEOUS</code></td>
+</tr>
+<tr>
+<td><code>accept_without_parsimony</code></td>
+<td>error</td>
+<td>ACCEPT with <code>parsimony</code> missing, or not <code>PARSIMONIOUS</code>/<code>ACCEPTABLE</code></td>
+</tr>
+<tr>
+<td><code>split_without_units</code></td>
+<td>error</td>
+<td>SPLIT with fewer than two <code>biological_units</code> that carry a term</td>
+</tr>
+<tr>
+<td><code>uninformative_without_units</code>, <code>heterogeneous_without_units</code></td>
+<td>error</td>
+<td>the meaning assessment is not backed by units showing it</td>
+</tr>
+<tr>
+<td><code>unit_term_label_mismatch</code>, <code>unit_term_without_label</code>, <code>unit_term_without_evidence</code></td>
+<td>error</td>
+<td>a unit's term label differs from GO's, is missing, or the term has no curated annotation cited</td>
+</tr>
+<tr>
+<td><code>redundancy_receipt_mismatch</code></td>
+<td>error</td>
+<td><code>consequent_descendant_count</code> or <code>sets_covered_by_more_specific_rule</code> differs from <code>rule_redundancy.tsv</code></td>
+</tr>
+<tr>
+<td><code>redundancy_prose_mismatch</code></td>
+<td>error</td>
+<td>prose or a correction's evidence names <code>rule_redundancy.tsv</code> or <code>keyword_redundancy.tsv</code> with a figure (<code>N of M sets</code>, <code>covered_sets N</code>, <code>condition_sets N</code>, <code>go_descendants N</code>) the committed table does not contain</td>
+</tr>
+<tr>
+<td><code>redundancy_prose_unconfirmed</code></td>
+<td>warning</td>
+<td>prose or a correction says "N sets are covered (or matched) by rules", with or without "of M", without citing a redundancy table, and the figures differ from the table's (GO and keyword rules; sentences about a sample are skipped). The same disagreement is the error <code>redundancy_prose_mismatch</code> when the text or the correction's evidence cites the table. <code>corrections[].withdrawn_claim</code> is exempt by design: it quotes the claim that was wrong, so its figures are expected to differ and must not be "fixed". Bounded figures ("no more than N", "at most N") are not read as claims</td>
+</tr>
+<tr>
+<td><code>correct_assessment_with_incorrect_examples</code></td>
+<td>error</td>
+<td>an annotation assessment is <code>CORRECT</code> and lists <code>incorrect_examples</code></td>
+</tr>
+<tr>
+<td><code>sample_not_described</code></td>
+<td>warning</td>
+<td><code>sets_examined_for_meaning</code> is below the rule's set count and the meaning notes do not say how the sets were chosen</td>
+</tr>
+<tr>
+<td><code>withdrawn_action_mismatch</code></td>
+<td>error</td>
+<td>WITHDRAWN without <code>rule.withdrawn</code>, or DEPRECATE on a withdrawn rule</td>
+</tr>
+<tr>
 <td><code>deprecate_without_counterexample</code></td>
 <td>error</td>
-<td>DEPRECATE with no <code>incorrect_examples</code>, no <code>consequent_obsolete: true</code> and no <code>withdrawn</code> rule</td>
+<td>DEPRECATE with no <code>incorrect_examples</code>, no <code>consequent_obsolete: true</code>, and not every set covered by a more specific rule</td>
 </tr>
 <tr>
 <td><code>modify_without_modification</code></td>
@@ -867,7 +1009,7 @@ the paper or database record the lead points to.</p>
 </tr>
 </tbody>
 </table>
-<p><code>just rules-validate --online &lt;file&gt;</code> adds two checks that need the network:</p>
+<p><code>just rules-validate --online &lt;file&gt;</code> adds checks that need the network:</p>
 <table>
 <thead>
 <tr>
@@ -881,6 +1023,16 @@ the paper or database record the lead points to.</p>
 <td><code>false_positive_has_experimental_annotation</code></td>
 <td>error</td>
 <td>an <code>incorrect_examples</code> accession carries the consequent, or a descendant, on experimental evidence in QuickGO</td>
+</tr>
+<tr>
+<td><code>unit_evidence_not_found</code></td>
+<td>error</td>
+<td>a <code>biological_units[].evidence</code> line of the form <code>ACCESSION GO:id CODE reference</code> names an annotation QuickGO does not hold (that accession, exactly that term, that evidence code and, when given, that reference)</td>
+</tr>
+<tr>
+<td><code>unit_term_relation_mismatch</code></td>
+<td>error</td>
+<td>a unit's <code>term_relation</code> to the rule's term is not borne out by the ontology</td>
 </tr>
 <tr>
 <td><code>stale_rule_snapshot</code>, <code>rule_withdrawn_upstream</code></td>
