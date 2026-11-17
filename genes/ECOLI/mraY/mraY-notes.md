@@ -41,10 +41,19 @@ host-pathogen context, not an MraY function, so it is not annotated here.
 `GO:0008963` has a stem-generic name (EC 2.7.8.13) but an L-lysine-specific
 definition (RHEA:21920). Its meso-diaminopimelate counterpart `GO:0051992`
 (RHEA:28386) is a **sibling** under `GO:0016780`, not a descendant. E. coli makes
-the DAP pentapeptide, so the four `GO:0008963` rows are corrected laterally to
-`GO:0051992` (MODIFY with a non-descendant replacement, the long-standing use for
-lateral/substrate corrections) rather than removed: the enzyme itself does not
-select the third stem residue, MurE does.
+the DAP pentapeptide, so `GO:0051992` is the core function.
+
+The four `GO:0008963` rows are **kept as non-core**, not corrected. An earlier
+revision of this review MODIFYed them to `GO:0051992` and filed `WRONG_TERM`
+source defects against EcoCyc and EcoliWiki; that was overruling experimental
+annotations whose full text is not cached here, which the project rules forbid,
+and it contradicted this project's own `PTHR22926` family review, which assesses
+the PAINT node sound on exactly those seeds. The enzyme does not select the third
+stem residue — MurE does — and the 1978 purification names its assayed substrate
+as the L-lysyl pentapeptide, so the L-lysine reaction is a demonstrated capability
+of the E. coli enzyme that simply is not what it does in vivo. The fix belongs
+upstream and is additive: a stem-agnostic parent in GO, and `GO:0051992` paired at
+`PTN000532041` as PAINT did for MurF.
 
 The same pair-of-siblings problem affects MurF (`GO:0047480` vs `GO:0008766`) and
 MurG (`GO:0050511` vs `GO:0051991`). For MurF there is direct evidence that the
