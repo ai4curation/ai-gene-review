@@ -23,3 +23,14 @@ Modify: broad or misleading transport labels should be redirected to lipid-speci
 ## 2026-06-20 second-pass audit
 
 The second-pass audit confirmed the existing ABCA1 review and manual reference metadata. No annotation action changes were needed: ABCA1 remains curated as an ATP-driven phospholipid/cholesterol transporter that enables apolipoprotein-dependent lipid efflux, HDL biogenesis, and APOE lipidation, with inflammatory, signaling, vesicle, secretion, trafficking, and generic binding annotations kept non-core or over-annotated unless they directly reflect lipid-transport biology.
+
+## 2026-11-13 ORGANELLES Golgi batch 1 (Golgi apparatus rows)
+
+Row: GO:0005794 Golgi apparatus, IEA GO_REF:0000107 (Ensembl projection from mouse Abca1 P41233 / ENSMUSP00000030010), located_in. No Golgi sub-compartment rows.
+
+Checks:
+- Donor: QuickGO shows mouse P41233 Golgi apparatus IDA PMID:10878804 (MGI). That paper is abstract-only in the cache and the abstract does not mention the Golgi; it reports "the acquisition of phagocytic behaviour by ABC1 transfectants" [PMID:10878804], so the localization assay could not be read. (P41233 also carries an ISO from human O95477.)
+- Human UniProt lists only cell membrane and endosome (curated, ECO:0000269); no Golgi line.
+- Own-gene evidence: stably transduced wild-type HA-ABCA1 in HEK293H cells. "A minor intracellular HA-ABCA1 expression was found in the Golgi-apparatus" and the Golgi marker was giantin ("To label the Golgi-apparatus and endosomes, double-labeling was performed using rabbit anti-Giantin") [PMID:20025763]; brefeldin A lowered surface ABCA1 by about 60% in the same paper.
+
+Outcome: KEEP_AS_NON_CORE stays (rule 7: direct evidence on the gene, wild-type transit pool, as for ABCA4). Close alternative MARK_AS_OVER_ANNOTATED (overexpressed protein, transit not residence); endogenous ABCA1 imaged with a Golgi marker in macrophages or hepatocytes would settle it. No Golgi membrane row: topology does not force a sub-compartment on a transit pool. Added references PMID:20025763 and PMID:10878804.

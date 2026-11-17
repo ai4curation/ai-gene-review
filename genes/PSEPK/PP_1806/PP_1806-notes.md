@@ -13,3 +13,14 @@
   E. coli GutQ paradigm, not a discriminating PANTHER subfamily
   [PMID:16199563, "Recombinant GutQ was shown to indeed be a second copy of
   API"].
+
+## 2026-11-10 completion pass
+
+- Generic parent rows that the evidence refines were changed to MODIFY with the
+  specific KDO-pathway term (rather than MARK_AS_OVER_ANNOTATED), matching the
+  E. coli exemplar reviews; substrate-binding rows stay KEEP_AS_NON_CORE.
+- Every row now carries a vetted quote (UniProt curated rule/family lines,
+  PANTHER PAINT rows, or E. coli ortholog papers clearly marked as such).
+- No provider deep research was generated (no provider access in this session).
+- Generic process rows are KEEP_AS_NON_CORE, not refined to GO:0019294,
+  because the pathway receiving PP_1806's arabinose 5-phosphate is untested.

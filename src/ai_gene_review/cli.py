@@ -698,8 +698,12 @@ def _validate_gene_review_cli(
 def _validate_rule_review_cli(
     yaml_file: Path,
     schema_path: Path,
+    online: bool = False,
 ) -> ValidationReport:
-    """Validate one rule review with the standard LinkML CLI tools."""
+    """Validate one rule review: LinkML schema, then receipt checks.
+
+    ``online`` adds the receipt checks that query UniProt and QuickGO.
+    """
     yaml_file = yaml_file.resolve()
     schema_path = schema_path.resolve()
     report = ValidationReport(file_path=yaml_file, is_valid=True)
@@ -730,6 +734,10 @@ def _validate_rule_review_cli(
         "linkml_validate",
         cwd=project_root,
     )
+
+    from ai_gene_review.validation.rule_review_receipts import validate_rule_review_receipts
+
+    validate_rule_review_receipts(yaml_file, report, online=online)
 
     return report
 
@@ -3254,10 +3262,20 @@ def rules_validate(
         bool,
         typer.Option("--verbose", "-v", help="Show detailed messages including warnings"),
     ] = False,
+    online: Annotated[
+        bool,
+        typer.Option(
+            "--online",
+            help="Also check receipts against UniProt and QuickGO (alleged false positives, stale rules)",
+        ),
+    ] = False,
 ):
-    """Validate rule review YAML files against the LinkML schema.
+    """Validate rule review YAML files: schema, then receipt checks.
 
-    Validates RuleReview files for schema compliance with the RuleReview class.
+    Validates RuleReview files for schema compliance, then checks that the
+    verdict carries receipts (see docs/rule_review_receipts.md): recorded
+    condition sets, identifier labels that match the official names, sources
+    that exist, and a named wrongly annotated protein behind a DEPRECATE.
 
     Examples:
         # Validate a specific review
@@ -3292,7 +3310,7 @@ def rules_validate(
     schema_path = get_schema_path()
 
     for yaml_file in all_files:
-        report = _validate_rule_review_cli(yaml_file, schema_path)
+        report = _validate_rule_review_cli(yaml_file, schema_path, online=online)
 
         if report.is_valid:
             valid_count += 1
@@ -4060,7 +4078,7 @@ def fetch_panther_paint(
         Optional[Path],
         typer.Option(
             "--cache-dir",
-            help="Where to cache the downloaded PAINT GAFs (default: <repo>/.cache/panther).",
+            help="Where to cache the downloaded PAINT GAFs (default: <repo>/.cache/panther/paint-<release>-<snapshot>).",
         ),
     ] = None,
     extra_uniprot: Annotated[
@@ -4092,13 +4110,14 @@ def fetch_panther_paint(
         ai-gene-review fetch-panther-paint PTHR35730 --extra-uniprot Q67XT3
         ai-gene-review fetch-panther-paint --all
     """
+    from ai_gene_review.etl.panther_families import paint_cache_dir
     from ai_gene_review.etl.panther_paint import (
         fetch_family_paint,
         fetch_all_family_paint,
     )
 
     repo_root = output_dir or Path.cwd()
-    cache = cache_dir or (repo_root / ".cache" / "panther")
+    cache = cache_dir or paint_cache_dir(repo_root / ".cache" / "panther")
     panther_root = repo_root / "interpro" / "panther"
 
     if all_families:
@@ -4401,6 +4420,103 @@ def gocam_compartments(
         )
     else:
         typer.echo(text)
+
+
+@app.command()
+def gocam_lint(
+    model_ids: Annotated[
+        Optional[List[str]],
+        typer.Argument(help="GO-CAM model ids to lint (default: every cached model)"),
+    ] = None,
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+    rule_ids: Annotated[
+        Optional[List[str]],
+        typer.Option("--rule", "-r", help="Only run these rules (repeatable)"),
+    ] = None,
+    no_ontology: Annotated[
+        bool,
+        typer.Option("--no-ontology", help="Skip rules that need GO (no download)"),
+    ] = False,
+    min_severity: Annotated[
+        str,
+        typer.Option("--min-severity", help="ERROR, WARNING or INFO"),
+    ] = "INFO",
+    output: Annotated[
+        Optional[Path],
+        typer.Option("--output", "-o", help="Write findings as TSV to this file"),
+    ] = None,
+    list_rules: Annotated[
+        bool,
+        typer.Option("--list-rules", help="List the available rules and exit"),
+    ] = False,
+):
+    """Report structural anomalies in cached GO-CAM models.
+
+    Rules cover impossible compartment crossings on direct causal edges,
+    same-gene chains, duplicate activities, opposite-sign fan-out, transcription
+    factors with direct edges, ligands as receptor inputs, generic or binding
+    MFs, orphans, disconnected components and near-duplicate models. See
+    docs/gocam_lint.md. Ontology rules use the oaklib GO SQLite build
+    (downloaded on first use).
+
+    Examples:
+        ai-gene-review gocam-lint 59cc772c00000000
+        ai-gene-review gocam-lint --min-severity WARNING -o reports/gocam-lint.tsv
+    """
+    from ai_gene_review.etl.gocam import normalize_gocam_id, src_path
+    from ai_gene_review.gocam_lint import (
+        CORPUS_RULES,
+        RULES,
+        SEVERITY_ORDER,
+        OakOracle,
+        check_rule_ids,
+        lint_paths,
+        write_findings_tsv,
+    )
+
+    if list_rules:
+        for r in RULES.values():
+            tag = " [GO]" if r.needs_ontology else ""
+            typer.echo(f"{r.id}{tag}: {r.description}")
+        for rid, desc in CORPUS_RULES.items():
+            typer.echo(f"{rid} [corpus]: {desc}")
+        return
+    severity = min_severity.upper()
+    if severity not in SEVERITY_ORDER:
+        raise typer.BadParameter(
+            f"--min-severity must be one of {', '.join(SEVERITY_ORDER)}, not {min_severity!r}"
+        )
+    if rule_ids:
+        try:
+            check_rule_ids(rule_ids)
+        except ValueError as exc:
+            raise typer.BadParameter(f"{exc}; see --list-rules") from exc
+    if model_ids:
+        paths = [src_path(normalize_gocam_id(m), cache_dir) for m in model_ids]
+        missing = [p for p in paths if not p.exists()]
+        if missing:
+            raise typer.BadParameter(f"not cached: {', '.join(map(str, missing))}")
+    else:
+        paths = sorted(cache_dir.glob("*/*-src.yaml"))
+    oracle = None if no_ontology else OakOracle()
+    findings = lint_paths(paths, oracle, rule_ids, corpus=len(paths) > 1)
+    cutoff = SEVERITY_ORDER[severity]
+    findings = [f for f in findings if SEVERITY_ORDER[f.severity] <= cutoff]
+    findings.sort(key=lambda f: (f.model_id, SEVERITY_ORDER[f.severity], f.rule))
+    if output:
+        write_findings_tsv(findings, output)
+        typer.echo(f"✓ Wrote {len(findings)} findings for {len(paths)} models to {output}")
+    else:
+        for f in findings:
+            typer.echo(f"{f.model_id}\t{f.severity}\t{f.rule}\t{f.message}")
+    counts: dict[tuple[str, str], int] = {}
+    for f in findings:
+        counts[(f.severity, f.rule)] = counts.get((f.severity, f.rule), 0) + 1
+    for (sev, rid), n in sorted(counts.items(), key=lambda kv: (SEVERITY_ORDER[kv[0][0]], -kv[1])):
+        typer.echo(f"{sev:8} {rid:28} {n}", err=True)
 
 
 @app.command()
@@ -4946,6 +5062,36 @@ def refresh_panther_members(
 
 
 @app.command()
+def check_panther_release():
+    """Report whether PANTHER has moved past the pinned release or PAINT snapshot.
+
+    Compares PANTHER_RELEASE and PAINT_SNAPSHOT (etl/panther_families.py) with
+    PANTHER's FTP site and API. Exits 1 when the pinned PAINT snapshot or tree
+    release is no longer what PANTHER serves; a newer library release that PAINT
+    and the API do not serve yet is only reported. Needs the network.
+
+    Example:
+        ai-gene-review check-panther-release
+    """
+    from ai_gene_review.etl.panther_families import (
+        PAINT_SNAPSHOT,
+        PANTHER_RELEASE,
+        panther_release_drift,
+    )
+
+    stale, notices = panther_release_drift()
+    typer.echo(f"pinned: PANTHER {PANTHER_RELEASE}, PAINT snapshot {PAINT_SNAPSHOT}")
+    for notice in notices:
+        typer.echo(f"ℹ️  {notice}")
+    for problem in stale:
+        typer.echo(f"⚠️  {problem}")
+    if stale:
+        typer.echo("See docs/panther_node_anchoring_plan.md (Phase 2) before bumping.")
+        raise typer.Exit(code=1)
+    typer.echo("✓ PAINT and the tree API still serve the pinned release and snapshot.")
+
+
+@app.command()
 def verify_panther_paint(
     output_dir: Annotated[
         Optional[Path],
@@ -4954,7 +5100,7 @@ def verify_panther_paint(
     cache_dir: Annotated[
         Optional[Path],
         typer.Option(
-            help="Where to cache the download (default: <repo>/.cache/panther)."
+            help="Where to cache the download (default: <repo>/.cache/panther/paint-<release>-<snapshot>)."
         ),
     ] = None,
 ):
@@ -4977,11 +5123,12 @@ def verify_panther_paint(
         fetch_ibd_gaf,
         find_pruned_paint_rows,
         load_committed_paint_rows,
+        paint_cache_dir,
         parse_ibd_row_keys,
     )
 
     repo_root = output_dir or Path.cwd()
-    cache = cache_dir or (repo_root / ".cache" / "panther")
+    cache = cache_dir or paint_cache_dir(repo_root / ".cache" / "panther")
     upstream = parse_ibd_row_keys(fetch_ibd_gaf(cache).read_text().splitlines())
     committed = load_committed_paint_rows(repo_root / "interpro" / "panther")
 

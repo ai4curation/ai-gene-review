@@ -43,3 +43,9 @@ ARNT2 dimerisation (PMID:11029639).
   with demonstrated HIF-1 activity or HIF dependence); marked over-annotated where only
   an expression change was recorded.
 - No NEW rows proposed.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0045722 / PMID:24177414: defect withdrawn (evidence depth: ABSTRACT). Abstract only (no PMC copy). RGD's record RGD:10445837 already carries the same IMP term on Hnf4a, so the Hif1a row is a separate deliberate annotation, not an Hnf4a result on the wrong gene; the defect was pure abstract-level inference with nothing identifiable wrong. Defect deleted; action stays UNDECIDED because the full text could not be read.

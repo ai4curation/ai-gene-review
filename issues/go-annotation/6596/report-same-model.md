@@ -105,10 +105,15 @@ release lag.
 ## Follow-up from review
 
 The PR review found the NEEDS_PRUNING verdict was not machine-checkable and the
-*S. pombe* row was left at MARK_AS_OVER_ANNOTATED. Both are fixed: PTHR11117
-now has a GO:0004776 term assessment with LSC1 and SPAC16E8.17c as member
-exceptions (pruned node PTN000122012, lost in PTN000874203), which the
-family/gene cross-check enforces, and the SPAC16E8.17c row is REMOVE.
+*S. pombe* row was left at MARK_AS_OVER_ANNOTATED. This PR first answered both
+(member exceptions for LSC1 and SPAC16E8.17c, and REMOVE on the SPAC16E8.17c
+row), but before it merged, main gained a fuller evolutionary review of the
+family (#6277, corrected in #6336). The merge takes main's LSC1, PTHR11117 and
+SPAC16E8.17c files as they are. Main records the same two member exceptions
+(and two more), and keeps the SPAC16E8.17c row at MARK_AS_OVER_ANNOTATED
+because the *S. pombe* enzyme has not been assayed. This PR's edits to those
+files are kept as `shadow-work.patch` (the worker's) and
+`review-followup.patch` (the review follow-ups).
 
 ## Cost
 

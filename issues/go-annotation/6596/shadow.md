@@ -99,3 +99,14 @@ Worker: claude-opus-5-5. Blinding: BLIND (opening post only, via
 - The worktree-isolation guard refuses shell loops and `$(...)` with computed
   arguments, even for read-only `sed` or `python` calls, so several queries had
   to be rewritten as scratch scripts.
+
+## 2026-11-16 (coordinator note, appended)
+
+The worker's edits to `genes/yeast/LSC1/LSC1-ai-review.yaml` and
+`interpro/panther/PTHR11117/PTHR11117-review.yaml` did not land as written. Before
+this work merged, main gained a fuller evolutionary review of the family (#6277,
+corrected in #6336), and the merge took main's versions of those files. Main
+independently keeps REMOVE on the LSC1 row, sets the PTN000122012 node to
+NEEDS_PRUNING, and records LSC1 and SPAC16E8.17c as member exceptions. The
+worker's original diff is preserved in `shadow-work.patch` in this folder; rate
+against that, not against the current files.

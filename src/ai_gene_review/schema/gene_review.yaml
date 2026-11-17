@@ -338,7 +338,10 @@ slots:
   proposed_new_terms:
     range: ProposedOntologyTerm
     multivalued: true
-    description: Proposed new ontology terms that should exist but don't
+    description: >-
+      Proposed new ontology terms that should exist but don't. Gene reviews and
+      modules both carry this list. Record a new-term request here rather than
+      only in prose (notes, reasons), so that it can be exported.
   proposed_ontology_changes:
     range: ProposedOntologyChange
     multivalued: true
@@ -1399,6 +1402,7 @@ classes:
       - description
       - references
       - knowledge_gaps
+      - proposed_new_terms
       - proposed_ontology_changes
     attributes:
       status:
@@ -2788,11 +2792,59 @@ classes:
         range: float
         minimum_value: 0.0
         maximum_value: 1.0
-        description: Overall confidence in the rule (0.0 to 1.0)
+        description: >-
+          Confidence that the recommended action is right (0.0 to 1.0). It is
+          confidence in the verdict, never confidence in the rule: a DEPRECATE
+          at 0.95 means "almost certainly should be retired". A verdict the
+          reviewer holds below 0.5 should be UNDECIDED instead.
       supported_by:
         range: SupportingTextInReference
         multivalued: true
         description: Supporting text from literature for this review
+      corrections:
+        range: RuleReviewCorrection
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Claims an earlier version of this review made that a later check
+          showed to be wrong, each with the evidence that refuted it. The
+          wrong claim is removed from the review's prose and recorded here, so
+          that review errors stay countable and can become test cases.
+
+  RuleReviewCorrection:
+    description: >-
+      One withdrawn claim of a rule review and what replaced it. A correction
+      is a receipt for a reviewing error: it names the claim, the check that
+      refuted it, and a source a validator or a person can look up.
+    attributes:
+      date:
+        range: string
+        description: Date the correction was made (YYYY-MM-DD)
+      withdrawn_claim:
+        range: string
+        required: true
+        description: The claim as the earlier review made it (short quote or paraphrase)
+      correction:
+        range: string
+        required: true
+        description: What the check showed instead
+      error_type:
+        range: RuleReviewErrorTypeEnum
+        description: The kind of reviewing error
+      evidence:
+        range: string
+        multivalued: true
+        description: >-
+          Checkable facts behind the correction, one per item, each naming its
+          source: a UniProt accession with a GO id, evidence code and reference
+          (P0CX53 GO:0034517 IGI PMID:39934334), an InterPro id with its official
+          name, a UniProtKB query with its count and release, or a GO id with
+          its label and parent.
+      supported_by:
+        range: SupportingTextInReference
+        multivalued: true
+        inlined_as_list: true
+        description: Supporting text from literature or files
 
   EmbeddedRule:
     description: >-
@@ -2855,6 +2907,22 @@ classes:
       modified_date:
         range: string
         description: Date the rule was last modified
+      retrieved_date:
+        range: string
+        description: >-
+          Date (YYYY-MM-DD) the rule was fetched from UniProt for this review.
+          Rules change and are withdrawn, so a review describes the rule as of
+          this date.
+      source_condition_set_count:
+        range: integer
+        minimum_value: 0
+        description: >-
+          Number of condition sets in the rule as fetched. When it exceeds the
+          number recorded in condition_sets, the review examined only part of
+          the rule and its verdict must say so.
+      withdrawn:
+        range: boolean
+        description: True when UniProt no longer serves the rule (HTTP 404 at retrieved_date)
 
   RuleConditionSet:
     description: >-
@@ -3028,6 +3096,12 @@ classes:
         range: string
         multivalued: true
         description: UniProt accessions for which the consequent is incorrect
+      consequent_obsolete:
+        range: boolean
+        description: >-
+          True when the consequent itself no longer exists (an obsolete GO
+          term). This is a ground for DEPRECATE that needs no wrongly
+          annotated protein; the online receipt check confirms it against GO.
       gene_reviews:
         range: string
         multivalued: true
@@ -3969,6 +4043,11 @@ enums:
           The GO Consortium's ontology editors, for a defect in a term itself -
           its label, definition, or placement in the graph - rather than in any
           annotation using it.
+      SYNGO:
+        description: >-
+          SynGO expert curation of synaptic genes (assigned_by SynGO in GOA). SynGO
+          annotates the species studied and maps the annotation to the human
+          ortholog, so a defect can sit on the rodent row, the human row, or both.
       OTHER:
         description: Name the resource in the explanation.
 
@@ -4014,6 +4093,21 @@ enums:
           shares a defect that is not a per-row judgement (e.g. a qualifier used
           consistently across one campaign's output). Fixable in bulk, and the
           explanation should give the date range and row count.
+      ORTHOLOG_TRANSFER_AS_EXPERIMENTAL:
+        description: >-
+          An annotation made from an experiment in another species was recorded on
+          the gene with an experimental evidence code (IDA, IMP, ...) rather than as
+          an orthology transfer (ISO). The experiment can be sound; the row
+          misstates how its evidence reaches this gene. Usually a resource's
+          documented convention, so raise it once rather than per row.
+      CONTEXT_NOT_ASSAYED:
+        description: >-
+          The cited work shows the activity but not the biological context the term
+          asserts. Typical case: a precomposed "X involved in Y" term (for example a
+          channel activity involved in regulation of presynaptic membrane potential)
+          annotated from a protein expressed in heterologous cells, which can
+          support X but cannot reach Y. The correction is usually the plain
+          activity term.
       OTHER: {}
       UNKNOWN: {}
 
@@ -4920,6 +5014,36 @@ enums:
       COMPLETE:
         description: Review is complete
 
+  RuleReviewErrorTypeEnum:
+    description: Kinds of reasoning error found in rule reviews
+    permissible_values:
+      WRONG_IDENTIFIER_MEANING:
+        description: An InterPro, FunFam, GO or EC identifier was given the name or meaning of a different entry
+      CONJUNCTION_IGNORED:
+        description: A condition was judged alone although the rule requires it together with other signatures or a taxon
+      REFUTED_BY_CURATED_ANNOTATION:
+        description: A match called a false positive carries the annotation, or a descendant, on experimental or curated evidence
+      SIZE_AS_EVIDENCE:
+        description: The number of condition sets, or a tool limit, was used as evidence that the annotation is wrong
+      GENERAL_IS_NOT_WRONG:
+        description: A true but general or redundant consequent was treated as false
+      ONTOLOGY_MISREAD:
+        description: The GO hierarchy or a term's scope was misread (a descendant called unrelated, a non-descendant offered as more specific, a process term replaced by function terms)
+      UNEXAMINED_RULE:
+        description: A verdict was given on condition sets the review never recorded or read
+      UNSUPPORTED_SOURCE:
+        description: The claim cited the review's own notes, an AI research file, a missing file or an unresolvable reference as literature
+      TAXON_MISREAD:
+        description: Taxon conditions were misstated, or a restriction that keeps a set precise was called arbitrary
+      SAMPLE_OVERGENERALISED:
+        description: A count from reviewed (Swiss-Prot) entries, or one example, was generalised to everything the rule matches
+      LOW_RECALL_IS_NOT_WRONG:
+        description: Missing coverage (false negatives) was treated as making the rule's annotations false
+      STALE_RULE_VERSION:
+        description: The claim described a version of the rule that differs from the one served at retrieved_date
+      OTHER:
+        description: Another kind of error, described in the correction
+
   RuleActionEnum:
     description: Recommended action for the rule
     permissible_values:
@@ -5611,6 +5735,12 @@ enums:
           consequence specified (use catalytic/receptor/adaptor/sequestering MF).
       GENERIC_MF:
         description: An overly generic MF term is used where a specific child term applies.
+      WRONG_MF_TERM:
+        description: >-
+          The MF term is wrong rather than vague: the gene product does not have
+          the asserted activity (e.g. a too-specific or lateral term), so the fix
+          is a different term, possibly a parent. Pairs with a WRONG_TERM source
+          defect.
       HAS_INPUT_MISUSE:
         description: >-
           'has input' used incorrectly, e.g. a receptor's ligand or a TF's DNA
@@ -5621,6 +5751,11 @@ enums:
           vice versa.
       INCORRECT_DIRECTIONALITY:
         description: Causal edge directionality (subject -> object) appears reversed.
+      WRONG_CAUSAL_SIGN:
+        description: >-
+          A causal edge has the wrong sign (positive where the evidence shows
+          inhibition, or vice versa). Pairs with a WRONG_CAUSAL_RELATION source
+          defect.
       MISSING_LOCATION:
         description: Activity lacks an 'occurs in' cellular component.
       MISSING_PROCESS:

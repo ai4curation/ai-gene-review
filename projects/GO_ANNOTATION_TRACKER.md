@@ -195,9 +195,10 @@ Enforcement, all built on `src/ai_gene_review/shadow_issues/guard.py`:
   now checked by `just validate-quotes`. Robustness: an `in_progress` queue,
   a sync that skips incomplete timeline items, a one-hour cursor overlap, CI
   validation of `issues/**`, and the notification hook extended to GitHub
-  MCP tools and every `gh api` field form. The PTHR11117 verdict is now
-  enforced (a GO:0004776 term assessment with LSC1 and SPAC16E8.17c as
-  member exceptions), and the SPAC16E8.17c row is REMOVE. NAMES_ISSUE prior
+  MCP tools and every `gh api` field form. The PTHR11117 verdict was made
+  enforceable (a GO:0004776 term assessment with LSC1 and SPAC16E8.17c as
+  member exceptions), and the SPAC16E8.17c row was set to REMOVE; both were
+  later superseded at merge (see 2026-11-16). NAMES_ISSUE prior
   work is derived by `shadow-issues backfill-prior-work`, which drops bulk
   commits naming many issues.
 
@@ -229,6 +230,22 @@ Enforcement, all built on `src/ai_gene_review/shadow_issues/guard.py`:
   Its other scores stand. A single issue cannot settle which rater is better
   calibrated, but it shows the rating depends on the rater, which argues for
   rating a sample of issues twice and reporting agreement, not one score.
+
+- 2026-11-16: merged main into this work. Main had gained a fuller
+  evolutionary review of succinyl-CoA synthetase after the 6596 shadow work
+  (#6277, corrected after an audit in #6336), covering LSC1, LSC2, the human
+  and *E. coli* subunits and both PANTHER families. The merge takes main's LSC1,
+  PTHR11117 and SPAC16E8.17c files unchanged. Main reaches the worker's
+  conclusions independently: REMOVE on the LSC1 GDP-forming IBA, NEEDS_PRUNING
+  at PTN000122012, and member exceptions for LSC1 and SPAC16E8.17c. It differs
+  in one call: the SPAC16E8.17c row stays MARK_AS_OVER_ANNOTATED, short of
+  REMOVE, because the *S. pombe* enzyme has not been assayed. Main also refines
+  the biology: the G-type beta gene was lost within fungi, not before them,
+  and Gln at position 20 does not decide GTP use. The worker's and follow-up
+  edits to those files are kept as `issues/go-annotation/6596/shadow-work.patch`
+  and `review-followup.patch`, since a squash merge would otherwise lose them,
+  and the history records for those edits are withdrawn because the edits do
+  not land.
 
 ## Next steps
 

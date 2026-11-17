@@ -66,9 +66,9 @@ GO:0102158 is the more specific, experimentally-matched term.
   PMID:18554506].
 - SUBUNIT: "Interacts with TECR" [file:human/HACD1/HACD1-uniprot.txt,
   PMID:38422897]. PMID:38422897 (Zhou et al., BBRC 2024; abstract-only cache):
-  "we confirmed the critical interactions between TECR and HACD1/2" — HACD-TECR
-  physically couples the dehydration (step 3) and reduction (step 4) steps of the
-  cycle. GOA records this as a bare GO:0005515 protein-binding IPI.
+  "we confirmed the critical interactions between TECR and HACD1/2" supports
+  association between enzymes of adjacent elongation steps. It does not establish
+  HACD1-specific substrate channeling. GOA records this as a bare GO:0005515 protein-binding IPI.
 - PMID:32296183 (HuRI reference interactome, Nature 2020; systematic Y2H):
   high-throughput binary interactions (with CPLX4/Q7Z7G2, IL10RA/Q13651,
   RNF170-5/Q96K19-5, TECR/Q9NZ01, TMEM106C/Q9BVX2). These are recorded as bare
@@ -88,28 +88,108 @@ GO:0102158 is the more specific, experimentally-matched term.
 - Isoform 2 (B0YJ81-2) uses VSP_035363 + VSP_035364, lacks the C-terminal
   catalytic region, and is "Catalytically inactive since it lacks the active
   site but may have an alternative function" [file:human/HACD1/HACD1-uniprot.txt].
-- Isoform 2 is implicated in cementum formation / hydroxyapatite crystal
-  nucleation and cell-substrate adhesion (PMID:22067203, PMID:25263524). The
-  corresponding GO terms (GO:0046848 hydroxyapatite binding, GO:0071529 cementum
-  mineralization, GO:0010811 positive regulation of cell-substrate adhesion,
-  GO:0065003 protein-containing complex assembly, GO:0019899 enzyme binding)
-  appear in the UniProt DR GO block but are **NOT** in the 17 GOA annotations
-  seeded here, so they are out of scope for this review. If added later, they
-  should be tagged `isoform: B0YJ81-2` and treated as non-core (isoform-2
-  moonlighting function, distinct from the canonical enzymatic role).
+- Recombinant CAP has cell-attachment and hydroxyapatite-related evidence
+  (PMID:22067203, PMID:25263524), assessed separately from canonical HACD1.
+  The earlier blanket attribution of absent UniProt GO lines to CAP was incorrect:
+  ER localization concerns isoform 1, and enzyme binding is not uniquely CAP-specific.
+  The original 17-context seed was a historical stage, not evidence for assigning
+  missing annotations to an isoform. The later 21-context review and explicit isoform
+  queries do not resolve the missing GOA lines. Do not invent source-row isoform flags.
 
-## Annotation review decisions (summary)
+## Historical initial decisions (superseded; false rationales corrected)
+
+The following actions describe the initial seed. Later dated entries supersede them.
+Breadth was not a valid reason to classify the two catalytic fatty-acid biosynthetic
+roles as non-core; GO:0035338 and GO:0006633 are now ACCEPT and listed in the same
+core-function object.
 
 - Core MF: GO:0102158 (VLC (3R)-3-hydroxyacyl-CoA dehydratase activity) — the
   two EXP annotations (18554506, 23933735) and the IEA(120) ACCEPTED; the
   generic GO:0018812 IBA/EXP and the Rhea-derived GO:0080023 "(2E)-enoyl-CoA
-  hydratase activity" IEA MODIFIED to GO:0102158 (same reaction, correct
-  direction/specificity).
+  hydratase activity" IEA MODIFIED to GO:0102158 for enzyme-class specificity.
+  The earlier direction argument incorrectly inferred direction from the hydratase
+  label; GO:0080023 already defines the dehydration chemistry.
 - Core BP: GO:0030497 fatty acid elongation, GO:0042761 very long-chain fatty
   acid biosynthetic process (both IBA) ACCEPTED.
 - Core location: GO:0005789 ER membrane (IBA, IEA, EXP, TAS) ACCEPTED.
 - Non-core BP: GO:0006633 fatty acid biosynthetic process (general parent),
   GO:0030148 sphingolipid biosynthetic process (downstream), GO:0035338
   long-chain fatty-acyl-CoA biosynthetic process (Reactome pathway framing).
-- GO:0005515 protein binding (two IPI): MARK_AS_OVER_ANNOTATED — bare, uninformative
-  MF term; not removed per experimental/IPI policy.
+- The initial two aggregated GO:0005515 contexts were marked MARK_AS_OVER_ANNOTATED.
+  The policy explanation was incorrect: genericity alone is not over-annotation.
+  Under the ClinGen exception, supported generic interactions remain non-core unless
+  evidence supports a specific refinement. Later entries record the partner decisions.
+
+
+## 2026-11-12: primary-source reassessment
+
+This dated reassessment supersedes the earlier action summary and its
+reaction-direction, indirect-pathway and generic-binding rationales. The earlier
+notes are retained as the prior curation record. Evidence access and its limits
+are documented in [the manual research report](HACD1-deep-research-manual.md).
+
+Fresh QuickGO retrieval yields 22 source rows and 21 distinct review contexts.
+Five HuRI partner contexts are now separate. The HACD1–TECR annotation from
+PMID:38422897 has two source-provider/date rows (IntAct and UniProt); both remain
+in the downloaded TSV and map to one shared annotation context. No source row
+has a target isoform, NOT flag or annotation extension. Do not convert a partner
+isoform, such as RNF170-5, into an HACD1 target-isoform flag.
+
+The reassessed draft has 15 ACCEPT and six KEEP_AS_NON_CORE actions, with no
+PENDING or NEW annotation. Supported generic binding follows the ClinGen policy.
+The five HuRI edges were checked in original author portal data and separately
+against IntAct curation. Those assays do not establish a physiological ER role
+for each partner. PMID:38422897 explicitly supports HACD1–TECR association, but
+its isolated stable complex and modeled active sites concern HACD2. We make no
+HACD1 substrate-channeling or adaptor-function assertion.
+
+GO:0080023 defines the dehydration reaction despite its hydratase label.
+Changing it for reaction direction would be wrong. Its Rhea-supported reaction
+scope and the generic dehydratase activity remain appropriate; the specific
+VLCFA enzyme-class annotation is already present. The prior PAINT granularity
+failure claim is removed. The retained IBD and independent functional evidence
+are respected; the actual tree/MSA was not independently retrieved.
+
+The original PMID:18554506 directly tests C16 substrate, human HACD1 ER
+localization and rescue of PHS1-suppressed yeast, including sphingolipid synthesis.
+This supports catalytic participation in fatty-acid and sphingolipid precursor
+biosynthesis. Pathway breadth does not by itself make those existing annotations
+non-core. Neither that assay nor PMID:23933735 supplies a measured C18–C26
+substrate panel. Retaining the established VLCFA enzyme-class annotation does
+not imply otherwise.
+
+Canonical HACD1-288, CAP140 and p.Tyr248Stop remain distinct. CAP lacks the
+canonical catalytic region, but an independently inspected negative CAP
+activity assay is not claimed. CAP mineralization annotations are absent from
+this fresh GOA set; no NEW mineralization, differentiation or adhesion
+annotation is introduced from the separate CAP literature.
+
+All 18 inherited supporting-text occurrences and the seven existing
+record-section fields are preserved. Source fields were seeded by the project
+pipeline and are not edited as biological judgments. The draft remains DRAFT;
+canonical validation, history scaffolding and PR delivery still follow.
+
+
+## PR #6311 review follow-up — 2026-11-12 UTC
+
+This update supersedes the preceding 15-ACCEPT/6-non-core candidate. Refine three broad MF rows to the supported GO:0102158 enzyme class, by specificity rather than reaction direction. Refine both TECR interactions to GO:0019899 enzyme binding while retaining the other four HuRI partners as non-core. Keep pathway-level fatty-acid and long-chain acyl-CoA biosynthesis accepted; retain the supported sphingolipid context as non-core, with exact yeast-rescue evidence in the manual report. Final counts: 11 ACCEPT, 5 KEEP_AS_NON_CORE, 5 MODIFY across all 21 original contexts; no NEW or PENDING.
+
+The committed manual now contains compact official ontology definitions/relations and exact original-paper excerpts for C16-only assays and yeast sphingolipid rescue; the broken private receipt link is removed. The main text was inspected independently of the unchanged abstract-only cache. Individual C18–C26 UniProt Rhea evidence links are a curator question, not an alleged curation error. PAINT tree/MSA placement remains uninspected.
+
+Correct the earlier blanket CAP claim: six UniProt GO lines are absent from canonical QuickGO, but explicit isoform queries also return zero rows; this does not establish a fetcher bug. ER localization is assigned to isoform 1, and enzyme binding is not uniquely attributable to CAP. Preserve all native source fields and isoform information rather than inventing missing rows. The family assessment follows the HACD1 specificity decision; the separately identified HACD2 correction is tracked in [PR #6316](https://github.com/ai4curation/ai-gene-review/pull/6316). Genuine historical states and history records are retained; statements that were never true are corrected in place with the reason for the error.
+
+
+## PR #6311 review follow-up — 2026-11-14 UTC
+
+Retain GO:0035338 and GO:0006633 as accepted catalytic biosynthetic roles and list
+both under the same existing dehydratase core function. Pathway breadth alone does
+not make a role non-core; this follows HACD1 evidence rather than legacy HACD2 actions.
+No additional activity or NEW annotation is introduced. Distinguish canonical
+HACD1-288 and CAP140 using functional_isoforms while preserving the native
+alternative_products catalog and all source-row fields. RNF170-5 remains supported
+non-core binding: canonical RNF170 enzyme activity is not established for that mapped
+truncated isoform. The manual records official sequence/domain sources and access limits.
+Replace the PMID:18554506 title quotation with an actual abstract finding and describe
+the C16 assay without claiming the authors explicitly resolved or deferred every other
+chain preference. Counts remain 11 ACCEPT, 5 KEEP_AS_NON_CORE and 5 MODIFY across
+21 contexts; status remains DRAFT. Earlier dated counts describe superseded candidates.

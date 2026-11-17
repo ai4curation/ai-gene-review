@@ -108,6 +108,12 @@ Until that is done, the umbrella links to them as optional.
 
 The organelle-by-stage matrix lives in
 [ORGANELLE_LIFECYCLES/coverage.yaml](ORGANELLE_LIFECYCLES/coverage.yaml).
+Every eukaryote-wide rule candidate, plus the phagosome and synaptic vesicle modules, is evaluated
+across 24 organisms in [ORGANELLE_LIFECYCLES/rule-evaluation.md](ORGANELLE_LIFECYCLES/rule-evaluation.md).
+The per-organism counts and verdicts are in
+[ORGANELLE_LIFECYCLES/selector-census.yaml](ORGANELLE_LIFECYCLES/selector-census.yaml), made by
+[ORGANELLE_LIFECYCLES/selector_census.py](ORGANELLE_LIFECYCLES/selector_census.py) with the module engine
+from PANTHER's release-pinned sequence classification files.
 
 ## Plan
 
@@ -136,8 +142,23 @@ The organelle-by-stage matrix lives in
 - [x] Lipid droplet: `lipid_droplet_lifecycle` umbrella with one eukaryote-wide rule module, `lipid_droplet_neutral_lipid_storage` (DGAT1 or DGAT2; FIT optional); `RULE_CANDIDATE`; TAG pathway and lipolysis modules referenced as optional
 - [ ] Lipid droplet: add seipin once BSCL2 has a local PANTHER entry, the PDAT route, and a eukaryote-wide lipolysis step
 - [x] Plastid: `plastid_lifecycle` umbrella (Embryophyta) with two rule modules, `plastid_protein_import` (Toc34 and Toc159 receptors, Toc75, Tic20, Tic110, ClpC, stromal processing peptidase; Tic214 and Tic40 optional) and `plastid_division` (FtsZ1, FtsZ2, ARC6, ARC5; MinD and PDV1/PDV2 optional), Arabidopsis-grounded; both `RULE_CANDIDATE`; photosynthesis modules referenced as optional
-- [ ] Plastid: add the stromal Hsp70/Hsp90C motor and the other 1-MDa TIC subunits, other green lineages' subfamilies (a green-algal import rule needs its own Toc34 selector, as Chlamydomonas TOC34 is in PTHR10903:SF135); a tighter MinD selector; model plastid quality control and chlorophagy; decide how red-algal and secondary plastids are scoped
+- [x] Plastid: stromal motor partners (cpHsc70 required; Hsp90C, FtsHi optional), Tic236 linker (required) and the remaining TIC subunits (Tic56, Tic100, Tic21, Tic22, Tic62, Tic32, Tic55, optional) added to `plastid_protein_import`
+- [ ] Plastid: model Ycf2 once it has a reviewed entry; resolve the PANTHER-file placements of Tic100, Tic32 and ClpC1; make the required cpHsc70 step checkable per genome (the PTHR19375 entries table is capped at 1,000 rows); other green lineages' subfamilies (a green-algal import rule needs its own Toc34 selector, as Chlamydomonas TOC34 is in PTHR10903:SF135); a tighter MinD selector; model plastid quality control and chlorophagy; decide how red-algal and secondary plastids are scoped
 - [x] Plant vacuole: `plant_vacuole_lifecycle` umbrella (Viridiplantae) with one new rule module, `plant_vacuole_fusion` (Mon1-Ccz1, RabG3, Vps41 and Vps39, SYP22 and VTI11), Arabidopsis-grounded; `RULE_CANDIDATE`; requires the eukaryote-wide ESCRT-III and V-ATPase rules
-- [ ] Plant vacuole: add the HOPS core, SYP51 and VAMP713, VSR sorting with retromer, AVP1, TIPs and NHX1; add fungal and animal Rab7 and SNARE selectors, and Vps39 from PTHR12894:SF49 (SF27 holds the CORVET TGFBRAP1/Vps3 proteins outside plants), so the fusion step can join `lysosome_lifecycle`
-- [ ] Specialized organelles
-- [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)
+- [x] Plant vacuole: `plant_vacuolar_sorting_receptor_cycle` (VSR, retromer; RMR optional) and `plant_tonoplast_transport` (V-PPase, TIP1, vacuolar NHX; TPC1, TPK1, CLC-a, ALMT9 optional), both required by `plant_vacuole_lifecycle`; `RULE_CANDIDATE`
+- [ ] Plant vacuole: add the HOPS core, SYP51 and VAMP713; resolve the VSR and RMR placements between UniProt and PANTHER's files; add fungal and animal Rab7 and SNARE selectors, and Vps39 from PTHR12894:SF49 (SF27 holds the CORVET TGFBRAP1/Vps3 proteins outside plants), so the fusion step can join `lysosome_lifecycle`
+- [x] Cilium: `cilium_lifecycle` umbrella (Eukaryota) requiring one new rule module, `intraflagellar_transport_core` (nine IFT-B and four IFT-A subunits and the dynein-2 intermediate chain; IFT88, IFT56, IFT54, IFT20, the other dynein-2 chains and kinesin-2 optional), human-grounded at Eukaryota-level PAINT nodes; `RULE_CANDIDATE`
+- [ ] Cilium: check the moss IFT gaps and the optional subunits' missing lineages against proteomes; add the BBSome, transition zone and motile axoneme as eukaryote-wide rules; model ciliary membrane trafficking and resorption
+- [x] Phagosome: assessed; `phagosome_maturation` stays descriptive. Its core is the endolysosomal machinery, which the lysosome/endosome endosome-maturation item will model as a rule; three of its required selectors miss the human proteins in PANTHER's files and two required steps (RILP, LAMP) are holozoan-only (see coverage)
+- [x] Synaptic vesicle: assessed; `synaptic_vesicle_cycle` stays `DESCRIPTIVE`. Its required steps hold in human, fly, worm and Nematostella, but only its synapsin step separates neuronal animals from other lineages (Trichoplax fails on it alone), and its Metazoa context, which the module does not qualify, includes sponges and placozoans (see coverage and `selector-census.yaml`)
+- [ ] Synaptic vesicle: narrow the cycle's context to animals with neurons and name the exceptions in the module; find selectors confined to neuronal animals; check ctenophores and proteomes; then reassess as a rule candidate
+- [ ] Phagosome: repoint the three `phagosome_maturation` selectors that miss human (Rab5, PIKfyve, V0a), already named in the module's own notes
+- [ ] Specialized organelles: lineage-specific organelles
+- [x] Evaluate the rule candidates against PANTHER's reference-proteome classification files for 24 organisms, with the module engine ([rule-evaluation](ORGANELLE_LIFECYCLES/rule-evaluation.md)); mitosome- and hydrogenosome-bearing lineages fail the mitochondrial and peroxisomal rules as expected, and several rules fail in model organisms on one selector
+- [x] Fix the MPP beta and alpha selectors (#6416) and the Pex2 selector (#6418), and rerun the rule evaluation with the fixes
+- [ ] Fix the remaining model-organism selector defects listed in the rule evaluation; several of the smaller ones (Nup88, Seh1, Atg steps, SRbeta) also fail in protist lineages, so check each against the full gap list before narrowing the fix to one organism
+- [ ] Triage the remaining gaps in the rule evaluation's full gap list (early animals, protists and the reduced-organelle lineages)
+- [ ] Check the cilium rule's fly (IFT81, IFT74, IFT139), worm (DYNC2I2) and Trichoplax (IFT74) gaps
+- [ ] Find out whether the lineages that PTHR13166 misses (plants and green algae, Monosiga, the chytrid, Phytophthora, Thalassiosira, Giardia, Trichomonas, Entamoeba) carry an ISD11 the family does not capture
+- [ ] Compile protein-complex annotons into their active units in `module_logic`, so family-keyed oracles can evaluate complex steps
+- [ ] Check the census gaps against the proteomes themselves, starting with the mitosome and hydrogenosome lineages once the selector defects are fixed
