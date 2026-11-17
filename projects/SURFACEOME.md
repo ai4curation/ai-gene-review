@@ -81,7 +81,7 @@ canonical growth):
 | likely | 1,252 | 188 |
 | low / uncertain / no | 2,297 | 362 |
 
-_(as of 2026-11-17; regenerate with the coverage script — see [Methods](#methods--reproducing).)_
+_(as of 2026-11-17; regenerate with the coverage script — see [Methods](#methods-and-reproducing).)_
 
 Two existing reviews were corrected during the benchmark pass: **HSPA1A** and
 **HMGB1** plasma-membrane / cell-surface rows moved ACCEPT → KEEP_AS_NON_CORE,
@@ -125,7 +125,7 @@ Two problems found:
 How several candidate "is it surface?" rules, applied to the current public GO
 annotations, score against the benchmark. Accuracy uses the paper's convention
 (yes+contextual = surface, n=147), and separately yes vs no only (n=116). (Rules
-and the exact GAF snapshot are in [Methods](#methods--reproducing); numbers are
+and the exact GAF snapshot are in [Methods](#methods-and-reproducing); numbers are
 from the 2026-10-21 run.)
 
 | Rule (public annotations) | yes | ctx | no called surface | Acc (147) | Acc yes/no (116) |
@@ -422,7 +422,7 @@ a prose `reason`. Converting those to `part_of CL/UBERON` extensions where the
 cell type or tissue is known is a worthwhile structural cleanup (candidate for a
 follow-up pass; not done corpus-wide here).
 
-## Methods / reproducing
+## Methods and reproducing
 
 Scripts live in `projects/SURFACEOME/scripts/` (`overlap.py` for the coverage
 table, `score_gaf.py` and `score_reviews.py` for the rule tables). To regenerate:
@@ -433,8 +433,10 @@ projects/SURFACEOME/scripts/run_all.sh        # writes results/*.tsv and *.txt
 ```
 
 `run_all.sh` needs the oaklib GO sqlite at `~/.data/oaklib/go.db` (created by any
-`runoak -i sqlite:obo:go` call). Results drift as GO and the GAF are updated; the
-numbers above are from the run on 2026-10-21.
+`runoak -i sqlite:obo:go` call). Results drift as GO and the GAF are updated. The
+coverage table (`overlap.py`) was regenerated 2026-11-17; the rule-score tables
+(`score_gaf.py`, `score_reviews.py`) are from the run on 2026-10-21 and have not
+been re-run since.
 
 ## Next steps
 
