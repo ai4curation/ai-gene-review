@@ -4,6 +4,34 @@ maturity: IN_PROGRESS
 tags: [OBSOLETION, BIOLOGY_DOMAIN]
 species: [human, mouse, yeast, SCHPO, DROME]
 collections: [GO_TRACKER_BACKLOG]
+proposed_ontology_changes:
+- change_type: NODE_OBSOLETION_WITH_NO_DIRECT_REPLACEMENT
+  ontology: GO
+  about_node:
+    id: GO:0051764
+    label: actin crosslink formation
+  has_nondirect_replacement:
+  - id: GO:7770064
+    label: actin-filament cross-linking activity
+  change_dsl: obsolete GO:0051764
+  justification: >-
+    Cross-linking two actin filaments is one protein's activity, not a process, and GO
+    created the molecular function GO:7770064 actin-filament cross-linking activity for it.
+    Recorded as a non-direct replacement because a biological process cannot be replaced
+    outright by a molecular function, and some experimental rows on the term are mutant or
+    knockdown phenotypes that belong on a process term instead. The per-row assessment of all
+    24 experimental GOA rows is in ACTIN_DYNAMICS_MF_REFACTORING/crosslinking_reannotation.yaml.
+  origin: UPSTREAM_PROPOSED
+  stance: AGREE
+  ontology_state_verified: '2026-11-12'
+  affected_annotations:
+  - genes/human/FLNA/FLNA-ai-review.yaml
+  - genes/human/BAIAP2/BAIAP2-ai-review.yaml
+  - genes/human/BAIAP2L1/BAIAP2L1-ai-review.yaml
+  - genes/human/BAIAP2L2/BAIAP2L2-ai-review.yaml
+  - genes/human/DPYSL3/DPYSL3-ai-review.yaml
+  - genes/DROME/wash/wash-ai-review.yaml
+  upstream_tracker_issue: https://github.com/geneontology/go-ontology/issues/19185
 ---
 
 # Actin Dynamics: Process Terms to Molecular Functions
@@ -32,8 +60,10 @@ in a [reannotation table](ACTIN_DYNAMICS_MF_REFACTORING/crosslinking_reannotatio
 
 Four PAINT nodes give the term to the other 268 phylogenetic (IBA) rows, and
 the electronic rows follow those nodes. The table says what each node should
-carry. Five reviews in this repo now carry GO:7770064 in place of the process
-term. Severing, nucleation and polymerase are not started.
+carry. Six reviews in this repo now carry GO:7770064 in place of the process
+term, and the obsoletion is recorded as a structured `proposed_ontology_changes`
+entry in this page's frontmatter. Severing, nucleation and polymerase are not
+started.
 
 ## Upstream tickets
 
@@ -95,8 +125,8 @@ reviews naming the term in `core_functions`.
 | GO:1903919 negative regulation of actin filament severing | 3 | 1 | 0 | 0 | 0 | 3 | 0 | 0 |  | 0 |
 | GO:0071846 actin filament debranching | 4 | 2 | 4 | 0 | 0 | 0 | 0 | 0 |  | 2 |
 | GO:0030043 actin filament fragmentation | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |  | 0 |
-| GO:7770064 actin-filament cross-linking activity | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | NEW 1 | 3 |
-| GO:0051764 actin crosslink formation | 9 | 6 | 1 | 0 | 7 | 0 | 0 | 1 |  | 1 |
+| GO:7770064 actin-filament cross-linking activity | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | NEW 1 | 5 |
+| GO:0051764 actin crosslink formation | 9 | 6 | 0 | 0 | 8 | 0 | 0 | 1 |  | 0 |
 | GO:0051017 actin filament bundle assembly | 14 | 12 | 7 | 3 | 0 | 1 | 0 | 1 | NEW 2 | 6 |
 | GO:0045010 actin nucleation | 2 | 2 | 0 | 0 | 1 | 0 | 0 | 0 | NEW 1 | 1 |
 | GO:0034314 Arp2/3 complex-mediated actin nucleation | 16 | 5 | 16 | 0 | 0 | 0 | 0 | 0 |  | 5 |
@@ -116,10 +146,11 @@ What stands out:
   These are MF_in_BP cases: process terms that describe one protein's
   activity. Each row should carry an MF instead, once one exists. For
   cross-linking it now does:
-  - seven GO:0051764 rows are MODIFY to GO:7770064 (BAIAP2, BAIAP2L1,
+  - eight GO:0051764 rows are MODIFY to GO:7770064 (FLNA, BAIAP2, BAIAP2L1,
     DPYSL3, DROME wash);
-  - FLNA's row is left as accepted;
-  - BAIAP2L2's row stays UNDECIDED.
+  - BAIAP2L2's row stays UNDECIDED;
+  - five reviews (FLNA, BAIAP2, DPYSL3, mouse Afap1l2, ESPN) now name
+    GO:7770064 as a core MF, and none names GO:0051764 as a core process.
 - **One review already uses GO:7770064 as a core MF** (human/ESPN), and
   human/AFAP1's review cites it as supported, so the cross-linking replacement
   has been exercised here. Likewise human/CFL2 already names GO:0003789 as its
@@ -149,9 +180,11 @@ What stands out:
 ### Re-check existing reviews (process rows that need an MF decision)
 
 - [x] human/BAIAP2, BAIAP2L1, DPYSL3; DROME/wash; and the mouse/Afap1l2 NEW
-      row: GO:0051764 rows moved to GO:7770064 (2026-11-16)
-- [ ] human/FLNA: GO:0051764 IDA row (PMID:10051605) left as accepted
-      pending the full text; see the CHECK entry in the table
+      row: GO:0051764 rows moved to GO:7770064 (2026-11-16). DPYSL3 also
+      gains a cross-linking core function beside its filamin-binding one
+- [x] human/FLNA: core MF set to GO:7770064 and the GO:0051764 row moved to
+      it, on the strength of PMID:2391361 and PMID:25358863. The upstream IDA
+      row's own evidence (PMID:10051605) stays a CHECK in the table
 - [ ] human/BAIAP2L2: GO:0051764 IBA row left UNDECIDED, as its review chose
 - [ ] human/CFL2 (GO:0051014 ACCEPT beside a GO:0003789 core MF), CAPG
       (GO:0051014 REMOVE), MYH9 (GO:1903919 marked over-annotated): severing
@@ -188,6 +221,8 @@ to the tracker without a decision by the project lead.
 - 2026-11-16: cross-linking reannotation table done (24 rows: 16 MIGRATE_TO_MF,
   3 PROCESS_ONLY, 4 CHECK, 1 WRONG_SENSE). Five reviews updated to GO:7770064.
   Severing, nucleation and polymerase not started.
+- 2026-11-17: after review, FLNA and DPYSL3 core functions aligned and the
+  obsoletion recorded in frontmatter. Six reviews now carry GO:7770064.
 
 ## NOTES
 
@@ -227,3 +262,10 @@ to the tracker without a decision by the project lead.
   `propagation_review` with root cause TERM_SCOPING_PROBLEM. BAIAP2 and
   Afap1l2 now name GO:7770064 as their core MF. Neither the DPYSL3 nor the
   BAIAP2 core function lists GO:0051764 as a process any more.
+- Review follow-up (2026-11-17):
+  - FLNA's core MF and GO:0051764 row moved to GO:7770064. The full text of
+    PMID:10051605 is not open access, so the upstream row stays a CHECK.
+  - DPYSL3 gained a cross-linking core function.
+  - The obsoletion was added as a `proposed_ontology_changes` entry with
+    stance AGREE. `adoption_status` is omitted until GO makes the change, as
+    the change policy requires.
