@@ -5011,6 +5011,18 @@ def refresh_panther_members(
             # files miss: for some proteins the two sources disagree, and neither
             # is privileged, so the UniProt value is recorded as an alternate that
             # membership checks also accept (reporting the disagreement).
+            #
+            # One gap, left open deliberately: a cited chain or isoform id
+            # (P57764-PRO_0000437526, Q14114-4) can never appear in the
+            # classification files, which key on bare accessions, so it always
+            # takes UniProt's value with nothing to conflict against. Where the
+            # two sources disagree about the parent entry, the index can hold the
+            # file value for the entry beside the UniProt value for its chain with
+            # no alternate recorded. Closing it means asking the files about each
+            # cited id's parent and fanning the answer back out, which changes
+            # which source wins for those ids -- a data change to the index, and
+            # to what validate-families accepts for them, so it belongs in its own
+            # change rather than riding along with the resolver fix.
             typer.echo(f"checking {len(needed)} accession(s) against UniProt...")
             from_uniprot = fetch_panther_from_uniprot(needed)
             for accession, family_sf in from_uniprot.items():

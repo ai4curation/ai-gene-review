@@ -576,8 +576,6 @@ def test_fetch_panther_from_uniprot_falls_back_per_accession_when_a_batch_is_rej
 
     def fake_urlopen(url, timeout=None):
         calls.append(url)
-        if "BOGUS" in url and url.count("accessions=") and "%2C" in url.split("accessions=")[1]:
-            raise urllib.error.HTTPError(url, 400, "Bad Request", {}, None)
         if "BOGUS" in url:
             raise urllib.error.HTTPError(url, 400, "Bad Request", {}, None)
         accession = url.split("accessions=")[1].split("&")[0]
@@ -600,3 +598,67 @@ def test_fetch_panther_from_uniprot_gives_up_quietly_on_a_single_bad_accession(m
 
     monkeypatch.setattr(panther_families.urllib.request, "urlopen", fake_urlopen)
     assert fetch_panther_from_uniprot(["BOGUS_ID"]) == {}
+
+
+@pytest.mark.parametrize("code", [429, 500, 503])
+def test_fetch_panther_from_uniprot_propagates_transient_http_failures(monkeypatch, code):
+    """"Ask again later" must not be recorded as "this protein has no family".
+
+    The caller writes every accession missing from the result under
+    ``UNRESOLVED_MARKER``, which ``load_member_index_gaps`` classifies as
+    ``absent`` and the next incremental run then treats as ``known_absent`` and
+    never re-queries short of ``--rebuild``. Swallowing a 429 or a 5xx would
+    therefore turn one throttled request into a sticky false absence for up to a
+    whole batch, so only a 400 is tolerated and the rest propagate. One failed
+    call must also not fan out into a batch's worth of un-backed-off retries.
+    """
+    calls: list[str] = []
+
+    def fake_urlopen(url, timeout=None):
+        calls.append(url)
+        raise urllib.error.HTTPError(url, code, "Transient", {}, None)
+
+    monkeypatch.setattr(panther_families.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(panther_families, "UNIPROT_BATCH_SIZE", 3)
+
+    with pytest.raises(urllib.error.HTTPError) as raised:
+        fetch_panther_from_uniprot(["P0AEK4", "P0A6R0", "P0A6Q6"])
+    assert raised.value.code == code
+    assert len(calls) == 1
+
+
+def test_fetch_panther_from_uniprot_propagates_a_transient_failure_on_one_accession(
+    monkeypatch,
+):
+    """The single-accession path takes the same gate as the batch path."""
+
+    def fake_urlopen(url, timeout=None):
+        raise urllib.error.HTTPError(url, 503, "Service Unavailable", {}, None)
+
+    monkeypatch.setattr(panther_families.urllib.request, "urlopen", fake_urlopen)
+    with pytest.raises(urllib.error.HTTPError):
+        fetch_panther_from_uniprot(["P0AEK4"])
+
+
+def test_fetch_panther_from_uniprot_propagates_a_transient_failure_during_retries(
+    monkeypatch,
+):
+    """A 400 opens the per-accession retry; a 5xx inside it still propagates."""
+    calls: list[str] = []
+
+    def fake_urlopen(url, timeout=None):
+        calls.append(url)
+        asked = url.split("accessions=")[1].split("&")[0]
+        if "%2C" in asked:  # the whole batch in one request
+            raise urllib.error.HTTPError(url, 400, "Bad Request", {}, None)
+        if "P0A6R0" in asked:
+            raise urllib.error.HTTPError(url, 503, "Service Unavailable", {}, None)
+        accession = url.split("accessions=")[1].split("&")[0]
+        return _FakeResponse(_panther_payload((accession, "PTHR43159:SF2")))
+
+    monkeypatch.setattr(panther_families.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(panther_families, "UNIPROT_BATCH_SIZE", 3)
+
+    with pytest.raises(urllib.error.HTTPError) as raised:
+        fetch_panther_from_uniprot(["P0AEK4", "P0A6R0", "P0A6Q6"])
+    assert raised.value.code == 503

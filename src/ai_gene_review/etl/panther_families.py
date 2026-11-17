@@ -1144,6 +1144,8 @@ def rewrite_panther_labels(
 
 UNIPROT_ACCESSIONS_URL = "https://rest.uniprot.org/uniprotkb/accessions"
 UNIPROT_BATCH_SIZE = 100
+#: The one status that says the request itself is unusable rather than untimely.
+HTTP_BAD_REQUEST = 400
 
 
 def _best_panther_xref(cross_references: Iterable[dict]) -> Optional[str]:
@@ -1188,6 +1190,11 @@ def parent_accession(cited: str) -> str:
     if one appears in it. They also carry no PANTHER cross-reference of their
     own, so the parent entry's family is the answer wanted, not a workaround.
 
+    Stripping a trailing ``-<digits>`` is safe because a UniProtKB accession
+    never contains a hyphen: both the six-character form (``P0AEK4``) and the
+    ten-character form (``A0A0B4J2F0``) are alphanumeric throughout, so a
+    hyphen can only start a suffix.
+
     >>> parent_accession("P57764-PRO_0000437526")
     'P57764'
     >>> parent_accession("Q9UJF2-2")
@@ -1226,21 +1233,37 @@ def _panther_xrefs_tolerating_bad_ids(batch: List[str]) -> Dict[str, str]:
     The endpoint fails the entire request when any id in it is unusable, so
     without this one bad accession would abort the index build and make
     ``validate-families`` report "membership not indexed yet" for every family
-    in the corpus. External interface, hence the broad tolerance: an id UniProt
-    will not answer for is left unresolved (and recorded as absent by the
-    caller) rather than taking the build down with it.
+    in the corpus. External interface, hence the tolerance: an id UniProt will
+    not answer for is left unresolved (and recorded as absent by the caller)
+    rather than taking the build down with it.
+
+    Only a 400 earns that tolerance. The caller writes each accession missing
+    from the result under ``UNRESOLVED_MARKER``, which
+    :func:`load_member_index_gaps` reads as ``absent`` -- both sources consulted,
+    no family -- and :func:`incremental_member_index` then takes as settled and
+    does not re-query without ``--rebuild``. A 400 means the id itself is
+    unusable, so that record is true; a 429 or 5xx means "ask again later", and
+    swallowing it would turn one throttled request into a sticky false absence
+    for up to a whole batch. Those propagate, as ``URLError`` and timeouts
+    already do, which also keeps a rate-limited batch from immediately firing a
+    batch's worth of un-backed-off single requests.
     """
     try:
         return _request_panther_xrefs(batch)
-    except urllib.error.HTTPError:
+    except urllib.error.HTTPError as err:
+        if err.code != HTTP_BAD_REQUEST:
+            raise
         if len(batch) == 1:
             return {}
+    # Fall through only for a rejected batch of more than one: find out which
+    # id the endpoint will not answer for, and keep the rest.
     found: Dict[str, str] = {}
     for accession in batch:
         try:
             found.update(_request_panther_xrefs([accession]))
-        except urllib.error.HTTPError:
-            continue
+        except urllib.error.HTTPError as err:
+            if err.code != HTTP_BAD_REQUEST:
+                raise
     return found
 
 
