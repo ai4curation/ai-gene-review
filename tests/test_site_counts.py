@@ -37,6 +37,15 @@ def repo(tmp_path: Path) -> Path:
     ):
         _touch(tmp_path, relative)
     _touch(tmp_path, "modules/m.yaml", "id: MODULE:m\ntitle: M\nmodule:\n  id: m\n")
+    _touch(
+        tmp_path,
+        "projects/collections.yaml",
+        "MAPPINGS:\n  title: Mapping reviews\n  index: MAPPING_REVIEWS\n",
+    )
+    _touch(tmp_path, "projects/OLD.md", "---\ntitle: Old\ntags: [OBSOLETION]\n---\n")
+    _touch(
+        tmp_path, "projects/M2GO.md", "---\ntitle: M2GO\ncollections: [MAPPINGS]\n---\n"
+    )
     return tmp_path
 
 
@@ -46,21 +55,35 @@ def test_collect_site_counts(repo: Path) -> None:
     assert counts["prediction_reviews"] == 1
     assert counts["families"] == 1
     assert counts["gocam_reviews"] == 1
-    assert counts["projects"] == 1
+    assert counts["projects"] == 3
+    assert counts["obsoletion_projects"] == 1
+    assert counts["mapping_reviews"] == 1
     assert counts["rule_reviews"] == 1
     assert counts["curated_rules"] == 1
     assert counts["modules"] == 1
 
 
-def test_stamp_fills_markers_in_staged_homepage(tmp_path: Path) -> None:
-    (tmp_path / "index.html").write_text("<span><!-- count:genes --> genes</span>")
-    stamp_site_counts(tmp_path, {"genes": 1234})
-    assert (tmp_path / "index.html").read_text() == "<span>1,234 genes</span>"
+def test_stamp_fills_markers_in_staged_homepage(repo: Path, tmp_path: Path) -> None:
+    site = tmp_path / "_site"
+    site.mkdir()
+    (site / "index.html").write_text("<span><!-- count:genes --> genes</span>")
+    stamp_site_counts(site, repo)
+    assert (site / "index.html").read_text() == "<span>2 genes</span>"
 
 
-def test_unknown_marker_fails() -> None:
+def test_stamp_computes_only_requested_counts(tmp_path: Path) -> None:
+    """A page without project markers needs no projects/collections.yaml."""
+    site = tmp_path / "_site"
+    site.mkdir()
+    (site / "index.html").write_text("<p>no markers</p>")
+    stamp_site_counts(site, tmp_path)
+    assert (site / "index.html").read_text() == "<p>no markers</p>"
+
+
+def test_unknown_marker_fails(tmp_path: Path) -> None:
+    (tmp_path / "index.html").write_text("<!-- count:gnees -->")
     with pytest.raises(KeyError, match="gnees"):
-        fill_counts("<!-- count:gnees -->", {"genes": 1})
+        stamp_site_counts(tmp_path, tmp_path)
 
 
 def test_front_page_markers_are_all_known() -> None:

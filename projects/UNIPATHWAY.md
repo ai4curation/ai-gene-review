@@ -1,5 +1,6 @@
 ---
 title: "UniPathway Unique Terms Project"
+collections: [MAPPINGS]
 maturity: MATURE
 last_reviewed: 2026-10-05
 tags: [PIPELINE, FLAGSHIP]

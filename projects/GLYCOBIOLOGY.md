@@ -1,5 +1,6 @@
 ---
 title: "Glycobiology Project"
+collections: [MAPPINGS]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [human]

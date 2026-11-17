@@ -485,12 +485,38 @@ nothing; renin performs every step of the conversion. So the test is never "is m
 the substrate" but "does my gene do any of the work", and a fibrinogen-shaped case can
 legitimately carry the term.
 
+**The check is a guide, not an oracle, and its negative result is the fragile one.** A
+positive result is cheap to read: comparators in the same role carry the term, so the
+absence on your gene is a gap. A *negative* result is the one that licenses the strong
+conclusion — do not propose — so it carries the weight and deserves the scrutiny.
+**Before trusting a negative, confirm the query can return a positive**: run it against a
+gene you already know carries the term, or query the term id directly and check the
+hit count is non-zero for the cohort as a whole. A malformed query returns a clean,
+confident, entirely false absence, and it does not look like an error.
+
+The failure has happened here. A review declined to propose `GO:0042742 defense response
+to bacterium` for GZMB on the reported grounds that no cytotoxic granule effector carries
+any bacterial-defense term. The query had asked QuickGO for each gene's
+biological-process annotations and filtered the results on the term-name field, which
+that call shape returns empty, so the filter matched nothing whatever the data said. It
+returned 200 results and no error. The only symptom was an unusually clean negative
+across all four genes, which reads as a finding and is in fact the tell. Re-run by term
+id, GNLY carries `GO:0042742` by IDA together with `GO:0031640` and `GO:0061844`, and
+GSDMB carries it by IBA; see the GZMB correction in `history/genes/human/GZMB/`. Read
+that way round, a result too tidy to be curation is usually not curation.
+
+Nor does a positive result compel the annotation. Comparators tell you whether a
+convention exists; they never establish that your gene does the work. The participation
+test above still governs, and a term carried by three same-role comparators is still
+wrong for a gene that is merely necessary for the process.
+
 Therefore, before proposing a `NEW` process term:
 
 - **Name the entity that performs the step.** If the answer is another gene product,
   the term belongs to that one. Necessity evidence does not answer this question.
 - **Run the comparator check** above, and treat a systematic absence as a convention
-  to identify rather than a gap to fill.
+  to identify rather than a gap to fill — after confirming the query can return a
+  positive at all, since a malformed one reports a confident false absence.
 - **Read the term's parents.** They usually say what kind of thing carries the term.
   A process under `GO:0006508 proteolysis` names whatever does the cleaving — which is
   the substrate itself in the autoprocessing case (`GO:0016540`), and otherwise is not.
@@ -1046,6 +1072,16 @@ just render-gocams     # every gocams/<id>/<id>-review.yaml, plus an index
 Output: `pages/gocams/<id>.html` and `pages/gocams/index.html`. Like gene HTML,
 this is a gitignored build product rendered by the Pages workflow; do not commit it.
 
+### Feedback and rules landing pages
+```bash
+just render-hubs       # pages/feedback/ and pages/rules/index.html
+```
+`pages/feedback/` publishes the exporters' output (`export-ontology-changes`,
+`export-source-defects`, `export_proposed_terms.py`) as HTML reports plus TSV
+downloads, and lists the `OBSOLETION`-tagged and `MAPPINGS` projects.
+`pages/rules/index.html` lists the curated rules (`rules/curated/CR-*.yaml`) and
+links the external rule reviews. Both are gitignored build products.
+
 ### Project pages
 Project docs live in `projects/`. Render with:
 ```bash
@@ -1088,7 +1124,10 @@ index page gets an auto-generated member table, members get a link back to it,
 and the all-projects table gains a Collection filter. Current collections:
 `FUNCTION_PREDICTION` (index `FUNCTION_PREDICTION_EVALUATION`) and
 `HOMOLOGY_PROPAGATION` (index `HOMOLOGY_PROPAGATION`, with the propagation
-browser at `app/propagation/`).
+browser at `app/propagation/`), and `MAPPINGS` (index `MAPPING_REVIEWS`), for reviews
+of vocabulary-to-GO mappings such as InterPro2GO, Rhea2GO and TC2GO. A mapping review
+project should join `MAPPINGS`; one proposing an obsoletion should carry the
+`OBSOLETION` tag. Both feed the feedback-to-resources page.
 
 **Manual reviews.** A project page may record reviewer sign-offs in frontmatter
 under `manual_reviews` (a list). Each entry needs a `reviewed_by`; `status` (if

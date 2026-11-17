@@ -189,22 +189,43 @@ class Remap:
 
 
 # Remap statuses the bump itself causes; only these anchors are listed in the report.
-BUMP_DRIVEN = frozenset({"remap", "split", "unresolved", "family_only_in_target"})
+# ``moved_family_only``: a subfamily anchor whose members are all recorded only at
+# family level, in another family. No id is proposed, since coarsening a subfamily
+# citation to a family is a curator's call; the members' rows name the family.
+BUMP_DRIVEN = frozenset(
+    {"remap", "split", "unresolved", "family_only_in_target", "moved_family_only"}
+)
 
 
-def _levels(assignments: Iterable[str], subfamily_level: bool) -> Set[str]:
-    """Members' ids at the declared level.
+def _levels(assignments: Iterable[str], declared: str) -> Set[str]:
+    """Members' ids at the level of the ``declared`` id, decided family first.
 
-    A classification row may record only a bare family (no subfamily recorded, not "no
-    subfamily exists"); at subfamily level such a row says nothing, so it is ignored
-    rather than read as a proposal to coarsen the anchor to its family.
+    A classification row may record only a bare family: the member is in that family,
+    its subfamily not recorded (not "no subfamily exists"). A bare row agrees with any
+    subfamily id of its own family, so it is folded into one when that family has one,
+    and otherwise kept as the family id, which still says which family the member is
+    in. Against a subfamily anchor, bare rows in the anchor's own family alone say
+    nothing and give the empty set, never a proposal to coarsen the anchor.
 
-    >>> sorted(_levels(["PTHR1:SF2", "PTHR1"], True)), sorted(_levels(["PTHR1:SF2", "PTHR1"], False))
-    (['PTHR1:SF2'], ['PTHR1'])
+    >>> sorted(_levels(["PTHR1:SF2", "PTHR1"], "PTHR1:SF5"))
+    ['PTHR1:SF2']
+    >>> sorted(_levels(["PTHR9:SF1", "PTHR9"], "PTHR1:SF5"))
+    ['PTHR9:SF1']
+    >>> sorted(_levels(["PTHR1:SF2", "PTHR9"], "PTHR1:SF5"))
+    ['PTHR1:SF2', 'PTHR9']
+    >>> sorted(_levels(["PTHR1", "PTHR9:SF1"], "PTHR1:SF5"))
+    ['PTHR1', 'PTHR9:SF1']
+    >>> _levels(["PTHR1", "PTHR1"], "PTHR1:SF5")
+    set()
+    >>> sorted(_levels(["PTHR1:SF2", "PTHR1"], "PTHR1"))
+    ['PTHR1']
     """
-    if subfamily_level:
-        return {value for value in assignments if ":" in value}
-    return {value.split(":", 1)[0] for value in assignments}
+    if ":" not in declared:
+        return {value.split(":", 1)[0] for value in assignments}
+    values = set(assignments)
+    subfamily_recorded = {value.split(":", 1)[0] for value in values if ":" in value}
+    levels = {value for value in values if ":" in value or value not in subfamily_recorded}
+    return set() if levels == {declared.split(":", 1)[0]} else levels
 
 
 def propose_remap(
@@ -212,10 +233,11 @@ def propose_remap(
 ) -> Remap:
     """Propose the target-release id for an anchor from its members' classification.
 
-    A proposal is made only when every member classified at the declared level in the
-    target release agrees. Members split across ids, missing from the classification
-    files or recorded only at family level are told apart from the same state already
-    present in the current release, which the bump did not cause.
+    A proposal is made only when every member agrees in the target release, judged
+    family first (see ``_levels``), and it is never a bare family for a subfamily
+    anchor. Members split across ids, missing from the classification files or
+    recorded only at family level are told apart from the same state already present
+    in the current release, which the bump did not cause.
 
     >>> a = Anchor("m.yaml", "$", ("PTHR1:SF5",), ("P1", "P2"))
     >>> propose_remap(a, {"P1": "PTHR1:SF5"}, {"P1": "PTHR1:SF5", "P2": "PTHR1:SF5"}).status
@@ -235,6 +257,13 @@ def propose_remap(
     ('family_only_in_target', None)
     >>> propose_remap(a, {"P1": "PTHR1:SF5"}, {"P1": "PTHR1", "P2": "PTHR1:SF9"}).proposed
     'PTHR1:SF9'
+    >>> propose_remap(a, {"P1": "PTHR1:SF5"}, {"P1": "PTHR9", "P2": "PTHR1:SF5"}).status
+    'split'
+    >>> propose_remap(a, {"P1": "PTHR1:SF5"}, {"P1": "PTHR9:SF1", "P2": "PTHR9"}).proposed
+    'PTHR9:SF1'
+    >>> r = propose_remap(a, {"P1": "PTHR1:SF5"}, {"P1": "PTHR9", "P2": "PTHR9"})
+    >>> r.status, r.proposed
+    ('moved_family_only', None)
     >>> fam = Anchor("m.yaml", "$", ("PTHR1",), ("P1",))
     >>> propose_remap(fam, {"P1": "PTHR2:SF1"}, {"P1": "PTHR1:SF3"}).mismatched_in_current
     True
@@ -244,8 +273,7 @@ def propose_remap(
     if len(anchor.declared) != 1:
         return Remap("multiple_declared", current=current, target=target)
     declared = anchor.declared[0]
-    subfamily_level = ":" in declared
-    current_levels = _levels(current.values(), subfamily_level)
+    current_levels = _levels(current.values(), declared)
     mismatched = bool(current_levels) and declared not in current_levels
 
     def remap(status: str, proposed: Optional[str] = None) -> Remap:
@@ -253,13 +281,17 @@ def propose_remap(
 
     if not target:
         return remap("unresolved" if current else "not_classified")
-    target_levels = _levels(target.values(), subfamily_level)
+    target_levels = _levels(target.values(), declared)
     if not target_levels:
         return remap("family_only_in_target" if current_levels else "family_only")
     if len(target_levels) > 1:
         return remap("split_in_current" if len(current_levels) > 1 else "split")
     (proposed,) = target_levels
-    return remap("unchanged") if proposed == declared else remap("remap", proposed)
+    if proposed == declared:
+        return remap("unchanged")
+    if ":" in declared and ":" not in proposed:
+        return remap("moved_family_only")
+    return remap("remap", proposed)
 
 
 def collect_anchors(root: Path) -> List[Anchor]:
