@@ -10,7 +10,9 @@
 - XcpU joins the pseudopilus tip through XcpW, making the tip complex quaternary rather than ternary
   [PMID:19828448 "This observation suggested the existence of a quaternary, rather than ternary, complex
   (XcpU(H)-V(I)-W(J)-X(K)) at the tip of the pseudopilus"].
-- PANTHER places XcpU in PTHR30093:SF44, the GspG subfamily, rather than in a GspH-specific subfamily;
+- PANTHER's own release classification places XcpU in PTHR30093:SF44, the GspG subfamily, rather
+  than in a GspH-specific subfamily (the reviewed GspH proteins of other systems are in
+  PTHR39583:SF2, so PANTHER splits the role between two families);
   the T2SS terms of PTN000764351 are nevertheless true of it, and the GspH-specific grounding comes from
   NCBIfam TIGR01708 and InterPro IPR049875.
 - The two PseudoCAP phenotype rows from the Overhage et al. swarming screen are marked as
