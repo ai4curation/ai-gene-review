@@ -1,0 +1,19 @@
+# GLT8D1 notes
+
+Human HGNC:24870 / UniProt Q68CQ7 was checked before review. The canonical product is 371 residues; Q68CQ7-2 is 259 residues. Its declared replacement at216–259 and deletion260–371 reproduce the independently fetched short sequence. No natural short-product function is inferred from engineered truncations.
+
+All six incoming contexts are reviewed individually: four ACCEPT, one MODIFY and one UNDECIDED; zero NEW. The membrane HDA remains unresolved because the source table is inaccessible.
+
+[PMID:38066107: construct and product-detection limits are recorded in the source guide.] [PMID:35198895: UDP release is distinguished from a detected transfer product.] [PMID:34746377: WT and variant localization are kept separate.]
+
+The inherited glucose-transfer assertion is retained on its actual ancestral placement. The core uses the directly product-resolved galactose reaction; retained glucose inference remains a potential additional specificity, without asserting distinct physiological roles. The independent Golgi is_active_in qualifier remains distinct from located_in.
+
+No generated provider report was made. [Primary-source guide](GLT8D1-source-guide.md) and [literal evidence](GLT8D1-review-evidence.json) document access and scope. Cache flags will be checked against genuine native acquisition; private originals do not turn an abstract-only normal cache into full text.
+
+## Review follow-up, 2026-11-07
+
+The current actions supersede the earlier tally: four ACCEPT, one MODIFY and one TOO_GENERAL; zero NEW. The membrane claim is resolved by accepted Golgi-membrane placement; the original HDA target table remains unverified. GO:0035250 now names the experimentally resolved UDP donor without choosing a linkage. Source-cache availability flags have been checked against the fetched files; separate original-paper access remains documented in the source guide. The sequence notation above means replacement at 216–259 and deletion of 260–371.
+
+## Second review follow-up, 2026-11-07
+
+The current actions supersede the preceding tallies: three ACCEPT, one KEEP_AS_NON_CORE, one MODIFY and one TOO_GENERAL; zero NEW. GO:0046527 is retained as non-core. Its reason now records the requested assay limitation explicitly. The other five decisions and the core section are unchanged.

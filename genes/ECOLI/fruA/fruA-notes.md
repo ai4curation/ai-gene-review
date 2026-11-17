@@ -42,3 +42,12 @@
   plasma membrane. The broad GO:1902495 transmembrane transporter complex row
   is compatible with FruA oligomerization, but no fructose-Enzyme-II-specific
   GO complex term exists in the seeded annotations.
+
+
+## 2026-11-06 comparative fructose-PTS review
+
+Reviewed all original annotation rows and complete biological scope. Payloads, row order and source bytes are preserved. Broad true terms were refined rather than called over-annotated. No new GO annotation is proposed solely to fill a pathway diagram. Current GO definitions were checked against QuickGO; net phosphohistidine-donor transport and the immediate phosphocysteine step are compatible descriptions of one group-translocation mechanism.
+
+A genuine default Falcon attempt failed with HTTP403; no provider report was fabricated. The review is based on cached primary literature, curated source statements and sequence/domain evidence.
+
+PMID8626640 is abstract-only, but its abstract explicitly reports B-prime deletion, C112S, uptake, phosphorylation and oligomer interference assays. Those claims are retained with that access limit. B-prime facilitates transfer rather than being a second catalytic B domain; the reference to two active IIB domains concerns oligomer subunits. GO1902495 is retained as the supported functional complex class. The accessible PMID15919996 abstract does not expose the exact topology-table row; corroborating independent permease evidence supports retaining the curator assignment.

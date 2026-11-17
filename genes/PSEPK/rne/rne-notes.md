@@ -33,3 +33,13 @@ locations remain non-core, while RNase E activity, RNA binding, RNA processing,
 mRNA catabolism, metal binding, and the cytoplasmic membrane-face localization
 remain accepted. The direct KT2440 deletion paper supports biological relevance
 but is not used to claim a purified KT2440 degradosome.
+
+## 2026-11-10 module-completion pass
+
+Harmonised with the new E. coli K-12 exemplar review (`genes/ECOLI/` same
+symbol) for the RNase E degradation module: every row now carries a vetted
+quote (HAMAP-derived UniProt text, or the E. coli experimental literature
+for homology support); broad parent terms entailed by an accepted specific term
+in this review are TOO_GENERAL rather than KEEP_AS_NON_CORE; ancillary binding
+and cofactor rows are KEEP_AS_NON_CORE. No new provider deep research was run
+(no API keys available in this session).

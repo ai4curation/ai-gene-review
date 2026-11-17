@@ -42,3 +42,9 @@ Review focus: proteostasis network context places SPG11/spatacsin under autophag
 The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
 
 - Moved out of the YAML description: existing GOA appropriately includes lysosome organization, lysosomal membrane organization, membrane bending, late endosome/lysosome locations, ER, and cytoplasmic locations; neuronal axonal/synaptic transport annotations are supported but non-core in this proteostasis-focused review; generic protein-binding annotations should be replaced by or subordinated to more informative endolysosomal membrane-organization processes.
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IEA (GO_REF:0000107, Ensembl projection from mouse Q3UHA3, is_active_in). QuickGO (2026-11-06): the mouse source is an MGI is_active_in IDA on PMID:37871017.
+- PMID:37871017 (full text): endogenous mouse brain spatacsin fractionates with ER proteins REEP5 and STIM1, not with the cathepsin D lysosomal fraction; V5-spatacsin mainly on GFP-Sec61beta/REEP5 ER by STED; spatacsin resists high-salt and pH extraction like STIM1 ["Spatacsin and the integral ER–membrane protein STIM1 were not released from membranes by high salt concentration or low or high pH buffer"]; ER-lysosome contacts reduced in Spg11-/- MEFs.
+- Outcome: ACCEPT kept (is_active_in justified). No GO:0005789 row: UniProt predicts no TM and calls the protein mainly cytoplasmic, and the authors leave the pool at the ER or late-endosome membranes, so the lines disagree. A protease-protection/topology assay would settle it.

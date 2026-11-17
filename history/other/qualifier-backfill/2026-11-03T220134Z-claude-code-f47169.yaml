@@ -1,0 +1,47 @@
+history_version: 1
+target:
+  kind: other
+  slug: qualifier-backfill
+  path: genes
+session:
+  id: 2026-11-03T220134Z-claude-code-f47169
+  timestamp: '2026-11-03T22:01:34Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    agent_tool: claude-code
+links:
+  issues: []
+  prs:
+  - https://github.com/ai4curation/ai-gene-review/pull/5974
+  urls: []
+events:
+- type: EDIT
+  outcome: changed
+  sections:
+  - existing_annotations
+  summary: Backfill missing annotation qualifiers from GOA (54,252 rows, 1,520 reviews)
+  details: |
+    Older reviews omitted the qualifier field on existing_annotations rows, so qualifier-aware checks (the hierarchical action-consistency rules) could not tell is_active_in from located_in or contributes_to from enables. Each review's own GOA file supplied the qualifier, matched on (term, evidence, reference, negated) as ai-gene-review backfill-qualifiers does, and only where GOA gives exactly one qualifier; 108 ambiguous rows were left unset, as were rows absent from GOA. Edits are pure one-line insertions after original_reference_id: no other line changed (the backfill-qualifiers command would have re-dumped every file). Each file was re-parsed and checked to equal its original data plus the new qualifiers; all values are in AnnotationQualifierEnum. A validation sample of 25 files showed no new errors.
+- type: EDIT
+  outcome: changed
+  sections:
+  - existing_annotations
+  summary: Make the backfill reproducible with the committed command
+  details: 'The backfill above was produced by a one-off inserter script, not by the committed command,
+    which then rewrote whole files with yaml.dump. In response to PR #5974 review, GOAValidator.backfill_qualifiers
+    (ai-gene-review backfill-qualifiers) now inserts one line per row using load_marked key positions
+    and refuses to write unless the reloaded file equals the original plus the new qualifiers. Run over
+    every review at the pre-backfill commit, it reproduces this PR''s diff exactly: 54,252 qualifiers
+    in 1,520 files, each file byte-identical to the committed version.'
+- type: EDIT
+  outcome: changed
+  sections:
+  - existing_annotations
+  summary: Leave ten reviews with pre-existing validation errors out of the backfill
+  details: CI's validate-changed strict-checks every review a PR touches. Ten touched reviews (DORPE/TDO,
+    OCTVU/CTR2, human AATF, DRAM1, ELAVL3, FZD7, GK5, LEMD2, PEX11G, POLD2) already fail on main with
+    21 reference-finding quote errors unrelated to qualifiers, confirmed by validating them at the pre-backfill
+    commit. Their 277 inserted qualifier lines are reverted so this PR leaves them unchanged; the backfill
+    now covers 53,975 rows in 1,510 reviews. Run ai-gene-review backfill-qualifiers on them once their
+    quotes are fixed.

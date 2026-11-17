@@ -40,3 +40,21 @@ produced `betC-deep-research-openscientist.md`. Its identity checks, CXPXR motif
 location (C54) and no-TM hydropathy scan agree with the UniProt record. It incorrectly
 states "Although BetC itself has not been crystallized"; PMID:29458126 reports the
 2.8-Angstrom SmCS structure. Recorded as LOW_QUALITY in the review's reference_review.
+
+
+## 2026-11-06 cross-taxon choline-sulfate audit
+
+Retained all four original row payloads. Cytoplasm and choline-formation BP now ACCEPT as core: GO:0042425 includes formation, not only de novo synthesis. PMID29458126 methods explicitly identify recombinant 1021/O69787; kcat/KM is 4800 for COS and 13 M^-1 s^-1 for phosphorylcholine at pH7.6. The aryl-sulfate comparison uses differing pH conditions. Native 1998 evidence is 102F34R, and 2022 ligand-bound structures are CECT4857/MH208481 (reported F105L versus GR4), not direct 1021 physiology. The later binding model challenges the older Glu386 interpretation; its Asp/Glu386 inconsistency is disclosed. No secondary phosphatase function was proposed from promiscuity alone.
+
+Reviewed the existing OpenScientist provider report and primary/cached sources; preserved the provider report and its PDF/HTML artifacts. A provider report is already present, so no replacement research run was needed. All machine annotation payloads and raw UniProt/GOA files are unchanged. No new annotation rows were added. Generic family labels and locus proximity do not establish COS transport, a BetD-BetE complex, or substrate promiscuity in unassayed homologs.
+
+Normal force-fetches of PMID:17116241 and PMID:21369825 still returned abstract-only caches; their assay limitations remain explicit. PMID:9736747 also remains abstract-only in the cache after the root fetch. PMC methods were independently accessible at https://pmc.ncbi.nlm.nih.gov/articles/PMC21653/ and explicitly name 102F34R; direct HTML retrieval encountered a challenge, Europe PMC XML returned HTTP500, and NCBI BioC returned no result. No publication cache was hand-edited or invented. Existing abstract quotations remain used as such. Full-text PMID:29458126 and PMID:35503214 distinguish recombinant source strains and assay conditions.
+
+Focused gene validation passed. Preservation is reproducibly checked by `.cache/module-audit-logs/choline-sulfate-20261106/check-existing-four.py`, against the frozen original baseline: 16 total rows, one inherited NEW, zero added rows, eight raw and twelve provider/artifact hashes unchanged. PSEPK/betC retains the advisory about not citing its low-quality provider in annotation support; primary and curated family evidence are used instead.
+
+
+## PR6105 round1 evidence-scope reassessment (2026-11-06)
+
+The TreeGrafter inference is plausible and is not contradicted, but soluble sulfatase architecture and absence of transmembrane segments do not identify which side of the membrane contains active enzyme. PMID:29458126 characterizes recombinant 1021/O69787 enzyme, not its native compartment. Native bet-locus physiology in PMID:9736747 concerns 102F34R and does not supply a compartment-resolving assay for 1021; the CECT4857 structural work in PMID:35503214 likewise does not establish native 1021 localization. Downstream glycine-betaine production cannot locate the preceding sulfatase reaction. Retain the machine-sourced row as UNDECIDED and omit the core location, consistently with Ruegeria; molecular-function and choline-formation claims remain supported.
+
+The cytoplasm row is retained as UNDECIDED, and no activity location is asserted in core_functions. Molecular-function verdicts, original annotation payloads, raw sources and genuine provider research remain unchanged. No publication cache was refreshed.

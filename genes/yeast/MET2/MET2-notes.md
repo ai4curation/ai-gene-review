@@ -7,3 +7,10 @@
 
 ## Curation observations
 - Threonine metabolic process RCA (P4-PWY-1 superpathway) REMOVED: Met2 diverts homoserine away from threonine.
+
+## 2026-11-13 audit (acyl-donor check for methionine module)
+- Acyl donor is acetyl-CoA, not succinyl-CoA [PMID:3301801 "Succinyl coenzyme A was not an acyl donor."]. GO:0004414 (not GO:0008899) is correct.
+- Methionine represses enzyme synthesis but does not inhibit activity; SAM/SAH inhibit slightly [PMID:3301801 "S-Adenosylmethionine and S-adenosylhomocysteine slightly inhibited the enzyme, but methionine had no effect."].
+- UniProt FUNCTION/CATALYTIC ACTIVITY for P08465 are by similarity to S. pombe Met6 (ECO:0000250|UniProtKB:O60062), not experimental on Met2.
+- PANTHER PTHR32268:SF11 (UniProt DR line); IBA node PTN000791315 (seeded by SGD:S000005221 itself, PomBase met6, CGD, bacterial MetX).
+- SGD hand-written description checked against PMID:3301801/PMID:6035500: no errors.

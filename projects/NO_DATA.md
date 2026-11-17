@@ -286,20 +286,30 @@ search, so we cannot meaningfully propose one. These rows should become
      or `WHOLLY_DARK`), on the row, the gene or a core function;
    - `nd_case` on a non-ND row;
    - `ACCEPT` without evidence that the literature was searched: the row must
-     cite a publication (PMID, DOI, PMC), the deep-research file, or the notes
-     file recording the queries and their result (a search that finds nothing
-     has no paper to cite). The UniProt record, or its protein-existence (`PE`)
-     line, is not a search. A notes citation should quote the queries and
-     their result, as DROME/CG42763 does, since the check sees only the file
-     name. On 2026-11-01 this flags 206 of 311 accepted ND
-     rows in 147 reviews; 197 of them cite nothing, mostly rows the re-action
+     cite a publication (PMID, DOI, PMC), or quote in `supported_by` the gene's
+     own deep-research or notes file where it records the queries and their
+     result (a search that finds nothing has no paper to cite), as DROME/CG42763
+     does. The quote goes in `supporting_text`, the field the verbatim check
+     confirms (`supporting_text_fulltext` is not checked and does not count), so
+     a bare file citation, a file in `additional_reference_ids`, another gene's
+     file, or a MOD gene description (`-deep-research-sgd/-flybase/-wormbase`,
+     curator text rather than a search) does not count. A publication id needs
+     no quote: a paper checked and found silent on the aspect has no line to
+     quote, and the id is checkable on its own. The UniProt record, or its
+     protein-existence (`PE`) line, is not a search. Any verbatim line of the
+     gene's own file passes, so the check narrows the loophole rather than
+     closing it: the quote should be the line that records the search. Quotes listed in
+     `conf/local_quote_baseline.yaml` only warn when not verbatim, so for those
+     few the check does not confirm the file says it. On 2026-11-06 this flags
+     210 of 321 accepted ND rows in 150 reviews, mostly rows the re-action
      pass converted.
 3. **Compliance** (`qc_config.yaml`, the evidence-code × action rule table):
    `nd_search_support` credits an `ACCEPT`ed ND that gives a reason and cites
    the literature search the same way the warning requires: a publication, or
-   the deep-research or notes file (not the UniProt record). The pass
-   adds no such citation itself: the credit is for a search a reviewer records,
-   so the rows the pass converted score 0 until one is.
+   a `supporting_text` quote from the gene's own deep-research or notes file
+   (not a MOD gene description, nor the UniProt record). The pass adds no
+   such citation itself: the credit is for a search a reviewer records, so
+   the rows the pass converted score 0 until one is.
    `nd_stale_support` credits a `REMOVE`d or `MODIFY`d ND only for a PMID/DOI
    quote from the literature that makes it stale.
 4. **Upstream (to do).** N1 rows where the MOD has already annotated the aspect
@@ -370,11 +380,24 @@ no longer restore them.
   MYCTU/Rv0898c, human/P3R3URF), which need knowledge gaps written by
   reading before the row can go.
 
-**Not yet swept (as of `04e2ffa3e`).** Reviews merged from main after the last
-pass carry 42 ND rows that `nd_policy` flags: 37 `MODIFY` rows in 13 mouse
-keratin-associated protein reviews (Krtap3-2 to Krtap29-1), whose reasons rest
-on family-level literature; human/CDKAL1 BP; ARATH/PGR3; and rat Actl7a, Aph1a
-and Pik3c2a. They are waiting for a decision.
+**Mouse keratin-associated proteins (2026-11-06).** The 37 `MODIFY` ND rows in
+13 mouse Krtap reviews (Krtap3-2 to Krtap29-1) came from main after the pass. Each
+review's notes record the literature on the gene: sequencing, gene-cluster
+descriptions, RNA expression, misattributed GOA rows (Krtap21-1) or a binding
+study of unstated species (Krtap8-1). None identifies a function for the mouse
+gene, so all 37 became `ACCEPT`. On 2026-11-14 each gene was searched in PubMed
+(E-utilities, the symbol and its earlier names in All Fields). The queries and
+hits are appended to each notes file and listed in its review's `references`.
+Each accepted row quotes the line in the notes that records the negative result
+(decision field `searched`). Apart from that line, the mouse hits are only
+sequencing, cluster descriptions, RNA expression and one plasma biomarker list;
+the rest are on sheep, goat, cattle or human. The 33 replacement terms the
+reviews did not carry elsewhere became `ISS` `NEW` rows. Applied with
+`apply_acceptance_rule.py mouse/Krtap`.
+
+**Not yet swept.** Five `REMOVE` or `MODIFY` ND rows from reviews merged after
+the pass have no `nd_case`: human/CDKAL1 BP, ARATH/PGR3 CC, and rat Actl7a,
+Aph1a and Pik3c2a BP. They are waiting for a decision.
 
 ## Plan
 
@@ -382,7 +405,8 @@ and Pik3c2a. They are waiting for a decision.
 - [x] Agree on the action per case: guideline-conformant ND is `ACCEPT`
 - [x] Add `nd_case` to the schema, `nd_policy` warnings, ND compliance rules
 - [x] Re-action pass (above)
-- [ ] Decide the 42 unswept rows from main (above)
+- [x] Mouse Krtap rows from main (above)
+- [ ] Decide the 5 remaining unswept rows (above)
 - [ ] Classify the 217 `ACCEPT` rows with no `nd_case` by reading (counted in
       the inventory's `nd_case` table); gap-less `aspect_empty` rows are
       expected to be N4 and gain `BIOLOGY` gaps
