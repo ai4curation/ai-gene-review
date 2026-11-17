@@ -8,7 +8,7 @@ normally one judgement, so the reviews of those proteins should reach the same
 verdict, or say why they differ.
 
 They drift apart easily, because the members are usually reviewed in different
-sittings. Two cases found so far:
+sittings. Three cases found so far:
 
 - ``liuB``/``liuD`` (PR #6341): the same claim was ``ACCEPT`` on one and
   ``TOO_GENERAL`` on the other, and after the fix one review's prose still
@@ -16,6 +16,8 @@ sittings. Two cases found so far:
 - ``wbpX``/``wbpY``: ``wbpY`` refined the term citing direct enzymology for both
   enzymes, while ``wbpX`` accepted the generic term saying that very evidence did
   not exist, and never cited the paper.
+- ``tatA``/``tatC``: ``MODIFY`` to ``GO:0009977`` against ``TOO_GENERAL`` on
+  ``GO:0008320``, found only once incomplete groups were compared (below).
 
 Divergence is not automatically a defect. ``ccoQ1``/``ccoQ2`` diverge from the
 other cbb3 subunits because they are accessory chains absent from the cryo-EM
@@ -23,8 +25,13 @@ models, and ``tse6`` diverges from ``tsi6`` because of a recorded
 ``WRONG_GENE_PRODUCT`` defect. Both are deliberate and argued in the rows. This
 script finds candidates to read; it does not decide them.
 
-Groups with an unreviewed member are reported separately: those cannot diverge
-yet, but they are where divergence will appear once the member is reviewed.
+Groups with a member that cannot be compared are reported separately, but their
+*other* members are still compared and a disagreement among them is flagged. An
+earlier version skipped such a group outright, on the reasoning that it "cannot
+diverge yet". That holds only for two-member groups, and most of these are not:
+``GO:0003955`` and ``GO:0016987`` each have four reviewed members beside the
+unreviewed one. The ``tatA``/``tatC`` case above was invisible until this
+changed, and was found on the first run after it.
 
 **Scope: molecular function only.** ``WORKLIST`` below is the MF worklist, which
 the builder fills by selecting IMP rows on molecular-function terms, so every
@@ -160,10 +167,21 @@ def collect() -> dict[str, list[dict[str, Any]]]:
             # only "a member is missing" would hide a live divergence among the
             # rest until the backlog cleared -- GO:0003955 has four reviewed
             # members and GO:0016987 four, so that is most of each group.
-            record["actions"] = {
+            comparable = {
                 s: actions_for_term(str(folders[s]), group["term"])
                 for s in record["reviewed"]
             }
+            # A member can be uncomparable for a second reason -- its folder
+            # exists but holds no review file, or its only row is a NEW proposal
+            # -- and a group can have both kinds at once. Leaving those in here
+            # would report "(no review file)" as a divergence, which is exactly
+            # what the branch below exists to prevent.
+            for symbol, verdict in list(comparable.items()):
+                if verdict in (["(no review file)"], ["(only a NEW row)"]):
+                    record["uncomparable"][symbol] = verdict[0]
+                    record["reviewed"].remove(symbol)
+                    del comparable[symbol]
+            record["actions"] = comparable
             out["incomplete"].append(record)
             continue
 
@@ -279,7 +297,6 @@ def main() -> int:
             for record in groups["consistent"]:
                 print(show(record))
 
-    print()
     partial = sum(
         1
         for bucket in ("incomplete", "no_verdict")

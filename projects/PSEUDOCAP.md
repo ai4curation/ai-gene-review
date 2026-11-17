@@ -662,7 +662,10 @@ Comparing the reviewed members of incomplete groups found a third case immediate
 `MODIFY`→`GO:0009977` on `tatA` and `TOO_GENERAL` on `tatC`, with `tatB` unreviewed.
 This is the `liuB`/`liuD` shape exactly: `tatC` carries `GO:0009977` as its own IBA
 row and accepts it, so the ancestor term is `TOO_GENERAL` there, while `tatA` has no
-`GO:0009977` row and its reviewer refined to reach the same level. The two verdicts
+`GO:0009977` row in GOA at all and its reviewer refined to reach the same level.
+`tatA` does carry `GO:0009977` as its core-function molecular function, so both
+reviews agree about what the protein does; what differs is only whether GOA already
+asserts it. The two verdicts
 agree about what the supported term is, and the asymmetry is in GOA. What is open is
 whether `tatA`'s rows pass the 2026-11-14 bar — a `MODIFY` needs that row's own
 evidence for the deeper term, and its IMP reason says the evidence is an export
@@ -670,7 +673,7 @@ phenotype. That is a judgement about three merged reviews of genes this PR does 
 touch (and `tatB` is in the QuickGO-blocked batch), so it is recorded here rather
 than fixed opportunistically.
 
-The check has already paid for itself twice. It is the generalisation of the
+The check has now paid for itself three times. It is the generalisation of the
 `liuB`/`liuD` drift caught in review on PR #6341, and run across the corpus it
 found a second instance: `wbpX` and `wbpY` share the `GO:0016757` claim from
 PMID:9680202, and `wbpY` had refined it to `GO:0016758` citing direct enzymology
