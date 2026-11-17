@@ -3,6 +3,8 @@ title: "Organelles"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60, TPR, TIM22, Ca2, CA2, SERCA]
+index_group: CROSS_CUTTING
+description: When is a root organelle term (e.g. mitochondrion) informative, versus its membrane or lumen?
 ---
 
 # Organelles
@@ -344,12 +346,79 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
         survey; 118 human genes are root-only for GO:0005794)
   - [x] Golgi batch 2: 20 human genes (2026-11-15); 33 human genes remain on
         the root-only Golgi list with a synthesis row
+  - [x] Follow-ups to #6297 and #6353 (2026-11-15): abstract-only sweep of ER
+        batch 1 (AIMP1 reworded), UFSP2 caveat, UFL1 tethering row; CDK5RAP3
+        checked and left without one
+  - [ ] Sweep ER batches 2-4 and Golgi batches 1-2 for reasons that rest on a
+        figure reading from an abstract-only cached paper (only ER batch 1 was
+        swept, 2026-11-15)
+  - [ ] Retry the AIMP1 full text (PMID:17525271, PMC1899434): restore the Figure 2
+        marker reading or move its ER and Golgi rows to MARK_AS_OVER_ANNOTATED
   - [ ] Write the Golgi rule after more batches; promote "curator deference
         stops at a readable paper" into the numbered rules, since it now
         governs direct-evidence rows too (CABP2, Golgi batch 1 review)
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-17 (UFSP2 core function; review follow-ups from #6432)
+
+- **UFSP2's core functions now name the ER, not its cytoplasmic face.** The
+  60S-recycling core function listed GO:0098554 beside GO:0005783 (2026-11-11
+  entry below). By the standard UFL1 uses (#6432), a face-level location belongs in
+  `core_functions` only when an assay places the activity itself there, and no
+  assay places UFSP2's deUFMylation on the cytoplasmic leaflet: the face is an IC
+  inference from topology and the partner, as UFSP2's own row says. The
+  GO:0098554 IC row stays. The core function names the ER root, not the ER
+  membrane as UFL1's does, because UFSP2's curated location evidence is
+  root-level. Rule of thumb for the tethering route: the row records
+  where the protein sits; the core function names the face only when the activity
+  is shown there.
+- **Open item updated:** the abstract-only sweep still owed now covers ER batches
+  2-4 and Golgi batches 1-2.
+- **History note.** The GFRA1 record added in #6432 cites `a8f60d2418`, a branch
+  commit squashed away when #6433 merged; the change it describes is in #6433.
+  The SHA was accurate when written (it existed on the branch), which is the
+  append case in `docs/history.md`, so the record stays as written; prose that
+  was never true is corrected in place instead.
+
+## 2026-11-15 (follow-ups to the tethering and Golgi batch 1 PRs)
+
+Items promised in the reviews of #6297 and #6353.
+
+- **Abstract-only readings swept.** The ER batch 1 GO:0005783 rows were scanned
+  for reasons that rest on a figure from a paper whose cached copy is
+  abstract-only. One case was left: AIMP1, whose ER reason and propagation
+  comment read Figure 2 of PMID:17525271 (endogenous AIMP1 with calnexin). They
+  now say what the Golgi row already said: the UniProt ER item is by similarity to
+  mouse P31230, curated (ECO:0000269) from that paper, and the root is kept on
+  curator deference; the figure reading is not relied on. The action is unchanged
+  (KEEP_AS_NON_CORE). An attempt to read the full text (PMC1899434) got only the
+  abstract from PMC and an HTTP 500 from Europe PMC on 2026-11-15, so the figure has
+  not been re-read. AHCY also cites a figure from an abstract-only cache, but its
+  reason says the figure was read in an externally recovered author manuscript, which
+  the policy allows; BRSK2 cites no figure.
+- **UFSP2.** The caveat now names both the release and the localisation tests as
+  overexpressed worm proteins in HeLa cells, and the notes record the literature
+  half of condition (d) (worm ODR-8 diffusely cytosolic without ODR-4, PMID:24603482
+  Fig 8E).
+- **UFL1 gains the tethering row.** A NEW GO:0098554 IC row beside its ER and ER
+  membrane rows, which all stay as they were. (a) Seven curated ECO:0000269 ER
+  membrane citations; (b) DDRGK1 has an N-terminal transmembrane domain
+  (PMID:38383785) and binds UFL1 directly (PMID:36543799); (c) two dependence tests
+  from two laboratories: GFP-UFL1 spreads through the cytoplasm in UFBP1 knockout
+  cells and returns to KDEL-positive ER on re-expression (PMID:36543799), and
+  deleting the DDRGK1 TM keeps the interaction but makes both proteins cytoplasmic
+  (PMID:32160526); (d) no TM, signal or transit feature, and cytoplasmic whenever
+  DDRGK1 is absent or unanchored. A pre-existing UFL1 quote that was not in its
+  UniProt file (listed in `conf/local_quote_baseline.yaml`) now quotes PMID:32160526,
+  and the baseline was pruned.
+- **CDK5RAP3 does not.** Its stability depends on UFL1 (PMID:20228063), which is
+  soluble, and no cached paper shows CDK5RAP3 released or destabilised when DDRGK1
+  is lost, so condition (c) on an integral partner is not met. Its GO:0005789 IDA
+  rows stay ACCEPT. This is the first case where the route separates two subunits of
+  one complex: being a subunit of a membrane-held complex is not enough unless the
+  subunit's own dependence on the integral partner is shown.
 
 ## 2026-11-15 (Golgi batch 2: 20 human genes)
 
@@ -409,6 +478,10 @@ Lessons, adding to batch 1:
   transfer, a qualifier the evidence does not support) goes into
   `source_defects` so `just export-source-defects` reports it: FGD4
   (WRONG_WITH_FROM), DRC4 and CUL3 (WRONG_QUALIFIER, CHECK), added after review.
+- **Fix the attribution before the qualifier.** When a row's gene product is
+  itself disputed (DPAGT1, probably Gnptab's row), record that defect alone; a
+  qualifier correction on the same row would be moot, and two requests on one row
+  cannot both be actioned.
 - **Judgement calls to revisit:** FGD1 (ACCEPT is close: the TGN export role is
   shown in human cells), DYNLT1 and DNM1L (deference to abstracts that name
   markers), CSNK1D (ACCEPT, with the Golgi function from perturbation), CERKL
@@ -427,7 +500,7 @@ ten Golgi rows on seven genes changed action.
 | ABCA1 | root; IEA stays KEEP_AS_NON_CORE | stably transduced wild-type HA-ABCA1 in HEK293H has a minor intracellular pool with giantin, and brefeldin A cuts surface ABCA1 by about 60% (PMID:20025763); the mouse donor (PMID:10878804) is abstract-only and never mentions the Golgi |
 | ACTL7A | root; IEA and two ISS rows stay KEEP_AS_NON_CORE | endogenous mouse Arp7A co-stains with GM130 in testis (PMID:21278383); soluble, light microscopy only |
 | ADRB2 | root; IEA and IDA stay KEEP_AS_NON_CORE | isoproterenol sends surface receptor to the Golgi, where it meets zDHHC9/14/18; brefeldin A blocks Cys-265 palmitoylation (PMID:27481942); a regulated retrograde pool |
-| AIMP1 | root; IEA stays KEEP_AS_NON_CORE | by similarity to mouse, curated from PMID:17525271: endogenous AIMP1 in HeLa is mostly calnexin-positive with a minor GM130 pool; consistent with its ER rows |
+| AIMP1 | root; IEA stays KEEP_AS_NON_CORE | by similarity to mouse, curated from PMID:17525271, which is abstract-only here; kept on curator deference (an earlier figure reading is not relied on); consistent with its ER rows |
 | ANGPTL3 | root; IEA stays KEEP_AS_NON_CORE | the mouse IDA rests on transient ANGPTL3-V5 with GM130, data not shown (PMID:23918928); tagged human ANGPTL3 sits with YFP-GalT (PMID:37634084) |
 | AP3B1 | root; IEA and TAS ACCEPT to KEEP_AS_NON_CORE; Golgi out of core_functions | endogenous AP-3 in the Golgi region, brefeldin A-sensitive but distinct from TGN markers (PMID:9151686); neuronal AP-3 on TGN buds by immuno-EM (PMID:8666661); no AP-3 on the TGN in HepG2, where it acts on early-endosome tubules (PMID:15051738) |
 | AP3B2 | root; IEA ACCEPT to KEEP_AS_NON_CORE | by similarity; the neuronal TGN immuno-EM (PMID:8666661) is contradicted by the marker and HepG2 EM data, so no TGN row |

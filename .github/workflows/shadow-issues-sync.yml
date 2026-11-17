@@ -1,0 +1,136 @@
+---
+name: Shadow issues sync
+
+# Mirrors upstream annotation issue trackers into issues/<tracker>/ (see
+# projects/GO_ANNOTATION_TRACKER.md): new issues get an issue.yaml stub, and
+# every issue's thread.jsonl gains any new comments or events. The fetch is
+# read-only GETs, so nothing upstream is touched.
+#
+# The branch is rebuilt from main on every run and the sync resumes from main's
+# cursor, so an unmerged sync PR is simply superseded, never lost.
+#
+# The commit message and PR text name no upstream issue: an issue URL or the
+# org/repo#N shorthand would cross-reference the curators' issues.
+
+on:  # yamllint disable-line rule:truthy
+  schedule:
+    - cron: "17 5 * * *"  # daily 05:17 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: shadow-issues-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      # Scopes the default GITHUB_TOKEN, used only to read the public upstream
+      # tracker; the push and the PR use the ai4c-agent App token below.
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install just
+        run: uv tool install rust-just
+
+      - name: Install project
+        run: uv sync
+
+      - name: Sync go-annotation
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: just sync-shadow-issues go-annotation
+
+      - name: Validate
+        run: just validate-shadow-issues go-annotation
+
+      - name: Check for changes
+        id: check-changes
+        run: |
+          if [ -z "$(git status --porcelain issues/)" ]; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No upstream changes."
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            # -uall lists files inside new (untracked) issue folders; without it a
+            # new folder collapses to one line and no issue.yaml is counted.
+            NEW=$(git status --porcelain -uall issues/ | grep -c '^?? .*issue.yaml$' || true)
+            CHANGED=$(git status --porcelain -uall issues/ | grep -c 'thread.jsonl$' || true)
+            echo "new=$NEW" >> "$GITHUB_OUTPUT"
+            echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate ai4c-agent token
+        if: steps.check-changes.outputs.has_changes == 'true'
+        id: ai4c-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
+          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
+
+      - name: Create or update sync PR
+        if: steps.check-changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
+          APP_SLUG: ${{ steps.ai4c-token.outputs.app-slug }}
+          NEW: ${{ steps.check-changes.outputs.new }}
+          CHANGED: ${{ steps.check-changes.outputs.changed }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP_USER_ID="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+          gh auth setup-git
+
+          BRANCH_NAME="auto/shadow-issues-sync"
+          git checkout -B "$BRANCH_NAME"
+          git add issues/
+
+          MSG="$(mktemp)"
+          printf 'Sync shadow issues (%s new, %s threads updated)\n\nAutomated read-only mirror of upstream issue trackers into issues/.\n' \
+            "$NEW" "$CHANGED" > "$MSG"
+          PR_BODY="$(mktemp)"
+          {
+            echo "## Summary"
+            echo
+            echo "Automated daily mirror of upstream annotation issue trackers into \`issues/\`"
+            echo "(see \`projects/GO_ANNOTATION_TRACKER.md\`)."
+            echo
+            echo "- **${NEW}** new issue stubs"
+            echo "- **${CHANGED}** threads with new comments or events"
+            echo
+            echo "Mirror data only; run \`just outstanding-shadow-issues\` after merging."
+          } > "$PR_BODY"
+          python3 src/ai_gene_review/shadow_issues/guard.py "$MSG" "$PR_BODY"
+
+          git commit -F "$MSG"
+          git push --force origin "$BRANCH_NAME"
+
+          EXISTING_PR_NUMBER="$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH_NAME" \
+            --state open --json number --limit 1 --jq '.[0].number // empty')"
+          if [ -n "$EXISTING_PR_NUMBER" ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/pulls/$EXISTING_PR_NUMBER" \
+              -F body=@"$PR_BODY" >/dev/null
+            echo "Updated sync PR #$EXISTING_PR_NUMBER."
+            exit 0
+          fi
+          gh pr create --repo "$GITHUB_REPOSITORY" --base main --head "$BRANCH_NAME" \
+            --title "Sync shadow issues" --body-file "$PR_BODY"

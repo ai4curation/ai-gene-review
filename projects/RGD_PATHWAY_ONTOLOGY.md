@@ -1,5 +1,6 @@
 ---
 title: "RGD Pathway Ontology: GO Mappings, GO-CAM Completeness and Module Seeds"
+collections: [MAPPINGS]
 maturity: SCOPING
 last_reviewed: 2026-10-26
 tags: [PIPELINE]
@@ -9,6 +10,7 @@ genes: [SCAP, INSIG1, INSIG2, MBTPS1, MBTPS2, SREBF1, SREBF2]
 # would otherwise link to the fission-yeast directory aco2, and "RNA polymerase I, II
 # and III" to the phage gene III.
 autolink_exclude: [PID, SREBP, ACO2, aco2, III]
+index_group: CROSS_CUTTING
 ---
 
 # RGD Pathway Ontology: GO Mappings, GO-CAM Completeness and Module Seeds

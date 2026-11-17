@@ -1,7 +1,7 @@
 # Plan: anchor PANTHER claims on tree nodes, and prepare for PANTHER 20
 
-Status: Phase 0 done (2026-11-15); Phase 1 reduced to guidance; Phases 2 and 3 not
-started. The decisions below keep churn to curated files minimal: no schema changes,
+Status: Phase 0 done (2026-11-15); Phase 1 reduced to guidance; Phase 2 has its dry-run
+report (`just panther-release-diff`); Phase 3 not started. The decisions below keep churn to curated files minimal: no schema changes,
 and no edits to existing modules or reviews until PANTHER 20 forces them.
 
 ## Summary
@@ -110,11 +110,86 @@ files PANTHER keeps per release (releases back to 14.1 are still on the FTP site
 
 Start when `just check-panther-release` reports that PAINT and the API serve 20.
 
+**Dry run, available now.** `just panther-release-diff 20.0` writes
+`reports/panther-release-diff-19.0-to-20.0.yaml` (git-ignored) and edits nothing. It
+lists:
+
+- every family or subfamily id cited in modules and family reviews that is gone or
+  renamed, with how far the name moved;
+- every anchor with representative members (module family descriptors and
+  family-review subfamilies) whose members fall into a different id in the target
+  release, with a proposed id when they agree. A member row that records only a bare
+  family never yields a proposal to coarsen a subfamily anchor. Anchors whose members
+  were already split or unclassified in 19.0 are counted but not listed, since the bump
+  did not cause them;
+- every quote of `interpro/panther/panther.obo` that verifies today but would fail once
+  that committed artifact is rebuilt for the target release.
+
+Two kinds of file are not scanned for ids, on purpose:
+
+- **Rule reviews** (`rules/`) cite PANTHER ids inside `rule.condition_sets`, a verbatim
+  transcription of the published ARBA or UniRule rule. Rewriting them would falsify the
+  receipt; they change only when the rule is re-fetched after UniProt updates it.
+- **Gene reviews** mention subfamilies in prose and quote UniProt's `DR PANTHER` lines,
+  which move on UniProt's schedule, not with this repository's pinned release.
+
+On 2026-11-17 it found:
+
+- 6,086 cited ids: 334 gone, 262 renamed to a divergent name, 139 partially renamed,
+  388 cosmetically renamed, and 2 in neither release.
+- 5,416 anchors: 495 with a proposed remap, 220 newly split across ids, 6 no longer
+  classified; 688 have members outside the classified organisms in both releases.
+- 514 files hold a listed anchor, and 535 cite an id that is gone or substantively
+  renamed. The two sets overlap.
+- 10 quotes of `panther.obo`, in 10 files (7 family reviews, 3 gene reviews), would
+  break when it is rebuilt. The other ~700 citations of `panther.obo` are
+  `references:` entries with no quoted text, which a rebuild cannot break. Quotes of
+  `-entries.csv` files are InterPro snapshots that change only when a family is
+  re-fetched, not at the bump.
+
+**No mega-migration PR.** About 500 files change, so the switch is split:
+
+1. A transition PR (before the switch, or with it) lets validators accept an id that is
+   valid in the previous release but changed in the new one, as a warning carrying the
+   report's proposal, instead of an error. It is switched on by setting
+   `PANTHER_PREVIOUS_RELEASE` in `etl/panther_families.py`.
+   - **Family reviews: done.** `check_panther_ids` reports such ids, labels and
+     memberships as UNRESOLVED. In a simulated bump to 20.0 over all family reviews
+     (PANTHER checks only, 2026-11-17), total failures go from 67 today to 2,400 without
+     the allowance (2,333 new: 547 ids, 1,182 labels, 604 memberships) and stay at 67
+     with it. Those 67 are the same set as today's except for one swap: a new, real
+     failure (P0ABZ4, first classified in 20.0, sits outside its declared subfamily,
+     which the bump did not change) and one existing failure that 20.0 resolves.
+     Release-independent scope errors (a family id in a subfamily slot, another
+     family's subfamily) still fail during the window. The previous release is read
+     from the cache only; `just ensure-panther-members` fills it while a switch is on,
+     and without it the allowance is off with a warning.
+   - **Modules: done.** PANTHER terms whose label matches the previous release are
+     set aside with a warning before OAK term validation
+     (`defer_previous_release_panther_terms`), and `validate_family_members` treats a
+     family that matched the members in the previous release as a warning. In a
+     simulated bump over all modules (2026-11-17), term errors go from 2 today to 463
+     without it and stay at 2 with it; membership errors go from 55 to 56 without it
+     and stay at 55 with it.
+   - **Labels are not laundered.** In both halves an id is deferred only while it
+     carries the previous release's name; a label wrong in both releases fails. During
+     the window `just fix-panther-labels` holds back, rather than rewrites, any label on
+     an id whose name changed between the releases, even with `--allow-divergent`,
+     because the id may now name something else. Those go through the remap batches.
+2. The bump PR changes the pinned constants, rebuilds the caches and `panther.obo`
+   (2.1), and re-quotes the `panther.obo` quotes the report lists (10 today), so
+   `just validate-quotes` stays green. That is too few to need a transition allowance
+   in the quote check.
+3. Remap PRs follow in batches of about 50 files each, one directory at a time
+   (modules, then family reviews), each regenerated from the report and checked by a
+   curator.
+4. A final PR removes the transition allowance.
+
 | Item | Change | Done when |
 |---|---|---|
 | 2.1 | Bump `PANTHER_RELEASE` and `PAINT_SNAPSHOT` together; rebuild `interpro/panther/panther.obo` and the member index (`just refresh-panther-members --rebuild`); re-fetch PAINT slices and trees. | All caches carry 20.0 paths. |
 | 2.2 | Re-check every cited PTN against the version 20 trees and sort them into: survives with the same representative members below it; survives with different members; gone. A gone node is re-located through its representative members (their lowest common ancestor in the new tree). It is never silently removed. | A report lists every PTN in each group, with proposed re-locations for review. |
-| 2.3 | Remap SF ids through representative members to the version 20 SF, not by label, and edit only files whose cited ids are gone or renamed. Bulk relabelling with `just fix-panther-labels` is not allowed for this step: some ids now name a different protein (for example `PTHR10133:SF27` changes from "DNA POLYMERASE NU" to "HELICASE AND POLYMERASE-CONTAINING PROTEIN TEBICHI"). | Validation passes; remaps are reviewed in a PR. |
+| 2.3 | Remap SF ids through representative members to the version 20 SF (`just panther-release-diff 20.0`), not by label, and edit only files whose cited ids are gone or renamed. Bulk relabelling with `just fix-panther-labels` is not allowed for this step: some ids now name a different protein (for example `PTHR10133:SF27` changes from "DNA POLYMERASE NU" to "HELICASE AND POLYMERASE-CONTAINING PROTEIN TEBICHI"). | Validation passes; remaps are reviewed in a PR. |
 | 2.4 | Re-check the reviewed human genes whose family changes (17; listed in the appendix) and the families they appear in. | Each one has a family review and module check. |
 | 2.5 | Expect IBA rows to turn into TreeGrafter IEA rows (GO_REF:0000118) for species dropped from PANTHER 20. In this repo that is `genes/PHAVU/LBA` and `genes/SOLTU/{CCOAOMT,JOKA2,PATB1}`. Re-review them after the next `just fetch-gene`. Poplar stays in PANTHER, so the CASPL project is unaffected. | Reviews updated after the GOA refresh. |
 | 2.6 | Re-check the open upstream discrepancies in `projects/PANTHER_FAMILY_ASSIGNMENT_DISCREPANCIES.md` and the DNAH12 case in `projects/IBA_REVIEW.md`. Both are unchanged in the 20.0 classification files, so the upstream reports still stand. | Pages updated with the version 20 status. |

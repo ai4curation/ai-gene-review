@@ -1022,6 +1022,137 @@ def test_atom_provenance_is_optional_and_does_not_affect_checking():
     assert [r.outcome for r in check_anchor_residues(annotated, CACHE)] == [Outcome.PASS]
 
 
+# --- PANTHER switch transition window ---------------------------------------
+# The previous release had PTHR00001:SF7 ("OLD SUBFAMILY") holding P00002, and named
+# SF1 "AN OLD NAME". In the current release SF7 is gone, SF1 is renamed and P00002
+# has moved to SF9 (see PANTHER_LABELS / PANTHER_MEMBERS above).
+
+def _previous():
+    from ai_gene_review.validation.family_residue_validator import PreviousRelease
+    return PreviousRelease(
+        "19.0",
+        {**PANTHER_LABELS, "PANTHER:PTHR00001:SF1": "AN OLD NAME",
+         "PANTHER:PTHR00001:SF7": "OLD SUBFAMILY"},
+        {"P00001": "PTHR00001:SF1", "P00002": "PTHR00001:SF7"},
+    )
+
+
+def _outcomes(review, previous):
+    from ai_gene_review.validation.family_residue_validator import check_panther_ids
+    return [
+        (r.kind, r.outcome)
+        for r in check_panther_ids(review, PANTHER_LABELS, PANTHER_MEMBERS, previous=previous)
+        if r.outcome is not Outcome.PASS
+    ]
+
+
+@pytest.mark.parametrize(
+    ("review", "kind"),
+    [
+        # id gone in the current release, but valid (with this label) in the previous one
+        (_panther_review(sf_id="PANTHER:PTHR00001:SF7", sf_label="OLD SUBFAMILY",
+                         members=()), "PANTHER_ID"),
+        # id renamed: the review still carries the previous release's name
+        (_panther_review(sf_label="AN OLD NAME"), "PANTHER_LABEL"),
+    ],
+)
+def test_transition_downgrades_previous_release_ids_and_labels(review, kind):
+    assert _outcomes(review, None) == [(kind, Outcome.FAIL)]
+    assert _outcomes(review, _previous()) == [(kind, Outcome.UNRESOLVED)]
+
+
+def test_transition_downgrades_membership_that_matched_the_previous_release():
+    review = _panther_review(sf_id="PANTHER:PTHR00001:SF7", sf_label="OLD SUBFAMILY",
+                             members=("P00002",))
+    assert _outcomes(review, None) == [
+        ("PANTHER_ID", Outcome.FAIL), ("PANTHER_MEMBERSHIP", Outcome.FAIL)]
+    assert _outcomes(review, _previous()) == [
+        ("PANTHER_ID", Outcome.UNRESOLVED), ("PANTHER_MEMBERSHIP", Outcome.UNRESOLVED)]
+
+
+def test_transition_fails_a_gone_id_whose_label_was_never_right():
+    """A gone id is deferred only while it carries the previous release's name, as in modules."""
+    review = _panther_review(sf_id="PANTHER:PTHR00001:SF7", sf_label="COMPLETELY WRONG",
+                             members=())
+    assert _outcomes(review, _previous()) == [("PANTHER_ID", Outcome.FAIL)]
+
+
+def test_transition_does_not_excuse_errors_wrong_in_both_releases():
+    """A label or membership that was never right still fails during a switch."""
+    wrong_label = _panther_review(sf_label="PLAUSIBLE BUT WRONG")
+    assert _outcomes(wrong_label, _previous()) == [("PANTHER_LABEL", Outcome.FAIL)]
+    wrong_member = _panther_review(members=("P00002",))  # SF9 now, SF7 before; never SF1
+    assert _outcomes(wrong_member, _previous()) == [("PANTHER_MEMBERSHIP", Outcome.FAIL)]
+
+
+def test_transition_defers_unclassified_member_of_a_changed_id():
+    """A member the previous release did not classify, under an id the bump renamed,
+    waits for the remap; under an id the bump left alone, a mismatch still fails."""
+    renamed_sf = _panther_review(sf_label="AN OLD NAME", members=("P00003",))
+    members = {**PANTHER_MEMBERS, "P00003": "PTHR00001:SF9"}
+    from ai_gene_review.validation.family_residue_validator import check_panther_ids
+    outcomes = [
+        (r.kind, r.outcome)
+        for r in check_panther_ids(renamed_sf, PANTHER_LABELS, members, previous=_previous())
+        if r.outcome is not Outcome.PASS
+    ]
+    assert outcomes == [("PANTHER_LABEL", Outcome.UNRESOLVED), ("PANTHER_MEMBERSHIP", Outcome.UNRESOLVED)]
+    unchanged_family = {**_previous().labels, "PANTHER:PTHR00001:SF1": "A SUBFAMILY"}
+    from ai_gene_review.validation.family_residue_validator import PreviousRelease
+    same_name = PreviousRelease("19.0", unchanged_family, _previous().members)
+    outcomes = [
+        (r.kind, r.outcome)
+        for r in check_panther_ids(_panther_review(members=("P00003",)), PANTHER_LABELS, members,
+                                   previous=same_name)
+        if r.outcome is not Outcome.PASS
+    ]
+    assert outcomes == [("PANTHER_MEMBERSHIP", Outcome.FAIL)]
+
+
+@pytest.mark.parametrize(
+    ("sf_id", "kind"),
+    [
+        # a family id in a slot that requires a subfamily
+        ("PANTHER:PTHR00003", "PANTHER_FAMILY_SCOPE"),
+        # a subfamily of a different family
+        ("PANTHER:PTHR00002:SF4", "PANTHER_FAMILY_SCOPE"),
+    ],
+)
+def test_transition_does_not_defer_release_independent_scope_errors(sf_id, kind):
+    """An id gone in the current release still fails a scope rule it breaks in every release."""
+    from ai_gene_review.validation.family_residue_validator import (
+        PreviousRelease,
+        check_panther_ids,
+    )
+    # current release: the review's family exists, the id in the subfamily slot is gone
+    labels = {"PANTHER:PTHR00001": "SOME FAMILY", "PANTHER:PTHR00001:SF1": "A SUBFAMILY"}
+    previous = PreviousRelease("19.0", {sf_id: "OLD NAME"}, {})
+    review = {"family_id": "PANTHER:PTHR00001", "family_name": "SOME FAMILY",
+              "subfamilies": [{"subfamily_id": sf_id, "label": "OLD NAME"}]}
+    outcomes = [(r.kind, r.outcome) for r in check_panther_ids(review, labels, {}, previous=previous)
+                if r.site_id == "subfamilies[].subfamily_id"]
+    assert outcomes == [(kind, Outcome.FAIL)]
+
+
+def test_load_previous_release_is_offline_and_off_when_not_cached(tmp_path, capsys):
+    from ai_gene_review.validation.family_residue_validator import load_previous_release
+    assert load_previous_release(tmp_path, "99.0") is None
+    assert "switch allowance is off" in capsys.readouterr().err
+
+    cache = tmp_path / ".cache" / "panther"
+    cache.mkdir(parents=True)
+    (cache / "PANTHER99.0_HMM_classifications").write_text("PTHR00001:SF7\tOLD SUBFAMILY\n")
+    (cache / "PTHR99.0_human").write_text(
+        "HUMAN|HGNC=1|UniProtKB=P00002\tP00002\tX\tPTHR00001:SF7\tOLD SUBFAMILY\n")
+    previous = load_previous_release(tmp_path, "99.0")  # other organisms absent: not fetched
+    assert previous is not None
+    err = capsys.readouterr().err
+    listed = err.split("classifications for ", 1)[1].split(" are not cached", 1)[0].split(", ")
+    assert "mouse" in listed and "human" not in listed
+    assert previous.labels == {"PANTHER:PTHR00001:SF7": "OLD SUBFAMILY"}
+    assert previous.members == {"P00002": "PTHR00001:SF7"}
+
+
 @pytest.mark.parametrize(
     "verdict,expected",
     [

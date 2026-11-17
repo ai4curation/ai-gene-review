@@ -14,6 +14,7 @@ manifest:
     - href: https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM
       title: JAK-STAT briefing
       description: AI generated
+index_group: MAMMAL
 ---
 
 # PAINT Human No-IBA Gene Review Project

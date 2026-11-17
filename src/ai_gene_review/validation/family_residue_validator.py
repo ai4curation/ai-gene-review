@@ -41,6 +41,7 @@ from __future__ import annotations
 import http.client
 import json
 import ssl
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -440,6 +441,130 @@ def _panther_index(
     )
 
 
+class PreviousRelease(NamedTuple):
+    """The PANTHER release being left during a switch (``PANTHER_PREVIOUS_RELEASE``).
+
+    ``labels`` maps ``PANTHER:<id>`` to that release's name; ``members`` maps a UniProt
+    accession to its ``PTHR family:SF`` there. While a switch is in progress, an id,
+    label or membership that matches this release but not the current one is reported
+    as UNRESOLVED (remap pending) instead of FAIL.
+    """
+
+    release: str
+    labels: dict[str, str]
+    members: dict[str, str]
+
+
+def load_previous_release(repo_root: Path, release: str) -> "PreviousRelease | None":
+    """Load ``release``'s names and memberships from the PANTHER cache, offline.
+
+    Nothing is downloaded: ``just ensure-panther-members`` (``refresh-panther-members``)
+    caches these files while a switch is on. If the names file is not cached, the
+    allowance is off for this run, with a warning, and checks fail as they would
+    without it, rather than the validator depending on the network.
+    """
+    from ai_gene_review.etl.panther_families import (
+        DEFAULT_ORGANISMS,
+        hmm_classifications_path,
+        panther_cache_dir,
+        previous_release_members,
+        previous_release_names,
+        sequence_classification_path,
+    )
+
+    cache = panther_cache_dir(repo_root)
+    if not hmm_classifications_path(cache, release).exists():
+        print(
+            f"warning: PANTHER {release} classifications are not cached in {cache}, so the "
+            "switch allowance is off; run `just ensure-panther-members`",
+            file=sys.stderr,
+        )
+        return None
+    missing = [
+        organism
+        for organism in DEFAULT_ORGANISMS
+        if not sequence_classification_path(cache, organism, release).exists()
+    ]
+    if missing:
+        print(
+            f"warning: PANTHER {release} classifications for {', '.join(missing)} are not "
+            f"cached in {cache}, so memberships in those organisms are checked without the "
+            "switch allowance; run `just ensure-panther-members`",
+            file=sys.stderr,
+        )
+    return PreviousRelease(
+        release,
+        previous_release_names(cache, release),
+        previous_release_members(cache, release, cached_only=True),
+    )
+
+
+def _switch_release() -> "str | None":
+    """The release being left during a PANTHER switch, or None outside one."""
+    from ai_gene_review.etl.panther_families import (
+        PANTHER_PREVIOUS_RELEASE,
+        PANTHER_RELEASE,
+    )
+
+    if PANTHER_PREVIOUS_RELEASE is not None and PANTHER_PREVIOUS_RELEASE == PANTHER_RELEASE:
+        raise ValueError(
+            f"PANTHER_PREVIOUS_RELEASE equals PANTHER_RELEASE ({PANTHER_RELEASE}); "
+            "set it to the release being left, or to None outside a switch"
+        )
+    return PANTHER_PREVIOUS_RELEASE
+
+
+def _previous_release(panther_dir: Path) -> "PreviousRelease | None":
+    """The previous release's names and memberships, or None outside a switch.
+
+    Cached per resolved directory, so callers that spell the path differently share
+    one load.
+    """
+    release = _switch_release()
+    if release is None:
+        return None
+    return _load_previous_release_cached(Path(panther_dir).resolve(), release)
+
+
+@lru_cache(maxsize=None)
+def _load_previous_release_cached(panther_dir: Path, release: str) -> "PreviousRelease | None":
+    return load_previous_release(panther_dir.parents[1], release)
+
+
+def previous_release_labels(panther_dir: Path) -> "tuple[str, dict[str, str]] | None":
+    """``(release, PANTHER:<id> -> name)`` for the release being left, or None.
+
+    For label tools such as ``fix-panther-labels``: reads only the names file from
+    the cache, not the per-organism member map. None outside a switch, or when the
+    names file is not cached.
+    """
+    release = _switch_release()
+    if release is None:
+        return None
+    return _load_previous_labels_cached(Path(panther_dir).resolve(), release)
+
+
+@lru_cache(maxsize=None)
+def _load_previous_labels_cached(
+    panther_dir: Path, release: str
+) -> "tuple[str, dict[str, str]] | None":
+    from ai_gene_review.etl.panther_families import (
+        hmm_classifications_path,
+        panther_cache_dir,
+        previous_release_names,
+    )
+
+    cache = panther_cache_dir(panther_dir.parents[1])
+    if not hmm_classifications_path(cache, release).exists():
+        print(
+            f"warning: PANTHER {release} classifications are not cached in {cache}; run "
+            "`just ensure-panther-members`",
+            file=sys.stderr,
+        )
+        return None
+    return release, previous_release_names(cache, release)
+
+
 class PantherTerm(NamedTuple):
     """One PANTHER identifier found in a review, with the rule that governs it.
 
@@ -491,6 +616,7 @@ def check_panther_ids(
     members: dict[str, str],
     gaps: "MemberIndexGaps | None" = None,
     alternates: "dict[str, str] | None" = None,
+    previous: "PreviousRelease | None" = None,
 ) -> list[ResidueCheck]:
     """Check every PANTHER family/subfamily id resolves, and that labels are verbatim.
 
@@ -506,8 +632,15 @@ def check_panther_ids(
     a failure, matching the convention documented in CLAUDE.md. Where PANTHER's
     classification files and UniProt disagree (``alternates``), a member matching
     either is accepted, and the disagreement is reported as UNRESOLVED.
+
+    During a PANTHER switch (``previous`` set), an id, label or membership that was
+    right in the previous release but changed in the current one is UNRESOLVED, with
+    a pointer to ``just panther-release-diff``, so remaps can land in batches.
     """
+    from ai_gene_review.etl.panther_families import PANTHER_RELEASE
+
     alternates = alternates or {}
+    remap_hint = "remap it from `just panther-release-diff`"
     family = review.get("family_id", "?")
     results: list[ResidueCheck] = []
 
@@ -527,6 +660,31 @@ def check_panther_ids(
             )
         )
 
+    def scope_failure(term: PantherTerm, curie: str) -> "ResidueCheck | None":
+        """A subfamily slot holding a family id, or another family's subfamily.
+
+        Both are facts about the id string, true in every release, so they are
+        checked before any switch allowance can defer the id.
+        """
+        if not term.must_be_own_subfamily:
+            return None
+        if not _is_panther_subfamily(curie):
+            return ResidueCheck(
+                family, term.path, curie, 0, [], None, Outcome.FAIL,
+                f"{curie} is a family, not a subfamily; a family id here "
+                "matches no member's subfamily and would flag every one of "
+                "them as a scope violation",
+                kind="PANTHER_FAMILY_SCOPE",
+            )
+        if own_family and _panther_family_base(curie) != own_family:
+            return ResidueCheck(
+                family, term.path, curie, 0, [], None, Outcome.FAIL,
+                f"{curie} belongs to a different family; this review is "
+                f"about {family}",
+                kind="PANTHER_FAMILY_SCOPE",
+            )
+        return None
+
     for term in _iter_panther_terms(review):
         path, curie, label = term.path, term.curie, term.label
         if not curie or curie.startswith("PANTHER:PTN"):
@@ -534,6 +692,23 @@ def check_panther_ids(
         # Resolution first: a non-PANTHER CURIE is not "a family, not a subfamily",
         # it is simply unresolvable, and that is the clearer message.
         if curie not in labels:
+            # Deferred only when the review still carries the previous release's name
+            # (or no label): a label wrong in both releases fails, as in modules.
+            if (
+                previous is not None
+                and curie in previous.labels
+                and label in (None, previous.labels[curie])
+            ):
+                results.append(
+                    scope_failure(term, curie)
+                    or ResidueCheck(
+                        family, path, curie, 0, [], None, Outcome.UNRESOLVED,
+                        f"{curie} is not in PANTHER {PANTHER_RELEASE}; it was "
+                        f"{previous.labels[curie]!r} in {previous.release}; {remap_hint}",
+                        kind="PANTHER_ID",
+                    )
+                )
+                continue
             results.append(
                 ResidueCheck(
                     family, path, curie, 0, [], None, Outcome.FAIL,
@@ -542,30 +717,27 @@ def check_panther_ids(
                 )
             )
             continue
-        if term.must_be_own_subfamily:
-            if not _is_panther_subfamily(curie):
-                results.append(
-                    ResidueCheck(
-                        family, path, curie, 0, [], None, Outcome.FAIL,
-                        f"{curie} is a family, not a subfamily; a family id here "
-                        "matches no member's subfamily and would flag every one of "
-                        "them as a scope violation",
-                        kind="PANTHER_FAMILY_SCOPE",
-                    )
-                )
-                continue
-            if own_family and _panther_family_base(curie) != own_family:
-                results.append(
-                    ResidueCheck(
-                        family, path, curie, 0, [], None, Outcome.FAIL,
-                        f"{curie} belongs to a different family; this review is "
-                        f"about {family}",
-                        kind="PANTHER_FAMILY_SCOPE",
-                    )
-                )
-                continue
+        failure = scope_failure(term, curie)
+        if failure is not None:
+            results.append(failure)
+            continue
         official = labels[curie]
-        if label is not None and label != official:
+        if (
+            label is not None
+            and label != official
+            and previous is not None
+            and label == previous.labels.get(curie)
+        ):
+            results.append(
+                ResidueCheck(
+                    family, path, curie, 0, [], None, Outcome.UNRESOLVED,
+                    f"renamed since PANTHER {previous.release}: {label!r} is now "
+                    f"{official!r} in {PANTHER_RELEASE}; the id may now name something "
+                    f"else, so {remap_hint}",
+                    kind="PANTHER_LABEL",
+                )
+            )
+        elif label is not None and label != official:
             results.append(
                 ResidueCheck(
                     family, path, curie, 0, [], None, Outcome.FAIL,
@@ -589,6 +761,15 @@ def check_panther_ids(
         if not declared:
             continue
         bare = declared.split(":", 1)[1]
+        # The bump changed what this id names (gone or renamed), so a member the previous
+        # release did not classify cannot be judged against it until the id is remapped.
+        # Name equality is a proxy: a subfamily renumbered under an identical generic name
+        # reads as unchanged here, so such a member still fails and needs a look.
+        declared_changed = (
+            previous is not None
+            and declared in previous.labels
+            and previous.labels[declared] != labels.get(declared)
+        )
         for member in sub.get("representative_members") or []:
             acc = (member.get("id") or "").split(":")[-1]
             if acc not in members:
@@ -618,6 +799,31 @@ def check_panther_ids(
                         f"sources disagree: PANTHER's classification files put it in "
                         f"{members[acc]}, UniProt's cross-reference in the declared "
                         f"{bare}; both are accepted",
+                        kind="PANTHER_MEMBERSHIP",
+                    )
+                )
+            elif (
+                members[acc] != bare
+                and previous is not None
+                and previous.members.get(acc) == bare
+            ):
+                results.append(
+                    ResidueCheck(
+                        family, declared, acc, 0, [], None, Outcome.UNRESOLVED,
+                        f"is classified {members[acc]} in PANTHER {PANTHER_RELEASE}, but "
+                        f"{bare} as declared in {previous.release}; {remap_hint}",
+                        kind="PANTHER_MEMBERSHIP",
+                    )
+                )
+            elif members[acc] != bare and declared_changed and previous is not None and (
+                acc not in previous.members
+            ):
+                results.append(
+                    ResidueCheck(
+                        family, declared, acc, 0, [], None, Outcome.UNRESOLVED,
+                        f"is classified {members[acc]} in PANTHER {PANTHER_RELEASE}; the "
+                        f"declared {bare} changed meaning since {previous.release}, which "
+                        f"did not classify this protein; {remap_hint}",
                         kind="PANTHER_MEMBERSHIP",
                     )
                 )
@@ -1236,6 +1442,7 @@ def validate_family_review(
     cache = SequenceCache(cache_dir)
     paint_index = load_paint_index(panther_dir)
     labels, members, gaps, alternates = _panther_index(panther_dir)
+    previous = _previous_release(panther_dir)
     return (
         check_anchor_residues(review, cache)
         + check_controls(review, cache)
@@ -1243,7 +1450,7 @@ def validate_family_review(
         + check_node_tree_evidence(review)
         + check_proposed_actions(review, lambda fam: load_family(fam, tree_cache_dir))
         + check_term_assessment_site_refs(review)
-        + check_panther_ids(review, labels, members, gaps, alternates)
+        + check_panther_ids(review, labels, members, gaps, alternates, previous)
     )
 
 

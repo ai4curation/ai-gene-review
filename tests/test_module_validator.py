@@ -1190,6 +1190,31 @@ def test_validate_family_members_rejects_member_in_a_different_family():
     assert "O14521 is in PANTHER:PTHR13337:SF6" in errors[0]
 
 
+def test_validate_family_members_previous_release_match_is_a_warning_during_a_switch():
+    """During a PANTHER switch, a family the members left in the bump is a warning."""
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR11375", "O14521")))
+    current = {"O14521": "PTHR13337:SF6"}
+
+    errors, _ = validate_family_members(uses, current)
+    assert len(errors) == 1
+
+    errors, warnings = validate_family_members(
+        uses, current, previous=("19.0", {"O14521": "PTHR11375:SF2"})
+    )
+    assert errors == []
+    assert len(warnings) == 1 and "PANTHER 19.0" in warnings[0]
+
+
+def test_validate_family_members_switch_does_not_excuse_a_family_wrong_in_both():
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR11375", "O14521")))
+
+    errors, _ = validate_family_members(
+        uses, {"O14521": "PTHR13337:SF6"}, previous=("19.0", {"O14521": "PTHR13337:SF6"})
+    )
+
+    assert len(errors) == 1
+
+
 def test_validate_family_members_matches_on_family_when_declared_as_subfamily():
     uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR13337:SF6", "O14521")))
 

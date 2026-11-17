@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [SCHPO, human, yeast, worm]
 collections: [GO_TRACKER_BACKLOG]
+index_group: GO_TRACKER_BACKLOG
 ---
 
 # Unfolded Protein Response: RIDD and the ER Quality Control Branch
