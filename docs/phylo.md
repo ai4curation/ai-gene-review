@@ -198,7 +198,7 @@ facts and lists the rows where the two pull apart
   (`<PTHR>-paint.tsv`). A family without a slice has `paint_slice: false` and no loss
   information at all: an empty list there would mean "no loss", so none is written.
 - The gene extract describes the seeds of the cached GOA row, which is a snapshot. PAINT
-  may have changed the seed list since: on about one row in seven the family's current
+  may have changed the seed list since: on about one row in eight the family's current
   PAINT slice lists different seeds. `<PTHR>-tree-nodes.yaml` describes the seeds of the
   slice, so compare the two when a verdict turns on a single seed.
 - Genes outside the PANTHER reference proteomes are not leaves, so they have no

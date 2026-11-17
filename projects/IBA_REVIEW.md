@@ -143,8 +143,9 @@ propagated annotations; 81 genes are reviewed and 65 await adjudication
 Until 2026-11 these verdicts were made from the GOA row alone, which carries a node id
 and a seed list: a census found a tree or alignment artifact behind 4.5% of the IBA rows
 we had overruled. Each review can now read the PANTHER tree and family alignment for its
-own rows (`just phylo`), an overruled IBA row is asked to quote it, and a join of all
-29,101 reviewed IBA rows with their tree facts shows where our verdicts and the tree
+own rows (`just phylo`), an overruled IBA row is asked to quote it, including what in it
+stands against the verdict, and a join of all 31,805 reviewed IBA rows with their tree
+facts shows where our verdicts and the tree
 agree and where they do not
 ([tree and alignment evidence](IBA_REVIEW/tree-evidence.md)).
 

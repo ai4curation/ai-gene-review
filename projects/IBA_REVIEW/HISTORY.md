@@ -146,6 +146,55 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
 
 ---
 
+## 2026-11-17 — What review of the re-read found, and what changed
+
+The pull request was reviewed after each push. The reviews found defects in the tooling
+and in rows the re-read had already applied. All were put right
+before any further batch was run. Details: [tree-evidence.md](tree-evidence.md#the-re-read)
+and [tree-rereview](tree-rereview/README.md#what-the-script-will-not-do).
+
+What was wrong, in the order it mattered:
+
+- **The flagship example quoted around the fact that stood against it.** The CIRBP reasons
+  said the seeds "all sit in one branch below" the node and that "CIRBP's own branch holds
+  none of them": two different nodes, 14 steps apart, with the extract's "CIRBP is inside
+  that clade" sitting unquoted between the two sentences that were quoted. I had corrected
+  two factual errors in that review a week earlier and written the new reason from the
+  parts of the extract that suited the verdict. The verdict is right; the argument for it
+  is the duplications that separate CIRBP from each seed, and it now says so.
+- **The same shortcut was open to the script.** A row could be applied with a quote that
+  named the term and nothing adverse. 65 applied rows had left out the sentence saying the
+  gene is inside the seed clade or shares its branch with seeds. A reading must now quote
+  every such sentence, and `just validate` warns on any review that does not
+  (`tree_evidence_adverse_unquoted`).
+- **The extract called a seed a one-to-one ortholog across a horizontal-transfer node.**
+  The re-read then used "all six seeds are one-to-one orthologs" to rewrite cab4's reason
+  and swap its failure mode. Four of the six are separated from cab4 by transfer nodes.
+- **An ortholog call was used against two reviews that dispute the placement itself**
+  (mam, cab4). The call is read from the placement, so it cannot refute an argument that
+  the placement is wrong. Failure modes are now a curator's to change.
+- **Correcting a reason left the same claim standing in the summary, a source note or the
+  list of affected subfamilies** (ten rows), and one edit reached a second row through a
+  shared YAML block.
+- **History records said "added to the reason" where the reason had been rewritten.**
+
+What I take from it:
+
+- **A quote check that asks only "is it verbatim" is passed by a true sentence chosen to
+  mislead.** The check has to know which sentences are adverse.
+- **A tool that refuses an edit must refuse it from both ends of a shared value**, and the
+  check that compares the result with the intent must not share objects with the result.
+- **A row's fields have to agree after an edit, not only the field that was edited.** If
+  the script cannot make the whole correction, it should make none.
+- **Review the first batches before running the rest.** The 61 unread batches would have
+  repeated every one of these.
+
+Since the plan was made, reviews merged on main have added 252 overruled IBA rows in 190
+genes and 167 disputed node assessments in 100 families. They have extracts and listings
+and are in neither plan.
+
+---
+
 ## 2026-11-16 — Re-read with the tree: candidate genes and families
 
 Asked to run the re-read as batches of agents. 278 gene rows (every gene with a row on the

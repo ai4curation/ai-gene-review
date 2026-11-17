@@ -13,13 +13,14 @@ placements from the GOA row alone, which carries a node id and a seed list. A ce
 2026-11-09 found a tree or alignment artifact behind 1.8% of 29,084 IBA rows, and behind
 4.5% of the 1,586 rows we had overruled. Every review can now read the PANTHER 19.0 tree
 and family alignment for its own rows (`GENE-phylo.yaml`, from `just phylo`), and a
-`REMOVE` or `MARK_AS_OVER_ANNOTATED` on an IBA row is asked to quote it. Joining all
-29,101 reviewed IBA rows with their tree facts shows that our verdicts follow the gene
-tree closely although almost none was made with it: we overrule 1.3% of rows where the
-gene is itself a seed, and 20.0% where the gene lies outside the clade the seeds span and
-has no one-to-one ortholog among them. The same join found errors in two of this
-project's own flagship write-ups, and 233 rows whose verdict and tree pull in different
-directions. Those rows are listed for re-review; the analysis itself changed no verdict.
+`REMOVE` or `MARK_AS_OVER_ANNOTATED` on an IBA row is asked to quote it, including what in
+it stands against the verdict. Joining all 31,805 reviewed IBA rows with their tree facts
+shows that our verdicts follow the gene tree closely although almost none was made with
+it: we overrule 1.3% of rows where the gene is itself a seed, and 21.1% where the gene lies
+outside the clade the seeds span and has no one-to-one ortholog among them. The same join
+found errors in two of this project's own flagship write-ups, and 256 rows whose verdict
+and tree pull in different directions. Those rows are listed for re-review; the analysis
+itself changed no verdict.
 
 ## What was missing
 
@@ -65,11 +66,11 @@ at a tree and left only prose was not counted.
   residue loss without a checkable residue claim (`missing_residue_evidence`).
   `just validate-families` reports a node assessment that disputes a placement without
   quoting a tree listing (`NODE_TREE_EVIDENCE`).
-- **Backfill.** Extracts are committed for the 1,184 genes whose review overrules an IBA
-  row, and node listings for 220 families: the 219 whose family review disputes a node
-  placement, and PTHR48034 (the CIRBP family below). In 9 of those genes the only
-  overruled IBA row has since been withdrawn from GOA; such a row has no tree row to
-  quote and is not asked for one.
+- **Backfill.** Extracts are committed for 1,378 genes: every gene whose review overrules
+  an IBA row that is still in its GOA file, and the genes with a kept row under a PAINT
+  loss. Node listings are committed for 330 families: those whose family review disputes a
+  node placement, and PTHR48034 (the CIRBP family below). A review row whose IBA has since
+  been withdrawn from GOA has no tree row to quote and is not asked for one.
 
 The file format, the numbering rules and the limits are in
 [docs/phylo.md](https://github.com/ai4curation/ai-gene-review/blob/main/docs/phylo.md).
@@ -78,8 +79,8 @@ Two things the extract settles that this project had been doing by hand:
 
 - **Seed identity.** A PANTHER leaf carries its MOD id and its UniProt accession together
   (`RAT|RGD=1565256|UniProtKB=Q4V898`), so a MOD-id seed resolves by lookup, not by name
-  match. The 29,075 placed rows carry 198,437 seed tokens; 514 of them (0.3%) name no leaf
-  of the tree, and every seed resolves on 28,608 rows. Arabidopsis `AGI_LocusCode` seeds
+  match. The 31,778 placed rows carry 213,504 seed tokens; 567 of them (0.3%) name no leaf
+  of the tree, and every seed resolves on 31,258 rows. Arabidopsis `AGI_LocusCode` seeds
   are resolved through UniProt's locus names.
 - **Residue numbering.** PANTHER's alignment rows leave out the stretches the family model
   does not align, so counting along a row does not give a position in the protein. The
@@ -88,8 +89,9 @@ Two things the extract settles that this project had been doing by hand:
 
 ## What the tree says about our verdicts
 
-`tree_evidence.py` joins each reviewed IBA row with its tree facts. Of 29,080 positive
-rows in 7,383 genes, 29,075 are placed in a PANTHER 19.0 tree. "Overruled" is `REMOVE` or
+`tree_evidence.py` joins each reviewed IBA row with its tree facts. Of 31,783 positive
+rows in 8,224 genes, 31,778 are placed in a PANTHER 19.0 tree (the figures are of
+2026-11-17, after the second merge with main). "Overruled" is `REMOVE` or
 `MARK_AS_OVER_ANNOTATED`; "refined" is `MODIFY` or `TOO_GENERAL`; "kept" is `ACCEPT` or
 `KEEP_AS_NON_CORE`.
 
@@ -97,11 +99,11 @@ rows in 7,383 genes, 29,075 are placed in a PANTHER 19.0 tree. "Overruled" is `R
 
 | | rated | kept | refined | overruled | % overruled | % `REMOVE` |
 |---|---:|---:|---:|---:|---:|---:|
-| Gene is itself a seed | 14,472 | 13,181 | 1,100 | 191 | 1.3% | 0.2% |
-| Inside the seed clade, with a one-to-one ortholog seed | 4,143 | 3,700 | 327 | 116 | 2.8% | 0.8% |
-| Outside the seed clade, with a one-to-one ortholog seed | 2,419 | 2,045 | 175 | 199 | 8.2% | 2.5% |
-| Inside the seed clade, no one-to-one ortholog seed | 4,725 | 3,713 | 421 | 591 | 12.5% | 5.5% |
-| Outside the seed clade, no one-to-one ortholog seed | 2,904 | 2,080 | 242 | 582 | 20.0% | 9.3% |
+| Gene is itself a seed | 15,933 | 14,361 | 1,358 | 214 | 1.3% | 0.2% |
+| Inside the seed clade, with a one-to-one ortholog seed | 4,322 | 3,840 | 353 | 129 | 3.0% | 0.8% |
+| Outside the seed clade, with a one-to-one ortholog seed | 2,603 | 2,197 | 180 | 226 | 8.7% | 2.4% |
+| Inside the seed clade, no one-to-one ortholog seed | 5,148 | 4,001 | 494 | 653 | 12.7% | 5.6% |
+| Outside the seed clade, no one-to-one ortholog seed | 3,329 | 2,336 | 289 | 704 | 21.1% | 9.9% |
 | PAINT loss on the path to the gene | 22 | 8 | 4 | 10 | 45.5% | 27.3% |
 
 The seed clade is the smallest clade that holds all the seeds of the row. A one-to-one
@@ -118,8 +120,9 @@ on node height below describe partly the same variable. The extract says which c
 is: for a bracketing node it gives the number of seeds on the gene's own branch below the
 node instead.
 
-A PAINT loss can be seen only where the family has a local PAINT slice, so the last line
-counts rows in those families and says nothing about the others.
+A PAINT loss can be seen only where the family has a local PAINT slice, which is so for
+24,133 of the 31,778 placed rows. The last line counts rows in those families and says
+nothing about the others.
 
 ### Similarity to the seeds in the family alignment
 
@@ -127,12 +130,12 @@ Rows where the gene is not itself a seed, by identity to the most similar seed:
 
 | Identity | rated | overruled | % overruled | % `REMOVE` |
 |---|---:|---:|---:|---:|
-| under 20% | 447 | 113 | 25.3% | 18.1% |
-| 20-30% | 1,446 | 284 | 19.6% | 10.0% |
-| 30-40% | 2,131 | 382 | 17.9% | 8.0% |
-| 40-60% | 3,755 | 376 | 10.0% | 3.6% |
-| 60-80% | 2,663 | 206 | 7.7% | 2.2% |
-| 80% or more | 3,765 | 137 | 3.6% | 1.0% |
+| under 20% | 485 | 127 | 26.2% | 19.2% |
+| 20-30% | 1,644 | 349 | 21.2% | 11.1% |
+| 30-40% | 2,383 | 442 | 18.5% | 8.0% |
+| 40-60% | 4,075 | 429 | 10.5% | 3.7% |
+| 60-80% | 2,815 | 215 | 7.6% | 2.2% |
+| 80% or more | 4,016 | 160 | 4.0% | 1.0% |
 
 ### Relation of the nearest seed, and duplications on the path
 
@@ -140,13 +143,13 @@ Rows where the gene is not itself a seed:
 
 | | rated | overruled | % overruled | % `REMOVE` |
 |---|---:|---:|---:|---:|
-| Nearest seed is an ortholog | 10,677 | 857 | 8.0% | 2.9% |
-| Nearest seed is a paralog | 3,469 | 631 | 18.2% | 9.2% |
-| Nearest seed is a xenolog | 64 | 10 | 15.6% | 7.8% |
-| No duplication between the PAINT node and the gene | 5,078 | 399 | 7.9% | 2.8% |
-| One duplication | 4,429 | 529 | 11.9% | 5.3% |
-| Two duplications | 2,514 | 326 | 13.0% | 5.6% |
-| Three or more | 2,210 | 244 | 11.0% | 5.1% |
+| Nearest seed is an ortholog | 11,543 | 999 | 8.7% | 3.0% |
+| Nearest seed is a paralog | 3,786 | 707 | 18.7% | 9.6% |
+| Nearest seed is a xenolog | 92 | 16 | 17.4% | 7.6% |
+| No duplication between the PAINT node and the gene | 5,549 | 463 | 8.3% | 2.8% |
+| One duplication | 4,749 | 612 | 12.9% | 5.9% |
+| Two duplications | 2,771 | 372 | 13.4% | 5.7% |
+| Three or more | 2,373 | 275 | 11.6% | 5.4% |
 
 ### How far above the seeds the node was placed
 
@@ -155,10 +158,10 @@ node:
 
 | | rated | overruled | % overruled | % `REMOVE` |
 |---|---:|---:|---:|---:|
-| Seeds bracket the node | 9,315 | 455 | 4.9% | 2.0% |
-| Common ancestor one step below | 3,526 | 131 | 3.7% | 1.4% |
-| Two or three steps below | 4,878 | 226 | 4.6% | 2.2% |
-| Four or more steps below | 5,200 | 303 | 5.8% | 2.1% |
+| Seeds bracket the node | 10,065 | 497 | 4.9% | 2.1% |
+| Common ancestor one step below | 3,929 | 148 | 3.8% | 1.3% |
+| Two or three steps below | 5,310 | 266 | 5.0% | 2.3% |
+| Four or more steps below | 5,583 | 345 | 6.2% | 2.3% |
 
 ### Reading these tables
 
@@ -167,9 +170,9 @@ node:
   itself, associated with our overruling it. What is associated is the gene lying outside
   the seed clade, having only paralogs among the seeds, or being under 40% identical to
   every seed.
-- **One duplication is most of the effect.** The rate rises from 7.9% to 11.9% with the
+- **One duplication is most of the effect.** The rate rises from 8.3% to 12.9% with the
   first duplication between the node and the gene, and further duplications add little
-  (13.0% with two, 11.0% with three or more).
+  (13.4% with two, 11.6% with three or more).
 - **These are our verdicts, not ground truth.** The tables say where we overrule, not
   where PAINT is wrong. They are less circular than the
   [species-distance analysis](single-organism-distance.md), whose reviewers had been told
@@ -237,26 +240,29 @@ Review of this work then found three more, in the work itself.
 
 ## Rows to re-review
 
-`tree-evidence-candidates.yaml` listed 233 rows in three groups when it was first built
-(the counts below). None is a finding that the verdict is wrong; each is a row where the
-verdict and the tree pull apart and someone should look. The file is regenerated from the
-current reviews, so rows leave it as they are corrected: after the re-read below it holds
-229, with 15 in the second group.
+`tree-evidence-candidates.yaml` lists 256 rows in three groups. None is a finding that
+the verdict is wrong; each is a row where the verdict and the tree pull apart and someone
+should look. The file is regenerated from the current reviews, so it grows as reviews are
+merged and rows leave it as they are corrected. It held 233 rows when it was first built,
+and the first twelve batches of the re-read below were planned from that list.
 
 | Group | Rows | Why it is listed |
 |---|---:|---|
-| PAINT loss on the path | 23 | PAINT has removed the term (IRD or IKR) between the node and the gene and not asserted it again below, so the cached IBA row is stale. We keep or refine 12 of these. |
-| Paralog claim without a duplication | 19 | Overruled as `WRONG_ORTHOLOG_OR_PARALOG`, but every seed is an ortholog by the tree and no duplication lies between the node and the gene. In 3 of them every seed is a one-to-one ortholog. |
-| Overruled although the gene is a seed | 191 | The gene's own experimental annotation is among the node's seeds. Either that annotation is disputed too (a seed-side error, as in the PseudoCAP sweep) or the verdict needs another look. |
+| PAINT loss on the path | 23 | PAINT has removed the term (IRD or IKR) between the node and the gene and not asserted it again below, so the cached IBA row is stale. We keep or refine 12 of these, which now raise `kept_under_paint_loss`. |
+| Paralog claim without a duplication | 19 | Overruled as `WRONG_ORTHOLOG_OR_PARALOG`, but every seed joins the gene at a speciation and no duplication or transfer node lies between the node and the gene. In none of them is every seed a one-to-one ortholog. |
+| Overruled although the gene is a seed | 214 | The gene's own experimental annotation is among the node's seeds. Either that annotation is disputed too (a seed-side error, as in the PseudoCAP sweep) or the verdict needs another look. |
 
 Examples: yeast SSA1 to SSA4 are accepted for `GO:0042026` protein refolding while PAINT
 carries an IRD for that term at the fungal node `PTN001065099` (2026-06-16), which lies on
 their path as well as on that of SSB1, SSB2 and SSZ1. Either the loss is too broad or four
-accepted rows are stale. SCHPO cab4, yeast CAB4 and worm pnk-1 are overruled as wrong
-paralogs where every seed is a one-to-one ortholog.
+accepted rows are stale. SCHPO cab4 and yeast CAB4 are overruled as wrong paralogs where
+every seed joins them at a speciation, four of the six across horizontal-transfer nodes.
+Both reviews dispute the subfamily placement itself, so the rows are on the list as rows
+to look at; the tree's relation is read from that placement and does not settle them.
 
-Beyond these lists, 1,689 overruled rows had an extract and 4 quoted it, and 392 node
-assessments in 219 family reviews disputed a placement, 6 of them citing a tree listing.
+When the list was first built, 1,689 overruled rows had an extract and 4 quoted it, and
+392 node assessments in 219 family reviews disputed a placement, 6 of them citing a tree
+listing. Now all 1,936 overruled rows have an extract and 232 quote it.
 
 ## The re-read
 
@@ -269,12 +275,13 @@ then edited by script. The method, the plans and a record of every row are in
 | | Rows read | Applied | Left for adjudication |
 |---|---:|---:|---:|
 | Gene reviews: the 12 batches that hold every candidate gene | 278 | 229 | 47, and 2 not read |
-| Family reviews: every disputed node assessment without a tree listing | 386 | 321 | 65 |
+| Family reviews: every disputed node assessment without a tree listing | 386 | 319 | 67 |
 
 An applied row quotes its own extract or listing in `supported_by` and says in its reason
-what the tree shows. The script changed no verdict. 26 rows that had been applied were
-changed on main before this work was merged with it; their edits were not carried over,
-and they are counted here as left for adjudication.
+what the tree shows. The script changed no verdict. 28 rows that had been applied were
+changed on main before this work was merged with it (26 at the first merge, 2 at the
+second); their edits were not carried over, and they are counted here as left for
+adjudication.
 
 Review of the first batches found four things the script should not have done, and all
 four were put right on 2026-11-16 and 2026-11-17, in the rows already applied and in the
@@ -301,7 +308,7 @@ script:
   refuses a shared value from either side.
 
 What the re-read leaves for a curator is in
-[`needs-curator.yaml`](tree-rereview/needs-curator.yaml): the rows below, and the 328
+[`needs-curator.yaml`](tree-rereview/needs-curator.yaml): the rows below, and the 326
 applied rows on which the reader left a note, often about a verdict or failure mode that
 no longer fits.
 
@@ -344,16 +351,19 @@ Three things follow.
   More than half of the disputed node assessments make a placement argument that the tree
   bears out.
 
-112 rows are left for adjudication, each with its reason in the run records: 42 where the
+114 rows are left for adjudication, each with its reason in the run records: 42 where the
 verifier did not accept the reading or its correction (among them 2 verdicts the reader
 found unsupported and 2 kept rows under a PAINT loss), 26 family rows whose node or term
-is not in the listing, 26 rows that changed on main after they were read, 11 kept rows
+is not in the listing, 28 rows that changed on main after they were read, 11 kept rows
 under a PAINT loss, 5 verdicts or assessments the tree does not support, and 2 family
 rows that name an affected subfamily which does not descend from the node. Two gene rows
 were not read: the reader returned no entry for them.
 
-Not yet read: the 61 gene batches with no candidate row, about 1,420 overruled rows. They
-still raise `missing_tree_evidence`.
+Not yet read: the 61 gene batches with no candidate row, 1,418 overruled rows in 970
+genes. They still raise `missing_tree_evidence`. So do 252 overruled rows in 190 genes
+that reviews merged on main have added since the plan was made, and 167 disputed node
+assessments in 100 families are in the same position; these have extracts and listings
+but are in neither plan.
 
 The readers of the gene batches and of the first four family batches ran on the session's
 model; the remaining family batches ran on Opus. A trial of a smaller model as reader on
@@ -388,10 +398,10 @@ regenerated by these commands.
   carry no loss information, so the loss counts here are over the families with a slice.
 - Identity and coverage are over the family model's columns. A domain the model does not
   cover is invisible.
-- A seed list in a cached GOA row is a snapshot and can lag PAINT. Of the 21,802 placed
-  rows whose family has a local PAINT slice, 21,217 still have an IBD row for the same
-  node and term in the slice. On those the two seed lists are the same on 86.2%, differ by
-  one seed on 9.2%, by two on 1.9% and by three or more on 2.7%. The other 585 rows have no
+- A seed list in a cached GOA row is a snapshot and can lag PAINT. Of the 24,133 placed
+  rows whose family has a local PAINT slice, 23,514 still have an IBD row for the same
+  node and term in the slice. On those the two seed lists are the same on 87.0%, differ by
+  one seed on 8.7%, by two on 1.8% and by three or more on 2.5%. The other 619 rows have no
   IBD row for that node and term in the slice: PAINT has since moved or removed the
   assertion. The extract describes the seeds of the GOA row, which is what the review is
   reviewing. For Cds1 the slice of 2026-08-28 lists fly `FBgn0031148` and MYCTU `P9WP51`
