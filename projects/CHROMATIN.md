@@ -1,7 +1,7 @@
 ---
 title: "Chromatin: complexes, locations and the GO chromatin subtree"
 maturity: SCOPING
-last_reviewed: '2026-11-15'
+last_reviewed: '2026-11-17'
 tags: [BIOLOGY_DOMAIN]
 species: [yeast]
 genes: [HAT1, HAT2, HIF1]
@@ -83,7 +83,7 @@ filing.
 | Module | Members | Status | Notes |
 |---|---|---|---|
 | [HAT-B complex](../modules/scer_hat_b_complex.html) (`modules/scer_hat_b_complex.yaml`) | HAT1, HAT2, HIF1 | DRAFT | Proposes a GO term for the type B HAT complex and records the GO:0000123 `part_of chromatin` edge as a proposed deletion. Two biology gaps: free H4 versus H3-H4 dimer as substrate, and HAT-B's role at double-strand breaks. |
-| [Rtt109-Vps75 complex](../modules/scer_rtt109_vps75_complex.html) (`modules/scer_rtt109_vps75_complex.yaml`) | RTT109, VPS75 | DRAFT | Uses GO:0070775 H3 histone acetyltransferase complex, which is also inferred to be part of chromatin; the complex has no activity on nucleosomal H3, so it is a second counterexample to the GO:0000123 edge. Vps75 drives H3 tail (K9, K27) acetylation; K56 needs Asf1 and not Vps75. Two biology gaps: where the complex acts (before or after nuclear import), and Rtt109-independent roles of Vps75. |
+| [Rtt109-Vps75 complex](../modules/scer_rtt109_vps75_complex.html) (`modules/scer_rtt109_vps75_complex.yaml`) | RTT109, VPS75 | DRAFT | Uses GO:0070775 H3 histone acetyltransferase complex, which is also inferred to be part of chromatin; the complex has no activity on nucleosomal H3, so it is a second counterexample to the GO:0000123 edge. Vps75 drives H3 tail (K9, K27) acetylation; K56 needs Asf1 and not Vps75. Two biology gaps: where the complex acts (before or after nuclear import), and Rtt109-independent roles of Vps75 (narrowed by PMID:19470761). |
 
 The HAT-B case is concrete: all three yeast subunits are annotated `part_of`
 GO:0000123 (IDA, IPI), so they inherit `part_of chromatin`. Meanwhile
@@ -92,13 +92,14 @@ cytoplasm and that modification of chromatin-packaged H4 is not established.
 
 ## Gene reviews
 
-| Gene | Rows | ACCEPT | KEEP_AS_NON_CORE | MODIFY | MARK_AS_OVER_ANNOTATED | TOO_GENERAL | REMOVE | NEW |
-|---|---|---|---|---|---|---|---|---|
-| HAT1 | 36 | 11 | 9 | 9 | 1 | 1 | 4 | 1 |
-| HAT2 | 35 | 15 | 4 | 3 | 2 | 0 | 11 | 0 |
-| HIF1 | 29 | 9 | 6 | 7 | 1 | 0 | 5 | 1 |
+| Gene | Rows | ACCEPT | KEEP_AS_NON_CORE | MODIFY | MARK_AS_OVER_ANNOTATED | TOO_GENERAL | REMOVE | UNDECIDED | NEW |
+|---|---|---|---|---|---|---|---|---|---|
+| HAT1 | 36 | 11 | 9 | 9 | 1 | 1 | 4 | 0 | 1 |
+| HAT2 | 35 | 15 | 4 | 3 | 2 | 0 | 11 | 0 | 0 |
+| HIF1 | 29 | 9 | 6 | 7 | 1 | 0 | 5 | 0 | 1 |
+| VPS75 | 53 | 20 | 8 | 19 | 0 | 0 | 4 | 1 | 1 |
 
-The main corrections:
+The main corrections for the HAT-B subunits:
 
 - **Activity terms refined to the acetylation site.** "Histone acetyltransferase activity" and its broader parents on Hat1 are modified to histone H4K12 acetyltransferase activity (the primary site) and H4K5 (the minor site, shown in vivo). Hat2's `contributes_to` rows get the same refinement.
 - **Rpd3L complex removed from Hat2.** Both Rpd3L rows on Hat2 come from a fungal PAINT node that sits above all three budding-yeast RbAp46/48 paralogs, with only Ume1 and *S. pombe* Prw1 as seeds. Ume1, not Hat2, is the WD40 subunit of Rpd3L. Hat2's "regulation of DNA-templated transcription" IBA is marked over-annotated for the same reason.
@@ -109,6 +110,15 @@ The main corrections:
 - **Complex rows kept.** The GO:0000123 histone acetyltransferase complex rows are accepted, because the membership claim is right; the chromatin problem lies in the ontology. HAT1 carries the proposed HAT-B complex term and the proposed edge deletion.
 - **Catalytic base recorded as a gap.** UniProt annotates Glu255 as Hat1's active site from an author statement. Mutagenesis shows neither Glu255 nor any nearby acidic residue is needed for activity, so HAT1 records the catalytic base as a knowledge gap.
 
+For VPS75:
+
+- **Core functions.** Acetyltransferase activator activity (activating Rtt109) and H3-H4 histone complex chaperone activity are both accepted as core.
+- **Histone binding refined.** All six histone binding rows (one IBA, one IDA and four IPI with histones H3 and H4) are modified to H3-H4 histone complex chaperone activity.
+- **Protein binding resolved by partner.** Rows where a study measured Rtt109 activation are modified to acetyltransferase activator activity (six). Rows that only detect or map the Rtt109 interaction are removed (four). Self-interaction rows, including all four "identical protein binding" rows, are modified to protein homodimerization activity (seven).
+- **Kept as non-core.** Chromatin location and chromatin binding are kept as non-core, because the core activity acts on histones not yet in chromatin. So are DNA replication-dependent chromatin assembly (the replication link runs mainly through Rtt109 and Asf1) and NHEJ (genetic and indirect).
+- **One row left undecided.** The cytosol row (hypoxia relocalization) is UNDECIDED: the cached paper does not name Vps75.
+- **New row.** Vps75 gets a NEW "nucleosome disassembly" row (PMID:19470761): independently of Rtt109, Vps75 and RSC remove H2A/H2B dimers from nucleosomes. The same paper narrows the module's open question about Vps75's Rtt109-independent roles.
+
 ## Plan
 
 Yeast histone acetyltransferase complexes, each as its own module:
@@ -116,7 +126,7 @@ Yeast histone acetyltransferase complexes, each as its own module:
 - [x] HAT-B (Hat1, Hat2, Hif1)
 - [x] gene reviews for HAT1, HAT2 and HIF1
 - [x] Rtt109-Vps75 (H3 acetylation of new histones; RTT109 already reviewed)
-- [ ] gene review for VPS75 (scaffold created; annotations PENDING)
+- [x] gene review for VPS75
 - [ ] NuA4 and piccolo NuA4 (Esa1, Epl1, Yng2; ESA1 already reviewed)
 - [ ] SAGA HAT module (Gcn5, Ada2, Ada3, Sgf29; GCN5 already reviewed)
 - [ ] NuA3 (Sas3; SAS3 already reviewed)
