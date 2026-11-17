@@ -68,7 +68,8 @@ One batch at a time:
    shows. It edits nothing. The instructions it works from are in
    [`workflows/`](workflows/).
 3. **Verification.** A second agent tries to fault the first: every correction, every row
-   on the candidate list, and one in four of the rest. It checks the reading against the
+   on the candidate list, every row whose tree file has a sentence that stands against the
+   verdict, and one in four of the rest. It checks the reading against the
    definitions and every fact in the sentence against the dossier. Where it faults a
    reading that only needs another reading, quote or sentence, it supplies the corrected
    one, which is then used whole; such a row is recorded with `verifier.agrees: false` and

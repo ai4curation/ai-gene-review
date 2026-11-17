@@ -420,8 +420,9 @@ def write_dossier(batch: str, out: Path) -> Path:
 def workflow_inputs(batches: list[str], out: Path) -> list[dict[str, Any]]:
     """Write the dossiers of some batches and describe them for the reading workflow.
 
-    ``flagged`` lists the rows a verifier must always check: rows on the candidate list
-    and kept rows under a PAINT loss, as ``gene|term|negated``.
+    ``flagged`` lists the rows a verifier must always check, as ``gene|term|negated``: rows
+    on the candidate list, kept rows under a PAINT loss, and rows whose tree file has a
+    sentence that stands against the verdict (:func:`required_sentences`).
     """
     inputs = []
     for batch in batches:
@@ -435,10 +436,19 @@ def workflow_inputs(batches: list[str], out: Path) -> list[dict[str, Any]]:
             "flagged": [
                 "|".join(str(part).lower() if isinstance(part, bool) else str(part) for part in _key(row))
                 for row in rows
-                if row["kind"] != "overruled" or row.get("flags")
+                if row["kind"] != "overruled" or row.get("flags") or has_required_sentence(row)
             ],
         })
     return inputs
+
+
+def has_required_sentence(row: dict[str, Any]) -> bool:
+    """True when the tree file of a planned row has a sentence its reading must quote."""
+    source = quote_source(row)
+    if source is None:
+        return False
+    reached = matching_rows(load(review_path_of(unit_of(row))) or {}, row)
+    return bool(required_sentences(row, source[0], reached[0] if reached else None))
 
 
 def family_paths(family: str) -> tuple[Path, Path, Path]:
@@ -874,9 +884,13 @@ def row_edit(
     chosen = [number for number in row.get("quote_sentences") or [] if isinstance(number, int)]
     if len(sentences(summary)) > 1 and not set(chosen) - {1}:
         return "the reading quotes only the sentence that names the term and the node"
-    unquoted = [what for number, what in required_sentences(row, summary, review_row) if number not in chosen]
+    required = required_sentences(row, summary, review_row)
+    unquoted = [what for number, what in required if number not in chosen]
     if unquoted:
         return "the reading does not quote what stands against the verdict: " + "; ".join(unquoted)
+    if required and verifier is None:
+        # The quote can be checked here; whether the sentence faces the fact is the verifier's to say.
+        return "a row whose tree file has a sentence against the verdict was not checked by the verifier"
     quotes = quotes_from(summary, chosen)
     if not quotes or row["term"] not in quotes[0] or any(quote not in source_text for quote in quotes):
         return "the quotes are not verbatim parts of the tree file"

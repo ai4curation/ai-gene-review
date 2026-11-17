@@ -136,10 +136,19 @@ def test_readings_the_script_leaves_for_a_curator(
     assert re.search(why, outcome), outcome
 
 
-def test_quoting_the_adverse_sentence_lets_the_reading_through() -> None:
-    edit = tr.row_edit(row(quote_sentences=[1, 4, 5]), [REVIEW_ROW], source(NODE, PATH, SEEDS, INSIDE, PARALOGS))
+def test_quoting_the_adverse_sentence_lets_a_verified_reading_through() -> None:
+    reading = row(quote_sentences=[1, 4, 5], verifier=AGREED)
+    edit = tr.row_edit(reading, [REVIEW_ROW], source(NODE, PATH, SEEDS, INSIDE, PARALOGS))
     assert isinstance(edit, RowEdit)
     assert edit.add_support == ((REFERENCE, NODE), (REFERENCE, f"{INSIDE} {PARALOGS}"))
+
+
+def test_a_row_with_an_adverse_sentence_is_not_applied_unverified() -> None:
+    """Whether the sentence faces the adverse fact is a judgement, so a second reader has to have looked."""
+    outcome = tr.row_edit(row(quote_sentences=[1, 4, 5]), [REVIEW_ROW], source(NODE, PATH, SEEDS, INSIDE, PARALOGS))
+    assert outcome == "a row whose tree file has a sentence against the verdict was not checked by the verifier"
+    # A row with nothing adverse may be applied on the reader's word alone.
+    assert isinstance(tr.row_edit(row(), [REVIEW_ROW], source(NODE, PATH, SEEDS, OUTSIDE, PARALOGS)), RowEdit)
 
 
 def test_a_verifiers_correction_is_used_whole_and_brings_its_own_quotes() -> None:
