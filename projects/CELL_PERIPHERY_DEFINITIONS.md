@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [human, mouse, rat, DROME, DICDI]
 collections: [GO_TRACKER_BACKLOG]
+index_group: GO_TRACKER_BACKLOG
 ---
 
 # Cell Surface and Cell Cortex: What the Annotations Say the Terms Mean

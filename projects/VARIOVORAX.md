@@ -66,6 +66,7 @@ genes:
 - copA2
 - zur
 autolink_gene_symbols: false
+index_group: BACTERIA
 ---
 
 # *Variovorax*: Rhizosphere Plant–Microbe Interactions & Critical Metal Recovery

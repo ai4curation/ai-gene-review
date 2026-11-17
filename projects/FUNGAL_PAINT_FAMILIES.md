@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 collections: [HOMOLOGY_PROPAGATION]
 species: [yeast, SCHPO, CANAL, NEUCR, ASPFU, EMENI]
 autolink_exclude: [Ser]
+index_group: YEAST
 ---
 
 # Fungal PAINT Family Reviews

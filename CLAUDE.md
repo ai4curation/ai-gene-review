@@ -1048,7 +1048,12 @@ renders to `pages/projects/FOO/bar.html`). Use ordinary relative links between a
 project page and its sub-pages (`[x](FOO/bar.md)` from `FOO.md`; `[parent](../FOO.md)`
 from inside `FOO/`); the renderer rewrites `.md`→`.html` and preserves the path.
 
-**Important:** The project index page (`pages/projects/index.html`) is **manually maintained**. When adding a new project, you must manually add a `<div class="project-card">` entry to the index HTML. The `render-projects` command does NOT update the index.
+**Project index.** `render-projects` generates the project index
+(`pages/projects/index.html`) from frontmatter; never edit it by hand, and do not
+commit it (it is gitignored). A project picks its section with `index_group:`, one of
+`WORM`, `YEAST`, `MAMMAL`, `BACTERIA`, `ARCHAEA`, `PLANT`, `OTHER_ORGANISM`, `GO_TRACKER_BACKLOG`, `CROSS_CUTTING` (defined as `INDEX_GROUPS` in `render_projects.py`); a project without one is
+listed under "Not yet grouped". An optional one-line `description:` appears on its card,
+and a `FOO/FOO-pathway.md` page gets a "Pathway diagram" link automatically.
 
 **Collections.** Related projects are grouped under an index page by listing a
 collection key in frontmatter, e.g. `collections: [HOMOLOGY_PROPAGATION]`. Keys
