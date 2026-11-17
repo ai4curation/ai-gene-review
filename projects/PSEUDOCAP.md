@@ -605,15 +605,18 @@ The "re-read as groups" step is now mechanical:
 compares the review actions on each shared term across its members and reports
 the groups that disagree.
 
-Divergence is a prompt to read, not a verdict. All three current divergences are
-deliberate: `ccoQ1`/`ccoQ2` sit at `MARK_AS_OVER_ANNOTATED` on `GO:0004129` while
-the six catalytic cbb3 subunits are `ACCEPT`, because the Q chains are accessory and
-absent from the cryo-EM models; `tse6` is `REMOVE` against `tsi6`'s `ACCEPT` on
+Divergence is a prompt to read, not a verdict. All three *full* divergences — those
+whose every member could be compared — are deliberate: `ccoQ1`/`ccoQ2` sit at
+`MARK_AS_OVER_ANNOTATED` on `GO:0004129` while the six catalytic cbb3 subunits are
+`ACCEPT`, because the Q chains are accessory and absent from the cryo-EM
+models; `tse6` is `REMOVE` against `tsi6`'s `ACCEPT` on
 `GO:0097351` because of a recorded `WRONG_GENE_PRODUCT` defect; and on `GO:0016757`
 `wbpL` modifies to `GO:0016780` phosphotransferase activity while `wbpX` and `wbpY`
 accept, because `wbpL` is a WecA-type initiating enzyme that transfers a
 sugar-1-phosphate and is not a glycosyltransferase in GO's sense at all. Each is
-argued in the rows themselves, which is what makes them fine.
+argued in the rows themselves, which is what makes them fine. The fourth divergence,
+among the comparable members of an incomplete group, is not deliberate; it is the
+`tatA`/`tatC` case described below.
 
 The verdict the script compares is the action *plus the replacement term* where the
 action is MODIFY, and prefixed with `NOT:` where the row is negated. Comparing bare

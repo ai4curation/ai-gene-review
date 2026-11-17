@@ -211,11 +211,15 @@ def collect() -> dict[str, list[dict[str, Any]]]:
             record["uncomparable"] = absent
             record["reviewed"] = [s for s in symbols if s not in absent]
             record["actions"] = {s: actions[s] for s in record["reviewed"]}
-            bucket = (
-                "no_verdict"
-                if all(r == "(only a NEW row)" for r in absent.values())
-                else "incomplete"
-            )
+            # "No verdict" means no member ruled on the claim, which needs both
+            # that nobody is missing a review (nothing to chase) and that no
+            # comparable member is left to rule. Testing only the first would
+            # file a group where two members carry verdicts and a third is
+            # NEW-only under "no member rules on this claim", and could flag it
+            # DIVERGENT in the same line. Inert today; the heading and the
+            # project page both state the stricter meaning.
+            backlog = any(r == "(no review file)" for r in absent.values())
+            bucket = "incomplete" if backlog or record["actions"] else "no_verdict"
             out[bucket].append(record)
             continue
 
