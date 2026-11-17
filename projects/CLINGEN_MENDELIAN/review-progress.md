@@ -8108,3 +8108,21 @@ The direct source audit verified 84 quotation occurrences against 17 input files
 Only human ACO2 is newly checked. All 235 dated queue records, 181 prior completion updates and earlier journal bytes are preserved. ROOT receipt `ACO2-root-delivery-acceptance-v1.json` (SHA256 `6dc155311fb887c7af685e157bcbc051a4a0266bba69d15a40dab2f4d68b3687`) is retained local provenance, not a public download link.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-15T140625Z-codex-579c21.yaml).
+
+## Completion checkpoint 763 (2026-11-16 02:11:16 UTC)
+
+763 complete; 2,113 of 2,876 remain. This publishes ROOT's prior acceptance of human ACSF3 (HGNC:27288; Q4G176), with zero new acceptance credit.
+
+[PR #6404](https://github.com/ai4curation/ai-gene-review/pull/6404) merged as [88a51e85](https://github.com/ai4curation/ai-gene-review/commit/88a51e855a0e1376a5b0d8fff5ac98bfe5d02911); [merge-group run 43781741111](https://github.com/ai4curation/ai-gene-review/actions/runs/43781741111) passed. Approval of the exact commit, all 15 reviewed files, the 15-path actual delta and fresh-main ancestry were verified.
+
+Human ACSF3 retains all 32 native GOA contexts: 14 ACCEPT, 13 KEEP_AS_NON_CORE, one TOO_GENERAL and four REMOVE, with zero NEW and zero UNDECIDED contexts. COMPLETE records finished decisions, not universal access to every original assay. Ten generic binding advisories are retained under the standing ClinGen policy, with experiment-level interaction support and no promotion to endogenous mechanisms.
+
+The core is mitochondrial matrix malonyl-CoA synthetase activity initiating malonate clearance. Four legacy long-chain/VLCFA assignments are contradicted by purified-enzyme evidence; the historical lysate result is not denied. Malonyl-CoA donor generation is distinct from direct protein malonyltransferase activity. All three mitochondrial fatty-acid synthesis annotations are retained as non-core: the experimentally observed contribution is context-dependent, not sole or essential. The open methylmalonate-to-methylmalonyl-CoA coverage question adds no guessed ontology identifier or NEW annotation. Matrix localization retains a verified TAS assertion, not a newly demonstrated submitochondrial assay. PMID17762044 and PMID42874924 remain abstract-only for native access; the PMID28986507 accepted manuscript was inspected externally. PMID42239141 is a rodent-cell preprint. Raw interaction data and PAINT topology limitations remain explicit.
+
+The direct source audit verified 112 quotation occurrences against 10 input files, with zero unchecked, blocking or baselined quotes. Inputs were pinned to the approved commit and actual merge. Integration executed scoped ACSF3 validation, the full test suite, repository gene schemas, history and family checks. The whole-repository quote step excludes gene reviews; it does not replace the direct ACSF3 audit. Corpus advisories, skips and unresolved checks remain in the pinned delivery proof.
+
+Five source defects are confirmed and remain NOT_REPORTED: four annotation targets and one UniProt source-text target. No upstream report was submitted, and source defects confer no additional locus credit. The original full scientific review is retained alongside the approved bounded repository follow-up.
+
+Only human ACSF3 is newly checked. All 235 dated queue records, 182 prior completion updates and earlier journal bytes are preserved. ROOT receipt `ACSF3-root-delivery-acceptance-v1.json` (SHA256 `918e74c2936d0b94afd0d5492ee121a861f5fca1ccdaa9efe21455c2aa6bc976`) is retained local provenance, not a public download link.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-16T021036Z-codex-38519f.yaml).
