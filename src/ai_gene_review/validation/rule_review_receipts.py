@@ -287,7 +287,8 @@ def keyword_redundancy_row(rule_id: str, table: Optional[Path] = None) -> Option
 _CITES_REDUNDANCY_TABLE = re.compile(r"(?:rule|keyword)_redundancy\.tsv")
 _TABLE_FIELD = re.compile(r"\b(go_descendants|condition_sets|covered_sets)\s+(\d[\d,]*)")
 _COVERAGE_CLAIM = re.compile(
-    r"(?<![\d.:])(?:(\d[\d,]*)\s+of\s+(?:the\s+)?(?:rule's\s+)?)?(\d[\d,]*)\s+(?:condition\s+)?sets\s+"
+    r"(?<![\d.:])(?:(\d[\d,]*)\s+of\s+(?:the\s+)?(?:rule's\s+)?)?(\d[\d,]*)\s+"
+    r"(?:of\s+(?:the\s+rule's|its|the)\s+)?(?:condition\s+)?sets\s+"
     r"(?:are\s+|is\s+)?(?:already\s+|also\s+)?(?:covered|matched)\s+by\s+"
     r"(?:a\s+|other\s+|the\s+)?(?:class-level\s+|more\s+specific\s+)?rules?\b"
     r"|(?:already\s+)?cover\s+(\d[\d,]*)\s+sets\b|\((\d[\d,]*)\s+covered\s+sets\)"
@@ -305,6 +306,10 @@ def coverage_claims(text: str) -> List[Tuple[int, Optional[int]]]:
     [(48, None), (48, None)]
     >>> coverage_claims("More specific rules already cover 39 sets. Sets 10 and 11 are covered by ARBA00092385.")
     [(39, None)]
+    >>> coverage_claims("289 of the rule's sets are already matched by rules asserting a more specific term.")
+    [(289, None)]
+    >>> coverage_claims("38 of its sets are covered by more specific rules.")
+    [(38, None)]
     >>> coverage_claims("In the sample, 11 of 40 sets are matched by a rule for a curated term.")
     []
     >>> coverage_claims("none of the 90 condition sets is matched by a rule for a descendant keyword.")

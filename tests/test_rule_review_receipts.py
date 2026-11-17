@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 
 from ai_gene_review.validation.rule_review_receipts import (
+    _redundancy_table,
     check_review,
     experimental_annotations,
     labels_agree,
@@ -80,6 +81,7 @@ def write_tables(root: Path) -> None:
         "rule\tkeyword\tname\tkeyword_descendants\tcondition_sets\tcovered_sets\tcovered_by_keywords\n"
         "ARBA00022679\tKW-0808\tTransferase\t13\t4603\t2661\tKW-0418=1196\n"
     )
+    _redundancy_table.cache_clear()  # the loader caches by path; a rewritten table must be re-read
 
 
 def checks(data: dict[str, Any], tmp_path: Path, severity: str = "error") -> set[str]:
@@ -447,6 +449,8 @@ def test_correction_text_backed_by_the_table_must_match_it(figure: str, fires: b
         ("313 of 343 sets are covered by rules with more specific terms.", False),
         ("313 sets are already matched by rules asserting a more specific term.", False),
         ("In the sample, 11 of 40 sets are matched by a rule for a curated term.", False),
+        ("320 of the rule's sets are already matched by rules asserting a more specific term.", True),
+        ("313 of its sets are covered by more specific rules.", False),
     ],
 )
 def test_coverage_figure_without_the_file_name_is_still_compared(text: str, expected_warning: bool, tmp_path: Path) -> None:
