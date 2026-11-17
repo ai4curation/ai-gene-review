@@ -66,7 +66,8 @@ def test_page_for_an_earlier_review_is_not_preserved(tmp_path: Path, heading: st
     html = page.read_text()
     assert 'action-badge action-ACCEPT' in html
     assert 'action-badge action-DEPRECATE' not in html
-    assert 'No domain overlap table is shown' in html
+    assert 'The domain overlap table is not shown' in html
+    assert 'Analysis Summary' not in html
 
 
 def test_condition_sets_reject_integer(tmp_path: Path) -> None:

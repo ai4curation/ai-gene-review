@@ -28,6 +28,12 @@ window.searchSchema = {
       "sortBy": "alphabetical"
     },
     {
+      "field": "meaning_assessment",
+      "label": "Biological meaning",
+      "type": "string",
+      "sortBy": "alphabetical"
+    },
+    {
       "field": "parsimony_assessment",
       "label": "Parsimony",
       "type": "string",
@@ -135,6 +141,11 @@ window.searchSchema = {
       "type": "array"
     },
     {
+      "field": "meaning_assessment",
+      "label": "Meaning",
+      "type": "string"
+    },
+    {
       "field": "parsimony_assessment",
       "label": "Parsimony",
       "type": "string"
@@ -147,6 +158,11 @@ window.searchSchema = {
     {
       "field": "num_condition_sets",
       "label": "# Condition Sets",
+      "type": "string"
+    },
+    {
+      "field": "num_recorded_condition_sets",
+      "label": "# Sets recorded in the review (facets cover these)",
       "type": "string"
     },
     {

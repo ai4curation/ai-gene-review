@@ -17,6 +17,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/LTstg8jwzm9v2CXuxMaHhp
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Genome-wide validation

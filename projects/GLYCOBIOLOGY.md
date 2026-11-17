@@ -12,6 +12,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/UqXg1UcLZY6vA2goRnxuCj
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Glycobiology Project

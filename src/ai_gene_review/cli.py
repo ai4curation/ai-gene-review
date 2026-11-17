@@ -5090,6 +5090,121 @@ def check_panther_release():
 
 
 @app.command()
+def panther_release_diff(
+    target_release: Annotated[
+        str, typer.Argument(help="PANTHER release to compare with, e.g. 20.0.")
+    ],
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    output: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output",
+            help="Report path (default: <repo>/reports/panther-release-diff-<current>-to-<target>.yaml).",
+        ),
+    ] = None,
+    organism: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--organism",
+            help="PANTHER organism slug to classify members with (repeatable). Defaults "
+            "to the set covering species curated in this repository.",
+        ),
+    ] = None,
+):
+    """Dry-run report of what bumping PANTHER_RELEASE to TARGET_RELEASE would change.
+
+    Lists cited PANTHER family and subfamily ids that are gone or renamed in the
+    target release, and, for every module family descriptor and family-review
+    subfamily that names representative members, the id those members fall into
+    in the target release, and the quotes of interpro/panther/panther.obo that the
+    rebuilt artifact would break. Edits nothing; proposals are for curators to
+    check. Downloads both releases' classification files into <repo>/.cache/panther
+    and renders the target release's OBO there.
+
+    Example:
+        ai-gene-review panther-release-diff 20.0
+    """
+    import yaml
+
+    from ai_gene_review.etl.panther_families import (
+        DEFAULT_ORGANISMS,
+        PANTHER_RELEASE,
+        build_member_index,
+        fetch_hmm_classifications,
+        fetch_sequence_classification,
+        hmm_url,
+        parse_hmm_classifications,
+        write_panther_obo,
+    )
+    from ai_gene_review.etl.panther_release_diff import (
+        DEFAULT_SCAN_GLOBS,
+        broken_obo_quotes,
+        build_report,
+        cited_ids,
+        collect_anchors,
+    )
+    from ai_gene_review.validation.quote_check import default_files
+
+    if target_release == PANTHER_RELEASE:
+        raise typer.BadParameter(
+            f"{target_release} is the pinned release; give the release to compare with"
+        )
+    repo_root = output_dir or Path.cwd()
+    cache = repo_root / ".cache" / "panther"
+    anchors = collect_anchors(repo_root)
+    accessions = {accession for anchor in anchors for accession in anchor.members}
+    organisms = list(organism or DEFAULT_ORGANISMS)
+
+    def entries(release: str) -> list:
+        path = fetch_hmm_classifications(cache, url=hmm_url(release))
+        return parse_hmm_classifications(path.read_text(errors="replace").splitlines())
+
+    def names(release: str) -> dict:
+        return {entry.accession: entry.name for entry in entries(release)}
+
+    def member_index(release: str) -> dict:
+        paths = []
+        for slug in organisms:
+            path = fetch_sequence_classification(slug, cache, release=release)
+            if path is None:
+                typer.echo(f"⚠️  no PANTHER {release} classification for organism '{slug}'")
+            else:
+                paths.append(path)
+        return build_member_index(accessions, paths)
+
+    files = sorted({path for pattern in DEFAULT_SCAN_GLOBS for path in repo_root.glob(pattern)})
+    report = build_report(
+        PANTHER_RELEASE,
+        target_release,
+        cited_ids(files, repo_root),
+        names(PANTHER_RELEASE),
+        names(target_release),
+        anchors,
+        member_index(PANTHER_RELEASE),
+        member_index(target_release),
+        broken_obo_quotes(
+            # validate-quotes' files, plus gene reviews, whose quotes `just validate` checks.
+            sorted(set(default_files(repo_root)) | set(repo_root.glob("genes/*/*/*-ai-review.yaml"))),
+            repo_root,
+            repo_root / "interpro" / "panther" / "panther.obo",
+            write_panther_obo(
+                entries(target_release), cache / f"panther-{target_release}.obo", release=target_release
+            ),
+        ),
+    )
+    out = output or (
+        repo_root / "reports" / f"panther-release-diff-{PANTHER_RELEASE}-to-{target_release}.yaml"
+    )
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(yaml.safe_dump(report, sort_keys=False, allow_unicode=True, width=120))
+    typer.echo(yaml.safe_dump({"summary": report["summary"]}, sort_keys=False).rstrip())
+    typer.echo(f"✓ Wrote {out}")
+
+
+@app.command()
 def verify_panther_paint(
     output_dir: Annotated[
         Optional[Path],
