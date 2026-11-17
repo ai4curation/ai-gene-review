@@ -1435,8 +1435,10 @@ def fetch_goa_data(uniprot_id: str) -> str:
             # Parse JSON response
             data = response.json()
             results = data.get("results", [])
-            # Note: pageInfo.total is unreliable, use numberOfHits instead
-            expected_total = data.get("numberOfHits", 0) or 0
+            # Note: pageInfo.total is unreliable, use numberOfHits instead. Take
+            # the max across pages so a trailing out-of-range page reporting 0
+            # cannot disarm the shortfall guard below.
+            expected_total = max(expected_total, data.get("numberOfHits", 0) or 0)
 
             if not results:
                 # No more results, stop pagination

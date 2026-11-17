@@ -536,3 +536,53 @@ def test_fetch_gene_data_keeps_existing_goa_file_when_quickgo_errors(
     with pytest.raises(ValueError, match="QuickGO"):
         fetch_gene_data(("SCHPO", "dca7"), base_path=tmp_path, seed_annotations=False)
     assert goa_file.read_text() == "GO TERM\tGO NAME\nGO:0005634\tnucleus\n"
+
+
+def _full_first_page():
+    row = {
+        "geneProductId": "UniProtKB:P0",
+        "goId": "GO:1",
+        "taxonId": 9606,
+        "taxonName": "Homo sapiens",
+    }
+    resp = _Mock()
+    resp.raise_for_status.return_value = None
+    resp.json.return_value = {"results": [row] * 200, "numberOfHits": 400}
+    return resp
+
+
+def _is_later_page(kwargs):
+    return any(k == "page" for (k, _) in kwargs.get("params", []))
+
+
+def test_fetch_goa_data_raises_on_persistent_mid_pagination_error(monkeypatch):
+    """Page 1 succeeds but page >= 2 fails on every attempt -> raise, never a
+    truncated GOA (the mid-pagination case #6488's parametrize used to cover)."""
+    from ai_gene_review.etl import gene
+
+    def fake_get(*args, **kwargs):
+        return _error_response(500) if _is_later_page(kwargs) else _full_first_page()
+
+    monkeypatch.setattr(gene.requests, "get", fake_get)
+    monkeypatch.setattr(gene.time, "sleep", lambda *a, **k: None)
+    with pytest.raises(ValueError, match="QuickGO"):
+        gene.fetch_goa_data("P0")
+
+
+def test_fetch_goa_data_raises_on_short_read_across_pages(monkeypatch):
+    """A trailing page reporting no results and numberOfHits:0 must not disarm the
+    shortfall guard set by page 1 (expected_total is kept as the running max)."""
+    from ai_gene_review.etl import gene
+
+    def _empty_last_page():
+        resp = _Mock()
+        resp.raise_for_status.return_value = None
+        resp.json.return_value = {"results": [], "numberOfHits": 0}
+        return resp
+
+    def fake_get(*args, **kwargs):
+        return _empty_last_page() if _is_later_page(kwargs) else _full_first_page()
+
+    monkeypatch.setattr(gene.requests, "get", fake_get)
+    with pytest.raises(ValueError, match="Incomplete"):
+        gene.fetch_goa_data("P0")
