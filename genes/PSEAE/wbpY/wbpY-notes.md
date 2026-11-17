@@ -84,3 +84,47 @@ Not changed by this: the IBA-seed assessment table above, whose verdicts
 (INDIRECT-PHENOTYPE for PTN005302544, SOUND for PTN000749272) still hold, and
 whose note that the node should be re-seeded with the 2022 IDA is the request in
 question.
+
+## Corrections to the bullets above (2026-11-17)
+
+These correct the 2022-biochemistry bullet at the top of this file and the
+sentence that follows it. They do not touch the 2026-11-10 section.
+
+*Processivity was stated without the authors' hedge.* The bullet says
+"WbpX+WbpY together make D-Rha oligomers non-processively". The paper does
+conclude that from the mass spectrometry [PMID:35166992 "Thus, polymerization of
+up to 8 D-Rha residues indicated that WbpX and WbpY cooperate to extend the CPA
+O antigen non-processively."], but hedges the mechanism on sequence grounds in
+the same paper: [PMID:35166992 "WbpX and WbpY lack the QxxRW sequence found in
+processive enzymes [47] and therefore may act in a non-processive or partially
+processive mechanism."]. `wbpY-ai-review.yaml` carries the hedge and
+`wbpX-notes.md` was corrected the same way in an earlier round; this file was
+the last place it was missing.
+
+*That bullet makes three claims under one quote that reaches only the first.*
+The bracketed NMR sentence supports the α1-3 transfer by WbpY and nothing else.
+The other two have their own sources: WbpX's two linkages are
+[PMID:35166992 "This indicated that WbpX has α1,2-D-RhaT and α1,3-D-RhaT
+activities"], and the oligomer result is the mass-spectrometry sentence quoted
+above. The review splits these into three findings; the bullet they came from
+never was.
+
+*The dual-sugar contrast belongs here, not only on wbpX.* WbpY transfers
+D-mannose as well as D-rhamnose [PMID:35166992 "In contrast, His6-WbpY had also
+significant D-ManT activity using GDP-[3H]Man which was 70% of the D-RhaT
+activity (Table 1)."] and is therefore [PMID:35166992 "WbpY is therefore a dual
+D-RhaT and D-ManT, similar to WbpZ."], where WbpX transfers no other sugar
+[PMID:35166992 "WbpX showed no transferase activity using any of the nucleotide
+sugars other than GDP-D-[3H]Rha, indicating that it is exclusively a D-RhaT."].
+So WbpY is the enzyme the contrast is about, and until now it lived only in
+`wbpX-notes.md`.
+
+*Which makes `GO:0016758` the apt stop for this gene, not a reluctant one.* The
+sentence above calls it "the most specific existing MF", which was written before
+the dual-sugar result was read into these notes. D-rhamnose is 6-deoxy-D-mannose,
+so the hexosyltransferase term covers both sugars WbpY uses, and a
+D-rhamnosyltransferase term — requested once for the pair on this review — would
+describe only part of what this enzyme does. For WbpX the reverse holds: that
+term would describe it exactly, so `GO:0016758` is the reluctant stop there. Both
+reviews' core functions say so; this file is where the reasoning was missing for
+the gene it is about.

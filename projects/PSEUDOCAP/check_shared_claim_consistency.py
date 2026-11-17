@@ -132,10 +132,13 @@ def actions_for_term(folder: str, term_id: str) -> list[str]:
 
 
 def collect() -> dict[str, list[dict[str, Any]]]:
-    """Split shared-claim groups into divergent, consistent and incomplete."""
+    """Split shared-claim groups into divergent, consistent, incomplete and no-verdict."""
     with open(WORKLIST, encoding="utf-8") as handle:
         data = yaml.safe_load(handle)
-    reviewed = {entry["symbol"]: entry["review_folder"] for entry in data["genes"]}
+    # review_folder is absent for a worklist gene that has not been reviewed, and
+    # the missing-member branch below is what handles that. Reading it with [] would
+    # raise there instead, turning an ordinary unreviewed member into a crash.
+    reviewed = {entry["symbol"]: entry.get("review_folder") for entry in data["genes"]}
 
     out: dict[str, list[dict[str, Any]]] = {
         "divergent": [],
