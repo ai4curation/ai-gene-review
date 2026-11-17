@@ -173,3 +173,25 @@ for either gene, and at 70% of the D-rhamnose rate the D-mannose activity is a
 genuine secondary activity rather than noise, but no D-mannose appears in the CPA
 repeat, so what it does in vivo is unknown. That is a question for the bench, and
 it is recorded as one on wbpY.
+
+**Correction to the acceptor note above.** The paragraph added earlier to
+separate the transfer assay from the linkage NMR did the separation for WbpX and
+then swept WbpY's result into the same clause, saying that "on that acceptor"
+WbpX forms both linkages "whereas WbpY forms only alpha1-3". WbpY's linkage NMR
+was not run on the benzyl acceptor at all: it used the lipid analogue
+[PMID:35166992 "To analyze the linkage(s) synthesized by WbpY, purified GST-WbpY
+elution fractions were pooled and used in 1000 × standard assays, using
+D-Rhaα1-3-D-GlcNAcα-PP-PhU acceptor substrate"], giving [PMID:35166992 "Thus
+WbpY is a monofunctional α1,3-D-RhaT."]. The benzyl acceptor appears only in the
+WbpX experiment. So the sentence written to stop two experiments being read as
+one did exactly that for a third.
+
+The same clause also left "it adds several residues in sequence" dangling off
+WbpY, which adds one [PMID:35166992 "The spectra indicated that WbpY transferred
+a single D-Rha residue in α1-3 linkage"]; the multi-residue result is WbpX's
+[PMID:35166992 "indicating that WbpX added multiple residues to D-Rhaα-Bn
+acceptor substrate"]. As written it asserted the opposite of this review's own
+finding a few lines above.
+
+Both are corrected in the description, which now states each enzyme's result
+with the acceptor that produced it.
