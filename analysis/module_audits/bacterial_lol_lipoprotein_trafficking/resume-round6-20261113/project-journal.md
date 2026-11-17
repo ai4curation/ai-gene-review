@@ -6,7 +6,7 @@ These are the branch-only paragraphs from `projects/MODULE_TAXON_AUDIT.md` at `0
 
 ## 2026-11-07 — bacterial lol lipoprotein trafficking full validation passes
 
-Comparative audit passes full validation on 25063f5cf5: 10,789 reviews, zero blocking errors and 315 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../analysis/module_audits/bacterial_lol_lipoprotein_trafficking/full-validation.json).
+Comparative audit passes full validation on 25063f5cf5: 10,789 reviews, zero blocking errors and 315 frozen inputs verified. Publication, fresh review/CI and actual merge remain pending. [Recorded proof](../full-validation.json).
 
 ## 2026-11-07 — bacterial_lol_lipoprotein_trafficking main integration
 
@@ -26,7 +26,7 @@ Integrate main ec787ac8700cacbf94a72abbbbe9dee9b622592b into paused PR #6188 at 
 
 ## 2026-11-08 — reconcile resumed PR #6188 tracker
 
-PR #6188: main ec787ac870 integrated at 2caeb09dd8; 367 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits. Per-path identity proof: [analysis/module_audits/bacterial_lol_lipoprotein_trafficking/resume-round2-20261108/integration-proof.json](../analysis/module_audits/bacterial_lol_lipoprotein_trafficking/resume-round2-20261108/integration-proof.json). Current counts above are computed from this branch’s inventory; prior dated journal entries remain historical.
+PR #6188: main ec787ac870 integrated at 2caeb09dd8; 367 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits. Per-path identity proof: [analysis/module_audits/bacterial_lol_lipoprotein_trafficking/resume-round2-20261108/integration-proof.json](../resume-round2-20261108/integration-proof.json). Current counts above are computed from this branch’s inventory; prior dated journal entries remain historical.
 
 > - [ ] Ledger snapshot after this integration: 777 modules; 35 COMPLETE, 10 PR_OPEN, 3 IN_PROGRESS, 729 NOT_STARTED. Counts retain dated row evidence and are not a fresh global GitHub survey.
 
@@ -36,11 +36,11 @@ Integrate main ac30fe31cf1a3155a6d56808212969efb09ddb00 into paused PR #6188 at 
 
 ## 2026-11-11 — reconcile resumed PR #6188 tracker
 
-PR #6188: main ac30fe31cf integrated at b0c61c3990; 364 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits. Per-path identity proof: [analysis/module_audits/bacterial_lol_lipoprotein_trafficking/resume-round4-20261111/integration-proof.json](../analysis/module_audits/bacterial_lol_lipoprotein_trafficking/resume-round4-20261111/integration-proof.json). Current counts above are computed from this branch’s inventory; prior dated journal entries remain historical.
+PR #6188: main ac30fe31cf integrated at b0c61c3990; 364 branch-specific files retain their exact pre-integration Git blob ids. Current review and CI govern merge readiness; earlier full-corpus results remain scoped to their recorded commits. Per-path identity proof: [analysis/module_audits/bacterial_lol_lipoprotein_trafficking/resume-round4-20261111/integration-proof.json](../resume-round4-20261111/integration-proof.json). Current counts above are computed from this branch’s inventory; prior dated journal entries remain historical.
 
 ## 2026-11-11 — resolve Lol ECO dependency hold
 
-PR #6188: dependency #6186 merged as bb0d72c688 and its final implementation is integrated and tested. The dependency hold is resolved. Fresh full-corpus CI, independent review and actual audit merge remain pending. Verification: [analysis/module_audits/bacterial_lol_lipoprotein_trafficking/merged-dependency-20261111/receipt.json](../analysis/module_audits/bacterial_lol_lipoprotein_trafficking/merged-dependency-20261111/receipt.json). Earlier dependency-pending receipts remain historical.
+PR #6188: dependency #6186 merged as bb0d72c688 and its final implementation is integrated and tested. The dependency hold is resolved. Fresh full-corpus CI, independent review and actual audit merge remain pending. Verification: [analysis/module_audits/bacterial_lol_lipoprotein_trafficking/merged-dependency-20261111/receipt.json](../merged-dependency-20261111/receipt.json). Earlier dependency-pending receipts remain historical.
 
 ## 2026-11-11 — resume PR #6188 after disk cleanup
 
@@ -48,6 +48,6 @@ Integrate main 0ca78c07ea0a7ee0ce4760193cc5b22848471d21 into paused PR #6188 at 
 
 ## 2026-11-11 — current integration accounting for PR #6188
 
-PR #6188: main 0ca78c07ea integrated at 97628c4f8a; 371 branch-specific files were verified unchanged at that integration. Subsequent review fixes are separately recorded. Fresh current-head review and CI govern merge readiness; historical full-corpus results retain their recorded scope. [Preservation and follow-up record](../analysis/module_audits/bacterial_lol_lipoprotein_trafficking/resume-round5-20261111/integration-proof.json).
+PR #6188: main 0ca78c07ea integrated at 97628c4f8a; 371 branch-specific files were verified unchanged at that integration. Subsequent review fixes are separately recorded. Fresh current-head review and CI govern merge readiness; historical full-corpus results retain their recorded scope. [Preservation and follow-up record](../resume-round5-20261111/integration-proof.json).
 
 ## 2026-11-11 — reconcile inherited ledger snapshots for PR #6188
