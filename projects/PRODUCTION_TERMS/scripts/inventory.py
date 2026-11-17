@@ -371,9 +371,13 @@ def check_classification(path: Path, rows: list[dict[str, Any]]) -> dict[str, An
             reg_counts[entry["group"]] += 1
         else:
             unmapped.append(f'{row["id"]} {row["label"]}')
+    # Largest group first, ties broken by name. The name is part of the key on
+    # purpose: a set union iterates in hash order, which varies between
+    # processes, so sorting on the count alone made this file's ordering differ
+    # from run to run and produced a spurious diff every time it was regenerated.
     groups = {g: {"production_terms": prod_counts[g], "regulation_terms": reg_counts[g]}
               for g in sorted(set(prod_counts) | set(reg_counts),
-                              key=lambda g: -(prod_counts[g] + reg_counts[g]))}
+                              key=lambda g: (-(prod_counts[g] + reg_counts[g]), g))}
 
     low = [f'{e["id"]} {e["label"]}' for e in entries if e.get("confidence") == "LOW"]
     unresolved = [f'{e["id"]} {e["label"]}' for e in entries if e.get("resolution")]
