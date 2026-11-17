@@ -61,20 +61,44 @@ def mod_id(accession: str) -> str:
     raise ValueError(f"No MGI or RGD cross-reference on UniProtKB:{accession}")
 
 
-def uniprot_for(donor: str) -> tuple[str, str] | None:
-    """(UniProt accession, gene symbol) for a WITH/FROM donor id, or None if no reviewed entry."""
+# GO WITH/FROM database abbreviation -> UniProt cross-reference index name (the
+# same mapping as genes/human/ARFGEF3/ARFGEF3-bioinformatics/uniprot.py).
+UNIPROT_XREF = {"MGI": "mgi", "RGD": "rgd", "FB": "flybase", "ZFIN": "zfin", "SGD": "sgd",
+                "PomBase": "pombase", "dictyBase": "dictybase", "AGI_LocusCode": "araport",
+                "WB": "wormbase", "Xenbase": "xenbase"}
+
+
+def uniprot_search(query: str) -> list[dict]:
+    """Reviewed UniProt entries matching a query (accession, gene symbol, organism)."""
+    q = urllib.parse.quote(f"({query}) AND reviewed:true")
+    url = (f"https://rest.uniprot.org/uniprotkb/search?query={q}"
+           "&fields=accession,gene_primary,organism_name&format=json&size=5")
+    return get_json(url).get("results", [])
+
+
+def uniprot_for(donor: str) -> dict:
+    """Resolve a WITH/FROM donor id to a reviewed UniProt entry, recording how it was resolved."""
     db, ident = donor.split(":", 1)
     if db == "UniProtKB":
-        query = urllib.parse.quote(f"accession:{ident}")
+        query = f"accession:{ident}"
+    elif db in UNIPROT_XREF:
+        # GOA writes MGI:MGI:87963; UniProt indexes the bare number.
+        query = f"xref:{UNIPROT_XREF[db]}-{ident.rsplit(':', 1)[-1]}"
     else:
-        ident = ident.removeprefix("MGI:")
-        query = urllib.parse.quote(f"(xref:{db.lower()}-{ident}) AND reviewed:true")
-    url = f"https://rest.uniprot.org/uniprotkb/search?query={query}&fields=accession,gene_primary&format=json"
-    hits = get_json(url).get("results", [])
+        return {"resolved_by": f"not resolved: database {db} not handled by this script"}
+    hits = uniprot_search(query)
+    if not hits and db == "WB":
+        # WormBase gene ids (WBGene...) are not in UniProt's wormbase xref index,
+        # which holds protein ids; free text finds them. Recorded as a fallback.
+        query = f'"{ident}"'
+        hits = uniprot_search(query)
+        query = f"FALLBACK free-text {query}"
     if not hits:
-        return None
-    genes = hits[0].get("genes") or [{}]
-    return hits[0]["primaryAccession"], genes[0].get("geneName", {}).get("value")
+        return {"resolved_by": f"not resolved by query {query}"}
+    hit = hits[0]
+    genes = hit.get("genes") or [{}]
+    return {"uniprot": hit["primaryAccession"], "symbol": genes[0].get("geneName", {}).get("value"),
+            "organism": hit.get("organism", {}).get("scientificName"), "resolved_by": query}
 
 
 def ancestors(go_id: str) -> set[str]:
@@ -91,9 +115,9 @@ def experimental_support(accession: str, go_id: str, exclude: set[str]) -> list[
 
 
 def donors(row: dict) -> set[str]:
-    """MOD and UniProt donors named in an IBA row's WITH/FROM."""
+    """Every donor named in an IBA row's WITH/FROM (all databases except the PANTHER node)."""
     return {f"{x['db']}:{x['id']}" for w in row.get("withFrom") or [] for x in w.get("connectedXrefs", [])
-            if x["db"] in ("MGI", "RGD", "UniProtKB", "ZFIN", "FB", "WB", "SGD", "TAIR", "PomBase")}
+            if x["db"] != "PANTHER"}
 
 
 def seeds() -> list[tuple[str, str]]:
@@ -138,11 +162,10 @@ def main() -> None:
     for (go_id, go_name, nodes), roster in sorted(fed_terms.items()):
         members = []
         for d in sorted(roster):
-            hit = uniprot_for(d)
-            members.append({"donor": d, "uniprot": hit[0] if hit else None,
-                            "symbol": hit[1] if hit else None,
-                            "experimental_support_excluding_swap_papers":
-                                experimental_support(hit[0], go_id, swap_papers) if hit else "not checked: no reviewed UniProt entry"})
+            hit = {"donor": d, **uniprot_for(d)}
+            hit["experimental_support_excluding_swap_papers"] = (
+                experimental_support(hit["uniprot"], go_id, swap_papers) if "uniprot" in hit else None)
+            members.append(hit)
         nodes_out.append({"go_id": go_id, "go_name": go_name, "paint_nodes": list(nodes), "donors": members})
     OUT.write_text(yaml.safe_dump({"retrieved": datetime.date.today().isoformat(), "swap_papers": sorted(swap_papers),
                                    "seeds": records, "iba_terms_the_swaps_could_feed": nodes_out},
