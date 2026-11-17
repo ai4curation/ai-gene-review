@@ -154,9 +154,9 @@ In `iMM904`, de novo nicotinate-nucleotide synthesis (`NNDPR`) has two compoundi
 
 ---
 
-## 5. AST-Based E-Flux vs. ChatGEM's Regex Parser & Condition-Specific Isozyme Shares
+## 5. AST-Based E-Flux vs. ChatGEM's Regex Parser
 
-In `pnnl/ChatGEM`'s reference script `46._automatic_E_flux.py`, GPR strings are parsed with `re.split(r"\(|\)", gpr)` and reduced with `max(stack)` at the top level. Benchmarking this parser against our AST evaluator (`eval_gpr_ast_eflux` in [`run_yeast_gem_audit.py`](run_yeast_gem_audit.py)) on nested GPR rules ([`out/ast_eflux_conditions.yaml`](out/ast_eflux_conditions.yaml)) demonstrates why AST traversal is mandatory:
+In `pnnl/ChatGEM`'s reference script `46._automatic_E_flux.py`, GPR strings are parsed with `re.split(r"\(|\)", gpr)` and reduced with `max(stack)` at the top level. Benchmarking this parser against our AST evaluator (`eval_gpr_ast_eflux` in [`run_yeast_gem_audit.py`](run_yeast_gem_audit.py)) on nested GPR rules with synthetic per-gene levels ([`out/ast_eflux_conditions.yaml`](out/ast_eflux_conditions.yaml)) demonstrates why AST traversal is mandatory:
 
 | Test Case | GPR Rule | True AST Capacity ($\text{AND}=\min, \text{OR}=\sum$) | ChatGEM Regex Capacity (`max(stack)`) | Error |
 |---|---|---:|---:|---:|
@@ -166,11 +166,4 @@ In `pnnl/ChatGEM`'s reference script `46._automatic_E_flux.py`, GPR strings are 
 | **Nested complex with isozyme subunits** | `(YFR053C or YGL253W) and YMR205C` | **`0.2000`** | **`1.0000`** | **`+0.8000` (evaluates outer `AND` as `OR`)** |
 | **Alternative complexes** | `(YGR240C and YMR205C) or (YDL022W and YOL059W)` | **`0.3500`** | **`0.2000`** | **`-0.1500` (evaluates outer `OR` as `max` instead of `sum`)** |
 
-Applying AST-based E-Flux across four physiological expression regimes resolves the `OR`-GPR isozyme degeneracy noted in [YEAST_METABOLIC_ENGINEERING](../YEAST_METABOLIC_ENGINEERING.md):
-
-| Physiological Regime | Dominant Hexokinase (`HEX1`) | Dominant GAPDH (`GAPD`) | Dominant Pyruvate Decarboxylase (`PYRDC`) | Dominant Alcohol Dehydrogenase (`ALCD2`) | Dominant Cytosolic G3P Dehydrogenase (`G3PD1ir`, repaired) |
-|---|---|---|---|---|---|
-| **Aerobic High Glucose** | `HXK2` (`78.7%`) | `TDH3` (`64.5%`) | `PDC1` (`89.3%`) | `ADH1` (`95.2%`) | `GPD2` (`54.5%`) / `GPD1` (`45.5%`) |
-| **Anaerobic Glucose Fermentation** | `HXK2` (`80.0%`) | `TDH3` (`62.5%`) | `PDC1` (`85.5%`) | `ADH1` (`99.0%`) | **`GPD2` (`82.6%`)** (NADH redox sink) |
-| **Hyperosmotic Stress (Glucose)** | `HXK2` (`53.3%`) | `TDH3` (`47.4%`) / `TDH1` (`28.9%`) | `PDC1` (`87.6%`) | `ADH1` (`94.4%`) | **`GPD1` (`87.0%`)** (HOG1-induced osmolyte) |
-| **Aerobic Ethanol Respiration** | **`HXK1` (`48.6%`)** / `GLK1` (`42.9%`) | `TDH3` (`40.0%`) / `TDH1` (`37.1%`) | `PDC1` (`66.7%`, low total capacity `0.30`) | **`ADH2` (`83.3%`)** (oxidative `ALCD2x`) | `GPD1` (`75.0%`) |
+The per-gene levels in this benchmark are synthetic inputs chosen to expose the parser bug, not measured expression data, so the benchmark says nothing about which isozyme dominates in any condition. Resolving the `OR`-GPR isozyme degeneracy noted in [YEAST_METABOLIC_ENGINEERING](../YEAST_METABOLIC_ENGINEERING.md) needs condition-specific transcriptomic or proteomic data, which this audit does not load.

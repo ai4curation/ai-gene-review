@@ -185,8 +185,10 @@ what the curated wiring implies; they are not a literature-validated mechanism.
    steady-state stoichiometric flux networks (`src/ai_gene_review/module_fba.py`) with
    hierarchical gene-protein-reaction (GPR) rules derived from `variant_sets`,
    `annotons`, and `PROTEIN_COMPLEX` `active_units` (`all_of` for multi-subunit
-   complexes, `any_of` for isozymes/paralogs), cross-checked against COBRApy LP and
-   rendered as interactive in-browser FBA / E-Flux simulators (`executable_fba.html.j2`).
+   complexes, `any_of` for isozymes/paralogs). Fluxes are the exact pFBA optimum,
+   solved as a min-cost maximum flow and checked against the same LP in scipy (HiGHS)
+   and COBRApy; the in-browser FBA / E-Flux simulators (`executable_fba.html.j2`) run
+   the same algorithm (`fba_solver.js`), checked against the Python solver under Node.
    Linking module reactions to external genome-scale reconstructions (BiGG / MetaNetX)
    is the next extension.
 5. **Agent-based models ([ABM_TRAFFICKING](ABM_TRAFFICKING.md)).** Intracellular
@@ -265,6 +267,17 @@ to zero flux and reroutes flux at upstream branch points. Curated derived constr
 models and scenarios were added to `glycerol_metabolism.yaml`, `alcoholic_fermentation.yaml`,
 and `pdh_bypass_acetyl_coa_synthesis.yaml`, and cross-checked against COBRApy LP in
 `tests/test_module_fba.py`.
+
+Follow-up after review: the first flux solver was a greedy water-filling heuristic that
+fell short of the LP optimum where routes reconverge; it is replaced by the exact pFBA
+optimum (maximum export, then minimum weighted L1), computed as a min-cost maximum flow
+and checked against scipy and COBRApy on every curated scenario and single-element
+knockout. Isozyme `any_of` capacity is now a sum capped at full capacity (losing a
+redundant isozyme has no effect) rather than a mean. Two curated scenarios had expected
+small flux on side branches that only the heuristic produced; exact pFBA puts no flux on
+a costlier branch while the main route has spare capacity, so their expectations now say
+so. A flow network with no entry or no exit (a closed cycle) is reported as a model
+failure rather than simulated as zero flux.
 
 ## 2026-10-25
 

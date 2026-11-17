@@ -714,7 +714,12 @@ def run_knockout_and_repair_experiments(model: cobra.Model) -> dict[str, Any]:
 
 
 def run_ast_eflux_comparison(model: cobra.Model) -> dict[str, Any]:
-    """Compare ChatGEM's regex E-Flux parser vs AST E-Flux and evaluate condition regimes."""
+    """Compare ChatGEM's regex E-Flux parser with AST E-Flux evaluation on nested GPRs.
+
+    The per-gene levels are synthetic test inputs that expose the parser's
+    operator-precedence bug; no expression dataset is loaded, so this makes no
+    claim about isozyme usage in any condition.
+    """
     test_expr = {
         "YGR240C": 0.8,
         "YMR205C": 0.2,
@@ -754,105 +759,13 @@ def run_ast_eflux_comparison(model: cobra.Model) -> dict[str, Any]:
             }
         )
 
-    regimes = {
-        "aerobic_high_glucose": {
-            "YGL253W": 1.00,
-            "YFR053C": 0.12,
-            "YCL040W": 0.15,
-            "YGR192C": 1.00,
-            "YJR009C": 0.45,
-            "YJL052W": 0.10,
-            "YLR044C": 1.00,
-            "YLR134W": 0.10,
-            "YGR087C": 0.02,
-            "YOL086C": 1.00,
-            "YMR303C": 0.05,
-            "YDL022W": 0.25,
-            "YOL059W": 0.30,
-        },
-        "anaerobic_glucose_fermentation": {
-            "YGL253W": 1.00,
-            "YFR053C": 0.10,
-            "YCL040W": 0.15,
-            "YGR192C": 1.00,
-            "YJR009C": 0.50,
-            "YJL052W": 0.10,
-            "YLR044C": 1.00,
-            "YLR134W": 0.15,
-            "YGR087C": 0.02,
-            "YOL086C": 1.00,
-            "YMR303C": 0.01,
-            "YDL022W": 0.20,
-            "YOL059W": 0.95,
-        },
-        "hyperosmotic_stress_glucose": {
-            "YGL253W": 0.80,
-            "YFR053C": 0.40,
-            "YCL040W": 0.30,
-            "YGR192C": 0.90,
-            "YJR009C": 0.45,
-            "YJL052W": 0.55,
-            "YLR044C": 0.85,
-            "YLR134W": 0.10,
-            "YGR087C": 0.02,
-            "YOL086C": 0.85,
-            "YMR303C": 0.05,
-            "YDL022W": 1.00,
-            "YOL059W": 0.15,
-        },
-        "aerobic_ethanol_respiration": {
-            "YGL253W": 0.15,
-            "YFR053C": 0.85,
-            "YCL040W": 0.75,
-            "YGR192C": 0.70,
-            "YJR009C": 0.40,
-            "YJL052W": 0.65,
-            "YLR044C": 0.20,
-            "YLR134W": 0.05,
-            "YGR087C": 0.05,
-            "YOL086C": 0.20,
-            "YMR303C": 1.00,
-            "YDL022W": 0.30,
-            "YOL059W": 0.10,
-        },
-    }
-
-    regime_summaries = {}
-    for reg_name, expr in regimes.items():
-        hxk_tot = expr["YGL253W"] + expr["YFR053C"] + expr["YCL040W"]
-        tdh_tot = expr["YGR192C"] + expr["YJR009C"] + expr["YJL052W"]
-        pdc_tot = expr["YLR044C"] + expr["YLR134W"] + expr["YGR087C"]
-        adh_tot = expr["YOL086C"] + expr["YMR303C"]
-        gpd_tot = expr["YDL022W"] + expr["YOL059W"]
-
-        regime_summaries[reg_name] = {
-            "HEX1_capacity_sum": round(hxk_tot, 3),
-            "HEX1_dominant_isoform": (
-                f"HXK2 ({100*expr['YGL253W']/hxk_tot:.1f}%)"
-                if expr["YGL253W"] >= expr["YFR053C"]
-                else f"HXK1 ({100*expr['YFR053C']/hxk_tot:.1f}%)"
-            ),
-            "GAPD_capacity_sum": round(tdh_tot, 3),
-            "GAPD_dominant_isoform": f"TDH3 ({100*expr['YGR192C']/tdh_tot:.1f}%)",
-            "PYRDC_capacity_sum": round(pdc_tot, 3),
-            "PYRDC_dominant_isoform": f"PDC1 ({100*expr['YLR044C']/pdc_tot:.1f}%)",
-            "ALCD2_capacity_sum": round(adh_tot, 3),
-            "ALCD2_dominant_isoform": (
-                f"ADH1 ({100*expr['YOL086C']/adh_tot:.1f}%)"
-                if expr["YOL086C"] >= expr["YMR303C"]
-                else f"ADH2 ({100*expr['YMR303C']/adh_tot:.1f}%)"
-            ),
-            "G3PD1ir_repaired_capacity_sum": round(gpd_tot, 3),
-            "G3PD1ir_dominant_isoform": (
-                f"GPD2 ({100*expr['YOL059W']/gpd_tot:.1f}%)"
-                if expr["YOL059W"] >= expr["YDL022W"]
-                else f"GPD1 ({100*expr['YDL022W']/gpd_tot:.1f}%)"
-            ),
-        }
-
     return {
+        "input_levels_note": (
+            "Synthetic per-gene levels chosen to exercise the parsers; they are "
+            "not measured expression data and support no biological conclusion."
+        ),
+        "synthetic_input_levels": test_expr,
         "gpr_parser_benchmark": parser_tests,
-        "condition_specific_isozyme_shares": regime_summaries,
     }
 
 

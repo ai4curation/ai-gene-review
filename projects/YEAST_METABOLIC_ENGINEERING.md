@@ -94,7 +94,7 @@ Full quantitative tables, simulation provenance, and reproducibility checklists 
 - [`YEAST_METABOLIC_ENGINEERING/out/target_genes_audit.yaml`](YEAST_METABOLIC_ENGINEERING/out/target_genes_audit.yaml) — Detailed EC, compartment, and AST-GPR audit for the 16 central-carbon target and paralog genes.
 - [`YEAST_METABOLIC_ENGINEERING/out/fba_vs_pfba_routing.yaml`](YEAST_METABOLIC_ENGINEERING/out/fba_vs_pfba_routing.yaml) — Standard FBA vs. parsimonious FBA flux distributions under aerobic and anaerobic glucose conditions, demonstrating the `PFK_3`/`FBA3`/`TALA` and `GLYCDy`/`DHAK` bypasses.
 - [`YEAST_METABOLIC_ENGINEERING/out/knockout_and_repair_experiments.yaml`](YEAST_METABOLIC_ENGINEERING/out/knockout_and_repair_experiments.yaml) — Single and double paralog knockouts before and after curation-guided repairs for `GPD1`/`GPD2`, `DAL3`/`DUR1,2`, and `BNA3`/`BNA7`.
-- [`YEAST_METABOLIC_ENGINEERING/out/ast_eflux_conditions.yaml`](YEAST_METABOLIC_ENGINEERING/out/ast_eflux_conditions.yaml) — Benchmark of AST-based E-Flux vs. ChatGEM's regex GPR parser (`46._automatic_E_flux.py`) and condition-specific isozyme capacities across aerobic glucose, anaerobic glucose, hyperosmotic stress, and aerobic ethanol regimes.
+- [`YEAST_METABOLIC_ENGINEERING/out/ast_eflux_conditions.yaml`](YEAST_METABOLIC_ENGINEERING/out/ast_eflux_conditions.yaml) — Benchmark of AST-based E-Flux vs. ChatGEM's regex GPR parser (`46._automatic_E_flux.py`) on nested GPR rules, using synthetic per-gene levels.
 
 ---
 
@@ -140,7 +140,7 @@ Last updated: 2026-11-04
 ## 2026-11-04
 
 - Completed ChatGEM + COBRApy curation audit of *S. cerevisiae* `iMM904` across all 16 target/paralog central-carbon genes, 5 curated metabolic modules, and 540 aligned `genes/yeast/` reviews (`projects/YEAST_METABOLIC_ENGINEERING/run_yeast_gem_audit.py` and `projects/YEAST_METABOLIC_ENGINEERING/RESULTS.md`).
-- Demonstrated curation-guided model repairs for `GPD1`/`GPD2` anaerobic glycerol secretion, `PFK_3`/`FBA3` glycolytic routing degeneracy, `DAL3`/`DUR1,2` allantoin catabolism, `BNA3`/`BNA7` de novo $\text{NAD}^+$ synthesis, and AST-based E-Flux condition-specific isozyme disambiguation.
+- Demonstrated curation-guided model repairs for `GPD1`/`GPD2` anaerobic glycerol secretion, `PFK_3`/`FBA3` glycolytic routing degeneracy, `DAL3`/`DUR1,2` allantoin catabolism, `BNA3`/`BNA7` de novo $\text{NAD}^+$ synthesis, and an AST-based E-Flux GPR evaluator that fixes ChatGEM's regex parser.
 
 ## 2025-12-30
 

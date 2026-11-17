@@ -26,14 +26,19 @@ steady-state **Flux Balance Analysis (FBA / parsimonious FBA / E-Flux)** model:
     :math:`\\min` capacity (knocking out any required subunit collapses complex
     capacity to zero).
   - ``any_of`` (isozyme ``annotons`` or alternative ``variants``): evaluated via
-    additive isozyme capacity :math:`\\frac{1}{k}\\sum_{i=1}^k c_i` (knocking out
-    one isozyme attenuates upper bound capacity :math:`UB_r` while preserving
-    flux through remaining isozymes; knocking out all isozymes blocks the step).
-* **Parsimonious Flux Allocation (pFBA)**: At metabolic branch points, steady-state
-  flux is allocated across open downstream branches by capacity-constrained
-  water-filling weighted by downstream capacity and inverse parsimony path cost
-  (shorter core routes carry higher flux per unit enzyme cost than multi-step or
-  ``optional: true`` side branches).
+    additive isozyme capacity capped at full capacity,
+    :math:`\\min(1, \\sum_{i=1}^k c_i)` (knocking out one redundant isozyme
+    leaves the step at full capacity; E-Flux levels on the isozymes add up;
+    knocking out all isozymes blocks the step).
+* **Parsimonious FBA (pFBA)**: the flux distribution is the exact optimum of the
+  two-stage pFBA linear program: maximize total export from terminal reactions,
+  then minimize the weighted L1 norm of reaction fluxes (``optional: true`` side
+  branches cost more per unit flux than core steps). Because each reaction
+  carries a single metabolite pool, the network is a flow network and the LP is
+  solved exactly as a min-cost maximum flow (:func:`_min_cost_max_flow`). Where
+  several routes are equally cheap, the optimum is not unique and the first
+  route in declaration order is filled first, as an LP solver returns one vertex
+  of the optimal face.
 """
 
 from __future__ import annotations
@@ -70,6 +75,8 @@ DEFAULT_UPPER_BOUND = 100.0
 OPTIONAL_BRANCH_UPPER_BOUND = 15.0
 DEFAULT_UPTAKE_RATE = 100.0
 FLUX_EPSILON = 1e-6
+CORE_FLUX_COST = 1.0
+OPTIONAL_BRANCH_FLUX_COST = 3.0
 
 
 @dataclass(frozen=True)
@@ -150,6 +157,7 @@ class FBAModel:
     skipped_connections: list[tuple[str, str, str]] = field(default_factory=list)
     removed_connections: list[tuple[str, str]] = field(default_factory=list)
     invalid_activation_logic: list[str] = field(default_factory=list)
+    structure_problems: list[str] = field(default_factory=list)
 
     @property
     def variables(self) -> list[str]:
@@ -175,7 +183,6 @@ class FBASimulation:
     element_active: dict[str, bool]
     gpr_capacities: dict[str, float]
     reaction_bounds: dict[str, float]
-    downstream_capacities: dict[str, float]
     reaction_fluxes: dict[str, float]
     transition_fluxes: list[dict[str, Any]]
     mass_balance_residuals: dict[str, float]
@@ -439,6 +446,10 @@ def _build_reaction_gpr_and_chemistry(
                     vid = str(variant["id"])
                     vlabel = str(variant.get("label") or vid)
                     v_sub = _compile_node(variant, is_root=False)
+                    if v_sub == {"element": vid}:
+                        # a variant with no annotons, parts or variant_sets is a
+                        # leaf; its own level is its whole capacity
+                        v_sub = None
                     v_genes: list[str] = []
                     for ann in as_list(variant.get("annotons")):
                         if isinstance(ann, dict):
@@ -534,7 +545,20 @@ def _eval_gpr_ast(
     raw_levels: dict[str, float],
     resolved_out: dict[str, float],
 ) -> float:
-    """Evaluate a GPR AST quantitatively and populate ``resolved_out`` for each element."""
+    """Evaluate a GPR AST quantitatively and populate ``resolved_out`` for each element.
+
+    ``all_of`` (complex subunits) takes the minimum; ``any_of`` (isozymes) adds the
+    children's capacities, capped at the full capacity of 1, so a redundant isozyme
+    can be lost without effect while losing every isozyme blocks the step.
+
+    >>> gpr = {"any_of": [{"element": "PDC1"}, {"element": "PDC5"}, {"element": "PDC6"}]}
+    >>> _eval_gpr_ast(gpr, {"PDC6": 0.0}, {})
+    1.0
+    >>> _eval_gpr_ast(gpr, {"PDC1": 0.2, "PDC5": 0.3, "PDC6": 0.0}, {})
+    0.5
+    >>> _eval_gpr_ast({"all_of": [{"element": "a"}, {"element": "b"}]}, {"b": 0.4}, {})
+    0.4
+    """
     if not expr or not isinstance(expr, dict):
         return 1.0
     if "element" in expr:
@@ -558,7 +582,7 @@ def _eval_gpr_ast(
             for s in as_list(expr["any_of"])
             if isinstance(s, dict)
         ]
-        return (sum(subs) / len(subs)) if subs else 1.0
+        return min(1.0, sum(subs)) if subs else 1.0
     return 1.0
 
 
@@ -878,9 +902,19 @@ def module_to_fba(
         )
 
     entry_reactions = [r.id for r in reactions if r.is_entry]
-    if not entry_reactions:
-        entry_reactions = [r.id for r in reactions if r.is_flow_stage][:1]
     terminal_reactions = [r.id for r in reactions if r.is_terminal]
+    structure_problems: list[str] = []
+    if any(r.is_flow_stage for r in reactions):
+        if not entry_reactions:
+            structure_problems.append(
+                "flow network has no entry reaction: every flow stage has an incoming "
+                "flow connection (a closed cycle), so no substrate can be taken up"
+            )
+        if not terminal_reactions:
+            structure_problems.append(
+                "flow network has no terminal reaction: every flow stage has an outgoing "
+                "flow connection (a closed cycle), so no product can leave at steady state"
+            )
 
     # Effective terminals: base terminals PLUS any flow reaction whose outgoing
     # connections were all explicitly severed via removed_connections.
@@ -936,6 +970,7 @@ def module_to_fba(
         skipped_connections=skipped,
         removed_connections=sorted(removed_leaf_pairs),
         invalid_activation_logic=invalid_logic,
+        structure_problems=structure_problems,
     )
 
 
@@ -987,44 +1022,123 @@ def _resolve_fba_active(
     return active, converged
 
 
-def _waterfill_allocate(
-    total_to_allocate: float,
-    caps: list[float],
-    weights: list[float],
+def _min_cost_max_flow(
+    n_nodes: int,
+    arcs: list[tuple[int, int, float, float]],
+    source: int,
+    sink: int,
 ) -> list[float]:
-    """Allocate ``total_to_allocate`` across branches respecting upper ``caps`` and ``weights``."""
-    n = len(caps)
-    alloc = [0.0] * n
-    rem = min(total_to_allocate, sum(max(0.0, c) for c in caps))
-    if rem <= FLUX_EPSILON or n == 0:
-        return alloc
+    """Return the flow on each arc of a min-cost maximum flow from ``source`` to ``sink``.
 
-    open_idxs = [i for i in range(n) if caps[i] > FLUX_EPSILON and weights[i] > 0.0]
-    while rem > FLUX_EPSILON and open_idxs:
-        w_sum = sum(weights[i] for i in open_idxs)
-        if w_sum <= 0.0:
+    ``arcs`` are ``(tail, head, capacity, cost)`` with non-negative costs. Successive
+    shortest augmenting paths (Bellman-Ford on the residual graph) give, at the
+    maximum flow value, the cheapest such flow. Ties go to the first path found in
+    arc order, so the result is deterministic. The browser solver in
+    ``templates/fba_solver.js`` implements the same algorithm arc for arc.
+
+    Two routes from node 0 to node 3; the cheaper one is filled first:
+
+    >>> arcs = [(0, 1, 10.0, 1.0), (0, 2, 10.0, 2.0), (1, 3, 6.0, 0.0), (2, 3, 10.0, 0.0)]
+    >>> _min_cost_max_flow(4, arcs, 0, 3)
+    [6.0, 10.0, 6.0, 10.0]
+    """
+    head: list[int] = []
+    residual: list[float] = []
+    cost: list[float] = []
+    adjacency: list[list[int]] = [[] for _ in range(n_nodes)]
+    for tail, hd, cap, c in arcs:
+        adjacency[tail].append(len(head))
+        head.append(hd)
+        residual.append(cap)
+        cost.append(c)
+        adjacency[hd].append(len(head))
+        head.append(tail)
+        residual.append(0.0)
+        cost.append(-c)
+
+    inf = float("inf")
+    while True:
+        dist = [inf] * n_nodes
+        via = [-1] * n_nodes
+        dist[source] = 0.0
+        for _ in range(n_nodes - 1):
+            changed = False
+            for u in range(n_nodes):
+                if dist[u] == inf:
+                    continue
+                for a in adjacency[u]:
+                    if residual[a] > FLUX_EPSILON and dist[u] + cost[a] < dist[head[a]]:
+                        dist[head[a]] = dist[u] + cost[a]
+                        via[head[a]] = a
+                        changed = True
+            if not changed:
+                break
+        if dist[sink] == inf:
             break
-        saturated_any = False
-        shares: dict[int, float] = {}
-        for i in open_idxs:
-            room = caps[i] - alloc[i]
-            desire = rem * (weights[i] / w_sum)
-            if desire >= room - 1e-12:
-                alloc[i] = caps[i]
-                rem -= room
-                saturated_any = True
-            else:
-                shares[i] = desire
-        if saturated_any:
-            open_idxs = [
-                i for i in open_idxs if (caps[i] - alloc[i]) > FLUX_EPSILON
-            ]
-        else:
-            for i, d in shares.items():
-                alloc[i] += d
-            rem = 0.0
-            break
-    return alloc
+        push = inf
+        v = sink
+        while v != source:
+            a = via[v]
+            push = min(push, residual[a])
+            v = head[a ^ 1]
+        v = sink
+        while v != source:
+            a = via[v]
+            residual[a] -= push
+            residual[a ^ 1] += push
+            v = head[a ^ 1]
+    return [residual[2 * i + 1] for i in range(len(arcs))]
+
+
+def _flux_cost(rxn: FBAReaction) -> float:
+    """pFBA weight of one unit of flux through ``rxn`` (optional side branches cost more)."""
+    return OPTIONAL_BRANCH_FLUX_COST if rxn.is_optional_branch else CORE_FLUX_COST
+
+
+def _solve_pfba(
+    flow_rxns: list[FBAReaction],
+    entry_ids: list[str],
+    terminal_ids: list[str],
+    reaction_bounds: Mapping[str, float],
+    edges: list[tuple[str, str, float]],
+    uptake_rate: float,
+) -> tuple[dict[str, float], list[float]]:
+    """Solve two-stage pFBA on the reaction network and return ``(reaction_fluxes, edge_fluxes)``.
+
+    Stage 1 maximizes total flux leaving the ``terminal_ids`` subject to steady
+    state at every reaction, ``0 <= v_r <= reaction_bounds[r]``, ``0 <= f_e <= ub_e``
+    and total uptake into ``entry_ids`` at most ``uptake_rate``. Stage 2 minimizes
+    the weighted L1 norm of reaction fluxes at that optimum. Each reaction is split
+    into an in-node and an out-node joined by an arc carrying its bounded flux.
+    """
+    index = {r.id: k for k, r in enumerate(flow_rxns)}
+    source = 0
+    sink = 2 * len(flow_rxns) + 1
+    in_node = {rid: 2 * k + 1 for rid, k in index.items()}
+    out_node = {rid: 2 * k + 2 for rid, k in index.items()}
+
+    supply = sink + 1
+    arcs: list[tuple[int, int, float, float]] = [(supply, source, max(0.0, uptake_rate), 0.0)]
+    for eid in entry_ids:
+        if eid in index:
+            arcs.append((source, in_node[eid], float("inf"), 0.0))
+    rxn_arc = {}
+    for r in flow_rxns:
+        rxn_arc[r.id] = len(arcs)
+        arcs.append((in_node[r.id], out_node[r.id], reaction_bounds[r.id], _flux_cost(r)))
+    edge_arc: dict[int, int] = {}
+    for idx, (src, tgt, ub) in enumerate(edges):
+        if ub > FLUX_EPSILON and src in index and tgt in index:
+            edge_arc[idx] = len(arcs)
+            arcs.append((out_node[src], in_node[tgt], ub, 0.0))
+    for tid in terminal_ids:
+        if tid in index:
+            arcs.append((out_node[tid], sink, float("inf"), 0.0))
+
+    flows = _min_cost_max_flow(sink + 2, arcs, supply, sink)
+    rxn_flux = {rid: flows[a] for rid, a in rxn_arc.items()}
+    edge_flux = [flows[edge_arc[i]] if i in edge_arc else 0.0 for i in range(len(edges))]
+    return rxn_flux, edge_flux
 
 
 def simulate_fba(
@@ -1082,9 +1196,7 @@ def simulate_fba(
                 ub = 0.0
         reaction_bounds[rxn.id] = max(0.0, ub)
 
-    outgoing_by_src: dict[str, list[tuple[int, FBATransition, float]]] = {
-        r.id: [] for r in model.reactions
-    }
+    outgoing_by_src: dict[str, list[int]] = {r.id: [] for r in model.reactions}
     incoming_by_tgt: dict[str, list[int]] = {r.id: [] for r in model.reactions}
     edge_ubs: list[float] = []
 
@@ -1123,143 +1235,26 @@ def simulate_fba(
         e_ub = max(0.0, e_ub)
         edge_ubs.append(e_ub)
         if e_ub > FLUX_EPSILON:
-            outgoing_by_src[t.source].append((idx, t, e_ub))
+            outgoing_by_src[t.source].append(idx)
             incoming_by_tgt[t.target].append(idx)
 
-    # 4. Backward Pass: Compute steady-state sink-reachable capacity C_down(r)
-    #    and parsimony path cost L(r) (steps to terminal sink).
-    eff_term_set = set(model.effective_terminals)
+    # 4. Solve the flux LP exactly. The module network is a single-commodity
+    #    flow network (each reaction conserves its one carried metabolite pool),
+    #    so the two pFBA stages -- maximize export, then minimize the weighted L1
+    #    norm of reaction fluxes -- are a min-cost max-flow problem.
     flow_rxns = [r for r in model.reactions if r.is_flow_stage]
-    downstream_cap: dict[str, float] = {}
-    parsimony_cost: dict[str, float] = {}
-
-    for r in flow_rxns:
-        if r.id in eff_term_set:
-            downstream_cap[r.id] = reaction_bounds[r.id]
-            parsimony_cost[r.id] = 1.0 + (2.0 if r.is_optional_branch else 0.0)
-        else:
-            downstream_cap[r.id] = 0.0
-            parsimony_cost[r.id] = 1e6
-
-    for _ in range(len(flow_rxns) + 2):
-        changed = False
-        for r in reversed(flow_rxns):
-            if r.id in eff_term_set:
-                continue
-            outs = outgoing_by_src.get(r.id, [])
-            if not outs:
-                new_cap = 0.0
-                new_cost = 1e6
-            else:
-                edge_caps = [
-                    min(e_ub, downstream_cap.get(t.target, 0.0))
-                    for _idx, t, e_ub in outs
-                ]
-                new_cap = min(reaction_bounds[r.id], sum(edge_caps))
-                open_costs = [
-                    parsimony_cost[t.target]
-                    for (_idx, t, _e_ub), ec in zip(outs, edge_caps)
-                    if ec > FLUX_EPSILON
-                ]
-                step_penalty = 1.0 + (2.0 if r.is_optional_branch else 0.0)
-                new_cost = (
-                    (step_penalty + min(open_costs)) if open_costs else 1e6
-                )
-            if (
-                abs(downstream_cap[r.id] - new_cap) > 1e-9
-                or abs(parsimony_cost[r.id] - new_cost) > 1e-9
-            ):
-                downstream_cap[r.id] = new_cap
-                parsimony_cost[r.id] = new_cost
-                changed = True
-        if not changed:
-            break
-
-    # 5. Forward Pass: Allocate steady-state flux from entry_reactions to terminals
-    #    preserving Kirchhoff mass balance (sum_in == v_r == sum_out) at every node.
-    rxn_flux: dict[str, float] = {r.id: 0.0 for r in model.reactions}
-    edge_flux: list[float] = [0.0] * len(model.transitions)
-
-    entry_ids = [
-        eid
-        for eid in model.entry_reactions
-        if downstream_cap.get(eid, 0.0) > FLUX_EPSILON
-    ]
-    if entry_ids and uptake_rate > 0.0:
-        entry_caps = [downstream_cap[eid] for eid in entry_ids]
-        entry_weights = [
-            downstream_cap[eid] / max(1.0, parsimony_cost.get(eid, 1.0))
-            for eid in entry_ids
-        ]
-        entry_alloc = _waterfill_allocate(uptake_rate, entry_caps, entry_weights)
-        for eid, val in zip(entry_ids, entry_alloc):
-            rxn_flux[eid] = val
-
-    # Propagate forward through the network until steady-state convergence
+    eff_term_set = set(model.effective_terminals)
     entry_set = set(model.entry_reactions)
-    for _ in range(len(flow_rxns) + 2):
-        prev_edge_flux = list(edge_flux)
-        # Recompute incoming flux for non-entry reactions and allocate outgoing flux
-        # Track remaining downstream capacity on target nodes during this pass
-        target_allocated: dict[str, float] = {r.id: 0.0 for r in flow_rxns}
-        for r in flow_rxns:
-            if r.id not in entry_set:
-                inc_edges = incoming_by_tgt.get(r.id, [])
-                rxn_flux[r.id] = min(
-                    downstream_cap.get(r.id, 0.0),
-                    sum(edge_flux[idx] for idx in inc_edges),
-                )
-            u_flux = rxn_flux[r.id]
-            if r.id in eff_term_set:
-                continue
-            outs = outgoing_by_src.get(r.id, [])
-            if not outs or u_flux <= FLUX_EPSILON:
-                for idx, _t, _e_ub in outs:
-                    edge_flux[idx] = 0.0
-                continue
-
-            caps: list[float] = []
-            weights: list[float] = []
-            for idx, t, e_ub in outs:
-                rem_tgt = max(
-                    0.0,
-                    downstream_cap.get(t.target, 0.0)
-                    - target_allocated.get(t.target, 0.0),
-                )
-                c = min(e_ub, rem_tgt)
-                caps.append(c)
-                w = c / max(1.0, parsimony_cost.get(t.target, 1.0))
-                weights.append(w)
-
-            alloc = _waterfill_allocate(u_flux, caps, weights)
-            for (idx, t, _e_ub), f_val in zip(outs, alloc):
-                edge_flux[idx] = f_val
-                target_allocated[t.target] = (
-                    target_allocated.get(t.target, 0.0) + f_val
-                )
-            # Tight backward correction if downstream convergence capped total outflux
-            actual_out = sum(alloc)
-            if actual_out < u_flux - 1e-9:
-                rxn_flux[r.id] = actual_out
-
-        if max(
-            (abs(a - b) for a, b in zip(edge_flux, prev_edge_flux)), default=0.0
-        ) < 1e-9:
-            break
-
-    # Final backward consistency sweep so upstream reactions match actual downstream flow
-    for _ in range(len(flow_rxns)):
-        for r in reversed(flow_rxns):
-            if r.id not in eff_term_set:
-                outs = outgoing_by_src.get(r.id, [])
-                rxn_flux[r.id] = sum(edge_flux[idx] for idx, _t, _e_ub in outs)
-            if r.id not in entry_set:
-                inc = incoming_by_tgt.get(r.id, [])
-                in_sum = sum(edge_flux[idx] for idx in inc)
-                if in_sum > rxn_flux[r.id] + 1e-9 and in_sum > 0:
-                    scale = rxn_flux[r.id] / in_sum
-                    for idx in inc:
-                        edge_flux[idx] *= scale
+    rxn_flux, edge_flux = _solve_pfba(
+        flow_rxns,
+        model.entry_reactions,
+        model.effective_terminals,
+        reaction_bounds,
+        [(t.source, t.target, ub) for t, ub in zip(model.transitions, edge_ubs)],
+        uptake_rate,
+    )
+    for rxn in model.reactions:
+        rxn_flux.setdefault(rxn.id, 0.0)
 
     # Compute steady-state mass-balance residuals (S*v = 0 check at internal nodes)
     residuals: dict[str, float] = {}
@@ -1272,13 +1267,12 @@ def simulate_fba(
         out_sum = (
             rxn_flux[r.id]
             if r.id in eff_term_set
-            else sum(edge_flux[idx] for idx, _t, _e in outgoing_by_src.get(r.id, []))
+            else sum(edge_flux[idx] for idx in outgoing_by_src.get(r.id, []))
         )
         residuals[r.id] = round(inc_sum - out_sum, 6)
 
     rounded_rxn_flux = {k: round(v, 4) for k, v in rxn_flux.items()}
     rounded_bounds = {k: round(v, 4) for k, v in reaction_bounds.items()}
-    rounded_down = {k: round(v, 4) for k, v in downstream_cap.items()}
 
     transition_fluxes: list[dict[str, Any]] = []
     for idx, t in enumerate(model.transitions):
@@ -1310,7 +1304,6 @@ def simulate_fba(
         element_active=element_active,
         gpr_capacities=gpr_capacities,
         reaction_bounds=rounded_bounds,
-        downstream_capacities=rounded_down,
         reaction_fluxes=rounded_rxn_flux,
         transition_fluxes=transition_fluxes,
         mass_balance_residuals=residuals,
@@ -1382,6 +1375,7 @@ def _run_fba_scenario_with_sim(
         failures.append(
             f"unsupported connection_type {pred!r} on {raw_src} -> {raw_tgt}"
         )
+    failures.extend(fba.structure_problems)
     for bad_logic in fba.invalid_activation_logic:
         if not any(bad_logic in f for f in failures):
             failures.append(f"invalid activation_logic: {bad_logic}")
@@ -1515,6 +1509,75 @@ def run_declared_fba_scenarios(doc_or_review: Any) -> list[ScenarioResult]:
     return results
 
 
+def fba_model_json(fba: FBAModel) -> dict[str, Any]:
+    """The JSON form of a compiled :class:`FBAModel` that ``templates/fba_solver.js`` simulates."""
+    return {
+        "reactions": [
+            {
+                "id": r.id,
+                "label": r.label,
+                "kind": r.kind,
+                "is_flow_stage": r.is_flow_stage,
+                "is_entry": r.is_entry,
+                "is_terminal": r.is_terminal,
+                "is_optional_branch": r.is_optional_branch,
+                "default_active": r.default_active,
+                "upper_bound": r.upper_bound,
+                "location_label": r.location_label or "",
+                "location_id": r.location_id or "",
+                "function_id": r.function_id or "",
+                "function_label": r.function_label or "",
+                "substrates": list(r.substrates),
+                "products": list(r.products),
+                "cofactors": list(r.cofactors),
+                "representative_genes": list(r.representative_genes),
+                "gpr_logic": r.gpr_logic,
+                "gpr_rule_text": r.gpr_rule_text,
+                "gate_activators": list(r.gate_activators),
+                "gate_inhibitors": list(r.gate_inhibitors),
+                "activation_logic": r.activation_logic,
+                "flow_inputs": list(r.flow_inputs),
+                "competing_inhibitors": list(r.competing_inhibitors),
+                "positive_modulators": list(r.positive_modulators),
+            }
+            for r in fba.reactions
+        ],
+        "gpr_elements": [
+            {
+                "id": g.id,
+                "label": g.label,
+                "kind": g.kind,
+                "reaction_id": g.reaction_id,
+                "default_active": g.default_active,
+                "function_id": g.function_id or "",
+                "function_label": g.function_label or "",
+                "representative_genes": list(g.representative_genes),
+            }
+            for g in fba.gpr_elements
+        ],
+        "transitions": [
+            {
+                "source": t.source,
+                "target": t.target,
+                "predicate": t.predicate,
+                "shared_metabolites": list(t.shared_metabolites),
+                "description": t.description or "",
+                "is_optional_branch": t.is_optional_branch,
+                "competing_inhibitors": list(t.competing_inhibitors),
+                "positive_modulators": list(t.positive_modulators),
+                "gate_activators": list(t.gate_activators),
+                "gate_inhibitors": list(t.gate_inhibitors),
+                "activation_logic": t.activation_logic,
+                "flow_inputs": list(t.flow_inputs),
+            }
+            for t in fba.transitions
+        ],
+        "entry_reactions": list(fba.entry_reactions),
+        "terminal_reactions": list(fba.terminal_reactions),
+        "effective_terminals": list(fba.effective_terminals),
+    }
+
+
 def fba_model_payload(
     doc_or_review: Any,
     model_entry: Any,
@@ -1543,6 +1606,9 @@ def fba_model_payload(
                 "removed_connections": [
                     {"source": s, "target": t} for s, t in sc_fba.removed_connections
                 ],
+                # removing connections recompiles the network, so the page
+                # simulates this scenario on its own compiled model
+                "model": fba_model_json(sc_fba) if sc_fba.removed_connections else None,
                 "expected_active": [str(x) for x in as_list(sc.get("expected_active"))],
                 "expected_inactive": [
                     str(x) for x in as_list(sc.get("expected_inactive"))
@@ -1557,7 +1623,6 @@ def fba_model_payload(
                     "element_active": sim.element_active,
                     "gpr_capacities": sim.gpr_capacities,
                     "reaction_bounds": sim.reaction_bounds,
-                    "downstream_capacities": sim.downstream_capacities,
                     "reaction_fluxes": sim.reaction_fluxes,
                     "transition_fluxes": sim.transition_fluxes,
                     "mass_balance_residuals": sim.mass_balance_residuals,
@@ -1593,75 +1658,15 @@ def fba_model_payload(
             "optional_branch_upper_bound": OPTIONAL_BRANCH_UPPER_BOUND,
             "competing_inhibitor_factor": COMPETING_INHIBITOR_FACTOR,
             "positive_regulator_boost": POSITIVE_REGULATOR_BOOST,
+            "core_flux_cost": CORE_FLUX_COST,
+            "optional_branch_flux_cost": OPTIONAL_BRANCH_FLUX_COST,
         },
-        "reactions": [
-            {
-                "id": r.id,
-                "label": r.label,
-                "kind": r.kind,
-                "is_flow_stage": r.is_flow_stage,
-                "is_entry": r.is_entry,
-                "is_terminal": r.is_terminal,
-                "is_optional_branch": r.is_optional_branch,
-                "default_active": r.default_active,
-                "upper_bound": r.upper_bound,
-                "location_label": r.location_label or "",
-                "location_id": r.location_id or "",
-                "function_id": r.function_id or "",
-                "function_label": r.function_label or "",
-                "substrates": list(r.substrates),
-                "products": list(r.products),
-                "cofactors": list(r.cofactors),
-                "representative_genes": list(r.representative_genes),
-                "gpr_logic": r.gpr_logic,
-                "gpr_rule_text": r.gpr_rule_text,
-                "gate_activators": list(r.gate_activators),
-                "gate_inhibitors": list(r.gate_inhibitors),
-                "activation_logic": r.activation_logic,
-                "flow_inputs": list(r.flow_inputs),
-                "competing_inhibitors": list(r.competing_inhibitors),
-                "positive_modulators": list(r.positive_modulators),
-            }
-            for r in base_fba.reactions
-        ],
-        "gpr_elements": [
-            {
-                "id": g.id,
-                "label": g.label,
-                "kind": g.kind,
-                "reaction_id": g.reaction_id,
-                "default_active": g.default_active,
-                "function_id": g.function_id or "",
-                "function_label": g.function_label or "",
-                "representative_genes": list(g.representative_genes),
-            }
-            for g in base_fba.gpr_elements
-        ],
-        "transitions": [
-            {
-                "source": t.source,
-                "target": t.target,
-                "predicate": t.predicate,
-                "shared_metabolites": list(t.shared_metabolites),
-                "description": t.description or "",
-                "is_optional_branch": t.is_optional_branch,
-                "competing_inhibitors": list(t.competing_inhibitors),
-                "positive_modulators": list(t.positive_modulators),
-                "gate_activators": list(t.gate_activators),
-                "gate_inhibitors": list(t.gate_inhibitors),
-                "activation_logic": t.activation_logic,
-                "flow_inputs": list(t.flow_inputs),
-            }
-            for t in base_fba.transitions
-        ],
-        "entry_reactions": list(base_fba.entry_reactions),
-        "terminal_reactions": list(base_fba.terminal_reactions),
+        **fba_model_json(base_fba),
         "baseline_simulation": {
             "uptake_rate": baseline_sim.uptake_rate,
             "element_active": baseline_sim.element_active,
             "gpr_capacities": baseline_sim.gpr_capacities,
             "reaction_bounds": baseline_sim.reaction_bounds,
-            "downstream_capacities": baseline_sim.downstream_capacities,
             "reaction_fluxes": baseline_sim.reaction_fluxes,
             "transition_fluxes": baseline_sim.transition_fluxes,
             "mass_balance_residuals": baseline_sim.mass_balance_residuals,

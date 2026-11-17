@@ -85,7 +85,8 @@ def is_interactive(model: dict[str, Any], doc: dict[str, Any]) -> bool:
     if mtype == "AGENT_BASED":
         return len(module_to_abm(doc).stages) > 0
     if mtype == "CONSTRAINT_BASED":
-        return len(module_to_fba(doc).reactions) > 0
+        fba = module_to_fba(doc)
+        return len(fba.reactions) > 0 and not fba.structure_problems
     return False
 
 

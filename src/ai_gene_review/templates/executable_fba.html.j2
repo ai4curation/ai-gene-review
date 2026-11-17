@@ -457,7 +457,7 @@
             <div class="card">
                 <h2>AST-Compiled GPR Isozyme, Variant &amp; Complex Subunit Controls (E-Flux)</h2>
                 <p class="desc" style="margin-bottom:0.75rem;font-size:0.82rem;">
-                    Click any enzyme variant, isozyme annoton (<code>any_of</code> = additive capacity), or protein-complex subunit (<code>all_of</code> = minimum subunit capacity) to toggle knockouts or 50% E-Flux attenuation.
+                    Click any enzyme variant, isozyme annoton (<code>any_of</code> = additive capacity, capped at full capacity), or protein-complex subunit (<code>all_of</code> = minimum subunit capacity) to toggle knockouts or 50% E-Flux attenuation.
                 </p>
                 <div class="gpr-grid" id="gpr-container"></div>
             </div>
@@ -496,7 +496,7 @@
     const COLORS = ["#0369a1", "#0f766e", "#2563eb", "#d97706", "#7c3aed", "#0891b2", "#4f46e5", "#be123c"];
 
     let currentSettings = {};
-    let currentRemoved = [];
+    let currentModel = data;
     let currentScenario = data.scenarios.length > 0 ? data.scenarios[0].id : "__baseline__";
     let currentUptake = params.uptake_rate;
     let simResult = null;
@@ -510,388 +510,7 @@
             .replace(/'/g, "&#39;");
     }
 
-    function evalGprAst(expr, rawLevels, resolvedOut) {
-        if (!expr || typeof expr !== "object") return 1.0;
-        if (typeof expr.element === "string") {
-            const eid = expr.element;
-            const direct = Object.prototype.hasOwnProperty.call(rawLevels, eid) ? rawLevels[eid] : 1.0;
-            const subCap = expr.sub_logic ? evalGprAst(expr.sub_logic, rawLevels, resolvedOut) : 1.0;
-            const val = Math.max(0.0, direct * subCap);
-            resolvedOut[eid] = val;
-            return val;
-        }
-        if (Array.isArray(expr.all_of) && expr.all_of.length > 0) {
-            const subs = expr.all_of.map(s => evalGprAst(s, rawLevels, resolvedOut));
-            return Math.min(...subs);
-        }
-        if (Array.isArray(expr.any_of) && expr.any_of.length > 0) {
-            const subs = expr.any_of.map(s => evalGprAst(s, rawLevels, resolvedOut));
-            return subs.reduce((a, b) => a + b, 0) / subs.length;
-        }
-        return 1.0;
-    }
-
-    function evalFbaLogic(expr, active, flowInputs, competingInhibitors, removedSet, targetId) {
-        if (!expr || typeof expr !== "object") return true;
-        if (typeof expr.element === "string") {
-            const v = expr.element;
-            if (removedSet && targetId && removedSet.has(v + "->" + targetId)) {
-                return !(flowInputs && flowInputs.has(v));
-            }
-            if (competingInhibitors && competingInhibitors.has(v)) return false;
-            if (flowInputs && flowInputs.has(v)) return true;
-            return Boolean(active[v]);
-        }
-        if (Array.isArray(expr.none_of)) {
-            return !expr.none_of.some(sub =>
-                evalFbaLogic(sub, active, flowInputs, competingInhibitors, removedSet, targetId)
-            );
-        }
-        if (Array.isArray(expr.all_of)) {
-            return expr.all_of.every(sub =>
-                evalFbaLogic(sub, active, flowInputs, competingInhibitors, removedSet, targetId)
-            );
-        }
-        if (Array.isArray(expr.any_of)) {
-            return expr.any_of.some(sub =>
-                evalFbaLogic(sub, active, flowInputs, competingInhibitors, removedSet, targetId)
-            );
-        }
-        return true;
-    }
-
-    function waterfillAllocate(totalToAllocate, caps, weights) {
-        const n = caps.length;
-        const alloc = new Array(n).fill(0.0);
-        let rem = Math.min(totalToAllocate, caps.reduce((acc, c) => acc + Math.max(0.0, c), 0.0));
-        if (rem <= EPS || n === 0) return alloc;
-
-        let openIdxs = [];
-        for (let i = 0; i < n; i++) {
-            if (caps[i] > EPS && weights[i] > 0.0) openIdxs.push(i);
-        }
-        while (rem > EPS && openIdxs.length > 0) {
-            const wSum = openIdxs.reduce((acc, i) => acc + weights[i], 0.0);
-            if (wSum <= 0.0) break;
-            let saturatedAny = false;
-            const shares = {};
-            for (const i of openIdxs) {
-                const room = caps[i] - alloc[i];
-                const desire = rem * (weights[i] / wSum);
-                if (desire >= room - 1e-12) {
-                    alloc[i] = caps[i];
-                    rem -= room;
-                    saturatedAny = true;
-                } else {
-                    shares[i] = desire;
-                }
-            }
-            if (saturatedAny) {
-                openIdxs = openIdxs.filter(i => (caps[i] - alloc[i]) > EPS);
-            } else {
-                for (const i of openIdxs) alloc[i] += shares[i];
-                rem = 0.0;
-                break;
-            }
-        }
-        return alloc;
-    }
-
-    function simulate(settings, removedList, uptakeRate) {
-        const removedSet = new Set((removedList || []).map(c => c.source + "->" + c.target));
-        const rawGprLevels = {};
-        for (const g of data.gpr_elements || []) {
-            if (Object.prototype.hasOwnProperty.call(settings, g.id)) {
-                const v = settings[g.id];
-                rawGprLevels[g.id] = typeof v === "boolean" ? (v ? 1.0 : 0.0) : Math.max(0.0, Number(v));
-            } else {
-                rawGprLevels[g.id] = g.default_active ? 1.0 : 0.0;
-            }
-        }
-
-        const gprCapacities = {};
-        for (const r of data.reactions) {
-            if (!r.is_flow_stage) continue;
-            let cap = r.gpr_logic ? evalGprAst(r.gpr_logic, rawGprLevels, gprCapacities) : 1.0;
-            if (Object.prototype.hasOwnProperty.call(settings, r.id)) {
-                const v = settings[r.id];
-                const factor = typeof v === "boolean" ? (v ? 1.0 : 0.0) : Math.max(0.0, Number(v));
-                cap *= factor;
-            }
-            gprCapacities[r.id] = cap;
-        }
-        for (const g of data.gpr_elements || []) {
-            if (!Object.prototype.hasOwnProperty.call(gprCapacities, g.id)) {
-                gprCapacities[g.id] = rawGprLevels[g.id];
-            }
-        }
-
-        const flowInputsByTarget = {};
-        const compInhByTarget = {};
-        for (const r of data.reactions) {
-            flowInputsByTarget[r.id] = new Set(r.flow_inputs || []);
-            compInhByTarget[r.id] = new Set(r.competing_inhibitors || []);
-        }
-
-        const active = {};
-        for (const r of data.reactions) {
-            if (Object.prototype.hasOwnProperty.call(settings, r.id)) {
-                const v = settings[r.id];
-                active[r.id] = typeof v === "boolean" ? v : Number(v) > EPS;
-            } else if (r.is_flow_stage && (gprCapacities[r.id] || 0) <= EPS) {
-                active[r.id] = false;
-            } else {
-                active[r.id] = Boolean(r.default_active);
-            }
-        }
-
-        for (let iter = 0; iter < data.reactions.length + 1; iter++) {
-            let changed = false;
-            for (const r of data.reactions) {
-                if (Object.prototype.hasOwnProperty.call(settings, r.id)) continue;
-                let nextVal;
-                if (r.is_flow_stage && (gprCapacities[r.id] || 0) <= EPS) {
-                    nextVal = false;
-                } else if (r.activation_logic) {
-                    nextVal = Boolean(r.default_active) && evalFbaLogic(
-                        r.activation_logic,
-                        active,
-                        flowInputsByTarget[r.id],
-                        compInhByTarget[r.id],
-                        removedSet,
-                        r.id
-                    );
-                } else {
-                    let gatedOff = false;
-                    for (const ga of r.gate_activators || []) {
-                        if (!removedSet.has(ga + "->" + r.id) && !active[ga]) gatedOff = true;
-                    }
-                    for (const gi of r.gate_inhibitors || []) {
-                        if (!removedSet.has(gi + "->" + r.id) && active[gi]) gatedOff = true;
-                    }
-                    nextVal = gatedOff ? false : Boolean(r.default_active);
-                }
-                if (active[r.id] !== nextVal) {
-                    active[r.id] = nextVal;
-                    changed = true;
-                }
-            }
-            if (!changed) break;
-        }
-
-        const reactionBounds = {};
-        for (const r of data.reactions) {
-            if (!r.is_flow_stage || !active[r.id]) {
-                reactionBounds[r.id] = 0.0;
-                continue;
-            }
-            let ub = r.upper_bound * (gprCapacities[r.id] ?? 1.0);
-            for (const inh of r.competing_inhibitors || []) {
-                if (!removedSet.has(inh + "->" + r.id) && active[inh]) {
-                    ub *= params.competing_inhibitor_factor;
-                }
-            }
-            for (const mod of r.positive_modulators || []) {
-                if (removedSet.has(mod + "->" + r.id)) continue;
-                if (active[mod]) {
-                    ub *= params.positive_regulator_boost;
-                } else if (!r.activation_logic) {
-                    ub = 0.0;
-                }
-            }
-            reactionBounds[r.id] = Math.max(0.0, ub);
-        }
-
-        const outgoingBySrc = {};
-        const incomingByTgt = {};
-        const activeFlowOutCount = {};
-        for (const r of data.reactions) {
-            outgoingBySrc[r.id] = [];
-            incomingByTgt[r.id] = [];
-            activeFlowOutCount[r.id] = 0;
-        }
-
-        const edgeUbs = data.transitions.map((t, idx) => {
-            if (removedSet.has(t.source + "->" + t.target)) return 0.0;
-            activeFlowOutCount[t.source] = (activeFlowOutCount[t.source] || 0) + 1;
-            if (!active[t.source] || !active[t.target]) return 0.0;
-            if (t.activation_logic) {
-                if (!evalFbaLogic(t.activation_logic, active, flowInputsByTarget[t.target], compInhByTarget[t.target], removedSet, t.target)) {
-                    return 0.0;
-                }
-            } else {
-                for (const ga of t.gate_activators || []) {
-                    if (!removedSet.has(ga + "->" + t.target) && !active[ga]) return 0.0;
-                }
-                for (const gi of t.gate_inhibitors || []) {
-                    if (!removedSet.has(gi + "->" + t.target) && active[gi]) return 0.0;
-                }
-            }
-            let eUb = Math.min(reactionBounds[t.source], reactionBounds[t.target]);
-            for (const inh of t.competing_inhibitors || []) {
-                if (!removedSet.has(inh + "->" + t.target) && active[inh]) {
-                    eUb *= params.competing_inhibitor_factor;
-                }
-            }
-            for (const mod of t.positive_modulators || []) {
-                if (removedSet.has(mod + "->" + t.target)) continue;
-                if (active[mod]) {
-                    eUb *= params.positive_regulator_boost;
-                } else if (!t.activation_logic) {
-                    eUb = 0.0;
-                }
-            }
-            eUb = Math.max(0.0, eUb);
-            if (eUb > EPS) {
-                outgoingBySrc[t.source].push({ idx, t, eUb });
-                incomingByTgt[t.target].push(idx);
-            }
-            return eUb;
-        });
-
-        const flowRxns = data.reactions.filter(r => r.is_flow_stage);
-        const effTermSet = new Set(
-            flowRxns
-                .filter(r => r.is_terminal || (activeFlowOutCount[r.id] || 0) === 0)
-                .map(r => r.id)
-        );
-
-        const downstreamCap = {};
-        const parsimonyCost = {};
-        for (const r of flowRxns) {
-            if (effTermSet.has(r.id)) {
-                downstreamCap[r.id] = reactionBounds[r.id];
-                parsimonyCost[r.id] = 1.0 + (r.is_optional_branch ? 2.0 : 0.0);
-            } else {
-                downstreamCap[r.id] = 0.0;
-                parsimonyCost[r.id] = 1e6;
-            }
-        }
-
-        for (let iter = 0; iter < flowRxns.length + 2; iter++) {
-            let changed = false;
-            for (let k = flowRxns.length - 1; k >= 0; k--) {
-                const r = flowRxns[k];
-                if (effTermSet.has(r.id)) continue;
-                const outs = outgoingBySrc[r.id] || [];
-                let newCap = 0.0;
-                let newCost = 1e6;
-                if (outs.length > 0) {
-                    const edgeCaps = outs.map(o => Math.min(o.eUb, downstreamCap[o.t.target] || 0.0));
-                    newCap = Math.min(reactionBounds[r.id], edgeCaps.reduce((a, b) => a + b, 0.0));
-                    const openCosts = outs
-                        .filter((o, i) => edgeCaps[i] > EPS)
-                        .map(o => parsimonyCost[o.t.target]);
-                    const stepPen = 1.0 + (r.is_optional_branch ? 2.0 : 0.0);
-                    newCost = openCosts.length > 0 ? stepPen + Math.min(...openCosts) : 1e6;
-                }
-                if (Math.abs(downstreamCap[r.id] - newCap) > 1e-9 || Math.abs(parsimonyCost[r.id] - newCost) > 1e-9) {
-                    downstreamCap[r.id] = newCap;
-                    parsimonyCost[r.id] = newCost;
-                    changed = true;
-                }
-            }
-            if (!changed) break;
-        }
-
-        const rxnFlux = {};
-        for (const r of data.reactions) rxnFlux[r.id] = 0.0;
-        const edgeFlux = new Array(data.transitions.length).fill(0.0);
-
-        const entryIds = data.entry_reactions.filter(id => (downstreamCap[id] || 0) > EPS);
-        if (entryIds.length > 0 && uptakeRate > 0) {
-            const eCaps = entryIds.map(id => downstreamCap[id]);
-            const eWeights = entryIds.map(id => downstreamCap[id] / Math.max(1.0, parsimonyCost[id] || 1.0));
-            const eAlloc = waterfillAllocate(uptakeRate, eCaps, eWeights);
-            entryIds.forEach((id, i) => { rxnFlux[id] = eAlloc[i]; });
-        }
-
-        const entrySet = new Set(data.entry_reactions);
-        for (let iter = 0; iter < flowRxns.length + 2; iter++) {
-            const targetAllocated = {};
-            for (const r of flowRxns) targetAllocated[r.id] = 0.0;
-            for (const r of flowRxns) {
-                if (!entrySet.has(r.id)) {
-                    const inc = incomingByTgt[r.id] || [];
-                    rxnFlux[r.id] = Math.min(
-                        downstreamCap[r.id] || 0.0,
-                        inc.reduce((acc, idx) => acc + edgeFlux[idx], 0.0)
-                    );
-                }
-                const uFlux = rxnFlux[r.id];
-                if (effTermSet.has(r.id)) continue;
-                const outs = outgoingBySrc[r.id] || [];
-                if (outs.length === 0 || uFlux <= EPS) {
-                    outs.forEach(o => { edgeFlux[o.idx] = 0.0; });
-                    continue;
-                }
-                const caps = outs.map(o => {
-                    const remTgt = Math.max(0.0, (downstreamCap[o.t.target] || 0.0) - (targetAllocated[o.t.target] || 0.0));
-                    return Math.min(o.eUb, remTgt);
-                });
-                const weights = outs.map((o, i) => caps[i] / Math.max(1.0, parsimonyCost[o.t.target] || 1.0));
-                const alloc = waterfillAllocate(uFlux, caps, weights);
-                outs.forEach((o, i) => {
-                    edgeFlux[o.idx] = alloc[i];
-                    targetAllocated[o.t.target] = (targetAllocated[o.t.target] || 0.0) + alloc[i];
-                });
-                const actualOut = alloc.reduce((a, b) => a + b, 0.0);
-                if (actualOut < uFlux - 1e-9) rxnFlux[r.id] = actualOut;
-            }
-        }
-
-        for (let sweep = 0; sweep < flowRxns.length; sweep++) {
-            for (let k = flowRxns.length - 1; k >= 0; k--) {
-                const r = flowRxns[k];
-                if (!effTermSet.has(r.id)) {
-                    const outs = outgoingBySrc[r.id] || [];
-                    rxnFlux[r.id] = outs.reduce((acc, o) => acc + edgeFlux[o.idx], 0.0);
-                }
-                if (!entrySet.has(r.id)) {
-                    const inc = incomingByTgt[r.id] || [];
-                    const inSum = inc.reduce((acc, idx) => acc + edgeFlux[idx], 0.0);
-                    if (inSum > rxnFlux[r.id] + 1e-9 && inSum > 0) {
-                        const scale = rxnFlux[r.id] / inSum;
-                        inc.forEach(idx => { edgeFlux[idx] *= scale; });
-                    }
-                }
-            }
-        }
-
-        let maxResidual = 0.0;
-        for (const r of flowRxns) {
-            const incSum = entrySet.has(r.id)
-                ? rxnFlux[r.id]
-                : (incomingByTgt[r.id] || []).reduce((acc, idx) => acc + edgeFlux[idx], 0.0);
-            const outSum = effTermSet.has(r.id)
-                ? rxnFlux[r.id]
-                : (outgoingBySrc[r.id] || []).reduce((acc, o) => acc + edgeFlux[o.idx], 0.0);
-            maxResidual = Math.max(maxResidual, Math.abs(incSum - outSum));
-        }
-
-        const transitionFluxes = data.transitions.map((t, idx) => ({
-            ...t,
-            upper_bound: edgeUbs[idx],
-            flux: edgeFlux[idx]
-        }));
-
-        const totalUptake = data.entry_reactions.reduce((acc, id) => acc + (rxnFlux[id] || 0.0), 0.0);
-        const totalExport = Array.from(effTermSet).reduce((acc, id) => acc + (rxnFlux[id] || 0.0), 0.0);
-        const totalL1 = Object.values(rxnFlux).reduce((a, b) => a + b, 0.0);
-
-        return {
-            elementActive: active,
-            gprCapacities,
-            reactionBounds,
-            downstreamCap,
-            reactionFluxes: rxnFlux,
-            transitionFluxes,
-            totalUptake,
-            totalExport,
-            totalL1,
-            maxResidual
-        };
-    }
+{% include "fba_solver.js" %}
 
     function cycleSetting(id) {
         if (!Object.prototype.hasOwnProperty.call(currentSettings, id)) {
@@ -961,7 +580,7 @@
                     ${r.gpr_rule_text && r.gpr_rule_text !== r.id ? `<strong>GPR:</strong> <code>${escHtml(r.gpr_rule_text)}</code>` : ""}
                 </div>
                 <div class="rxn-footer">
-                    <span>${r.is_flow_stage ? `UB: ${ub.toFixed(1)} · DownCap: ${(simResult.downstreamCap[r.id] || 0).toFixed(1)}` : "Regulator"}</span>
+                    <span>${r.is_flow_stage ? `UB: ${ub.toFixed(1)}` : "Regulator"}</span>
                     <span class="lock-pill ${pill.cls}">${escHtml(pill.text)}</span>
                 </div>
             `;
@@ -1076,7 +695,7 @@
     }
 
     function recompute() {
-        simResult = simulate(currentSettings, currentRemoved, currentUptake);
+        simResult = simulateFba(currentModel, params, currentSettings, currentUptake);
         document.getElementById("uptake-label").textContent = `${currentUptake}`;
         document.getElementById("kpi-uptake").textContent = simResult.totalUptake.toFixed(2);
         document.getElementById("kpi-export").textContent = simResult.totalExport.toFixed(2);
@@ -1093,12 +712,12 @@
         currentScenario = scId;
         if (scId === "__baseline__") {
             currentSettings = {};
-            currentRemoved = [];
+            currentModel = data;
         } else {
             const sc = data.scenarios.find(s => s.id === scId);
             if (sc) {
                 currentSettings = { ...(sc.settings || {}) };
-                currentRemoved = [...(sc.removed_connections || [])];
+                currentModel = sc.model || data;
             }
         }
         recompute();

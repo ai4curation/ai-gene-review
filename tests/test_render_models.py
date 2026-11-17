@@ -209,7 +209,8 @@ executable_models:
     scenarios:
       - id: wt_ethanol
         label: Wild-type ethanol dominance
-        expected_active: [pdc, adh, bdh]
+        expected_active: [pdc, adh]
+        expected_inactive: [bdh]
         expected_outcome_order: [adh, bdh]
 """
     modules = tmp_path / "modules"
@@ -227,6 +228,9 @@ executable_models:
     assert [r["id"] for r in payload["reactions"]] == ["pdc", "adh", "bdh"]
     assert payload["scenarios"][0]["failures"] == []
     assert "Constraint-Based Model" in model_page.read_text()
+    assert "function simulateFba(model, params, settings, uptakeRate)" in (
+        model_page.read_text()
+    )
     assert 'href="../models/ferment_fba.html"' in page.read_text()
 
 

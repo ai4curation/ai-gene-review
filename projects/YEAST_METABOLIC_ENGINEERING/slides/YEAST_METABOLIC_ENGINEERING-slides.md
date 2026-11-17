@@ -189,7 +189,7 @@ Parsing <code>cobra.core.gene.parse_gpr()</code> ASTs separates <code>BoolOp(And
 
 ---
 
-# 7. Discovering & Fixing ChatGEM's E-Flux Bug + Isozyme Regimes
+# 7. Discovering & Fixing ChatGEM's E-Flux Bug
 
 <div class="cols">
 <div>
@@ -201,7 +201,6 @@ PNNL ChatGEM's E-Flux script splits GPR strings with regex `re.split(r'(\band\b|
 |---|---:|---:|---:|
 | `(HXK1 or HXK2) and PFK2` | `0.20` | `1.00` | **`+0.80` (+400%)** |
 | `(PFK1 and PFK2) or (GPD1 and GPD2)` | `0.35` | `0.20` | **`-0.15` (-43%)** |
-| `(TDH1 or TDH2 or TDH3) and (PFK1 and PFK2)` | `0.20` | `1.25` | **`+1.05` (+525%)** |
 
 - **Bug 1:** `and` pops only the immediately preceding token instead of the parenthesized `(HXK1 or HXK2)` group.
 - **Bug 2:** `max(stack)` replaces additive isozyme `OR` (`sum`) with `max` whenever two complexes act in parallel.
@@ -209,17 +208,12 @@ PNNL ChatGEM's E-Flux script splits GPR strings with regex `re.split(r'(\band\b|
 </div>
 <div>
 
-## AST E-Flux Resolves Yeast Isozyme Biology
-Replacing regex parsing with `ast.BoolOp` (`And` → min, `Or` → sum) cleanly separates the four physiological regimes across our 16 reviewed yeast genes:
+## What the Benchmark Does and Does Not Show
+Replacing regex parsing with `ast.BoolOp` (`And` → min, `Or` → sum) gives the intended capacity on every nested rule tested.
 
-| Reaction (GPR) | YPD | Osmotic | Anaerobic | EtOH |
-|---|---:|---:|---:|---:|
-| `HEX1` (`HXK2` vs `HXK1`/`GLK1`) | **1.40** (`HXK2` 71%) | 1.15 | 1.35 | 1.45 (`HXK1`) |
-| `PFK` (`PFK1 and PFK2` min) | **0.85** | 0.70 | 0.85 | 0.35 |
-| `GAPD` (`TDH3` 82% in YPD) | **1.58** | 1.45 | 1.55 | 1.15 (`TDH1`) |
-| `G3PD1ir` (`GPD1 or GPD2`) | 0.30 | **1.20 (`GPD1`)** | **1.15 (`GPD2`)** | 0.25 |
-| `G3PT` (`GPP1 or GPP2`) | 0.30 | **1.15 (`GPP2`)** | **1.15 (`GPP1`)** | 0.20 |
-| `ALCD2x` (`ADH1` vs `ADH2`) | **1.22 (`ADH1`)** | 0.92 | 1.21 | **1.20 (`ADH2`)** |
+- The per-gene levels in the benchmark are **synthetic inputs** chosen to expose the bug, not measured expression.
+- So it says nothing about which isozyme (`HXK1`/`HXK2`, `GPD1`/`GPD2`, `ADH1`/`ADH2`) dominates in a given condition.
+- Resolving `OR`-GPR isozyme degeneracy needs condition-specific transcriptomic or proteomic data, which the audit does not yet load.
 
 </div>
 </div>
@@ -231,13 +225,13 @@ Replacing regex parsing with `ast.BoolOp` (`And` → min, `Or` → sum) cleanly 
 <div class="cols">
 <div>
 
-## Curated YAML → COBRApy Model (`module_fba.py`)
-Every metabolic module now compiles directly into a stoichiometric COBRApy model validated in CI by `just validate-modules`:
+## Curated YAML → Steady-State Flux Model (`module_fba.py`)
+A module that declares a derived `CONSTRAINT_BASED` model compiles into a steady-state flux network, solved as exact pFBA (maximum export, then minimum weighted flux), and its scenarios are checked in CI by `just validate-modules`:
 
 - **`active_units` (`PROTEIN_COMPLEX`)** → `all_of` (min subunit capacity, e.g., `PFK1 + PFK2` α₄β₄ complex).
-- **`variant_sets` (isozymes)** → `any_of` (sum of isozyme capacities, e.g., `GPD1 / GPD2`, `GPP1 / GPP2`, `ACS1 / ACS2`).
+- **`variant_sets` (isozymes)** → `any_of` (sum of isozyme capacities, capped at full capacity, e.g., `GPD1 / GPD2`, `GPP1 / GPP2`, `ACS1 / ACS2`).
 - **`direction_by_variant`** → opposite physiological directions (`ADH1` reductive vs. `ADH2` oxidative).
-- **19 reactions · 13 scenarios · 51 quantitative FBA & E-Flux assertions** across:
+- **15 reactions · 14 scenarios · 89 flux assertions** across:
   1. `modules/glycerol_metabolism.yaml`
   2. `modules/alcoholic_fermentation.yaml`
   3. `modules/pdh_bypass_acetyl_coa_synthesis.yaml`
@@ -247,11 +241,11 @@ Every metabolic module now compiles directly into a stoichiometric COBRApy model
 
 ## Interactive Browser FBA/E-Flux Explorer
 - Rendered via `executable_fba.html.j2` (`just render-models`):
-  - **1-click scenario pills** (*YPD WT*, *0.8 M NaCl Osmotic Stress*, *Anaerobic Redox Sink*, *`gpd1Δ`*, *`gpd1Δ gpd2Δ`*, *`pdcΔ`*, *`adh1Δ`*, *`acs2Δ` on Glucose*).
-  - **Live gene abundance sliders** (`0%` KO to `200%` OE) recomputing AST E-Flux capacities (`min`/`sum`) and solving pathway FBA in real time in the browser.
+  - **1-click scenario pills**, one per curated scenario (e.g. *`gut2Δ` rerouting*, *hyperosmotic glycerol synthesis*, *ADH loss → butanediol overflow*, *`acs1Δ acs2Δ`*).
+  - **Click any reaction or GPR element** to cycle knockout → 50% → pinned, and an **uptake slider**; the page re-solves pFBA in the browser with the same algorithm as the Python checker.
 
 <div class="callout">
-<strong>Continuous Curation Guardrail:</strong> If any edit to a gene review or module breaks mass balance, reverses a cofactor, drops an isozyme from a <code>variant_set</code>, or violates a knockout phenotype, <code>just validate-modules</code> fails immediately.
+<strong>Continuous Curation Guardrail:</strong> If an edit to a module makes a curated scenario fail (a knockout phenotype, an expected-active or zero-flux reaction, or a flux order), <code>just validate-modules</code> fails.
 </div>
 
 </div>
