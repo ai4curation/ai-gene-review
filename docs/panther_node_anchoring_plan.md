@@ -155,11 +155,15 @@ On 2026-11-17 it found:
    `PANTHER_PREVIOUS_RELEASE` in `etl/panther_families.py`.
    - **Family reviews: done.** `check_panther_ids` reports such ids, labels and
      memberships as UNRESOLVED. In a simulated bump to 20.0 over all family reviews
-     (PANTHER checks only), total failures go from 62 today to 2,249 without the
-     allowance (2,187 new: 541 ids, 1,091 labels, 555 memberships) and stay at 62 with
-     it. Those 62 are the same set as today's except for one swap: a new, real failure
-     (P0ABZ4, first classified in 20.0, sits outside its declared subfamily, which the
-     bump did not change) and one existing failure that 20.0 resolves.
+     (PANTHER checks only, 2026-11-17), total failures go from 67 today to 2,400 without
+     the allowance (2,333 new: 547 ids, 1,182 labels, 604 memberships) and stay at 67
+     with it. Those 67 are the same set as today's except for one swap: a new, real
+     failure (P0ABZ4, first classified in 20.0, sits outside its declared subfamily,
+     which the bump did not change) and one existing failure that 20.0 resolves.
+     Release-independent scope errors (a family id in a subfamily slot, another
+     family's subfamily) still fail during the window. The previous release is read
+     from the cache only; `just ensure-panther-members` fills it while a switch is on,
+     and without it the allowance is off with a warning.
    - **Modules: to do.** Term labels go through the OAK term validator, and
      membership through `validate_family_members`.
 2. The bump PR changes the pinned constants, rebuilds the caches and `panther.obo`

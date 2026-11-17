@@ -1100,3 +1100,44 @@ def test_transition_defers_unclassified_member_of_a_changed_id():
         if r.outcome is not Outcome.PASS
     ]
     assert outcomes == [("PANTHER_MEMBERSHIP", Outcome.FAIL)]
+
+
+@pytest.mark.parametrize(
+    ("sf_id", "kind"),
+    [
+        # a family id in a slot that requires a subfamily
+        ("PANTHER:PTHR00003", "PANTHER_FAMILY_SCOPE"),
+        # a subfamily of a different family
+        ("PANTHER:PTHR00002:SF4", "PANTHER_FAMILY_SCOPE"),
+    ],
+)
+def test_transition_does_not_defer_release_independent_scope_errors(sf_id, kind):
+    """An id gone in the current release still fails a scope rule it breaks in every release."""
+    from ai_gene_review.validation.family_residue_validator import (
+        PreviousRelease,
+        check_panther_ids,
+    )
+    # current release: the review's family exists, the id in the subfamily slot is gone
+    labels = {"PANTHER:PTHR00001": "SOME FAMILY", "PANTHER:PTHR00001:SF1": "A SUBFAMILY"}
+    previous = PreviousRelease("19.0", {sf_id: "OLD NAME"}, {})
+    review = {"family_id": "PANTHER:PTHR00001", "family_name": "SOME FAMILY",
+              "subfamilies": [{"subfamily_id": sf_id, "label": "OLD NAME"}]}
+    outcomes = [(r.kind, r.outcome) for r in check_panther_ids(review, labels, {}, previous=previous)
+                if r.site_id == "subfamilies[].subfamily_id"]
+    assert outcomes == [(kind, Outcome.FAIL)]
+
+
+def test_load_previous_release_is_offline_and_off_when_not_cached(tmp_path, capsys):
+    from ai_gene_review.validation.family_residue_validator import load_previous_release
+    assert load_previous_release(tmp_path, "99.0") is None
+    assert "switch allowance is off" in capsys.readouterr().err
+
+    cache = tmp_path / ".cache" / "panther"
+    cache.mkdir(parents=True)
+    (cache / "PANTHER99.0_HMM_classifications").write_text("PTHR00001:SF7\tOLD SUBFAMILY\n")
+    (cache / "PTHR99.0_human").write_text(
+        "HUMAN|HGNC=1|UniProtKB=P00002\tP00002\tX\tPTHR00001:SF7\tOLD SUBFAMILY\n")
+    previous = load_previous_release(tmp_path, "99.0")  # other organisms absent: not fetched
+    assert previous is not None
+    assert previous.labels == {"PANTHER:PTHR00001:SF7": "OLD SUBFAMILY"}
+    assert previous.members == {"P00002": "PTHR00001:SF7"}

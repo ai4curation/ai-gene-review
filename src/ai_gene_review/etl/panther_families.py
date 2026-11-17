@@ -1325,28 +1325,66 @@ def panther_release_drift(timeout: int = 60) -> Tuple[List[str], List[str]]:
 # --------------------------------------------------------------------------- #
 
 
+def panther_cache_dir(repo_root: Path) -> Path:
+    """The git-ignored folder holding PANTHER downloads and the member index.
+
+    >>> panther_cache_dir(Path("/repo")).as_posix()
+    '/repo/.cache/panther'
+    """
+    return Path(repo_root) / MEMBER_INDEX_RELPATH.parent
+
+
+def hmm_classifications_path(cache_dir: Path, release: str) -> Path:
+    """Where :func:`fetch_hmm_classifications` caches one release's names file.
+
+    >>> hmm_classifications_path(Path("c"), "19.0").name
+    'PANTHER19.0_HMM_classifications'
+    """
+    return Path(cache_dir) / hmm_url(release).rsplit("/", 1)[-1]
+
+
 def previous_release_names(cache_dir: Path, release: str) -> Dict[str, str]:
-    """``PANTHER:<id> -> name`` for every family and subfamily in ``release``.
+    r"""``PANTHER:<id> -> name`` for every family and subfamily in ``release``.
 
     Read from that release's HMM classification file (downloaded into ``cache_dir``
-    once), keyed like :func:`load_obo_names` so the two can be compared directly.
+    once if absent). Keys and values match :func:`load_obo_names` on an OBO written by
+    :func:`write_panther_obo`: names go through :func:`escape_obo_value`, as they do in
+    the committed artifact, so the two can be compared directly.
+
+    >>> import tempfile
+    >>> d = Path(tempfile.mkdtemp())
+    >>> _ = hmm_classifications_path(d, "99.0").write_text("PTHR1:SF1\tA ! B\n")
+    >>> previous_release_names(d, "99.0")
+    {'PANTHER:PTHR1:SF1': 'A \\! B'}
     """
     path = fetch_hmm_classifications(cache_dir, url=hmm_url(release))
     entries = parse_hmm_classifications(path.read_text(errors="replace").splitlines())
-    return {f"PANTHER:{entry.accession}": entry.name for entry in entries}
+    return {f"PANTHER:{entry.accession}": escape_obo_value(entry.name) for entry in entries}
 
 
 def previous_release_members(
-    cache_dir: Path, release: str, organisms: Iterable[str] = DEFAULT_ORGANISMS
+    cache_dir: Path,
+    release: str,
+    organisms: Iterable[str] = DEFAULT_ORGANISMS,
+    cached_only: bool = False,
 ) -> Dict[str, str]:
     """UniProt accession -> ``PTHR family:SF`` in ``release``, for the given organisms.
 
     Not pruned to cited accessions: it backs a temporary allowance, and every
-    accession a review cites must be answerable from it.
+    accession a review cites must be answerable from it. For the default organisms
+    that means about 305 MB of classification files on a cold cache and about 300,000
+    accessions in memory (measured for 19.0), paid once per validation process during
+    a switch.
+    ``cached_only`` reads only files already in ``cache_dir`` and downloads nothing,
+    so a validator never depends on the network.
     """
     index: Dict[str, str] = {}
     for organism in organisms:
-        path = fetch_sequence_classification(organism, cache_dir, release=release)
+        if cached_only:
+            cached = Path(cache_dir) / f"PTHR{release}_{organism}"
+            path: Optional[Path] = cached if cached.exists() else None
+        else:
+            path = fetch_sequence_classification(organism, cache_dir, release=release)
         if path is None:
             continue
         for accession, family_sf in parse_sequence_classification(

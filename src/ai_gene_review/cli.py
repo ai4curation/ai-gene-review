@@ -4944,6 +4944,19 @@ def refresh_panther_members(
     cache = cache_dir or (repo_root / ".cache" / "panther")
     organisms = list(organism) if organism else list(DEFAULT_ORGANISMS)
 
+    # During a PANTHER switch, validators read the previous release's names and
+    # memberships from this cache without downloading anything; warm it here.
+    from ai_gene_review.etl.panther_families import (
+        PANTHER_PREVIOUS_RELEASE,
+        previous_release_members,
+        previous_release_names,
+    )
+
+    if PANTHER_PREVIOUS_RELEASE is not None:
+        previous_release_names(cache, PANTHER_PREVIOUS_RELEASE)
+        previous_release_members(cache, PANTHER_PREVIOUS_RELEASE)
+        typer.echo(f"cached PANTHER {PANTHER_PREVIOUS_RELEASE} classifications for the switch allowance")
+
     # Every representative member, grounded or not -- an ungrounded descriptor's
     # members are the ones whose real family most needs resolving -- plus the
     # accessions cited only in prose, which the prose scan checks.

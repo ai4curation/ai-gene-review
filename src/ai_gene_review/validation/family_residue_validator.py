@@ -41,6 +41,7 @@ from __future__ import annotations
 import http.client
 import json
 import ssl
+import sys
 import time
 import urllib.error
 import urllib.request
@@ -454,23 +455,52 @@ class PreviousRelease(NamedTuple):
     members: dict[str, str]
 
 
+def load_previous_release(repo_root: Path, release: str) -> "PreviousRelease | None":
+    """Load ``release``'s names and memberships from the PANTHER cache, offline.
+
+    Nothing is downloaded: ``just ensure-panther-members`` (``refresh-panther-members``)
+    caches these files while a switch is on. If the names file is not cached, the
+    allowance is off for this run, with a warning, and checks fail as they would
+    without it, rather than the validator depending on the network.
+    """
+    from ai_gene_review.etl.panther_families import (
+        hmm_classifications_path,
+        panther_cache_dir,
+        previous_release_members,
+        previous_release_names,
+    )
+
+    cache = panther_cache_dir(repo_root)
+    if not hmm_classifications_path(cache, release).exists():
+        print(
+            f"warning: PANTHER {release} classifications are not cached in {cache}, so the "
+            "switch allowance is off; run `just ensure-panther-members`",
+            file=sys.stderr,
+        )
+        return None
+    return PreviousRelease(
+        release,
+        previous_release_names(cache, release),
+        previous_release_members(cache, release, cached_only=True),
+    )
+
+
 @lru_cache(maxsize=None)
 def _previous_release(panther_dir: Path) -> "PreviousRelease | None":
     """The previous release's names and memberships, or None outside a switch."""
     from ai_gene_review.etl.panther_families import (
         PANTHER_PREVIOUS_RELEASE,
-        previous_release_members,
-        previous_release_names,
+        PANTHER_RELEASE,
     )
 
     if PANTHER_PREVIOUS_RELEASE is None:
         return None
-    cache = Path(panther_dir).parents[1] / ".cache" / "panther"
-    return PreviousRelease(
-        PANTHER_PREVIOUS_RELEASE,
-        previous_release_names(cache, PANTHER_PREVIOUS_RELEASE),
-        previous_release_members(cache, PANTHER_PREVIOUS_RELEASE),
-    )
+    if PANTHER_PREVIOUS_RELEASE == PANTHER_RELEASE:
+        raise ValueError(
+            f"PANTHER_PREVIOUS_RELEASE equals PANTHER_RELEASE ({PANTHER_RELEASE}); "
+            "set it to the release being left, or to None outside a switch"
+        )
+    return load_previous_release(Path(panther_dir).parents[1], PANTHER_PREVIOUS_RELEASE)
 
 
 class PantherTerm(NamedTuple):
@@ -568,6 +598,31 @@ def check_panther_ids(
             )
         )
 
+    def scope_failure(term: PantherTerm, curie: str) -> "ResidueCheck | None":
+        """A subfamily slot holding a family id, or another family's subfamily.
+
+        Both are facts about the id string, true in every release, so they are
+        checked before any switch allowance can defer the id.
+        """
+        if not term.must_be_own_subfamily:
+            return None
+        if not _is_panther_subfamily(curie):
+            return ResidueCheck(
+                family, term.path, curie, 0, [], None, Outcome.FAIL,
+                f"{curie} is a family, not a subfamily; a family id here "
+                "matches no member's subfamily and would flag every one of "
+                "them as a scope violation",
+                kind="PANTHER_FAMILY_SCOPE",
+            )
+        if own_family and _panther_family_base(curie) != own_family:
+            return ResidueCheck(
+                family, term.path, curie, 0, [], None, Outcome.FAIL,
+                f"{curie} belongs to a different family; this review is "
+                f"about {family}",
+                kind="PANTHER_FAMILY_SCOPE",
+            )
+        return None
+
     for term in _iter_panther_terms(review):
         path, curie, label = term.path, term.curie, term.label
         if not curie or curie.startswith("PANTHER:PTN"):
@@ -577,7 +632,8 @@ def check_panther_ids(
         if curie not in labels:
             if previous is not None and curie in previous.labels:
                 results.append(
-                    ResidueCheck(
+                    scope_failure(term, curie)
+                    or ResidueCheck(
                         family, path, curie, 0, [], None, Outcome.UNRESOLVED,
                         f"{curie} is not in PANTHER {PANTHER_RELEASE}; it was "
                         f"{previous.labels[curie]!r} in {previous.release}; {remap_hint}",
@@ -593,28 +649,10 @@ def check_panther_ids(
                 )
             )
             continue
-        if term.must_be_own_subfamily:
-            if not _is_panther_subfamily(curie):
-                results.append(
-                    ResidueCheck(
-                        family, path, curie, 0, [], None, Outcome.FAIL,
-                        f"{curie} is a family, not a subfamily; a family id here "
-                        "matches no member's subfamily and would flag every one of "
-                        "them as a scope violation",
-                        kind="PANTHER_FAMILY_SCOPE",
-                    )
-                )
-                continue
-            if own_family and _panther_family_base(curie) != own_family:
-                results.append(
-                    ResidueCheck(
-                        family, path, curie, 0, [], None, Outcome.FAIL,
-                        f"{curie} belongs to a different family; this review is "
-                        f"about {family}",
-                        kind="PANTHER_FAMILY_SCOPE",
-                    )
-                )
-                continue
+        failure = scope_failure(term, curie)
+        if failure is not None:
+            results.append(failure)
+            continue
         official = labels[curie]
         if (
             label is not None
@@ -657,6 +695,8 @@ def check_panther_ids(
         bare = declared.split(":", 1)[1]
         # The bump changed what this id names (gone or renamed), so a member the previous
         # release did not classify cannot be judged against it until the id is remapped.
+        # Name equality is a proxy: a subfamily renumbered under an identical generic name
+        # reads as unchanged here, so such a member still fails and needs a look.
         declared_changed = (
             previous is not None
             and declared in previous.labels
