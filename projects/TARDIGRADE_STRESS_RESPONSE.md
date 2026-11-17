@@ -8,6 +8,7 @@ genes: [Dsup, CAHS1, CAHS2, CAHS3, SAHS1, SAHS2, MAHS, RvLEAM, RvY_00650, RvY_00
 manifest:
   slides:
     - href: TARDIGRADE_STRESS_RESPONSE/slides/TARDIGRADE_STRESS_RESPONSE-slides.html
+index_group: OTHER_ORGANISM
 ---
 
 # Tardigrade Stress Response Protein Curation Project

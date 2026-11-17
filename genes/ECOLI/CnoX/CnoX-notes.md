@@ -42,3 +42,12 @@
 - Reconciled the mild in-vitro GroEL/GroES inhibition in PMID:21498507 with the
   later GroES-release plugin mechanism. No directional regulatory BP is proposed
   without in-vivo evidence.
+
+
+## 2026-11-07 UTC — comparative GroEL-system evidence audit
+
+Full PMID42567683 identifies recombinant P0A6F5/P0A6F9/P77395 proteins (BL21(DE3); N-His6 CnoX) and demonstrates same-ring CnoX/GroES coexistence. This refines, rather than erases, the release result under the 2023 biochemical conditions. Substrate-free AMP-PNP structures do not establish temporal ordering or productive folding by each state. Basal GroEL-associated client redox quality control from PMID36764293 is separated from HOCl-activated holdase function from PMID29754824. No universal classical oxidoreductase or obligatory immediate-displacement claim is made. The two inherited NEW rows are retained unchanged in payload/action; no new proposal is added.
+
+All original ordered annotation payloads, historical NEW actions and protected source/provider bytes were retained. No NEW rows were added. Existing provider research was used as a lead, with primary/curated evidence checked independently. PAINT-loss check completed: target was not a leaf in the cached family tree, so loss absence could not be established; no loss was invented.
+
+Current actions: 5 ACCEPT, 1 KEEP_AS_NON_CORE, 3 MODIFY, 2 NEW, 1 REMOVE. Status COMPLETE reflects completed adjudication, including explicit uncertainty, not proof of every tested proposition. Focused validation/render/history results and source preservation are recorded in the existing-member consultation proof.

@@ -88,3 +88,15 @@ event is relevant and correctly places the protein at the mitochondrial outer
 membrane. By contrast, `TP53 stimulates PMAIP1 expression` and
 `Transactivation of PMAIP1 by E2F1` are gene-expression events that should not
 project cytosolic localization onto the NOXA protein.
+
+## 2026-11-15 re-review of source defects
+
+- GO:0071456 cellular response to hypoxia, IEP, PMID:20810912: the `WRONG_REFERENCE` defect
+  (previously `CONFIRMED`) was withdrawn. The paper is the intended one and it did measure noxa
+  [PMID:20810912 "mRNA levels of both of these genes were unchanged or slightly reduced"].
+  QuickGO by reference shows UniProt gave the same IEP row to the panel of genes examined in the study
+  (TP53, MDM2, MDM4, BAD, BBC3, NDRG1, HIF1A, LMNA, PMAIP1), so this is a curator's judgement on
+  weak expression data, not a citation error. The action stays `MARK_AS_OVER_ANNOTATED`.
+- GO:0043065, IMP, PMID:21525171: the `SUSPECTED` `WRONG_REFERENCE` query is kept unchanged. The
+  abstract says that silencing of Noxa did not confer protection; the full text is not open access
+  and was not read, and UniProt's only other IMP row from the paper is on BID.
