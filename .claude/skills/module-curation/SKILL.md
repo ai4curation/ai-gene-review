@@ -79,5 +79,7 @@ Load only the reference needed for the decision at hand:
   `proposed_definition`, `justification`, a verified `proposed_parent` and
   `supported_by` quotes. A fault in an existing term goes in
   `proposed_ontology_changes`. Notes may point to the entry but must not be the
-  only record. `export_proposed_terms.py` collects module requests with the
-  gene ones.
+  only record. `export_proposed_terms.py` collects the top-level
+  `proposed_new_terms` of modules and gene reviews; it does not read
+  `knowledge_gaps[].proposed_terms`, which belong to a gap with a genuine
+  biological unknown. Put a pure ontology request at the top level.

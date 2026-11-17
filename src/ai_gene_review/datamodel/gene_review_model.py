@@ -474,6 +474,10 @@ class SourceResourceEnum(str, Enum):
     """
     The GO Consortium's ontology editors, for a defect in a term itself - its label, definition, or placement in the graph - rather than in any annotation using it.
     """
+    SYNGO = "SYNGO"
+    """
+    SynGO expert curation of synaptic genes (assigned_by SynGO in GOA). SynGO annotates the species studied and maps the annotation to the human ortholog, so a defect can sit on the rodent row, the human row, or both.
+    """
     OTHER = "OTHER"
     """
     Name the resource in the explanation.
@@ -523,6 +527,14 @@ class SourceDefectCauseEnum(str, Enum):
     PRACTICE_CHANGE = "PRACTICE_CHANGE"
     """
     A curation programme's convention changed, so a dated cohort of rows shares a defect that is not a per-row judgement (e.g. a qualifier used consistently across one campaign's output). Fixable in bulk, and the explanation should give the date range and row count.
+    """
+    ORTHOLOG_TRANSFER_AS_EXPERIMENTAL = "ORTHOLOG_TRANSFER_AS_EXPERIMENTAL"
+    """
+    An annotation made from an experiment in another species was recorded on the gene with an experimental evidence code (IDA, IMP, ...) rather than as an orthology transfer (ISO). The experiment can be sound; the row misstates how its evidence reaches this gene. Usually a resource's documented convention, so raise it once rather than per row.
+    """
+    CONTEXT_NOT_ASSAYED = "CONTEXT_NOT_ASSAYED"
+    """
+    The cited work shows the activity but not the biological context the term asserts. Typical case: a precomposed "X involved in Y" term (for example a channel activity involved in regulation of presynaptic membrane potential) annotated from a protein expressed in heterologous cells, which can support X but cannot reach Y. The correction is usually the plain activity term.
     """
     OTHER = "OTHER"
     UNKNOWN = "UNKNOWN"
@@ -2607,6 +2619,10 @@ class GoCamQcFlagEnum(str, Enum):
     """
     An overly generic MF term is used where a specific child term applies.
     """
+    WRONG_MF_TERM = "WRONG_MF_TERM"
+    """
+    The MF term is wrong rather than vague: the gene product does not have the asserted activity (e.g. a too-specific or lateral term), so the fix is a different term, possibly a parent. Pairs with a WRONG_TERM source defect.
+    """
     HAS_INPUT_MISUSE = "HAS_INPUT_MISUSE"
     """
     'has input' used incorrectly, e.g. a receptor's ligand or a TF's DNA instead of the substrate/target gene/downstream effector.
@@ -2618,6 +2634,10 @@ class GoCamQcFlagEnum(str, Enum):
     INCORRECT_DIRECTIONALITY = "INCORRECT_DIRECTIONALITY"
     """
     Causal edge directionality (subject -> object) appears reversed.
+    """
+    WRONG_CAUSAL_SIGN = "WRONG_CAUSAL_SIGN"
+    """
+    A causal edge has the wrong sign (positive where the evidence shows inhibition, or vice versa). Pairs with a WRONG_CAUSAL_RELATION source defect.
     """
     MISSING_LOCATION = "MISSING_LOCATION"
     """

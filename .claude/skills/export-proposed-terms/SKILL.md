@@ -17,7 +17,8 @@ uv run python src/ai_gene_review/tools/export_proposed_terms.py -o reports/propo
 Pass files or directories after the options to restrict the export. With no
 inputs, the helper scans `genes/**/*-ai-review.yaml` and `modules/**/*.yaml`.
 Module rows carry the module id in `review_id` and leave the gene and taxon
-columns empty.
+columns empty. The top-level `proposed_new_terms` list is the canonical place
+for a term request in both gene reviews and modules.
 
 The TSV defaults to `reports/proposed_new_terms.tsv`. It has one row per
 top-level `proposed_new_terms` entry and skips reviews where
