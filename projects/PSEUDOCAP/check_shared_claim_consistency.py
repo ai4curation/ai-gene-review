@@ -148,11 +148,17 @@ def collect() -> dict[str, list[dict[str, Any]]]:
             s: actions_for_term(str(f), group["term"]) for s, f in folders.items()
         }
 
-        # The worklist names a folder but the review file is not there. That is a
-        # structural absence, not a disagreement about the claim, so it joins the
-        # incomplete cases rather than being reported as divergence: counting it
-        # as divergent would turn a missing file into a content judgement.
-        absent = [s for s, v in actions.items() if v == ["(no review file)"]]
+        # Two kinds of member cannot be compared on this claim, and neither is a
+        # disagreement about it: one whose review file is missing, and one whose
+        # only row on the term is a NEW proposal, which rules on nothing. Both
+        # join the incomplete cases. Leaving either in the comparison would make
+        # a single such member read as divergence, and a group where every member
+        # is like that read as agreement on a claim nobody ruled on.
+        absent = [
+            s
+            for s, v in actions.items()
+            if v in (["(no review file)"], ["(only a NEW row)"])
+        ]
         if absent:
             record["unreviewed"] = absent
             record["reviewed"] = [s for s in symbols if s not in absent]
