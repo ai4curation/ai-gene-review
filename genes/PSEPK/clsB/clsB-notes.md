@@ -12,3 +12,13 @@ phase.
 The exact synthase activity and cardiolipin biosynthetic process are supported
 for this named family member. Relative activity and possible secondary
 phosphatidyltransferase chemistry should be tested against the other paralogs.
+
+## 2026-11 update
+
+Re-reviewed to completion alongside the E. coli exemplar in `genes/ECOLI/` used by the
+module `bacterial_phosphatidylglycerol_cardiolipin_biosynthesis`. Broad parent terms
+(membrane, phospholipid or lipid biosynthesis, generic transferase or catalytic activity)
+that were previously kept as non-core are now refined with MODIFY to the specific terms
+the gene carries, so that same-term rows are treated the same way across the PSEPK and
+E. coli orthologues. Every row now cites vetted family-level or curated evidence. No
+deep-research provider key was available.

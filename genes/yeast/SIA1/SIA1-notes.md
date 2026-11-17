@@ -139,3 +139,7 @@ Pma1 H+-ATPase; molecular mechanism unknown. I will use the BP "regulation of pr
   (abstract only), publications/PMID_11389906.md (abstract only), publications/PMID_38227612.md
   (full text; Pma1 context).
 - Deep research: genes/yeast/SIA1/SIA1-deep-research-falcon.md, used for context only.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[4], GO:0005575 cellular_component (ND, GO_REF:0000015), ACCEPT: the ND may be stale. SIA1-deep-research-falcon.md states that in the Huh et al. (2003) genome-wide GFP localization study (PMID:14562095) Sia1p localizes to the cytoplasm. If that is right, a localization screen identifies a location for this gene product in S. cerevisiae. GOA carries no HDA cytoplasm row for SIA1, so the falcon claim needs checking against the Huh et al. dataset before any CC annotation is made. The review action was left unchanged.

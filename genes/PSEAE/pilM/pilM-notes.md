@@ -90,3 +90,35 @@ both IBDs over-propagate to EutJ leaves.
   domain mapping).
 - NEW: ATP binding (IDA, PMID:27022027); cytoplasmic side of plasma membrane
   (IC from PMID:19857645 fractionation + PilN-tail binding PMID:23457250).
+
+## Leaf evidence check (2026-11-06)
+
+Audit of the leaf claims in the `GO_CENTRAL` source defects on PTN001286216.
+Leaf membership and subfamily confirmed with
+`uv run python projects/PSEUDOCAP/panther_tree.py node PTN001286216 --leaves`
+(23 leaves, all PTHR32432:SF3); UniProt flat files fetched for all 23 accessions.
+
+Discriminator found: the seed and 14 other leaves match InterPro IPR005883 PilM
+with Pfam PF11104 PilM_2 (10 of those also NCBIfam TIGR01175 pilM); four leaves
+match InterPro IPR013366 EutJ with Pfam PF14450 FtsA and none of the PilM
+signatures; four match neither family. No leaf other than G3XD28 carries any
+experimental GO annotation.
+
+| Leaf | Name and its evidence | Experimental annotations | Verdict |
+|---|---|---|---|
+| P77277 (E. coli b2454) | RecName "Ethanolamine utilization protein EutJ", curated (Reviewed); PE 3 | none; FUNCTION by ECO:0000250 from P0A206. Lies in the E. coli *eut* operon (CC CAUTION) | Claim survives on domain + operon context, not on the name: IPR013366 EutJ, PF14450 FtsA, no PilM signature |
+| P0A206 (S. typhimurium STM2462) | RecName "Ethanolamine utilization protein EutJ", curated; GN from ECO:0000303 PubMed:7868611; PE 2 | no experimental GO rows, but curated ECO:0000269 FUNCTION/DISRUPTION PHENOTYPE from *eutJ* deletion and *eutJ/eutS* overexpression (PubMed:10464203, 16585748, 27063436), placing it in the 17-gene *eut* operon and its microcompartment | Claim survives, now on experimental curated statements |
+| Q8RI50 (F. nucleatum FN1783) | **SubName** "Ethanolamine utilization protein eutJ" {ECO:0000313\|EMBL}; PE 3 | none | Name is **not evidence**; the EutJ claim is downgraded to the signature match (IPR013366, no PilM signature; Pfam HSP70 rather than FtsA) |
+| Q8Y7V8 (L. monocytogenes lmo1161) | **SubName** "Lmo1161 protein" {ECO:0000313\|EMBL}; PE 4 Predicted | none | Not a pilus protein on two checkable grounds: IPR013366 EutJ / PF14450 FtsA with no PilM signature, and gene neighbourhood (lmo1160 phosphate propanoyltransferase, lmo1164 corrinoid adenosyltransferase) places it in the B12-dependent catabolic microcompartment locus |
+| A0A0H2W2G1 (Y. pestis YPO0146) | SubName "Uncharacterized protein"; PE 4 | none | Carries IPR005883 PilM / PF11104, so the Enterobacteriaceae subclade PTN002089606 is **mixed**, not an "EutJ branch" |
+
+Correction to the earlier entry: the tree offers **no PilM-only node** for the
+seed. The smallest clade holding G3XD28 with other PilM-signature leaves is
+PTN001596234, which already contains P77277 and P0A206, and the
+Enterobacteriaceae clade below it is mixed (above). The requested change is
+therefore NOT/IKR on the four EutJ-signature leaves, not a move.
+
+Confidence: GO:0043107 defect PROBABLE -> CONFIRMED; GO:0044096 defect
+PROBABLE -> CONFIRMED (the decisive fact for the latter is G3XD28's own
+GO:0005737 cytoplasm EXP:UniProtKB annotation plus PMID:19857645, independent
+of any leaf name).

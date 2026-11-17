@@ -1,0 +1,31 @@
+# Bacterial naringenin A-ring degradation: comparative audit
+
+## 2026-11-06 — evidence and scope
+
+The starting point is the fourteen completed HERSS/PSEPK reviews and six family reviews merged in PR #5971. Their 34 annotation rows and 34 raw/provider files are recorded before edits in `analysis/module_audits/bacterial_flavonoid_degradation/original-panel-baseline.json`. Existing inherited NEW rows remain proposals; pathway participation must be justified separately from exact reaction assignment.
+
+The [2013 primary paper](https://doi.org/10.1099/mic.0.061135-0), read in its [author-uploaded full-text copy](https://www.academia.edu/50645228/Naringenin_degradation_by_the_endophytic_diazotroph_Herbaspirillum_seropedicae_SmR1), establishes induced, heat-sensitive naringenin conversion by SmR1 extracts. Its fdeA insertion failed complementation with fdeA alone; the authors interpret a polar effect. That phenotype supports the locus, not autonomous FdeA chemistry or necessity of every downstream protein. Page 172 also reports consumption by H. rubrisubalbicans M1, with Azospirillum brasilense FP2 and E. coli Top10 negative under the tested conditions. Thus SmR1 is the mechanistically characterized organism, not the only tested positive species. The immutable PMID23125118 cache remains abstract-only; full-text access is recorded here separately.
+
+[PMID39107441](https://pubmed.ncbi.nlm.nih.gov/39107441/) provides purified NADPH-dependent FdeE hydroxylation. It does not make FdeD an obligatory electron-transfer partner. [PMID27059806](https://pubmed.ncbi.nlm.nih.gov/27059806/) provides FdeE/FdeC mutant and metabolite evidence; its full text remains unresolved. Its studied FdeG mutant requires follow-up before a strong necessity claim or exclusion. The R13076-R13079 chemical chain remains a proposed downstream model; KEGG continuity does not prove its enzyme assignments or that dehydration requires FdeI.
+
+[PMID38707841](https://pubmed.ncbi.nlm.nih.gov/38707841/) is a substantive comparative boundary: Variovorax V35 oxidatively catabolizes isoflavones with IfcA/B and redundant downstream IfcD1/D2 cupins. Its X2-to-X3 catalyst remains unidentified, and its alpha/beta hydrolase deletion does not abolish daidzein degradation. Exact sequence relationships and substrate specificity must be checked before treating these proteins as interchangeable Fde representatives. The cupin result motivates reconsidering the position of FdeH without asserting its chemistry.
+
+Three review articles are being curated: [PMID17014487](https://pubmed.ncbi.nlm.nih.gov/17014487/) on rhizosphere flavonoid signals and catabolism; [PMID26963713](https://pubmed.ncbi.nlm.nih.gov/26963713/) on human-gut flavonoid-converting species and enzymes; and [PMID37718389](https://pubmed.ncbi.nlm.nih.gov/37718389/) on microbial plant-toxin breakdown. They provide ecological and mechanistic comparisons, not proof of individual Fde late-step assignments. Oxidative A-ring cleavage, oxidative C-ring cleavage and anaerobic gut transformations must remain distinguished.
+
+The live KEGG census finds all seven orthology groups together in 50 genomes: 29 beta-, 16 gamma- and five alphaproteobacteria, all within Pseudomonadota. Individual FdeE assignments occur in 79 Pseudomonadota genomes and two Actinomycetota genomes. Same-genome coassignment is not evidence of a functional complete route. The current bulk K26180 list also omits KT2440 despite its historical single-gene mapping; that discrepancy is unresolved. Snapshot details and source URLs are in `analysis/module_audits/bacterial_flavonoid_degradation/taxonomy-snapshot.json`.
+
+Seven Bradyrhizobium diazoefficiens USDA110 proteins were seeded normally as an alphaproteobacterial comparison. The 2013 paper documents a related locus and explicitly leaves its function unknown. Gene reviews must distinguish family-level chemistry, proposed Fde roles and unestablished native naringenin conversion. H. rubrisubalbicans M1 has an exact KEGG genome/sequence mapping (T04238, CP013737, Hrubri_0804-0812), but the FdeE locus currently lacks a resolved UniProt entry; no protein from another strain is substituted.
+
+## Comparative integration follow-up
+
+Current KEGG single-gene queries corroborate the missing PP_3199 assignment: no ORTHOLOGY field and an empty gene-to-KO response. Its independent sequence comparison remains evidence; the earlier source snapshot is preserved. All seven USDA110 reviews were independently checked and committed at fa3b4c6e2d.
+
+[PMID31265361](https://pubmed.ncbi.nlm.nih.gov/31265361/) adds an independent alphaproteobacterial locus experiment. Publisher Results and Figure 8 text were accessible through the indexed full text (direct fetch returned403). ORS285 deletion of BRAD285_V2_3671-3680 abolished the reported naringenin/apigenin degradation phenotype; naringenin growth stimulation persisted. This is whole-locus evidence, not an assignment of every late enzyme or proof of USDA110 activity. The cached abstract is unchanged and separately records growth stimulation.
+
+The module now places FdeD and FdeH in optional unresolved context parts, retains six chemical steps with explicit late-step uncertainty, and adds all seven USDA110 proteins as qualified comparisons. Optionality avoids an unsupported mandatory conjunction; it does not claim native dispensability.
+
+## 2026-11-06 — review follow-up
+
+The ORS285 degradation statement now has an explicit file evidence entry tracing the separately accessed Results/Figure 8, while the PMID evidence stays within the cached abstract. All three FdeB reviews now distinguish broad hydrolase architecture from unresolved ester specificity and unproven native process participation; the model retains R13077 as a hypothesized reaction role only. PP_3198/FdeD no longer asserts process participation without an established step. See `analysis/module_audits/bacterial_flavonoid_degradation/round1-source-review.md`.
+
+The participation reassessment was extended to every inherited process proposal: nine B/D/H/I/J rows are explicitly retired, while the experimentally grounded FdeE/FdeC process proposals and qualified PSEPK donor transfers remain active. Source payloads and ordering are preserved. See the complete proposal table in the follow-up preservation proof.

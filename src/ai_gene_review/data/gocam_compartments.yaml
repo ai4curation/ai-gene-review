@@ -1,0 +1,298 @@
+# Spatial compartment model for GO-CAM location QC.
+#
+# Used by ai_gene_review.gocam_compartments to check that the `occurs_in`
+# locations of GO-CAM activities can be placed in a cell, and that causally
+# connected activities sit in the same or adjacent compartments.
+#
+# compartments: a pairwise-disjoint set of spatial regions. Together they are
+#   intended to cover a cell (eukaryote, Gram-negative bacterium, plant) and its
+#   surroundings. Each compartment has one or more GO `anchors`. A cellular
+#   component term resolves to a compartment when the anchor is the term itself
+#   or one of its is_a / part_of ancestors. Where several anchors match, the most
+#   specific wins (an anchor that is an ancestor of another matching anchor is
+#   dropped), so lysosomal lumen resolves to LYSOSOME_LUMEN, not VACUOLE_LUMEN.
+#   `kind` is membrane (a bilayer or envelope) or space (an aqueous or bulk
+#   region). Two membranes that border the same space are BRIDGED rather than
+#   NONADJACENT: their proteins can meet across it at a contact site or when a
+#   vesicle docks, so such edges are reported separately and at lower priority.
+#
+# unions: GO terms that span several compartments (cytoplasm = cytosol plus the
+#   organelles in it). A term that reaches one of these, but no compartment
+#   anchor, is COARSE: it narrows the location to the listed compartments without
+#   choosing one.
+#
+# adjacency: undirected pairs of compartments that share a boundary, so that an
+#   activity in one can act directly on a molecule in the other (a membrane and
+#   the aqueous space on either side of it). Two lumens are never adjacent to
+#   each other, and the cytosol is not adjacent to the nucleoplasm: material
+#   crosses the nuclear envelope only by transport through the pore.
+#
+# context_hints: terms that GO does not place in any compartment (chromatin,
+#   cytoskeleton) but whose usual location is obvious to a biologist. These are
+#   reported as hints next to an UNRESOLVED finding. They are never used to
+#   resolve the term, because the point of the check is that the model does not
+#   say where the activity is. A hint applies to the term and its descendants;
+#   the most specific matching hint wins. Cell-type terms (CL:) used as
+#   occurs_in get a fixed hint in code.
+
+compartments:
+  EXTRACELLULAR:
+    kind: space
+    label: extracellular region
+    anchors: [GO:0005576]
+  PLASMA_MEMBRANE:
+    kind: membrane
+    label: plasma membrane
+    anchors: [GO:0005886]
+  CYTOSOL:
+    kind: space
+    label: cytosol
+    anchors: [GO:0005829]
+  NUCLEAR_ENVELOPE:
+    kind: membrane
+    label: nuclear envelope
+    anchors: [GO:0005635]
+  NUCLEAR_LUMEN:
+    kind: space
+    label: nuclear lumen
+    anchors: [GO:0031981]
+  MITOCHONDRIAL_OUTER_MEMBRANE:
+    kind: membrane
+    label: mitochondrial outer membrane
+    anchors: [GO:0005741]
+  MITOCHONDRIAL_INTERMEMBRANE_SPACE:
+    kind: space
+    label: mitochondrial intermembrane space
+    anchors: [GO:0005758]
+  MITOCHONDRIAL_INNER_MEMBRANE:
+    kind: membrane
+    label: mitochondrial inner membrane
+    anchors: [GO:0005743]
+  MITOCHONDRIAL_MATRIX:
+    kind: space
+    label: mitochondrial matrix
+    anchors: [GO:0005759]
+  ER_MEMBRANE:
+    kind: membrane
+    label: endoplasmic reticulum membrane
+    anchors: [GO:0005789]
+  ER_LUMEN:
+    kind: space
+    label: endoplasmic reticulum lumen
+    anchors: [GO:0005788]
+  GOLGI_MEMBRANE:
+    kind: membrane
+    label: Golgi membrane
+    anchors: [GO:0000139]
+  GOLGI_LUMEN:
+    kind: space
+    label: Golgi lumen
+    anchors: [GO:0005796]
+  ENDOSOME_MEMBRANE:
+    kind: membrane
+    label: endosome membrane
+    anchors: [GO:0010008]
+  ENDOSOME_LUMEN:
+    kind: space
+    label: endosome lumen
+    anchors: [GO:0031904]
+  LYSOSOME_MEMBRANE:
+    kind: membrane
+    label: lysosomal membrane
+    anchors: [GO:0005765]
+  LYSOSOME_LUMEN:
+    kind: space
+    label: lysosomal lumen
+    anchors: [GO:0043202]
+  VACUOLE_MEMBRANE:
+    kind: membrane
+    label: vacuolar membrane
+    anchors: [GO:0005774]
+  VACUOLE_LUMEN:
+    kind: space
+    label: vacuolar lumen
+    anchors: [GO:0005775]
+  PEROXISOME_MEMBRANE:
+    kind: membrane
+    label: peroxisomal membrane
+    anchors: [GO:0005778]
+  PEROXISOME_MATRIX:
+    kind: space
+    label: peroxisomal matrix
+    anchors: [GO:0005782]
+  VESICLE_MEMBRANE:
+    kind: membrane
+    label: cytoplasmic vesicle membrane
+    anchors: [GO:0030659]
+  VESICLE_LUMEN:
+    kind: space
+    label: cytoplasmic vesicle lumen
+    anchors: [GO:0060205]
+  CHLOROPLAST_ENVELOPE:
+    kind: membrane
+    label: chloroplast envelope
+    anchors: [GO:0009941]
+  CHLOROPLAST_STROMA:
+    kind: space
+    label: chloroplast stroma
+    anchors: [GO:0009570]
+  THYLAKOID_MEMBRANE:
+    kind: membrane
+    label: thylakoid membrane
+    anchors: [GO:0042651]
+  THYLAKOID_LUMEN:
+    kind: space
+    label: thylakoid lumen
+    anchors: [GO:0031977]
+  PERIPLASM:
+    kind: space
+    label: periplasmic space
+    anchors: [GO:0042597]
+  CELL_OUTER_MEMBRANE:
+    kind: membrane
+    label: cell outer membrane
+    anchors: [GO:0009279]
+  LIPID_DROPLET:
+    kind: space
+    label: lipid droplet
+    anchors: [GO:0005811]
+
+unions:
+  GO:0005737:
+    label: cytoplasm
+    members: [CYTOSOL, MITOCHONDRIAL_OUTER_MEMBRANE, MITOCHONDRIAL_INTERMEMBRANE_SPACE,
+      MITOCHONDRIAL_INNER_MEMBRANE, MITOCHONDRIAL_MATRIX, ER_MEMBRANE, ER_LUMEN,
+      GOLGI_MEMBRANE, GOLGI_LUMEN, ENDOSOME_MEMBRANE, ENDOSOME_LUMEN, LYSOSOME_MEMBRANE,
+      LYSOSOME_LUMEN, VACUOLE_MEMBRANE, VACUOLE_LUMEN, PEROXISOME_MEMBRANE,
+      PEROXISOME_MATRIX, VESICLE_MEMBRANE, VESICLE_LUMEN, CHLOROPLAST_ENVELOPE,
+      CHLOROPLAST_STROMA, THYLAKOID_MEMBRANE, THYLAKOID_LUMEN, LIPID_DROPLET]
+  GO:0005634:
+    label: nucleus
+    members: [NUCLEAR_ENVELOPE, NUCLEAR_LUMEN]
+  GO:0005739:
+    label: mitochondrion
+    members: [MITOCHONDRIAL_OUTER_MEMBRANE, MITOCHONDRIAL_INTERMEMBRANE_SPACE,
+      MITOCHONDRIAL_INNER_MEMBRANE, MITOCHONDRIAL_MATRIX]
+  GO:0005783:
+    label: endoplasmic reticulum
+    members: [ER_MEMBRANE, ER_LUMEN]
+  GO:0005794:
+    label: Golgi apparatus
+    members: [GOLGI_MEMBRANE, GOLGI_LUMEN]
+  GO:0005768:
+    label: endosome
+    members: [ENDOSOME_MEMBRANE, ENDOSOME_LUMEN]
+  GO:0005764:
+    label: lysosome
+    members: [LYSOSOME_MEMBRANE, LYSOSOME_LUMEN]
+  GO:0005773:
+    label: vacuole
+    members: [VACUOLE_MEMBRANE, VACUOLE_LUMEN, LYSOSOME_MEMBRANE, LYSOSOME_LUMEN]
+  GO:0005777:
+    label: peroxisome
+    members: [PEROXISOME_MEMBRANE, PEROXISOME_MATRIX]
+  GO:0031410:
+    label: cytoplasmic vesicle
+    members: [VESICLE_MEMBRANE, VESICLE_LUMEN, ENDOSOME_MEMBRANE, ENDOSOME_LUMEN]
+  GO:0009507:
+    label: chloroplast
+    members: [CHLOROPLAST_ENVELOPE, CHLOROPLAST_STROMA, THYLAKOID_MEMBRANE, THYLAKOID_LUMEN]
+  GO:0009986:
+    label: cell surface
+    members: [PLASMA_MEMBRANE, EXTRACELLULAR, CELL_OUTER_MEMBRANE]
+  GO:0016020:
+    label: membrane
+    members: [PLASMA_MEMBRANE, NUCLEAR_ENVELOPE, MITOCHONDRIAL_OUTER_MEMBRANE,
+      MITOCHONDRIAL_INNER_MEMBRANE, ER_MEMBRANE, GOLGI_MEMBRANE, ENDOSOME_MEMBRANE,
+      LYSOSOME_MEMBRANE, VACUOLE_MEMBRANE, PEROXISOME_MEMBRANE, VESICLE_MEMBRANE,
+      CHLOROPLAST_ENVELOPE, THYLAKOID_MEMBRANE, CELL_OUTER_MEMBRANE]
+  GO:0071944:
+    label: cell periphery
+    members: [PLASMA_MEMBRANE, CYTOSOL, EXTRACELLULAR, PERIPLASM, CELL_OUTER_MEMBRANE]
+
+adjacency:
+  - [EXTRACELLULAR, PLASMA_MEMBRANE]
+  - [PLASMA_MEMBRANE, CYTOSOL]
+  - [CYTOSOL, NUCLEAR_ENVELOPE]
+  - [NUCLEAR_ENVELOPE, NUCLEAR_LUMEN]
+  - [CYTOSOL, MITOCHONDRIAL_OUTER_MEMBRANE]
+  - [MITOCHONDRIAL_OUTER_MEMBRANE, MITOCHONDRIAL_INTERMEMBRANE_SPACE]
+  - [MITOCHONDRIAL_INTERMEMBRANE_SPACE, MITOCHONDRIAL_INNER_MEMBRANE]
+  - [MITOCHONDRIAL_INNER_MEMBRANE, MITOCHONDRIAL_MATRIX]
+  - [CYTOSOL, ER_MEMBRANE]
+  - [ER_MEMBRANE, ER_LUMEN]
+  # the outer nuclear membrane is continuous with the ER membrane, and the
+  # perinuclear space with the ER lumen
+  - [NUCLEAR_ENVELOPE, ER_MEMBRANE]
+  - [NUCLEAR_ENVELOPE, ER_LUMEN]
+  - [CYTOSOL, GOLGI_MEMBRANE]
+  - [GOLGI_MEMBRANE, GOLGI_LUMEN]
+  - [CYTOSOL, ENDOSOME_MEMBRANE]
+  - [ENDOSOME_MEMBRANE, ENDOSOME_LUMEN]
+  - [CYTOSOL, LYSOSOME_MEMBRANE]
+  - [LYSOSOME_MEMBRANE, LYSOSOME_LUMEN]
+  - [CYTOSOL, VACUOLE_MEMBRANE]
+  - [VACUOLE_MEMBRANE, VACUOLE_LUMEN]
+  - [CYTOSOL, PEROXISOME_MEMBRANE]
+  - [PEROXISOME_MEMBRANE, PEROXISOME_MATRIX]
+  - [CYTOSOL, VESICLE_MEMBRANE]
+  - [VESICLE_MEMBRANE, VESICLE_LUMEN]
+  - [CYTOSOL, CHLOROPLAST_ENVELOPE]
+  - [CHLOROPLAST_ENVELOPE, CHLOROPLAST_STROMA]
+  - [CHLOROPLAST_STROMA, THYLAKOID_MEMBRANE]
+  - [THYLAKOID_MEMBRANE, THYLAKOID_LUMEN]
+  # Gram-negative envelope
+  - [PLASMA_MEMBRANE, PERIPLASM]
+  - [PERIPLASM, CELL_OUTER_MEMBRANE]
+  - [CELL_OUTER_MEMBRANE, EXTRACELLULAR]
+  # lipid droplets bud from the ER membrane and face the cytosol
+  - [CYTOSOL, LIPID_DROPLET]
+  - [ER_MEMBRANE, LIPID_DROPLET]
+
+context_hints:
+  GO:0000785:
+    label: chromatin
+    usual: NUCLEAR_LUMEN
+    better_term: {id: GO:0000228, label: nuclear chromosome}
+    note: GO places chromatin under chromosome, which is not part of the nucleus because prokaryotic chromosomes exist.
+  GO:0005694:
+    label: chromosome
+    usual: NUCLEAR_LUMEN
+    better_term: {id: GO:0000228, label: nuclear chromosome}
+  GO:0005856:
+    label: cytoskeleton
+    usual: CYTOSOL
+  GO:0005874:
+    label: microtubule
+    usual: CYTOSOL
+  GO:0015629:
+    label: actin cytoskeleton
+    usual: CYTOSOL
+  GO:0005813:
+    label: centrosome
+    usual: CYTOSOL
+  GO:0032991:
+    label: protein-containing complex
+    note: a complex term says nothing about where the complex is.
+  GO:0005816:
+    label: spindle pole body
+    usual: NUCLEAR_ENVELOPE
+    note: the fungal spindle pole body is embedded in the nuclear envelope.
+  GO:0098857:
+    label: membrane microdomain
+    usual: PLASMA_MEMBRANE
+  GO:0044232:
+    label: organelle membrane contact site
+    note: a contact site joins two membranes across the cytosol; name the membrane the activity is in.
+  GO:0030054:
+    label: cell junction
+    note: a junction spans plasma membrane, cytosol and extracellular region; name the side the activity is on.
+  GO:0032153:
+    label: cell division site
+    note: a region of the cell periphery, not a compartment.
+  GO:0044217:
+    label: other organism part
+    note: a location in another organism (host or symbiont); the compartment model covers one cell, so edges into it cross organisms.
+  GO:0005575:
+    label: cellular_component
+    note: the root term carries no location.

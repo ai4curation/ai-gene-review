@@ -1,10 +1,10 @@
 ---
 title: "Pennycress (Thlaspi arvense) Oilseed Domestication Genes"
 maturity: IN_PROGRESS
-last_reviewed: 2026-10-05
+last_reviewed: 2026-11-04
 tags: [BIOLOGY_DOMAIN]
 species: [THLAR, ARATH]
-genes: [FAE1, TFP, CYP71B1, matK]
+genes: [FAE1, TFP, CYP71B1, matK, TAV2_LOCUS3068, TAV2_LOCUS7508, TAV2_LOCUS14099, CSD1, CSD2]
 ---
 
 # Pennycress (Thlaspi arvense) Oilseed Domestication Genes
@@ -50,6 +50,9 @@ the pennycress CRISPR knockouts.
 | TFP | G1FNI6 | Glucosinolate breakdown | Reviewed (earlier) |
 | CYP71B1 | P49264 | Specialized metabolism, function unknown | Reviewed (earlier) |
 | matK | Q9GF35 | Chloroplast intron splicing | Reviewed (earlier) |
+| TAV2_LOCUS3068 (DCL1) | A0AAU9RFA2 | miRNA biogenesis (`miR162` homeostatic target) | Reviewed |
+| TAV2_LOCUS7508 (APS1) | A0AAU9RRK7 | Sulfate activation / glucosinolates (`miR395` target) | Reviewed |
+| TAV2_LOCUS14099 (LAC4) | A0AAU9S9S2 | Lignification / pod shatter (`miR397` target) | Reviewed |
 | FAD2, ROD1, FAD3 | to identify | Seed oil: oleic vs. polyunsaturated | Planned |
 | TT8, TT2, TTG1 | to identify | Seed coat, fibre, dormancy | Planned |
 | MYB28, MYC3, GTR1/2, AOP2 | to identify | Seed glucosinolate | Planned |
@@ -135,6 +138,61 @@ The calls, with reasons, are in [CALLS.md](THLAR_OILSEED/ortholog_mapping/CALLS.
   sinigrin, which needs a working AOP2. Details are in
   [CALLS.md](THLAR_OILSEED/ortholog_mapping/CALLS.md#aop2-gene-model).
 
+## Pennycress & plant miRNA–target datasets
+
+`THLAR_OILSEED/mirna_targets/` holds the curated *Thlaspi arvense* and *Arabidopsis thaliana*
+miRNA–target datasets, cross-mapped to the `T_arvense_v2` reference genome (`GCA_911865555.2`)
+and UniProt proteome (`UP000836841`). Full documentation is in
+[README.md](THLAR_OILSEED/mirna_targets/README.md).
+
+- **`thlar_mirna_loci_72.tsv` (72 rows):** All 72 ShortStack-predicted pennycress miRNA loci
+  from Nunn et al. 2022 (PMID:34990041 / PMC9055812, Additional file 2 Table S12), including 46
+  conserved loci across 22 miRNABase families (`miR156` to `miR824`) and 26 novel pennycress-specific
+  candidate miRNAs.
+- **`thlar_mirna_targets.tsv` (88 rows across 73 unique `TAV2_LOCUS` genes):** High-confidence
+  pennycress `miRNA -> target` interactions combining the 16 Nunn et al. 2022 Table S15 targets
+  (such as `tar-miR156 -> SPL9/SPL13`, `tar-miR157 -> FLC`, `tar-miR160 -> ARF17`, and
+  `tar-miR395 -> APS1/APS3/APS4`) with 72 conserved Brassicaceae miRNA–target modules mapped via
+  orthology and direct target-site alignment on `T_arvense_v2` transcripts (`Allen_Score <= 2.5`).
+- **`tardb_ath_degradome.tsv` (168 rows):** Experimentally supported *Arabidopsis thaliana*
+  degradome/PARE cleavage interactions from TarDB across 39 miRNA families (`Allen_Score <= 2.0`,
+  degradome `P < 0.05`).
+- **`goa_tair_mirna_annotations.tsv` (54 rows):** Audit of all *Arabidopsis thaliana* EBI GOA RNA
+  (`goa_arabidopsis_rna.gaf.gz`) and TAIR (`tair.gaf.gz`) annotations to `GO:1903231`
+  (`mRNA binding involved in post-transcriptional gene silencing`) and `GO:0035195` (`miRNA-mediated
+  post-transcriptional gene silencing`) and its descendants.
+
+### Curation findings from miRNA-regulated gene reviews
+
+- **Pennycress `DCL1` (`TAV2_LOCUS3068` / `A0AAU9RFA2`, `tar-miR162` target):** Primary RNase III
+  endoribonuclease that processes plant `pri-miRNA` and `pre-miRNA` hairpins into mature 20-24 nt
+  miRNA/miRNA* duplexes (`GO:0031053` primary miRNA processing, proposed as `NEW` `ISS` from
+  `UniProtKB:Q9SP32`). Its own mRNA is cleaved by `tar-miR162` (`Allen_Score = 1.0`) in a conserved
+  negative feedback loop that maintains DCL1 homeostasis, making DCL1 both an actor in and a
+  substrate of `GO:0035195`. False IEA mappings inherited from animal Dicer and fungal nuclear-export
+  orthologs (`GO:0000976` transcription cis-regulatory region binding, `GO:0006355` regulation of
+  DNA-templated transcription, and `GO:0006406` mRNA export from nucleus) are removed.
+- **Pennycress `APS1` (`TAV2_LOCUS7508` / `A0AAU9RRK7`, `tar-miR395` target):** Plastid-targeted
+  ATP sulfurylase (`GO:0004022` sulfate adenylyltransferase (ATP) activity) that activates inorganic
+  sulfate into APS at the entry point of the glucosinolate PAPS donor pathway (`GO:0019344` cysteine
+  biosynthetic process and `GO:0019761` glucosinolate biosynthetic process proposed as `NEW` `ISS`
+  from `UniProtKB:Q42559`). Although `tar-miR395a-f` directs cleavage of `TAV2_LOCUS7508` mRNA
+  (`Allen_Score = 1.0`, PMID:34990041 Table S15), `APS1` is the substrate of RISC cleavage and is
+  therefore not annotated to `GO:0035195`.
+- **Pennycress `LAC4` (`TAV2_LOCUS14099` / `A0AAU9S9S2`, `tar-miR397` target):** Secreted apoplastic
+  multi-copper oxidase (`GO:0052716` hydroquinone:oxygen oxidoreductase activity) that oxidizes
+  monolignols for secondary cell wall and silique valve-margin lignification (`GO:0009809` lignin
+  biosynthetic process, replacing broad `GO:0009808`). Targeted by `tar-miR397a/b` (`Allen_Score = 0.5`)
+  to balance copper allocation and stem/pod lignification; as an mRNA substrate of `miR397`-RISC,
+  `LAC4` is not annotated to `GO:0035195`.
+- **Substrate-vs-actor mis-annotations in *Arabidopsis* (`ARATH/CSD1` and `ARATH/CSD2`):** Audit of
+  `goa_tair_mirna_annotations.tsv` revealed that only three *Arabidopsis* mRNA target genes (`CSD1`,
+  `CSD2`, and `PXMT1`) are annotated to `GO:0035195` (`miRNA-mediated post-transcriptional gene
+  silencing`), all via `IEP`. Reviews of <gene species="ARATH" symbol="CSD1">CSD1</gene> (`P24704`)
+  and <gene species="ARATH" symbol="CSD2">CSD2</gene> (`O78310`) remove `GO:0035195` (`PMID:16861386`)
+  because `CSD1` and `CSD2` mRNAs are the cleaved substrates of `miR398`-loaded RISC rather than
+  participants in the silencing machinery.
+
 ## Next steps
 
 Tracked in [ai-gene-review#4015](https://github.com/ai4curation/ai-gene-review/issues/4015).
@@ -156,3 +214,5 @@ Tracked in [ai-gene-review#4015](https://github.com/ai4curation/ai-gene-review/i
 - PMID:41578087 — stacking domestication traits by CRISPR (Nature Plants 2026).
 - PMID:41685867 — tt8-2bp seed-coat anatomy and chemistry in pennycress.
 - PMID:39470818 — review of pennycress domestication and engineering.
+- PMID:34990041 — chromosome-level *Thlaspi arvense* genome (`T_arvense_v2`), sRNA-seq of 72 miRNA loci, and target predictions.
+- PMID:16861386 — post-transcriptional regulation of *Arabidopsis* `CSD1` and `CSD2` by `miR398` during oxidative stress.

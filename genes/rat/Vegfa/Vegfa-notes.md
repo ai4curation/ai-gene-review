@@ -44,3 +44,9 @@
 ## 2026-10-28: blood-brain barrier permeability row (PR #5682 review)
 
 The GO:1905604 negative regulation of blood-brain barrier permeability ISO row was first REMOVEd, although its reason and source defect both said the correct term is positive regulation. It is now a sign-correcting MODIFY to GO:1905605, which the gene does not otherwise carry, and the RGD defect now asks for a repoint rather than a deletion.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0070482 / PMID:15885787: defect retyped (evidence depth: ABSTRACT). The reference is not mis-keyed - RGD's API shows reference RGD:8549762 is this paper and its disease annotations sit on human VEGFA/KDR (IEP) with ISO to rat, while rat Vegfa and Kdr both carry a direct GO IEP. The abstract states all specimens were human. Retyped to WRONG_EVIDENCE_CODE (IEP on rat for human-tissue data), slot fixed, free-text record removed. Full text unavailable, so whether the paper supports "response to oxygen levels" at all is unverified. `just validate rat Vegfa` fails only on pre-existing sparse-checkout artefacts (file:human/VEGFA/VEGFA-uniprot.txt exists in the main checkout).
