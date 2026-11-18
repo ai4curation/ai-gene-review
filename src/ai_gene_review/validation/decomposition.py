@@ -23,6 +23,8 @@ INVOLVED_IN = " involved in "
 CATEGORY = "Decomposition"
 #: actions that say a claim is not one the review would accept
 NOT_ACCEPTABLE = frozenset({"KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED", "REMOVE"})
+#: actions that assert a claim the review accepts
+ACCEPTING = frozenset({"ACCEPT", "NEW"})
 
 #: term id -> its is_a ancestors (not part_of: the context Y is a part_of ancestor)
 IsAAncestors = Callable[[str], frozenset[str]]
@@ -177,14 +179,15 @@ def check_decomposition(
       KEEP_AS_NON_CORE on that term. Ordinary refinements are out of scope.
     """
     anns = data.get("existing_annotations") or []
-    not_acceptable: dict[str, str] = {}
+    actions_by_term: dict[str, set[str]] = {}
     for ann in anns:
         if not isinstance(ann, dict) or not isinstance(ann.get("review"), dict):
             continue
-        act = ann["review"].get("action")
         tid = (ann.get("term") or {}).get("id")
-        if act in NOT_ACCEPTABLE and tid:
-            not_acceptable.setdefault(str(tid), str(act))
+        if tid:
+            actions_by_term.setdefault(str(tid), set()).add(
+                str(ann["review"].get("action"))
+            )
     for i, ann in enumerate(anns):
         if not isinstance(ann, dict) or not isinstance(ann.get("review"), dict):
             continue
@@ -302,8 +305,11 @@ def check_decomposition(
 
         if action == "MODIFY" and (dec or to_genus):
             for t in review.get("proposed_replacement_terms") or []:
-                held = not_acceptable.get(str((t or {}).get("id")))
-                if isinstance(t, dict) and held:
+                if not isinstance(t, dict):
+                    continue
+                acts = actions_by_term.get(str(t.get("id")), set())
+                held = ", ".join(sorted(acts & NOT_ACCEPTABLE))
+                if held and not acts & ACCEPTING:
                     _issue(
                         report,
                         ValidationSeverity.WARNING,

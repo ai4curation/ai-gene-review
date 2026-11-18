@@ -268,3 +268,34 @@ def test_ordinary_refinement_modify_is_out_of_scope():
         _row(plasma, "KEEP_AS_NON_CORE"),
     ]
     assert "decomposition_replacement_not_acceptable" not in _check_rows(rows)
+
+
+@pytest.mark.parametrize("order", ["accept_first", "remove_first"])
+def test_an_accepting_row_wins_whatever_the_order(order):
+    """A term the review ACCEPTs on one row is acceptable even if another row removes it."""
+    others = [_row(GENUS, "ACCEPT"), _row(GENUS, "REMOVE")]
+    if order == "remove_first":
+        others.reverse()
+    rows = [
+        _row(
+            PRECOMPOSED,
+            "MODIFY",
+            proposed_replacement_terms=[GENUS],
+            decomposed_into={"context_dropped": True},
+        ),
+        *others,
+    ]
+    assert "decomposition_replacement_not_acceptable" not in _check_rows(rows)
+
+
+def test_non_dict_replacement_is_skipped():
+    rows = [
+        _row(
+            PRECOMPOSED,
+            "MODIFY",
+            proposed_replacement_terms=["GO:0006622"],
+            decomposed_into={"context_dropped": True},
+        ),
+        _row(GENUS, "KEEP_AS_NON_CORE"),
+    ]
+    assert "decomposition_replacement_not_acceptable" not in _check_rows(rows)

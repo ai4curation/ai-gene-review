@@ -126,7 +126,7 @@ here.
 | rows on label-only terms (Y entailed by the regulated process; see round 3) | 11 |
 | rows on terms kept as the right grain (`keep_precomposed.yaml`; see rounds 5 and 6) | 71 |
 
-Figures refreshed 2026-11-07, after merging `main`; they are a snapshot, and
+Figures refreshed 2026-11-18, after merging `main`; they are a snapshot, and
 `data/summary.yaml` is authoritative. The first snapshot
 (2026-10-18) had 1,023 rows over 519 genes. Current review actions on these
 rows (after round 7): KEEP_AS_NON_CORE 715, ACCEPT 372, MODIFY 153,
@@ -134,11 +134,11 @@ MARK_AS_OVER_ANNOTATED 140, UNDECIDED 77, REMOVE 27, NEW 17, TOO_GENERAL 9. Apar
 project decomposed, the existing MODIFYs do not decompose: in the first
 snapshot, one of 71 proposed the bare genus and the other 70 were lateral moves to a different term (e.g.
 `DNA strand elongation involved in DNA replication` → `G1/S transition of
-mitotic cell cycle` for *Drosophila* chromatin factors). Evidence: IMP 368,
-IEA 310, ISS 193, IDA 160, IBA 112, ISO 110, IGI 83, other 115.
+mitotic cell cycle` for *Drosophila* chromatin factors). Evidence: IMP 381,
+IEA 321, ISS 196, IDA 167, IBA 126, ISO 110, IGI 84, other 125.
 
-By organism folder (`by_organism` in `data/summary.yaml`): human 737 rows,
-mouse 150, rat 140, DROME 120, worm 88, DICDI 75, yeast 35, other 106.
+By organism folder (`by_organism` in `data/summary.yaml`): human 783 rows,
+mouse 150, rat 140, DROME 121, worm 90, DICDI 75, yeast 35, other 116.
 
 ### Rows on already-obsolete terms (fix first)
 
@@ -769,7 +769,7 @@ unchanged.
 | Gene | Rows | Before | Now |
 |---|---|---|---|
 | ced-1 (4), ced-6 (2), ced-7 (3): GOA GO:1904747 (PMID:23505386) | 9 | MODIFY → GO:0043065 (round 6) | KEEP_AS_NON_CORE, restored as before round 6 |
-| ced-1, ced-2, ced-5, ced-6, ced-7, ced-12: GO:1902742 (PMID:24225442, background genotype) | 12 | MODIFY → GO:0043065 (round 6; GO:1904747 before that) | MARK_AS_OVER_ANNOTATED. The genes do not take part in the dying cell's program; their pro-death role is positive regulation from the engulfing cell, which is non-core. ced-1/6/7 keep it on their GO:1904747 rows; for ced-2/5/12 it is recorded in the reason. |
+| ced-1, ced-2, ced-5, ced-6, ced-7, ced-12: GO:1902742 (PMID:24225442, background genotype) | 12 | MODIFY → GO:0043065 (round 6; GO:1904747 before that) | MARK_AS_OVER_ANNOTATED. The genes do not take part in the dying cell's program; their pro-death role is positive regulation from the engulfing cell, which is non-core. ced-1/6/7 keep it on their GO:1904747 rows; for ced-2/5/12 it is recorded in the reason only (see below). |
 | human NOTCH1: obsolete GO:0003252 (IEA, ISS) | 2 | MODIFY → GO:0008285 (round 1) | MARK_AS_OVER_ANNOTATED; NOTCH1's own GO:0008285 IDA row is KEEP_AS_NON_CORE |
 | mouse Dnmt1: obsolete GO:1905931 (IEA, ISO) | 2 | MODIFY → GO:1905064 (round 1) | MARK_AS_OVER_ANNOTATED; propagated from the human DNMT1 IMP row, which `main` now keeps as non-core on the obsolete term |
 | rat Cdkn1b: GO:0060770 (ISO) | 1 | MODIFY → GO:0050680 | KEEP_AS_NON_CORE on its own term; GO:0050680 is non-core on another row of the review |
@@ -783,6 +783,17 @@ cannot see a non-core claim whose replacement is on no other row (the ced
 rows, mouse Dnmt1); those rest on the written rule in CLAUDE.md. The
 APOPTOSIS [assay-readout page](APOPTOSIS/ASSAY_READOUT_OVERANNOTATION.md) is
 updated to match, as are the six ced notes files.
+
+**Why ced-2, ced-5 and ced-12 get no positive-regulation row.** ced-1, ced-6
+and ced-7 carry the pro-death role because GOA already annotated them to
+GO:1904747, and those rows are kept. The other three have no such row, and
+adding one would be a NEW annotation. CLAUDE.md reserves NEW for direct
+claims and rules out indirect or pleiotropic effects. Engulfment genes
+promote death only modestly, from another cell, and only when killing is
+weakened (Reddien 2001; Hoeppner 2001), so their reasons record the reading
+and quote both papers, but no row asserts it. A curator who wants it
+machine-readable can add GO:1904747 to match the siblings; this round
+deliberately does not.
 
 Round-6 follow-ups: the stronger argument for dropping the developmental
 context of GO:1904747 no longer applies, since those rows are not
