@@ -45,7 +45,8 @@ All scripts, test sets and raw model outputs are in
 builds the test set, one that asks the models and one that scores the answers.
 
 A short preprint is being drafted from these results:
-[manuscript notes](LLM_SEQUENCE_PROBE/manuscript/README.md), with the LaTeX source in
+[read the draft (PDF)](LLM_SEQUENCE_PROBE/manuscript/manuscript.pdf) or the
+[manuscript notes](LLM_SEQUENCE_PROBE/manuscript/README.md). The LaTeX source is
 `LLM_SEQUENCE_PROBE/manuscript/manuscript.tex`.
 
 ## Test 1: next amino acid (replication of the blog post)

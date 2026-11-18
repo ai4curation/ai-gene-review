@@ -23,7 +23,7 @@ uv run python figures/make_figures.py
 pdflatex manuscript && bibtex manuscript && pdflatex manuscript && pdflatex manuscript
 ```
 
-The PDF is not committed.
+`manuscript.pdf` is a committed reading copy; rebuild and recommit it when the source changes.
 
 ## Open before posting
 
