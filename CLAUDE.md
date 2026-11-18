@@ -573,6 +573,9 @@ action fits the verdict and that the target sits correctly in the family's PANTH
 (below the node for TOO_DEEP, NEEDS_PRUNING and LOSS_TOO_BROAD). PAINT prunes per
 annotation: a loss of a general term does not block a more specific term asserted at an
 ancestral node, so request each change separately.
+`just export-paint-change-requests` turns these rows into one Markdown change request per
+family in `reports/paint-change-requests/` (generated and git-ignored; do not commit), and
+fails if a family asks for incompatible changes to one PAINT row.
 
 ### Term-id validation: GOA ids are trusted, your `core_functions` ids are checked
 
