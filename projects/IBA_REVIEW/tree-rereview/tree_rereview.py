@@ -50,7 +50,7 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Iterable, Iterator
 
 import yaml
 
@@ -1070,6 +1070,51 @@ def history_arguments(unit: str, applied: list[dict[str, Any]], pr: str = "", un
 
 
 CORRECTED_BY_VERIFIER = "applied as corrected by the verifier"
+#: Key of a run record: reviews whose tree file could not be listed under ``references``.
+NOT_LISTED = "tree_file_not_listed_under_references"
+
+
+def failed_units(results: dict[str, tuple[bool, str]]) -> dict[str, str]:
+    """The units whose review no longer validates, each with the first error reported.
+
+    >>> failed_units({"human/A": (True, "ok"), "human/B": (False, "x\\n  ERROR: bad quote\\n")})
+    {'human/B': 'ERROR: bad quote'}
+    """
+    return {unit: _first_error(output) for unit, (valid, output) in results.items() if not valid}
+
+
+def undo_applied(record: dict[str, Any], unit: str, rows: list[dict[str, Any]], why: str) -> None:
+    """Bookkeeping for a review that was put back as it was: nothing in the record may say it was edited.
+
+    Its rows go to adjudication with the validator's error, and the review is no longer
+    reported as one whose tree file could not be listed, since no edit of it remains.
+
+    >>> record = {NOT_LISTED: {"human/A": "no references list", "human/B": "no references list"}}
+    >>> rows = [{"term": "GO:1", "outcome": "applied", "outcome_detail": CORRECTED_BY_VERIFIER}]
+    >>> undo_applied(record, "human/A", rows, "ERROR: bad quote")
+    >>> rows[0]["outcome"], rows[0]["outcome_detail"]
+    ('adjudicate', 'edit undone, the review no longer validated: ERROR: bad quote')
+    >>> record
+    {'tree_file_not_listed_under_references': {'human/B': 'no references list'}}
+    """
+    for row in rows:
+        row["outcome"], row["outcome_detail"] = "adjudicate", f"edit undone, the review no longer validated: {why}"
+    listed = mapping(record.get(NOT_LISTED))
+    listed.pop(unit, None)
+    if not listed:
+        record.pop(NOT_LISTED, None)
+
+
+def forget_added_quotes(rows: list[dict[str, Any]]) -> None:
+    """Take ``quotes_added`` off the rows of a review whose completed quotes were put back.
+
+    >>> rows = [{"term": "GO:1", "quotes_added": [4]}, {"term": "GO:2"}]
+    >>> forget_added_quotes(rows)
+    >>> rows
+    [{'term': 'GO:1'}, {'term': 'GO:2'}]
+    """
+    for row in rows:
+        row.pop("quotes_added", None)
 
 
 def apply_batch(batch: str, jobs: int = 4, pr: str = "") -> Counter[str]:
@@ -1100,7 +1145,7 @@ def apply_batch(batch: str, jobs: int = 4, pr: str = "") -> Counter[str]:
         if text != originals[gene]:
             text, unlisted = with_tree_reference(text, gene)
             if unlisted:
-                record.setdefault("tree_file_not_listed_under_references", {})[gene] = unlisted
+                record.setdefault(NOT_LISTED, {})[gene] = unlisted
             review_path.write_text(text, encoding="utf-8")
     changed = [gene for gene, rows in by_gene.items() if any(row["outcome"] == "applied" for row in rows)]
     with ThreadPoolExecutor(max_workers=jobs) as pool:
@@ -1112,8 +1157,7 @@ def apply_batch(batch: str, jobs: int = 4, pr: str = "") -> Counter[str]:
         applied = [row for row in by_gene[gene] if row["outcome"] == "applied"]
         if not valid:
             review_path_of(gene).write_text(originals[gene], encoding="utf-8")
-            for row in applied:
-                row["outcome"], row["outcome_detail"] = "adjudicate", f"edit undone, the review no longer validated: {_first_error(output)}"
+            undo_applied(record, gene, applied, _first_error(output))
             continue
         unshared = alias_count(review_path_of(gene).read_text(encoding="utf-8")) < alias_count(originals[gene])
         records.append(write_history(scaffolder, history_arguments(gene, applied, pr, unshared)))
@@ -1171,10 +1215,11 @@ def list_tree_references(pr: str = "", jobs: int = 4) -> tuple[list[str], dict[s
         results = dict(zip(changed, pool.map(lambda unit: validate(review_path_of(unit)), changed)))
     scaffolder = _new_history()
     written: list[Path] = []
+    failed = failed_units(results)
     for unit in list(changed):
-        if not results[unit][0]:
+        if unit in failed:
             review_path_of(unit).write_text(originals[unit], encoding="utf-8")
-            skipped[unit] = "put back: the review no longer validated with the entry: " + _first_error(results[unit][1])
+            skipped[unit] = "put back: the review no longer validated with the entry: " + failed[unit]
             changed.remove(unit)
             continue
         name = tree_file_of(unit).name
@@ -1210,6 +1255,30 @@ WORKLIST_FIELDS = (
 )
 
 
+def standing_contradictions(rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Rows whose review still states something that both agents found the tree to contradict.
+
+    The reading is ``REASON_CONTRADICTED``, the verifier agreed with it, and no edit was
+    made, usually because the claim is also outside the reason, which is all the script
+    rewrites. What the script may rewrite does not decide whether a statement known to be
+    false stays in a review: such a row is corrected by hand before the batch is pushed,
+    and its ``correction`` says what was done.
+
+    >>> agreed = {"agrees": True}
+    >>> left = {"term": "GO:1", "tree_reading": "REASON_CONTRADICTED", "outcome": "adjudicate", "verifier": agreed}
+    >>> done = {"term": "GO:2", "tree_reading": "REASON_CONTRADICTED", "outcome": "applied", "verifier": agreed}
+    >>> [row["term"] for row in standing_contradictions([left, done])]
+    ['GO:1']
+    """
+    return [
+        row
+        for row in rows
+        if row.get("tree_reading") == "REASON_CONTRADICTED"
+        and row.get("outcome") == "adjudicate"
+        and mapping(row.get("verifier")).get("agrees") is True
+    ]
+
+
 def worklist() -> dict[str, Any]:
     """What the re-read leaves for a curator, from the run records.
 
@@ -1219,8 +1288,11 @@ def worklist() -> dict[str, Any]:
     hears of it.
     """
     groups: dict[str, list[dict[str, Any]]] = {"adjudicate": [], "not_read": [], "applied_with_note": []}
+    standing = 0
     for path in sorted(RUNS.glob("*.yaml")):
         record = load(path)
+        left = {id(row) for row in standing_contradictions(record["rows"])}
+        standing += len(left)
         for row in record["rows"]:
             outcome = row.get("outcome", "")
             group = outcome if outcome in ("adjudicate", "not_read") else "applied_with_note" if row.get("note") else ""
@@ -1232,6 +1304,8 @@ def worklist() -> dict[str, Any]:
                     entry[field] = row[field]
             if row.get("negated"):
                 entry["negated"] = True
+            if id(row) in left:
+                entry["contradicted_and_left"] = True
             for field in WORKLIST_FIELDS:
                 if row.get(field) not in (None, "", []):
                     entry[field] = row[field]
@@ -1248,9 +1322,11 @@ def worklist() -> dict[str, Any]:
             "corrected reason), and the reader noted something the edit does not settle, often a verdict "
             "or failure mode that no longer fits. A note was written from the row as it stood before the "
             "edit, so it can describe something the edit has since changed, such as a row without any "
-            "supported_by."
+            "supported_by. contradicted_and_left marks an adjudicate row on which reader and verifier agree "
+            "that the review states something the tree contradicts and nothing was edited; such a row is "
+            "corrected by hand before its batch is pushed, so the count is normally 0."
         ),
-        "counts": {group: len(rows) for group, rows in groups.items()},
+        "counts": {**{group: len(rows) for group, rows in groups.items()}, "contradicted_and_left": standing},
         **groups,
     }
 
@@ -1300,12 +1376,12 @@ def requote(pr: str = "", jobs: int = 4) -> list[str]:
     scaffolder = _new_history()
     written: list[Path] = []
     lines: list[str] = []
+    failed = failed_units(results)
     for unit, rows in changed.items():
-        if not results[unit][0]:
+        if unit in failed:
             review_path_of(unit).write_text(originals[unit], encoding="utf-8")
-            for row, _ in rows:
-                del row["quotes_added"]
-            lines.append(f"{unit}: put back, the review no longer validated with the added quotes: {_first_error(results[unit][1])}")
+            forget_added_quotes([row for row, _ in rows])
+            lines.append(f"{unit}: put back, the review no longer validated with the added quotes: {failed[unit]}")
             continue
         gene = "/" in unit
         details = [
@@ -1376,8 +1452,15 @@ def finish(journal: Path, date: str, jobs: int = 4, pr: str = "") -> list[str]:
             f"{batch}: {len(record['rows'])} rows; readings {dict(readings)}; verifier checked {len(checked)}, "
             f"disagreed on {checked.count(False)}; outcomes {dict(outcomes)}"
         )
-        for unit, why in sorted(mapping(load(run_path(batch)).get("tree_file_not_listed_under_references")).items()):
+        applied = load(run_path(batch))
+        for unit, why in sorted(mapping(applied.get(NOT_LISTED)).items()):
             lines.append(f"  {unit}: tree file not listed under references: {why}")
+        for row in standing_contradictions(applied["rows"]):
+            lines.append(
+                f"  {unit_of(row)} {row.get('node', '')} {row['term']}: the review states something the tree "
+                f"contradicts and was left as it is ({row.get('outcome_detail', '')}); correct it by hand before "
+                "the batch is pushed"
+            )
     WORKLIST.write_text(dump(worklist()), encoding="utf-8")
     return lines
 

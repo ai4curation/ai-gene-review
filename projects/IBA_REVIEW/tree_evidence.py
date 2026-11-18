@@ -17,6 +17,7 @@ Usage (from the repository root):
     uv run python projects/IBA_REVIEW/tree_evidence.py --summary       # print the tables in tree-evidence.md
     uv run python projects/IBA_REVIEW/tree_evidence.py --candidates    # write tree-evidence-candidates.yaml
     uv run python projects/IBA_REVIEW/tree_evidence.py --seed-lists    # GOA seed lists against the PAINT slices
+    uv run python projects/IBA_REVIEW/tree_evidence.py --residue-backlog  # write residue-evidence-backlog.yaml
 """
 
 from __future__ import annotations
@@ -39,12 +40,17 @@ from ai_gene_review.etl.gene_phylo import (
     resolve_seed,
 )
 from ai_gene_review.etl.panther_release import DEFAULT_DB, FamilyTree, PantherRelease
-from ai_gene_review.validation.tree_evidence import phylo_reference_ids
+from ai_gene_review.validation.tree_evidence import (
+    RESIDUE_FAILURE_MODE,
+    iter_tree_evidence_violations,
+    phylo_reference_ids,
+)
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 ROWS = HERE / "tree-evidence-rows.tsv.gz"
 CANDIDATES = HERE / "tree-evidence-candidates.yaml"
+RESIDUE_BACKLOG = HERE / "residue-evidence-backlog.yaml"
 Loader = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
 
 FIELDS = [
@@ -446,15 +452,102 @@ def seed_list_agreement(root: Path, release: PantherRelease) -> str:
     return "\n".join(lines)
 
 
+def curated_sites(extract: Path) -> int:
+    """How many of the family's curated residue sites a gene's extract reads off the alignment."""
+    if not extract.exists():
+        return 0
+    doc = yaml.load(extract.read_text(encoding="utf-8"), Loader=Loader) or {}
+    return sum(len(_mapping(tree).get("residue_sites") or []) for tree in doc.get("trees") or [])
+
+
+def residue_backlog(root: Path) -> dict[str, Any]:
+    """Rows overruled for residue or sub-activity loss that state no checkable residue claim.
+
+    This is the validator's ``missing_residue_evidence`` check run over every gene review,
+    with or without a tree extract, so the rows are exactly those ``just validate`` warns
+    about. ``curated_sites_in_extract`` counts the curated residue sites of the family
+    that the gene's extract reads off the alignment: where it is not zero, the positions
+    a claim needs are already computed. A row with the failure mode that is neither
+    ``REMOVE`` nor ``MARK_AS_OVER_ANNOTATED`` is not asked for a claim and is counted apart.
+    """
+    reviews = sorted(root.glob("genes/*/*/*-ai-review.yaml"))
+    using: set[str] = set()
+    with_mode = with_claims = not_applicable = not_asked = 0
+    rows: list[dict[str, Any]] = []
+    for review in reviews:
+        text = review.read_text(encoding="utf-8")
+        if RESIDUE_FAILURE_MODE not in text:
+            continue
+        data = yaml.load(text, Loader=Loader) or {}
+        annotations = data.get("existing_annotations") or []
+        organism, gene = review.parent.parent.name, review.parent.name
+        for annotation in annotations:
+            propagation = _mapping(_mapping(_mapping(annotation).get("review")).get("propagation_review"))
+            if RESIDUE_FAILURE_MODE not in (propagation.get("failure_modes") or []):
+                continue
+            with_mode += 1
+            using.add(f"{organism}/{gene}")
+            if propagation.get("residue_claims"):
+                with_claims += 1
+            elif propagation.get("residue_claims_not_applicable"):
+                not_applicable += 1
+            elif _mapping(annotation.get("review")).get("action") not in OVERRULED:
+                not_asked += 1
+        extract = phylo_path(root, organism, gene)
+        sites = curated_sites(extract)
+        for index, check, _, _ in iter_tree_evidence_violations(data, review):
+            if check != "missing_residue_evidence":
+                continue
+            annotation = annotations[index]
+            term = _mapping(annotation.get("term"))
+            rows.append({
+                "gene": f"{organism}/{gene}",
+                "term": term.get("id", ""),
+                "label": term.get("label", ""),
+                "evidence_type": annotation.get("evidence_type", ""),
+                "action": _mapping(annotation.get("review")).get("action", ""),
+                "has_extract": extract.exists(),
+                "curated_sites_in_extract": sites,
+            })
+    return {
+        "generated_by": "projects/IBA_REVIEW/tree_evidence.py --residue-backlog",
+        "meaning": (
+            f"A propagated row is overruled with failure mode {RESIDUE_FAILURE_MODE} and carries neither "
+            "residue_claims nor residue_claims_not_applicable, so the residue argument cannot be checked "
+            "against the alignment (validator warning missing_residue_evidence)"
+        ),
+        "counts": {
+            "reviews_read": len(reviews),
+            "rows_with_the_failure_mode": with_mode,
+            "reviews_with_the_failure_mode": len(using),
+            "rows_with_residue_claims": with_claims,
+            "rows_with_residue_claims_not_applicable": not_applicable,
+            "rows_not_asked_because_not_overruled": not_asked,
+            "rows_without_a_claim": len(rows),
+            "reviews_without_a_claim": len({row["gene"] for row in rows}),
+            "rows_whose_extract_has_curated_sites": sum(1 for row in rows if row["curated_sites_in_extract"]),
+        },
+        "rows": rows,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=(__doc__ or "").split("\n")[0])
     parser.add_argument("--summary", action="store_true")
     parser.add_argument("--candidates", action="store_true")
     parser.add_argument("--seed-lists", action="store_true")
+    parser.add_argument("--residue-backlog", action="store_true")
     parser.add_argument("--rows", type=Path, default=ROWS)
     args = parser.parse_args(argv)
     if args.seed_lists:
         print(seed_list_agreement(ROOT, PantherRelease(ROOT / DEFAULT_DB)))
+        return 0
+    if args.residue_backlog:
+        backlog = residue_backlog(ROOT)
+        RESIDUE_BACKLOG.write_text(
+            yaml.safe_dump(backlog, sort_keys=False, width=1_000_000, allow_unicode=True), encoding="utf-8"
+        )
+        print(RESIDUE_BACKLOG, backlog["counts"])
         return 0
     if args.summary:
         print(summary(read_rows(args.rows)))

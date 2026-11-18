@@ -63,7 +63,8 @@ at a tree and left only prose was not counted.
   is inside the seed clade, shares its branch with seeds, or every seed is an ortholog
   under a paralog claim), when a row is kept although PAINT has removed the term on the
   path to the gene (`kept_under_paint_loss`), and when a propagated row is overruled for
-  residue loss without a checkable residue claim (`missing_residue_evidence`).
+  residue loss without a checkable residue claim (`missing_residue_evidence`; 97 rows in 63
+  reviews on 2026-11-18, [below](#residue-arguments-without-a-residue-claim)).
   `just validate-families` reports a node assessment that disputes a placement without
   quoting a tree listing (`NODE_TREE_EVIDENCE`).
 - **Backfill.** Extracts are committed for 1,392 genes: every gene whose review overrules
@@ -275,8 +276,8 @@ then edited by script. The method, the plans and a record of every row are in
 | | Rows read | Applied | Left for adjudication |
 |---|---:|---:|---:|
 | Gene reviews: the 12 batches that hold every candidate gene | 278 | 229 | 47, and 2 not read |
-| Gene reviews: two further batches, as a pilot of the corrected rules | 47 | 46 | 1 |
-| Family reviews: every disputed node assessment without a tree listing | 386 | 319 | 67 |
+| Gene reviews: two further batches, as a pilot of the corrected rules | 47 | 47, one of them by hand | 0 |
+| Family reviews: every disputed node assessment without a tree listing | 386 | 321, two of them by hand | 65 |
 
 An applied row quotes its own extract or listing in `supported_by` and says in its reason
 what the tree shows. The script changed no verdict. 28 rows that had been applied were
@@ -315,13 +316,23 @@ quoted the sentences it had to. The verifier faulted 3 of the 36 readings it che
 for a fact stated wrongly in the sentence (a miscount, two facts run together, the wrong
 seed named as the one on the gene's branch), and supplied the correction each time. One
 reason was corrected: ARATH LCYB `GO:0005739` said the gene is outside the clade that
-inherited the function, while two seeds share its branch. One row whose contradicted
-claim is also in the summary and a source note was left for a curator (ARATH MNS1
-`GO:0036503`). 46 rows were applied. The two batches took 622,000 agent tokens, 311,000 a
+inherited the function, while two seeds share its branch. The script applied 46 rows and
+left one for a curator, because its contradicted claim is also in the summary and a
+source note: ARATH MNS1 `GO:0036503` said that no seed of the ERAD term lies in MNS1's own
+branch, and human MAN1A1 does. The two batches took 622,000 agent tokens, 311,000 a
 batch, against about 275,000 before the verifier was given every such row.
 
+Review of the pilot asked why a statement that both agents had found false should stay in
+a review because of what the script may rewrite. It should not. MNS1 was corrected by
+hand in all three places, with the reason the verifier had checked. So were the two
+family assessments of the same kind, PTHR10048 `GO:0005944` and PTHR16675 `GO:0002476`,
+each of which listed as affected a subfamily with no leaf below the node; both were
+checked against the release tree first, and the second against QuickGO (human HFE does
+not carry the row). `finish` now names such rows, and `needs-curator.yaml` counts them
+(`contradicted_and_left`, 0 today).
+
 What the re-read leaves for a curator is in
-[`needs-curator.yaml`](tree-rereview/needs-curator.yaml): the rows below, and the 348
+[`needs-curator.yaml`](tree-rereview/needs-curator.yaml): the rows below, and the 351
 applied rows on which the reader left a note, often about a verdict or failure mode that
 no longer fits.
 
@@ -359,19 +370,26 @@ Three things follow.
   a "paralog" that the tree makes a one-to-one ortholog, a "broad" node with five leaves,
   a seed list described from gene names, a subfamily named as affected that does not
   descend from the node. 11 gene rows and 24 family rows had their reason corrected after
-  the verifier agreed with the correction; the rest are among the rows left for a curator.
+  the verifier agreed with the correction, and three more were corrected by hand (above);
+  the rest are among the rows left for a curator.
 - **Family reviewers argue from the tree more than gene reviewers, and are mostly right.**
   More than half of the disputed node assessments make a placement argument that the tree
   bears out.
 
-115 rows are left for adjudication, each with its reason in the run records: 42 where the
+112 rows are left for adjudication, each with its reason in the run records: 42 where the
 verifier did not accept the reading or its correction (among them 2 verdicts the reader
 found unsupported and 2 kept rows under a PAINT loss), 26 family rows whose node or term
 is not in the listing, 28 rows that changed on main after they were read, 11 kept rows
-under a PAINT loss, 5 verdicts or assessments the tree does not support, 2 family rows
-that name an affected subfamily which does not descend from the node, and 1 gene row
-whose contradicted claim is outside the reason. Two gene rows were not read: the reader
-returned no entry for them.
+under a PAINT loss, and 5 verdicts or assessments the tree does not support. Two gene
+rows were not read: the reader returned no entry for them.
+
+Fifteen of the 42 are readings of a contradiction (11 gene rows, 4 family rows). In most
+of them the verifier accepted that the review states something the tree contradicts and
+faulted the drafted correction: a clause that overstates, a second claim that is no
+contradiction, a missing quote. No agreed text exists for these. They were also read
+before the reader rules were corrected, and against extracts that have since been
+regenerated, so the old drafts cannot simply be applied: they need a fresh reading under
+the corrected rules, and are the first rows a curator should look at.
 
 Not yet read: 59 gene batches with no candidate row, 1,371 overruled rows in 935 genes.
 They still raise `missing_tree_evidence`. So do 277 overruled rows in 204 genes that
@@ -384,6 +402,19 @@ session's model; the remaining family batches and the pilot ran on Opus. A trial
 two batches gave the same reading on 38 of 43 rows but missed four of the five rows where
 the review contradicts the tree, so it is not used.
 
+### Residue arguments without a residue claim
+
+The pilot met four rows overruled as `PSEUDO_OR_SUBACTIVITY_LOSS` with nothing in
+`residue_claims` (ARATH CRY1 `GO:0003904`, and GID1A, GID1B and GID1C `GO:0016787`).
+Counted over every gene review on 2026-11-18, with or without an extract: 167 rows in 94
+reviews use the failure mode; 46 state residue claims, 16 say why the argument is not a
+point-residue question, 8 are not overruled and so are not asked, and **97 rows in 63
+reviews** raise `missing_residue_evidence` (76 `REMOVE`, 21 `MARK_AS_OVER_ANNOTATED`; 68
+of them IBA rows). They are listed in
+[`residue-evidence-backlog.yaml`](residue-evidence-backlog.yaml). For 5 of them the
+gene's extract already reads the family's curated sites off the alignment. These are
+rows as their reviews wrote them; the re-read notes them and changes none.
+
 ## Reproduce
 
 ```bash
@@ -392,6 +423,7 @@ uv run python projects/IBA_REVIEW/tree_evidence.py              # tree-evidence-
 uv run python projects/IBA_REVIEW/tree_evidence.py --summary    # the tables above
 uv run python projects/IBA_REVIEW/tree_evidence.py --candidates # tree-evidence-candidates.yaml
 uv run python projects/IBA_REVIEW/tree_evidence.py --seed-lists # GOA seed lists against the PAINT slices
+uv run python projects/IBA_REVIEW/tree_evidence.py --residue-backlog  # residue-evidence-backlog.yaml (no database needed)
 ```
 
 The census of 2026-11-09 was a one-off count of committed artifacts and is not

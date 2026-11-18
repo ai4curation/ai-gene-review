@@ -253,3 +253,58 @@ def test_the_first_error_of_a_validator_run_is_what_gets_reported() -> None:
 
 def test_the_worklist_says_that_notes_predate_the_edit() -> None:
     assert "as it stood before the edit" in tr.worklist()["about"]
+
+
+def test_a_review_that_was_put_back_leaves_no_trace_of_an_edit_in_the_record() -> None:
+    record = {tr.NOT_LISTED: {"human/TEST": "no references list"}}
+    rows = [row(outcome="applied"), row(term="GO:0005681", outcome="applied", outcome_detail=tr.CORRECTED_BY_VERIFIER)]
+    tr.undo_applied(record, "human/TEST", rows, "ERROR: quote not found")
+    assert [(r["outcome"], r["outcome_detail"]) for r in rows] == [
+        ("adjudicate", "edit undone, the review no longer validated: ERROR: quote not found")
+    ] * 2
+    # The review is as it was, so it is not one whose tree file went unlisted.
+    assert tr.NOT_LISTED not in record
+
+
+def test_only_the_review_that_was_put_back_is_taken_off_the_unlisted_list() -> None:
+    record = {tr.NOT_LISTED: {"human/TEST": "no references list", "human/OTHER": "no references list"}}
+    tr.undo_applied(record, "human/TEST", [row(outcome="applied")], "ERROR: x")
+    assert record[tr.NOT_LISTED] == {"human/OTHER": "no references list"}
+
+
+def test_failed_units_are_those_whose_review_stopped_validating() -> None:
+    results = {"human/A": (True, "✓ Valid"), "PTHR1": (False, "ERROR in --schema\n  ✗ not valid\n"), "human/B": (False, "nothing recognisable")}
+    assert tr.failed_units(results) == {"PTHR1": "ERROR in --schema", "human/B": "no longer validates"}
+
+
+def test_quotes_added_to_a_review_that_was_put_back_are_forgotten() -> None:
+    rows = [row(outcome="applied", quotes_added=[4]), row(term="GO:0005681", outcome="applied")]
+    tr.forget_added_quotes(rows)
+    assert all("quotes_added" not in r for r in rows)
+
+
+def test_a_contradiction_both_agents_agree_on_that_the_script_left_is_named() -> None:
+    left = row(
+        tree_reading="REASON_CONTRADICTED", outcome="adjudicate", verifier=AGREED,
+        outcome_detail="the contradicted claim is in summary, which the script does not rewrite",
+    )
+    rows = [
+        left,
+        # corrected by the script
+        row(term="GO:0005681", tree_reading="REASON_CONTRADICTED", outcome="applied", verifier=AGREED),
+        # the verifier did not accept the reading: not an agreed finding
+        row(term="GO:0005682", tree_reading="REASON_CONTRADICTED", outcome="adjudicate", verifier={"agrees": False, "problem": "x"}),
+        # a verdict to judge, not a statement to correct
+        row(term="GO:0005683", tree_reading="VERDICT_UNSUPPORTED", outcome="adjudicate", verifier=AGREED),
+        # never checked
+        row(term="GO:0005684", tree_reading="REASON_CONTRADICTED", outcome="adjudicate"),
+    ]
+    assert tr.standing_contradictions(rows) == [left]
+
+
+def test_the_worklist_marks_and_counts_the_contradictions_left_standing() -> None:
+    worklist = tr.worklist()
+    marked = [entry for entry in worklist["adjudicate"] if entry.get("contradicted_and_left")]
+    assert worklist["counts"]["contradicted_and_left"] == len(marked)
+    assert all(entry["tree_reading"] == "REASON_CONTRADICTED" for entry in marked)
+    assert "contradicted_and_left" in worklist["about"]

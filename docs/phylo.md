@@ -175,6 +175,8 @@ that has none. A review row whose IBA has since been withdrawn from GOA is not a
 the extract describes the rows of the current GOA file and has none for it. `projects/IBA_REVIEW/tree_evidence.py` joins every reviewed IBA row with its tree
 facts and lists the rows where the two pull apart
 (see [the IBA project](https://github.com/ai4curation/ai-gene-review/blob/main/projects/IBA_REVIEW.md)).
+Run with `--residue-backlog`, it lists every row in the corpus that raises
+`missing_residue_evidence` (`projects/IBA_REVIEW/residue-evidence-backlog.yaml`).
 
 ## Limits
 

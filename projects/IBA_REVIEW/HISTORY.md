@@ -200,6 +200,24 @@ reading quoted the sentences it had to; the verifier, now given every row with a
 sentence, faulted 3 of 36 and corrected all three; no failure mode was proposed. Cost:
 311,000 agent tokens a batch and about two minutes of wall time each.
 
+**After review of the pilot (2026-11-18).** The row left for a curator, ARATH MNS1
+`GO:0036503`, said in its summary, its reason and a source note that no seed lies in
+MNS1's own branch; human MAN1A1 does. The reviewer's point: the script's rule about what
+it may rewrite should not decide whether a statement known to be false stays in a review.
+MNS1 was corrected by hand with the reason the verifier had checked, and so were two
+family assessments of the same kind (PTHR10048 `GO:0005944`, PTHR16675 `GO:0002476`: a
+subfamily listed as affected has no leaf below the node), each after checking the release
+tree. `finish` now names a row that both agents found contradicted and the script left,
+and `needs-curator.yaml` counts them (0). Fifteen further readings of a contradiction
+have no agreed correction, because the verifier faulted the draft; they need a fresh
+reading under the corrected rules. Also sized, since the pilot kept meeting it four rows at
+a time: 97 rows in 63 reviews are overruled for residue or sub-activity loss without a
+residue claim (`residue-evidence-backlog.yaml`).
+
+- **A rule about what a tool may edit is not a rule about what may stay wrong.** When
+  both agents agree a statement is false and the tool cannot make the whole correction,
+  the correction is made by hand before the batch ships, not filed.
+
 ---
 
 ## 2026-11-16 — Re-read with the tree: candidate genes and families
