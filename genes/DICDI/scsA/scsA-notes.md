@@ -143,13 +143,13 @@ evolutionary reviews of the alpha family PTHR11117 and the beta family PTHR11815
 | GO:0004776 IDA, IBA, IEA | ACCEPT | GTP-dependent phosphoenzyme, GTP from GDP, purified enzyme GTP-utilizing; abstracts only |
 | GO:0004775 IBA, IEA | KEEP_AS_NON_CORE | inside the clade, A-type beta gene present, but no ADP-forming enzyme assayed; non-core because not shown in this organism, not because peripheral |
 | GO:0009361 IBA | KEEP_AS_NON_CORE | follows GO:0004775 |
-| GO:0003824 IEA | MODIFY to GO:0004774 | IPR005810 is specific to SCS alpha subunits but does not fix the nucleotide, so the row's own evidence reaches the nucleotide-agnostic term; GO:0004776 is asserted by IDA |
+| GO:0003824 IEA | TOO_GENERAL | Both InterPro entries map only to catalytic activity; IPR005810 is SCS-alpha specific but the term it could support, GO:0004774, is an ancestor of GO:0004776, asserted by IDA. Same action as the other alpha subunits (changed back from MODIFY after PR review) |
 | GO:0006099 IBA, IEA | ACCEPT | TCA-cycle step; no mutant in Dictyostelium |
 | GO:0006104 TAS | ACCEPT | author statement; reaction interconverts succinyl-CoA and succinate |
 | GO:0005739 IBA, IEA | ACCEPT | root organelle policy; presequence and two mitochondrial proteomes (PMID:33923051, PMID:35602934) |
 | GO:0016020 IDA | UNDECIDED | fractionation observation in the abstract; full text not read |
 | GO:0005759 IC | NEW | presequence, soluble dimer, TCA-cycle function |
-| GO:0045244 IDA (PMID:8240297) | NEW | alpha-beta dimer that forms GTP from GDP |
+| GO:0045244 IC (PMID:8240297) | NEW | alpha-beta dimer that forms GTP from GDP |
 
 Also proposed as NEW: GO:0045244 succinate-CoA ligase complex (GDP-forming), part_of, from the alpha-beta
 dimer that forms GTP from GDP (PMID:8240297, abstract only; beta partner not identified). It is a sibling
