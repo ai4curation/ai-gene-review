@@ -9,6 +9,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/1n4HSQCXjJ6ogACVmJMQGu
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Metabolomics Interpretation with GO and GO-CAM

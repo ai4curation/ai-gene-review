@@ -5,6 +5,7 @@ tags: [BIOLOGY_DOMAIN]
 species: [METJA, SULAC, METAC, METTP, FERPA, 9ARCH, NITRP, METS5, ACIAM, SACS2, METTH, HALSA, HALVD, METTM, METKA, METBF, 9EURY]
 autolink_exclude: [ftsZ]
 genes: [ureC1, ureC2, Ferp_0128, mcrA, MJ1511, nadX, thiL, gatC, amoA, Hsp14, Hsp20, Msed_0709, sor, lacS, cdvB, Msed_1700, Msed_1695, bop, psmA1, Msed_1456, Msed_2001, Msed_1424, Msed_0406, Msed_0147, Msed_0148, Msed_1375, Msed_1993, Msed_1426, Msed_0638, Msed_0639, Msed_1321, Msed_0399, Msed_0656, Msed_1423, Msed_2055]
+index_group: ARCHAEA
 ---
 
 # Archaea

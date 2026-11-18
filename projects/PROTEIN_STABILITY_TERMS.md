@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [OBSOLETION, BIOLOGY_DOMAIN]
 species: [human, mouse, rat, ECOLI, DROME]
 collections: [GO_TRACKER_BACKLOG]
+index_group: GO_TRACKER_BACKLOG
 ---
 
 # Protein Stabilization and Destabilization: What Do the Terms Mean?

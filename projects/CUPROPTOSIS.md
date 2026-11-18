@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/85LwTAVJUnCY6yJFKHcXnh
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Cuproptosis (Copper-Dependent Cell Death) Project
