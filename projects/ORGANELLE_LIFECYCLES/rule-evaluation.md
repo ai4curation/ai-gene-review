@@ -164,17 +164,22 @@ pass on their polyphosphate-filled vacuole, which the rule does not distinguish 
 
 ## The lysosome-related organelle rule
 
-`lysosome_related_organelle_biogenesis` takes Metazoa as its context. It needs AP-3 (the delta subunit,
+`lysosome_related_organelle_biogenesis` takes Metazoa as its context. It needs AP-3 (evaluated on the delta subunit,
 `PTHR22781:SF12`), BLOC-1 (BLOC1S1, BLOC1S2 and Snapin), a Rab32/38-family GTPase (`PTHR24073:SF839` or
 `SF862`) and an exchange factor for it: BLOC-3 (HPS1 `PTHR12761:SF1` and HPS4 `PTHR14407:SF9`) or the
 nematode GLO-3. It is met in human, *Drosophila* and Trichoplax. *C. elegans* fails on the exchange factor
 alone: it has no HPS1 or HPS4 (PMID:30419011), and GLO-3 (Q21045), which with CCZ-1 activates the worm
-Rab32 GLO-1, has no PANTHER classification in the worm file, so the census cannot find it. Nematostella
+Rab32 GLO-1, has no PANTHER classification in the worm file, so the census cannot evaluate that step and lists it
+under `unevaluable_steps`. Nematostella
 fails on both Rab32/38 and the exchange factor: PANTHER's file has no Rab32/38-subfamily protein for it, and
 an HPS4 but no HPS1. Outside animals the rule's parts are older than the organelles it describes.
 Dictyostelium has AP-3, BLOC-1, a Rab32 and HPS1, and fails only on HPS4. Monosiga has a Rab32 and HPS1 and
 fails on BLOC1S1 and HPS4. The failures outside animals say nothing about lysosome-related organelles there,
-which the rule does not claim to describe.
+which the rule does not claim to describe. Zero counts can also be a limit of sequence classification: PSI-BLAST
+finds none of the eight BLOC-1 subunits in budding yeast, which has distant homologues of three
+(PMID:21159114). In divergent protists some selectors hold several proteins (eight AP-3 delta and five HPS1
+proteins in *Trichomonas*; four Rab32/38-subfamily proteins in *Trichomonas* and *Paramecium*, three in
+*Entamoeba*); these are subfamily counts, not checked orthologues.
 
 ## Expected failures
 
@@ -294,7 +299,7 @@ Every step that fails in at least one organism, with the organisms it fails in (
   - `rab32_38_gef` (21): Ce, Nv, Mb, Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh
   - `bloc1_complex` (18): Mb, Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Eh
   - `rab32_38_gtpase` (13): Nv, Bd, Cr, Pp, Tb, Lm, Pf, Tp, At, Os, Sc, Sp, Nc
-  - `ap3_delta` (2): Cr, Gi
+  - `ap3_complex` (2): Cr, Gi
 - `phagosome_maturation`
   - `rilp_rab7_effector` (23): Dm, Ce, Nv, Ta, Mb, Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh
   - `lamp_proteins` (18): Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh
