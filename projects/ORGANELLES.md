@@ -348,8 +348,6 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
         the root-only Golgi list with a synthesis row
   - [x] Golgi batch 3: 20 human genes (2026-11-18); 13 human genes remain on
         the root-only Golgi list with a synthesis row
-  - [ ] MS4A4A ER rows: the ER IDA rests on the same sentence that says MS4A4A is
-        not with ER or Golgi markers (PMID:31413141)
   - [x] Follow-ups to #6297 and #6353 (2026-11-15): abstract-only sweep of ER
         batch 1 (AIMP1 reworded), UFSP2 caveat, UFL1 tethering row; CDK5RAP3
         checked and left without one
@@ -382,7 +380,7 @@ could not be read.
 | LYN | root; three IDA and one IEA ACCEPT to KEEP_AS_NON_CORE | endogenous LYN with GalT, dispersed by brefeldin A; cycloheximide and FRAP show newly made LYN in transit to the plasma membrane (PMID:15173188) |
 | MAPK1 | root; IEA and TAS stay MARK_AS_OVER_ANNOTATED, reasons rewritten | the marker study says ERK1/2 "were not found to be associated with the fragmented Golgi" (PMID:16533948); phosphorylating GRASP55 is a Golgi substrate, not a location |
 | MAPK3 | root; IEA and TAS MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE | endogenous ERK1c, an ERK1 splice form, sits with GM130 and p58 in mitotic HeLa cells (isoform-specific antibody, lost on siRNA; PMID:16533948); canonical ERK1 is absent; isoform source defect (CHECK) |
-| MS4A4A | root; IBA and IDA ACCEPT to MARK_AS_OVER_ANNOTATED; Golgi out of core_functions and description | the cited paper says TREM2 partly colocalizes with KDEL and giantin, "In contrast, MS4A4A did not colocalize with these intracellular markers" (PMID:31413141); WRONG_GENE_PRODUCT query (CHECK, candidate TREM2); the IBD's only seed is this row |
+| MS4A4A | root; IBA and IDA ACCEPT to MARK_AS_OVER_ANNOTATED; Golgi and ER out of core_functions and description; the ER IDA from the same paper also moved | the cited paper says TREM2 partly colocalizes with KDEL and giantin, "In contrast, MS4A4A did not colocalize with these intracellular markers" (PMID:31413141); WRONG_GENE_PRODUCT query (CHECK, candidate TREM2); the IBD's only seed is this row |
 | MSLN | root; IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | untagged UniProt item; no Golgi marker or brefeldin A data for mesothelin; transit only, matching its ER lumen row |
 | MYH9 | root; IEA stays KEEP_AS_NON_CORE | the mouse donor (PMID:14617807, TGN) is unreadable, but a readable human paper puts endogenous NMIIA at giantin-marked stacks and needs it for Golgi-to-ER return (PMID:22525330); recruited motor |
 | NEDD9 | root; EXP and IEA stay KEEP_AS_NON_CORE | curated item from PMID:8668148 (abstract-only, mentions only periphery and nucleus); curator deference |
@@ -417,8 +415,9 @@ Lessons, adding to batches 1 and 2:
   effector counts for the root (RSAD2 kept it; BST2 already excludes such pools from
   sub-compartments), and whether a second abstract-level line lifts the unreadable-donor
   rule (PRNP kept, RP2 and NEDD9 on deference).
-- **Out of scope but flagged:** MS4A4A's ER IDA rests on the same negative sentence and
-  needs an ER pass.
+- **MS4A4A's ER IDA** rests on the same negative sentence, so it moved to
+  MARK_AS_OVER_ANNOTATED with the Golgi rows (after review), and the ER left its
+  description and core functions.
 
 ## 2026-11-17 (UFSP2 core function; review follow-ups from #6432)
 

@@ -33,3 +33,5 @@ The second-pass audit confirmed the existing MS4A4A review and manual reference 
 - Not changed (outside this batch): the GO:0005783 ER IDA from the same paper rests on the same
   sentence and should be revisited in an ER pass, together with the ER entries in the description and
   core_functions.locations.
+
+- Follow-up after the #6521 review (2026-11-18): the GO:0005783 ER IDA from PMID:31413141 rests on the same sentence as the Golgi IDA [PMID:31413141 "We also detected partial colocalization of TREM2 with both endoplasmic reticulum (KDEL) and Golgi (Giantin). In contrast, MS4A4A did not colocalize with these intracellular markers"], so it also moved from ACCEPT to MARK_AS_OVER_ANNOTATED, and the ER was removed from core_functions.locations and the description. No other source places MS4A4A in the ER.
