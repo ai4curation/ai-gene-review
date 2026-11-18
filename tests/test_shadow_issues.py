@@ -837,6 +837,18 @@ def test_paint_diff_shows_every_changed_column(tmp_path):
         "changed\tPTN1\tGO:1\tIBD\t\ttaxon taxon: -> taxon:9606"
     ]
 
+    # A column only the older slice format has is compared too.
+    new.write_text(
+        "family\tnode\tgo_id\taspect\tevidence\tnegated\tseeds\tdate\n"
+        "PTHR1\tPTN1\tGO:1\tF\tIBD\tfalse\tUniProtKB:A\t20260528\n"
+    )
+    result = CliRunner().invoke(
+        app, ["shadow-issues", "paint-diff", str(old), str(new)]
+    )
+    assert result.output.splitlines() == [
+        "changed\tPTN1\tGO:1\tIBD\t\ttaxon taxon: -> "
+    ]
+
 
 def test_paint_diff_rejects_a_repeated_key(tmp_path):
     """Two rows with one key would silently drop one, so reading the slice fails."""
@@ -861,8 +873,8 @@ def test_ratings_shows_only_the_last_adjudication(config, tracker_dir):
                 "dimension": "downstream",
                 "rater_value": "PARTIAL",
                 "adjudicated_value": v,
-                "adjudicator": "x",
-                "date": "2026-11-17",
+                "by": "coordinator",
+                "at": "2026-11-17T00:00:00Z",
                 "reason": "r",
             }
             for v in ("PENDING_RELEASE", "AGREE")
@@ -875,6 +887,24 @@ def test_ratings_shows_only_the_last_adjudication(config, tracker_dir):
     )
     assert "| PARTIAL → AGREE* |" in result.output, result.output
     assert "PENDING_RELEASE" not in result.output
+
+    # A ruling that upholds the rater's score is still marked as adjudicated.
+    rating["adjudications"] = [
+        {**rating["adjudications"][0], "adjudicated_value": "PARTIAL"}
+    ]
+    (tracker_dir / "101" / "rating.yaml").write_text(yaml.safe_dump(rating))
+    result = CliRunner().invoke(
+        app, ["shadow-issues", "ratings", "example", "--root", str(tracker_dir.parent)]
+    )
+    assert "| PARTIAL* |" in result.output, result.output
+
+
+def test_effective_score_tolerates_a_ruling_without_a_value():
+    """queue_for reads ratings before validate does, so a bad ruling must not crash it."""
+    from ai_gene_review.shadow_issues.store import effective_score
+
+    rating = {"downstream": "PARTIAL", "adjudications": [{"dimension": "downstream"}]}
+    assert effective_score(rating, "downstream") == "PARTIAL"
 
 
 def test_committed_tracker_validates():

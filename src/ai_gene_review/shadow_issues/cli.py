@@ -230,7 +230,8 @@ def ratings_cmd(
 ) -> None:
     """Print a markdown table of every rating (rating.yaml and rating-<label>.yaml files).
 
-    An adjudicated dimension shows as ``score → adjudicated value*``.
+    An adjudicated dimension shows as ``score → adjudicated value*``, or as
+    ``score*`` when the last ruling upheld the rater's score.
     """
     header = [
         "issue",
@@ -253,9 +254,14 @@ def ratings_cmd(
             for dimension in DIMENSIONS:
                 # Show the final ruling, marked, beside the score as the rater
                 # wrote it; the last adjudication of a dimension is the one that counts.
-                final = effective_score(rating, dimension)
-                if final != rating.get(dimension):
-                    rating[dimension] = f"{rating.get(dimension, '-')} → {final}*"
+                rulings = rating.get("adjudications") or []
+                if not any(r.get("dimension") == dimension for r in rulings):
+                    continue
+                raw, final = (
+                    rating.get(dimension, "-"),
+                    effective_score(rating, dimension),
+                )
+                rating[dimension] = f"{raw}*" if final == raw else f"{raw} → {final}*"
             row = [
                 f"{tracker} {folder.name}",
                 rating_path.stem,
@@ -359,8 +365,9 @@ def paint_diff_cmd(
             typer.echo(f"added\t{label(key)}\t{after[key]['date']}")
         elif before[key] != after[key]:
             changes = []
-            for column in after[key]:
-                was, now = before[key].get(column, ""), after[key][column]
+            # Both rows' columns, so a column one slice format lacks still shows.
+            for column in dict.fromkeys([*before[key], *after[key]]):
+                was, now = before[key].get(column, ""), after[key].get(column, "")
                 if was == now:
                     continue
                 if column == "seeds":

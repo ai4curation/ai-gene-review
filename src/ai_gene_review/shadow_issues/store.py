@@ -443,7 +443,7 @@ def effective_score(rating: dict[str, Any], dimension: str) -> str | None:
     score = rating.get(dimension)
     for ruling in rating.get("adjudications") or []:
         if ruling.get("dimension") == dimension:
-            score = ruling["adjudicated_value"]
+            score = ruling.get("adjudicated_value", score)
     return score
 
 
