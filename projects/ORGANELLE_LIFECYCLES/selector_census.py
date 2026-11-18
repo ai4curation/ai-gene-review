@@ -15,7 +15,8 @@ whose units mix PANTHER-keyed and gene-keyed selectors, which are evaluated on t
 units alone. A family step that also names an InterPro domain (``domain`` or ``required_domain``) holds only
 when a selected protein carries that domain in UniProt's InterPro cross-references, fetched once and
 cached in ``.cache/panther/uniprot-interpro.json``; such rows also report
-``proteins_with_required_domains_per_organism``. Annoton functions are not checked. Each descriptor row's ``required`` flag marks only whether its top-level part
+``proteins_with_required_domains_per_organism``. A domain on a step selected only by UniProt
+accession is not checked. Annoton functions are not checked. Each descriptor row's ``required`` flag marks only whether its top-level part
 is ``optional``; it is a reading aid, not the verdict. Classification rows with an empty
 accession column are skipped, so they cannot turn a zero count into a hit.
 
@@ -423,8 +424,7 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
             if (
                 a.domain_ids
                 and panther_ids(a)
-                and len(interpro_ids([{"term": {"id": d}} for d in a.domain_ids]))
-                < len(a.domain_ids)
+                and any(not d.startswith("InterPro:") for d in a.domain_ids)
             ):
                 raise SystemExit(
                     f"{name}: step {a.node_id} names a domain the census cannot check "
