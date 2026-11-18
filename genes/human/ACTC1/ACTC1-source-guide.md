@@ -81,7 +81,7 @@ Results report weak between-mutant statistical separation; the abstract is more 
 - PMID:14605248: abstract; cardiac-actin-deficient mouse myocardial growth and filament architecture.
 - PMID:16481394: full text, Figure 9 and corresponding Results; cardiac alpha-actin in sarcomeric I-bands.
 - PMID:19468071: full Results/Methods; human ACTC cDNA expressed in Acta1-null mouse skeletal muscle; retained myofibrillar architecture.
-- PMID:24413018: full FASS synaptosome Methods/Results; individual protein identities in inaccessible supplementary S1–S3.
+- PMID:24413018: full FASS synaptosome Methods/Results inspected; the branch-base PDF-derived full text is retained after review. The fetched HTML extraction remains recoverable in the first published commit. Individual protein identities remain in inaccessible supplementary S1–S3.
 - PMID:21362503: full exosome isolation/MS description; ACTC1-specific Supplemental Table 1 unavailable.
 - PMID:23533145: EPS-urine exosome-enriched proteomics; ACTC1-specific Supplemental Table 2 unavailable.
 - PMID:22516433 and PMID:19946888: native abstracts only; ACTC1-specific protein/peptide tables not inspected.
