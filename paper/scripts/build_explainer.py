@@ -10,6 +10,8 @@ import datetime, html, json, os, re, subprocess
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 S = json.load(open(os.path.join(ROOT, "generated", "stats.json")))
 M, T = S["macros"], S["tables"]
+_sj = os.path.join(ROOT, "generated", "stats_structured.json")
+M.update(json.load(open(_sj)) if os.path.exists(_sj) else {})
 ACTIONS = ["ACCEPT", "KEEP_AS_NON_CORE", "MODIFY", "TOO_GENERAL", "MARK_AS_OVER_ANNOTATED", "REMOVE", "UNDECIDED"]
 ALABEL = {"ACCEPT": "Accept", "KEEP_AS_NON_CORE": "Keep as non-core", "MODIFY": "Modify", "TOO_GENERAL": "Too general",
           "MARK_AS_OVER_ANNOTATED": "Over-annotated", "REMOVE": "Remove", "UNDECIDED": "Undecided"}
@@ -28,7 +30,7 @@ DD = [
  ("01_assay_to_function", "Evidence codes say an experiment was done, not how close its readout is to the protein's own activity.",
   f"IEP rows: {M['accIEP']}% accepted, {M['rejIEP']}% rejected. Molecular readouts support a function term 77% of the time, phenotype readouts 8%.", "corpus + project"),
  ("02_iba_seeds", "Tree-based propagation mostly works; when it fails, one wrong seed annotation reaches every descendant.",
-  f"IBA accepted {M['accIBA']}%, on a par with IDA ({M['accIDA']}%). 21 of 109 sole-seed P. aeruginosa proteins carry a wrong seed.", "corpus + project"),
+  f"IBA accepted {M['accIBA']}%, on a par with IDA ({M['accIDA']}%). Of {M['nPropRows']} transferred rows with a propagation review, {M['pctPropNoFailureIBA']}% of IBA but only {M['pctPropNoFailureISO']}% of ISO show no failure.", "corpus"),
  ("03_projection", "Outside model organisms almost everything is projected from orthologs, carrying context the target lineage lacks.",
   f"ISO accepted {M['accISO']}% vs IBA {M['accIBA']}%. Naked mole rat: 1 experimental annotation among ~335,000.", "corpus + project"),
  ("04_keywords", "UniProt keyword mappings read 'regulates' or 'active during' as 'takes part in'.",
@@ -44,11 +46,11 @@ DD = [
  ("09_obsoletion", "Obsoleting a term is easy; moving its annotations needs a decision per row, which agentic review supplies.",
   "30 term-obsoletion projects; unfolded protein binding reassigned across 148 genes before both source terms were obsoleted.", "project"),
  ("10_citations", "A citation can pass every check and still be wrong, and annotations outlive retracted papers.",
-  "Of 290 pairs flagged by a 2020 misannotation study, 216 have since left GOA; the review overturns one of the study's calls.", "project"),
+  f"{M['nRefReviews']} references adjudicated: {M['nRefMiscited']} miscited, {M['nRefWrongIdentifier']} pointing at the wrong paper. {M['nSourceDefects']} source-record defects filed upstream.", "corpus"),
  ("11_entities", "Annotation assumes one entry is one real protein; fused gene models and isoforms break that.",
   "26 of 58 over-long R. toruloides entries are fusions of 2–4 neighbouring genes.", "project"),
  ("12_predictors", "Predictors copy or learn GO, so they reproduce its error classes, and GO-scored benchmarks reward them.",
-  "eggNOG-mapper recovers 44% of core functions for a newly sequenced species; BioReason-Pro: 23 of 955 terms correct and new.", "project"),
+  f"Of {M['nPredictions']} predicted terms scored, {M['predPctCorrect']}% correct and {M['predPctWrong']}% wrong; only {M['predPctCOR']}% correct and new. eggNOG-mapper recovers 44% of core functions for a new species.", "corpus + project"),
 ]
 
 def tex_to_text(s):
@@ -125,20 +127,23 @@ FIGS = [
  ("Fig. 6: review actions by clade", "done"),
  ("Fig. 7: experimental annotation outcome by annotation date", "done"),
  ("Fig. 8: deep-dive panels (experimental codes, ISO, keywords, domain pipelines)", "done"),
+ ("Fig. 9: propagation reviews, root causes and failure modes (IBA deep dive)", "done"),
+ ("Fig. 10: evidence trail, source defects and reference adjudications", "done"),
+ ("Fig. 11: predictor assessments and error types", "done"),
  ("Corpus composition by campaign type", "planned"),
  ("Per-pipeline error rates scaled to all of UniProt-GOA", "planned"),
- ("Predictor outcomes aligned with the deep-dive error classes", "planned"),
- ("Figures for the project-based deep dives (IBA seeds, obsoletion, citations, ...)", "planned"),
+ ("Sign-error and obsoletion figures", "planned"),
  ("Table 1: corpus composition by evidence class and aspect", "done, GOA share planned"),
  ("Tables: actions by evidence class, pipeline, aspect, annotating group", "done"),
  ("Table: GO terms with the highest rejection rate", "done"),
+ ("Table: curation sessions by agent tool and model", "done"),
  ("Supplement: actions by code, taxon folder, clade; protein binding", "done"),
 ]
 figs_html = "".join(f'<li><span class="chip {"ok" if s == "done" else "warn" if "done" in s else "plain"}">{e(s)}</span>{e(n)}</li>' for n, s in FIGS)
 
 NEXT = [
  ("Show the calls are right", "Expert grading of a stratified sample of about 500 decisions. Self-consistency (≈99.7% on re-review) is not accuracy."),
- ("Remaining figures", "Campaign-type breakdown, GOA-wide extrapolation, predictor figure, and figures for the project-based deep dives."),
+ ("Remaining figures", "Campaign-type breakdown, GOA-wide extrapolation, sign-error and obsoletion figures; bring BioReason and eggNOG into the predictor figure."),
  ("Reconcile keyword numbers", "Corpus-wide keyword2GO rejection (14–24%) is far below the SPKW project subsets (79–100%); state the selection."),
  ("Re-derive project numbers", f"{n_proj} numbers are still copied from project pages; each needs a script under paper/scripts/."),
  ("Gene selection", "Not a random sample: report results by campaign type (whole proteome, thematic, term audit)."),
