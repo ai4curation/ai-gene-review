@@ -38,3 +38,8 @@ A retrospective audit of the succinyl-CoA synthetase reviews found the points be
 - Description: "Bacteria have a single beta subunit" changed to "E. coli, like most bacteria, has a single beta subunit"; some bacteria have two beta-subunit genes.
 - The OpenScientist finding that Pro20 governs the preference for ADP over GDP is now a separate finding marked DISPUTED.
 - Review status changed from INITIALIZED to DRAFT; no row is pending.
+
+## Reconciliation with the Pseudomonas reviews (2026-11-18)
+
+- GO:0046872 metal ion binding (IEA): MODIFY (to GO:0000287) changed to TOO_GENERAL. The row's own evidence is the ATP-grasp signature InterPro:IPR011761, which stops at metal ion binding and does not identify the metal. The Mg2+ evidence [PMID:10625475 "X-ray diffraction data revealed an ADP-Mg(2+) complex bound in the ATP-grasp fold of the N-terminal domain of each beta-subunit"] belongs to the separate GO:0000287 row, which is kept. Under the current guideline MODIFY needs the row's own evidence for the deeper term, and a term that is imprecise on its own beside a more specific asserted term is TOO_GENERAL. The line "metal ion binding (IEA) modified to magnesium ion binding" in the first review above is superseded. The P. aeruginosa and P. putida sucC reviews use the same action.
+- No other change. GO:0004776 stays KEEP_AS_NON_CORE here and ACCEPT in the Pseudomonas reviews; that is a species difference (measured tenfold preference for ATP in E. coli, no preference reported for P. aeruginosa), as is GO:0042709 TOO_GENERAL beside the IDA-supported GO:0009361.
