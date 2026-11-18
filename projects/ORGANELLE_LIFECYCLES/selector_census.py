@@ -234,11 +234,12 @@ def fetch_interpro_domains(accessions: set[str], cache_file: Path) -> DomainLook
                 if acc in found
             }
         )
-        # Written after every batch, so a failure in a later batch keeps the earlier answers.
+        # Written after every batch, so a failure in a later batch keeps the earlier answers;
+        # written to a temporary file and renamed, so an interrupted write cannot corrupt it.
         cache_file.parent.mkdir(parents=True, exist_ok=True)
-        cache_file.write_text(
-            json.dumps({"accessions": entries}, sort_keys=True, indent=0)
-        )
+        tmp = cache_file.with_name(cache_file.name + ".tmp")
+        tmp.write_text(json.dumps({"accessions": entries}, sort_keys=True, indent=0))
+        tmp.replace(cache_file)
     answered = accessions & set(entries)
     return DomainLookup(
         domains={acc: set(entries[acc]["interpro"]) for acc in answered},
@@ -440,9 +441,10 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
             for o in ORGANISMS
         }
         lookup = fetch_interpro_domains(
-            set().union(*candidates.values()), cache / "uniprot-interpro.json"
+            set().union(*candidates.values(), set()), cache / "uniprot-interpro.json"
         )
         domains = lookup.domains
+        unanswered = set(lookup.unanswered)
         rows = []
         for d in descriptors(doc["module"]):
             selected = {
@@ -504,11 +506,9 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
                             "uniprot_releases": list(lookup.uniprot_releases),
                             "unanswered_accessions": list(lookup.unanswered),
                             "unanswered_by_organism": {
-                                o.slug: sorted(
-                                    set(lookup.unanswered) & candidates[o.slug]
-                                )
+                                o.slug: sorted(unanswered & candidates[o.slug])
                                 for o in ORGANISMS
-                                if set(lookup.unanswered) & candidates[o.slug]
+                                if unanswered & candidates[o.slug]
                             },
                         }
                     }
