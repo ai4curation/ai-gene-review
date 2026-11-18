@@ -294,6 +294,22 @@ MANIFEST_KINDS: Dict[str, ManifestKind] = {
     "artifacts": ManifestKind(label="Brief", allow_local=False),
 }
 
+#: Sections of the generated projects index (``pages/projects/index.html``), in
+#: display order. A project picks one with its ``index_group`` frontmatter key;
+#: projects without one are listed under :data:`UNGROUPED_HEADING`.
+INDEX_GROUPS: Dict[str, str] = {
+    "WORM": "C. elegans Projects",
+    "YEAST": "Yeast Projects",
+    "MAMMAL": "Human / Mammalian Projects",
+    "BACTERIA": "Bacterial Projects",
+    "ARCHAEA": "Archaeal Projects",
+    "PLANT": "Plant Projects",
+    "OTHER_ORGANISM": "Other Organism Projects",
+    "GO_TRACKER_BACKLOG": "GO Tracker Backlog",
+    "CROSS_CUTTING": "Cross-Cutting & Methodology",
+}
+UNGROUPED_HEADING = "Not yet grouped"
+
 #: Allowed keys inside a single manifest entry.
 MANIFEST_ENTRY_KEYS = {"href", "title", "description"}
 
@@ -1923,9 +1939,17 @@ def collect_project_rows(projects_dir: Path) -> List[Dict[str, Any]]:
 
         collections = _as_string_list(frontmatter.get("collections"))
         resources = manifest_resources(frontmatter, md_path, projects_dir)
+        pathway = support_dir / f"{md_path.stem}-pathway.md"
         rows.append(
             {
                 "slug": md_path.stem,
+                "index_group": frontmatter.get("index_group"),
+                "description": frontmatter.get("description"),
+                "pathway_url": (
+                    f"{md_path.stem}/{pathway.with_suffix('.html').name}"
+                    if pathway.is_file()
+                    else None
+                ),
                 "collections": collections,
                 "title": title,
                 "url": f"{md_path.stem}.html",
@@ -1996,7 +2020,7 @@ def render_projects_table(
     ``maturity``, ``tags``, ``species``, ``genes``) plus a count of supporting
     markdown docs in its ``FOO/`` folder. The rendered page provides client-side
     filtering by tag/maturity/species and a title/slug search. This complements
-    the hand-curated ``index.html`` by guaranteeing every project is listed.
+    the grouped ``index.html`` (:func:`render_projects_index`) with filters.
 
     Args:
         projects_dir: Directory containing project markdown files
@@ -2060,6 +2084,49 @@ def render_projects_table(
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / "all-projects.html"
     output_path.write_text(html)
+    return output_path
+
+
+def group_project_rows(
+    rows: List[Dict[str, Any]],
+) -> List[Tuple[str, List[Dict[str, Any]]]]:
+    """Group project rows by ``index_group`` in :data:`INDEX_GROUPS` order.
+
+    Projects without a known group are listed last, under
+    :data:`UNGROUPED_HEADING`; empty groups are omitted.
+
+    >>> rows = [{"slug": "A", "index_group": "YEAST"}, {"slug": "B", "index_group": "WORM"},
+    ...         {"slug": "C", "index_group": None}]
+    >>> [(heading, [r["slug"] for r in members]) for heading, members in group_project_rows(rows)]
+    [('C. elegans Projects', ['B']), ('Yeast Projects', ['A']), ('Not yet grouped', ['C'])]
+    """
+    groups: List[Tuple[str, List[Dict[str, Any]]]] = [
+        (heading, [r for r in rows if r.get("index_group") == key])
+        for key, heading in INDEX_GROUPS.items()
+    ]
+    groups.append(
+        (UNGROUPED_HEADING, [r for r in rows if r.get("index_group") not in INDEX_GROUPS])
+    )
+    return [(heading, members) for heading, members in groups if members]
+
+
+def render_projects_index(
+    projects_dir: Path = Path("projects"),
+    output_dir: Path = Path("pages/projects"),
+) -> Path:
+    """Render ``index.html``: every top-level project, grouped by ``index_group``."""
+    template_path = Path(__file__).parent / "templates" / "projects_index.html.j2"
+    env = Environment(
+        loader=FileSystemLoader(template_path.parent),
+        autoescape=select_autoescape(["html", "j2"]),
+    )
+    rows = collect_project_rows(projects_dir)
+    html = env.get_template(template_path.name).render(
+        groups=group_project_rows(rows), total=len(rows)
+    )
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "index.html"
+    output_path.write_text("\n".join(line.rstrip() for line in html.splitlines()) + "\n")
     return output_path
 
 
@@ -2157,6 +2224,9 @@ def render_all_projects(
     table_path = render_projects_table(projects_dir, output_dir)
     output_paths.append(table_path)
     print(f"Rendered project table -> {table_path}")
+    index_path = render_projects_index(projects_dir, output_dir)
+    output_paths.append(index_path)
+    print(f"Rendered grouped project index -> {index_path}")
 
     if all_warnings:
         print(f"\n{len(all_warnings)} warnings:")

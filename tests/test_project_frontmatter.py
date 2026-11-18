@@ -15,6 +15,7 @@ import pytest
 import yaml
 
 from ai_gene_review.render_projects import (
+    INDEX_GROUPS,
     MANIFEST_ENTRY_KEYS,
     MANIFEST_KINDS,
     manifest_errors,
@@ -169,6 +170,24 @@ def test_project_tags_are_controlled(md_path: Path) -> None:
         f"{md_path.relative_to(PROJECTS_DIR)} has invalid tag(s) {invalid}; "
         f"allowed tags are {sorted(VALID_TAGS)}."
     )
+
+
+@pytest.mark.parametrize(
+    "md_path",
+    _project_markdown_files(),
+    ids=lambda p: str(p.relative_to(PROJECTS_DIR)),
+)
+def test_project_index_group_is_controlled(md_path: Path) -> None:
+    """``index_group`` names a section of the generated projects index."""
+    fm = _parse_frontmatter(md_path.read_text())
+    group = fm.get("index_group")
+    if group is None:
+        return
+    assert group in INDEX_GROUPS, (
+        f"{md_path.relative_to(PROJECTS_DIR)} has index_group {group!r}; "
+        f"allowed values are {sorted(INDEX_GROUPS)}."
+    )
+    assert md_path.parent == PROJECTS_DIR, "only top-level projects are indexed"
 
 
 @pytest.mark.parametrize(

@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [EVALUATION, PIPELINE]
 species: [human, worm]
 genes: [MEGF10, ced-1]
+index_group: CROSS_CUTTING
 ---
 
 # PANTHER family assignment discrepancies

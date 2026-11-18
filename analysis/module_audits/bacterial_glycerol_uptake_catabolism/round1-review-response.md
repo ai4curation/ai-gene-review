@@ -1,0 +1,11 @@
+Addressed the core-synthesis mismatch: retained the supported GlpD electron-transfer, respiratory and homodimerization claims and GlpK phosphorylation/self-association, and made them explicit in core_functions. The current official GO0009055 definition explicitly includes enzymatic metabolic reactions; a diffusible-carrier-only interpretation is not applicable. GO0004368 is not its descendant.
+
+Changed ECOLI GlpK DNA damage response to MARK_AS_OVER_ANNOTATED while preserving the genuine Table1 IEP observation: induction does not show work by the protein in the response. Replaced the editorial quotation with the actual row and recorded a probable source mapping CHECK. GlpF mercury remains UNDECIDED because the specific full experiment is inaccessible; inhibition alone is not accepted as an adaptive-response mechanism, but an abstract is insufficient to declare the experimental mapping demonstrably wrong.
+
+Refined BACSU GlpK G3P metabolism to G3P biosynthesis. Preserved PSEPK GlpD historical ISS/NEW payload and supplied positive sequence/reaction/topology support:57.2% identity over500 aligned residue pairs,55.53% over515 total columns. Target membrane-face details remain inferred.
+
+Omitted manganese from the metal-binding refinement while retaining measured substitution/occupancy as evidence, not a demonstrated native role. Restored cached-full-text-unavailable flags without retracting separately documented full-text readings. Added BACSU GlpD primary-source provenance pointers. No original sources or providers were edited.
+
+Six changed reviews/renders/histories pass focused checks with zero curation warnings. All116 ordered payloads, the historical NEW row and63 protected source artifacts are preserved; only the two justified action changes above occur. No new GO rows or publications, module/family/project edits, full-corpus run, commits or publication actions. See analysis/module_audits/bacterial_glycerol_uptake_catabolism/round1-gene-review/findings.md for detailed evidence and limitations.
+
+Root verification confirms 36 handoff hashes, 116 ordered payloads, 63 protected sources, and all focused log hashes. The unchanged source-based coverage checker passes 29 cases with byte-identical results; current nine-member review hashes are recorded separately. Full-corpus validation and publication remain pending.

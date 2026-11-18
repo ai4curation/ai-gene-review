@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [EVALUATION, PIPELINE]
 species: [human, rat, ARATH, SCHPO]
 genes: [FGFR4, AGR2, GCH1, HSPA6, CRY2, Ghr, CLV3, GID1A, chk1]
+index_group: CROSS_CUTTING
 ---
 # NOT Annotation Usage Audit
 

@@ -3,6 +3,7 @@ title: "Organelle Lifecycle Modules"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 autolink_exclude: [ftsZ, FtsZ]
+index_group: CROSS_CUTTING
 ---
 
 # Organelle Lifecycle Modules
@@ -26,7 +27,9 @@ eukaryote-wide `MODULE:mitochondrial_protein_import` and
   an organelle confined to one lineage (the plastid and the plant vacuole):
   its umbrella and rule modules take that clade, or the narrower clade their
   grounding supports, as their context, and their required parts assert "every
-  member of the clade has this".
+  member of the clade has this". An organelle scattered across lineages
+  (the acidocalcisome) keeps the Eukaryota context, and its rule says in its
+  notes which lineages it is meant for; failures outside them are expected.
 - **Rules, not compendia.** A non-optional part asserts "every eukaryote with
   this organelle has this". That is a stronger claim than a descriptive pathway
   module makes, and it is what lets the satisfiability engine
@@ -108,10 +111,12 @@ Until that is done, the umbrella links to them as optional.
 
 The organelle-by-stage matrix lives in
 [ORGANELLE_LIFECYCLES/coverage.yaml](ORGANELLE_LIFECYCLES/coverage.yaml).
-Per-organism selector counts behind the phagosome and synaptic vesicle assessments are in
+Every eukaryote-wide rule candidate, plus the phagosome and synaptic vesicle modules, is evaluated
+across 24 organisms in [ORGANELLE_LIFECYCLES/rule-evaluation.md](ORGANELLE_LIFECYCLES/rule-evaluation.md).
+The per-organism counts and verdicts are in
 [ORGANELLE_LIFECYCLES/selector-census.yaml](ORGANELLE_LIFECYCLES/selector-census.yaml), made by
-[ORGANELLE_LIFECYCLES/selector_census.py](ORGANELLE_LIFECYCLES/selector_census.py) from PANTHER's
-release-pinned sequence classification files.
+[ORGANELLE_LIFECYCLES/selector_census.py](ORGANELLE_LIFECYCLES/selector_census.py) with the module engine
+from PANTHER's release-pinned sequence classification files.
 
 ## Plan
 
@@ -151,5 +156,14 @@ release-pinned sequence classification files.
 - [x] Synaptic vesicle: assessed; `synaptic_vesicle_cycle` stays `DESCRIPTIVE`. Its required steps hold in human, fly, worm and Nematostella, but only its synapsin step separates neuronal animals from other lineages (Trichoplax fails on it alone), and its Metazoa context, which the module does not qualify, includes sponges and placozoans (see coverage and `selector-census.yaml`)
 - [ ] Synaptic vesicle: narrow the cycle's context to animals with neurons and name the exceptions in the module; find selectors confined to neuronal animals; check ctenophores and proteomes; then reassess as a rule candidate
 - [ ] Phagosome: repoint the three `phagosome_maturation` selectors that miss human (Rab5, PIKfyve, V0a), already named in the module's own notes
-- [ ] Specialized organelles: lineage-specific organelles
-- [ ] Evaluate the umbrellas against reference proteomes (mitosome- and hydrogenosome-bearing lineages first)
+- [x] Acidocalcisome: `acidocalcisome_lifecycle` umbrella requiring one new rule module, `acidocalcisome_polyphosphate_storage` (a VTC-domain subunit of `PTHR46140:SF1`, Vtc4 in most lineages, plus an H+-PPase or the V-ATPase; AP-3 delta optional); inositol pyrophosphate synthesis optional; `RULE_CANDIDATE` for the VTC lineages, met in the nine census organisms that have Vtc4 ([rule-evaluation](ORGANELLE_LIFECYCLES/rule-evaluation.md#the-acidocalcisome-rule))
+- [ ] Acidocalcisome: add the Ca2+-ATPase, polyphosphate turnover and the contractile-vacuole link; separate the catalytic Vtc4 from Vtc2/Vtc3-type subunits that PANTHER places in `PTHR46140:SF1` (Toxoplasma Vtc2; the *Plasmodium* pass rests on such a protein); decide whether the fungal polyphosphate vacuole should be separated from the acidocalcisome; check Paramecium and Phytophthora, which have no Vtc4-type protein in PANTHER's files
+- [ ] Specialized organelles: other lineage-specific organelles (contractile vacuole, lysosome-related organelles, hydrogenosome and mitosome variants)
+- [x] Evaluate the rule candidates against PANTHER's reference-proteome classification files for 24 organisms, with the module engine ([rule-evaluation](ORGANELLE_LIFECYCLES/rule-evaluation.md)); mitosome- and hydrogenosome-bearing lineages fail the mitochondrial and peroxisomal rules as expected, and several rules fail in model organisms on one selector
+- [x] Fix the MPP beta and alpha selectors (#6416) and the Pex2 selector (#6418), and rerun the rule evaluation with the fixes
+- [ ] Fix the remaining model-organism selector defects listed in the rule evaluation; several of the smaller ones (Nup88, Seh1, Atg steps, SRbeta) also fail in protist lineages, so check each against the full gap list before narrowing the fix to one organism
+- [ ] Triage the remaining gaps in the rule evaluation's full gap list (early animals, protists and the reduced-organelle lineages)
+- [ ] Check the cilium rule's fly (IFT81, IFT74, IFT139), worm (DYNC2I2) and Trichoplax (IFT74) gaps
+- [ ] Find out whether the lineages that PTHR13166 misses (plants and green algae, Monosiga, the chytrid, Phytophthora, Thalassiosira, Giardia, Trichomonas, Entamoeba) carry an ISD11 the family does not capture
+- [ ] Compile protein-complex annotons into their active units in `module_logic`, so family-keyed oracles can evaluate complex steps
+- [ ] Check the census gaps against the proteomes themselves, starting with the mitosome and hydrogenosome lineages once the selector defects are fixed
