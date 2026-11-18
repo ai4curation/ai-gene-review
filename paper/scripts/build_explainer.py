@@ -138,6 +138,7 @@ FIGS = [
  ("Table: GO terms with the highest rejection rate", "done"),
  ("Table: curation sessions by agent tool and model", "done"),
  ("Table: residue claims by matching method and claim type, with validator results", "done"),
+ ("Release: alignment manifest (SHA-256), residue-loss audit and triage", "done"),
  ("Supplement: actions by code, taxon folder, clade; protein binding", "done"),
 ]
 figs_html = "".join(f'<li><span class="chip {"ok" if s == "done" else "warn" if "done" in s else "plain"}">{e(s)}</span>{e(n)}</li>' for n, s in FIGS)

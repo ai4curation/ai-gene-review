@@ -47,10 +47,11 @@ def review(path):
                     out["residue_claims"].append({**base, "claim_type": rc.get("claim_type"), "method": rc.get("method"),
                                                   "alignment_release": rc.get("alignment_release"),
                                                   "site_ref": rc.get("site_ref"), "has_target": bool(rc.get("target")),
+                                                  "comment": " ".join(str(rc.get("comment") or "").split())[:400],
                                                   "not_applicable": False})
             if pr.get("residue_claims_not_applicable"):
                 out["residue_claims"].append({**base, "claim_type": None, "method": None, "alignment_release": None,
-                                              "site_ref": None, "has_target": False, "not_applicable": True})
+                                              "site_ref": None, "has_target": False, "comment": "", "not_applicable": True})
             fm = pr.get("failure_modes") or []
             out["propagation"].append({**base, "root_cause": pr.get("root_cause"),
                                        "failure_modes": "|".join(map(str, fm)) if isinstance(fm, list) else str(fm)})

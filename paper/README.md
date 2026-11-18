@@ -7,6 +7,10 @@ Build: `make` (extracts corpus tables into `data/` (git-ignored, ~1.5 min), rege
 deep-dive files and `main.log`; republish it to https://claude.ai/artifact/2vpZJok8Ki5rRw4Lqff9DT.
 Hand-written claims, figure list and next steps live in `scripts/build_explainer.py`.
 
+**Release files** (`release/`, committed): `alignment_manifest.tsv` (archived alignments with
+SHA-256), `residue_loss_prose_claims.tsv` (scripted harvest) and `residue_audit_triage.yaml` (manual
+triage of flagged rows; hand-written, update when the harvest changes).
+
 **Rule:** every corpus number in the text is a macro from `generated/stats.tex` or a table
 from `generated/tab_*.tex`, produced by `scripts/compute_stats.py`. Numbers taken from
 project pages are marked `\proj{...}` and must be re-derived by a script before submission.

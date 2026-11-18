@@ -12,6 +12,8 @@ stats: data
 	$(PY) scripts/compute_stats.py
 	$(PY) scripts/figures.py
 	$(PY) scripts/figures_structured.py
+	$(PY) scripts/audit_residue_claims.py
+	$(PY) scripts/alignment_manifest.py
 pdf:
 	latexmk -pdf -interaction=nonstopmode main.tex
 refresh:
