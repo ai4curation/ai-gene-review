@@ -44,10 +44,9 @@ All scripts, test sets and raw model outputs are in
 [`LLM_SEQUENCE_PROBE/`](LLM_SEQUENCE_PROBE/). Each test folder has a script that
 builds the test set, one that asks the models and one that scores the answers.
 
-A short preprint is being drafted from these results:
-[read the draft (PDF)](LLM_SEQUENCE_PROBE/manuscript/manuscript.pdf) or the
-[manuscript notes](LLM_SEQUENCE_PROBE/manuscript/README.md). The LaTeX source is
-`LLM_SEQUENCE_PROBE/manuscript/manuscript.tex`.
+A short preprint is being drafted from these results. The draft and its LaTeX
+source live in a separate repository, `ai4curation/fable-sequence-to-function`,
+which is private while the draft is in progress.
 
 ## Test 1: next amino acid (replication of the blog post)
 
@@ -143,7 +142,7 @@ sequence. Three groups, all from Swiss-Prot and excluding human, mouse and rat:
 | Other enzyme, active site to Ala | 3/20 | 3/20 | 16/20 |
 | Mutated position reported as substituted (60 mutants) | 57/60 | 47/60 | 0/60 |
 
-![Share of sequences called catalytically active, by sequence class and model](LLM_SEQUENCE_PROBE/manuscript/figures/fig1_pseudoenzyme.png)
+![Share of sequences called catalytically active, by sequence class and model](LLM_SEQUENCE_PROBE/figures/fig1_pseudoenzyme.png)
 
 - **The new models read the residues.** They flip from active to inactive on a
   one-residue change and name the changed position. Opus 4.6 answers from the
@@ -191,7 +190,7 @@ identity or more was released before 2026-06-01. Fifteen are "known": at least
 Baselines: the best single-state guess scores 54 to 55% on secondary structure,
 and a random long-range pair is in contact about 2% of the time.
 
-![Secondary structure accuracy and contact precision for novel and known structures](LLM_SEQUENCE_PROBE/manuscript/figures/fig2_structure.png)
+![Secondary structure accuracy and contact precision for novel and known structures](LLM_SEQUENCE_PROBE/figures/fig2_structure.png)
 
 The figure counts ASPRV1 once, so its novel bars differ slightly from the table.
 
