@@ -399,6 +399,24 @@ disagree about. The 41 findings (17 gaps, 15 discrepancies, 9 insights) are in
   differentiation (GO:0042490) is a direct child of neuron differentiation, which the gene
   already carries. It became a MODIFY of the two IMP rows whose papers are about touch
   receptors, and the family-level IBA and IEA rows stay `ACCEPT`.
+- **Module links (2026-11-18).** Each of the nine genes now appears in a module:
+  - yap-1 and egl-44 as the YAP/TAZ and TEAD representatives in `hippo_signaling`,
+    alongside the earlier wts-1 review in the LATS tier;
+  - cki-1 as a Cip/Kip CDK inhibitor in `g1_s_transition`. Worm CKI-1 is destroyed by
+    a CRL2 ligase rather than an SCF.
+  - lin-31 in a new optional worm-only part of `egfr_signaling`: the LIN-1/LIN-31
+    complex that MPK-1 phosphorylation disrupts;
+  - pie-1 and pos-1 in `primordial_germ_cell_specification`, as activators of
+    nos-2 translation and, for PIE-1, as the germline transcriptional silencer;
+  - mes-1 in a new module, `c_elegans_p2_ems_contact_signaling`: the MES-1/SRC-1 and
+    MOM-2/MOM-5 Wnt arms of the P2-to-EMS signal;
+  - mec-3, egl-44 and egl-46 in a new module,
+    `c_elegans_touch_receptor_neuron_terminal_selection`: the UNC-86/MEC-3
+    selector and the EGL-44/EGL-46 repressor that keeps the touch program off in
+    FLP.
+
+  No review needed a link back to a module, because none decomposes a precomposed
+  "X involved in Y" term.
 - **Lexical overlap.** The new descriptions recover a median 0.46 of their WormBase
   content words, against 0.37 for the worm corpus. That is expected when the text is an
   input. The corpus median is unchanged at 0.37 (452 genes; see
