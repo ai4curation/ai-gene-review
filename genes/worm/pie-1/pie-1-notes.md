@@ -147,3 +147,13 @@
   binding); the repressive functions marked over-annotated (PIE-1 activates translation
   of its known targets).
 - NEW: positive regulation of translation (mom-2, nos-2); nucleolus (oocytes).
+
+## 2026-11-18: second core function narrowed to what was shown
+
+While pie-1 was being linked into `primordial_germ_cell_specification`, the second core
+function was found to say that PIE-1 binds the 3' UTRs of both mom-2 and nos-2.
+- 3' UTR binding is shown only for mom-2 (PMID:24131629, in vitro).
+- For nos-2, PIE-1 is "required for efficient expression of the maternally encoded
+  Nanos homolog NOS-2" (PMID:11316796), and direct binding has not been shown.
+
+The core function now says this. The gene description already did.
