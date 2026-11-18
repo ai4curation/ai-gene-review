@@ -40,3 +40,9 @@
   (IEP-like): MARK_AS_OVER_ANNOTATED plus WRONG_EVIDENCE_CODE CHECK.
 - No NEW rows proposed: every process I considered (e.g. brain development, neuron
   apoptosis) is either already present or rests on necessity evidence only.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0043065 / PMID:17869439: defect withdrawn (evidence depth: ABSTRACT). Abstract only (no PMC copy). The paper is the intended one and does test caspase-9 inhibitors, so WRONG_REFERENCE was mis-typed; RGD's record RGD:2314390 annotates Casp9 and Casp3 but not Casp8 with this term, i.e. a deliberate full-text reading. Nothing identifiably wrong in the source: defect deleted, its quote moved to the annotation's supported_by, reason and the reference_review note reworded; the open point remains as an existing suggested_question.

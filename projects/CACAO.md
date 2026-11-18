@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [EVALUATION]
 species: [STRP1, EBOZM, yeast, RVFVZ, BUNYW, BPPRD, PSEAE, BPP22, SHIFL, ECOLI, BPPH2, BPT4, BPT5, BPP1, BPPGK, 9CAUD, HHV8P, SENDZ, SINDV, SFVCP, SALTY, TRYCR, NOSB1, BACSU, LAMBD, human, mouse, rat, ARATH, DROME, MYXXA, RHOCB, PSE14, BPG15]
 genes: [pppL, VP35, VP40, GP, WHI3, NSS, N__P16494, XV, fabY, sieA, ipaH4.5, clpX, cha, STM3697, doc, acrIIA5, K3, K5, V__P69282, VPS74, APN1, lysK, gag, SWP7, acs, ybjN, D15, P03316, "3", "5.4", "1", "2", "4", "15", "17", DMS3-25, DMS3-30, JBD30_035, GH15_072, PSPPH_4093, bchF, bchE, bchJ, actC, actA]
+index_group: CROSS_CUTTING
 ---
 
 # CACAO community annotations review

@@ -16,6 +16,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/5RLkvDe6U9n6epeLhUzxpR
       title: Project brief
+index_group: OTHER_ORGANISM
 ---
 
 # Conidiation regulatory cascade — module design proposal
@@ -327,8 +328,8 @@ dirs:** likely `EMENI` (*A. nidulans*) and `NEUCR` (*N. crassa*).
    - `uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C ModuleReview modules/conidiation_regulatory_cascade.yaml`
    - `uv run python -m ai_gene_review.validation.module_validator modules/conidiation_regulatory_cascade.yaml`
    - `just render-module modules/conidiation_regulatory_cascade.yaml`
-5. If this project page is kept, add a `project-card` entry to
-   `pages/projects/index.html` (the index is manually maintained).
+5. If this project page is kept, set `index_group:` in its frontmatter so it
+   appears in the right section of the generated project index.
 
 ## 11. Open questions
 

@@ -49,7 +49,12 @@ evidence quality, and whether the curation narrative is coherent.
   (CLAUDE.md works thyroglobulin, fibrinogen and C3 through the three cases).
 - Treat "every other participant carries this term and this gene does not" as a red
   flag rather than a justification. Ask for the comparator check — two or three other
-  gene products in the same role relative to the same kind of process — and check the
+  gene products in the same role relative to the same kind of process — and, where the
+  review reports a systematic *absence* and declines to propose on that basis, ask how
+  the query was shown to be capable of returning a positive. An absence is the result
+  that carries the argument, and a malformed query reports one confidently and
+  silently; a negative that is clean across every comparator is the tell, not the
+  finding. Also check the
   term's parents (a process under `GO:0006508 proteolysis` names whatever does the
   cleaving, which is the substrate itself in the autoprocessing case, `GO:0016540`,
   and otherwise is not) and the cached GO-CAMs, which often already contain the gene
