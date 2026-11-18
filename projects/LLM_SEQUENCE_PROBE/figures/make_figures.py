@@ -1,8 +1,12 @@
-"""Draw the manuscript figures from the committed model outputs. Usage: make_figures.py (no arguments)."""
+"""Draw the two project-page figures from the committed model outputs. Usage: make_figures.py (no arguments).
+
+Reads ../pseudo/ and ../structure/ and writes fig1_pseudoenzyme.png and fig2_structure.png beside this file,
+at 160 dots per inch (1056 x 432 pixels). The manuscript repository keeps its own copy, which writes PDFs.
+"""
 import collections, json, math, pathlib, statistics
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-HERE = pathlib.Path(__file__).parent; ROOT = HERE.parent.parent
+HERE = pathlib.Path(__file__).parent; ROOT = HERE.parent
 MODELS = [("claude-fable-5-2", "Fable 5.2", "#2a78d6"), ("claude-opus-5-5", "Opus 5.5", "#eb6834"), ("claude-opus-4-6", "Opus 4.6", "#1baf7a")]
 INK, MUTED, GRID = "#1a1a19", "#6b6a63", "#e4e3dd"
 plt.rcParams.update({"font.size": 8.5, "font.family": "DejaVu Sans", "axes.edgecolor": MUTED, "axes.labelcolor": INK, "xtick.color": INK,
@@ -31,7 +35,7 @@ for mid, _, _ in MODELS:
 fig, ax = plt.subplots(figsize=(6.6, 2.7))
 bars(ax, [c[2] for c in classes], vals, 112); ax.set_yticks([0, 25, 50, 75, 100]); ax.set_ylabel("Called catalytically active (%)")
 ax.legend(frameon=False, ncol=3, loc="upper center", bbox_to_anchor=(0.5, 1.16))
-fig.tight_layout(); fig.savefig(HERE / "fig1_pseudoenzyme.pdf"); plt.close(fig)
+fig.tight_layout(); fig.savefig(HERE / "fig1_pseudoenzyme.png", dpi=160); plt.close(fig)
 
 # Figure 2: secondary structure and contact precision against deposited structures (ASPRV1 counted once)
 S = {t["pdb"]: t for t in json.loads((ROOT / "structure/truth.json").read_text())}
@@ -68,5 +72,5 @@ for ax, v, ymax, ylab, ref, name in ((axs[0], q3, 100, "Secondary structure accu
         y = statistics.mean(ref[s]); ax.plot([i - 0.42, i + 0.42], [y, y], color=INK, linewidth=1, linestyle=(0, (3, 2)), zorder=4)
     ax.text(1.47, statistics.mean(ref["known"]), name, ha="left", va="center", fontsize=7, color=MUTED)
 h, l = axs[0].get_legend_handles_labels(); fig.legend(h, l, frameon=False, ncol=3, loc="upper center")
-fig.tight_layout(rect=(0, 0, 1, 0.92)); fig.savefig(HERE / "fig2_structure.pdf"); plt.close(fig)
+fig.tight_layout(rect=(0, 0, 1, 0.92)); fig.savefig(HERE / "fig2_structure.png", dpi=160); plt.close(fig)
 print({m: [round(x, 1) for x in v] for m, v in vals.items()}); print("Q3", q3); print("contacts", cp); print({k: round(statistics.mean(v), 1) for k, v in base.items()}, {k: round(statistics.mean(v), 1) for k, v in chance.items()})
