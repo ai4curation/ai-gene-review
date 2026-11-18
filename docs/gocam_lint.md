@@ -41,6 +41,7 @@ fits, the `GoCamQcFlagEnum` value a reviewer would record.
 | `disconnected_components` | no | Several components. WARNING when two share at least half their genes (a switch or choice, or cloned variant paths) | |
 | `missing_evidence` | no | A causal edge with no evidence | MISSING_EVIDENCE |
 | `missing_location` | no | An activity with no `occurs_in` | MISSING_LOCATION |
+| `sparse_locations` | no | Model rule: half or more of the activities (in a model of three or more) have no `occurs_in`, so its edges cannot be checked for compartment adjacency. WARNING, reported once per model | MISSING_LOCATION |
 | `small_model` | no | Two or fewer activities | |
 | `no_narrative` | no | No curator comment beyond automated changes | |
 | `near_duplicate_models` | no | Corpus rule: two models whose (gene, MF) activity sets overlap with Jaccard ≥ 0.6 | |
@@ -52,7 +53,7 @@ several models are linted together.
 Connectivity rules count metabolite flow as well as causal edges: in pathway
 models, A `has output` X and B `has input` X links A to B. Gene-centric
 models, where every activity has the same enabler (MGI/SGD imports), are
-exempt from the orphan and component rules.
+exempt from the orphan, component and `sparse_locations` rules.
 
 ## Compartment topology
 

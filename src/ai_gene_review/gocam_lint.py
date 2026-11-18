@@ -703,6 +703,27 @@ def missing_location(view: ModelView, _o: Optional[TermOracle]) -> Iterator[Find
                      (a,), "MISSING_LOCATION")
 
 
+@rule("sparse_locations", "Model in which half or more of the activities have no occurs_in.")
+def sparse_locations(view: ModelView, _o: Optional[TermOracle]) -> Iterator[Finding]:
+    """A model too thinly located to be placed in compartments.
+
+    One activity without a location is common (`missing_location`, INFO). When
+    half or more are missing, the causal edges cannot be checked for
+    compartment adjacency and the model cannot be drawn as a spatial scene, so
+    the model as a whole is reported once, as a WARNING. Models of two or
+    fewer activities are left to `small_model`; gene-centric imports (one
+    enabler throughout) are not pathway models and are exempt.
+    """
+    if view.is_gene_centric:
+        return
+    acts = list(view.activities)
+    missing = [a for a in acts if view.cc(a) is None]
+    if len(acts) >= 3 and 2 * len(missing) >= len(acts):
+        yield _f(view, "sparse_locations", "WARNING",
+                 f"{len(missing)} of {len(acts)} activities have no occurs_in",
+                 tuple(missing), "MISSING_LOCATION")
+
+
 @rule("small_model", "Model with two or fewer activities.")
 def small_model(view: ModelView, _o: Optional[TermOracle]) -> Iterator[Finding]:
     """Very small models carry little causal structure."""

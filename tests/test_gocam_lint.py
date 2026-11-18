@@ -221,3 +221,17 @@ def test_cli_corpus_rule_runs():
               "62b4ffe300004525", "62b4ffe300004489"])
     assert result.exit_code == 0, result.output
     assert "near_duplicate_models" in result.output
+
+
+def test_sparse_locations_reports_the_model_once():
+    """Four of six activities unlocated: one WARNING naming all four."""
+    findings = lint_model(_model("680ad14200007201"), None)
+    (finding,) = _rules(findings, "sparse_locations")
+    assert finding.severity == "WARNING"
+    assert finding.qc_flag == "MISSING_LOCATION"
+    assert len(finding.activity_ids) == 4
+    assert len(_rules(findings, "missing_location")) == 4
+
+
+def test_sparse_locations_ignores_a_fully_located_model():
+    assert not _rules(lint_model(_model("62b4ffe300000241"), None), "sparse_locations")
