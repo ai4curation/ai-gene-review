@@ -51,6 +51,7 @@ phnX, so read the list rather than counting it.
 ```bash
 uv run python -m ai_gene_review.validation.enzyme_family_cutoff Q88KF6 --go GO:0004451
 uv run python projects/ENZYME_SPECIFICITY/cutoff-check/run_cutoff_check.py
+uv run python projects/ENZYME_SPECIFICITY/cutoff-check/page/build_page.py OUT.html  # results page
 ```
 
 ## Evaluation set
