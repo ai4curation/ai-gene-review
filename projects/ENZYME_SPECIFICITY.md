@@ -15,6 +15,7 @@ manifest:
     - href: https://claude.ai/artifact/GHRaq9M5SJkRknTDVgUFt6
       title: Cutoff check
       description: AI generated
+index_group: CROSS_CUTTING
 ---
 
 # Enzyme Specificity Project

@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/VHttoJK4pkrUE9GQEEFGYM
       title: Project brief
+index_group: BACTERIA
 ---
 
 # Cellulosome Project

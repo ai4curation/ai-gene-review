@@ -43,6 +43,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/6c2seZotkYZQ22pTQxPvMR
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Deliverome GO Collaboration

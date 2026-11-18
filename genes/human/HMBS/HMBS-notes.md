@@ -63,3 +63,14 @@ and cached Reactome entries R-HSA-189406 / R-HSA-189451.
   MARK_AS_OVER_ANNOTATED.** Bare "protein binding" is uninformative; both are high-throughput
   interactome screens (Y2H reference interactome; neurodegenerative-disease interactome).
   Per policy, do NOT REMOVE bare protein-binding IPIs — mark as over-annotated.
+
+## Completion pass (2026-11-10, Claude (AI-assisted))
+
+- All rows carry complete verbatim quotes; title-only quotes (PMID:32296183, 32814053, 2025226)
+  and the DE-line "EC=2.5.1.61" quote were replaced with abstract/CC text.
+- protein binding (HuRI; neurodegenerative-disease Y2H map) -> REMOVE (protein-binding policy).
+- cytoplasm IBA -> MODIFY to cytosol (propagation_review: granularity, PTN000168159).
+- porphyrin-containing compound biosynthetic (ARBA) and tetrapyrrole biosynthetic (InterPro2GO)
+  -> MODIFY to heme biosynthetic process.
+- heme B biosynthetic process IDA: MARK_AS_OVER_ANNOTATED -> ACCEPT, matching the convention
+  used for ALAD, CPOX, UROD, FECH (the process covers every step toward protoheme).

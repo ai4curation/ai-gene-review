@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [CHLRE, ARATH]
 genes: [LCI5, rbcL, RBCS1, SAGA1, SAGA2, MITH1, RBMP1, RBMP2, BST1, BST2, BST3, CAH3, LCIB, LCIC, HLA3, LCIA, CIA5]
+index_group: PLANT
 ---
 
 # CO2-Concentrating Mechanisms (CCMs)

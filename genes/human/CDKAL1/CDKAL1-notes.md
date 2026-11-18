@@ -77,3 +77,7 @@ instead.
   purpose of the modification, consistent with the PAINT node and with PMID:21841312.
 - GO:1904047 SAM binding added as a NEW ISS row (PMID:23542644, RimO/MTTase mechanism naming CDKAL1;
   UniProt PRU00780 exchangeable-SAM note), for consistency with LIAS and ELP3.
+
+## ND re-check (2026-11-15)
+
+- Literature on human CDKAL1 identifies its biological process: the human protein converts t6A to ms2t6A in tRNA in vivo (PMID:20584901). The BP ND row is stale (nd_case STALE); the MODIFY to tRNA methylthiolation stands.
