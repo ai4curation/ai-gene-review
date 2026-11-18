@@ -5,6 +5,7 @@ Outputs (paper/data/):
   propagation.tsv      one row per annotation carrying a propagation_review block
   source_defects.tsv   one row per source_defects item on an annotation
   ref_reviews.tsv      one row per reference with a reference_review block
+  residue_claims.tsv   one row per propagation_review residue claim (plus not-applicable notes)
   history.tsv          one row per gene history record (agent, model, date)
 """
 import csv, glob, os, sys
@@ -28,7 +29,7 @@ def org_of(path):
 
 def review(path):
     d = load(path)
-    out = {"propagation": [], "source_defects": [], "ref_reviews": []}
+    out = {"propagation": [], "source_defects": [], "ref_reviews": [], "residue_claims": []}
     if not d:
         return out
     org, gene = org_of(path), d.get("gene_symbol")
@@ -41,6 +42,15 @@ def review(path):
                 "reference": a.get("original_reference_id"), "action": r.get("action")}
         pr = r.get("propagation_review")
         if isinstance(pr, dict):
+            for rc in pr.get("residue_claims") or []:
+                if isinstance(rc, dict):
+                    out["residue_claims"].append({**base, "claim_type": rc.get("claim_type"), "method": rc.get("method"),
+                                                  "alignment_release": rc.get("alignment_release"),
+                                                  "site_ref": rc.get("site_ref"), "has_target": bool(rc.get("target")),
+                                                  "not_applicable": False})
+            if pr.get("residue_claims_not_applicable"):
+                out["residue_claims"].append({**base, "claim_type": None, "method": None, "alignment_release": None,
+                                              "site_ref": None, "has_target": False, "not_applicable": True})
             fm = pr.get("failure_modes") or []
             out["propagation"].append({**base, "root_cause": pr.get("root_cause"),
                                        "failure_modes": "|".join(map(str, fm)) if isinstance(fm, list) else str(fm)})
@@ -99,7 +109,7 @@ def main():
     revs = sorted(glob.glob(os.path.join(ROOT, "genes", "*", "*", "*-ai-review.yaml")))
     preds = sorted(glob.glob(os.path.join(ROOT, "genes", "*", "*", "*predictions-review.yaml")))
     hist = sorted(glob.glob(os.path.join(ROOT, "history", "genes", "*", "*", "*.yaml")))
-    agg = {"propagation": [], "source_defects": [], "ref_reviews": []}
+    agg = {"propagation": [], "source_defects": [], "ref_reviews": [], "residue_claims": []}
     with ProcessPoolExecutor() as ex:
         for out in ex.map(review, revs, chunksize=50):
             for k in agg:
