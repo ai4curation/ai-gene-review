@@ -7,3 +7,13 @@ The POU-seeded PTN000180816 trace is insufficient for the two specific DNA-recog
 ## Ligand activity and signaling pathway review, 2026-10-21
 
 Changed the molecular function on `core_functions` and the `GO:0005102` (*signaling receptor binding*) `MODIFY` replacement from `GO:0005114` (*netrin receptor binding*) to `GO:0048018` (*receptor ligand activity*) per the GO-CAM signaling receptor guideline and `go-ontology#31015` (Jan 2026), which reclassified `GO:0048018` as an activity that `has_part GO:0005102` rather than `is_a GO:0005102`. Proposed `NEW` `GO:0038007` (*netrin-activated signaling pathway*) and added it to `core_functions.directly_involved_in`, resolving the Category A ligand gap identified in `projects/LIGANDS_IN_SIGNALING.md` (`PMID:10366627`).
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- One Golgi row: IEA GO_REF:0000107, projected from mouse Ntn3 (Q9R1A3). QuickGO (2026-11-18): the
+  donor is an MGI IDA from PMID:10381568 (Puschel 1999, "Divergent properties of mouse netrins"),
+  abstract-only with no PMC record. The abstract does not mention the Golgi.
+- UniProt has no Golgi item for NTN3 (only secreted/extracellular matrix, by similarity).
+- KEEP_AS_NON_CORE (which assumed transit) changed to UNDECIDED under the unreadable-donor line;
+  the two readings (transfected protein in transit, MARK_AS_OVER_ANNOTATED; endogenous or retained
+  pool, KEEP_AS_NON_CORE) are set out in the row.
