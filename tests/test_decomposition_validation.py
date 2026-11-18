@@ -214,3 +214,57 @@ def test_real_go_synonym_catches_label_drift():
 
     review = {"action": "MODIFY", "proposed_replacement_terms": [NEG_PROLIF]}
     assert "decomposition_context_dropped_silently" in _check(review, DRIFTED, names=go_names)
+
+
+def _check_rows(rows: list[dict], **lookups) -> set[str]:
+    """Run check_decomposition over several annotation rows."""
+    report = ValidationReport(file_path=Path("test"), is_valid=True)
+    check_decomposition({"existing_annotations": rows}, report, get_project_root(), **lookups)
+    return {i.check_type for i in report.issues if i.check_type}
+
+
+def _row(term: dict, action: str, **review) -> dict:
+    return {"term": term, "review": {"action": action, **review}}
+
+
+@pytest.mark.parametrize(
+    "other_action,warns",
+    [
+        ("KEEP_AS_NON_CORE", True),
+        ("MARK_AS_OVER_ANNOTATED", True),
+        ("REMOVE", True),
+        ("ACCEPT", False),
+    ],
+)
+def test_decomposition_replacement_must_be_acceptable(other_action, warns):
+    """A decomposition MODIFY's replacement is a claim the review would accept."""
+    rows = [
+        _row(
+            PRECOMPOSED,
+            "MODIFY",
+            proposed_replacement_terms=[GENUS],
+            decomposed_into={"context_dropped": True},
+        ),
+        _row(GENUS, other_action),
+    ]
+    found = "decomposition_replacement_not_acceptable" in _check_rows(rows)
+    assert found is warns
+
+
+def test_genus_replacement_without_decomposed_into_is_checked_too():
+    rows = [
+        _row(PRECOMPOSED, "MODIFY", proposed_replacement_terms=[GENUS]),
+        _row(GENUS, "KEEP_AS_NON_CORE"),
+    ]
+    assert "decomposition_replacement_not_acceptable" in _check_rows(rows)
+
+
+def test_ordinary_refinement_modify_is_out_of_scope():
+    """Refining a general term to a non-core specific one stays a MODIFY (CLAUDE.md)."""
+    membrane = {"id": "GO:0016020", "label": "membrane"}
+    plasma = {"id": "GO:0005886", "label": "plasma membrane"}
+    rows = [
+        _row(membrane, "MODIFY", proposed_replacement_terms=[plasma]),
+        _row(plasma, "KEEP_AS_NON_CORE"),
+    ]
+    assert "decomposition_replacement_not_acceptable" not in _check_rows(rows)
