@@ -46,7 +46,7 @@ builds the test set, one that asks the models and one that scores the answers.
 
 A short preprint is being drafted from these results. The draft and its LaTeX
 source live in a separate repository, `ai4curation/fable-sequence-to-function`,
-which is private while the draft is in progress.
+which is private while the draft is in progress; ask the authors for access.
 
 ## Test 1: next amino acid (replication of the blog post)
 
