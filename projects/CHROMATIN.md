@@ -1,10 +1,10 @@
 ---
 title: "Chromatin: complexes, locations and the GO chromatin subtree"
 maturity: SCOPING
-last_reviewed: '2026-11-17'
+last_reviewed: '2026-11-18'
 tags: [BIOLOGY_DOMAIN]
 species: [yeast]
-genes: [HAT1, HAT2, HIF1]
+genes: [HAT1, HAT2, HIF1, RTT109, VPS75, ESA1, EPL1, YNG2, EAF6, GCN5, ADA2, NGG1, SGF29, SAS3, NTO1, YNG1, TAF14, SAS2, SAS4, SAS5]
 ---
 
 # Chromatin: complexes, locations and the GO chromatin subtree
@@ -84,6 +84,10 @@ filing.
 |---|---|---|---|
 | [HAT-B complex](../modules/scer_hat_b_complex.html) (`modules/scer_hat_b_complex.yaml`) | HAT1, HAT2, HIF1 | DRAFT | Proposes a GO term for the type B HAT complex and records the GO:0000123 `part_of chromatin` edge as a proposed deletion. Two biology gaps: free H4 versus H3-H4 dimer as substrate, and HAT-B's role at double-strand breaks. |
 | [Rtt109-Vps75 complex](../modules/scer_rtt109_vps75_complex.html) (`modules/scer_rtt109_vps75_complex.yaml`) | RTT109, VPS75 | DRAFT | Uses GO:0070775 H3 histone acetyltransferase complex, which is also inferred to be part of chromatin; the complex has no activity on nucleosomal H3, so it is a second counterexample to the GO:0000123 edge. Vps75 drives H3 tail (K9, K27) acetylation; K56 needs Asf1 and not Vps75. Two biology gaps: where the complex acts (before or after nuclear import), and Rtt109-independent roles of Vps75 (narrowed by PMID:19470761). |
+| [NuA4 complex](../modules/scer_nua4_complex.html) (`modules/scer_nua4_complex.yaml`) | ESA1, EPL1, YNG2, EAF6 (plus unreviewed hub and TINTIN subunits) | DRAFT | Three parts: the piccolo HAT core (Esa1 H4 acetyltransferase, Epl1 activator and nucleosome binding, Yng2 H3K4me3 reader, Eaf6), the Tra1-Eaf1 hub, and TINTIN (Eaf3 H3K36me3 reader). Acts on nucleosomes, so the inherited chromatin location is fine. Proposes a `capable_of` H4 acetyltransferase axiom for GO:0032777 piccolo, which is otherwise not classified as a HAT complex. |
+| [SAGA HAT module](../modules/scer_saga_hat_module.html) (`modules/scer_saga_hat_module.yaml`) | GCN5, ADA2, NGG1, SGF29 | DRAFT | The Gcn5-Ada2-Ada3 catalytic core (Ada2 as acetyltransferase activator, Ada3 contributing) plus Sgf29 as H3K4me3 reader. Proposes a GO term for the SAGA-type HAT module and a definition fix for GO:0070461 SAGA-type complex, whose definition requires TAFs that its children ADA and ATAC lack. |
+| [NuA3 complex](../modules/scer_nua3_complex.html) (`modules/scer_nua3_complex.yaml`) | SAS3, NTO1, YNG1, EAF6, TAF14 (plus Pdp3) | DRAFT | Sas3 H3K14 acetyltransferase with Nto1, Yng1 (H3K4me3 reader), Eaf6 and Taf14 (H3K9ac reader); NuA3a and NuA3b as variants, with Pdp3 (H3K36me3 reader) in NuA3b. Records that the GO:1990468 NuA3b definition names H3K4me3 where Pdp3 reads H3K36me3. |
+| [SAS-I complex](../modules/scer_sas_complex.html) (`modules/scer_sas_complex.yaml`) | SAS2, SAS4, SAS5 | DRAFT | Sas2 H4K16 acetyltransferase, Sas4 adaptor and Sas5. SAS-I has little or no activity on nucleosomes and has not been seen on chromatin by ChIP. Its GO term (GO:0033255) sits under piccolo rather than under the HAT complex hierarchy; the module proposes moving it under protein acetyltransferase complex. |
 
 The HAT-B case is concrete: all three yeast subunits are annotated `part_of`
 GO:0000123 (IDA, IPI), so they inherit `part_of chromatin`. Meanwhile
@@ -97,7 +101,18 @@ cytoplasm and that modification of chromatin-packaged H4 is not established.
 | HAT1 | 36 | 11 | 9 | 9 | 1 | 1 | 4 | 0 | 1 |
 | HAT2 | 35 | 15 | 4 | 3 | 2 | 0 | 11 | 0 | 0 |
 | HIF1 | 29 | 9 | 6 | 7 | 1 | 0 | 5 | 0 | 1 |
-| VPS75 | 53 | 20 | 8 | 19 | 0 | 0 | 4 | 1 | 1 |
+| VPS75 | 53 | 20 | 9 | 19 | 0 | 0 | 4 | 0 | 1 |
+| EPL1 | 30 | 17 | 1 | 6 | 0 | 0 | 5 | 0 | 1 |
+| YNG2 | 29 | 16 | 2 | 5 | 0 | 0 | 6 | 0 | 0 |
+| EAF6 | 16 | 11 | 1 | 4 | 0 | 0 | 0 | 0 | 0 |
+| ADA2 | 87 | 22 | 9 | 3 | 2 | 0 | 50 | 0 | 1 |
+| NGG1 | 50 | 18 | 0 | 2 | 0 | 0 | 29 | 1 | 0 |
+| SGF29 | 30 | 19 | 0 | 2 | 1 | 0 | 8 | 0 | 0 |
+| NTO1 | 20 | 12 | 4 | 1 | 1 | 0 | 0 | 0 | 2 |
+| YNG1 | 29 | 14 | 3 | 4 | 1 | 0 | 7 | 0 | 0 |
+| TAF14 | 71 | 44 | 2 | 8 | 0 | 1 | 13 | 0 | 3 |
+| SAS4 | 21 | 5 | 1 | 4 | 1 | 0 | 9 | 0 | 1 |
+| SAS5 | 24 | 5 | 3 | 6 | 3 | 1 | 6 | 0 | 0 |
 
 The main corrections for the HAT-B subunits:
 
@@ -116,7 +131,16 @@ For VPS75:
 - **Histone binding refined.** All six histone binding rows (one IBA, one IDA and four IPI with histones H3 and H4) are modified to H3-H4 histone complex chaperone activity.
 - **Protein binding resolved by partner.** Rows where a study measured Rtt109 activation are modified to acetyltransferase activator activity (six). Rows that only detect or map the Rtt109 interaction are removed (four). Self-interaction rows, including all four "identical protein binding" rows, are modified to protein homodimerization activity (seven).
 - **Kept as non-core.** Chromatin location and chromatin binding are kept as non-core, because the core activity acts on histones not yet in chromatin. So are DNA replication-dependent chromatin assembly (the replication link runs mainly through Rtt109 and Asf1) and NHEJ (genetic and indirect).
-- **One row left undecided.** The cytosol row (hypoxia relocalization) is UNDECIDED: the cached paper does not name Vps75.
+- **Cytosol kept as non-core.** Table 2 of PMID:22932476 lists Vps75 among nuclear proteins that leave the nucleus under hypoxia and return on reoxygenation; the location is real but condition-specific.
+
+For the other HAT complex members:
+
+- **Generic protein binding.** Removed wherever the partner is a fellow subunit (50 rows on ADA2, 29 on NGG1, and most on the others). Rows with a histone partner were modified to the specific reader or binding activity.
+- **Activator activity added where it was missing.** Ada2 (activating Gcn5, PMID:11773077) and Epl1 (activating Esa1, PMID:21984211) each get a NEW acetyltransferase activator activity row, the same term Vps75 carries for Rtt109.
+- **Reader activities.** Yng2, Yng1 and Sgf29 are H3K4me3 readers. Taf14 gets NEW H3K9ac and H3K9cr reader rows.
+- **Paralog and complex over-propagation removed.** Four complex IBA rows (TFIID, TFIIF, SWI/SNF, INO80) are removed from Sas5. They come from a node above the Sas5-Taf14 split that is seeded only by Taf14 and Tfg3.
+- **Taf14's Mediator row removed.** It came from a 1994 Mediator preparation that contained co-purifying TFIIF, and is recorded as a source defect for SGD.
+- **SAS-I subunits.** Sas4 and Sas5 get `contributes_to` H4K16 acetyltransferase activity, and their `enables` HAT rows are recorded as wrong-qualifier source defects, since Sas2 is the catalytic subunit. Their silencing rows become heterochromatin boundary formation, because SAS-I limits SIR spreading rather than forming heterochromatin.
 - **New row.** Vps75 gets a NEW "nucleosome disassembly" row (PMID:19470761): independently of Rtt109, Vps75 and RSC remove H2A/H2B dimers from nucleosomes. The same paper narrows the module's open question about Vps75's Rtt109-independent roles.
 
 ## Plan
@@ -127,10 +151,16 @@ Yeast histone acetyltransferase complexes, each as its own module:
 - [x] gene reviews for HAT1, HAT2 and HIF1
 - [x] Rtt109-Vps75 (H3 acetylation of new histones; RTT109 already reviewed)
 - [x] gene review for VPS75
-- [ ] NuA4 and piccolo NuA4 (Esa1, Epl1, Yng2; ESA1 already reviewed)
-- [ ] SAGA HAT module (Gcn5, Ada2, Ada3, Sgf29; GCN5 already reviewed)
-- [ ] NuA3 (Sas3; SAS3 already reviewed)
-- [ ] SAS-I (Sas2, Sas4, Sas5; SAS2 already reviewed)
+- [x] NuA4 and piccolo NuA4, with reviews of EPL1, YNG2 and EAF6
+- [x] SAGA HAT module, with reviews of ADA2, NGG1 and SGF29
+- [x] NuA3, with reviews of NTO1, YNG1 and TAF14
+- [x] SAS-I, with reviews of SAS4 and SAS5
+
+Follow-ups from these reviews, on genes reviewed before this project:
+
+- [ ] GCN5: its core function covers H3 only (Gcn5 also acetylates H2B, PMID:30224453), has no `in_complex`, and it accepts chromatin organization from PMID:9674426 where NGG1 refines the same paper's row to chromatin remodeling.
+- [ ] SAS2: it accepts subtelomeric heterochromatin formation as core where SAS4 and SAS5 now use heterochromatin boundary formation, and it accepts IDA rows from PMID:11731479 whose full text reportedly shows the purified complex failing to acetylate histones (not yet read verbatim).
+- [ ] ESA1: accepts the general histone acetyltransferase rows that EPL1 and YNG2 refine, and marks a transcription NAS row over-annotated where they modify it.
 
 Then the deacetylase complexes asserted `part_of chromatin` (Rpd3L, Rpd3S,
 Hda1, Set3, Snt2C) and the remodelers, so that every complex in the table
@@ -140,6 +170,7 @@ Ontology track:
 
 - [ ] file the go-ontology issue on the chromatin subtree
 - [ ] update the HAT-B module's `request_status` once filed
+- [ ] add to the issue: SAS-I and piccolo sit outside the HAT complex hierarchy (GO:0033255 under GO:0032777, which has no `capable_of`), and the GO:0070461 and GO:1990468 definition errors
 
 ## Reproducing the numbers
 
