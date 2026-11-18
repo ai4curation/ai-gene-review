@@ -11,16 +11,20 @@ Positions are PA0335 numbering; required residues D16, D18, Y47; supporting Y57,
 |---|---|---|---|---|---|---|---|
 | Q88CN3 PP_5147, P. putida KT2440 (query) | 67.7% | 3/3 | D | D | Y | Y | T |
 | Q9I6F6 PA0335 (paHisN), P. aeruginosa; characterized HolPase | 100.0% | 3/3 | D | D | Y | Y | T |
-| Q58989 SerB (MJ1594), M. jannaschii; characterized PSPase | 24.0% | 0/3 | - | N | A | - | G |
+| Q58989 SerB (MJ1594), M. jannaschii; characterized PSPase | 24.0% | not assessed | n/a | n/a | n/a | n/a | n/a |
 
-## NCBIfam family models (score / trusted cutoff)
+## NCBIfam family models (score / noise cutoff / trusted cutoff)
 
 | Protein | NF052360.1 histidinol-phosphatase (EC 3.1.3.15) | NF052359.1 histidinol-phosphatase (EC 3.1.3.15) | TIGR00338.1 phosphoserine phosphatase SerB (EC 3.1.3.3) | NF008350.0 phosphoserine phosphatase (EC 3.1.3.3) |
 |---|---|---|---|---|
-| Q88CN3 | 351.1 / 280.0 (ABOVE_TC) | 242.2 / 400.0 (BELOW_NC) | 33.9 / 144.1 (BELOW_NC) | 16.3 / 413.0 (BELOW_NC) |
-| Q9I6F6 | 364.1 / 280.0 (ABOVE_TC) | 225.5 / 400.0 (BELOW_NC) | 35.3 / 144.1 (BELOW_NC) | 18.5 / 413.0 (BELOW_NC) |
-| Q58989 | 36.2 / 280.0 (BELOW_NC) | no hit / 400.0 (NO_HIT) | 313.2 / 144.1 (ABOVE_TC) | 200.9 / 413.0 (BELOW_NC) |
+| Q88CN3 | 351.1 / 280.0 / 280.0 (ABOVE_TC) | 242.2 / 400.0 / 400.0 (BELOW_NC) | 33.9 / 105.0 / 144.1 (BELOW_NC) | 16.3 / 413.0 / 413.0 (BELOW_NC) |
+| Q9I6F6 | 364.1 / 280.0 / 280.0 (ABOVE_TC) | 225.5 / 400.0 / 400.0 (BELOW_NC) | 35.3 / 105.0 / 144.1 (BELOW_NC) | 18.5 / 413.0 / 413.0 (BELOW_NC) |
+| Q58989 | 36.2 / 280.0 / 280.0 (BELOW_NC) | no hit / 400.0 / 400.0 (NO_HIT) | 313.2 / 105.0 / 144.1 (ABOVE_TC) | 200.9 / 413.0 / 413.0 (BELOW_NC) |
 
-The fingerprint is only trusted for proteins close to PA0335: the paper's similarity
-network separated the HolPase cluster at a 45.8% identity threshold. Residues read
-from an alignment far below that (as for the distant SerB control) are not meaningful.
+Fingerprint residues are not assessed below 45% identity to PA0335: the paper's
+similarity network separated the HolPase cluster at a 45.8% identity threshold, and a
+pairwise alignment far below that does not place the cap residues reliably. The SerB
+control is therefore a control for the family models only.
+
+A model separates the two activities here only if the characterized enzyme of its own
+activity passes it: compare each PSPase model's SerB row with the PP_5147 row.

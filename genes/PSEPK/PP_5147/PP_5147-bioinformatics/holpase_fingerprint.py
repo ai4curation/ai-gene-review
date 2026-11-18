@@ -46,6 +46,9 @@ PROTEINS = {
     "Q58989": "SerB (MJ1594), M. jannaschii; characterized PSPase",
 }
 REFERENCE = "Q9I6F6"
+# The paper's similarity network separated the HolPase cluster at a 45.8% identity edge
+# threshold; below this the pairwise alignment, and so the residue reading, is not trusted.
+MIN_IDENTITY = 0.45
 FINGERPRINT = {16: ("D", "required"), 18: ("D", "required"), 47: ("Y", "required"), 57: ("Y", "supporting"), 113: ("T", "supporting")}
 MODELS = {
     "NF052360.1": "histidinol-phosphatase (EC 3.1.3.15)",
@@ -150,29 +153,35 @@ def render(results: dict) -> str:
     ]
     for acc, r in results["proteins"].items():
         fp = r["fingerprint"]
-        res = " | ".join(fp["residues"][p]["query_residue"] or "-" for p in FINGERPRINT)
-        lines.append(
-            f"| {acc} {r['label']} | {fp['identity_to_PA0335']:.1%} | "
-            f"{fp['required_present']}/{fp['required_total']} | {res} |"
-        )
+        if fp["identity_to_PA0335"] >= MIN_IDENTITY:
+            present = f"{fp['required_present']}/{fp['required_total']}"
+            res = " | ".join(fp["residues"][p]["query_residue"] or "-" for p in FINGERPRINT)
+        else:
+            present = "not assessed"
+            res = " | ".join("n/a" for _ in FINGERPRINT)
+        lines.append(f"| {acc} {r['label']} | {fp['identity_to_PA0335']:.1%} | {present} | {res} |")
     lines += [
         "",
-        "## NCBIfam family models (score / trusted cutoff)",
+        "## NCBIfam family models (score / noise cutoff / trusted cutoff)",
         "",
         "| Protein | " + " | ".join(f"{m} {MODELS[m]}" for m in MODELS) + " |",
         "|---" * (len(MODELS) + 1) + "|",
     ]
     for acc, r in results["proteins"].items():
         cells = [
-            f"{s['seq_score'] if s['seq_score'] is not None else 'no hit'} / {s['trusted_cutoff']} ({s['status']})"
+            f"{s['seq_score'] if s['seq_score'] is not None else 'no hit'} / {s['noise_cutoff']} / {s['trusted_cutoff']} ({s['status']})"
             for s in r["models"]
         ]
         lines.append(f"| {acc} | " + " | ".join(cells) + " |")
     lines += [
         "",
-        "The fingerprint is only trusted for proteins close to PA0335: the paper's similarity",
-        "network separated the HolPase cluster at a 45.8% identity threshold. Residues read",
-        "from an alignment far below that (as for the distant SerB control) are not meaningful.",
+        f"Fingerprint residues are not assessed below {MIN_IDENTITY:.0%} identity to PA0335: the paper's",
+        "similarity network separated the HolPase cluster at a 45.8% identity threshold, and a",
+        "pairwise alignment far below that does not place the cap residues reliably. The SerB",
+        "control is therefore a control for the family models only.",
+        "",
+        "A model separates the two activities here only if the characterized enzyme of its own",
+        "activity passes it: compare each PSPase model's SerB row with the PP_5147 row.",
         "",
     ]
     return "\n".join(lines)
