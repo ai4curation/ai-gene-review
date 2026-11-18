@@ -47,7 +47,18 @@ import urllib.request
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Dict, Iterable, Iterator, List, NamedTuple, Optional, Set, Tuple
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+)
 
 import requests
 import yaml
@@ -1138,7 +1149,7 @@ def rewrite_panther_labels(
     names: Dict[str, str],
     skip_curies: Optional[Set[str]] = None,
     allow_divergent: bool = False,
-    previous_names: Optional[Dict[str, str]] = None,
+    previous_names: Optional[Mapping[str, str]] = None,
 ) -> Tuple[str, List[Tuple[str, str, str]], List[DeferredLabel]]:
     """Rewrite PANTHER family/subfamily labels to their official PANTHER names.
 
@@ -1604,11 +1615,12 @@ def _panther_artifacts_cached(panther_dir: Path) -> PantherArtifacts:
 class PreviousLabels(NamedTuple):
     """The names of the PANTHER release being left during a switch.
 
-    ``labels`` maps ``PANTHER:<id>`` to that release's name, escaped as in the OBO.
+    ``labels`` maps ``PANTHER:<id>`` to that release's name, escaped as in the OBO. It
+    is read-only: the cached copy is shared with :class:`PreviousRelease`.
     """
 
     release: str
-    labels: Dict[str, str]
+    labels: Mapping[str, str]
 
 
 class PreviousRelease(NamedTuple):
@@ -1621,7 +1633,7 @@ class PreviousRelease(NamedTuple):
     """
 
     release: str
-    labels: Dict[str, str]
+    labels: Mapping[str, str]  # read-only, shared with the cached PreviousLabels
     members: Dict[str, str]
 
 
