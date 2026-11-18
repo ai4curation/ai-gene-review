@@ -12,3 +12,13 @@ UniProt P24521; phosphomevalonate kinase, EC 2.7.4.2; GHMP-type (fungal/plant) P
 - Vacuole NAS (Hu et al. 2017 review) REMOVE: unsupported, contradicts GFP/soluble data.
 - Peroxisome IBA (plant node PTN000781523, Arabidopsis AT1G31910 only) REMOVE: plant PTS1-bearing PMK; yeast Erg8 lacks PTS1 and is cytoplasmic.
 - ATP binding, nucleus HDA KEEP_AS_NON_CORE. Rest ACCEPT.
+
+## 2026-11-18 correction (mevalonate-pathway cross-species campaign)
+
+- Earlier entries above call Arabidopsis PMK (AT1G31910) "PTS1-bearing". That is wrong: the
+  Arabidopsis PMK review found no PTS1, and the UniProt PTS2 feature (residues 57-65) does not match
+  the PTS2 consensus (genes/ARATH/PMK/PMK-bioinformatics/RESULTS.md). Its peroxisomal location rests on
+  YFP fusions in periwinkle cells [PMID:21655959 "PMK and MVD are localised to the peroxisomes, while MVK
+  was cytosolic"]. The REMOVE of the inherited peroxisome IBA on yeast Erg8 is unchanged; the review text
+  was corrected, and PTN000781523 is a Eukaryota-level node, not a plant sub-node. The PTHR31814 family
+  review now proposes moving that IBD to the plant clade PTN008640230.
