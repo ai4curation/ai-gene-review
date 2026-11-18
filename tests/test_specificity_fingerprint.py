@@ -1,5 +1,7 @@
 """Tests for curated substrate-specificity fingerprints (Kinateder et al. 2024)."""
 
+import json
+import urllib.request
 from pathlib import Path
 
 import pytest
@@ -93,6 +95,29 @@ def test_fingerprint_positions_are_well_formed(fp):
 @pytest.fixture(scope="module")
 def cache(tmp_path_factory):
     return SequenceCache(tmp_path_factory.mktemp("uniprot_seq"))
+
+
+def _quickgo_term(go_id: str) -> dict:
+    url = f"https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{go_id}"
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=60) as fh:
+        return json.load(fh)["results"][0]
+
+
+@pytest.mark.integration
+@pytest.mark.vcr_skip
+@pytest.mark.parametrize("fp", FINGERPRINTS.values(), ids=lambda fp: fp.id)
+def test_fingerprint_go_terms_are_current(fp):
+    """Each function GO id is a primary, non-obsolete term with the stated label.
+
+    QuickGO answers a secondary (merged) id with the primary term, so comparing the
+    returned id with the one asked for catches a stale id even when the label is right.
+    """
+    for function in filter(None, [fp.function, fp.contrast_function]):
+        term = _quickgo_term(function["go"])
+        assert term["id"] == function["go"], f"{function['go']} is now {term['id']}"
+        assert not term["isObsolete"], function["go"]
+        assert term["name"] == function["label"], function["go"]
 
 
 @pytest.mark.integration

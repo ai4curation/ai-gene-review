@@ -29,10 +29,12 @@ Verdicts
 ``ABOVE_TC``
     A target family scores at or above its trusted cutoff. Consistent with the annotation.
 ``BETWEEN_NC_TC``
-    The best target hit lies between noise and trusted cutoffs. Schnoes's lenient cutoff;
-    treat as unresolved, not as a pass.
+    The best target hit lies between noise and trusted cutoffs (Schnoes's lenient
+    cutoff), or only a domain-level target model passes or reaches that band. Treat as
+    unresolved, not as a pass.
 ``BTC``
-    A target family is hit but below its noise cutoff.
+    A target family is hit but below its noise cutoff. For a model with no curated noise
+    cutoff the hit is only known to be below the trusted cutoff, and the note says so.
 ``SFA``
     No target family is hit at all, but the protein does match other NCBIfam families.
 ``NO_TARGET_HIT``
@@ -60,11 +62,15 @@ import urllib.error
 import urllib.request
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Iterable
+from functools import lru_cache
+from typing import TYPE_CHECKING, Iterable
 
 import yaml
 
 from ai_gene_review.validation.family_residue_validator import SequenceCache
+
+if TYPE_CHECKING:
+    import pyhmmer
 
 NCBIFAM_BASE = "https://ftp.ncbi.nlm.nih.gov/hmm/current"
 INTERPRO_NCBIFAM = (
@@ -116,7 +122,7 @@ class FamilyScore:
     seq_score: float | None
     dom_score: float | None
     tc: tuple[float, float]
-    nc: tuple[float, float]
+    nc: tuple[float, float] | None  # None when the model has no curated NC line
     status: str = field(init=False)
 
     def __post_init__(self) -> None:
@@ -138,13 +144,19 @@ def classify_hit(
     seq_score: float | None,
     dom_score: float | None,
     tc: tuple[float, float],
-    nc: tuple[float, float],
+    nc: tuple[float, float] | None,
 ) -> str:
-    """Place one hit relative to a model's trusted and noise cutoffs."""
+    """Place one hit relative to a model's trusted and noise cutoffs.
+
+    A model with no curated noise cutoff has no lenient band, so a hit below its trusted
+    cutoff is ``BELOW_TC`` rather than ``BELOW_NC``.
+    """
     if seq_score is None or dom_score is None:
         return "NO_HIT"
     if seq_score >= tc[0] and dom_score >= tc[1]:
         return "ABOVE_TC"
+    if nc is None:
+        return "BELOW_TC"
     if seq_score >= nc[0] and dom_score >= nc[1]:
         return "BETWEEN_NC_TC"
     return "BELOW_NC"
@@ -168,7 +180,11 @@ def verdict_for(scores: list[FamilyScore]) -> tuple[str, str, list[str]]:
         if better:
             note = "target family passes TC, but so does a family for another reaction"
             return "ABOVE_TC", note, better
-        return "ABOVE_TC", "a functional target family passes its trusted cutoff", better
+        return (
+            "ABOVE_TC",
+            "a functional target family passes its trusted cutoff",
+            better,
+        )
     if any(s.status == "ABOVE_TC" for s in targets):
         note = (
             "passes TC only for a domain-level model, which does not fix the reaction"
@@ -180,8 +196,16 @@ def verdict_for(scores: list[FamilyScore]) -> tuple[str, str, list[str]]:
             "best target hit lies between noise and trusted cutoffs",
             better,
         )
-    if any(s.status != "NO_HIT" for s in targets):
-        return "BTC", "target family hit only below its noise cutoff", better
+    if any(s.status == "BETWEEN_NC_TC" for s in targets):
+        note = "only a domain-level target model is hit, between its noise and trusted cutoffs"
+        return "BETWEEN_NC_TC", note, better
+    below = [s for s in targets if s.status in {"BELOW_NC", "BELOW_TC"}]
+    if below:
+        if all(s.status == "BELOW_NC" for s in below):
+            note = "target family hit only below its noise cutoff"
+        else:
+            note = "target family hit below its trusted cutoff; a hit model has no curated noise cutoff"
+        return "BTC", note, better
     if any(s.status != "NO_HIT" for s in others):
         return "SFA", "no target family hit; protein matches other families", better
     return "NO_TARGET_HIT", "no scored family produced a hit", better
@@ -201,7 +225,9 @@ class NCBIfam:
         # The release table also lists Pfam-derived models that NCBI does not redistribute.
         self.families = [f for f in self._load_table() if f.accession in distributed]
         self.by_source = {f.source_id: f for f in self.families if f.source_id}
-        self.by_source.update({f.accession.split(".")[0]: f for f in self.families})
+        # unversioned accessions as a fallback, never shadowing a family's own source id
+        for f in self.families:
+            self.by_source.setdefault(f.accession.split(".")[0], f)
 
     def _download(self, url: str, path: Path) -> Path:
         if not path.exists():
@@ -261,32 +287,37 @@ class NCBIfam:
 
 
 def interpro_ncbifam_matches(accession: str) -> list[str]:
-    """NCBIfam ids InterPro reports for a UniProt protein (empty if none)."""
-    req = urllib.request.Request(
-        INTERPRO_NCBIFAM.format(acc=accession), headers={"Accept": "application/json"}
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=60) as fh:
-            body = fh.read()
-    except urllib.error.HTTPError as exc:
-        if exc.code == 404:
-            return []
-        raise
-    if not body.strip():  # InterPro answers 204 with no body when nothing matches
-        return []
-    return [r["metadata"]["accession"] for r in json.loads(body)["results"]]
+    """NCBIfam ids InterPro reports for a UniProt protein (empty if none), across pages."""
+    url: str | None = INTERPRO_NCBIFAM.format(acc=accession)
+    matches: list[str] = []
+    while url:
+        req = urllib.request.Request(url, headers={"Accept": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=60) as fh:
+                body = fh.read()
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                return matches
+            raise
+        if not body.strip():  # InterPro answers 204 with no body when nothing matches
+            return matches
+        page = json.loads(body)
+        matches += [r["metadata"]["accession"] for r in page["results"]]
+        url = page.get("next")
+    return matches
 
 
-def go_ec_xrefs(go_id: str) -> list[str]:
+@lru_cache(maxsize=None)
+def go_ec_xrefs(go_id: str) -> tuple[str, ...]:
     """EC numbers the GO term cross-references, so a GO-only query also finds EC-only families."""
     req = urllib.request.Request(
         QUICKGO_XREFS.format(go=go_id), headers={"Accept": "application/json"}
     )
     with urllib.request.urlopen(req, timeout=60) as fh:
         results = json.load(fh)["results"]
-    return [
+    return tuple(
         x["dbId"] for r in results for x in r.get("xRefs", []) if x["dbCode"] == "EC"
-    ]
+    )
 
 
 def is_complete_ec(ec: str) -> bool:
@@ -299,12 +330,15 @@ def is_complete_ec(ec: str) -> bool:
     return len(parts) == 4 and "-" not in parts
 
 
-def _cutoffs(hmm) -> tuple[tuple[float, float], tuple[float, float]]:
+def _cutoffs(
+    hmm: pyhmmer.plan7.HMM,
+) -> tuple[tuple[float, float], tuple[float, float] | None]:
+    """Trusted cutoff, and noise cutoff or None when the model curates none."""
     tc, nc = hmm.cutoffs.trusted, hmm.cutoffs.noise
     if tc is None:
-        raise ValueError(f"{hmm.accession} has no TC line")
-    nc = nc or tc
-    return (round(tc[0], 1), round(tc[1], 1)), (round(nc[0], 1), round(nc[1], 1))
+        raise ValueError(f"{hmm.accession!r} has no TC line")
+    rounded_nc = None if nc is None else (round(nc[0], 1), round(nc[1], 1))
+    return (round(tc[0], 1), round(tc[1], 1)), rounded_nc
 
 
 def score_families(
@@ -327,13 +361,30 @@ def score_families(
         with pyhmmer.plan7.HMMFile(db.hmm_path(family)) as fh:
             hmm = fh.read()
         tc, nc = _cutoffs(hmm)
-        # Schnoes scored with a permissive E-value (100) to see divergent hits; scores are
-        # independent of E-value, so report everything and judge by bit score alone.
-        hits = next(pyhmmer.hmmsearch([hmm], block, E=1e6, domE=1e6, Z=1))
+        # Schnoes scored permissively (E-value 100) to see divergent hits. Scores do not
+        # depend on E-value, so report everything and judge by bit score alone, and switch
+        # off HMMER's acceleration filters, which would otherwise discard a divergent
+        # sequence before it is scored and turn a weak hit into a false "no hit".
+        hits = next(
+            pyhmmer.hmmsearch(
+                [hmm],
+                block,
+                E=1e6,
+                domE=1e6,
+                Z=1,
+                bias_filter=False,
+                F1=1.0,
+                F2=1.0,
+                F3=1.0,
+            )
+        )
         seq_score = dom_score = None
-        for hit in hits:
-            seq_score = hit.score
-            dom_score = max(d.score for d in hit.domains)
+        # One sequence in the block, so at most one hit. With the filters off every
+        # sequence is scored; a non-positive bit score means the sequence fits the model
+        # no better than the null model, so it is not counted as a hit.
+        if len(hits) and hits[0].score > 0:
+            seq_score = hits[0].score
+            dom_score = max(d.score for d in hits[0].domains)
         scores.append(
             FamilyScore(
                 accession=family.accession,

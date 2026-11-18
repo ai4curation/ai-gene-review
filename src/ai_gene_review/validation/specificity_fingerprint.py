@@ -21,12 +21,20 @@ Verdicts
 ``CONTRAST``
     Every required position carries a residue typical of the contrast function.
 ``PARTIAL``
-    Some, but not all, required positions carry an indicating residue.
+    Some, but not all, required positions carry an indicating residue. Read it with the
+    fingerprint's own notes in the config: required residues are not always equally
+    decisive. For the HolPase fingerprint, a PARTIAL that misses only D18 is a weak
+    positive, since a homologue with Ala there was confirmed in vitro.
 ``ABSENT``
     No required position carries an indicating residue.
 ``LOW_IDENTITY``
     Identity to the reference is below the fingerprint's ``min_identity``, so the
-    alignment is not trusted. Residues are still reported.
+    alignment is not trusted. Residues are still reported but should not be read.
+
+``CONTRAST`` needs a contrast-function protein close enough to the reference to clear
+``min_identity``. Where the paralogous family is more distant than that, as for
+phosphoserine phosphatases against PA0335, a fingerprint confirms the function inside its
+cluster and abstains (``LOW_IDENTITY``) on the paralogs rather than calling them.
 
 In the protocol of Schnoes et al. (PMID:20011109) this follows family membership and the
 catalytic-residue check: a protein can belong to the family and keep its catalytic

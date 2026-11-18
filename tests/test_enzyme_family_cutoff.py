@@ -20,6 +20,7 @@ def score(
     target: bool = True,
     family_type: str = "equivalog",
     acc: str = "TIGR00001.1",
+    nc: tuple[float, float] | None = NC,
 ) -> FamilyScore:
     """A FamilyScore whose domain score equals its sequence score."""
     return FamilyScore(
@@ -32,7 +33,7 @@ def score(
         seq_score=seq,
         dom_score=seq,
         tc=TC,
-        nc=NC,
+        nc=nc,
     )
 
 
@@ -50,6 +51,29 @@ def score(
 )
 def test_classify_hit(seq, dom, expected):
     assert classify_hit(seq, dom, TC, NC) == expected
+
+
+@pytest.mark.parametrize(
+    "seq,expected", [(350.0, "ABOVE_TC"), (250.0, "BELOW_TC"), (None, "NO_HIT")]
+)
+def test_classify_hit_without_noise_cutoff(seq, expected):
+    """A model with no NC line has no lenient band to place a sub-TC hit in."""
+    assert classify_hit(seq, seq, TC, None) == expected
+
+
+def test_domain_target_in_lenient_band_is_not_btc():
+    """A domain-level target between NC and TC was not measured below its noise cutoff."""
+    verdict, note, _ = verdict_for([score(250.0, family_type="domain")])
+    assert verdict == "BETWEEN_NC_TC"
+    assert "domain-level" in note
+
+
+def test_btc_without_noise_cutoff_says_so():
+    verdict, note, _ = verdict_for([score(250.0, nc=None)])
+    assert verdict == "BTC"
+    assert "no curated noise cutoff" in note
+    _, note_with_nc, _ = verdict_for([score(150.0)])
+    assert note_with_nc == "target family hit only below its noise cutoff"
 
 
 @pytest.mark.parametrize(

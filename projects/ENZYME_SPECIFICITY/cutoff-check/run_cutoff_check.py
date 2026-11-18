@@ -55,9 +55,10 @@ def main() -> None:
     for gene in selection["genes"]:
         for row in enzyme_rows(Path(gene["review"])):
             report = check(row["accession"], [], [row["go"]], Path(".cache"))
-            # Families differ in TC, so "best" is the largest margin over TC, not raw score.
+            # Families differ in TC, so "best" is the highest score as a fraction of TC
+            # (the measure the published chart plots), not the highest raw score.
             hits = [s for s in report.scores if s.is_target and s.seq_score is not None]
-            best = max(hits, key=lambda s: s.seq_score - s.tc[0], default=None)
+            best = max(hits, key=lambda s: s.seq_score / s.tc[0], default=None)
             results.append(
                 {
                     **row,
@@ -68,6 +69,18 @@ def main() -> None:
                     "best_target_score": None if best is None else best.seq_score,
                     "best_target_tc": None if best is None else best.tc[0],
                     "better_fitting_families": report.better_fitting_families,
+                    "target_scores": [
+                        {
+                            "family": f"{s.accession} {s.product_name}",
+                            "family_type": s.family_type,
+                            "score": s.seq_score,
+                            "noise_cutoff": None if s.nc is None else s.nc[0],
+                            "trusted_cutoff": s.tc[0],
+                            "status": s.status,
+                        }
+                        for s in report.scores
+                        if s.is_target
+                    ],
                     "ncbifam_release": report.ncbifam_release,
                 }
             )

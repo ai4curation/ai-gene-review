@@ -5,8 +5,8 @@ Back to [Enzyme Specificity Project](../ENZYME_SPECIFICITY.md).
 **Bottom line:** most enzyme misannotations in automatically annotated databases are
 overpredictions: the sequence resembles a family but does not belong to it. A family HMM
 scored against its curated trusted cutoff catches many of them. On 38 reviewed electronic
-enzyme rows, 11 of 12 accepted rows that had a family model passed the cutoff, and 11 of
-14 removed rows that had one failed it. This check reproduces steps 2 and 4 of Schnoes et
+enzyme rows, 11 of 12 accepted rows that had a family model passed the cutoff, and 10 of
+13 removed rows that had one failed it. This check reproduces steps 2 and 4 of Schnoes et
 al. 2009. It can tell an annotation lacks family support. It cannot show that a protein
 is catalytically active, and it needs a family model to exist.
 
@@ -28,14 +28,16 @@ models (the successor to TIGRFAMs). Each model carries curated trusted (TC) and 
 2. Target families are the NCBIfam models that carry the EC or GO term. Observed families
    are those InterPro already reports for the protein.
 3. The UniProt sequence is scored against each model with pyhmmer, with no reporting
-   threshold. As with HMMER `--cut_tc`, a hit passes only if both its full-sequence and
-   best-domain scores reach TC.
+   threshold and with HMMER's acceleration filters switched off, so a divergent sequence
+   is scored instead of being discarded early (Schnoes scored permissively for the same
+   reason). A non-positive bit score counts as no hit. As with HMMER `--cut_tc`, a hit
+   passes only if both its full-sequence and best-domain scores reach TC.
 
 | Verdict | Meaning |
 |---|---|
 | `ABOVE_TC` | A function-level target family passes TC |
 | `BETWEEN_NC_TC` | Best target hit lies between the noise and trusted cutoffs (Schnoes's lenient band), or only a domain-level model passes |
-| `BTC` | Target family hit, but below its noise cutoff |
+| `BTC` | Target family hit, but below its noise cutoff (for a model with no curated noise cutoff, below its trusted cutoff, as the note says) |
 | `SFA` | No target family hit; the protein matches other families |
 | `NO_MODEL` | No NCBIfam model carries the function; inconclusive |
 
@@ -59,13 +61,16 @@ HADH. The ACCEPT rows on the same genes serve as controls. The set is **enriched
 REMOVE rows by construction**, so the counts below show agreement on this set, not a
 general error rate. The runner reads every IEA/IBA molecular-function row that maps to a
 complete EC number (38 rows; PHYKPL has none, as its transaminase term carries no complete
-EC). The reviewer's action is never an input to the check. Raw output:
-[results.yaml](results.yaml), NCBIfam release `hmm_PGAP/20.0`.
+EC). The reviewer's action is never an input to the check, and actions are read from the
+reviews at run time. Raw output: [results.yaml](results.yaml), which lists every target
+family's score for each row; NCBIfam release `hmm_PGAP/20.0`. Where a row has several
+target families, the scores quoted below are for the best one, the highest score as a
+fraction of its trusted cutoff.
 
 | Verdict | ACCEPT | MARK_AS_OVER_ANNOTATED | REMOVE | UNDECIDED |
 |---|---|---|---|---|
 | ABOVE_TC | 11 | 0 | 3 | 0 |
-| BTC | 1 | 0 | 9 | 3 |
+| BTC | 1 | 0 | 8 | 4 |
 | NO_MODEL | 0 | 2 | 7 | 0 |
 | SFA | 0 | 0 | 2 | 0 |
 
@@ -76,12 +81,12 @@ competing family it finds is the function the reviewer accepted:
 
 | Gene | Removed term | Target score / TC | Family the protein passes instead |
 |---|---|---|---|
-| prpB | isocitrate lyase | 69.1 / 562 | methylisocitrate lyase (NF008455.0, 552.4 / 353) |
-| phnX | phosphoglycolate phosphatase | 35.4 / 180 | phosphonoacetaldehyde hydrolase (TIGR01422.2) |
-| nspC | diaminopimelate decarboxylase | 43.7 / 298 | carboxynorspermidine decarboxylase (TIGR01047.1) |
-| PP_3599 | 4-hydroxy-tetrahydrodipicolinate synthase | 108.7 / 206 | 5-dehydro-4-deoxyglucarate dehydratase (TIGR03249.1) |
-| mdh | L-lactate dehydrogenase | 215.9 / 304 | malate dehydrogenase (NF004863.0) |
-| hisI | phosphoribosyl-ATP diphosphatase | 152.0 / 187 | phosphoribosyl-AMP cyclohydrolase (NF000768.0) |
+| prpB | isocitrate lyase | 58.4 / 275.9 (TIGR01346.1) | methylisocitrate lyase (NF008455.0, 552.4 / 353) |
+| phnX | phosphoglycolate phosphatase | 35.4 / 180 (TIGR01449.2) | phosphonoacetaldehyde hydrolase (TIGR01422.2) |
+| nspC | diaminopimelate decarboxylase | 43.7 / 297.9 (TIGR01048.1) | carboxynorspermidine decarboxylase (TIGR01047.1) |
+| PP_3599 | 4-hydroxy-tetrahydrodipicolinate synthase | 108.7 / 206.1 (TIGR00674.1) | 5-dehydro-4-deoxyglucarate dehydratase (TIGR03249.1) |
+| mdh | L-lactate dehydrogenase | 215.9 / 303.5 (TIGR01771.1) | malate dehydrogenase (NF004863.0) |
+| hisI | phosphoribosyl-ATP diphosphatase | 152.0 / 187 (NF002747.0) | phosphoribosyl-AMP cyclohydrolase (NF000768.0) |
 | purM | phosphoribosylamine-glycine ligase | no hit (SFA) | AIR synthase, PurM (TIGR00878.1) |
 | puuD | urate oxidase | no hit (SFA) | T6SS sheath large subunit TssC (TIGR03355.1) |
 
@@ -89,6 +94,15 @@ Even a `NO_MODEL` verdict carries information through the competing-family list:
 (N-acylneuraminate cytidylyltransferase) passes the KDO 8-P phosphatase family; mqo2 and
 mqo3 ((S)-2-hydroxyglutarate dehydrogenase) pass malate:quinone oxidoreductase; serA
 passes phosphoglycerate dehydrogenase.
+
+### Undecided rows the check speaks to
+
+Four rows the reviewers left UNDECIDED fall far below their target family's cutoff, with
+no competing family above its own: ptxD hydroxypyruvate reductase and glyoxylate reductase
+(80.8 / 403, NF012013.0), PP_4638 methylenetetrahydrofolate reductase [NAD(P)H]
+(26.3 / 293.7, TIGR00676.1) and PP_0556 NAD+ kinase (13.7 / 299, NF002892.0). These are
+the reviews to revisit with the check's output in hand. A BTC with no competitor points
+toward a more general term, not a removal on its own.
 
 ### Where they disagree, and why
 
@@ -102,13 +116,14 @@ passes phosphoglycerate dehydrogenase.
   "homoserine O-succinyltransferase MetX" model (NF047916.1, 697.8 / 560, family type
   `exception`). Each MetX row therefore lists the other model as a competitor that also
   passes. That flags the pair for review but does not settle it: the succinyl model
-  wins on raw score, the acetyl model on margin over TC. The reviewer settled it from
+  wins on raw score, the acetyl model on score relative to its cutoff. The reviewer settled it from
   the curated UniProt entry and an experimental annotation.
-- **PP_2325 2-dehydropantoate 2-reductase: ABOVE_TC for "putative 2-dehydropantoate
-  2-reductase" (NF004887.0), but REMOVE.** The reviewer relied on biochemistry of the
-  *P. aeruginosa* ortholog, which is inactive on ketopantoate. Experimental data outrank
-  an HMM, and the model's own name is hedged.
-- **Human HADH (3S)-3-hydroxyacyl-CoA dehydrogenase: BTC (317.7 / 508), but ACCEPT.**
+- **PP_2325 2-dehydropantoate 2-reductase: ABOVE_TC, but REMOVE.** It passes both
+  TIGR00745.1 (246.3 / 141.4) and the "putative 2-dehydropantoate 2-reductase" model
+  NF004887.0 (541.1 / 360). The reviewer relied on biochemistry of the *P. aeruginosa*
+  ortholog, which is inactive on ketopantoate. Experimental data outrank an HMM, and a
+  family whose members include inactive paralogs cannot fix the substrate.
+- **Human HADH (3S)-3-hydroxyacyl-CoA dehydrogenase: BTC (238.3 / 312, NF006143.0), but ACCEPT.**
   The accepted function has direct experimental support. NCBIfam cutoffs are set on
   prokaryotic members, so divergent eukaryotic orthologs fall below them. This is the
   paper's own caveat about trusted cutoffs, and the reason a BTC must never by itself
@@ -137,7 +152,10 @@ paralogs for different reactions can pass the same family models.
 adds the step from Kinateder et al. 2024 [PMID:38284491]: read the residues an alanine
 scan showed to decide the reaction, at the matching positions of the query. Fingerprints
 are curated in `conf/specificity_fingerprints.yaml`, each citing its mutagenesis paper.
-The first one, for the *P. aeruginosa* histidinol-phosphate phosphatase PA0335, finds
+Read a verdict with its fingerprint's notes in that file: for the HolPase fingerprint a
+`PARTIAL` that misses only D18 is a weak positive, and `CONTRAST` is effectively
+unreachable because the paralogous phosphoserine phosphatases sit below its identity
+floor. The first one, for the *P. aeruginosa* histidinol-phosphate phosphatase PA0335, finds
 its full fingerprint in *P. putida* PP_5147.
 
 ## Limitations
