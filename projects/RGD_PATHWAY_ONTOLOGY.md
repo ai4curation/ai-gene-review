@@ -1113,6 +1113,62 @@ Possible upstream errors found in this set:
 - **RGD.** The definition of PW:0001332 (Pol II termination) cross-references
   GO:0006386, which is termination of RNA polymerase III transcription.
 
+### Tenth set: translation
+
+The tenth set carries out the translation plan in
+[broad_pathway_split_plans.md](RGD_PATHWAY_ONTOLOGY/broad_pathway_split_plans.md).
+Every module cites PW:0000101 (translation), which moves to `has_module`. The
+ribosome module also cites PW:0001066 (ribosome biogenesis), as the plan says,
+which moves that pathway to `has_module` too, although the biogenesis factors
+themselves are still to be modelled (the last step of the plan). Tiers are now
+134 `has_module`, 1 `related_module_only` and 2 `no_specific_go_term`.
+
+- [`modules/cytoplasmic_ribosome.yaml`](../modules/cytoplasmic_ribosome.yaml):
+  the 80S ribosome with 40S and 60S subunit complexes, the ribosomal proteins as
+  units (modelled once here for the other modules to reference), tissue and sex
+  paralogues as alternative units, and rRNA-catalysed peptidyltransferase on the
+  60S complex. The rRNAs are not gene products in this model.
+- [`modules/translation_initiation.yaml`](../modules/translation_initiation.yaml):
+  ternary complex formation and eIF2B recycling, 43S assembly with eIF3, eIF1 and
+  eIF1A, eIF4F mRNA activation, scanning and start codon recognition, and eIF5B
+  subunit joining. The eIF2 kinases stay in `integrated_stress_response`.
+- [`modules/translation_elongation_and_termination.yaml`](../modules/translation_elongation_and_termination.yaml):
+  eEF1A with eEF1B, eEF2 with EEF2K as optional regulation, eIF5A, the eRF1-eRF3
+  release factor complex and ABCE1 recycling. PELO and HBS1L, which rescue stalled
+  ribosomes, are left for a later ribosome quality control module.
+- [`modules/nonsense_mediated_mrna_decay.yaml`](../modules/nonsense_mediated_mrna_decay.yaml):
+  the exon junction complex mark, the UPF surveillance complex, SMG1C phosphorylation
+  of UPF1, and decay by SMG6 or SMG5-SMG7. General cytoplasmic decay is left out.
+- **Ontology requests**: two `proposed_new_terms` (translation preinitiation
+  complex scanning; translation start codon recognition; GO has these steps only as
+  Reactome cross-references on GO:0003743) and two `proposed_ontology_changes` (the
+  definition of GO:0005085 names only signalling GTPases; the definition of
+  GO:0170010 describes 3' to 5' decay, not SMG6 cleavage).
+- **Follow-ups from the ninth-set review**: MCOLN2 in
+  `endolysosomal_calcium_release` is now typed by its PI(3,5)P2-gated cation channel
+  activity, `pre_mrna_capping` also requests the definition fix for the parent
+  GO:0009452, and the ninth-set history record's `modules_compared 844` should read
+  847 (records are append-only, so the correction is noted here).
+
+Possible upstream errors found in this set:
+
+- **GOA.**
+  - EIF2S1 carries cap-dependent translation initiation factor activity
+    (GO:0160296), defined as binding the cap, which eIF2 does not do; the same term
+    is on EIF2S1 in a dozen human GO-CAMs.
+  - EIF3I has an "enables" initiation factor row from a complex assay where the
+    other eIF3 subunits carry "contributes_to".
+  - GGT1 and GGT5 carry IDA rows for GO:0000048 peptidyltransferase activity, the
+    ribosome's peptide-bond reaction rather than gamma-glutamyl transfer.
+  - UPF1, UPF2, SMG1, SMG5, SMG6 and SMG7 carry TAS rows for mRNA export from
+    nucleus from a paper on UPF1 in S-phase progression (a query).
+  - No human eEF1B subunit has an experimental row for its exchange activity.
+- **GO-CAM.** An angiogenin model gives the 60S subunit ribonuclease inhibitor
+  activity while the cited paper says the ribosome activates angiogenin.
+- **UniProt vs GOA.** RPL41 is named eS32 (small subunit) in UniProt but placed in
+  the 60S by GOA and Complex Portal; the module follows UniProt and records the
+  conflict.
+
 ## Next steps
 
 - Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
@@ -1141,9 +1197,9 @@ Possible upstream errors found in this set:
   polymerase transcription and calcium-mediated signaling, which match only by
   gene overlap) now have split plans in
   [broad_pathway_split_plans.md](RGD_PATHWAY_ONTOLOGY/broad_pathway_split_plans.md),
-  with a suggested order. The RNA polymerase II plan is done (ninth set); next are
-  the cytoplasmic ribosome and translation initiation, the spliceosome, Polycomb
-  and COMPASS, then ribosome biogenesis.
+  with a suggested order. The RNA polymerase II plan (ninth set) and translation
+  (tenth set) are done; next are the spliceosome, Polycomb and COMPASS, then
+  ribosome biogenesis.
 - Add the obligatory PMCA subunits NPTN and BSG to
   `plasma_membrane_calcium_extrusion`.
 - Factor a human DNA gap-filling module (PCNA, RFC, Pol delta, LIG1) out of the
@@ -1179,6 +1235,7 @@ Possible upstream errors found in this set:
 - [x] Split chromatin remodeling and calcium transport by family, and cover kinin signaling (10 modules and one extension, seventh set)
 - [x] Model the remaining calcium transport families (6 modules, eighth set)
 - [x] Split RNA polymerase II transcription into five modules (ninth set)
+- [x] Split translation into four modules (tenth set)
 
 ## Notes
 
@@ -1252,3 +1309,11 @@ elongation and termination, capping, 3′ cleavage and polyadenylation), plus
 notes in the Pol I and Pol III modules pointing to the new enzyme module.
 PW:0000127 moves to `has_module`: 132 `has_module`, 3 `related_module_only`, 2
 `no_specific_go_term`, with `modules_compared` at 847.
+
+### 2026-11-18
+
+Tenth set: four translation modules (cytoplasmic ribosome, initiation, elongation
+and termination, nonsense-mediated decay), plus three follow-ups from the
+ninth-set review. PW:0000101 and PW:0001066 move to `has_module`: 134
+`has_module`, 1 `related_module_only` and 2 `no_specific_go_term`, with
+`modules_compared` at 851.
