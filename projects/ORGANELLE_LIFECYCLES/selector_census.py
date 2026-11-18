@@ -233,7 +233,7 @@ def fetch_interpro_domains(accessions: set[str], cache_file: Path) -> DomainLook
                 if acc in found
             }
         )
-    if missing:
+        # Written after every batch, so a failure in a later batch keeps the earlier answers.
         cache_file.parent.mkdir(parents=True, exist_ok=True)
         cache_file.write_text(
             json.dumps({"accessions": entries}, sort_keys=True, indent=0)
@@ -423,21 +423,24 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
             if (
                 a.domain_ids
                 and panther_ids(a)
-                and not interpro_ids([{"term": {"id": d}} for d in a.domain_ids])
+                and len(interpro_ids([{"term": {"id": d}} for d in a.domain_ids]))
+                < len(a.domain_ids)
             ):
                 raise SystemExit(
                     f"{name}: step {a.node_id} names a domain the census cannot check "
                     f"({', '.join(a.domain_ids)}); use an InterPro id"
                 )
-        lookup = fetch_interpro_domains(
-            {
+        candidates = {
+            o.slug: {
                 acc
                 for selectors in domain_families
-                for index in data.values()
                 for f in selectors
-                for acc in index.get(f, set())
-            },
-            cache / "uniprot-interpro.json",
+                for acc in data[o.slug].get(f, set())
+            }
+            for o in ORGANISMS
+        }
+        lookup = fetch_interpro_domains(
+            set().union(*candidates.values()), cache / "uniprot-interpro.json"
         )
         domains = lookup.domains
         rows = []
@@ -500,6 +503,13 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
                             "source": "UniProt InterPro cross-references",
                             "uniprot_releases": list(lookup.uniprot_releases),
                             "unanswered_accessions": list(lookup.unanswered),
+                            "unanswered_by_organism": {
+                                o.slug: sorted(
+                                    set(lookup.unanswered) & candidates[o.slug]
+                                )
+                                for o in ORGANISMS
+                                if set(lookup.unanswered) & candidates[o.slug]
+                            },
                         }
                     }
                     if domain_families

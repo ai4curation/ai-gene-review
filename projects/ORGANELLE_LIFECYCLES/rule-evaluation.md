@@ -149,8 +149,9 @@ with such a subunit: the chytrid, Chlamydomonas, *Trypanosoma*, *Leishmania*,
 domain requirement excludes the Vtc1-like proteins, which have only the DUF202 membrane domain.
 Dictyostelium's two `PTHR46140:SF1` proteins (Q54JW8, Q54ZD5) are of that kind, so without the domain the
 rule would pass there on the wrong protein. The domain does not exclude every non-catalytic VTC subunit:
-the entries table places Toxoplasma Vtc2 in `PTHR46140:SF1`, so *Plasmodium*'s pass, on the putative VTC
-protein C6KT60, does not establish a catalytic Vtc4 there. The other passes are on proteins named Vtc4,
+apicomplexans have both a Vtc2 and a Vtc4 (PMID:42126255), and the entries table places Toxoplasma Vtc2
+in `PTHR46140:SF1`, so it is not established whether *Plasmodium*'s pass, on the putative VTC protein
+C6KT60, rests on its Vtc4 or its Vtc2. The other passes are on proteins named Vtc4,
 or on the Chlamydomonas, Leishmania and Thalassiosira VTC-domain proteins (the module lists them).
 
 The failures in animals and land plants are expected, since neither has VTC. A failure does not mean the
