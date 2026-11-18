@@ -189,9 +189,16 @@ What I take from it:
 - **Review the first batches before running the rest.** The 61 unread batches would have
   repeated every one of these.
 
-Since the plan was made, reviews merged on main have added 252 overruled IBA rows in 190
-genes and 167 disputed node assessments in 100 families. They have extracts and listings
+Since the plan was made, reviews merged on main have added 277 overruled IBA rows in 204
+genes and 174 disputed node assessments in 106 families. They have extracts and listings
 and are in neither plan.
+
+**Pilot of the corrected rules.** Asked to run two of the unread batches on Opus before
+any more. `g013` and `g014`: 47 rows, 46 applied, 1 left for a curator because the claim
+the tree contradicts is in the summary and a source note as well as the reason. Every
+reading quoted the sentences it had to; the verifier, now given every row with an adverse
+sentence, faulted 3 of 36 and corrected all three; no failure mode was proposed. Cost:
+311,000 agent tokens a batch and about two minutes of wall time each.
 
 ---
 

@@ -225,3 +225,31 @@ def test_matching_rows_finds_family_assessments_by_node_term_and_negation() -> N
     ]}
     found = tr.matching_rows(doc, {"family": "PTHR1", "node": "PANTHER:PTN1", "term": "GO:1", "negated": False})
     assert [item["assessment"] for item in found] == ["TOO_DEEP"]
+
+
+WITH_LIST = "id: P1\nreferences:\n- id: PMID:1\n  title: A paper\n"
+WITHOUT_LIST = "id: P1\nexisting_annotations: []\n"
+
+
+def test_a_review_with_a_reference_list_gets_its_tree_file_listed() -> None:
+    text, problem = tr.with_tree_reference(WITH_LIST, "human/CIRBP")
+    assert problem == ""
+    assert text.endswith("- id: file:human/CIRBP/CIRBP-phylo.yaml\n  title: Placement of the IBA rows of CIRBP in the PANTHER 19.0 tree and family alignment\n")
+    # Listing it again changes nothing and is no problem.
+    assert tr.with_tree_reference(text, "human/CIRBP") == (text, "")
+
+
+def test_a_review_without_a_reference_list_is_left_alone_and_says_why() -> None:
+    text, problem = tr.with_tree_reference(WITHOUT_LIST, "human/CIRBP")
+    assert text == WITHOUT_LIST
+    assert "references" in problem
+
+
+def test_the_first_error_of_a_validator_run_is_what_gets_reported() -> None:
+    output = "checking\n  ❌ ERROR: [reference] quote not found in PMID:1\n  ⚠ WARNING: something else\n"
+    assert tr._first_error(output) == "❌ ERROR: [reference] quote not found in PMID:1"
+    assert tr._first_error("all quiet") == "no longer validates"
+
+
+def test_the_worklist_says_that_notes_predate_the_edit() -> None:
+    assert "as it stood before the edit" in tr.worklist()["about"]

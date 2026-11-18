@@ -313,3 +313,18 @@ def test_undecided_rows_and_rows_without_an_extract_are_left_alone(tmp_path: Pat
 def test_an_extract_row_for_the_negated_annotation_is_not_used_for_the_positive_one(tmp_path: Path) -> None:
     yaml_file = with_extract(tmp_path, summary("NOT " + NODE, PATH, SEEDS, ONE_BRANCH_INSIDE, PARALOGS), negated=True)
     assert check(review(supported_by=quoting(NODE)), yaml_file) == []
+
+
+def test_a_label_with_a_full_stop_shifts_the_numbering_but_not_the_finding() -> None:
+    """Sentences are split at a full stop and a space, which a term label could contain.
+
+    The split is then one fragment longer, but joining gives the text back, the adverse
+    statement is still at the end of its fragment, and the quotes are still verbatim; the
+    reader and the script number the fragments with this same function.
+    """
+    node = NODE.replace("mRNA splicing, via spliceosome", "response to St. Louis encephalitis virus")
+    text = summary(node, PATH, SEEDS, ONE_BRANCH_INSIDE, PARALOGS)
+    parts = sentences(text)
+    assert len(parts) == 6 and " ".join(parts) == text
+    assert [(number, what) for number, what, _ in adverse_sentences(text)] == [(5, "the gene is inside the clade the seeds span")]
+    assert all(quote in text for quote in quotes_from(text, [5]))

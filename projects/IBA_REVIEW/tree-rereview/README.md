@@ -33,16 +33,17 @@ each subfamily the review names as affected lie below the node.
 | | Batches | Rows read | Applied | Left for adjudication |
 |---|---:|---:|---:|---:|
 | Gene reviews, candidate genes (`g001` to `g012`) | 12 of 73 | 278 | 229 | 47, and 2 not read |
-| Gene reviews, the rest (`g013` to `g073`) | 0 of 61 | 0 | | |
+| Gene reviews, pilot of the corrected rules (`g013`, `g014`) | 2 of 73 | 47 | 46 | 1 |
+| Gene reviews, the rest (`g015` to `g073`) | 0 of 59 | 0 | | |
 | Family reviews (`f001` to `f018`) | 18 of 18 | 386 | 319 | 67 |
 
 `tree_rereview.py status` prints the current counts. Results and what they show are in
 [tree-evidence.md](../tree-evidence.md#the-re-read). What is left for a curator is in
 [`needs-curator.yaml`](needs-curator.yaml).
 
-The 61 unread gene batches hold 1,418 overruled rows in 970 genes. Since the plans were
-made, reviews merged on main have added 252 overruled IBA rows in 190 genes and 167
-disputed node assessments in 100 families. Those have extracts and listings, and are not
+The 59 unread gene batches hold 1,371 overruled rows in 935 genes. Since the plans were
+made, reviews merged on main have added 277 overruled IBA rows in 204 genes and 174
+disputed node assessments in 106 families. Those have extracts and listings, and are not
 in either plan; `plan` makes a plan once and does not extend it, so they need batches of
 their own.
 

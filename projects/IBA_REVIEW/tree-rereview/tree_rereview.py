@@ -745,13 +745,18 @@ def tree_file_of(unit: str) -> Path:
     return gene_paths(unit)[1] if "/" in unit else family_paths(unit)[1]
 
 
-def with_tree_reference(text: str, unit: str) -> str:
-    """``text`` with the unit's tree file listed under ``references``; unchanged when that cannot be placed."""
+def with_tree_reference(text: str, unit: str) -> tuple[str, str]:
+    """``text`` with the unit's tree file listed under ``references``, and why not when it could not be.
+
+    The second value is empty when the file is listed (or already was). A review without a
+    block-style, non-empty ``references`` list keeps its text, and the reason comes back so
+    that the caller can report it.
+    """
     release_name = str((load(tree_file_of(unit)) or {}).get("panther_release") or "19.0")
     try:
-        return add_reference(text, *tree_reference(unit, release_name))
-    except RowEditError:
-        return text
+        return add_reference(text, *tree_reference(unit, release_name)), ""
+    except RowEditError as error:
+        return text, str(error)
 
 
 def matching_rows(document: dict[str, Any], row: dict[str, Any]) -> list[dict[str, Any]]:
@@ -1093,7 +1098,10 @@ def apply_batch(batch: str, jobs: int = 4, pr: str = "") -> Counter[str]:
             if row.get("verifier") and not row["verifier"]["agrees"]:
                 row["outcome_detail"] = CORRECTED_BY_VERIFIER
         if text != originals[gene]:
-            review_path.write_text(with_tree_reference(text, gene), encoding="utf-8")
+            text, unlisted = with_tree_reference(text, gene)
+            if unlisted:
+                record.setdefault("tree_file_not_listed_under_references", {})[gene] = unlisted
+            review_path.write_text(text, encoding="utf-8")
     changed = [gene for gene, rows in by_gene.items() if any(row["outcome"] == "applied" for row in rows)]
     with ThreadPoolExecutor(max_workers=jobs) as pool:
         results = dict(zip(changed, pool.map(lambda gene: validate(review_path_of(gene)), changed)))
@@ -1104,9 +1112,8 @@ def apply_batch(batch: str, jobs: int = 4, pr: str = "") -> Counter[str]:
         applied = [row for row in by_gene[gene] if row["outcome"] == "applied"]
         if not valid:
             review_path_of(gene).write_text(originals[gene], encoding="utf-8")
-            first_error = next((line.strip() for line in output.splitlines() if "ERROR" in line or "✗" in line), "no longer validates")
             for row in applied:
-                row["outcome"], row["outcome_detail"] = "adjudicate", f"edit undone, the review no longer validated: {first_error[:300]}"
+                row["outcome"], row["outcome_detail"] = "adjudicate", f"edit undone, the review no longer validated: {_first_error(output)}"
             continue
         unshared = alias_count(review_path_of(gene).read_text(encoding="utf-8")) < alias_count(originals[gene])
         records.append(write_history(scaffolder, history_arguments(gene, applied, pr, unshared)))
@@ -1132,16 +1139,19 @@ def cites(value: Any, reference: str) -> bool:
     return False
 
 
-def list_tree_references(pr: str = "", jobs: int = 4) -> list[str]:
+def list_tree_references(pr: str = "", jobs: int = 4) -> tuple[list[str], dict[str, str]]:
     """List under ``references`` the tree file that a review's rows quote, wherever it is not listed yet.
 
     Reviews list the file sources they cite; the rows that quote a tree extract or node
-    listing were written before this script added the entry itself. Returns the units changed.
+    listing were written before this script added the entry itself. Returns the units
+    changed, and the units left as they were with the reason: no reference list to add
+    to, or a review that no longer validated with the entry and was put back.
     """
     units = sorted(
         str(path.parent.relative_to(ROOT / "genes")) for path in (ROOT / "genes").glob("*/*/*-phylo.yaml")
     ) + sorted(path.parent.name for path in (ROOT / "interpro" / "panther").glob("*/*-tree-nodes.yaml"))
     originals: dict[str, str] = {}
+    skipped: dict[str, str] = {}
     for unit in units:
         review_path = review_path_of(unit)
         if not review_path.exists():
@@ -1150,8 +1160,10 @@ def list_tree_references(pr: str = "", jobs: int = 4) -> list[str]:
         reference = tree_reference(unit)[0]
         if reference not in text or not cites(yaml.load(text, Loader=Loader), reference):
             continue
-        new = with_tree_reference(text, unit)
-        if new != text:
+        new, unlisted = with_tree_reference(text, unit)
+        if unlisted:
+            skipped[unit] = unlisted
+        elif new != text:
             originals[unit] = text
             review_path.write_text(new, encoding="utf-8")
     changed = list(originals)
@@ -1159,10 +1171,12 @@ def list_tree_references(pr: str = "", jobs: int = 4) -> list[str]:
         results = dict(zip(changed, pool.map(lambda unit: validate(review_path_of(unit)), changed)))
     scaffolder = _new_history()
     written: list[Path] = []
-    for unit in changed:
+    for unit in list(changed):
         if not results[unit][0]:
             review_path_of(unit).write_text(originals[unit], encoding="utf-8")
-            raise SystemExit(f"{unit} no longer validates with its tree file listed under references:\n{results[unit][1][-2000:]}")
+            skipped[unit] = "put back: the review no longer validated with the entry: " + _first_error(results[unit][1])
+            changed.remove(unit)
+            continue
         name = tree_file_of(unit).name
         target = (
             ["--kind", "gene", "--organism", unit.split("/")[0], "--slug", unit.split("/")[1], "--sections", "references"]
@@ -1180,7 +1194,13 @@ def list_tree_references(pr: str = "", jobs: int = 4) -> list[str]:
     valid, output = validate_history(written)
     if not valid:
         raise SystemExit(f"history records do not validate:\n{output}")
-    return changed
+    return changed, skipped
+
+
+def _first_error(output: str) -> str:
+    """The first line of a validator's output that reports an error, shortened."""
+    line = next((line.strip() for line in output.splitlines() if "ERROR" in line or "✗" in line), "no longer validates")
+    return line[:300]
 
 
 WORKLIST = HERE / "needs-curator.yaml"
@@ -1226,7 +1246,9 @@ def worklist() -> dict[str, Any]:
             "the verifier disagreed, or the edit could not be placed; nothing was changed. not_read: no "
             "reading was returned. applied_with_note: the row was edited (a quote and a sentence, or a "
             "corrected reason), and the reader noted something the edit does not settle, often a verdict "
-            "or failure mode that no longer fits."
+            "or failure mode that no longer fits. A note was written from the row as it stood before the "
+            "edit, so it can describe something the edit has since changed, such as a row without any "
+            "supported_by."
         ),
         "counts": {group: len(rows) for group, rows in groups.items()},
         **groups,
@@ -1280,7 +1302,11 @@ def requote(pr: str = "", jobs: int = 4) -> list[str]:
     lines: list[str] = []
     for unit, rows in changed.items():
         if not results[unit][0]:
-            raise SystemExit(f"{unit} no longer validates after its quotes were completed:\n{results[unit][1][-2000:]}")
+            review_path_of(unit).write_text(originals[unit], encoding="utf-8")
+            for row, _ in rows:
+                del row["quotes_added"]
+            lines.append(f"{unit}: put back, the review no longer validated with the added quotes: {_first_error(results[unit][1])}")
+            continue
         gene = "/" in unit
         details = [
             "The first pass of the tree re-read quoted the tree file on these rows without the sentence that "
@@ -1350,6 +1376,8 @@ def finish(journal: Path, date: str, jobs: int = 4, pr: str = "") -> list[str]:
             f"{batch}: {len(record['rows'])} rows; readings {dict(readings)}; verifier checked {len(checked)}, "
             f"disagreed on {checked.count(False)}; outcomes {dict(outcomes)}"
         )
+        for unit, why in sorted(mapping(load(run_path(batch)).get("tree_file_not_listed_under_references")).items()):
+            lines.append(f"  {unit}: tree file not listed under references: {why}")
     WORKLIST.write_text(dump(worklist()), encoding="utf-8")
     return lines
 
@@ -1440,8 +1468,10 @@ def main(argv: list[str] | None = None) -> int:
     elif args.command == "requote":
         print("\n".join(requote(args.pr, args.jobs)) or "every applied row already quotes what it has to")
     elif args.command == "references":
-        listed = list_tree_references(args.pr, args.jobs)
-        print(f"{len(listed)} reviews now list their tree file under references")
+        listed, skipped = list_tree_references(args.pr, args.jobs)
+        print(f"{len(listed)} reviews now list their tree file under references; {len(skipped)} left as they were")
+        for unit, why in sorted(skipped.items()):
+            print(f"  {unit}: {why}")
     else:
         print(status())
     return 0
