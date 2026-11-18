@@ -8,9 +8,10 @@ asks PAINT curators to make (``paint_action`` plus, for moves and added losses,
 and the PANTHER tree. This module flattens every proposed action into one row and
 renders one Markdown report per family, which is the unit a PAINT curator works in.
 
-Requests that cannot all be carried out are flagged, not resolved: two different actions
-on the same PAINT row (node and term), the same IBD moved to two different nodes, or a
-loss requested below an IBD that another request removes.
+Requests that cannot all be carried out are flagged, not resolved. A PAINT row (node and
+term) has one verdict, so two different requests on it conflict, including a move or a
+removal next to an added loss: a moved IBD may no longer sit above the loss target. The
+one exception is several losses requested below the same IBD, which are independent.
 
 >>> row = _row(
 ...     "interpro/panther/PTHR1/PTHR1-review.yaml",
@@ -156,9 +157,12 @@ def collect(root: Path) -> list[dict[str, str]]:
 def conflicts(rows: list[dict[str, str]]) -> list[str]:
     """Return requests in the same family that cannot all be carried out.
 
-    Flagged: different requests on one PAINT row (the same node and term), which
-    covers one IBD moved to different targets, and a loss added below an IBD that
-    another request removes.
+    A PAINT row (the same node and term) has one verdict, so any two different
+    requests on it are flagged, except several added losses (``ADD_IRD``/``ADD_IKR``),
+    which prune independent clades below one IBD. A move or removal next to a loss is
+    flagged: removing the IBD makes the loss moot, and a moved IBD may no longer sit
+    above the loss target (deciding that needs the tree, which this module does not
+    load).
 
     >>> r = {c: "" for c in COLUMNS}
     >>> a = {**r, "family_id": "F", "node_id": "N", "term_id": "GO:1",
@@ -172,22 +176,27 @@ def conflicts(rows: list[dict[str, str]]) -> list[str]:
     >>> conflicts([{**a, "paint_action": "REMOVE_IBD", "target_node_id": ""},
     ...            {**a, "paint_action": "ADD_IKR", "target_node_id": "T3"}])
     ['F: N GO:1 has conflicting requests: ADD_IKR to T3; REMOVE_IBD']
+    >>> conflicts([a, {**a, "paint_action": "ADD_IKR", "target_node_id": "T3"}])
+    ['F: N GO:1 has conflicting requests: ADD_IKR to T3; MOVE_IBD to T1']
+    >>> loss = {**a, "paint_action": "ADD_IKR", "target_node_id": "T3"}
+    >>> conflicts([loss, {**loss, "paint_action": "ADD_IRD", "target_node_id": "T4"}])
+    []
     """
     requests: dict[tuple[str, str, str], set[str]] = defaultdict(set)
     losses: dict[tuple[str, str, str], set[str]] = defaultdict(set)
     for r in rows:
         key = (r["family_id"], r["node_id"], r["term_id"])
         target = f" to {r['target_node_id']}" if r["target_node_id"] else ""
-        # Several losses below one IBD are compatible, so they are kept apart and only
-        # clash with a request that removes the IBD they would prune.
+        # Several losses below one IBD are compatible with each other, so they are kept
+        # apart; any other request on the row conflicts with them.
         bucket = losses if r["paint_action"].startswith("ADD_") else requests
         bucket[key].add(r["paint_action"] + target)
     problems = []
     for key in sorted(set(requests) | set(losses)):
-        found = requests[key]
-        if len(found) > 1 or ("REMOVE_IBD" in found and losses[key]):
+        found, added = requests.get(key, set()), losses.get(key, set())
+        if len(found) > 1 or (found and added):
             fam, node, term = key
-            listed = "; ".join(sorted(found | losses[key]))
+            listed = "; ".join(sorted(found | added))
             problems.append(f"{fam}: {node} {term} has conflicting requests: {listed}")
     return problems
 
@@ -223,8 +232,8 @@ def render_report(family_id: str, rows: list[dict[str, str]]) -> str:
     for i, r in enumerate(rows, 1):
         node = r["node_id"] + (f" ({r['node_taxon']})" if r["node_taxon"] else "")
         lines += ["", f"## {i}. {r['request']}", ""]
-        lines.append(f"- **PAINT row:** {r['evidence'] or 'annotation'} of {r['term_id']} "
-                     f"{r['term_label']} at {node}".rstrip())
+        term = f"{r['term_id']} {r['term_label']}" if r["term_label"] else r["term_id"]
+        lines.append(f"- **PAINT row:** {r['evidence'] or 'annotation'} of {term} at {node}")
         if r["paint_snapshot"]:
             lines.append(f"- **PAINT snapshot reviewed:** {r['paint_snapshot']}")
         lines.append(f"- **Verdict:** {r['assessment']}")
@@ -238,7 +247,7 @@ def render_report(family_id: str, rows: list[dict[str, str]]) -> str:
         for ev in json.loads(r["supported_by"] or "[]"):
             text = " ".join(str(ev.get("supporting_text") or "").split())
             if text:
-                lines += ["", f"> {text}", f"> — {ev.get('reference_id', '')}"]
+                lines += ["", f"> {text}", ">", f"> — {ev.get('reference_id', '')}"]
             else:
                 lines += ["", f"- **Evidence reference:** {ev.get('reference_id', '')}"]
     return "\n".join(lines) + "\n"

@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 import pytest
+import yaml
 
 from ai_gene_review.tools.export_paint_change_requests import (
     COLUMNS,
@@ -129,8 +130,16 @@ def test_losses_below_one_ibd_do_not_conflict() -> None:
     first = {**base, "family_id": "F", "node_id": "N", "term_id": "GO:1",
              "paint_action": "ADD_IKR", "target_node_id": "A"}
     assert conflicts([first, {**first, "paint_action": "ADD_IRD", "target_node_id": "B"}]) == []
-    # moving the IBD and pruning below it can both be wanted
-    assert conflicts([first, {**first, "paint_action": "MOVE_IBD", "target_node_id": "C"}]) == []
+
+
+def test_move_next_to_a_loss_on_one_row_conflicts() -> None:
+    """A move and a loss on one PAINT row are two verdicts; the moved IBD may not sit above
+    the loss target, which only the tree can tell, so the pair is flagged."""
+    base = {c: "" for c in COLUMNS}
+    loss = {**base, "family_id": "F", "node_id": "N", "term_id": "GO:1",
+            "paint_action": "ADD_IKR", "target_node_id": "A"}
+    found = conflicts([loss, {**loss, "paint_action": "MOVE_IBD", "target_node_id": "C"}])
+    assert found == ["F: N GO:1 has conflicting requests: ADD_IKR to A; MOVE_IBD to C"]
 
 
 def test_loss_below_a_removed_ibd_conflicts() -> None:
@@ -162,12 +171,25 @@ def test_main_exits_nonzero_on_conflict(tmp_path: Path, monkeypatch: pytest.Monk
     assert "CONFLICT: PANTHER:PTHR1: PANTHER:PTN10" in capsys.readouterr().out
 
 
-def test_real_pthr24416_requests() -> None:
-    """The committed PTHR24416 review yields its three requests and no conflict."""
-    rows = [r for r in collect(Path(".")) if r["family_id"] == "PANTHER:PTHR24416"]
-    assert sorted((r["term_id"], r["paint_action"], r["target_node_id"]) for r in rows) == [
-        ("GO:0004714", "ADD_IKR", "PANTHER:PTN002400510"),
-        ("GO:0005518", "MOVE_IBD", "PANTHER:PTN007801558"),
-        ("GO:0038062", "MOVE_IBD", "PANTHER:PTN007801558"),
-    ]
+REPO_ROOT = Path(__file__).resolve().parents[1]
+TARGETED = {"MOVE_IBD", "ADD_IRD", "ADD_IKR", "MOVE_LOSS"}
+
+
+def test_committed_family_reviews_export_cleanly() -> None:
+    """Every committed proposed action exports to a well-formed request, without conflicts.
+
+    Asserts invariants rather than particular rows, so later curation of a family review
+    does not break this test.
+    """
+    schema = yaml.safe_load(
+        (REPO_ROOT / "src/ai_gene_review/schema/family_review.yaml").read_text())
+    actions = set(schema["enums"]["PaintActionEnum"]["permissible_values"])
+    rows = collect(REPO_ROOT)
+    assert rows, "no committed family review carries a proposed_action"
+    for r in rows:
+        assert r["family_id"].startswith("PANTHER:PTHR"), r
+        assert r["node_id"] and r["term_id"], r
+        assert r["paint_action"] in actions, r
+        assert bool(r["target_node_id"]) is (r["paint_action"] in TARGETED), r
+        assert r["request"] and not r["request"].startswith(r["paint_action"]), r
     assert conflicts(rows) == []
