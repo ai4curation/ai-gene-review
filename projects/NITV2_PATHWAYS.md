@@ -16,6 +16,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/SYDG4JC3arG7b3fFiuq6UK
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Nitratidesulfovibrio vulgaris Pathways Project

@@ -32,3 +32,14 @@
 - Module (`modules/primary_cilium_life_cycle.yaml`, stage 1): "distal appendage root component".
 - HPA v25 (member_evidence.md): Primary cilium (Uncertain); Primary cilium transition zone (Uncertain); main locations Golgi apparatus, primary cilium, transition zone, vesicles. No centrosome or basal body call. The HPA cilium atlas paper (PMID:41005307) is abstract-only in the cache and gives no gene-level detail.
 - Comparison: the Golgi/vesicle signal agrees with the reported IFT20-associated Golgi pool, and a transition-zone-level signal is compatible with transition fibers at the ciliary base, but both calls are graded Uncertain and HPA does not resolve the distal appendage. The literature (several independent groups, super-resolution, EM, patient cells) robustly supports the module role, and core_functions are consistent with it. Minor refinements: CEP83 is downstream of the CEP90-MNR-OFD1 distal complex (which matches the C2CD3/OFD1 Reactome step), and CEP83-SCLT1 may be interdependent rather than strictly ordered. No substantive disagreement with the module.
+
+## 2026-11-13 ORGANELLES Golgi batch 1 (Golgi apparatus rows)
+
+Rows: GO:0005794 IBA (GO_REF:0000033, `is_active_in`, WITH PTN000570990 and Q9Y592) and GO:0005794 IDA (PMID:23530209, `located_in`).
+
+Checks:
+- QuickGO WITH/FROM for the IBA lists only the PTN node and human CEP83 itself, so the PAINT node rests on CEP83's own IDA (expected, not circular). No PAINT tsv is cached for PTHR23170.
+- PMID:23530209 is abstract-only (PMC3625310 returned no full text): "a pool of CCDC41 colocalizes with intraflagellar transport protein 20 (IFT20) subunit of the intraflagellar transport particle at the Golgi complex." No marker visible; curator deference for the IDA.
+- CEP83 is a soluble coiled-coil distal-appendage protein; its demonstrated activity (IFT20 recruitment, ciliary vesicle docking) is read out at the mother centriole.
+
+Outcome: both rows stay KEEP_AS_NON_CORE with a dated check; root only. `is_active_in` on the IBA is soft: colocalization at the Golgi, activity shown at the centriole.

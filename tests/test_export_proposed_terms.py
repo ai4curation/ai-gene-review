@@ -206,3 +206,15 @@ proposed_new_terms:
     assert rows[0]["proposed_parent_id"] == "GO:0007165"
     assert rows[0]["organism"] == ""
     assert rows[0]["gene_symbol"] == ""
+
+
+def test_gene_tree_below_a_modules_folder_keeps_the_gene_glob(tmp_path: Path) -> None:
+    gene_dir = tmp_path / "modules" / "checkout" / "genes" / "yeast" / "SAS3"
+    gene_dir.mkdir(parents=True)
+    body = "proposed_new_terms:\n  - proposed_name: a term\n"
+    (gene_dir / "SAS3-ai-review.yaml").write_text(body, encoding="utf-8")
+    (gene_dir / "SAS3-ai-review-clean.yaml").write_text(body, encoding="utf-8")
+
+    found = expand_inputs([tmp_path / "modules" / "checkout" / "genes"])
+
+    assert [path.name for path in found] == ["SAS3-ai-review.yaml"]

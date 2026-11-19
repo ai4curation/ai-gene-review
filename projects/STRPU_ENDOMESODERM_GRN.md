@@ -31,6 +31,7 @@ genes:
   - Twist
   - FoxN23
   - Six12
+index_group: MAMMAL
 ---
 
 # Sea Urchin Endomesoderm GRN

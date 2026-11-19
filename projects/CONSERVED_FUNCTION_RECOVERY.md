@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [EVALUATION]
 collections: [HOMOLOGY_PROPAGATION]
 autolink_exclude: [fliI, sctN]
+index_group: CROSS_CUTTING
 ---
 
 # Conserved-function recovery

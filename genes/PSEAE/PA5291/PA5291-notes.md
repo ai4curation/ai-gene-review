@@ -59,3 +59,18 @@ transport) on PA5291. With BetT3 = PA5291 and BetT2 = PA3933 these are the wrong
 Node-level: no GO_CENTRAL defect. GO:0022857 suits the BCCT family node, and the IBD rests on two
 experimentally characterised E. coli transporters plus BetT1 and BetT3. The PA3933 seed is wrong, but
 that only removes one of five seeds.
+
+## 2026-11-15 (re-review of source defects)
+
+Withdrew the two `WRONG_GENE_PRODUCT` source defects on the GO:0015653 / GO:0031460
+glycine betaine rows (PMID:18156257). The 2008 full text was read via PMC2293270:
+Table 3 shows a clone containing PA5291 itself conferred growth on **glycine betaine**
+(and a PA3933 clone conferred growth on **choline**) in the DC3000 GB4 mutant. So the
+glycine betaine rows are correctly attributed to PA5291 by their cited paper — this is
+not a wrong-gene mis-assignment. The earlier analysis above relied only on Malek 2011's
+restatement ("BetT2 and BetT3 transport GB and choline, respectively") without the 2008
+primary data, which were unavailable at the time. The 2008 (heterologous complementation,
+PA5291→GB) and 2011 (native betT3 deletion, PA5291→choline) papers genuinely conflict on
+PA5291's substrate; the GB rows are now UNDECIDED (substrate conflict), not a source defect.
+Note: the PANTHER family review marking the PA3933 seed WRONG is downstream of this and was
+not edited here.
