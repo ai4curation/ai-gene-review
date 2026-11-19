@@ -4,7 +4,8 @@
    by reference (GO_REF:0000003 is EC2GO, GO_REF:0000117 is ARBA).
 2. For each EC2GO row, look the entry up in the current UniProtKB release and
    record whether it still carries EC 2.3.1.86, and on what evidence.
-3. For an evenly spread sample of the entries that no longer carry it, read
+3. For an evenly spaced sample (first to last accession) of the entries that
+   no longer carry it, read
    the last six UniSave versions and report which carried EC 2.3.1.86 and
    whether the evidence was ARBA00048237.
 
@@ -98,8 +99,13 @@ def main() -> None:
 
     history: list[str] = []
     without.sort()
-    sample = without[:: max(1, len(without) // SAMPLE)][:SAMPLE]
+    n = len(without)
+    k = min(SAMPLE, n)
+    # Evenly spaced indices from the first to the last entry, so the newest
+    # accessions are sampled too.
+    sample = [without[round(i * (n - 1) / (k - 1))] for i in range(k)] if k > 1 else without[:k]
     attributed = 0
+    by_release: Counter[str] = Counter()
     for acc in sample:
         versions = json.loads(fetch(f"https://rest.uniprot.org/unisave/{acc}?format=json")[0])["results"][:6]
         sources: list[str] = []
@@ -110,12 +116,19 @@ def main() -> None:
             if "EC=2.3.1.86" not in txt:
                 continue
             ev = "ARBA00048237" if "ARBA:ARBA00048237" in txt else "other"
+            if ev == "ARBA00048237":
+                by_release[v.get("lastReleaseDate", "")] += 1
             sources.append(f"v{v['entryVersion']} ({v.get('lastReleaseDate', '')}): {ev}")
         if any(x.endswith("ARBA00048237") for x in sources):
             attributed += 1
         history.append(f"- {acc}: " + ("; ".join(sources) if sources else "EC 2.3.1.86 not in the last 6 versions"))
     history.insert(0, f"{attributed} of {len(sample)} sampled entries carried EC 2.3.1.86 from ARBA00048237 in an earlier version.")
     history.insert(1, "")
+    history.insert(2, "Sampled entries whose version in a release carried it from ARBA00048237:")
+    history.insert(3, "")
+    for i, (rel, cnt) in enumerate(sorted(by_release.items(), key=lambda x: time.strptime(x[0], "%d-%b-%Y"))):
+        history.insert(4 + i, f"- {rel}: {cnt} of {len(sample)}")
+    history.insert(4 + len(by_release), "")
 
     lines = [
         "# Bacterial GO:0004321 rows and their EC source",
