@@ -54,6 +54,34 @@ def fetch(url: str, accept: str = "application/json") -> tuple[bytes, dict]:
     raise RuntimeError("unreachable")
 
 
+def releases_spanned(version: dict) -> set[str]:
+    """UniProt releases (YYYY_NN) a UniSave version was current in.
+
+    A version is current from its first to its last release, so a version that
+    was not edited between two releases counts for both.
+
+    >>> sorted(releases_spanned({"firstRelease": "2026_02/2026_02", "lastRelease": "2026_03/2026_03"}))
+    ['2026_02', '2026_03']
+    >>> releases_spanned({"firstRelease": "2026_03/2026_03", "lastRelease": "2026_03/2026_03"})
+    {'2026_03'}
+    >>> releases_spanned({})
+    set()
+    """
+    first = (version.get("firstRelease") or "").split("/")[0]
+    last = (version.get("lastRelease") or "").split("/")[0]
+    if not first or not last:
+        return set()
+    (fy, fn), (ly, ln) = (map(int, first.split("_")), map(int, last.split("_")))
+    out = set()
+    y, n = fy, fn
+    while (y, n) <= (ly, ln):
+        out.add(f"{y}_{n:02d}")
+        n += 1
+        if n > 4:  # UniProt publishes four releases a year
+            y, n = y + 1, 1
+    return out
+
+
 def ec_evidence(entry: dict) -> list[str]:
     """Evidence codes on EC 2.3.1.86 in the entry's names and catalytic activities."""
     found: list[str] = []
@@ -109,6 +137,7 @@ def main() -> None:
     for acc in sample:
         versions = json.loads(fetch(f"https://rest.uniprot.org/unisave/{acc}?format=json")[0])["results"][:6]
         sources: list[str] = []
+        covered: set[str] = set()
         for v in versions:
             txt = fetch(
                 f"https://rest.uniprot.org/unisave/{acc}?format=txt&versions={v['entryVersion']}", "text/plain"
@@ -117,17 +146,18 @@ def main() -> None:
                 continue
             ev = "ARBA00048237" if "ARBA:ARBA00048237" in txt else "other"
             if ev == "ARBA00048237":
-                by_release[v.get("lastReleaseDate", "")] += 1
+                covered.update(releases_spanned(v))
             sources.append(f"v{v['entryVersion']} ({v.get('lastReleaseDate', '')}): {ev}")
         if any(x.endswith("ARBA00048237") for x in sources):
             attributed += 1
+        by_release.update(covered)
         history.append(f"- {acc}: " + ("; ".join(sources) if sources else "EC 2.3.1.86 not in the last 6 versions"))
     history.insert(0, f"{attributed} of {len(sample)} sampled entries carried EC 2.3.1.86 from ARBA00048237 in an earlier version.")
     history.insert(1, "")
-    history.insert(2, "Sampled entries whose version in a release carried it from ARBA00048237:")
+    history.insert(2, "Sampled entries carrying it from ARBA00048237 in each release (a version counts for every release it spans):")
     history.insert(3, "")
-    for i, (rel, cnt) in enumerate(sorted(by_release.items(), key=lambda x: time.strptime(x[0], "%d-%b-%Y"))):
-        history.insert(4 + i, f"- {rel}: {cnt} of {len(sample)}")
+    for i, (rel, cnt) in enumerate(sorted(by_release.items())):
+        history.insert(4 + i, f"- release {rel}: {cnt} of {len(sample)}")
     history.insert(4 + len(by_release), "")
 
     lines = [
