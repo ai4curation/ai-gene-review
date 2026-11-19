@@ -61,3 +61,18 @@ written afterwards. It was checked against this review on 2026-10-11:
 dismech `Autosomal_Dominant_Hypercholesterolemia_3` (gain of function) now binds the PCSK9-LDLR
 binding node to GO:0050750 with modifier INCREASED (allele-specific: D374Y), and its LDLR
 catabolism node to GO:0032802 INCREASED - consistent with core function 1 here.
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- Two Golgi rows: IDA PMID:17461796 and IEA GO_REF:0000044 (untagged UniProt item). Both changed
+  ACCEPT to KEEP_AS_NON_CORE: the location is real but is the biosynthetic route and a post-ER sorting
+  pool, and the Golgi is not in core_functions.
+- PMID:17461796 abstract-only: Golgi apparatus in LDLR-expressing primary hepatocytes, colocalized
+  with LDLR; marker unreadable. Newly cited PMID:27280970 (Poirier et al. 2016, full text cached):
+  immunogold EM of endogenous PCSK9 over RER, Golgi, MVB and late endosomes of human hepatocytes;
+  endogenous PCSK9 with the TGN marker golgin-97 in HepG2 (immunoadsorption control); WT
+  PCSK9-mCherry also with golgin-97, CTD-dependent. PMID:19635789 (abstract-only) gives the
+  clathrin light chain perturbation evidence for an intracellular TGN-to-lysosome route.
+- No GO:0005802 TGN row: the golgin-97 lines are one laboratory, one cell line, one paper; the liver
+  EM resolves only the Golgi. A judgement call: a second laboratory's marker-resolved TGN data on
+  the endogenous protein would justify a NEW IC TGN row.

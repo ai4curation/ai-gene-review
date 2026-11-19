@@ -346,10 +346,12 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
         survey; 118 human genes are root-only for GO:0005794)
   - [x] Golgi batch 2: 20 human genes (2026-11-15); 33 human genes remain on
         the root-only Golgi list with a synthesis row
+  - [x] Golgi batch 3: 20 human genes (2026-11-18); 13 human genes remain on
+        the root-only Golgi list with a synthesis row
   - [x] Follow-ups to #6297 and #6353 (2026-11-15): abstract-only sweep of ER
         batch 1 (AIMP1 reworded), UFSP2 caveat, UFL1 tethering row; CDK5RAP3
         checked and left without one
-  - [ ] Sweep ER batches 2-4 and Golgi batches 1-2 for reasons that rest on a
+  - [ ] Sweep ER batches 2-4 and Golgi batches 1-3 for reasons that rest on a
         figure reading from an abstract-only cached paper (only ER batch 1 was
         swept, 2026-11-15)
   - [ ] Retry the AIMP1 full text (PMID:17525271, PMC1899434): restore the Figure 2
@@ -360,6 +362,62 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-18 (Golgi batch 3: 20 human genes)
+
+The next 20 human genes on the root-only Golgi list with a synthesis row (GRB2 to
+RSAD2), from the 2026-11-15 survey. No gene gained a sub-compartment row. Seventeen
+Golgi rows on nine genes changed action; four went to UNDECIDED because the donor paper
+could not be read.
+
+| gene | outcome | evidence |
+|---|---|---|
+| GRB2 | root; IEA and ISS KEEP_AS_NON_CORE to UNDECIDED | by similarity to mouse, curated from a yeast two-hybrid PrP paper (PMID:11571277) that is unreadable and never mentions the Golgi; the readable human paper (PMID:17276458) shows only a "perinuclear Golgi region" without a marker |
+| HCK | root; IEA stays KEEP_AS_NON_CORE | the Golgi item is on isoform p59Hck only, curated from PMID:11904303 (unreadable; overexpressed active GFP fusion); curator deference, with an isoform source defect (ABCA7 pattern) |
+| KIFAP3 | root; IEA stays KEEP_AS_NON_CORE | Ensembl projection of a mouse IDA: immuno-EM of endogenous KAP3 along ER and Golgi membranes in photoreceptors (PMID:19384852); recruited kinesin-II adaptor |
+| LDLR | root; IDA and IEA stay KEEP_AS_NON_CORE | PMID:17461796 (abstract-only): PCSK9 sorts to the Golgi in hepatocytes and colocalizes with LDLR; biosynthetic and PCSK9-routing pool |
+| LRP2 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | the only donor is the unreadable cubilin paper (PMID:15616221) behind the LRP2 ER row, already UNDECIDED |
+| LYN | root; three IDA and one IEA ACCEPT to KEEP_AS_NON_CORE | endogenous LYN with GalT, dispersed by brefeldin A; cycloheximide and FRAP show newly made LYN in transit to the plasma membrane (PMID:15173188) |
+| MAPK1 | root; IEA and TAS stay MARK_AS_OVER_ANNOTATED, reasons rewritten | the marker study says ERK1/2 "were not found to be associated with the fragmented Golgi" (PMID:16533948); phosphorylating GRASP55 is a Golgi substrate, not a location |
+| MAPK3 | root; IEA and TAS MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE | endogenous ERK1c, an ERK1 splice form, sits with GM130 and p58 in mitotic HeLa cells (isoform-specific antibody, lost on siRNA; PMID:16533948); canonical ERK1 is absent; isoform source defect (CHECK) |
+| MS4A4A | root; IBA and IDA ACCEPT to MARK_AS_OVER_ANNOTATED; Golgi and ER out of core_functions and description; the ER IDA from the same paper also moved | the cited paper says TREM2 partly colocalizes with KDEL and giantin, "In contrast, MS4A4A did not colocalize with these intracellular markers" (PMID:31413141); WRONG_GENE_PRODUCT query (CHECK, candidate TREM2); the IBD's only seed is this row |
+| MSLN | root; IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | untagged UniProt item; no Golgi marker or brefeldin A data for mesothelin; transit only, matching its ER lumen row |
+| MYH9 | root; IEA stays KEEP_AS_NON_CORE | the mouse donor (PMID:14617807, TGN) is unreadable, but a readable human paper puts endogenous NMIIA at giantin-marked stacks and needs it for Golgi-to-ER return (PMID:22525330); recruited motor |
+| NEDD9 | root; EXP and IEA stay KEEP_AS_NON_CORE | curated item from PMID:8668148 (abstract-only, mentions only periphery and nucleus); curator deference |
+| NTN3 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | Ensembl projection of a mouse IDA from PMID:10381568, unreadable and silent on the Golgi; no UniProt Golgi item |
+| P3H2 | root; two IDA and one IEA stay KEEP_AS_NON_CORE | curated item from an abstract-only paper titled "ER and Golgi resident" (PMID:15063763), plus HPA endogenous staining (pattern-based, no Golgi marker) |
+| PCSK9 | root; IDA and IEA ACCEPT to KEEP_AS_NON_CORE | immunogold EM of endogenous PCSK9 in human hepatocyte Golgi and golgin-97 colocalization in HepG2 (PMID:27280970); a biosynthetic and sorting pool of a secreted protein; no TGN row (one laboratory, one paper) |
+| PICALM | root; IEA and EXP ACCEPT to MARK_AS_OVER_ANNOTATED; Golgi out of core_functions and description | full text: only highly overexpressed GFP-CALM appears in a clathrin-defined "Golgi area", and the authors write "Endogenous CALM is located only in endocytic-coated pits" (PMID:10436022) |
+| PRAME | root; EXP and IEA stay KEEP_AS_NON_CORE | endogenous PRAME with the 58K Golgi marker in HL60 cells only after LPS or PGN with IFN-gamma (PMID:23460923); regulated recruited pool |
+| PRNP | root; IEA and ISS stay KEEP_AS_NON_CORE | by similarity to mouse (donor PMID:11756421 unreadable); copper and zinc move surface PrPC to early endosomes and Golgi compartments (PMID:14511113, abstract); a ligand-driven retrograde pool |
+| RP2 | root; IEA stays KEEP_AS_NON_CORE | mouse IDA from an abstract that says RP2 "also localized to the Golgi" (PMID:20106869); a lipidated soluble protein cannot be in transit; curator deference |
+| RSAD2 | root; three EXP and one IEA stay KEEP_AS_NON_CORE | EGFP-viperin alone is not with a Golgi marker and reaches the Golgi only with HSV-1 gD (PMID:31921110); HCMV moves endogenous viperin from ER to Golgi (PMID:11752458); kept as an infection-induced pool of an antiviral effector |
+
+Lessons, adding to batches 1 and 2:
+
+- **Check that the cited paper is not reporting a negative.** MS4A4A's IDA cites a
+  marker-controlled sentence saying the protein is not in the Golgi; PICALM's authors say
+  their overexpression signal is probably not physiological. A readable source that
+  disowns the signal makes even a curated EXP or IDA row MARK_AS_OVER_ANNOTATED, and a
+  PAINT IBD seeded only by such a row inherits the error.
+- **Golgi pools restricted to one splice form** (ERK1c of MAPK3; p59Hck of HCK): keep the
+  root as non-core with an isoform source defect (ABCA7 pattern); the same paper can then
+  argue against the paralog's rows (MAPK1).
+- **Acting on a Golgi substrate is not a Golgi location** (ERK2 and GRASP55).
+- **An ARBA Golgi rule is unvetted**: ARBA00028708 gives MAPK1 and MAPK3 the same row, and
+  marker data decide them differently.
+- **Readable human evidence can rescue an unreadable donor for the root** (MYH9), but a
+  sub-compartment claim from the unreadable donor still counts as no line.
+- **HPA Golgi IDA rows** are endogenous whole-organelle evidence, but the call is
+  pattern-based (no Golgi counterstain): a line for the root, never for a sub-compartment.
+- **Immuno-EM ultrastructure counts as a Golgi line without a marker** (KIFAP3).
+- **Open question for the Golgi rule:** whether a virus-induced pool of an antiviral
+  effector counts for the root (RSAD2 kept it; BST2 already excludes such pools from
+  sub-compartments), and whether a second abstract-level line lifts the unreadable-donor
+  rule (PRNP kept, RP2 and NEDD9 on deference).
+- **MS4A4A's ER IDA** rests on the same negative sentence, so it moved to
+  MARK_AS_OVER_ANNOTATED with the Golgi rows (after review), and the ER left its
+  description and core functions.
 
 ## 2026-11-17 (UFSP2 core function; review follow-ups from #6432)
 
