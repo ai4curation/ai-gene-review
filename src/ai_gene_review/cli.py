@@ -5484,7 +5484,12 @@ def fix_panther_labels(
     total = 0
     held_back: list[tuple[Path, str, str, str, bool]] = []
     renamed: list[tuple[Path, str, str, str]] = []
-    not_looked_up: list[tuple[Path, str, str, str]] = []
+    not_looked_up: list[tuple[Path, str, str, str, str]] = []
+    # Why a withheld label would also have been deferred had its id been confirmed.
+    also_deferred = {
+        "divergent": "the label also describes a different protein than the id's name",
+        "renamed_in_switch": "the id was also renamed in the PANTHER switch",
+    }
     for path in targets:
         text = path.read_text()
         doc = yaml.safe_load(text)
@@ -5510,12 +5515,21 @@ def fix_panther_labels(
             previous_names=previous_names,
         )
         if unconfirmed - skip:
-            # Report only the labels the skip actually withheld.
-            _, would_change, _ = rewrite_panther_labels(
+            # Report every label the skip withheld, including those the rewrite would
+            # also have deferred: a skipped id is never deferred, so it would otherwise
+            # be listed nowhere.
+            _, would_change, would_defer = rewrite_panther_labels(
                 text, names, skip, allow_divergent=allow_divergent, previous_names=previous_names
             )
             not_looked_up.extend(
-                (path, curie, old, new) for curie, old, new in would_change if curie in unconfirmed
+                (path, curie, old, new, "")
+                for curie, old, new in would_change
+                if curie in unconfirmed
+            )
+            not_looked_up.extend(
+                (path, item.curie, item.old, item.new, also_deferred[item.reason])
+                for item in would_defer
+                if item.curie in unconfirmed
             )
         for item in deferred:
             if item.reason == "renamed_in_switch":
@@ -5550,8 +5564,10 @@ def fix_panther_labels(
             "can be neither confirmed nor disputed. Run `just ensure-panther-members`, "
             "then re-run."
         )
-        for path, curie, old, new in not_looked_up:
+        for path, curie, old, new, note in not_looked_up:
             typer.echo(f"  {path.name}: {curie}  {old!r} -> {new!r}")
+            if note:
+                typer.echo(f"      ({note}; check the id once its members are looked up)")
 
     if held_back:
         typer.echo(
