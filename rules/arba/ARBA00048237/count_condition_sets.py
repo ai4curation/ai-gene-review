@@ -25,6 +25,8 @@ import urllib.request
 from pathlib import Path
 
 API = "https://rest.uniprot.org/uniprotkb/search"
+#: Reviewed matches are fetched in one page; a larger set fails loudly rather than truncating.
+REVIEWED_PAGE = 500
 
 SETS: dict[int, list[str]] = {
     1: ["xref:interpro-IPR004568", "xref:interpro-IPR008278", "xref:interpro-IPR016039"],
@@ -68,14 +70,19 @@ def count(query: str) -> int:
 
 def reviewed(query: str) -> list[dict]:
     """Reviewed matches with accession, organism, name and EC numbers."""
-    data, _ = get(
+    data, headers = get(
         {
             "query": f"({query}) AND reviewed:true",
             "fields": "accession,protein_name,organism_name,ec,lineage",
             "format": "json",
-            "size": "50",
+            "size": str(REVIEWED_PAGE),
         }
     )
+    total = int(headers.get("X-Total-Results") or headers.get("x-total-results") or 0)
+    if total > REVIEWED_PAGE:
+        raise RuntimeError(
+            f"{total} reviewed matches for {query!r} exceed the page of {REVIEWED_PAGE}; raise REVIEWED_PAGE"
+        )
     out = []
     for e in data.get("results", []):
         desc = e.get("proteinDescription", {})
@@ -116,6 +123,13 @@ def set1_family_check() -> dict[str, int]:
             f'{no_fam} AND {fungi} AND xref:"panther-PTHR11712:SF336"'
         ),
         "set 1 without IPR050830, other eukaryotes": count(f"{no_fam} AND {other}"),
+        "set 1 without IPR050830 or PTHR10982": count(f"{no_fam} NOT xref:panther-PTHR10982"),
+        "set 1 without IPR050830 or PTHR10982, Fungi": count(
+            f"{no_fam} NOT xref:panther-PTHR10982 AND {fungi}"
+        ),
+        "set 1 without IPR050830 or PTHR10982, other eukaryotes": count(
+            f"{no_fam} NOT xref:panther-PTHR10982 AND {other}"
+        ),
         "set 1, other eukaryotes": count(f"{set1} AND {other}"),
     }
 

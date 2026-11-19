@@ -97,6 +97,7 @@ def main() -> None:
                 without.append(e["primaryAccession"])
 
     history: list[str] = []
+    without.sort()
     sample = without[:: max(1, len(without) // SAMPLE)][:SAMPLE]
     attributed = 0
     for acc in sample:

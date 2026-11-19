@@ -206,6 +206,10 @@ Three independent routes put the term on proteins that are not fungal FAS:
    rule's evidence tag in those versions). The rule served in release 2026_04 (eight condition sets) matches
    no bacterial or archaeal entry, and those entries have lost the EC, but
    QuickGO still serves 529 GO:0004321 rows on them from the earlier release.
+   (The table above counts 520 for this class: it was classified on
+   2026-11-01 against UniProtKB 2026_03 by PANTHER family, while 529 is every
+   bacterial EC2GO row whose entry no longer carries the EC, counted on
+   2026-11-17 against 2026_04.)
    An earlier version of this page blamed condition set 1 of the current rule;
    queried as a conjunction, that set matches only eukaryotes. See the rule
    review, [ARBA00048237](../rules/arba/ARBA00048237/ARBA00048237-review.yaml).
