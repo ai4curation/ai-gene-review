@@ -837,17 +837,55 @@ def test_paint_diff_shows_every_changed_column(tmp_path):
         "changed\tPTN1\tGO:1\tIBD\t\ttaxon taxon: -> taxon:9606"
     ]
 
-    # A column only the older slice format has is compared too.
+    # A format change is reported once, and rows are compared on shared columns.
     new.write_text(
         "family\tnode\tgo_id\taspect\tevidence\tnegated\tseeds\tdate\n"
         "PTHR1\tPTN1\tGO:1\tF\tIBD\tfalse\tUniProtKB:A\t20260528\n"
+        "PTHR1\tPTN2\tGO:1\tF\tIBD\tfalse\tUniProtKB:A\t20261002\n"
+    )
+    old.write_text(
+        header
+        + "PTHR1\tPTN1\tGO:1\tF\tIBD\tfalse\tUniProtKB:A\ttaxon:\t20260528\n"
+        + "PTHR1\tPTN2\tGO:1\tF\tIBD\tfalse\tUniProtKB:A\ttaxon:\t20260528\n"
     )
     result = CliRunner().invoke(
         app, ["shadow-issues", "paint-diff", str(old), str(new)]
     )
     assert result.output.splitlines() == [
-        "changed\tPTN1\tGO:1\tIBD\t\ttaxon taxon: -> "
+        "header\t-taxon",
+        "changed\tPTN2\tGO:1\tIBD\t\tdate 20260528 -> 20261002",
     ]
+
+
+def test_paint_diff_rejects_a_file_that_is_not_a_slice(tmp_path):
+    from ai_gene_review.shadow_issues.cli import read_paint_slice
+
+    path = tmp_path / "x.tsv"
+    path.write_text("node\tgo_id\nPTN1\tGO:1\n")
+    with pytest.raises(ValueError, match="no evidence, negated, date column"):
+        read_paint_slice(path)
+
+
+def test_validate_survives_evidence_missing_required_fields(config, tracker_dir):
+    """A missing required slot is reported by the schema check, not a traceback."""
+    store_issue(config, tracker_dir, make_issue(), [])
+    path = tracker_dir / "101" / "issue.yaml"
+    issue = yaml.safe_load(path.read_text())
+    issue["resolution"] = {
+        "status": "RESOLVED",
+        "summary": "fixed",
+        "evidence": [{"ref": "x"}],
+    }
+    issue["shadow"]["work_products"] = [{"kind": "OTHER"}]
+    path.write_text(yaml.safe_dump(issue))
+    result = CliRunner().invoke(
+        app, ["shadow-issues", "validate", "example", "--root", str(tracker_dir.parent)]
+    )
+    assert result.exit_code == 1, result.output
+    assert result.exception is None or isinstance(result.exception, SystemExit), (
+        result.output
+    )
+    assert "kind" in result.output and "path" in result.output, result.output
 
 
 def test_paint_diff_rejects_a_repeated_key(tmp_path):

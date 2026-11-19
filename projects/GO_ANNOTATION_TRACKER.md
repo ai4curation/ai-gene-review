@@ -92,7 +92,8 @@ The schema is `src/ai_gene_review/schema/shadow_issue.yaml`.
 
 A disputed score is not edited. The dispute is recorded as an `adjudications`
 entry on the rating (dimension, rater's value, adjudicated value, by whom,
-why), and `just shadow-ratings` shows it as `rater → adjudicated*`.
+why), and `just shadow-ratings` shows it as `rater → adjudicated*`. An
+adjudication that upholds the rater's value shows as `rater*`.
 
 `just outstanding-shadow-issues` lists the six queues (`untriaged`,
 `in_progress`, `needs_shadow`, `needs_rating`, `pending_release`,

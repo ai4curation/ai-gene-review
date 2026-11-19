@@ -312,19 +312,32 @@ def agreement_cmd(
         typer.echo(f"| {dimension} | {n} | {k} | {share} |")
 
 
-def read_paint_slice(path: Path) -> dict[tuple[str, str, str, str], dict[str, str]]:
-    """Rows of a ``<FAMILY>-paint.tsv`` slice, keyed by node, term, evidence and negation.
+PAINT_SLICE_REQUIRED = ("node", "go_id", "evidence", "negated", "date")
 
-    PAINT makes one assertion per key, so a repeated key is an error, not a row to drop.
+
+def read_paint_slice(
+    path: Path,
+) -> tuple[list[str], dict[tuple[str, str, str, str], dict[str, str]]]:
+    """The columns and rows of a ``<FAMILY>-paint.tsv`` slice, rows keyed by node, term, evidence and negation.
+
+    PAINT makes one assertion per key, so a repeated key is an error, not a row
+    to drop; so is a slice without the columns paint-diff reads.
     """
     rows: dict[tuple[str, str, str, str], dict[str, str]] = {}
     with path.open(newline="") as fh:
-        for row in csv.DictReader(fh, delimiter="\t"):
+        reader = csv.DictReader(fh, delimiter="\t")
+        columns = list(reader.fieldnames or [])
+        missing = [c for c in PAINT_SLICE_REQUIRED if c not in columns]
+        if missing:
+            raise ValueError(
+                f"{path}: not a PAINT slice, no {', '.join(missing)} column"
+            )
+        for row in reader:
             key = (row["node"], row["go_id"], row["evidence"], row["negated"])
             if key in rows:
                 raise ValueError(f"{path}: more than one row for {key}")
             rows[key] = row
-    return rows
+    return columns, rows
 
 
 @shadow_issues_app.command("paint-diff")
@@ -347,8 +360,20 @@ def paint_diff_cmd(
     PAINT snapshot moves on. Output columns: change, node, term, evidence, NOT,
     then the date of an added or removed row, or each changed column of a
     changed row (``date old -> new``, ``seeds +added -dropped``, and so on).
+    If the two slices have different columns, a first ``header`` line says so
+    (``+added -dropped``) and rows are compared on the shared columns only.
     """
-    before, after = read_paint_slice(old), read_paint_slice(new)
+    old_columns, before = read_paint_slice(old)
+    new_columns, after = read_paint_slice(new)
+    shared = [c for c in new_columns if c in old_columns]
+    if old_columns != new_columns:
+        typer.echo(
+            "\t".join(
+                ["header"]
+                + [f"+{c}" for c in new_columns if c not in old_columns]
+                + [f"-{c}" for c in old_columns if c not in new_columns]
+            )
+        )
 
     def wanted(key: tuple[str, str, str, str]) -> bool:
         return (not node or key[0] in node) and (not go or key[1] in go)
@@ -363,11 +388,10 @@ def paint_diff_cmd(
             typer.echo(f"removed\t{label(key)}\t{before[key]['date']}")
         elif key not in before:
             typer.echo(f"added\t{label(key)}\t{after[key]['date']}")
-        elif before[key] != after[key]:
+        else:
             changes = []
-            # Both rows' columns, so a column one slice format lacks still shows.
-            for column in dict.fromkeys([*before[key], *after[key]]):
-                was, now = before[key].get(column, ""), after[key].get(column, "")
+            for column in shared:
+                was, now = before[key][column], after[key][column]
                 if was == now:
                     continue
                 if column == "seeds":
@@ -381,7 +405,8 @@ def paint_diff_cmd(
                     )
                 else:
                     changes.append(f"{column} {was} -> {now}")
-            typer.echo("\t".join(["changed", label(key), *changes]))
+            if changes:
+                typer.echo("\t".join(["changed", label(key), *changes]))
 
 
 def diff_covers(path: str, diff_text: str) -> bool:
@@ -431,6 +456,8 @@ def work_product_problems(issue: dict, repo_root: Path) -> list[str]:
     """
     problems = []
     for product in (issue.get("shadow") or {}).get("work_products") or []:
+        if not product.get("path"):
+            continue  # path is required, so the schema check reports it
         diff = product.get("preserved_diff")
         if (
             product.get("landed") is not False
@@ -459,11 +486,13 @@ def evidence_problems(issue: dict[str, Any]) -> list[str]:
     """
     problems = []
     for item in (issue.get("resolution") or {}).get("evidence") or []:
-        if item["kind"] not in DOWNSTREAM_EVIDENCE:
+        # kind and ref are required, so the schema check reports them if absent.
+        kind, ref = item.get("kind"), item.get("ref", "?")
+        if kind not in DOWNSTREAM_EVIDENCE:
             continue
         for field in ("checked_at", "source_release", "source_release_date"):
             if not item.get(field):
-                problems.append(f"{item['kind']} evidence {item['ref']} needs {field}")
+                problems.append(f"{kind} evidence {ref} needs {field}")
     return problems
 
 
