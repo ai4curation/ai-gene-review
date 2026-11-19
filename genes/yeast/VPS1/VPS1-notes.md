@@ -187,3 +187,34 @@
   intramitochondrial case but has no review to ground a request.
 - Effect on this review: the two microtubule rows stay MARK_AS_OVER_ANNOTATED, with
   the PRD argument dropped and propagation root cause set to UNRESOLVED.
+
+## Session 2026-11-19 (later): PR review fixes
+
+The automated PR reviewer pointed out that UniProt tags both the FUNCTION comment ("it
+binds microtubules ...") and the location "Cytoplasm, cytoskeleton" with ECO:0000269 /
+PubMed:8344247. My microtubule reasons had attributed the claim to the 1991 SPO15 paper
+without checking. Findings:
+- PMID:8344247 (Wilsbach and Payne 1993, abstract only) supports Golgi retention: lam1 is
+  allelic to VPS1, and Kex2p is not retained in the late Golgi. The abstract has no
+  microtubule or cytoskeleton data. Full text (PMC413570) was blocked by PMC (reCAPTCHA)
+  and Europe PMC (403 for the PDF, 500 for XML).
+- PMID:1825352 (Yeh et al. 1991, SPO15, abstract only): "The SPO15 gene product expressed
+  in Escherichia coli can be affinity-purified with microtubules." So Vps1 does have one
+  in vitro microtubule result, and the earlier statement here and in the family review
+  that the fungal branch had "no data" was wrong for Vps1.
+- Recorded two SUSPECTED WRONG_REFERENCE source defects (CHECK) on the UniProt
+  reference, for CC:FUNCTION and CC:SUBCELLULAR LOCATION. PMID:1825352 is named as a
+  candidate for the microtubule sentence, not as a confirmed correction.
+- Row changes:
+  - Microtubule binding stays MARK_AS_OVER_ANNOTATED, as a real in vitro observation of
+    unknown relevance; propagation fields are now UNRESOLVED/UNRESOLVED.
+  - Microtubule stays MARK_AS_OVER_ANNOTATED, with no in vivo location.
+  - Cytoskeleton (TOO_GENERAL) is now described as a curated UniProt location.
+  - GO:0045053 is re-grounded on PMID:8344247.
+  - Mitochondrion HDA moves to KEEP_AS_NON_CORE, per ORGANELLES.md rule 2.
+  - Membrane tubulation becomes UNDECIDED: the full text of PMID:20841380 is still
+    unreachable.
+- Core function 3 now says why it uses GTPase activity rather than GO:1990606. Core
+  function 4 lists only GO:0034497, which is part_of GO:0000045. Added a
+  proposed_new_terms entry for an "Atg9 reservoir" CC term.
+- Family review wording updated to reflect the Vps1 in vitro result. Verdicts unchanged.
