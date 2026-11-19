@@ -862,8 +862,42 @@ def test_paint_diff_rejects_a_file_that_is_not_a_slice(tmp_path):
 
     path = tmp_path / "x.tsv"
     path.write_text("node\tgo_id\nPTN1\tGO:1\n")
-    with pytest.raises(ValueError, match="no evidence, negated, date column"):
+    with pytest.raises(ValueError, match="no evidence, negated, date columns"):
         read_paint_slice(path)
+
+
+def test_paint_diff_ignores_a_column_reorder(tmp_path):
+    """Same columns in another order is not a format change worth a header line."""
+    old, new = tmp_path / "old.tsv", tmp_path / "new.tsv"
+    old.write_text("node\tgo_id\tevidence\tnegated\tdate\nPTN1\tGO:1\tIBD\tfalse\t1\n")
+    new.write_text("date\tnode\tgo_id\tevidence\tnegated\n1\tPTN1\tGO:1\tIBD\tfalse\n")
+    result = CliRunner().invoke(
+        app, ["shadow-issues", "paint-diff", str(old), str(new)]
+    )
+    assert result.exit_code == 0 and result.output == "", result.output
+
+
+@pytest.mark.parametrize("name", ["issue.yaml", "rating.yaml"])
+def test_validate_and_ratings_survive_an_empty_file(config, tracker_dir, name):
+    """An empty or half-written file is reported, not a traceback that stops the run."""
+    store_issue(config, tracker_dir, make_issue(), [])
+    (tracker_dir / "101" / "rating.yaml").write_text(yaml.safe_dump(RATING))
+    (tracker_dir / "101" / "report.md").write_text("# r\n")
+    (tracker_dir / "101" / name).write_text("")
+    root = str(tracker_dir.parent)
+    result = CliRunner().invoke(
+        app, ["shadow-issues", "validate", "example", "--root", root]
+    )
+    assert result.exit_code == 1, result.output
+    assert result.exception is None or isinstance(result.exception, SystemExit), (
+        result.output
+    )
+    if name == "rating.yaml":
+        for command in ("ratings", "agreement"):
+            result = CliRunner().invoke(
+                app, ["shadow-issues", command, "example", "--root", root]
+            )
+            assert result.exit_code == 0, result.output
 
 
 def test_validate_survives_evidence_missing_required_fields(config, tracker_dir):

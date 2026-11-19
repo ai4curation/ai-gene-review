@@ -250,7 +250,7 @@ def ratings_cmd(
             continue
         _, issue = load_issue(folder)
         for rating_path in ratings:
-            rating = yaml.safe_load(rating_path.read_text())
+            rating = yaml.safe_load(rating_path.read_text()) or {}
             for dimension in DIMENSIONS:
                 # Show the final ruling, marked, beside the score as the rater
                 # wrote it; the last adjudication of a dimension is the one that counts.
@@ -265,10 +265,10 @@ def ratings_cmd(
             row = [
                 f"{tracker} {folder.name}",
                 rating_path.stem,
-                issue["triage"].get("kind", "-"),
-                issue["shadow"].get("blinding", "-"),
+                (issue.get("triage") or {}).get("kind", "-"),
+                (issue.get("shadow") or {}).get("blinding", "-"),
                 *(rating.get(d, "-") for d in DIMENSIONS),
-                rating["independence"],
+                rating.get("independence", "-"),
                 f"[report]({link_base}/{tracker}/{folder.name}/{report_for(rating_path).name})",
             ]
             typer.echo("| " + " | ".join(str(c) for c in row) + " |")
@@ -292,7 +292,7 @@ def agreement_cmd(
     agreed: Counter[str] = Counter()
     rated_twice = 0
     for folder in iter_issue_folders(root / tracker):
-        ratings = [yaml.safe_load(p.read_text()) for p in rating_files(folder)]
+        ratings = [yaml.safe_load(p.read_text()) or {} for p in rating_files(folder)]
         if len(ratings) < 2:
             continue
         rated_twice += 1
@@ -330,7 +330,8 @@ def read_paint_slice(
         missing = [c for c in PAINT_SLICE_REQUIRED if c not in columns]
         if missing:
             raise ValueError(
-                f"{path}: not a PAINT slice, no {', '.join(missing)} column"
+                f"{path}: not a PAINT slice, no {', '.join(missing)} "
+                + ("columns" if len(missing) > 1 else "column")
             )
         for row in reader:
             key = (row["node"], row["go_id"], row["evidence"], row["negated"])
@@ -366,7 +367,7 @@ def paint_diff_cmd(
     old_columns, before = read_paint_slice(old)
     new_columns, after = read_paint_slice(new)
     shared = [c for c in new_columns if c in old_columns]
-    if old_columns != new_columns:
+    if set(old_columns) != set(new_columns):
         typer.echo(
             "\t".join(
                 ["header"]
@@ -564,7 +565,8 @@ def validate_cmd(
         for path, target in checks:
             if not path.exists():
                 continue
-            data = yaml.safe_load(path.read_text())
+            # An empty file loads as None; {} lets the schema report what is missing.
+            data = yaml.safe_load(path.read_text()) or {}
             problems = [r.message for r in validator.validate(data, target).results]
             if data.get("number") != int(folder.name) or data.get("tracker") != tracker:
                 problems.append(
