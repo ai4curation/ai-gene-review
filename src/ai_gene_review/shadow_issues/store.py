@@ -385,11 +385,18 @@ def store_issue(
 
 
 def load_issue(folder: Path) -> tuple[dict[str, Any], dict[str, Any]]:
-    """(source.yaml, issue.yaml) for one issue folder."""
-    return (
-        yaml.safe_load((folder / "source.yaml").read_text()),
-        yaml.safe_load((folder / "issue.yaml").read_text()),
-    )
+    """(source.yaml, issue.yaml) for one issue folder.
+
+    Both files are written by sync, so one that is empty or not a mapping is a
+    broken mirror: fail naming it, and leave the detail to ``validate``.
+    """
+    loaded = []
+    for name in ("source.yaml", "issue.yaml"):
+        data = yaml.safe_load((folder / name).read_text())
+        if not isinstance(data, dict):
+            raise ValueError(f"{folder / name} is empty or not a mapping; run validate")
+        loaded.append(data)
+    return loaded[0], loaded[1]
 
 
 def iter_issue_folders(tracker_dir: Path) -> list[Path]:

@@ -893,11 +893,25 @@ def test_validate_and_ratings_survive_an_empty_file(config, tracker_dir, name):
         result.output
     )
     if name == "rating.yaml":
+        # An empty second rating beside a full one reaches agreement's comparison.
+        (tracker_dir / "101" / "rating.yaml").write_text(yaml.safe_dump(RATING))
+        (tracker_dir / "101" / "rating-second.yaml").write_text("")
+        (tracker_dir / "101" / "report-second.md").write_text("# r\n")
         for command in ("ratings", "agreement"):
             result = CliRunner().invoke(
                 app, ["shadow-issues", command, "example", "--root", root]
             )
             assert result.exit_code == 0, result.output
+        assert "issues rated twice or more: 1" in result.output
+        assert "| triage | 0 | 0 | - |" in result.output
+    else:
+        # The display commands read issue.yaml through load_issue, which names it.
+        for command in ("ratings", "outstanding", "stats"):
+            result = CliRunner().invoke(
+                app, ["shadow-issues", command, "example", "--root", root]
+            )
+            assert isinstance(result.exception, ValueError), result.output
+            assert "issue.yaml is empty or not a mapping" in str(result.exception)
 
 
 def test_validate_survives_evidence_missing_required_fields(config, tracker_dir):
