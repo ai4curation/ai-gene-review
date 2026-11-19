@@ -44,6 +44,10 @@ All scripts, test sets and raw model outputs are in
 [`LLM_SEQUENCE_PROBE/`](LLM_SEQUENCE_PROBE/). Each test folder has a script that
 builds the test set, one that asks the models and one that scores the answers.
 
+The reproducible version of this analysis, with frozen expected outputs and a
+one-command check, now lives in the `ai4curation/fable-sequence-to-function`
+repository; the copy here is the original working record.
+
 A short preprint is being drafted from these results:
 [read the draft (PDF)](LLM_SEQUENCE_PROBE/manuscript/manuscript.pdf) or the
 [manuscript notes](LLM_SEQUENCE_PROBE/manuscript/README.md). The LaTeX source is
@@ -97,7 +101,7 @@ UniProt's transmembrane and signal features.
 | Sampled proteins with at least one correct Pfam family | 39/45 | 35/45 | 5/43 |
 | Obscure DUF proteins with at least one correct Pfam family | 8/15 | 3/15 | 0/15 |
 | Predicted domains carrying the right Pfam accession | 62/70 | 45/51 | 5/22 |
-| Boundary overlap (IoU) when the family is right | 0.87 | 0.86 | 0.61 |
+| Boundary overlap (IoU) when the family is right | 0.86 | 0.86 | 0.61 |
 | Transmembrane helices recovered | 74/74 | 74/74 | 51/73 |
 | Signal peptide, true positives / false positives | 9 / 0 | 9 / 0 | 9 / 6 |
 | Shuffled sequences given any Pfam domain | 1/60 | 0/60 | 4/59 |
