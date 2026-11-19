@@ -1,0 +1,8 @@
+# SLC20A2 (PiT2 / GLVR2) curation notes
+
+- UniProt Q08357 (Sodium-dependent phosphate transporter 2); HGNC SLC20A2; synonyms GLVR2, PIT2. SLC20/PiT family, multi-pass plasma-membrane protein, PANTHER PTHR11101.
+- Core activity: Na-coupled inorganic-phosphate symporter, preferentially monovalent phosphate, ~2 Na+ per Pi [file:human/SLC20A2/SLC20A2-uniprot.txt CC:FUNCTION "Sodium-phosphate symporter which preferentially transports"; many IMP from PFBC loss-of-function mutations PubMed:12205090/15955065/22327515/28722801/30704756 + IDA]. Plasma membrane [CC:SUBCELLULAR LOCATION "Cell membrane"], apical/brush-border in polarized epithelia ["Apical cell membrane"] -> GO:0016324/GO:0031526 ACCEPT.
+- Principal brain phosphate transporter; loss-of-function causes primary familial brain calcification (disease relevance, not a curation claim).
+- Supplies phosphate for bone mineralization [CC:FUNCTION "quality and strength by providing phosphate for bone mineralization"] -> GO:0030501 positive regulation of bone mineralization KEEP_AS_NON_CORE (indirect, via substrate supply).
+- Gammaretroviral entry receptor (amphotropic MuLV, 10A1 MLV, some FeLV-B) [CC:FUNCTION (Microbial infection) "Functions as a retroviral receptor and"; GO:0001618 IMP PubMed:12205090/15955065] -> KEEP_AS_NON_CORE. GO:0046718 symbiont entry KEEP_AS_NON_CORE. The GOA GO:0038023 signaling receptor activity (TAS PMID:8302848) -> MODIFY to GO:0001618 virus receptor activity (lateral; A2 already carries GO:0001618 by IMP).
+- GO:0070062 extracellular exosome (HDA PMID:19199708) KEEP_AS_NON_CORE (proteomics). Generic terms as for PiT1: GO:0005315 TOO_GENERAL, GO:0006817 TOO_GENERAL, GO:0016020 MODIFY->plasma membrane, GO:0035725 sodium transport KEEP_AS_NON_CORE. Batch 26.
