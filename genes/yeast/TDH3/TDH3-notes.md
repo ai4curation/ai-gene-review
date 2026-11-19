@@ -16,3 +16,12 @@ TDH3-specific (moonlighting, all kept non-core):
 - Mitochondrion in UniProt from proteomics [UniProt:P00359 "Mitochondrion {ECO:0000269|PubMed:16823961}."].
 
 Decisions: as TDH1 (but mitochondrion IEA kept non-core, matching UniProt), plus KEEP_AS_NON_CORE RNA/mRNA binding, heme binding, heme transport, nucleus, apoptotic process, ROS metabolic process.
+
+## QA pass (2026-11-19)
+
+- Glucose metabolic process is TOO_GENERAL in the review (entailed by the accepted glycolysis/gluconeogenesis rows).
+- ROS metabolic process (IMP, PMID:17726063) changed KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED, as for TDH2: indirect consequence of redox perturbation, not a ROS-metabolising activity. Not removed (abstract only).
+- Description: S-nitrosation is stated for yeast GAPDH generally, since PMID:17726063 does not resolve the isoform in its abstract.
+- Added the SGD description (deep-research-sgd) and PMID:24292082 as references, with the antimicrobial-peptide sentence in the description, matching TDH1. The SGD "AU-rich" wording rests on a GAPDH-family statement [PMID:25288528 "GAPDH has long been known as a 3' AU-rich element-binding protein"]; RNA binding (GO:0003723) kept at that level since the abstract does not give Tdh3's specificity.
+- Heme transport (GO:0015886) kept: its definition covers movement "within a cell", which fits heme allocation to Hap1.
+- Extended the truncated UniProt CC:FUNCTION quotes. Status set to COMPLETE.

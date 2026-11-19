@@ -4,7 +4,7 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP, PIPELINE, EVALUATION]
 species: [yeast]
 genes: [PDC1, ADH1, ADH2, GPD1, GPD2, HXK1, HXK2, GLK1, PFK1, PFK2, PYC1, PYC2, TDH1, TDH2, TDH3, ZWF1, BNA3, BNA7, DAL3, "DUR1,2", ERG26]
-last_reviewed: '2026-11-04'
+last_reviewed: '2026-11-19'
 autolink_gene_symbols: false
 manifest:
   slides:
@@ -109,27 +109,27 @@ Last updated: 2026-11-04
 - [x] `ADH2` (`YMR303C`, `COMPLETE`) — Alcohol dehydrogenase 2 (glucose-repressed oxidative ethanol dehydrogenase; `genes/yeast/ADH2/ADH2-ai-review.yaml`)
 - [x] `GPD1` (`YDL022W`, `COMPLETE`) — Glycerol-3-phosphate dehydrogenase 1 (HOG1-induced osmotic glycerol synthesis; `genes/yeast/GPD1/GPD1-ai-review.yaml`)
 - [x] `GPD2` (`YOL059W`, `COMPLETE`) — Glycerol-3-phosphate dehydrogenase 2 (anaerobic NADH redox-sink glycerol synthesis; `genes/yeast/GPD2/GPD2-ai-review.yaml`)
-- [x] `HXK1` (`YFR053C`, `DRAFT`) — Hexokinase 1 (glucose-repressed hexokinase isozyme; `genes/yeast/HXK1/HXK1-ai-review.yaml`)
-- [x] `HXK2` (`YGL253W`, `DRAFT`) — Hexokinase 2 (predominant glucose-phosphorylating hexokinase on high glucose; `genes/yeast/HXK2/HXK2-ai-review.yaml`)
+- [x] `HXK1` (`YFR053C`, `COMPLETE`) — Hexokinase 1 (glucose-repressed hexokinase isozyme; `genes/yeast/HXK1/HXK1-ai-review.yaml`)
+- [x] `HXK2` (`YGL253W`, `COMPLETE`) — Hexokinase 2 (predominant glucose-phosphorylating hexokinase on high glucose; `genes/yeast/HXK2/HXK2-ai-review.yaml`)
 - [x] `GLK1` (`YCL040W`, `COMPLETE`) — Glucokinase 1 (aldohexose-specific glucokinase; `genes/yeast/GLK1/GLK1-ai-review.yaml`)
-- [x] `PFK1` (`YGR240C`, `DRAFT`) — Phosphofructokinase $\alpha$-subunit (`genes/yeast/PFK1/PFK1-ai-review.yaml`)
-- [x] `PFK2` (`YMR205C`, `DRAFT`) — Phosphofructokinase $\beta$-subunit (`genes/yeast/PFK2/PFK2-ai-review.yaml`)
+- [x] `PFK1` (`YGR240C`, `COMPLETE`) — Phosphofructokinase $\alpha$-subunit (`genes/yeast/PFK1/PFK1-ai-review.yaml`)
+- [x] `PFK2` (`YMR205C`, `COMPLETE`) — Phosphofructokinase $\beta$-subunit (`genes/yeast/PFK2/PFK2-ai-review.yaml`)
 - [x] `PYC1` (`YGL062W`, `COMPLETE`) — Pyruvate carboxylase 1 (`genes/yeast/PYC1/PYC1-ai-review.yaml`)
 - [x] `PYC2` (`YBR218C`, `COMPLETE`) — Pyruvate carboxylase 2 (`genes/yeast/PYC2/PYC2-ai-review.yaml`)
-- [x] `TDH1` (`YJL052W`, `DRAFT`) — Glyceraldehyde-3-phosphate dehydrogenase 1 (stationary/stress-induced isozyme; `genes/yeast/TDH1/TDH1-ai-review.yaml`)
-- [x] `TDH2` (`YJR009C`, `DRAFT`) — Glyceraldehyde-3-phosphate dehydrogenase 2 (`genes/yeast/TDH2/TDH2-ai-review.yaml`)
-- [x] `TDH3` (`YGR192C`, `DRAFT`) — Glyceraldehyde-3-phosphate dehydrogenase 3 (major glycolytic GAPDH isozyme; `genes/yeast/TDH3/TDH3-ai-review.yaml`)
-- [x] `ZWF1` (`YNL241C`, `DRAFT`) — Glucose-6-phosphate dehydrogenase (`genes/yeast/ZWF1/ZWF1-ai-review.yaml`)
+- [x] `TDH1` (`YJL052W`, `COMPLETE`) — Glyceraldehyde-3-phosphate dehydrogenase 1 (stationary/stress-induced isozyme; `genes/yeast/TDH1/TDH1-ai-review.yaml`)
+- [x] `TDH2` (`YJR009C`, `COMPLETE`) — Glyceraldehyde-3-phosphate dehydrogenase 2 (`genes/yeast/TDH2/TDH2-ai-review.yaml`)
+- [x] `TDH3` (`YGR192C`, `COMPLETE`) — Glyceraldehyde-3-phosphate dehydrogenase 3 (major glycolytic GAPDH isozyme; `genes/yeast/TDH3/TDH3-ai-review.yaml`)
+- [x] `ZWF1` (`YNL241C`, `COMPLETE`) — Glucose-6-phosphate dehydrogenase (`genes/yeast/ZWF1/ZWF1-ai-review.yaml`)
 
 ## Additional `iMM904` `CLASS_CHANGE` Genes Audited & Repaired in COBRApy
 
-- [x] `BNA3` (`YJL060W`, `DRAFT`) & `BNA7` (`YDR428C`, `COMPLETE`) — Corrected `FKYNH` (`EC 3.5.1.9`) assignment from `BNA3` (kynurenine aminotransferase `EC 2.6.1.7`) to `BNA7` and removed non-yeast prokaryotic `ASPOcm`/`QULNS` bypass.
-- [x] `DAL3` (`YIR032C`, `DRAFT`) & `DUR1,2` (`YBR208C`, `DRAFT`) — Corrected `UGLYCH` from bacterial ureidoglycolate hydrolase (`EC 3.5.3.19`) to yeast ureidoglycolate lyase (`EC 4.3.2.3`), restoring essentiality of `DUR1,2` on allantoin.
+- [x] `BNA3` (`YJL060W`, `COMPLETE`) & `BNA7` (`YDR428C`, `COMPLETE`) — Corrected `FKYNH` (`EC 3.5.1.9`) assignment from `BNA3` (kynurenine aminotransferase `EC 2.6.1.7`) to `BNA7` and removed non-yeast prokaryotic `ASPOcm`/`QULNS` bypass.
+- [x] `DAL3` (`YIR032C`, `COMPLETE`) & `DUR1,2` (`YBR208C`, `COMPLETE`) — Corrected `UGLYCH` from bacterial ureidoglycolate hydrolase (`EC 3.5.3.19`) to yeast ureidoglycolate lyase (`EC 4.3.2.3`), restoring essentiality of `DUR1,2` on allantoin.
 - [x] `ERG26` (`YGL001C`, `COMPLETE`) — Identified inherited BiGG `EC 5.3.3.1` (steroid isomerase) misannotation on C-3 sterol dehydrogenase/decarboxylase (`EC 1.1.1.170`).
 
 ## Progress
 
-- Core target + paralog genes reviewed: 16 / 16 (7 `COMPLETE`, 9 `DRAFT`)
+- Core target + paralog genes reviewed: 16 / 16 (16 `COMPLETE`)
 - Proteome-wide reviewed yeast genes aligned to `iMM904`: 540 / 905
 - Curated yeast central-carbon modules: 5 (`alcoholic_fermentation`, `glycerol_metabolism`, `emp_glycolysis`, `pentose_phosphate_pathway`, `pyruvate_metabolism`)
 

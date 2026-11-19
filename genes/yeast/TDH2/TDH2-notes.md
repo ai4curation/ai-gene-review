@@ -15,3 +15,10 @@ TDH2-specific:
 - Protein binding IPI with ubiquitin (UBI4) from ubiquitin-conjugate proteomics [PMID:15699485 "we identified 127 proteins that are candidate substrates for the 26S proteasome"] -> REMOVE (uninformative; substrate status).
 
 Decisions: as TDH1 plus REMOVE protein binding, MARK_AS_OVER_ANNOTATED promoter-specific chromatin binding, KEEP_AS_NON_CORE nucleus, apoptotic process, ROS metabolic process.
+
+## QA pass (2026-11-19)
+
+- Glucose metabolic process is TOO_GENERAL in the review (entailed by the accepted glycolysis/gluconeogenesis rows).
+- ROS metabolic process (IMP, PMID:17726063) changed KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED: the reason already argued an indirect effect, and GAPDH has no ROS-metabolising activity [PMID:17726063 "Blockage of NO synthesis with Nomega-nitro-L-arginine methyl ester leads to a decrease of GAPDH S-nitrosation and of intracellular reactive oxygen species (ROS) accumulation, increasing survival"]. Not removed (abstract only).
+- Added the SGD description (deep-research-sgd) and PMID:24292082 (GAPDH-derived antimicrobial peptides) as references, with the antimicrobial-peptide sentence in the description, matching TDH1.
+- Extended the truncated UniProt CC:FUNCTION quotes. Status set to COMPLETE.
