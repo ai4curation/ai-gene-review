@@ -67,3 +67,7 @@
   (PMID:10406798), and human SFT2D2 colocalizes with syntaxin 6 (PMID:25464851).
 - Caveat: the SFT2D3 value is a fold change after perturbation. Control-vesicle enrichment is in
   Supplemental Table S4, not read. BSG (plasma membrane) rose equally. No sub-compartment row.
+
+### Review follow-up (2026-11-19)
+
+- The Golgi row's summary now matches the reason's hedge. PMID:40397568 reports a finite 12-fold change for SFT2D3, unlike enzymes it says were detected only after COG4 depletion, so SFT2D3 was quantified in control vesicles too. Family conservation corroborates but does not establish the location. GO:0042147 in core_functions still rests on paralog and ortholog papers: left for a later pass.

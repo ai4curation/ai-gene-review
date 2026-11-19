@@ -359,12 +359,17 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
   - [ ] Retry the AIMP1 full text (PMID:17525271, PMC1899434): restore the Figure 2
         marker reading or move its ER and Golgi rows to MARK_AS_OVER_ANNOTATED
   - [ ] Revisit organelle rows that Golgi batch 4 left out of scope: SPG21's
-        GO:0030140 rows (same 2001 observation as its Golgi row), STC2's ER rows
-        (same unread donor), SELENOI's ER rows (PMID:32576654 places EPT1 in the
-        Golgi), and TCP1's acrosomal vesicle projection
+        GO:0030140 rows (same 2001 observation as its Golgi row; reasons now record
+        the readable negative), STC2's ER rows (same unread donor), SELENOI's ER rows
+        (PMID:32576654 places EPT1 in the Golgi; reasons now say so), TCP1's acrosomal
+        vesicle projection, and SFT2D3's GO:0042147 core function, which rests on the
+        same paralog and ortholog papers the Golgi row no longer relies on
   - [ ] Write the Golgi rule now that the human list is done; promote "curator deference
         stops at a readable paper" into the numbered rules, since it now
-        governs direct-evidence rows too (CABP2, Golgi batch 1 review)
+        governs direct-evidence rows too (CABP2, Golgi batch 1 review), together with
+        the batch 4 tier between it and plain deference: a later abstract that implies
+        an unreadable donor was wrong leaves the row UNDECIDED (TCP1, against TLR1 and
+        TLR6)
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
@@ -415,6 +420,11 @@ Lessons, adding to batches 1-3:
   network transport vesicle is not part of GO:0005794 (SPG21).
 - **Paralogous receptors citing one unreadable paper get the same call** and say so,
   so a later reading changes them together (TLR1, TLR6, CD14).
+- **When new evidence contradicts a sentence elsewhere in the file, fix the sentence even
+  if its row is out of scope** (from the review): record the re-reading in that row's
+  text and leave the action for its own pass (SELENOI's and STC2's ER rows, SPG21's
+  GO:0030140 rows). A reason that says an `is_active_in` activity is not shown gets a
+  WRONG_QUALIFIER CHECK defect, so the query is machine-readable (SELENOI).
 
 ## 2026-11-18 (Golgi batch 3: 20 human genes)
 

@@ -155,3 +155,7 @@ Reactome). ACCEPT as core location.
   check). Open question for a later pass: whether EPT1's ER location (ECO:0000305 only) still holds
   given PMID:32576654, and whether CEPT1's review should cite PMID:32576654 as a second line for
   its ER location.
+
+### Review follow-up (2026-11-19)
+
+- Softened the Golgi reason (the ER premise is weaker than assumed, not refuted), added a dated note to both ER membrane rows recording what they rest on (actions unchanged, left for an ER pass), added a SUSPECTED WRONG_QUALIFIER source defect on the Golgi row, and reworded the description.

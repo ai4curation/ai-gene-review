@@ -125,3 +125,7 @@ the configuration in which a fold-retaining protein sometimes turns out to retai
 - UNDECIDED is the close alternative (unreadable 2001 donor). The GO:0030140 rows (IBA, IDA) rest
   on the same 2001 observation and were left as they are (outside this check). They are worth
   revisiting.
+
+### Review follow-up (2026-11-19)
+
+- Both GO:0030140 rows now record the readable evidence against a TGN location (PMID:40833810 live imaging with ARL1-GFP; PMID:19184135 limited GM130 overlap). Actions unchanged; MARK_AS_OVER_ANNOTATED is the likely outcome of a later pass.

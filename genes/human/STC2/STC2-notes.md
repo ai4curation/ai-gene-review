@@ -15,3 +15,7 @@
 - The description no longer says STC2 "localizes to the ER and Golgi apparatus". The ER rows were
   not part of this check and still cite the same deep-research sentence. They are worth an ER-policy
   pass.
+
+### Review follow-up (2026-11-19)
+
+- Removed the deep-research sentence placing STC2 "in the ER and Golgi" from the ER row's summary and supported_by; it summarises PMID:15485913, which could not be read. ER action unchanged.
