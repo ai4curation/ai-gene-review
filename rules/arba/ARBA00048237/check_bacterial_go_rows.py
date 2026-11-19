@@ -36,6 +36,10 @@ QUICKGO = "https://www.ebi.ac.uk/QuickGO/services/annotation/downloadSearch?" + 
     }
 )
 UNIPROT = "https://rest.uniprot.org/uniprotkb/search"
+#: Network attempts per request (UniProt batch lookups can be slow).
+ATTEMPTS = 6
+#: Accessions per UniProtKB batch lookup.
+BATCH = 50
 #: Entries whose UniSave history is read, spread evenly over the sorted accession list.
 SAMPLE = 20
 
@@ -43,14 +47,14 @@ SAMPLE = 20
 def fetch(url: str, accept: str = "application/json") -> tuple[bytes, dict]:
     """GET with retries; return body and headers."""
     req = urllib.request.Request(url, headers={"Accept": accept})
-    for attempt in range(4):
+    for attempt in range(ATTEMPTS):
         try:
-            with urllib.request.urlopen(req, timeout=120) as r:
+            with urllib.request.urlopen(req, timeout=300) as r:
                 return r.read(), dict(r.headers)
         except Exception:  # network: retry with backoff
-            if attempt == 3:
+            if attempt == ATTEMPTS - 1:
                 raise
-            time.sleep(2**attempt)
+            time.sleep(5 * 2**attempt)
     raise RuntimeError("unreachable")
 
 
@@ -108,11 +112,11 @@ def main() -> None:
     status: Counter[str] = Counter()
     release = None
     without: list[str] = []
-    for i in range(0, len(accs), 100):
-        chunk = accs[i : i + 100]
+    for i in range(0, len(accs), BATCH):
+        chunk = accs[i : i + BATCH]
         q = " OR ".join(f"accession:{a}" for a in chunk)
         url = UNIPROT + "?" + urllib.parse.urlencode(
-            {"query": q, "format": "json", "size": "100", "fields": "accession,protein_name,ec,cc_catalytic_activity"}
+            {"query": q, "format": "json", "size": str(BATCH), "fields": "accession,protein_name,ec,cc_catalytic_activity"}
         )
         data, headers = fetch(url)
         release = headers.get("X-UniProt-Release") or headers.get("x-uniprot-release") or release
