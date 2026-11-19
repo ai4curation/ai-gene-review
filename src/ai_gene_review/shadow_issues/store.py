@@ -387,8 +387,9 @@ def store_issue(
 def load_issue(folder: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     """(source.yaml, issue.yaml) for one issue folder.
 
-    Both files are written by sync, so one that is empty or not a mapping is a
-    broken mirror: fail naming it, and leave the detail to ``validate``.
+    source.yaml is machine-owned, so an empty one is a broken mirror; issue.yaml
+    is curated (sync only creates its stub), so an empty one is a half-written
+    edit. Either way, fail naming the file and leave the detail to ``validate``.
     """
     loaded = []
     for name in ("source.yaml", "issue.yaml"):

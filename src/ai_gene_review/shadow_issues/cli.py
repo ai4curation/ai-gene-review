@@ -200,7 +200,7 @@ def backfill_prior_work_cmd(
     changed = 0
     for folder in iter_issue_folders(root / tracker):
         path = folder / "issue.yaml"
-        issue = yaml.safe_load(path.read_text())
+        _, issue = load_issue(folder)
         merged = merge_prior_work(
             issue.get("prior_work", []),
             names_issue_entries(found.get(int(folder.name), [])),

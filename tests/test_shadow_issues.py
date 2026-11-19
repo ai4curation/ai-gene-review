@@ -897,13 +897,17 @@ def test_validate_and_ratings_survive_an_empty_file(config, tracker_dir, name):
         (tracker_dir / "101" / "rating.yaml").write_text(yaml.safe_dump(RATING))
         (tracker_dir / "101" / "rating-second.yaml").write_text("")
         (tracker_dir / "101" / "report-second.md").write_text("# r\n")
-        for command in ("ratings", "agreement"):
-            result = CliRunner().invoke(
-                app, ["shadow-issues", command, "example", "--root", root]
-            )
-            assert result.exit_code == 0, result.output
-        assert "issues rated twice or more: 1" in result.output
-        assert "| triage | 0 | 0 | - |" in result.output
+        ratings = CliRunner().invoke(
+            app, ["shadow-issues", "ratings", "example", "--root", root]
+        )
+        assert ratings.exit_code == 0, ratings.output
+        assert "| rating-second |" in ratings.output, ratings.output
+        agreement = CliRunner().invoke(
+            app, ["shadow-issues", "agreement", "example", "--root", root]
+        )
+        assert agreement.exit_code == 0, agreement.output
+        assert "issues rated twice or more: 1" in agreement.output
+        assert "| triage | 0 | 0 | - |" in agreement.output
     else:
         # The display commands read issue.yaml through load_issue, which names it.
         for command in ("ratings", "outstanding", "stats"):
