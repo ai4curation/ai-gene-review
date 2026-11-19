@@ -142,6 +142,8 @@ def main() -> None:
     attributed = 0
     by_release: Counter[str] = Counter()
     missing_span = 0
+    spanned = 0
+    release_dates: dict[str, str] = {}
     for acc in sample:
         versions = json.loads(fetch(f"https://rest.uniprot.org/unisave/{acc}?format=json")[0])["results"]
         sources: list[str] = []
@@ -151,6 +153,11 @@ def main() -> None:
             if span is None:
                 missing_span += 1
                 continue
+            spanned += 1
+            for key in ("first", "last"):
+                label = (v.get(f"{key}Release") or "").split("/")[0]
+                if label and v.get(f"{key}ReleaseDate"):
+                    release_dates[label] = v[f"{key}ReleaseDate"]
             # Every version current in any tallied release, however many there are.
             if span[1] < TALLY_RELEASES[0]:
                 continue
@@ -171,15 +178,20 @@ def main() -> None:
             f"- {acc}: "
             + ("; ".join(sources) if sources else f"EC 2.3.1.86 in no version current since {TALLY_RELEASES[0]}")
         )
-    if missing_span:
-        raise RuntimeError(f"{missing_span} UniSave versions had no firstRelease/lastRelease; check the field names")
+    if not spanned:
+        raise RuntimeError("No UniSave version had firstRelease/lastRelease; check the field names")
     head = [
         f"{attributed} of {len(sample)} sampled entries carried EC 2.3.1.86 from ARBA00048237 in an earlier version.",
         "",
         "Sampled entries carrying it from ARBA00048237 in each release (every UniSave version current in "
         f"{' or '.join(TALLY_RELEASES)} is read; a version counts for each release it spans):",
         "",
-        *[f"- release {r}: {by_release[r]} of {len(sample)}" for r in TALLY_RELEASES],
+        *[
+            f"- release {r} ({release_dates.get(r, 'date not reported')}): {by_release[r]} of {len(sample)}"
+            for r in TALLY_RELEASES
+        ],
+        "",
+        f"UniSave versions without release fields (skipped): {missing_span}",
         "",
     ]
     history = head + history
