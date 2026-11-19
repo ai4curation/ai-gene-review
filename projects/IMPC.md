@@ -104,9 +104,15 @@ function (bare protein binding excluded) and 3,325 (39%) have no experimental
 mouse function or process at all. For those 3,325, the finest IMPC call is
 cellular for 745 and anatomical, behavioural, systemic or undefined for the rest.
 So IMPC is often the only functional observation on a gene, and it is an
-organism-level observation. This counts mouse annotations only; a human
-ortholog's experimental annotation would reach the mouse gene as ISO, which we
-did not count as experimental.
+organism-level observation.
+
+Adding the human ortholog (IMPC's `human_gene_symbol`, matched to the human GO
+annotation file, same experimental codes) lights up more than half of them:
+1,926 of the 3,325 (58%) have an experimental human MF or BP, and 198 have no
+human symbol in IMPC's gene table. That leaves 1,399 genes (17% of those with a
+call) with no experimental function or process in either species; for 306 of
+them the finest IMPC call is cellular. Counting molecular function alone, 2,733
+genes (32%) have none in either species, against 5,312 for mouse alone.
 
 **Reviewers keep knockout rows but rarely as core.** Across 228 mouse reviews
 in this repository ([`IMPC/results/REVIEW_ACTIONS.md`](IMPC/results/REVIEW_ACTIONS.md)):
@@ -124,6 +130,97 @@ generally and [BEHAVIOR](BEHAVIOR.md) found for behaviour terms: the failure
 mode of a phenotype is distance from the gene product, not error. These are
 literature IMP rows, mostly from classical single-gene knockouts, not IMPC data.
 
+## Follow-up analyses
+
+### Human annotations for the dark genes
+
+Covered in the dark-gene paragraph above; the numbers are in the "Human coverage
+of the dark genes" section of
+[`IMPC/results/GO_COVERAGE.md`](IMPC/results/GO_COVERAGE.md). Human GO file of
+2026-05-21. A mouse gene counts as covered when any of the human symbols IMPC
+maps it to carries the annotation, so the human figure is an upper bound where
+IMPC lists several orthologs.
+
+### Papers that use IMPC alleles
+
+Europe PMC finds 1,396 non-preprint records whose text names an IMPC, KOMP or
+EUCOMM allele designation (`tm1a(EUCOMM)`, `tm1b(KOMP)`, `tm1(KOMP)Vlcg`,
+`em1(IMPC)` and nine more; searched in the methods, results, figure, table and
+supplement fields as well as the default field, which misses most methods
+text). After removing 7 consortium resource and screen papers, a fixed-seed
+sample of 200 from the remaining 1,382 was classified by the finest readout it
+reports, with the [ASSAY_TO_FUNCTION](ASSAY_TO_FUNCTION.md) readout catalogue:
+molecular if a `proximity: molecular` class matches, cellular if only
+phenotypic (cell-level) classes match, organism-only otherwise
+([`IMPC/results/ALLELE_FOLLOWUP.md`](IMPC/results/ALLELE_FOLLOWUP.md)).
+
+| Finest readout | Abstract (198 papers) | Full text (182 papers) |
+|---|---:|---:|
+| Molecular | 8 (4%) | 95 (52%) |
+| Cellular | 18 (9%) | 51 (28%) |
+| Organism only | 172 (87%) | 36 (20%) |
+
+- **The abstracts look organism-level; the papers are not.** 85% of abstracts
+  match no catalogue readout at all, while 76 papers whose abstract reads as
+  organism-only report a molecular assay in the full text and 44 a cellular one.
+  The catalogue's patterns are probe and instrument names, which live in methods.
+- **The full-text figure is an upper bound.** A match anywhere in the article
+  counts, including the introduction and discussion, and the commonest molecular
+  match, "electrophysiolog", also covers whole-animal recordings. Three
+  catalogue patterns that mean something else in these papers (haematopoietic
+  "reconstitution", ".edu" addresses read as EdU, and FLP "flippase") are
+  dropped; every kept match is listed in
+  [`allele_followup_matches.tsv`](IMPC/results/allele_followup_matches.tsv).
+- **Reading:** about half of the papers that use an IMPC allele report at least
+  one molecular-level assay somewhere and four in five reach at least the
+  cellular level. That is where knockout-derived molecular and cellular knowledge
+  comes from, and none of it is in the IMPC phenotype data.
+
+### IMP rows tied to IMPC in our reviews
+
+There are none to spot-check
+([`IMPC/results/IMPC_IMP_ROWS.md`](IMPC/results/IMPC_IMP_ROWS.md)). No IMP or
+IGI row in any review in this repository cites one of the IMPC consortium or
+centre-screen papers (the eight on this page plus the Sanger Mouse Genetics
+Project screen, PMID:23870131), and no cached publication cited by such a row has
+a title naming IMPC or high-throughput phenotyping. The absence is upstream: in
+MGI's whole GO file only 4 IMP rows cite any of these papers, all to PMID:23870131,
+all biological process with `acts_upstream_of_or_within` (*Cbx7*, *Git2*,
+*Fam107b*, *Trmt10a*), and none of the four genes has a review here. The one
+review that uses IMPC data in its reasoning, `human/ARHGAP4`, uses it the other
+way round: the knockout's zero significant calls across 413 tests is cited as a
+tested absence of phenotype when downgrading process rows. The rubric line now in
+the `annotation-reviewer` skill states the page's conclusion: a high-throughput
+knockout result supports at most an organism-level process row, usually
+`KEEP_AS_NON_CORE`, and never a molecular-function or `core_functions` claim
+without a separate assay.
+
+### Lethality and cell essentiality
+
+The DepMap portal's download API did not return its file listing (it answered
+with a browser-verification page and then HTTP 403). The comparison uses the
+same files from the DepMap team's own deposit of the 24Q4 public release on
+figshare (doi:10.25452/figshare.plus.27993248.v1, MD5-checked), which is older
+than the portal's current release. No other essential-gene list was used
+([`IMPC/results/ESSENTIALITY.md`](IMPC/results/ESSENTIALITY.md)).
+
+| IMPC call (genes with a human symbol) | Genes | DepMap common essential |
+|---|---:|---:|
+| Preweaning, embryonic or prenatal lethality | 2,996 | 665 (22%) |
+| Phenotyped, no lethality call | 6,549 | 122 (2%) |
+
+- **Most lethal knockouts are developmental-only.** 2,331 of 2,996 lethal genes
+  (78%) are not common-essential in human cancer cell lines, so the lethality
+  reflects a requirement of the embryo or the animal, not of every cell. For
+  these the call says nothing at the cell level.
+- **Common essentials are lethal, as expected.** Of 787 phenotyped genes whose
+  human ortholog is common-essential, 665 (84%) have a lethality call; the earlier
+  the lethality, the higher the share (59% of genes lethal before organogenesis
+  against 3% for incomplete-penetrance preweaning lethality).
+- **So lethality has a cell-level reading for about a fifth of genes**, and only
+  in combination with a cell-line screen. "No lethality call" includes genes
+  whose viability was not assessed as well as viable lines.
+
 ## Answer to question 1, as far as it goes
 
 - **Molecular function: no, by design.** A knockout removes the product and
@@ -140,10 +237,11 @@ literature IMP rows, mostly from classical single-gene knockouts, not IMPC data.
   supports at most an organism-level process row, usually `KEEP_AS_NON_CORE`,
   and never a molecular-function or `core_functions` claim without a separate
   assay.
-- **What we did not measure:** how much molecular and cellular knowledge comes
-  from follow-up work with IMPC/KOMP alleles. That is probably the IMPC's
-  largest contribution to gene function, and it is not visible in phenotype
-  data.
+- **Follow-up work with the alleles is where molecular knowledge comes from.**
+  In a sample of 200 papers that use IMPC/KOMP/EUCOMM alleles, about half report
+  a molecular assay in the full text and four in five reach at least a cellular
+  readout, though only 13% of abstracts show it. Those results reach GO as
+  ordinary curated IMP or IDA rows, not as IMPC data.
 
 ## Plan
 
@@ -152,13 +250,13 @@ literature IMP rows, mostly from classical single-gene knockouts, not IMPC data.
 - [x] Measure GO coverage of IMPC-phenotyped genes and how MGI qualifies
       knockout-derived annotations.
 - [x] Tabulate reviewer actions on mouse IMP/IGI rows against IDA.
-- [ ] Follow-up use of alleles: sample papers citing IMPC/KOMP alleles and
+- [x] Follow-up use of alleles: sample papers citing IMPC/KOMP alleles and
       classify whether they report molecular or cellular readouts.
-- [ ] Count human ISO support for the 3,325 genes with no experimental mouse
-      annotation, so the dark-gene figure covers both species.
-- [ ] Spot-check reviews whose IMP rows cite an IMPC-centre paper, and write a
+- [x] Count human experimental support for the 3,325 genes with no experimental
+      mouse annotation, so the dark-gene figure covers both species.
+- [x] Spot-check reviews whose IMP rows cite an IMPC-centre paper, and write a
       short rubric line for IMPC-derived claims in `annotation-reviewer`.
-- [ ] Look at the embryo and lethality screens separately: essentiality is the
+- [x] Look at the embryo and lethality screens separately: essentiality is the
       one organism-level IMPC readout with a clear cell-level reading (cell
       viability, proliferation) when combined with human cell-line screens.
 
@@ -172,9 +270,13 @@ uv run python projects/IMPC/fetch_impc.py
 curl -sSL -o .cache/impc/mp.owl https://purl.obolibrary.org/obo/mp.owl
 curl -sSL -o .cache/impc/go-basic.obo https://purl.obolibrary.org/obo/go/go-basic.obo
 curl -sSL -o .cache/impc/mgi.gaf.gz http://current.geneontology.org/annotations/mgi.gaf.gz
+curl -sSL -o .cache/impc/goa_human.gaf.gz http://current.geneontology.org/annotations/goa_human.gaf.gz
 uv run python projects/IMPC/mp_resolution.py
 uv run python projects/IMPC/go_coverage.py
 uv run python projects/IMPC/review_actions.py
+uv run python projects/IMPC/impc_imp_rows.py
+uv run python projects/IMPC/allele_followup.py   # Europe PMC + PMC; slow, caches under .cache/impc/europepmc/
+uv run python projects/IMPC/essentiality.py      # DepMap; caches under .cache/impc/depmap/
 ```
 
 ## Key literature

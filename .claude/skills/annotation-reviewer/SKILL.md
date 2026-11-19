@@ -255,6 +255,11 @@ experimental annotations whose full text you have not read.
      Apply this policy to new reviews and to annotations touched during re-review.
      Older untouched reviews may retain legacy actions; migrate those when they
      are re-reviewed rather than treating their presence as an exception.
+   - **High-throughput knockout screens (IMPC/KOMP/EUCOMM, Sanger MGP) report
+     organism-level phenotypes.** Such a result supports at most an organism-level
+     process row, usually `KEEP_AS_NON_CORE`, and never a molecular-function or
+     `core_functions` claim without a separate assay of the product. Lethality alone
+     says the gene is required, not what it does. See `projects/IMPC.md`.
    - Consider specificity - terms that are too general should be modified to more specific functions
    - Watch for overly specific or contorted terms that might need generalization
    - Evaluate whether annotations truly represent core vs. peripheral functions

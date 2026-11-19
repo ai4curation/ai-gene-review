@@ -1,0 +1,175 @@
+"""Which reviewed IMP/IGI rows rest on IMPC consortium papers or IMPC-centre screens?
+
+Scans every ``genes/*/*/*-ai-review.yaml`` for ``existing_annotations`` rows
+with evidence IMP or IGI whose ``original_reference_id`` is either one of the
+IMPC consortium / centre screen PMIDs listed on the project page, or a PMID
+whose cached title (``publications/PMID_*.md``) names IMPC or high-throughput
+phenotyping. Reports each row with the reviewer's action and summary. It also
+counts the IMP/IGI rows citing those PMIDs in MGI's GO annotation file
+(``.cache/impc/mgi.gaf.gz``, if present), so an empty result can be told apart
+from a gap in this repository, and lists reviews whose text mentions IMPC.
+
+Output: ``projects/IMPC/results/impc_imp_rows.tsv`` and ``IMPC_IMP_ROWS.md``.
+
+    uv run python projects/IMPC/impc_imp_rows.py
+"""
+
+from __future__ import annotations
+
+import re
+from collections import Counter
+from pathlib import Path
+
+import yaml
+
+HERE = Path(__file__).parent
+RESULTS = HERE / "results"
+GENES = Path("genes")
+PUBS = Path("publications")
+
+# IMPC consortium papers and IMPC-centre screens. PMID:23870131 (White et al.
+# 2013, "Genome-wide generation and systematic phenotyping of knockout mice
+# reveals new roles for many genes") is the Sanger Mouse Genetics Project screen.
+IMPC_PMIDS = {
+    "PMID:27626380", "PMID:28650483", "PMID:36305825", "PMID:29626206",
+    "PMID:28650954", "PMID:29348434", "PMID:29026089", "PMID:32005800",
+    "PMID:23870131",
+}
+MGI_GAF = Path(".cache/impc/mgi.gaf.gz")
+MENTION = re.compile(r"\bIMPC\b|International Mouse Phenotyping|mousephenotype\.org")
+TITLE = re.compile(
+    r"Mouse Phenotyping|\bIMPC\b|high-throughput (mouse )?phenotyping|"
+    r"knockout mouse project|large[- ]scale (mouse )?phenotyp|mouse phenomics",
+    re.I,
+)
+CODES = {"IMP", "IGI"}
+
+
+def cached_titles() -> dict[str, str]:
+    """PMID -> title for every cached publication (frontmatter ``title:``, possibly folded)."""
+    out = {}
+    for path in PUBS.glob("PMID_*.md"):
+        with path.open(errors="replace") as fh:
+            head = fh.read(4000)
+        m = re.search(r"^title:(.*?)\n(?=[A-Za-z_]+:)", head, re.S | re.M)
+        if m:
+            out["PMID:" + path.stem.split("_", 1)[1]] = re.sub(r"\s+", " ", m.group(1)).strip().strip("'\"")
+    return out
+
+
+def mgi_rows() -> list[list[str]]:
+    import gzip
+
+    if not MGI_GAF.exists():
+        return []
+    rows = []
+    with gzip.open(MGI_GAF, "rt") as fh:
+        for line in fh:
+            if line.startswith("!"):
+                continue
+            f = line.rstrip("\n").split("\t")
+            refs = set(f[5].split("|"))
+            if f[6] in CODES and refs & IMPC_PMIDS:
+                rows.append([f[2], f[3], f[4], sorted(refs & IMPC_PMIDS)[0], f[6]])
+    return rows
+
+
+def main() -> None:
+    titles = cached_titles()
+    candidates = IMPC_PMIDS | {p for p, t in titles.items() if TITLE.search(t)}
+    rows = []
+    title_hits: dict[str, str] = {}
+    mentions = []
+    for path in sorted(GENES.glob("*/*/*-ai-review.yaml")):
+        text = path.read_text()
+        if MENTION.search(text):
+            mentions.append(f"{path.parts[1]}/{path.parent.name}")
+        if not any(p in text for p in candidates):
+            continue
+        doc = yaml.safe_load(text) or {}
+        ref_titles = {r.get("id"): r.get("title") or "" for r in doc.get("references") or [] if isinstance(r, dict)}
+        for ann in doc.get("existing_annotations") or []:
+            if ann.get("evidence_type") not in CODES:
+                continue
+            ref = ann.get("original_reference_id") or ""
+            if not ref.startswith("PMID:"):
+                continue
+            title = ref_titles.get(ref) or titles.get(ref, "")
+            if ref not in IMPC_PMIDS and not TITLE.search(title):
+                continue
+            if ref not in IMPC_PMIDS:
+                title_hits[ref] = title
+            review = ann.get("review") or {}
+            term = ann.get("term") or {}
+            rows.append({
+                "species": path.parts[1],
+                "gene": path.parent.name,
+                "evidence": ann.get("evidence_type"),
+                "go": term.get("id", ""),
+                "label": term.get("label", ""),
+                "reference": ref,
+                "reference_title": title,
+                "action": review.get("action", ""),
+                "summary": re.sub(r"\s+", " ", str(review.get("summary") or "")),
+            })
+
+    RESULTS.mkdir(exist_ok=True)
+    cols = ["species", "gene", "evidence", "go", "label", "reference", "reference_title", "action", "summary"]
+    with (RESULTS / "impc_imp_rows.tsv").open("w") as fh:
+        fh.write("\t".join(cols) + "\n")
+        for r in rows:
+            fh.write("\t".join(str(r[c]).replace("\t", " ") for c in cols) + "\n")
+
+    actions = Counter(r["action"] for r in rows)
+    mgi = mgi_rows()
+    lines = [
+        "# Reviewed IMP/IGI rows citing IMPC papers (generated)",
+        "",
+        "Generated by `impc_imp_rows.py`; do not edit by hand. Rows are IMP/IGI `existing_annotations`"
+        f" whose reference is one of {len(IMPC_PMIDS)} IMPC consortium/centre-screen PMIDs, or whose title"
+        " names IMPC or high-throughput phenotyping.",
+        "",
+        f"- Rows: {len(rows)} across {len({(r['species'], r['gene']) for r in rows})} reviews",
+        f"- References: {', '.join(sorted({r['reference'] for r in rows})) or 'none'}",
+        f"- Matched by title only: {', '.join(f'{k} ({v})' for k, v in sorted(title_hits.items())) or 'none'}",
+        "- Actions: " + (", ".join(f"{a} {n}" for a, n in actions.most_common()) or "none"),
+        f"- Cached publications whose title matches the IMPC/high-throughput pattern: {len(candidates - IMPC_PMIDS)}"
+        " (none needs to be an IMPC paper; listed rows are those also cited by an IMP/IGI row)",
+        "",
+        "## The same PMIDs in MGI's GO annotation file",
+        "",
+        f"IMP/IGI rows in `mgi.gaf.gz` citing one of the IMPC PMIDs: {len(mgi)}.",
+        "",
+    ]
+    if mgi:
+        lines += ["| Gene | Qualifier | GO | Reference | Evidence | Reviewed here |", "|---|---|---|---|---|---|"]
+        for sym, qual, go, ref, ev in mgi:
+            reviewed = "yes" if list(GENES.glob(f"*/{sym}/{sym}-ai-review.yaml")) else "no"
+            lines.append(f"| {sym} | {qual} | {go} | {ref} | {ev} | {reviewed} |")
+        lines.append("")
+    lines += [
+        "## Reviews whose text mentions IMPC",
+        "",
+        ", ".join(mentions) or "none",
+        "",
+        "## Rows",
+        "",
+    ]
+    if not rows:
+        lines.append("No reviewed IMP/IGI row cites any of these references.")
+    else:
+        lines += ["| Gene | Evidence | Term | Reference | Action | Reviewer summary |", "|---|---|---|---|---|---|"]
+    for r in rows:
+        s = r["summary"]
+        s = s if len(s) <= 220 else s[:217] + "..."
+        lines.append(
+            f"| {r['species']}/{r['gene']} | {r['evidence']} | {r['go']} {r['label']} | {r['reference']} |"
+            f" {r['action']} | {s.replace('|', '/')} |"
+        )
+    lines.append("")
+    (RESULTS / "IMPC_IMP_ROWS.md").write_text("\n".join(lines))
+    print("\n".join(lines))
+
+
+if __name__ == "__main__":
+    main()
