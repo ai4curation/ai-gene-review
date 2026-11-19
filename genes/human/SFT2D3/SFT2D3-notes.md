@@ -52,3 +52,18 @@
 - Paralog studies are extremely valuable for understudied genes
 - Yeast homolog research provides strong mechanistic foundations
 - Focus on functional context rather than generic gene expression studies
+## 2026-11-19 ORGANELLES Golgi batch 4 (Golgi apparatus rows)
+
+- The review's GO:0005794 row is a NEW proposal. GO:0005794 has never been in SFT2D3-goa.tsv
+  (`git log -S` on the GOA file finds no such row), so this is not GOA drift. The second GO:0005794
+  in the file is the core_functions location.
+- The NEW row was ISS citing PMID:25464851, a paper about the paralog SFT2D2, plus a deep-research
+  sentence about a 2024 preprint. It is re-based as IC on the peer-reviewed version, Sumya,
+  Aragon-Ramirez and Lupashin 2025 Mol Biol Cell [PMID:40397568 "The most notable increase was
+  observed for QPCTL (39-fold), SFT2D3 (12-fold), and BSG (12-fold)"]. That paper uses RPE1 cells
+  and GS15-positive Golgi-derived vesicles after acute COG4 depletion. Full text cached. The preprint
+  is PMID:39484492 (cached, not cited).
+- Second, independent line: family conservation. Yeast Sft2p is "found mostly in the late Golgi"
+  (PMID:10406798), and human SFT2D2 colocalizes with syntaxin 6 (PMID:25464851).
+- Caveat: the SFT2D3 value is a fold change after perturbation. Control-vesicle enrichment is in
+  Supplemental Table S4, not read. BSG (plasma membrane) rose equally. No sub-compartment row.

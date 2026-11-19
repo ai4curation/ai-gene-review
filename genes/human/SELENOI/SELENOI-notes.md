@@ -132,3 +132,26 @@ Reactome). ACCEPT as core location.
 - located in: GO:0005789 endoplasmic reticulum membrane
 - part of BP: GO:0006646 phosphatidylethanolamine biosynthetic process (CDP-ethanolamine /
   Kennedy pathway, final step)
+
+## 2026-11-19 ORGANELLES Golgi batch 4 (Golgi apparatus rows)
+
+- One GO:0005794 row (IBA, is_active_in). MARK_AS_OVER_ANNOTATED changed to KEEP_AS_NON_CORE.
+- PAINT IBD at PTN000045767 (interpro/panther/PTHR10414/PTHR10414-paint.tsv) is seeded only by the
+  CHPT1 lineage (fly cpt FBgn0031948, mouse Chpt1 MGI:2384841, human CHPT1 Q8WUD6). SELENOI seeds
+  the ER membrane IBD at the same node. This is the same seed pattern as CEPT1 (Golgi batch 1).
+- The earlier action assumed SELENOI is an established ER enzyme. The UniProt ER item is ECO:0000305
+  (curator inference), and none of the cached SELENOI papers images the protein.
+- A PubMed search (EPT1/SELENOI/selenoprotein I AND Golgi/localization) found Horibata, Ando and
+  Sugimoto 2020 [PMID:32576654 "Immunohistochemical analyses revealed that EPT1 localizes to the
+  Golgi apparatus and CEPT1 to the ER."]. Fetched with `ai-gene-review fetch-pmid`: abstract only.
+  The full text (PMC7397746, DOI 10.1194/jlr.RA120000898) could not be retrieved through the PubMed
+  MCP or the Europe PMC REST API. So the Golgi marker and whether EPT1 was endogenous or tagged are
+  unchecked. The positive author statement gets deference (P3H2/RP2 pattern).
+- Varlamova et al. 2017 (PMID:29101747, abstract seen in PubMed only, not cached or cited) report
+  SELENOI in nucleus, cytoplasm and ER of tumour cell lines. Low weight.
+- is_active_in: activity at the Golgi is not shown. Brefeldin A did not change the PE species made.
+- Description now says the protein is assigned to the ER membrane and reported in the Golgi in
+  HEK293 cells. The ER rows and core_functions (ER membrane) were left untouched (outside this
+  check). Open question for a later pass: whether EPT1's ER location (ECO:0000305 only) still holds
+  given PMID:32576654, and whether CEPT1's review should cite PMID:32576654 as a second line for
+  its ER location.
