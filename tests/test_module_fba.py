@@ -87,20 +87,44 @@ def test_glycerol_metabolism_mass_balance_and_gut2_rerouting() -> None:
     assert "dihydroxyacetone" in tx_by_pair[
         ("glycerol_dehydrogenase_step", "dihydroxyacetone_kinase_step")
     ].shared_metabolites
+    # The PRECEDES link between the synthesis and utilisation arms is an ordering
+    # statement, not a metabolite handoff: it carries no flux, so the arms are
+    # independent and each has its own entry and terminal.
+    assert model.ordering_connections == [
+        ("g3p_phosphatase_step", "PRECEDES", "glycerol_utilisation")
+    ]
+    assert ("g3p_phosphatase_step", "glycerol_kinase_step") not in tx_by_pair
+    assert set(model.entry_reactions) == {
+        "g3p_nad_dehydrogenase_step",
+        "glycerol_kinase_step",
+        "glycerol_dehydrogenase_step",
+    }
+    assert "g3p_phosphatase_step" in model.terminal_reactions
 
     # Baseline steady-state conservation: total uptake == total export, zero residuals
     wt = simulate_fba(model)
     assert wt.total_uptake_flux == pytest.approx(DEFAULT_UPTAKE_RATE)
     assert wt.total_export_flux == pytest.approx(DEFAULT_UPTAKE_RATE)
     assert all(abs(v) < 1e-6 for v in wt.mass_balance_residuals.values())
-    # The GUT1-GUT2 and DHA routes are equally cheap and each has capacity for the
-    # whole budget; the pFBA optimum is not unique and the first declared route
-    # takes all of it (one vertex of the optimal face, as an LP solver returns).
-    assert wt.reaction_fluxes["g3p_quinone_dehydrogenase_step"] == pytest.approx(100.0)
-    assert wt.reaction_fluxes["dihydroxyacetone_kinase_step"] == 0.0
+    # The three two-step routes are equally cheap and share one uptake budget;
+    # the pFBA optimum is not unique and the first declared route takes all of it
+    # (one vertex of the optimal face, as an LP solver returns). Scenarios
+    # therefore state which arm they feed instead of relying on this order.
+    assert wt.reaction_fluxes["g3p_phosphatase_step"] == pytest.approx(100.0)
+    assert wt.reaction_fluxes["g3p_quinone_dehydrogenase_step"] == 0.0
+
+    # Feeding only the utilisation arm, GUT1-GUT2 is the first declared route.
+    catabolic = {"g3p_nad_dehydrogenase_step": False}
+    wt_cat = simulate_fba(model, settings=catabolic)
+    assert wt_cat.reaction_fluxes["g3p_quinone_dehydrogenase_step"] == pytest.approx(
+        100.0
+    )
+    assert wt_cat.reaction_fluxes["dihydroxyacetone_kinase_step"] == 0.0
 
     # Knocking out terminal GUT2 forces upstream GUT1 (glycerol_kinase_step) to 0 at steady state
-    gut2_ko = simulate_fba(model, settings={"g3p_quinone_dehydrogenase_step": False})
+    gut2_ko = simulate_fba(
+        model, settings={**catabolic, "g3p_quinone_dehydrogenase_step": False}
+    )
     assert gut2_ko.reaction_fluxes["g3p_quinone_dehydrogenase_step"] == 0.0
     assert gut2_ko.reaction_fluxes["glycerol_kinase_step"] == 0.0
     assert gut2_ko.reaction_fluxes["glycerol_dehydrogenase_step"] == pytest.approx(
@@ -190,8 +214,8 @@ def test_pdh_bypass_payload_and_acs_bottleneck() -> None:
             "expected g3p_quinone_dehydrogenase_step to carry positive steady-state flux",
         ),
         (
-            {"expected_inactive": ["g3p_quinone_dehydrogenase_step"]},
-            "expected g3p_quinone_dehydrogenase_step to carry zero steady-state flux",
+            {"expected_inactive": ["g3p_phosphatase_step"]},
+            "expected g3p_phosphatase_step to carry zero steady-state flux",
         ),
         (
             {
@@ -243,7 +267,7 @@ def _step(nid: str, **extra: Any) -> dict[str, Any]:
 
 
 def _flow(src: str, tgt: str) -> dict[str, str]:
-    return {"source": src, "target": tgt, "connection_type": "PRECEDES"}
+    return {"source": src, "target": tgt, "connection_type": "PROVIDES_INPUT_FOR"}
 
 
 RECONVERGING = _module_doc(

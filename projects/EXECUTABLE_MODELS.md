@@ -259,8 +259,8 @@ Implemented `model_type: CONSTRAINT_BASED` (`derivation: DERIVED_FROM_MODULE`) i
 closing the constraint-based roadmap item. Metabolic modules compile into steady-state
 flux-balance and E-Flux models ($\mathbf{S}\mathbf{v} = \mathbf{0}$, $0 \le v_r \le u_r(\mathbf{e})$)
 where reaction upper bounds are derived from hierarchical gene-protein-reaction (GPR)
-trees (`all_of` for multi-subunit `PROTEIN_COMPLEX` `active_units` such as the heterotetrameric
-Carassius $\alpha_3/\beta_2$ PDC complex; `any_of` for `variant_sets` and isozyme annotons).
+trees (`all_of` for multi-subunit `PROTEIN_COMPLEX` `active_units` such as the heteromeric
+Carassius PDC formed by the E1α3 and E1β2 paralog products; `any_of` for `variant_sets` and isozyme annotons).
 Unlike `AGENT_BASED` trafficking models where blocking a downstream step causes upstream
 cargo accumulation, steady-state mass balance forces dead-end upstream unbranched steps
 to zero flux and reroutes flux at upstream branch points. Curated derived constraint-based

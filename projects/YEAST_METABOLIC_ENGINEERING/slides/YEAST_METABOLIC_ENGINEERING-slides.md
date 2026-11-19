@@ -149,10 +149,10 @@ Parsing <code>cobra.core.gene.parse_gpr()</code> ASTs separates <code>BoolOp(And
 
 ## 2. Enantiomeric Mislabeling (`GPP1` / `GPP2`)
 - **The bug:** SGD YeastPathways (`PWY3O-48`) annotates `GPP1` (`YIL053W`) and `GPP2` (`YER062C`) with `GLYCEROL-1-PHOSPHATASE-RXN` (*"glycerol 1-phosphate"*).
-- **Biochemical truth:** `sn-glycerol 1-phosphate` is the archaeal membrane lipid enantiomer. Yeast `GPD1`/`GPD2` + `GPP1`/`GPP2` produce and hydrolyze **`sn-glycerol 3-phosphate`** (`EC 3.1.3.21`, `GO:0004368`).
+- **Biochemical truth:** `sn-glycerol 1-phosphate` is the archaeal membrane lipid enantiomer. Yeast `GPD1`/`GPD2` + `GPP1`/`GPP2` produce and hydrolyze **`sn-glycerol 3-phosphate`** (`EC 3.1.3.21`, `GO:0043136` *sn-glycerol 3-phosphatase activity*, not `GO:0000121` *sn-glycerol 1-phosphatase activity*).
 
 ## 3. High-Throughput RNA-Binding Inflation
-- **The bug:** Proteome-wide RIP/CLIP (`PMID:41816908`) added `GO:0003730` (`mRNA 3'-UTR binding`, `HDA`) to `PFK1`, `PFK2`, `HXK1`, `HXK2`, and `TDH1–3`.
+- **The bug:** RNA-binding work on yeast phosphofructokinase (`PMID:41816908`) added `GO:0003730` (`mRNA 3'-UTR binding`, `IDA`) to `PFK1` and `PFK2`, and an ARBA rule adds the same term to both by `IEA`.
 - **Curation fix:** Separated as **`KEEP_AS_NON_CORE`** so metabolic module extraction is not polluted by moonlighting RBP hits.
 
 </div>

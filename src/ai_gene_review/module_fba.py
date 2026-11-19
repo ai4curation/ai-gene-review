@@ -18,6 +18,11 @@ steady-state **Flux Balance Analysis (FBA / parsimonious FBA / E-Flux)** model:
   step, blocking a mandatory downstream enzyme in steady-state FBA forces the
   entire unbranched upstream segment to zero steady-state flux and diverts flux
   at upstream branch points into alternative open routes.
+  Only metabolite-handoff predicates (:data:`METABOLITE_FLOW_PREDICATES`:
+  ``PROVIDES_INPUT_FOR``, ``HAS_INPUT``, ``HAS_OUTPUT``) become mass-conserving
+  transitions. ``PRECEDES`` and ``CAUSES`` state an ordering or a causal link,
+  not that one step's product is the next step's substrate, so they are listed
+  in :attr:`FBAModel.ordering_connections` and carry no flux.
 * **AST-Based GPR & E-Flux Capacity Bounds**: Each reaction step extracts its
   hierarchical Gene-Protein-Reaction (GPR) tree from nested ``variant_sets``,
   ``annotons``, and ``protein_complex.active_units``:
@@ -35,7 +40,10 @@ steady-state **Flux Balance Analysis (FBA / parsimonious FBA / E-Flux)** model:
   then minimize the weighted L1 norm of reaction fluxes (``optional: true`` side
   branches cost more per unit flux than core steps). Because each reaction
   carries a single metabolite pool, the network is a flow network and the LP is
-  solved exactly as a min-cost maximum flow (:func:`_min_cost_max_flow`). Where
+  solved exactly as a min-cost maximum flow (:func:`_min_cost_max_flow`). Every
+  handoff has unit stoichiometry (``substrates``/``products`` are labels, not
+  coefficients), so carbon and cofactors are not balanced; the zero
+  mass-balance residuals check the solver, not the biology. Where
   several routes are equally cheap, the optimum is not unique and the first
   route in declaration order is filled first, as an LP solver returns one vertex
   of the optimal face.
@@ -70,6 +78,18 @@ from ai_gene_review.module_boolean import (
 from ai_gene_review.module_dynamics import Attractor, ScenarioResult
 from ai_gene_review.module_notation import iter_connections, iter_nodes
 from ai_gene_review.render_modules import as_list
+
+METABOLITE_FLOW_PREDICATES: frozenset[str] = frozenset(
+    {"PROVIDES_INPUT_FOR", "HAS_INPUT", "HAS_OUTPUT"}
+)
+"""Connection types compiled as metabolite handoff (one step's product feeds the next)."""
+
+ORDERING_PREDICATES: frozenset[str] = FLOW_PREDICATES - METABOLITE_FLOW_PREDICATES
+"""Flow-like connection types that carry no metabolite.
+
+>>> sorted(ORDERING_PREDICATES)
+['CAUSES', 'PRECEDES']
+"""
 
 DEFAULT_UPPER_BOUND = 100.0
 OPTIONAL_BRANCH_UPPER_BOUND = 15.0
@@ -155,6 +175,7 @@ class FBAModel:
     terminal_reactions: list[str]
     effective_terminals: list[str]
     skipped_connections: list[tuple[str, str, str]] = field(default_factory=list)
+    ordering_connections: list[tuple[str, str, str]] = field(default_factory=list)
     removed_connections: list[tuple[str, str]] = field(default_factory=list)
     invalid_activation_logic: list[str] = field(default_factory=list)
     structure_problems: list[str] = field(default_factory=list)
@@ -710,6 +731,7 @@ def module_to_fba(
     base_flat_conns: list[tuple[str, str, str, str | None]] = []
     active_flat_conns: list[tuple[str, str, str, str | None]] = []
     skipped: list[tuple[str, str, str]] = []
+    ordering: list[tuple[str, str, str]] = []
     seen_base: set[tuple[str, str, str]] = set()
     seen_active: set[tuple[str, str, str]] = set()
 
@@ -725,8 +747,11 @@ def module_to_fba(
         )
         if pred in STRUCTURAL_PREDICATES:
             continue
+        if pred in ORDERING_PREDICATES:
+            ordering.append((raw_src, pred, raw_tgt))
+            continue
         if pred not in (
-            FLOW_PREDICATES | POSITIVE_REG_PREDICATES | INHIBITING_PREDICATES
+            METABOLITE_FLOW_PREDICATES | POSITIVE_REG_PREDICATES | INHIBITING_PREDICATES
         ):
             if (raw_src, raw_tgt) not in removed:
                 skipped.append((raw_src, pred, raw_tgt))
@@ -763,7 +788,7 @@ def module_to_fba(
     for src, tgt, pred, _desc in base_flat_conns:
         base_outgoing_preds_by_source[src].add(pred)
         base_incoming_by_target[tgt] += 1
-        if pred in FLOW_PREDICATES:
+        if pred in METABOLITE_FLOW_PREDICATES:
             base_flow_endpoints.add(src)
             base_flow_endpoints.add(tgt)
             base_flow_outgoing[src] += 1
@@ -775,7 +800,7 @@ def module_to_fba(
     neg_reg_by_target: dict[str, list[str]] = {eid: [] for eid in variables}
 
     for src, tgt, pred, desc in active_flat_conns:
-        if pred in FLOW_PREDICATES:
+        if pred in METABOLITE_FLOW_PREDICATES:
             flow_conns.append((src, tgt, pred, desc))
             active_flow_outgoing[src] += 1
             if src not in flow_inputs_by_target[tgt]:
@@ -968,6 +993,7 @@ def module_to_fba(
         terminal_reactions=terminal_reactions,
         effective_terminals=effective_terminals,
         skipped_connections=skipped,
+        ordering_connections=ordering,
         removed_connections=sorted(removed_leaf_pairs),
         invalid_activation_logic=invalid_logic,
         structure_problems=structure_problems,
