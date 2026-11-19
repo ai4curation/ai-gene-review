@@ -2,14 +2,16 @@
 
 [Back to the project](../ORGANELLE_LIFECYCLES.md)
 
-**Bottom line:** every eukaryote-wide rule candidate was evaluated with the module engine against
+**Bottom line:** every eukaryote-wide rule candidate, and the lineage-scoped acidocalcisome and lysosome-related
+organelle rules, was evaluated with the module engine against
 PANTHER's release-19 sequence classification files for 24 organisms. Three things show up. First,
 in lineages that certainly have the organelle, several rules failed on a single selector that held
 only the human protein or missed one lineage's subfamily; those are selector defects, not biology. The
 two largest, MPP and Pex2, are fixed (#6416, #6418) and the results below are rerun with the fixes; the
 rest are listed below for fixing. Second, the lineages with reduced or absent organelles (the
 mitosome-bearing *Giardia* and *Entamoeba*, the hydrogenosome-bearing *Trichomonas*, the non-ciliated
-lineages for the cilium) fail as expected, so the rules discriminate. Third, the engine cannot evaluate
+lineages for the cilium, the lineages without VTC for the acidocalcisome) fail as expected, so the rules
+discriminate. Third, the engine cannot evaluate
 a protein-complex step from family selectors, because it compiles the complex into one atom without its
 units; the census supplies the units itself.
 
@@ -18,7 +20,9 @@ units; the census supplies the units itself.
 [selector_census.py](selector_census.py) compiles each module with `ai_gene_review.module_logic`, so
 optional parts, variant sets and module references count as the engine reads them. A step holds in an
 organism when one of its PANTHER family or subfamily ids selects a protein in that organism's
-classification file; a protein-complex step holds when every active unit's ids do. The per-organism
+classification file; a protein-complex step holds when every active unit's ids do. A step that also
+requires an InterPro domain holds only when a selected protein carries that domain in UniProt's InterPro
+cross-references, which the script fetches once and caches. The per-organism
 counts, the verdicts and the engine's innermost gaps are in
 [selector-census.yaml](selector-census.yaml). Regenerate both with:
 
@@ -29,7 +33,8 @@ uv run python projects/ORGANELLE_LIFECYCLES/selector_census.py \
     vacuolar_atpase_acidification er_cotranslational_translocation \
     er_oxidative_protein_folding autophagosome_core_biogenesis \
     intraflagellar_transport_core golgi_copi_vesicle_coat nuclear_pore_transport_core \
-    lipid_droplet_neutral_lipid_storage phagosome_maturation synaptic_vesicle_cycle \
+    lipid_droplet_neutral_lipid_storage acidocalcisome_polyphosphate_storage \
+    lysosome_related_organelle_biogenesis phagosome_maturation synaptic_vesicle_cycle \
     -o projects/ORGANELLE_LIFECYCLES/selector-census.yaml
 ```
 
@@ -58,6 +63,8 @@ disagreement between the two sources rather than a wrong selector.
 | `golgi_copi_vesicle_coat` | ✓ | ✓ | ✓ | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 3 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 1 | ✓ | 1 | ✓ | ✓ | 1 |
 | `nuclear_pore_transport_core` | ✓ | ✓ | 1 | 2 | 2 | 1 | ✓ | ✓ | ✓ | 1 | 1 | 2 | 3 | 2 | ✓ | 3 | ✓ | 1 | 1 | ✓ | ✓ | ✓ | ✓ | 3 |
 | `lipid_droplet_neutral_lipid_storage` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 1 | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 1 |
+| `acidocalcisome_polyphosphate_storage` | 1 | 1 | 1 | 1 | 1 | 1 | ✓ | ✓ | 1 | ✓ | ✓ | 1 | 1 | 1 | 1 | ✓ | ✓ | 1 | 1 | ✓ | ✓ | ✓ | 1 | 1 |
+| `lysosome_related_organelle_biogenesis` | ✓ | ✓ | 1 | 2 | ✓ | 2 | 3 | 4 | 3 | 3 | 3 | 3 | 2 | 2 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 1 | 2 |
 | `phagosome_maturation` | 3 | 1 | 1 | 1 | 2 | 1 | 2 | 3 | 3 | 4 | 4 | 7 | 3 | 3 | 4 | 3 | 5 | 5 | 4 | 2 | 4 | 2 | 3 | 4 |
 | `synaptic_vesicle_cycle` | ✓ | ✓ | ✓ | ✓ | 1 | 3 | 3 | 2 | 3 | 4 | 4 | 4 | 4 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 4 |
 
@@ -134,6 +141,48 @@ intermediate chain DYNC2I2 and Trichoplax on IFT74; moss fails on 8 steps and Th
 module's notes already record. Fly and worm both build IFT-dependent sensory cilia, so their gaps are
 lineage-specific placements, divergent orthologs or real losses; which is not checked here.
 
+## The acidocalcisome rule
+
+`acidocalcisome_polyphosphate_storage` is scoped to the lineages that make polyphosphate with the VTC
+complex. It needs a VTC-domain subunit of `PTHR46140:SF1` (InterPro IPR018966; Vtc4 in most lineages)
+and an acidifying pump (the H+-PPase `PTHR31998` or the V-ATPase rule). It is met in the nine organisms
+with such a subunit: the chytrid, Chlamydomonas, *Trypanosoma*, *Leishmania*,
+*Plasmodium*, Thalassiosira and the three fungi. Every other organism fails on the Vtc4 step alone. The
+domain requirement excludes the Vtc1-like proteins, which have only the DUF202 membrane domain.
+Dictyostelium's two `PTHR46140:SF1` proteins (Q54JW8, Q54ZD5) are of that kind, so without the domain the
+rule would pass there on the wrong protein. The domain does not exclude every non-catalytic VTC subunit:
+*Toxoplasma* has both a Vtc2 and a Vtc4 (PMID:42126255), and the entries table places its Vtc2 in
+`PTHR46140:SF1`, so an apicomplexan VTC-domain protein in that subfamily need not be the catalytic subunit.
+Nothing establishes which kind the putative *Plasmodium* protein C6KT60 is, so its pass may rest on a
+non-catalytic subunit. The other passes are on proteins named Vtc4,
+or on the Chlamydomonas, Leishmania and Thalassiosira VTC-domain proteins (the module lists them).
+
+The failures in animals and land plants are expected, since neither has VTC. A failure does not mean the
+organism lacks acidocalcisomes. Dictyostelium has polyphosphate-rich mass-dense granules with an H+-PPase
+activity (PMID:11748243), but no VTC-domain protein and no `PTHR31998` protein in these files, and it makes
+polyphosphate with a bacterial-type PPK1 (PMID:17940044). Paramecium and Phytophthora have no Vtc4-type
+protein in these files either, and whether they have acidocalcisomes is not checked here. The three fungi
+pass on their polyphosphate-filled vacuole, which the rule does not distinguish from an acidocalcisome.
+
+## The lysosome-related organelle rule
+
+`lysosome_related_organelle_biogenesis` takes Metazoa as its context. It needs AP-3 (evaluated on the delta subunit,
+`PTHR22781:SF12`), BLOC-1 (BLOC1S1, BLOC1S2 and Snapin), a Rab32/38-family GTPase (`PTHR24073:SF839` or
+`SF862`) and an exchange factor for it: BLOC-3 (HPS1 `PTHR12761:SF1` and HPS4 `PTHR14407:SF9`) or the
+nematode GLO-3. It is met in human, *Drosophila* and Trichoplax. *C. elegans* fails on the exchange factor
+alone: it has no HPS1 or HPS4 (PMID:30419011), and GLO-3 (Q21045), which with CCZ-1 activates the worm
+Rab32 GLO-1, has no PANTHER classification in the worm file, so the census cannot evaluate that step and lists it
+under `unevaluable_steps`. Nematostella
+fails on both Rab32/38 and the exchange factor: PANTHER's file has no Rab32/38-subfamily protein for it, and
+an HPS4 but no HPS1. Outside animals the rule's parts are older than the organelles it describes.
+Dictyostelium has AP-3, BLOC-1, a Rab32 and HPS1, and fails only on HPS4. Monosiga has a Rab32 and HPS1 and
+fails on BLOC1S1 and HPS4. The failures outside animals say nothing about lysosome-related organelles there,
+which the rule does not claim to describe. Zero counts can also be a limit of sequence classification: PSI-BLAST
+finds none of the eight BLOC-1 subunits in budding yeast, which has distant homologues of three
+(PMID:21159114). In divergent protists some selectors hold several proteins (eight AP-3 delta and five HPS1
+proteins in *Trichomonas*; four Rab32/38-subfamily proteins in *Trichomonas* and *Paramecium*, three in
+*Entamoeba*); these are subfamily counts, not checked orthologues.
+
 ## Expected failures
 
 - **Reduced mitochondria.** *Giardia* and *Entamoeba* (mitosomes) and *Trichomonas* (hydrogenosomes)
@@ -158,7 +207,7 @@ lineage-specific placements, divergent orthologs or real losses; which is not ch
 sees no selector for the complex, and the step can never hold. The census works around this by reading
 the units itself. It also reports, per module, any complex whose units mix family-keyed and gene-keyed
 selectors (`mixed_complex_steps` in the census), because such a complex is evaluated on its family-keyed
-units alone; none of the 14 modules has one. A fix in the engine, compiling a complex into an AND over
+units alone; none of the 16 modules has one. A fix in the engine, compiling a complex into an AND over
 its units, would let any oracle evaluate these steps.
 
 ## Full gap list
@@ -246,6 +295,13 @@ Every step that fails in at least one organism, with the organisms it fails in (
   - `sec13` (1): At
 - `lipid_droplet_neutral_lipid_storage`
   - `dgat_family` (3): Gi, Tv, Eh
+- `acidocalcisome_polyphosphate_storage`
+  - `vtc4_catalytic_subunit` (15): Hs, Dm, Ce, Nv, Ta, Mb, Pp, Gi, Tv, Pt, Ph, At, Os, Dd, Eh
+- `lysosome_related_organelle_biogenesis`
+  - `rab32_38_gef` (21): Ce, Nv, Mb, Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh
+  - `bloc1_complex` (18): Mb, Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Eh
+  - `rab32_38_gtpase` (13): Nv, Bd, Cr, Pp, Tb, Lm, Pf, Tp, At, Os, Sc, Sp, Nc
+  - `ap3_complex` (2): Cr, Gi
 - `phagosome_maturation`
   - `rilp_rab7_effector` (23): Dm, Ce, Nv, Ta, Mb, Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh
   - `lamp_proteins` (18): Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh

@@ -39,3 +39,7 @@
 ## 2026-10-28: PI(4,5)P2 3-kinase activity rows (PR #5679 CI)
 
 The two GO:0046934 rows (EC-mapped IEA, ISO from human IDA) were first KEEP_AS_NON_CORE. CI's family cross-check flagged them, because the PANTHER PTHR10048 family review scopes this activity to the class I catalytic subunits only. That matches this review's own evidence: the recombinant enzyme phosphorylates PtdIns(4,5)P2 only with a phosphatidylserine carrier, and in cells the products are PI3P and PI(3,4)P2. Both rows are now MARK_AS_OVER_ANNOTATED, and the ISO row has a propagation_review.
+
+## ND re-check (2026-11-15)
+
+- Literature on rat Pik3c2a identifies a biological process: its knockdown in rat INS1 cells impairs insulin secretion (PMID:21127054). The BP ND row is stale (nd_case STALE); the REMOVE stands.

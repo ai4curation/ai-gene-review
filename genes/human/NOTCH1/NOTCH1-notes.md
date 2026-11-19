@@ -124,3 +124,5 @@ absence from QuickGO is not by itself evidence against homology.
 No existing review action changed: the evolutionary evidence does not bear on any IBA row
 (all propagation stays within animals). Added an evolutionary-origin sentence to the
 description, the four papers to references, and suggested questions.
+
+Round 7 of projects/INVOLVED_IN_PRECOMPOSITION.md (2026-11-18): the two rows on obsolete GO:0003252 are now MARK_AS_OVER_ANNOTATED instead of MODIFY to GO:0008285, because NOTCH1's own GO:0008285 IDA row is KEEP_AS_NON_CORE and a MODIFY's replacement must be a claim the review would accept.

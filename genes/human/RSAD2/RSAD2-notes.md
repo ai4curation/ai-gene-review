@@ -151,3 +151,12 @@ rows are removed as uninformative, which does not dispute the interactions.
   (PMID:30872404 human reconstitution; PMID:21435586 mouse pDCs) — viperin itself
   positions the kinase and the E3 ligase, which is the work the term names, and the
   function is separable from catalysis.
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- All four GO:0005794 rows (EXP PMID:11752458, PMID:16982913, PMID:31921110; IEA SubCell) stay KEEP_AS_NON_CORE; reasons extended.
+- PMID:31921110 (full text cached, PMC6917645): in COS-7 cells, EGFP-viperin alone overlaps mCherry-KDEL and lipid droplets but not ECFP-Golgi; only on co-expression of HSV-1 gD does it accumulate at the Golgi [PMID:31921110 "viperin could co-localize with mCherry-KDEL (Figure 3C, yellow signal) and lipid droplets (Figure 3D, yellow signal), but not TOM70-CFP (Figure 3A) or ECFP-Glogi (Figure 3B)"]. So the Golgi is not viperin's resting location.
+- PMID:11752458: abstract-only in the cache; PMC64994 fetched through the PubMed full-text tool on 2026-11-18 returned no body text. The abstract describes endogenous infection-induced viperin moving from the ER to the Golgi and then to vacuoles during HCMV infection; kept on deference as an infection-context pool of the endogenous protein.
+- PMID:16982913: abstract-only; the abstract does not mention the Golgi. Kept on curator deference to the curated UniProt item (UNDECIDED is the alternative).
+- Judgement: every readable Golgi line is virus- or viral-protein-induced. Kept non-core rather than MARK_AS_OVER_ANNOTATED because infection is the setting in which an antiviral protein acts; flag for policy (viral-induced relocation of an antiviral effector vs. BST2-type perturbation).
+- No sub-compartment row.

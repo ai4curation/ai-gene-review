@@ -99,6 +99,7 @@ proposed_ontology_changes:
   confidence: PROBABLE
   request_status: NOT_FILED
   ontology_state_verified: '2026-11-01'
+index_group: CROSS_CUTTING
 ---
 
 # Fatty-acyl-CoA Synthase Activity — Proposed Obsoletion of GO:0004321

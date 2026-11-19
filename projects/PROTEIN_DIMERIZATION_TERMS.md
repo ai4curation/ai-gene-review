@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [OBSOLETION, PIPELINE]
 species: [human, mouse, ARATH, ECOLI]
 collections: [GO_TRACKER_BACKLOG]
+index_group: GO_TRACKER_BACKLOG
 ---
 
 # Protein Dimerization and Oligomerization Terms

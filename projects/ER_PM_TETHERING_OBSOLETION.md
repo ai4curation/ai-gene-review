@@ -12,6 +12,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/FMq8m8yzvRNQmUs1Jv1YqH
       title: Project brief
+index_group: MAMMAL
 ---
 
 # ER–Plasma Membrane Tethering — Obsoletion & Replacement (GO:0061817)

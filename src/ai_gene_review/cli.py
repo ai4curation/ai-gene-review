@@ -43,10 +43,12 @@ from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.validator import get_project_root, get_schema_path
 from ai_gene_review.draw import ReviewVisualizer
 from ai_gene_review.litscan.cli import litscan_app
+from ai_gene_review.shadow_issues.cli import shadow_issues_app
 from ai_gene_review.tools.audit_fulltext_flags import audit as audit_flags
 
 app = typer.Typer(help="ai-gene-review: Gene data ETL and review tool.")
 app.add_typer(litscan_app, name="litscan")
+app.add_typer(shadow_issues_app, name="shadow-issues")
 
 
 @app.command()
@@ -3546,6 +3548,65 @@ def render_projects(
 
 
 @app.command()
+def render_hubs(
+    root: Annotated[
+        Path, typer.Option("--root", help="Repository root to read reviews from")
+    ] = Path("."),
+    pages_dir: Annotated[
+        Path, typer.Option("--pages-dir", help="Site pages directory to write into")
+    ] = Path("pages"),
+):
+    """Render the feedback-to-resources and annotation-rules landing pages.
+
+    Writes pages/feedback/ (ontology changes, proposed new terms, source defects,
+    mapping and rule reviews, with TSV downloads) and pages/rules/index.html.
+
+    Examples:
+        ai-gene-review render-hubs
+    """
+    from ai_gene_review.render_hubs import render_feedback, render_rules
+
+    feedback = render_feedback(root=root, output_dir=pages_dir / "feedback")
+    rules = render_rules(root=root, output_dir=pages_dir / "rules")
+    typer.echo(f"Rendered {len(feedback)} feedback page(s) and {rules}")
+
+
+@app.command()
+def render_gocams(
+    gocams_dir: Annotated[
+        Path,
+        typer.Option("--gocams-dir", help="Directory of cached GO-CAM models and reviews"),
+    ] = Path("gocams"),
+    output_dir: Annotated[
+        Path,
+        typer.Option("--output-dir", "-o", help="Output directory for GO-CAM review pages"),
+    ] = Path("pages/gocams"),
+    genes_dir: Annotated[
+        Path,
+        typer.Option("--genes-dir", help="Directory of gene reviews, for links"),
+    ] = Path("genes"),
+    modules_dir: Annotated[
+        Path,
+        typer.Option("--modules-dir", help="Directory of module YAML, for links"),
+    ] = Path("modules"),
+):
+    """Render every GO-CAM review (gocams/<id>/<id>-review.yaml) plus an index page.
+
+    Examples:
+        ai-gene-review render-gocams
+    """
+    from ai_gene_review.render_gocams import render_all_gocams
+
+    written = render_all_gocams(
+        gocams_dir=gocams_dir,
+        output_dir=output_dir,
+        genes_dir=genes_dir,
+        modules_dir=modules_dir,
+    )
+    typer.echo(f"Rendered {len(written) - 1} GO-CAM review page(s) and an index to {output_dir}")
+
+
+@app.command()
 def render_modules(
     files: Annotated[
         Optional[List[Path]],
@@ -4941,8 +5002,25 @@ def refresh_panther_members(
     from ai_gene_review.validation.prose_panther_scan import collect_claims
 
     repo_root = output_dir or Path.cwd()
-    cache = cache_dir or (repo_root / ".cache" / "panther")
+    from ai_gene_review.etl.panther_families import (
+        fetch_hmm_classifications,
+        hmm_url,
+        panther_cache_dir,
+        switch_release,
+    )
+
+    cache = cache_dir or panther_cache_dir(repo_root)
     organisms = list(organism) if organism else list(DEFAULT_ORGANISMS)
+
+    # During a PANTHER switch, validators read the previous release's names and
+    # memberships from this cache without downloading anything; warm it here. Only the
+    # default organisms: they are what the validators read, whatever --organism says.
+    previous = switch_release()  # raises on a misconfigured switch
+    if previous is not None:
+        fetch_hmm_classifications(cache, url=hmm_url(previous))
+        for slug in DEFAULT_ORGANISMS:
+            fetch_sequence_classification(slug, cache, release=previous)
+        typer.echo(f"cached PANTHER {previous} classifications for the switch allowance")
 
     # Every representative member, grounded or not -- an ungrounded descriptor's
     # members are the ones whose real family most needs resolving -- plus the
@@ -5011,6 +5089,18 @@ def refresh_panther_members(
             # files miss: for some proteins the two sources disagree, and neither
             # is privileged, so the UniProt value is recorded as an alternate that
             # membership checks also accept (reporting the disagreement).
+            #
+            # One gap, left open deliberately: a cited chain or isoform id
+            # (P57764-PRO_0000437526, Q14114-4) can never appear in the
+            # classification files, which key on bare accessions, so it always
+            # takes UniProt's value with nothing to conflict against. Where the
+            # two sources disagree about the parent entry, the index can hold the
+            # file value for the entry beside the UniProt value for its chain with
+            # no alternate recorded. Closing it means asking the files about each
+            # cited id's parent and fanning the answer back out, which changes
+            # which source wins for those ids -- a data change to the index, and
+            # to what validate-families accepts for them, so it belongs in its own
+            # change rather than riding along with the resolver fix.
             typer.echo(f"checking {len(needed)} accession(s) against UniProt...")
             from_uniprot = fetch_panther_from_uniprot(needed)
             for accession, family_sf in from_uniprot.items():
@@ -5087,6 +5177,125 @@ def check_panther_release():
         typer.echo("See docs/panther_node_anchoring_plan.md (Phase 2) before bumping.")
         raise typer.Exit(code=1)
     typer.echo("✓ PAINT and the tree API still serve the pinned release and snapshot.")
+
+
+@app.command()
+def panther_release_diff(
+    target_release: Annotated[
+        str, typer.Argument(help="PANTHER release to compare with, e.g. 20.0.")
+    ],
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    output: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output",
+            help="Report path (default: <repo>/reports/panther-release-diff-<current>-to-<target>.yaml).",
+        ),
+    ] = None,
+    organism: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--organism",
+            help="PANTHER organism slug to classify members with (repeatable). Defaults "
+            "to the set covering species curated in this repository.",
+        ),
+    ] = None,
+):
+    """Dry-run report of what bumping PANTHER_RELEASE to TARGET_RELEASE would change.
+
+    Lists cited PANTHER family and subfamily ids that are gone or renamed in the
+    target release, and, for every module family descriptor and family-review
+    subfamily that names representative members, the id those members fall into
+    in the target release, and the quotes of interpro/panther/panther.obo that the
+    rebuilt artifact would break. Edits nothing; proposals are for curators to
+    check. Downloads both releases' classification files into <repo>/.cache/panther
+    and renders the target release's OBO there.
+
+    Example:
+        ai-gene-review panther-release-diff 20.0
+    """
+    import yaml
+
+    from ai_gene_review.etl.panther_families import (
+        DEFAULT_ORGANISMS,
+        PANTHER_RELEASE,
+        build_member_index,
+        fetch_hmm_classifications,
+        fetch_sequence_classification,
+        hmm_url,
+        parse_hmm_classifications,
+        write_panther_obo,
+    )
+    from ai_gene_review.etl.panther_release_diff import (
+        DEFAULT_SCAN_GLOBS,
+        broken_obo_quotes,
+        build_report,
+        cited_ids,
+        collect_anchors,
+    )
+    from ai_gene_review.validation.quote_check import default_files
+
+    if target_release == PANTHER_RELEASE:
+        raise typer.BadParameter(
+            f"{target_release} is the pinned release; give the release to compare with"
+        )
+    repo_root = output_dir or Path.cwd()
+    cache = repo_root / ".cache" / "panther"
+    anchors = collect_anchors(repo_root)
+    accessions = {accession for anchor in anchors for accession in anchor.members}
+    organisms = list(organism or DEFAULT_ORGANISMS)
+
+    parsed: dict = {}
+
+    def entries(release: str) -> list:
+        if release not in parsed:
+            path = fetch_hmm_classifications(cache, url=hmm_url(release))
+            parsed[release] = parse_hmm_classifications(path.read_text(errors="replace").splitlines())
+        return parsed[release]
+
+    def names(release: str) -> dict:
+        return {entry.accession: entry.name for entry in entries(release)}
+
+    def member_index(release: str) -> dict:
+        paths = []
+        for slug in organisms:
+            path = fetch_sequence_classification(slug, cache, release=release)
+            if path is None:
+                typer.echo(f"⚠️  no PANTHER {release} classification for organism '{slug}'")
+            else:
+                paths.append(path)
+        return build_member_index(accessions, paths)
+
+    files = sorted({path for pattern in DEFAULT_SCAN_GLOBS for path in repo_root.glob(pattern)})
+    report = build_report(
+        PANTHER_RELEASE,
+        target_release,
+        cited_ids(files, repo_root),
+        names(PANTHER_RELEASE),
+        names(target_release),
+        anchors,
+        member_index(PANTHER_RELEASE),
+        member_index(target_release),
+        broken_obo_quotes(
+            # validate-quotes' files, plus gene reviews, whose quotes `just validate` checks.
+            sorted(set(default_files(repo_root)) | set(repo_root.glob("genes/*/*/*-ai-review.yaml"))),
+            repo_root,
+            repo_root / "interpro" / "panther" / "panther.obo",
+            write_panther_obo(
+                entries(target_release), cache / f"panther-{target_release}.obo", release=target_release
+            ),
+        ),
+    )
+    out = output or (
+        repo_root / "reports" / f"panther-release-diff-{PANTHER_RELEASE}-to-{target_release}.yaml"
+    )
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(yaml.safe_dump(report, sort_keys=False, allow_unicode=True, width=120))
+    typer.echo(yaml.safe_dump({"summary": report["summary"]}, sort_keys=False).rstrip())
+    typer.echo(f"✓ Wrote {out}")
 
 
 @app.command()
@@ -5193,7 +5402,9 @@ def fix_panther_labels(
             "--allow-divergent",
             help="Also rewrite labels that describe a different protein than the "
             "id's official name. Held back by default because that pattern "
-            "usually means the ID is wrong; only pass this after checking.",
+            "usually means the ID is wrong; only pass this after checking. "
+            "During a PANTHER switch it does not apply to ids renamed since the "
+            "previous release: those are remapped, never relabelled.",
         ),
     ] = False,
 ):
@@ -5203,7 +5414,14 @@ def fix_panther_labels(
     verified; the curator's readable description belongs in `preferred_term`.
     Descriptors whose declared family does not contain their representative
     member are deliberately SKIPPED -- relabelling those would hide a wrong
-    family id behind an authoritative-looking name. Fix the id first.
+    family id behind an authoritative-looking name. Fix the id first. So are
+    descriptors none of whose representative members has been looked up yet:
+    their id can be neither confirmed nor disputed until the index is refreshed.
+
+    Both guards read cached data (the member index and, during a PANTHER switch,
+    the previous release's names). When that data is missing a guard cannot
+    act, so --apply refuses to run until `just ensure-panther-members` has
+    built it; a dry run reports the same and continues.
 
     Example:
         ai-gene-review fix-panther-labels --apply
@@ -5211,8 +5429,14 @@ def fix_panther_labels(
     import yaml
 
     from ai_gene_review.etl.panther_families import (
+        load_member_index_alternates,
+        load_member_index_gaps,
         load_obo_names,
+        member_index_path,
+        members_not_looked_up,
+        previous_release_labels,
         rewrite_panther_labels,
+        switch_release,
     )
     from ai_gene_review.validation.module_validator import (
         iter_family_member_uses,
@@ -5223,12 +5447,35 @@ def fix_panther_labels(
 
     repo_root = output_dir or Path.cwd()
     names = load_obo_names(repo_root / "interpro" / "panther" / "panther.obo")
-    from ai_gene_review.etl.panther_families import member_index_path
-
-    from ai_gene_review.etl.panther_families import load_member_index_alternates
-
+    # During a PANTHER switch, a label still carrying the previous release's name is
+    # held back for remapping rather than relabelled (see rewrite_panther_labels).
+    previous = previous_release_labels(repo_root / "interpro" / "panther")
     member_index = load_member_index(member_index_path(repo_root))
     member_alternates = load_member_index_alternates(member_index_path(repo_root))
+    member_gaps = load_member_index_gaps(member_index_path(repo_root))
+
+    # Without their cached data the guards are silently off: never relabel unguarded.
+    # An empty index refuses outright; a partial one skips, per descriptor, the ids
+    # none of whose members has been looked up (see members_not_looked_up below).
+    unguarded: list[str] = []
+    switch = switch_release()
+    if switch is not None and previous is None:
+        unguarded.append(
+            f"PANTHER {switch} names are not cached, so labels on ids renamed in the "
+            "switch cannot be held back"
+        )
+    if not member_index:
+        unguarded.append(
+            "the PANTHER member index is empty, so descriptors whose representative "
+            "members contradict their family id cannot be skipped"
+        )
+    for reason in unguarded:
+        typer.echo(f"⚠  {reason}.", err=True)
+    if unguarded:
+        typer.echo("Build the missing caches with `just ensure-panther-members`.", err=True)
+        if apply:
+            typer.echo("Refusing --apply until they are built.", err=True)
+            raise typer.Exit(1)
     # Same PAINT-corroboration rule the validator applies, so a grounding the
     # validator merely warns about is not treated here as disputed.
     paint_index = load_paint_index(repo_root / "interpro" / "panther")
@@ -5236,10 +5483,18 @@ def fix_panther_labels(
 
     total = 0
     held_back: list[tuple[Path, str, str, str, bool]] = []
+    renamed: list[tuple[Path, str, str, str]] = []
+    not_looked_up: list[tuple[Path, str, str, str, str]] = []
+    # Why a withheld label would also have been deferred had its id been confirmed.
+    also_deferred = {
+        "divergent": "the label also describes a different protein than the id's name",
+        "renamed_in_switch": "the id was also renamed in the PANTHER switch",
+    }
     for path in targets:
         text = path.read_text()
         doc = yaml.safe_load(text)
         skip: set[str] = set()
+        unconfirmed: set[str] = set()
         corroborated: set[str] = set()
         for use in iter_family_member_uses(doc):
             errors, _ = validate_family_members(
@@ -5247,15 +5502,40 @@ def fix_panther_labels(
             )
             if errors:
                 skip.update(use.declared_family_curies)
+            elif members_not_looked_up(use.representative_accessions, member_index, member_gaps):
+                unconfirmed.update(use.declared_family_curies)
             elif any(a in member_index for a in use.representative_accessions):
                 corroborated.update(use.declared_family_curies)
+        previous_names = None if previous is None else previous.labels
         new_text, changes, deferred = rewrite_panther_labels(
-            text, names, skip, allow_divergent=allow_divergent
+            text,
+            names,
+            skip | unconfirmed,
+            allow_divergent=allow_divergent,
+            previous_names=previous_names,
         )
-        held_back.extend(
-            (path, curie, old, new, curie in corroborated)
-            for curie, old, new in deferred
-        )
+        if unconfirmed - skip:
+            # Report every label the skip withheld, including those the rewrite would
+            # also have deferred: a skipped id is never deferred, so it would otherwise
+            # be listed nowhere.
+            _, would_change, would_defer = rewrite_panther_labels(
+                text, names, skip, allow_divergent=allow_divergent, previous_names=previous_names
+            )
+            not_looked_up.extend(
+                (path, curie, old, new, "")
+                for curie, old, new in would_change
+                if curie in unconfirmed
+            )
+            not_looked_up.extend(
+                (path, item.curie, item.old, item.new, also_deferred[item.reason])
+                for item in would_defer
+                if item.curie in unconfirmed
+            )
+        for item in deferred:
+            if item.reason == "renamed_in_switch":
+                renamed.append((path, item.curie, item.old, item.new))
+            else:
+                held_back.append((path, item.curie, item.old, item.new, item.curie in corroborated))
         if not changes:
             continue
         total += len(changes)
@@ -5266,6 +5546,28 @@ def fix_panther_labels(
             typer.echo(f"  (skipped {len(skip)} id(s) with disputed grounding)")
         if apply:
             path.write_text(new_text)
+
+    if renamed and previous is not None:
+        typer.echo(
+            f"\n⚠  {len(renamed)} label(s) NOT rewritten: they are on ids whose name "
+            f"changed since PANTHER {previous.release}, so the id may now "
+            "name something else. Remap them from `just panther-release-diff`; "
+            "--allow-divergent does not apply to these."
+        )
+        for path, curie, old, new in renamed:
+            typer.echo(f"  {path.name}: {curie}  {old!r} -> now {new!r}")
+
+    if not_looked_up:
+        typer.echo(
+            f"\n⚠  {len(not_looked_up)} label(s) NOT rewritten: no representative "
+            "member of the id has been looked up in the member index yet, so the id "
+            "can be neither confirmed nor disputed. Run `just ensure-panther-members`, "
+            "then re-run."
+        )
+        for path, curie, old, new, note in not_looked_up:
+            typer.echo(f"  {path.name}: {curie}  {old!r} -> {new!r}")
+            if note:
+                typer.echo(f"      ({note}; check the id once its members are looked up)")
 
     if held_back:
         typer.echo(

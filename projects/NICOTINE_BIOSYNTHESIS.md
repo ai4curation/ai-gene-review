@@ -14,6 +14,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/UnQ9Raqh1BixjT3CMmvgdH
       title: Project brief
+index_group: PLANT
 ---
 # Nicotine Biosynthesis Project
 

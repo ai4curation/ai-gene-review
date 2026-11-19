@@ -17,6 +17,7 @@ genes:
   - cec-10
   - CG3226
   - BTBD3
+index_group: CROSS_CUTTING
 ---
 
 # Taxon Pathway Variance

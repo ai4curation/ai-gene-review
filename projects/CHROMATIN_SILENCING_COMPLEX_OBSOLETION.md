@@ -5,6 +5,7 @@ tags: [OBSOLETION]
 species: [ARATH, yeast, human, DROME, MAIZE]
 genes: [CLF, FIE, MSI1, SWN, VIN3, VRN2, VRN5, EZ1, BAZ2A, SIRT1, EZH2, SIR2, SIR3, SIR4, Elba1, Elba2, Elba3]
 collections: [GO_TRACKER_BACKLOG]
+index_group: GO_TRACKER_BACKLOG
 ---
 
 # Chromatin Silencing Complex (GO:0005677): Obsolete, Merge or Rename?

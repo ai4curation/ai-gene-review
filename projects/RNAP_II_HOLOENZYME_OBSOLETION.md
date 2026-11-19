@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [OBSOLETION]
 species: [human, yeast, SCHPO]
 collections: [GO_TRACKER_BACKLOG]
+index_group: GO_TRACKER_BACKLOG
 ---
 
 # RNA Polymerase II Holoenzyme (GO:0016591) Obsoletion
