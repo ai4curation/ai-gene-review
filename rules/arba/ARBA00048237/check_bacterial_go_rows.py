@@ -183,15 +183,16 @@ def main() -> None:
     head = [
         f"{attributed} of {len(sample)} sampled entries carried EC 2.3.1.86 from ARBA00048237 in an earlier version.",
         "",
-        "Sampled entries carrying it from ARBA00048237 in each release (every UniSave version current in "
-        f"{' or '.join(TALLY_RELEASES)} is read; a version counts for each release it spans):",
+        "Sampled entries carrying it from ARBA00048237 in each release (every UniSave version current at or "
+        f"after {TALLY_RELEASES[0]} is read; a version counts for each release it spans):",
         "",
         *[
             f"- release {r} ({release_dates.get(r, 'date not reported')}): {by_release[r]} of {len(sample)}"
             for r in TALLY_RELEASES
         ],
         "",
-        f"UniSave versions without release fields (skipped): {missing_span}",
+        f"UniSave versions without release fields (skipped; when non-zero the per-release counts above are "
+        f"lower bounds): {missing_span}",
         "",
     ]
     history = head + history
