@@ -3,6 +3,8 @@ title: "IMPC Knockouts and Gene Function"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, EVALUATION]
 species: [mouse]
+index_group: CROSS_CUTTING
+description: "Do standardized mouse knockout phenotypes reveal molecular and cellular function, or organism-level phenotypes only?"
 ---
 
 # IMPC Knockouts and Gene Function
