@@ -5432,8 +5432,12 @@ def fix_panther_labels(
         load_member_index_alternates,
         load_member_index_gaps,
         load_obo_names,
+        MEMBERS_INDEXED,
+        MEMBERS_NO_FAMILY,
+        MEMBERS_NOT_LOOKED_UP,
+        member_corroboration,
         member_index_path,
-        members_not_looked_up,
+        panther_cache_dir,
         previous_release_labels,
         rewrite_panther_labels,
         switch_release,
@@ -5456,7 +5460,14 @@ def fix_panther_labels(
 
     # Without their cached data the guards are silently off: never relabel unguarded.
     # An empty index refuses outright; a partial one skips, per descriptor, the ids
-    # none of whose members has been looked up (see members_not_looked_up below).
+    # none of whose members has been looked up (see member_corroboration below).
+    # `just fix-panther-labels` has already run ensure-panther-members, which only
+    # warns when the build fails, so point at its log rather than suggest a re-run.
+    refresh_log = panther_cache_dir(repo_root) / "refresh.log"
+    build_hint = (
+        "`just ensure-panther-members` builds the member index and the switch caches; "
+        f"it runs before `just fix-panther-labels`, so if it failed, see {refresh_log}."
+    )
     unguarded: list[str] = []
     switch = switch_release()
     if switch is not None and previous is None:
@@ -5472,7 +5483,7 @@ def fix_panther_labels(
     for reason in unguarded:
         typer.echo(f"⚠  {reason}.", err=True)
     if unguarded:
-        typer.echo("Build the missing caches with `just ensure-panther-members`.", err=True)
+        typer.echo(build_hint, err=True)
         if apply:
             typer.echo("Refusing --apply until they are built.", err=True)
             raise typer.Exit(1)
@@ -5485,6 +5496,7 @@ def fix_panther_labels(
     held_back: list[tuple[Path, str, str, str, bool]] = []
     renamed: list[tuple[Path, str, str, str]] = []
     not_looked_up: list[tuple[Path, str, str, str, str]] = []
+    uncorroborated_changes: list[tuple[Path, str, str, str]] = []
     # Why a withheld label would also have been deferred had its id been confirmed.
     also_deferred = {
         "divergent": "the label also describes a different protein than the id's name",
@@ -5496,16 +5508,22 @@ def fix_panther_labels(
         skip: set[str] = set()
         unconfirmed: set[str] = set()
         corroborated: set[str] = set()
+        no_family: set[str] = set()
         for use in iter_family_member_uses(doc):
             errors, _ = validate_family_members(
                 [use], member_index, paint_index, alternates=member_alternates
             )
+            corroboration = member_corroboration(
+                use.representative_accessions, member_index, member_gaps
+            )
             if errors:
                 skip.update(use.declared_family_curies)
-            elif members_not_looked_up(use.representative_accessions, member_index, member_gaps):
+            elif corroboration == MEMBERS_NOT_LOOKED_UP:
                 unconfirmed.update(use.declared_family_curies)
-            elif any(a in member_index for a in use.representative_accessions):
+            elif corroboration == MEMBERS_INDEXED:
                 corroborated.update(use.declared_family_curies)
+            elif corroboration == MEMBERS_NO_FAMILY:
+                no_family.update(use.declared_family_curies)
         previous_names = None if previous is None else previous.labels
         new_text, changes, deferred = rewrite_panther_labels(
             text,
@@ -5521,16 +5539,29 @@ def fix_panther_labels(
             _, would_change, would_defer = rewrite_panther_labels(
                 text, names, skip, allow_divergent=allow_divergent, previous_names=previous_names
             )
+            withheld = unconfirmed - skip
             not_looked_up.extend(
-                (path, curie, old, new, "")
-                for curie, old, new in would_change
-                if curie in unconfirmed
+                (path, curie, old, new, "") for curie, old, new in would_change if curie in withheld
             )
-            not_looked_up.extend(
-                (path, item.curie, item.old, item.new, also_deferred[item.reason])
-                for item in would_defer
-                if item.curie in unconfirmed
-            )
+            for item in would_defer:
+                if item.curie not in withheld:
+                    continue
+                if item.reason not in also_deferred:
+                    raise ValueError(
+                        f"unknown DeferredLabel reason {item.reason!r}: "
+                        "add it to also_deferred in fix_panther_labels"
+                    )
+                not_looked_up.append(
+                    (path, item.curie, item.old, item.new, also_deferred[item.reason])
+                )
+        # Relabelled although no member corroborates the id: PANTHER has no family for
+        # any of them, so no refresh will change it. Listed, since the risk the skip
+        # guards against (a wrong id behind an official name) is the same.
+        uncorroborated_changes.extend(
+            (path, curie, old, new)
+            for curie, old, new in changes
+            if curie in no_family - corroborated
+        )
         for item in deferred:
             if item.reason == "renamed_in_switch":
                 renamed.append((path, item.curie, item.old, item.new))
@@ -5561,13 +5592,23 @@ def fix_panther_labels(
         typer.echo(
             f"\n⚠  {len(not_looked_up)} label(s) NOT rewritten: no representative "
             "member of the id has been looked up in the member index yet, so the id "
-            "can be neither confirmed nor disputed. Run `just ensure-panther-members`, "
-            "then re-run."
+            f"can be neither confirmed nor disputed. {build_hint} --allow-divergent "
+            "does not override this skip."
         )
         for path, curie, old, new, note in not_looked_up:
             typer.echo(f"  {path.name}: {curie}  {old!r} -> {new!r}")
             if note:
                 typer.echo(f"      ({note}; check the id once its members are looked up)")
+
+    if uncorroborated_changes:
+        verb = "rewritten" if apply else "to be rewritten"
+        typer.echo(
+            f"\nⓘ  {len(uncorroborated_changes)} label(s) {verb} without member "
+            "corroboration: PANTHER has no family for any representative member of the "
+            "id, so nothing confirms the id itself. Check these ids by hand."
+        )
+        for path, curie, old, new in uncorroborated_changes:
+            typer.echo(f"  {path.name}: {curie}  {old!r} -> {new!r}")
 
     if held_back:
         typer.echo(

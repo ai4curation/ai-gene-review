@@ -854,6 +854,8 @@ def test_fix_panther_labels_skips_ids_whose_members_were_never_looked_up(tmp_pat
     assert "Applied 1 label correction(s)" in result.output
     assert "1 label(s) NOT rewritten: no representative member" in result.output
     assert "PANTHER:PTHR00002  'OTHER NAMES' -> 'OTHER NAME'" in result.output
+    assert "refresh.log" in result.output  # the recipe already ran the build
+    assert "--allow-divergent does not override this skip" in result.output
     text = module.read_text()
     assert "label: REAL NAME\n" in text and "label: OTHER NAMES\n" in text
 
@@ -883,3 +885,37 @@ def test_fix_panther_labels_reports_an_unconfirmed_id_whose_label_diverges(tmp_p
     assert "PANTHER:PTHR00002  'SUCCINATE DEHYDROGENASE' -> 'OTHER NAME'" in result.output
     assert "describes a different protein" in result.output
     assert module.read_text() == before
+
+
+
+def test_fix_panther_labels_relabels_but_lists_ids_panther_has_no_family_for(
+    tmp_path: Path,
+) -> None:
+    """Members looked up with no PANTHER family: relabelled (no refresh will help), but listed."""
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+    from ai_gene_review.etl.panther_families import member_index_path
+
+    repo = _label_fix_repo(tmp_path, with_member_index=True)
+    index = member_index_path(repo)
+    index.write_text(index.read_text() + "\n# unresolved: Q99999\n")
+    (repo / "interpro" / "panther" / "panther.obo").write_text(
+        "[Term]\nid: PANTHER:PTHR00002\nname: OTHER NAME\n"
+    )
+    module = repo / "modules" / "m.yaml"
+    module.write_text(
+        "id: m\nparts:\n- family:\n    preferred_term: x\n    term:\n"
+        "      id: PANTHER:PTHR00002\n      label: OTHER NAMES\n"
+        "    representative_members:\n    - preferred_term: b\n      term:\n"
+        "        id: UniProtKB:Q99999\n"
+    )
+
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+
+    assert result.exit_code == 0, result.output
+    assert "Applied 1 label correction(s)" in result.output
+    assert "1 label(s) rewritten without member corroboration" in result.output
+    assert "PANTHER:PTHR00002  'OTHER NAMES' -> 'OTHER NAME'" in result.output
+    assert "NOT rewritten" not in result.output
+    assert "label: OTHER NAME\n" in module.read_text()

@@ -431,29 +431,46 @@ class MemberIndexGaps(NamedTuple):
     """UniProt was not consulted, so the status is unknown. Rerun to resolve."""
 
 
+# Outcomes of member_corroboration. A descriptor's members either reach the index
+# (whether they agree with its family id is the member check's job), were never looked
+# up (a refresh resolves it), were looked up and have no PANTHER family (permanent), or
+# do not exist.
+MEMBERS_INDEXED = "indexed"
+MEMBERS_NOT_LOOKED_UP = "not_looked_up"
+MEMBERS_NO_FAMILY = "no_family"
+NO_MEMBERS = "no_members"
 
-def members_not_looked_up(
-    accessions: Iterable[str], index: Dict[str, str], gaps: MemberIndexGaps
-) -> bool:
-    """Whether no accession has a family in ``index`` and some were never looked up.
 
-    A descriptor in that state can be neither confirmed nor disputed by its members
-    until the index is refreshed, so label tools leave its id alone. Accessions PANTHER
-    is known to have no family for (``gaps.absent``) are a permanent state, not a
-    missing lookup, and descriptors with no members have nothing to look up.
+def member_corroboration(
+    accessions: Iterable[str], index: Mapping[str, str], gaps: MemberIndexGaps
+) -> str:
+    """How far a descriptor's representative members can corroborate its family id.
+
+    Label tools act on the answer. ``MEMBERS_NOT_LOOKED_UP`` (no member in the index,
+    and some never looked up) leaves the id alone until the index is refreshed: no
+    member can confirm or dispute it yet. ``MEMBERS_NO_FAMILY`` (every member looked
+    up, none with a PANTHER family) carries the same risk -- a wrong id behind an
+    official name -- but no refresh will ever change it, so skipping would leave the
+    label wrong for good; tools relabel it and say so. ``NO_MEMBERS`` has nothing to
+    look up.
 
     >>> gaps = MemberIndexGaps(absent={"P3"}, unchecked={"P2"})
-    >>> members_not_looked_up({"P1", "P2"}, {"P1": "PTHR1"}, gaps)
-    False
-    >>> members_not_looked_up({"P2"}, {}, gaps), members_not_looked_up({"P4"}, {}, gaps)
-    (True, True)
-    >>> members_not_looked_up({"P3"}, {}, gaps), members_not_looked_up(set(), {}, gaps)
-    (False, False)
+    >>> member_corroboration({"P1", "P2"}, {"P1": "PTHR1"}, gaps)
+    'indexed'
+    >>> member_corroboration({"P2"}, {}, gaps), member_corroboration({"P4"}, {}, gaps)
+    ('not_looked_up', 'not_looked_up')
+    >>> member_corroboration({"P3", "P4"}, {}, gaps)
+    'not_looked_up'
+    >>> member_corroboration({"P3"}, {}, gaps), member_corroboration(set(), {}, gaps)
+    ('no_family', 'no_members')
     """
     accessions = set(accessions)
+    if not accessions:
+        return NO_MEMBERS
     if any(accession in index for accession in accessions):
-        return False
-    return bool(accessions - gaps.absent)
+        return MEMBERS_INDEXED
+    return MEMBERS_NOT_LOOKED_UP if accessions - gaps.absent else MEMBERS_NO_FAMILY
+
 
 def render_member_index(
     index: Dict[str, str],
@@ -1141,7 +1158,9 @@ class DeferredLabel(NamedTuple):
     curie: str
     old: str
     new: str
-    reason: str  # "divergent" | "renamed_in_switch"
+    # "divergent" | "renamed_in_switch". A new value must also be named in
+    # cli.fix_panther_labels (also_deferred), which reports deferrals by reason.
+    reason: str
 
 
 def rewrite_panther_labels(
