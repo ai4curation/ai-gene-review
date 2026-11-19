@@ -909,13 +909,42 @@ def test_validate_and_ratings_survive_an_empty_file(config, tracker_dir, name):
         assert "issues rated twice or more: 1" in agreement.output
         assert "| triage | 0 | 0 | - |" in agreement.output
     else:
-        # The display commands read issue.yaml through load_issue, which names it.
-        for command in ("ratings", "outstanding", "stats"):
+        # The other commands read issue.yaml through load_issue, which names it.
+        repo = tracker_dir.parent.parent
+        subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+        _commit(repo, "genes/a.yaml", "Unrelated change")
+        for command in ("ratings", "outstanding", "stats", "backfill-prior-work"):
             result = CliRunner().invoke(
                 app, ["shadow-issues", command, "example", "--root", root]
             )
             assert isinstance(result.exception, ValueError), result.output
             assert "issue.yaml is empty or not a mapping" in str(result.exception)
+
+
+def test_backfill_prior_work_records_commits_naming_the_issue(config, tracker_dir):
+    """backfill-prior-work writes a NAMES_ISSUE entry for a commit naming the issue."""
+    store_issue(config, tracker_dir, make_issue(), [])
+    repo = tracker_dir.parent.parent
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    _commit(repo, "genes/a.yaml", "Fix annotation (issues/example/101)")
+    root = str(tracker_dir.parent)
+    result = CliRunner().invoke(
+        app, ["shadow-issues", "backfill-prior-work", "example", "--root", root]
+    )
+    assert result.exit_code == 0, result.output
+    issue = yaml.safe_load((tracker_dir / "101" / "issue.yaml").read_text())
+    assert [p["subject"] for p in issue["prior_work"]] == [
+        "Fix annotation (issues/example/101)"
+    ]
+
+
+def test_load_issue_names_a_missing_file(config, tracker_dir):
+    from ai_gene_review.shadow_issues.store import load_issue
+
+    store_issue(config, tracker_dir, make_issue(), [])
+    (tracker_dir / "101" / "issue.yaml").unlink()
+    with pytest.raises(ValueError, match="issue.yaml is missing"):
+        load_issue(tracker_dir / "101")
 
 
 def test_validate_survives_evidence_missing_required_fields(config, tracker_dir):

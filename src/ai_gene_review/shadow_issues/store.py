@@ -393,7 +393,10 @@ def load_issue(folder: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     """
     loaded = []
     for name in ("source.yaml", "issue.yaml"):
-        data = yaml.safe_load((folder / name).read_text())
+        path = folder / name
+        if not path.exists():
+            raise ValueError(f"{path} is missing; run validate")
+        data = yaml.safe_load(path.read_text())
         if not isinstance(data, dict):
             raise ValueError(f"{folder / name} is empty or not a mapping; run validate")
         loaded.append(data)
