@@ -396,7 +396,11 @@ def load_issue(folder: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         path = folder / name
         if not path.exists():
             raise ValueError(f"{path} is missing; run validate")
-        data = yaml.safe_load(path.read_text())
+        try:
+            data = yaml.safe_load(path.read_text())
+        except yaml.YAMLError as exc:
+            # PyYAML's message says "<unicode string>", not which of many files.
+            raise ValueError(f"{path} is not valid YAML; run validate") from exc
         if not isinstance(data, dict):
             raise ValueError(f"{path} is empty or not a mapping; run validate")
         loaded.append(data)

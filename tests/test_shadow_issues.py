@@ -968,6 +968,7 @@ def test_backfill_prior_work_leaves_an_unnamed_issue_untouched(config, tracker_d
         ],
     )
     assert result.exit_code == 0, result.output
+    assert "prior_work updated on 0 issues" in result.output, result.output
     assert path.read_bytes() == before
 
 
@@ -975,6 +976,9 @@ def test_load_issue_names_a_missing_file(config, tracker_dir):
     store_issue(config, tracker_dir, make_issue(), [])
     (tracker_dir / "101" / "issue.yaml").unlink()
     with pytest.raises(ValueError, match="issue.yaml is missing"):
+        load_issue(tracker_dir / "101")
+    (tracker_dir / "101" / "issue.yaml").write_text("title: 'cut off")
+    with pytest.raises(ValueError, match="issue.yaml is not valid YAML"):
         load_issue(tracker_dir / "101")
 
 
@@ -995,6 +999,7 @@ def test_load_issue_names_a_missing_file(config, tracker_dir):
             "source.yaml: number 202 does not match the folder; run sync",
         ),
         ("issue.yaml", "title: 'cut off", "issue.yaml: not valid YAML (ScannerError)"),
+        ("issue.yaml", b"title: \xc3", "issue.yaml: not readable as UTF-8"),
     ],
 )
 def test_validate_reports_a_broken_mirror(config, tracker_dir, name, content, message):
@@ -1003,6 +1008,8 @@ def test_validate_reports_a_broken_mirror(config, tracker_dir, name, content, me
     path = tracker_dir / "101" / name
     if content is None:
         path.unlink()
+    elif isinstance(content, bytes):
+        path.write_bytes(content)
     else:
         path.write_text(content)
     result = CliRunner().invoke(

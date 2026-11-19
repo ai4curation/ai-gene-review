@@ -558,6 +558,8 @@ def parse_for_validation(path: Path) -> tuple[Any, str | None]:
     """
     try:
         return yaml.safe_load(path.read_text()), None
+    except UnicodeDecodeError:
+        return None, "not readable as UTF-8"
     except yaml.YAMLError as exc:
         return None, f"not valid YAML ({type(exc).__name__})"
 
