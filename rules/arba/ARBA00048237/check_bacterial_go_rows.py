@@ -12,11 +12,16 @@
 
 Writes RESULTS-bacterial-rows.md next to this script.
 
-Usage: python check_bacterial_go_rows.py
+Usage: python check_bacterial_go_rows.py [--quickgo-tsv FILE]
+
+With --quickgo-tsv, step 1 reads a saved QuickGO download of the same query
+instead of fetching it (QuickGO's download endpoint can be unavailable); the
+receipt then records the file's modification date as the QuickGO date.
 """
 
 from __future__ import annotations
 
+import argparse
 import csv
 import io
 import json
@@ -108,7 +113,16 @@ def ec_evidence(entry: dict) -> list[str]:
 
 def main() -> None:
     """Run the three steps and write RESULTS-bacterial-rows.md."""
-    body, _ = fetch(QUICKGO, "text/tsv")
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--quickgo-tsv", type=Path, help="saved QuickGO download of the same query")
+    args = parser.parse_args()
+    if args.quickgo_tsv:
+        body = args.quickgo_tsv.read_bytes()
+        quickgo_date = time.strftime("%Y-%m-%d", time.localtime(args.quickgo_tsv.stat().st_mtime))
+        quickgo_note = f"QuickGO download of {quickgo_date} (saved file, same query)"
+    else:
+        body, _ = fetch(QUICKGO, "text/tsv")
+        quickgo_note = f"QuickGO retrieved {time.strftime('%Y-%m-%d')}"
     rows = list(csv.DictReader(io.StringIO(body.decode()), delimiter="\t"))
     by_ref = Counter(f"{r['REFERENCE']} / {r['ASSIGNED BY']}" for r in rows)
     accs = sorted({r["GENE PRODUCT ID"] for r in rows if r["REFERENCE"] == "GO_REF:0000003"})
@@ -201,7 +215,7 @@ def main() -> None:
     lines = [
         "# Bacterial GO:0004321 rows and their EC source",
         "",
-        f"QuickGO retrieved {time.strftime('%Y-%m-%d')}; UniProtKB release {release}. "
+        f"{quickgo_note}; UniProtKB release {release}, UniSave read {time.strftime('%Y-%m-%d')}. "
         "Produced by `check_bacterial_go_rows.py`.",
         "",
         f"QuickGO serves {len(rows)} GO:0004321 annotations on Bacteria:",
