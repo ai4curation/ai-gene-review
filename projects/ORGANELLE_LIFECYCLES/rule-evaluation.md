@@ -172,7 +172,9 @@ pass on their polyphosphate-filled vacuole, which the rule does not distinguish 
 nematode GLO-3. It is met in human, *Drosophila* and Trichoplax. *C. elegans* fails on the exchange factor
 alone: it has no HPS1 or HPS4 (PMID:30419011), and GLO-3 (Q21045), which with CCZ-1 activates the worm
 Rab32 GLO-1, has no PANTHER classification in the worm file, so the census cannot evaluate that step and lists it
-under `unevaluable_steps`. Nematostella
+under `unevaluable_steps`. Every exchange-factor gap is also listed under `gaps_on_unevaluable_steps`,
+because the census cannot check GLO-3 in any genome; outside the worm that mark only says the gap is not
+fully checked, since the organisms that lack BLOC-3 are not nematodes. Nematostella
 fails on both Rab32/38 and the exchange factor: PANTHER's file has no Rab32/38-subfamily protein for it, and
 an HPS4 but no HPS1. Outside animals the rule's parts are older than the organelles it describes.
 Dictyostelium has AP-3, BLOC-1, a Rab32 and HPS1, and fails only on HPS4. Monosiga has a Rab32 and HPS1 and
