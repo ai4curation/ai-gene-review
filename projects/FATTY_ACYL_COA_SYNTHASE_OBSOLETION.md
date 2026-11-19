@@ -204,8 +204,8 @@ Three independent routes put the term on proteins that are not fungal FAS:
 3. **An ARBA rule, since fixed.** ARBA00048237 gave the 2.3.1.86 reaction to
    bacterial polyketide synthases in the June and September 2026 UniProt
    releases (19 of 20 entries sampled from the 529 stale rows show the
-   rule's evidence tag in both releases; the twentieth carried a submitter
-   EC). The rule served in release 2026_04 (eight condition sets) matches
+   rule's evidence tag in both releases; the twentieth carried the EC from
+   another source). The rule served in release 2026_04 (eight condition sets) matches
    no bacterial or archaeal entry, and those entries have lost the EC, but
    QuickGO still serves 529 GO:0004321 rows on them from the earlier release.
    (The table above counts 520 for this class: it was classified on
