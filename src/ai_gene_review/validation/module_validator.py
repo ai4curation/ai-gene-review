@@ -86,7 +86,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from enum import Enum
-from typing import Callable, Dict, Iterator, List, NamedTuple, Optional, Set, Tuple
+from typing import Callable, Dict, Iterator, List, Mapping, NamedTuple, Optional, Set, Tuple
 
 import yaml
 
@@ -1439,7 +1439,7 @@ def compare_label(
 def defer_previous_release_panther_terms(
     terms: List[Tuple[str, str]],
     current_names: Dict[str, str],
-    previous_names: Dict[str, str],
+    previous_names: Mapping[str, str],
     previous_release: str,
 ) -> Tuple[List[Tuple[str, str]], List[str]]:
     """Set aside PANTHER terms that were right in the previous release (switch window).

@@ -5015,12 +5015,12 @@ def refresh_panther_members(
     # During a PANTHER switch, validators read the previous release's names and
     # memberships from this cache without downloading anything; warm it here. Only the
     # default organisms: they are what the validators read, whatever --organism says.
-    previous_release = switch_release()  # raises on a misconfigured switch
-    if previous_release is not None:
-        fetch_hmm_classifications(cache, url=hmm_url(previous_release))
+    previous = switch_release()  # raises on a misconfigured switch
+    if previous is not None:
+        fetch_hmm_classifications(cache, url=hmm_url(previous))
         for slug in DEFAULT_ORGANISMS:
-            fetch_sequence_classification(slug, cache, release=previous_release)
-        typer.echo(f"cached PANTHER {previous_release} classifications for the switch allowance")
+            fetch_sequence_classification(slug, cache, release=previous)
+        typer.echo(f"cached PANTHER {previous} classifications for the switch allowance")
 
     # Every representative member, grounded or not -- an ungrounded descriptor's
     # members are the ones whose real family most needs resolving -- plus the
@@ -5414,7 +5414,9 @@ def fix_panther_labels(
     verified; the curator's readable description belongs in `preferred_term`.
     Descriptors whose declared family does not contain their representative
     member are deliberately SKIPPED -- relabelling those would hide a wrong
-    family id behind an authoritative-looking name. Fix the id first.
+    family id behind an authoritative-looking name. Fix the id first. So are
+    descriptors none of whose representative members has been looked up yet:
+    their id can be neither confirmed nor disputed until the index is refreshed.
 
     Both guards read cached data (the member index and, during a PANTHER switch,
     the previous release's names). When that data is missing a guard cannot
@@ -5428,8 +5430,10 @@ def fix_panther_labels(
 
     from ai_gene_review.etl.panther_families import (
         load_member_index_alternates,
+        load_member_index_gaps,
         load_obo_names,
         member_index_path,
+        members_not_looked_up,
         previous_release_labels,
         rewrite_panther_labels,
         switch_release,
@@ -5448,8 +5452,11 @@ def fix_panther_labels(
     previous = previous_release_labels(repo_root / "interpro" / "panther")
     member_index = load_member_index(member_index_path(repo_root))
     member_alternates = load_member_index_alternates(member_index_path(repo_root))
+    member_gaps = load_member_index_gaps(member_index_path(repo_root))
 
     # Without their cached data the guards are silently off: never relabel unguarded.
+    # An empty index refuses outright; a partial one skips, per descriptor, the ids
+    # none of whose members has been looked up (see members_not_looked_up below).
     unguarded: list[str] = []
     switch = switch_release()
     if switch is not None and previous is None:
@@ -5477,10 +5484,17 @@ def fix_panther_labels(
     total = 0
     held_back: list[tuple[Path, str, str, str, bool]] = []
     renamed: list[tuple[Path, str, str, str]] = []
+    not_looked_up: list[tuple[Path, str, str, str, str]] = []
+    # Why a withheld label would also have been deferred had its id been confirmed.
+    also_deferred = {
+        "divergent": "the label also describes a different protein than the id's name",
+        "renamed_in_switch": "the id was also renamed in the PANTHER switch",
+    }
     for path in targets:
         text = path.read_text()
         doc = yaml.safe_load(text)
         skip: set[str] = set()
+        unconfirmed: set[str] = set()
         corroborated: set[str] = set()
         for use in iter_family_member_uses(doc):
             errors, _ = validate_family_members(
@@ -5488,15 +5502,35 @@ def fix_panther_labels(
             )
             if errors:
                 skip.update(use.declared_family_curies)
+            elif members_not_looked_up(use.representative_accessions, member_index, member_gaps):
+                unconfirmed.update(use.declared_family_curies)
             elif any(a in member_index for a in use.representative_accessions):
                 corroborated.update(use.declared_family_curies)
+        previous_names = None if previous is None else previous.labels
         new_text, changes, deferred = rewrite_panther_labels(
             text,
             names,
-            skip,
+            skip | unconfirmed,
             allow_divergent=allow_divergent,
-            previous_names=None if previous is None else previous.labels,
+            previous_names=previous_names,
         )
+        if unconfirmed - skip:
+            # Report every label the skip withheld, including those the rewrite would
+            # also have deferred: a skipped id is never deferred, so it would otherwise
+            # be listed nowhere.
+            _, would_change, would_defer = rewrite_panther_labels(
+                text, names, skip, allow_divergent=allow_divergent, previous_names=previous_names
+            )
+            not_looked_up.extend(
+                (path, curie, old, new, "")
+                for curie, old, new in would_change
+                if curie in unconfirmed
+            )
+            not_looked_up.extend(
+                (path, item.curie, item.old, item.new, also_deferred[item.reason])
+                for item in would_defer
+                if item.curie in unconfirmed
+            )
         for item in deferred:
             if item.reason == "renamed_in_switch":
                 renamed.append((path, item.curie, item.old, item.new))
@@ -5522,6 +5556,18 @@ def fix_panther_labels(
         )
         for path, curie, old, new in renamed:
             typer.echo(f"  {path.name}: {curie}  {old!r} -> now {new!r}")
+
+    if not_looked_up:
+        typer.echo(
+            f"\n⚠  {len(not_looked_up)} label(s) NOT rewritten: no representative "
+            "member of the id has been looked up in the member index yet, so the id "
+            "can be neither confirmed nor disputed. Run `just ensure-panther-members`, "
+            "then re-run."
+        )
+        for path, curie, old, new, note in not_looked_up:
+            typer.echo(f"  {path.name}: {curie}  {old!r} -> {new!r}")
+            if note:
+                typer.echo(f"      ({note}; check the id once its members are looked up)")
 
     if held_back:
         typer.echo(

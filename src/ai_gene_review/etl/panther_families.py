@@ -47,7 +47,18 @@ import urllib.request
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Dict, Iterable, Iterator, List, NamedTuple, Optional, Set, Tuple
+from typing import (
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+)
 
 import requests
 import yaml
@@ -419,6 +430,30 @@ class MemberIndexGaps(NamedTuple):
     unchecked: Set[str]
     """UniProt was not consulted, so the status is unknown. Rerun to resolve."""
 
+
+
+def members_not_looked_up(
+    accessions: Iterable[str], index: Dict[str, str], gaps: MemberIndexGaps
+) -> bool:
+    """Whether no accession has a family in ``index`` and some were never looked up.
+
+    A descriptor in that state can be neither confirmed nor disputed by its members
+    until the index is refreshed, so label tools leave its id alone. Accessions PANTHER
+    is known to have no family for (``gaps.absent``) are a permanent state, not a
+    missing lookup, and descriptors with no members have nothing to look up.
+
+    >>> gaps = MemberIndexGaps(absent={"P3"}, unchecked={"P2"})
+    >>> members_not_looked_up({"P1", "P2"}, {"P1": "PTHR1"}, gaps)
+    False
+    >>> members_not_looked_up({"P2"}, {}, gaps), members_not_looked_up({"P4"}, {}, gaps)
+    (True, True)
+    >>> members_not_looked_up({"P3"}, {}, gaps), members_not_looked_up(set(), {}, gaps)
+    (False, False)
+    """
+    accessions = set(accessions)
+    if any(accession in index for accession in accessions):
+        return False
+    return bool(accessions - gaps.absent)
 
 def render_member_index(
     index: Dict[str, str],
@@ -1114,7 +1149,7 @@ def rewrite_panther_labels(
     names: Dict[str, str],
     skip_curies: Optional[Set[str]] = None,
     allow_divergent: bool = False,
-    previous_names: Optional[Dict[str, str]] = None,
+    previous_names: Optional[Mapping[str, str]] = None,
 ) -> Tuple[str, List[Tuple[str, str, str]], List[DeferredLabel]]:
     """Rewrite PANTHER family/subfamily labels to their official PANTHER names.
 
@@ -1580,11 +1615,12 @@ def _panther_artifacts_cached(panther_dir: Path) -> PantherArtifacts:
 class PreviousLabels(NamedTuple):
     """The names of the PANTHER release being left during a switch.
 
-    ``labels`` maps ``PANTHER:<id>`` to that release's name, escaped as in the OBO.
+    ``labels`` maps ``PANTHER:<id>`` to that release's name, escaped as in the OBO. It
+    is read-only: the cached copy is shared with :class:`PreviousRelease`.
     """
 
     release: str
-    labels: Dict[str, str]
+    labels: Mapping[str, str]
 
 
 class PreviousRelease(NamedTuple):
@@ -1597,7 +1633,7 @@ class PreviousRelease(NamedTuple):
     """
 
     release: str
-    labels: Dict[str, str]
+    labels: Mapping[str, str]  # read-only, shared with the cached PreviousLabels
     members: Dict[str, str]
 
 
