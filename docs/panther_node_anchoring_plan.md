@@ -182,6 +182,8 @@ On 2026-11-17 it found:
      relabel unguarded; a dry run reports the same and continues. With a partial
      index, a descriptor none of whose representative members has been looked up
      yet is skipped and listed, like a disputed one, until the index is refreshed.
+     One whose members were all looked up and have no PANTHER family is relabelled,
+     since no refresh will change that, but listed for a check by hand.
 2. The bump PR changes the pinned constants, rebuilds the caches and `panther.obo`
    (2.1), and re-quotes the `panther.obo` quotes the report lists (10 today), so
    `just validate-quotes` stays green. That is too few to need a transition allowance
