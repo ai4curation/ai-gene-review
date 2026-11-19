@@ -29,6 +29,7 @@ counts, the verdicts and the engine's innermost gaps are in
 ```
 uv run python projects/ORGANELLE_LIFECYCLES/selector_census.py \
     mitochondrial_protein_import mitochondrial_iron_sulfur_cluster_assembly \
+    mitochondrion_related_organelle_core \
     peroxisomal_protein_import escrt_iii_intralumenal_vesicle_formation \
     vacuolar_atpase_acidification er_cotranslational_translocation \
     er_oxidative_protein_folding autophagosome_core_biogenesis \
@@ -53,6 +54,7 @@ disagreement between the two sources rather than a wrong selector.
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | `mitochondrial_protein_import` | ✓ | ✓ | ✓ | 3 | 1 | 2 | ✓ | ✓ | ✓ | 4 | 4 | 9 | 5 | 1 | ✓ | ✓ | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | 1 | 9 |
 | `mitochondrial_iron_sulfur_cluster_assembly` | ✓ | ✓ | ✓ | ✓ | 1 | 1 | 1 | 1 | 1 | ✓ | ✓ | 2 | 2 | ✓ | 2 | 1 | 3 | 1 | 1 | ✓ | ✓ | ✓ | ✓ | 4 |
+| `mitochondrion_related_organelle_core` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `peroxisomal_protein_import` | ✓ | ✓ | 2 | 4 | 3 | 7 | 1 | ✓ | ✓ | 2 | 2 | 10 | 8 | 4 | 1 | 10 | 8 | ✓ | 1 | 1 | 1 | ✓ | ✓ | 9 |
 | `escrt_iii_intralumenal_vesicle_formation` | ✓ | ✓ | ✓ | ✓ | ✓ | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | 2 | ✓ | 1 | ✓ | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `vacuolar_atpase_acidification` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
@@ -183,6 +185,22 @@ finds none of the eight BLOC-1 subunits in budding yeast, which has distant homo
 proteins in *Trichomonas*; four Rab32/38-subfamily proteins in *Trichomonas* and *Paramecium*, three in
 *Entamoeba*); these are subfamily counts, not checked orthologues.
 
+## The mitochondrion-related organelle rule
+
+`mitochondrion_related_organelle_core` takes Eukaryota as its context and needs two matrix chaperones of
+mitochondrial origin: a mitochondrial-type Hsp70 (`PTHR19375:SF184`, or `SF505`/`SF545` for the
+Arabidopsis mitochondrial Hsp70s) and a mitochondrial Cpn60 (`PTHR45633:SF3`, or `SF17` for human HSPD1).
+These are the proteins whose genes first showed that *Giardia*, *Trichomonas* and *Entamoeba* once had
+mitochondria (PMID:9419358, PMID:11880223), and their products are in the mitosome and hydrogenosome
+(PMID:10022906, PMID:22079833). The rule is met in all 24 census organisms, as expected if every one of
+them keeps a mitochondrion or an MRO. That makes it the weakest rule here: it shows the organelle, not
+any function of it, and it has not been tested against a genome with no MRO, since none is in the census.
+Using the mitochondrial subfamilies rather than the whole families matters: PTHR19375 holds 47
+*Trichomonas* proteins, against 3 in `SF184`, and PTHR45633's other subfamilies hold the plastid Cpn60
+subunits. In plastid-bearing lineages the plastid DnaK-type Hsp70 may still fall in `SF184`, so the Hsp70
+step alone does not show a mitochondrion there. The count of 7 `SF184` proteins in *Entamoeba* is a
+subfamily count, not checked orthologues.
+
 ## Expected failures
 
 - **Reduced mitochondria.** *Giardia* and *Entamoeba* (mitosomes) and *Trichomonas* (hydrogenosomes)
@@ -190,7 +208,8 @@ proteins in *Trichomonas*; four Rab32/38-subfamily proteins in *Trichomonas* and
   reduced import machinery. With the MPP selectors fixed the counts no longer include that defect: the
   census finds an MPP beta but no MPP alpha in *Giardia* and *Entamoeba*, and both in *Trichomonas*.
   Other selector defects may still be among these gaps, so the counts are not yet a clean description
-  of what these organelles keep.
+  of what these organelles keep. What they do keep is tested by `mitochondrion_related_organelle_core`, which all
+  three pass (see the section above).
 - **Kinetoplastids.** *Trypanosoma* and *Leishmania* fail the import rule on TOM40, TIM23, Tim17 and
   Tim44. As `coverage.yaml` records, kinetoplastids replace the TIM23/TIM22 pair with a single
   Tim17-family translocase, so the rule needs a lineage variant set before it can be read there.
@@ -207,7 +226,7 @@ proteins in *Trichomonas*; four Rab32/38-subfamily proteins in *Trichomonas* and
 sees no selector for the complex, and the step can never hold. The census works around this by reading
 the units itself. It also reports, per module, any complex whose units mix family-keyed and gene-keyed
 selectors (`mixed_complex_steps` in the census), because such a complex is evaluated on its family-keyed
-units alone; none of the 16 modules has one. A fix in the engine, compiling a complex into an AND over
+units alone; none of the 17 modules has one. A fix in the engine, compiling a complex into an AND over
 its units, would let any oracle evaluate these steps.
 
 ## Full gap list
