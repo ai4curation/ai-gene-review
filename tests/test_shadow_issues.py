@@ -919,6 +919,8 @@ def test_validate_and_ratings_survive_an_empty_file(config, tracker_dir, name):
             )
             assert isinstance(result.exception, ValueError), result.output
             assert "issue.yaml is empty or not a mapping" in str(result.exception)
+        # Nothing wrote to the file before the error (backfill-prior-work writes it).
+        assert (tracker_dir / "101" / "issue.yaml").read_text() == ""
 
 
 def test_backfill_prior_work_records_commits_naming_the_issue(config, tracker_dir):
@@ -933,18 +935,49 @@ def test_backfill_prior_work_records_commits_naming_the_issue(config, tracker_di
     )
     assert result.exit_code == 0, result.output
     issue = yaml.safe_load((tracker_dir / "101" / "issue.yaml").read_text())
-    assert [p["subject"] for p in issue["prior_work"]] == [
-        "Fix annotation (issues/example/101)"
+    sha = subprocess.run(
+        ["git", "rev-parse", "--short=12", "HEAD"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    assert issue["prior_work"] == [
+        {
+            "relation": "NAMES_ISSUE",
+            "commit": sha,
+            "subject": "Fix annotation (issues/example/101)",
+        }
     ]
 
 
 def test_load_issue_names_a_missing_file(config, tracker_dir):
-    from ai_gene_review.shadow_issues.store import load_issue
-
     store_issue(config, tracker_dir, make_issue(), [])
     (tracker_dir / "101" / "issue.yaml").unlink()
     with pytest.raises(ValueError, match="issue.yaml is missing"):
         load_issue(tracker_dir / "101")
+
+
+@pytest.mark.parametrize(
+    "name,content,message",
+    [
+        ("issue.yaml", None, "issue.yaml: missing; run sync"),
+        ("source.yaml", None, "source.yaml: missing; run sync"),
+        ("source.yaml", "", "source.yaml: empty or not a mapping; run sync"),
+    ],
+)
+def test_validate_reports_a_broken_mirror(config, tracker_dir, name, content, message):
+    """What load_issue refuses, validate reports, so its pointer leads somewhere."""
+    store_issue(config, tracker_dir, make_issue(), [])
+    path = tracker_dir / "101" / name
+    if content is None:
+        path.unlink()
+    else:
+        path.write_text(content)
+    result = CliRunner().invoke(
+        app, ["shadow-issues", "validate", "example", "--root", str(tracker_dir.parent)]
+    )
+    assert result.exit_code == 1 and message in result.output, result.output
 
 
 def test_validate_survives_evidence_missing_required_fields(config, tracker_dir):

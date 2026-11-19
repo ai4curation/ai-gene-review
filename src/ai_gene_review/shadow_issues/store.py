@@ -398,7 +398,7 @@ def load_issue(folder: Path) -> tuple[dict[str, Any], dict[str, Any]]:
             raise ValueError(f"{path} is missing; run validate")
         data = yaml.safe_load(path.read_text())
         if not isinstance(data, dict):
-            raise ValueError(f"{folder / name} is empty or not a mapping; run validate")
+            raise ValueError(f"{path} is empty or not a mapping; run validate")
         loaded.append(data)
     return loaded[0], loaded[1]
 

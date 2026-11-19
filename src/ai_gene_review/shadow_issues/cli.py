@@ -558,6 +558,16 @@ def validate_cmd(
     failures = 0
     folders = iter_issue_folders(root / tracker)
     for folder in folders:
+        # sync writes source.yaml and creates issue.yaml in every folder, so either
+        # one missing (or source.yaml unreadable) means the mirror needs a re-sync.
+        for name in ("source.yaml", "issue.yaml"):
+            if not (folder / name).exists():
+                failures += 1
+                typer.echo(f"{folder / name}: missing; run sync", err=True)
+        source = folder / "source.yaml"
+        if source.exists() and not isinstance(yaml.safe_load(source.read_text()), dict):
+            failures += 1
+            typer.echo(f"{source}: empty or not a mapping; run sync", err=True)
         checks = [
             (folder / "issue.yaml", "ShadowIssue"),
             (folder / "self-rating.yaml", "SelfRating"),
