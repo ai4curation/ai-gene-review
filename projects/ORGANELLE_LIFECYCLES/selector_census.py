@@ -10,9 +10,11 @@ UniProt accessions, and a protein-complex step holds when every active unit's PA
 the engine's atom for a complex carries no unit selectors). The ``unsatisfied_gaps`` of an organism are
 the engine's innermost gaps. Every step of the compiled module is classified once, before any organism
 is evaluated: ``unevaluable_steps`` lists the steps this oracle cannot evaluate at all (a step with
-neither a PANTHER id nor an accession), which never hold, and ``mixed_complex_steps`` the complexes
-whose units mix PANTHER-keyed and gene-keyed selectors, which are evaluated on their PANTHER-keyed
-units alone. A family step that also names an InterPro domain (``domain`` or ``required_domain``) holds only
+neither a PANTHER id nor an accession), which never hold; ``gaps_on_unevaluable_steps`` names, per
+organism, the unsatisfied gaps whose absent steps include one of those, so they are not read as
+observed absences (when the unevaluable step is a whole alternative, as in a variant set, it could
+fill the gap); and ``mixed_complex_steps`` the complexes whose units mix PANTHER-keyed and
+gene-keyed selectors, which are evaluated on their PANTHER-keyed units alone. A family step that also names an InterPro domain (``domain`` or ``required_domain``) holds only
 when a selected protein carries that domain in UniProt's InterPro cross-references, fetched once and
 cached in ``.cache/panther/uniprot-interpro.json``; such rows also report
 ``proteins_with_required_domains_per_organism``. A domain on a step selected only by UniProt
@@ -481,18 +483,33 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
                 {f"{ref}#{k}": v for k, v in complex_units(ref_doc["module"]).items()}
             )
         kinds = {a.node_id: step_kind(a, units) for a in iter_atoms(circuit)}
-        met, gaps = {}, {}
+        met, gaps, undetermined = {}, {}, {}
         for o in ORGANISMS:
             holds = atom_holds(data[o.slug], units, all_accessions[o.slug], domains)
             met[o.slug] = is_satisfied(circuit, holds)
             if not met[o.slug]:
-                gaps[o.slug] = ["/".join(g.path) for g in gap_report(circuit, holds)]
+                report = gap_report(circuit, holds)
+                gaps[o.slug] = ["/".join(g.path) for g in report]
+                # A gap that an unevaluable step could fill is not an observed absence.
+                marked = {
+                    "/".join(g.path): sorted(
+                        {
+                            a.node_id
+                            for a in g.absent
+                            if kinds[a.node_id] == "unevaluable"
+                        }
+                    )
+                    for g in report
+                }
+                if any(marked.values()):
+                    undetermined[o.slug] = {k: v for k, v in marked.items() if v}
         modules.append(
             {
                 "module": name,
                 "descriptors": rows,
                 "required_parts_met": met,
                 "unsatisfied_gaps": gaps,
+                "gaps_on_unevaluable_steps": undetermined,
                 "unevaluable_steps": sorted(
                     k for k, v in kinds.items() if v == "unevaluable"
                 ),
