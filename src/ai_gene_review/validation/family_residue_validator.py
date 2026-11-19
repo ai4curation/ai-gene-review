@@ -41,12 +41,10 @@ from __future__ import annotations
 import http.client
 import json
 import ssl
-import sys
 import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
-from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple
 from enum import Enum
 from pathlib import Path
@@ -54,7 +52,13 @@ from typing import Iterable
 
 import yaml
 
-if TYPE_CHECKING:  # annotation only; the runtime import lives in _panther_index
+from ai_gene_review.etl.panther_families import (
+    PreviousRelease,
+    panther_artifacts,
+    previous_release,
+)
+
+if TYPE_CHECKING:
     from ai_gene_review.etl.panther_families import MemberIndexGaps
 
 UNIPROT_JSON = "https://rest.uniprot.org/uniprotkb/{acc}.json"
@@ -404,165 +408,6 @@ def check_term_assessment_site_refs(review: dict) -> list[ResidueCheck]:
                              f"review; known sites are {sorted(known) or '(none)'}", kind="TERM_SITE_REF")
             )
     return results
-
-
-@lru_cache(maxsize=None)
-def _panther_index(
-    panther_dir: Path,
-) -> "tuple[dict[str, str], dict[str, str], MemberIndexGaps, dict[str, str]]":
-    """Load the PANTHER artifacts once per directory.
-
-    Reuses ``etl.panther_families`` rather than reimplementing: those loaders are
-    tested, they skip the artifact's comment block deliberately rather than by luck,
-    and ``load_member_index`` degrades to an empty mapping on a fresh checkout instead
-    of raising. Cached because ``panther.obo`` is 13.8 MB and this runs once per family
-    review file.
-
-    The third element distinguishes an accession PANTHER genuinely has no family for
-    from one whose lookup was never done -- reporting both as "run
-    refresh-panther-members" would give advice that cannot work for the former.
-    """
-    from ai_gene_review.etl.panther_families import (
-        load_member_index,
-        load_member_index_alternates,
-        load_member_index_gaps,
-        load_obo_names,
-        member_index_path,
-    )
-
-    # panther_dir is <repo>/interpro/panther; the member index is a build
-    # artifact in <repo>/.cache/panther.
-    members = member_index_path(Path(panther_dir).parents[1])
-    return (
-        load_obo_names(panther_dir / "panther.obo"),
-        load_member_index(members),
-        load_member_index_gaps(members),
-        load_member_index_alternates(members),
-    )
-
-
-class PreviousRelease(NamedTuple):
-    """The PANTHER release being left during a switch (``PANTHER_PREVIOUS_RELEASE``).
-
-    ``labels`` maps ``PANTHER:<id>`` to that release's name; ``members`` maps a UniProt
-    accession to its ``PTHR family:SF`` there. While a switch is in progress, an id,
-    label or membership that matches this release but not the current one is reported
-    as UNRESOLVED (remap pending) instead of FAIL.
-    """
-
-    release: str
-    labels: dict[str, str]
-    members: dict[str, str]
-
-
-def load_previous_release(repo_root: Path, release: str) -> "PreviousRelease | None":
-    """Load ``release``'s names and memberships from the PANTHER cache, offline.
-
-    Nothing is downloaded: ``just ensure-panther-members`` (``refresh-panther-members``)
-    caches these files while a switch is on. If the names file is not cached, the
-    allowance is off for this run, with a warning, and checks fail as they would
-    without it, rather than the validator depending on the network.
-    """
-    from ai_gene_review.etl.panther_families import (
-        DEFAULT_ORGANISMS,
-        hmm_classifications_path,
-        panther_cache_dir,
-        previous_release_members,
-        previous_release_names,
-        sequence_classification_path,
-    )
-
-    cache = panther_cache_dir(repo_root)
-    if not hmm_classifications_path(cache, release).exists():
-        print(
-            f"warning: PANTHER {release} classifications are not cached in {cache}, so the "
-            "switch allowance is off; run `just ensure-panther-members`",
-            file=sys.stderr,
-        )
-        return None
-    missing = [
-        organism
-        for organism in DEFAULT_ORGANISMS
-        if not sequence_classification_path(cache, organism, release).exists()
-    ]
-    if missing:
-        print(
-            f"warning: PANTHER {release} classifications for {', '.join(missing)} are not "
-            f"cached in {cache}, so memberships in those organisms are checked without the "
-            "switch allowance; run `just ensure-panther-members`",
-            file=sys.stderr,
-        )
-    return PreviousRelease(
-        release,
-        previous_release_names(cache, release),
-        previous_release_members(cache, release, cached_only=True),
-    )
-
-
-def _switch_release() -> "str | None":
-    """The release being left during a PANTHER switch, or None outside one."""
-    from ai_gene_review.etl.panther_families import (
-        PANTHER_PREVIOUS_RELEASE,
-        PANTHER_RELEASE,
-    )
-
-    if PANTHER_PREVIOUS_RELEASE is not None and PANTHER_PREVIOUS_RELEASE == PANTHER_RELEASE:
-        raise ValueError(
-            f"PANTHER_PREVIOUS_RELEASE equals PANTHER_RELEASE ({PANTHER_RELEASE}); "
-            "set it to the release being left, or to None outside a switch"
-        )
-    return PANTHER_PREVIOUS_RELEASE
-
-
-def _previous_release(panther_dir: Path) -> "PreviousRelease | None":
-    """The previous release's names and memberships, or None outside a switch.
-
-    Cached per resolved directory, so callers that spell the path differently share
-    one load.
-    """
-    release = _switch_release()
-    if release is None:
-        return None
-    return _load_previous_release_cached(Path(panther_dir).resolve(), release)
-
-
-@lru_cache(maxsize=None)
-def _load_previous_release_cached(panther_dir: Path, release: str) -> "PreviousRelease | None":
-    return load_previous_release(panther_dir.parents[1], release)
-
-
-def previous_release_labels(panther_dir: Path) -> "tuple[str, dict[str, str]] | None":
-    """``(release, PANTHER:<id> -> name)`` for the release being left, or None.
-
-    For label tools such as ``fix-panther-labels``: reads only the names file from
-    the cache, not the per-organism member map. None outside a switch, or when the
-    names file is not cached.
-    """
-    release = _switch_release()
-    if release is None:
-        return None
-    return _load_previous_labels_cached(Path(panther_dir).resolve(), release)
-
-
-@lru_cache(maxsize=None)
-def _load_previous_labels_cached(
-    panther_dir: Path, release: str
-) -> "tuple[str, dict[str, str]] | None":
-    from ai_gene_review.etl.panther_families import (
-        hmm_classifications_path,
-        panther_cache_dir,
-        previous_release_names,
-    )
-
-    cache = panther_cache_dir(panther_dir.parents[1])
-    if not hmm_classifications_path(cache, release).exists():
-        print(
-            f"warning: PANTHER {release} classifications are not cached in {cache}; run "
-            "`just ensure-panther-members`",
-            file=sys.stderr,
-        )
-        return None
-    return release, previous_release_names(cache, release)
 
 
 class PantherTerm(NamedTuple):
@@ -1384,8 +1229,8 @@ def validate_family_review(
     review = yaml.safe_load(path.read_text())
     cache = SequenceCache(cache_dir)
     paint_index = load_paint_index(panther_dir)
-    labels, members, gaps, alternates = _panther_index(panther_dir)
-    previous = _previous_release(panther_dir)
+    labels, members, gaps, alternates = panther_artifacts(panther_dir)
+    previous = previous_release(panther_dir)
     return (
         check_anchor_residues(review, cache)
         + check_controls(review, cache)

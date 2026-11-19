@@ -224,7 +224,9 @@ def _levels(assignments: Iterable[str], declared: str) -> Set[str]:
         return {value.split(":", 1)[0] for value in assignments}
     values = set(assignments)
     subfamily_recorded = {value.split(":", 1)[0] for value in values if ":" in value}
-    levels = {value for value in values if ":" in value or value not in subfamily_recorded}
+    levels = {
+        value for value in values if ":" in value or value not in subfamily_recorded
+    }
     return set() if levels == {declared.split(":", 1)[0]} else levels
 
 

@@ -1958,20 +1958,17 @@ def validate_module_file(
 
     # During a PANTHER switch, ids, labels and memberships that were right in the
     # release being left are warnings until remapped (PANTHER_PREVIOUS_RELEASE).
-    from ai_gene_review.validation.family_residue_validator import (
-        _panther_index,
-        _previous_release,
-    )
+    from ai_gene_review.etl.panther_families import panther_artifacts, previous_release
 
-    panther_artifacts = panther_dir or project_root / "interpro" / "panther"
-    previous = _previous_release(panther_artifacts)
+    panther_root = panther_dir or project_root / "interpro" / "panther"
+    previous = previous_release(panther_root)
 
     member_errors, member_warnings = validate_family_members(
         list(iter_family_member_uses(doc)),
         member_index,
         paint_index,
         alternates=alternates,
-        subfamily_counts=load_subfamily_counts(panther_artifacts / "panther.obo"),
+        subfamily_counts=load_subfamily_counts(panther_root / "panther.obo"),
         previous=None if previous is None else (previous.release, previous.members),
     )
 
@@ -1979,7 +1976,7 @@ def validate_module_file(
     transition_warnings: List[str] = []
     if previous is not None:
         terms, transition_warnings = defer_previous_release_panther_terms(
-            terms, _panther_index(panther_artifacts)[0], previous.labels, previous.release
+            terms, panther_artifacts(panther_root).names, previous.labels, previous.release
         )
     errors, warnings = validate_terms(terms, adapter_map, resolver, label_aliases)
     warnings.extend(transition_warnings)
