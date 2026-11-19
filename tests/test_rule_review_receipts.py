@@ -451,6 +451,10 @@ def test_correction_text_backed_by_the_table_must_match_it(figure: str, fires: b
         ("In the sample, 11 of 40 sets are matched by a rule for a curated term.", False),
         ("320 of the rule's sets are already matched by rules asserting a more specific term.", True),
         ("313 of its sets are covered by more specific rules.", False),
+        ("No more than 320 of 355 sets are covered by rules with more specific terms.", False),
+        ("Fewer than 320 of its sets are covered by more specific rules.", False),
+        ("About 320 of 355 sets are covered by rules with more specific terms.", True),
+        ("Roughly 313 of 343 sets are covered by rules with more specific terms.", False),
     ],
 )
 def test_coverage_figure_without_the_file_name_is_still_compared(text: str, expected_warning: bool, tmp_path: Path) -> None:
