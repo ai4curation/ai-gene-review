@@ -11,8 +11,8 @@ the engine's atom for a complex carries no unit selectors). The ``unsatisfied_ga
 the engine's innermost gaps. Every step of the compiled module is classified once, before any organism
 is evaluated: ``unevaluable_steps`` lists the steps this oracle cannot evaluate at all (a step with
 neither a PANTHER id nor an accession), which never hold; ``gaps_on_unevaluable_steps`` names, per
-organism, the unsatisfied gaps that one of those steps could fill, so they are not read as observed
-absences; and ``mixed_complex_steps`` the complexes
+organism, the unsatisfied gaps whose absent steps include one of those, so they are not read as observed
+absences (when the unevaluable step is a whole alternative, as in a variant set, it could fill the gap); and ``mixed_complex_steps`` the complexes
 whose units mix PANTHER-keyed and gene-keyed selectors, which are evaluated on their PANTHER-keyed
 units alone. A family step that also names an InterPro domain (``domain`` or ``required_domain``) holds only
 when a selected protein carries that domain in UniProt's InterPro cross-references, fetched once and
