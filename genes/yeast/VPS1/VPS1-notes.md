@@ -122,7 +122,10 @@
   membrane-binding dynamin.
 - Microtubules: the SPO15-era UniProt FUNCTION text says "it binds microtubules", but
   "no requirement for microtubules was found for Vps1p function in protein sorting"
-  [PMID:8299420]. Vps1 lacks the PRD that carries MT binding in classical dynamin.
+  [PMID:8299420]. (Corrected 2026-11-19: an earlier version said Vps1 "lacks the PRD
+  that carries MT binding in classical dynamin". That was asserted from memory with no
+  cached source, and DRP1/DNM1L, which also lacks a PRD, has reported contextual
+  microtubule co-pelleting in the DNM1L review.)
 
 ## Decisions summary (see review YAML)
 
@@ -132,3 +135,55 @@
   (HDA), phagophore assembly site (IMP), BIR (HMP).
 - General terms refined: vacuolar transport → protein targeting to vacuole; autophagy →
   autophagosome assembly; peroxisome organization (IDA/IMP) → peroxisome fission.
+
+## Session 2026-11-19: GO-CAMs, modules and the PTHR11566 family
+
+### GO-CAMs
+- No production GO-CAM in `gocams/index.tsv` contains S. cerevisiae Vps1 (SGD:S000001709 /
+  P21576).
+- The S. pombe clathrin-dependent endocytosis model (gomodel:6918f23700004722) has
+  vps1 (PomBase:SPAC767.01c) as activity 693b3c0900003157: GO:1990606 membrane scission
+  GTPase motor activity, occurs_in GO:0030479 actin cortical patch, part_of GO:0072583.
+  Its part_of edge is ECO:0000266 / GO_REF:0000024 with SGD:S000001709, i.e. an ISO from
+  S. cerevisiae Vps1, so it restates our claim rather than adding support.
+- Source-data oddity in that model: the occurs_in evidence for the vps1 activity has
+  `with_objects: GO:00006897`, an eight-digit (malformed) id, probably meant to be
+  GO:0006897 endocytosis. Not recorded as a source_defect because that needs a
+  GoCamReview of the whole model (about 40 activities), which is a separate task.
+- Gene review link: the GO:0099051 row (vesicle scission involved in endocytosis =
+  vesicle scission part_of endocytosis, per the INVOLVED_IN_PRECOMPOSITION class-B
+  default) is now MODIFY to GO:0099050 vesicle scission, with `decomposed_into`
+  naming the pombe activity and `in_core_functions: true`. Core function 2 uses
+  GO:0099050 instead of the precomposed term.
+
+### Modules
+- `modules/peroxisome-lifecycle.yaml`: added a third division route,
+  `vps1_fis1_independent_division_route` (S. cerevisiae), because Vps1 fission does not
+  use Fis1/Mdv1/Caf4 (PMID:18445678) and so fits neither the FIS1-supported route nor
+  the metazoan MFF route. Also added S. cerevisiae DNM1 (P54861) as a representative
+  member of the FIS1-supported route's scission unit.
+- No yeast retromer or yeast endocytosis module exists. The partner genes (VPS35, VPS26,
+  VPS29, VPS5, VPS17, MVP1, VPS10) have no reviews yet, so building one now would rest
+  on unreviewed parts; left as a curation gap.
+- PANTHER 19.0 classification (budding-yeast file): P21576 is in PTHR11566:SF220 and
+  P54861 in PTHR11566:SF235. `refresh-panther-members` itself failed (HTTP 400), so the
+  module validator's membership check was not run.
+
+### PTHR11566 family review (new, IN_PROGRESS)
+- Fetched the PANTHER 19.0 tree with `ai_gene_review.etl.panther_trees.load_family`
+  (1039 leaves). Facts used are in `interpro/panther/PTHR11566/PTHR11566-tree-check.txt`.
+- PTN000170013 is the family root. The classical-dynamin clade is PTN000170172 (128
+  leaves; DNM1-3, shibire, dyn-1) and excludes Vps1, Dnm1, Mgm1 and DNM1L. The
+  metazoan OPA1 clade is PTN000170131 (35 leaves, all SF67). The fungal MGM1 clade is
+  PTN008973437.
+- Assessed the eight IBD node/term pairs that reach Vps1. SOUND: GTPase, cytoplasm,
+  membrane, peroxisome (PTN000902186), endocytosis (PTN002480314). NEEDS_PRUNING with
+  ADD_IRD at PTN000170131 (OPA1 clade, intramitochondrial): microtubule and microtubule
+  binding at the root, and peroxisome fission at PTN008520527. All three requests pass
+  the tree check.
+- Not requested: moving microtubule binding to PTN000170172. The DNM1L review cites
+  endogenous Jurkat Drp1 microtubule co-pelleting (PMID:23798729), so the term is not
+  confined to classical dynamins. The fungal MGM1 clade is probably a second
+  intramitochondrial case but has no review to ground a request.
+- Effect on this review: the two microtubule rows stay MARK_AS_OVER_ANNOTATED, with
+  the PRD argument dropped and propagation root cause set to UNRESOLVED.
