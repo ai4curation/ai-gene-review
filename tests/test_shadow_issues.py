@@ -919,8 +919,6 @@ def test_validate_and_ratings_survive_an_empty_file(config, tracker_dir, name):
             )
             assert isinstance(result.exception, ValueError), result.output
             assert "issue.yaml is empty or not a mapping" in str(result.exception)
-        # Nothing wrote to the file before the error (backfill-prior-work writes it).
-        assert (tracker_dir / "101" / "issue.yaml").read_text() == ""
 
 
 def test_backfill_prior_work_records_commits_naming_the_issue(config, tracker_dir):
@@ -951,6 +949,28 @@ def test_backfill_prior_work_records_commits_naming_the_issue(config, tracker_di
     ]
 
 
+def test_backfill_prior_work_leaves_an_unnamed_issue_untouched(config, tracker_dir):
+    """With no commit naming the issue, backfill-prior-work does not rewrite issue.yaml."""
+    store_issue(config, tracker_dir, make_issue(), [])
+    repo = tracker_dir.parent.parent
+    subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+    _commit(repo, "genes/a.yaml", "Unrelated change")
+    path = tracker_dir / "101" / "issue.yaml"
+    before = path.read_bytes()
+    result = CliRunner().invoke(
+        app,
+        [
+            "shadow-issues",
+            "backfill-prior-work",
+            "example",
+            "--root",
+            str(tracker_dir.parent),
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert path.read_bytes() == before
+
+
 def test_load_issue_names_a_missing_file(config, tracker_dir):
     store_issue(config, tracker_dir, make_issue(), [])
     (tracker_dir / "101" / "issue.yaml").unlink()
@@ -964,6 +984,17 @@ def test_load_issue_names_a_missing_file(config, tracker_dir):
         ("issue.yaml", None, "issue.yaml: missing; run sync"),
         ("source.yaml", None, "source.yaml: missing; run sync"),
         ("source.yaml", "", "source.yaml: empty or not a mapping; run sync"),
+        (
+            "source.yaml",
+            "title: 'cut off",
+            "source.yaml: not valid YAML (ScannerError); run sync",
+        ),
+        (
+            "source.yaml",
+            "number: 202\n",
+            "source.yaml: number 202 does not match the folder; run sync",
+        ),
+        ("issue.yaml", "title: 'cut off", "issue.yaml: not valid YAML (ScannerError)"),
     ],
 )
 def test_validate_reports_a_broken_mirror(config, tracker_dir, name, content, message):

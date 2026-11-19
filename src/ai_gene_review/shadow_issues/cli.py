@@ -544,6 +544,24 @@ def adjudication_problems(rating: dict[str, Any]) -> list[str]:
     return problems
 
 
+def parse_for_validation(path: Path) -> tuple[Any, str | None]:
+    """A YAML file's content, or None and a parse error to report.
+
+    ``validate`` exists to report broken files, so a syntax error (a sync or
+    edit cut off mid-scalar) is a problem for that file, not a crash of the run.
+
+    >>> import tempfile
+    >>> bad = Path(tempfile.mkdtemp()) / "x.yaml"
+    >>> _ = bad.write_text("title: 'cut off")
+    >>> parse_for_validation(bad)[1]
+    'not valid YAML (ScannerError)'
+    """
+    try:
+        return yaml.safe_load(path.read_text()), None
+    except yaml.YAMLError as exc:
+        return None, f"not valid YAML ({type(exc).__name__})"
+
+
 @shadow_issues_app.command("validate")
 def validate_cmd(
     tracker: TrackerArg = "go-annotation", root: RootOpt = ISSUES_DIR
@@ -565,9 +583,15 @@ def validate_cmd(
                 failures += 1
                 typer.echo(f"{folder / name}: missing; run sync", err=True)
         source = folder / "source.yaml"
-        if source.exists() and not isinstance(yaml.safe_load(source.read_text()), dict):
-            failures += 1
-            typer.echo(f"{source}: empty or not a mapping; run sync", err=True)
+        if source.exists():
+            snapshot, error = parse_for_validation(source)
+            if error is None and not isinstance(snapshot, dict):
+                error = "empty or not a mapping"
+            elif error is None and snapshot.get("number") != int(folder.name):
+                error = f"number {snapshot.get('number')} does not match the folder"
+            if error:
+                failures += 1
+                typer.echo(f"{source}: {error}; run sync", err=True)
         checks = [
             (folder / "issue.yaml", "ShadowIssue"),
             (folder / "self-rating.yaml", "SelfRating"),
@@ -575,8 +599,13 @@ def validate_cmd(
         for path, target in checks:
             if not path.exists():
                 continue
+            parsed, error = parse_for_validation(path)
+            if error:
+                failures += 1
+                typer.echo(f"{path}: {error}", err=True)
+                continue
             # An empty file loads as None; {} lets the schema report what is missing.
-            data = yaml.safe_load(path.read_text()) or {}
+            data = parsed or {}
             problems = [r.message for r in validator.validate(data, target).results]
             if data.get("number") != int(folder.name) or data.get("tracker") != tracker:
                 problems.append(
