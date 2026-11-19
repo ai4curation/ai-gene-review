@@ -5,9 +5,10 @@
 2. For each EC2GO row, look the entry up in the current UniProtKB release and
    record whether it still carries EC 2.3.1.86, and on what evidence.
 3. For an evenly spaced sample (first to last accession) of the entries that
-   no longer carry it, read every UniSave version current in TALLY_RELEASES
-   and report which carried EC 2.3.1.86, whether the evidence was
-   ARBA00048237, and how many entries carried it in each of those releases.
+   no longer carry it, read every UniSave version current at or after the
+   first of TALLY_RELEASES and report which carried EC 2.3.1.86, whether the
+   evidence was ARBA00048237, and how many entries carried it in each of
+   TALLY_RELEASES.
 
 Writes RESULTS-bacterial-rows.md next to this script.
 
