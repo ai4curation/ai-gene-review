@@ -348,20 +348,83 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
         the root-only Golgi list with a synthesis row
   - [x] Golgi batch 3: 20 human genes (2026-11-18); 13 human genes remain on
         the root-only Golgi list with a synthesis row
+  - [x] Golgi batch 4: the last 13 human genes (2026-11-19); human root-only
+        Golgi list with a synthesis row done
   - [x] Follow-ups to #6297 and #6353 (2026-11-15): abstract-only sweep of ER
         batch 1 (AIMP1 reworded), UFSP2 caveat, UFL1 tethering row; CDK5RAP3
         checked and left without one
-  - [ ] Sweep ER batches 2-4 and Golgi batches 1-3 for reasons that rest on a
+  - [ ] Sweep ER batches 2-4 and Golgi batches 1-4 for reasons that rest on a
         figure reading from an abstract-only cached paper (only ER batch 1 was
         swept, 2026-11-15)
   - [ ] Retry the AIMP1 full text (PMID:17525271, PMC1899434): restore the Figure 2
         marker reading or move its ER and Golgi rows to MARK_AS_OVER_ANNOTATED
-  - [ ] Write the Golgi rule after more batches; promote "curator deference
+  - [ ] Revisit organelle rows that Golgi batch 4 left out of scope: SPG21's
+        GO:0030140 rows (same 2001 observation as its Golgi row; reasons now record
+        the readable negative), STC2's ER rows (same unread donor), SELENOI's ER rows
+        (PMID:32576654 places EPT1 in the Golgi; reasons now say so), TCP1's acrosomal
+        vesicle projection, and SFT2D3's GO:0042147 core function, which rests on the
+        same paralog and ortholog papers the Golgi row no longer relies on
+  - [ ] Write the Golgi rule now that the human list is done; promote "curator deference
         stops at a readable paper" into the numbered rules, since it now
-        governs direct-evidence rows too (CABP2, Golgi batch 1 review)
+        governs direct-evidence rows too (CABP2, Golgi batch 1 review), together with
+        the batch 4 tier between it and plain deference: a later abstract that implies
+        an unreadable donor was wrong leaves the row UNDECIDED (TCP1, against TLR1 and
+        TLR6)
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-19 (Golgi batch 4: the last 13 human genes)
+
+The last 13 human genes on the root-only Golgi list with a synthesis row (SELENOI to
+VEGFA), from the 2026-11-15 survey. No gene gained a sub-compartment row. Five Golgi
+rows on five genes changed action, and SFT2D3's own NEW row was re-based on a paper
+about SFT2D3 itself.
+
+| gene | outcome | evidence |
+|---|---|---|
+| SELENOI | root; IBA MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE | the PAINT IBD is seeded only by the CHPT1 lineage (CEPT1 pattern), but the one study imaging EPT1 beside CEPT1 in human cells puts EPT1 in the Golgi and CEPT1 in the ER (PMID:32576654, abstract-only, deference); the old "established ER enzyme" premise rested on a curator inference and yeast fractionation |
+| SFT2D3 | root; NEW row re-based from ISS (paralog paper) to IC on PMID:40397568 | endogenous SFT2D3 rises in GS15-positive Golgi-derived vesicles after COG4 depletion (perturbation, control data in an unread supplement), plus family conservation (yeast Sft2p, human SFT2D2 at the late Golgi); not GOA drift: GOA never had the row |
+| SPG21 | root; IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | the curated TGN item cites an abstract-only paper; endogenous maspardin overlaps GM130 only slightly (PMID:19184135) and live imaging shows late endosomes and lysosomes, not the TGN (PMID:40833810); UNDECIDED is the close alternative |
+| STC2 | root; IEA ACCEPT to UNDECIDED | Ensembl projection of an MGI IDA from an abstract-only paper with no localization data (PMID:15485913); the earlier ACCEPT also leaned on a deep-research summary of that paper |
+| SUN5 | root; IEA and ISS stay KEEP_AS_NON_CORE | endogenous mouse Sun5 sits with GM130 in round spermatids and leaves it by the elongating stage (PMID:25775128, full text); transit pool in the native cell |
+| SYN1 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | by similarity to mouse, whose item cites a yeast two-hybrid paper (PMID:11571277, abstract-only, no Golgi); a cytosolic protein has no biosynthetic transit pool, so the old reason fails |
+| SYNE1 | root; IDA and IEA stay KEEP_AS_NON_CORE | endogenous Syne-1 with p58 and beta-COP, dispersed by brefeldin A (PMID:12808039, full text); recruited pool, core at the nuclear envelope; SUSPECTED isoform source defect (CHECK) because UniProt limits the item to GSRP-56 |
+| TBC1D14 | root; IDA and IEA stay ACCEPT | endogenous TBC1D14 with GM130 and TGN46 (PMID:22613832); it works with TRAPPII and RAB1B at the Golgi (PMID:26711178); markers span compartments, so no sub-compartment row |
+| TCP1 | root; IEA MARK_AS_OVER_ANNOTATED to UNDECIDED | Ensembl projection of a mouse IDA from PMID:2655925 (abstract-only, claims the cytoplasmic face of the TGN); a later same-lab abstract calls native TCP1 cytosolic without addressing the Golgi (PMID:1630492) |
+| TLR1 | root; IDA and IEA stay KEEP_AS_NON_CORE | abstract-only: ligand-recruited TLR2 clusters "are targeted to the Golgi apparatus" (PMID:16880211); curator deference; same paper and call as CD14 (batch 1) and TLR6 |
+| TLR6 | root; IDA and IEA stay KEEP_AS_NON_CORE | as TLR1 |
+| UBA5 | root; IEA and EXP stay KEEP_AS_NON_CORE | endogenous UBA5 with GM130 beside a mainly cytoplasmic signal (PMID:26872069, full text); no UFMylation step shown at the Golgi; consistent with UFL1, UFSP2 and DDRGK1 |
+| VEGFA | root; IEA stays KEEP_AS_NON_CORE | curated L-VEGF189 item from an abstract-only paper (PMID:11731620, deference); tagged VEGF165 shows "clear Golgi localization" with no named marker (PMID:24501421); biosynthetic transit; matches its ER row |
+
+Lessons, adding to batches 1-3:
+
+- **A paralog-seeded IBD is not wrong by itself.** CEPT1's rule (paralog-only seeds,
+  so MARK_AS_OVER_ANNOTATED) holds when the target's own data place it elsewhere. For
+  SELENOI the target's own study points to the Golgi, so that study decides.
+- **Read the ECO tags behind an "established elsewhere" premise** before using it
+  against a row (SELENOI's ER rested on ECO:0000305).
+- **A soluble cytosolic protein has no biosynthetic transit pool** (SYN1); marker data
+  must decide.
+- **Trace a by-similarity UniProt line to the donor entry's own tag**: SYN1's human,
+  mouse and rat Golgi items all rest on one two-hybrid paper about PrPC.
+- **A UniProt isoform qualifier can be narrower than the literature** (SYNE1), the
+  reverse of the ABCA7 pattern; record it as a CHECK.
+- **Only an explicit negative from a readable paper overrides an unreadable donor.** A
+  later abstract that implies an earlier claim was wrong (TCP1) leaves the row UNDECIDED.
+- **Golgi-vesicle proteomics after COG depletion** is an endogenous line for the root,
+  never for a sub-compartment (SFT2D3).
+- **A deep-research sentence that summarises an unread donor is not a second line**
+  (STC2).
+- **Check GO structure before calling a Golgi row a parent**: GO:0030140 trans-Golgi
+  network transport vesicle is not part of GO:0005794 (SPG21).
+- **Paralogous receptors citing one unreadable paper get the same call** and say so,
+  so a later reading changes them together (TLR1, TLR6, CD14).
+- **When new evidence contradicts a sentence elsewhere in the file, fix the sentence even
+  if its row is out of scope** (from the review): record the re-reading in that row's
+  text and leave the action for its own pass (SELENOI's and STC2's ER rows, SPG21's
+  GO:0030140 rows). A reason that says an `is_active_in` activity is not shown gets a
+  WRONG_QUALIFIER CHECK defect, so the query is machine-readable (SELENOI).
 
 ## 2026-11-18 (Golgi batch 3: 20 human genes)
 
