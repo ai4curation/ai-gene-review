@@ -21,7 +21,8 @@ The first four reviews and their results are tracked in the
   mRNA or ncRNA. A sigma-factor promoter assertion is transcriptional; an Hfq RNA
   assertion is not a DNA-binding claim.
 - `effect` records activation, repression or unknown sign under the stated condition.
-  `stabilizes` is reserved for increased RNA lifetime at `rna_stability` level.
+  `stabilizes` and `destabilizes` record increased and decreased RNA lifetime,
+  respectively, and are restricted to the `rna_stability` level.
 - `directness: direct` requires binding evidence and a functional regulatory effect
   supporting that target at the stated level (DNA binding for transcription, RNA
   binding for post-transcriptional effects). Binding alone or differential expression alone is insufficient.

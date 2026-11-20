@@ -52,8 +52,8 @@ def check_record(data, review, metadata, validator):
         valid_types = {'transcription': {'gene', 'promoter', 'operon'},
                        'translation': {'mRNA'}, 'rna_stability': {'mRNA', 'ncRNA'}}
         if (target_type not in valid_types[level]
-                or (effect == 'stabilizes' and level != 'rna_stability')
-                or (level == 'rna_stability' and effect not in {'stabilizes', 'unknown'})):
+                or (effect in {'stabilizes', 'destabilizes'} and level != 'rna_stability')
+                or (level == 'rna_stability' and effect not in {'stabilizes', 'destabilizes', 'unknown'})):
             raise ValueError('Inconsistent regulatory level, target type or effect')
         if assertion['id'] in ids:
             raise ValueError(f'Duplicate relationship ID: {assertion["id"]}')

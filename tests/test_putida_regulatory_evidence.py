@@ -33,17 +33,30 @@ def test_valid_record_retains_unknown_directness(case, validator):
     assert data['relationships'][0]['directness'] == 'unresolved'
 
 
-def test_rna_stability_relationship_snippet(case, validator):
+@pytest.mark.parametrize('effect', ['stabilizes', 'destabilizes', 'unknown'])
+def test_rna_stability_relationship_snippet(case, validator, effect):
     """RNA stability must be expressible without claiming promoter activation."""
     relationship = copy.deepcopy(case[0]['relationships'][0])
-    relationship.update(regulatory_level='rna_stability', effect='stabilizes')
+    relationship.update(regulatory_level='rna_stability', effect=effect)
     relationship['target'] = {'name': 'CrcZ', 'type': 'ncRNA'}
     checker.check_structure(relationship, validator, 'RegulatoryRelationship')
+
+
+def test_accept_destabilizing_rna_relationship(case, validator):
+    """The complete-record guard must retain a known negative stability effect."""
+    data, review, metadata = copy.deepcopy(case)
+    relationship = data['relationships'][0]
+    relationship.update(regulatory_level='rna_stability', effect='destabilizes')
+    relationship['target'] = {'name': 'test RNA', 'type': 'mRNA'}
+    # This fixture tests structure/semantics only, not a new biological assertion.
+    assert checker.check_record(data, review, metadata, validator)
 
 
 @pytest.mark.parametrize('level,target,effect', [
     (None, 'ncRNA', 'activates'),
     ('transcription', 'promoter', 'stabilizes'),
+    ('transcription', 'promoter', 'destabilizes'),
+    ('translation', 'mRNA', 'destabilizes'),
     ('rna_stability', 'promoter', 'stabilizes'),
     ('translation', 'ncRNA', 'represses'),
     ('rna_stability', 'ncRNA', 'activates'),

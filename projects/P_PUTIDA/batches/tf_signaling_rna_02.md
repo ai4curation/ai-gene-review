@@ -48,6 +48,33 @@ transcription interpretation. Semantic validation rejects promoter stabilization
 translation of ncRNA and RNA targets lacking an explicit level. Reusable LinkML
 classes still permit standalone snippet validation.
 
+### Review follow-up (2026-11-20)
+
+The review summaries now give short assessments, with the evidence and action
+arguments kept in `reason`. UniProt section labels were derived with
+`just backfill-record-sections` (16 additions). RNA stability relationships can
+encode either `stabilizes` or `destabilizes`; both are rejected at other regulatory
+levels. No target destabilization assertion was added from another species.
+
+Localization uses the same evidence rule across the batch: an existing inferred
+annotation can be retained when its biological basis is sound, without claiming
+an organism-specific localization assay. RpoS has a UniProt cytoplasmic assignment;
+Hfq's existing cytosol row is consistent with its conserved RNA/translation role.
+GacA has no existing component row, and the proposed cytosol addition was withdrawn
+because the reviewed evidence did not warrant a new assertion. Provider prose alone
+does not meet that higher bar. These are different assertion histories, not claims
+that one of the three regulators must occupy a different compartment.
+
+GacA's positive-transcription refinement now explicitly identifies the quoted
+Discussion synthesis and the gacS-to-gacA inference. FleQ's activator core function
+also records positive transcriptional regulation, and its proposed term definition
+no longer describes activation itself as catalysis.
+
+Follow-up validation: all four gene/sidecar checks, 73 focused tests, 129 source
+quotation checks, six new history records and changed-code Ruff checks passed.
+The manifest's preserved-source hashes and all machine-seeded annotation identity
+fields remain unchanged. No lockfile or local runtime was created or modified.
+
 ## Validation and provenance
 
 - All four `just validate PSEPK GENE` runs passed, including companion records.
