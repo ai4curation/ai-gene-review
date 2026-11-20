@@ -54,7 +54,7 @@ anchor, `BRUMA/dpy-31`, is in the same PANTHER subfamily as *C. elegans*
 
 - [x] `BRUMA` `dpy-31` / A8Q2D1 - cross-check existing review against the module
 - [x] `worm` `dpy-31` / P98060 - fetched and reviewed the C. elegans DPY-31 ortholog
-- [ ] `HAECO` `dpy-31` / D5FM34 - fetch and review the reviewed *H. contortus* DPY-31 ortholog
+- [x] `HAECO` `dpy-31` / D5FM34 - fetched and reviewed the reviewed *H. contortus* DPY-31 ortholog
 - [ ] `BRUMA` `bma-dpy-18.1` / Q68VC1 - fetch and review a prolyl 4-hydroxylase alpha candidate
 - [ ] `BRUMA` `bma-dpy-18.2` / A0A1P6BZ71 - fetch and review the second prolyl 4-hydroxylase alpha candidate
 - [ ] `worm` `dpy-18` / Q10576 - fetch and review the C. elegans prolyl 4-hydroxylase alpha-1 ortholog
@@ -121,6 +121,7 @@ Pathogen accessions need UniProt and literature resolution before fetching.
 - [x] Choose the first real multi-part module: nematode cuticle collagen maturation
 - [x] Add `modules/nematode_cuticle_collagen_maturation.yaml`
 - [x] Create the `worm` `dpy-31` review for the C. elegans DPY-31 ortholog
+- [x] Create the `HAECO` `dpy-31` review for the H. contortus DPY-31 ortholog
 - [ ] Add or cross-check the remaining first-wave cuticle member gene reviews
 
 # NOTES
@@ -168,3 +169,9 @@ Pathogen accessions need UniProt and literature resolution before fetching.
   the 2026 action treatment for the generic metallopeptidase parent row, and
   adds local supporting quotes from the B. malayi recombinant cleavage and
   inhibitor literature.
+- Added `genes/HAECO/dpy-31` and curated D5FM34 as the H. contortus DPY-31
+  ortholog. The review keeps the same six GOA rows as BRUMA DPY-31, anchors the
+  molecular function and collagenous-cuticle process to the Stepek/Page abstract
+  reporting H. contortus dpy-31 rescue of a C. elegans dpy-31 mutant and
+  recombinant SQT-3 cleavage, and leaves parasite-native H. contortus substrates
+  and in-species loss-of-function phenotypes as explicit biology gaps.
