@@ -239,3 +239,21 @@ PMID:32814053 uses an HTT N-terminal 1–504 construct with polyglutamine-varian
 - Context 134 (regulation of synaptic vesicle endocytosis): Original donor annotations and explicit abstract inspected; full paper was browser-challenged. Retain the experimental ortholog inference without inventing human neuronal assays.
 
 ROOT adjudication: generic membrane contexts 98–99 are TOO_GENERAL; phagocytic-vesicle, exosome and blood-microparticle contexts 117, 121–123 and 125 are UNDECIDED pending source-specific peptide/protein assignments. Curator deference and biological plausibility are not asserted as independent verification.
+
+## Follow-up: claim consistency and curated-record support
+
+Five generic-binding claims are retained as non-core using independently supported identical partners. This does not add five new matches to the native-PMID census or verify the original Stitch-seq, qAP-MS or OpenCell source tables.
+
+| Original source and partner | Independent support | Scope |
+| --- | --- | --- |
+| PMID:21516116, ACTB | IntAct EBI-10534694, PMID:25416956; copolymerization in PMID:20308063 | Original Stitch-seq record remains unverified |
+| PMID:25959826, HTT | IntAct EBI-26255819, PMID:32814053, Table S2 | HTT residues 1–504 in polyglutamine-variant context; no full-length endogenous claim |
+| PMID:35271311, CFL1 | IntAct EBI-24324336, PMID:32296183, Supplementary Table 9 | Independent two-hybrid evidence; original OpenCell assignment unverified |
+| PMID:35271311, CAP2 | IntAct EBI-24415841, PMID:32296183, Supplementary Table 9 | Independent two-hybrid evidence; original OpenCell assignment unverified |
+| PMID:35271311, CFL2 | IntAct EBI-24434587, PMID:32296183, Supplementary Table 9 | Independent two-hybrid evidence; original OpenCell assignment unverified |
+
+The native UniProt P63261 record (SHA-256 `58a868032130d8993815f0d2d67b4528a7ba14ed2c69bd927ebab679e78eaa95`) supplies curated CC CATALYTIC ACTIVITY at lines 312–316 and CC DISEASE at lines 368–385. Its ATP reaction is inferred by similarity from P68137, the same donor as the native ISS context. The disease comments identify DFNA20 and Baraitser-Winter syndrome 2; the combined DFNA20/26 nomenclature also appears in the original paper title listed in the record. These CC comments, not DR GO lines or keywords, support the review.
+
+Official QuickGO identifies axon, apical part of cell and synapse as cellular-component anatomical locations. Schaffer collateral–CA1 synapse is an is_a subtype of synapse; calyx of Held reaches synapse through part_of ancestry. Three representative core locations therefore cover the accepted anatomical contexts without duplicating every narrower term.
+
+The [GO_REF:0000024 method](https://geneontology.org/GO_REF/0000024.html) explicitly allows case-by-case paralog transfer. The [manual-annotation best-practices article](https://pmc.ncbi.nlm.nih.gov/articles/PMC3706743/) uses ATPase versus ATP binding as an example where substrate-binding co-annotation is unnecessary. These are method/policy references, not new cached primary-experiment quotations.
