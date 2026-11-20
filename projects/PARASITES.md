@@ -59,6 +59,10 @@ rather than duplicating them — see [Related projects](#related-projects).
   these are the subject of the existing
   [PARASITE_IMMUNE_MODULATORS](PARASITE_IMMUNE_MODULATORS.md) project, treated
   here as a sub-topic.
+- **Pathogenic nematode modules and ortholog sets** — these are tracked in
+  [NEMATODE_PATHOGENS](NEMATODE_PATHOGENS.md), which splits the older nematode
+  seed set here into cuticle maturation, FAR binding, cystatins, surface
+  antioxidants, and anthelmintic-target biology.
 
 A note on boundaries: not every host-associated nematode is a parasite.
 *Necromenic* associates (e.g. *Pristionchus pacificus*, which rides live beetles
