@@ -54,7 +54,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 
 # STATUS
 
-Last updated: 2026-11-06
+Last updated: 2026-11-20
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -440,12 +440,15 @@ node for protein arginine N5-methyltransferase activity. The official PANTHER
 family name is GUANIDINOACETATE N-METHYLTRANSFERASE, so each fungal review needs
 to keep the GAMT branch separate from Rpl12/RMT2 methylation.
 
-- [ ] `yeast/RMT2` - *S. cerevisiae* protein-arginine N5-methyltransferase;
-  drafted in this branch
-- [ ] `SCHPO/rmt2` - fission-yeast Rmt2 ortholog
-- [ ] `NEUCR/ant-1` - *Neurospora crassa* Rmt2-family member
-- [ ] `ASPFU/rmt2` - *Aspergillus fumigatus* Rmt2-family member
-- [ ] `EMENI/rmt2` - *Aspergillus nidulans* Rmt2-family member
+- [x] `yeast/RMT2` - *S. cerevisiae* protein-arginine N5-methyltransferase;
+  merged in PR #6035
+- [x] `SCHPO/rmt2` - fission-yeast Rmt2 ortholog; merged in PR #6037
+- [x] `NEUCR/ant-1` - *Neurospora crassa* Rmt2-family member; merged in PR
+  #6038
+- [x] `ASPFU/rmt2` - *Aspergillus fumigatus* Rmt2-family member; drafted in
+  this branch
+- [x] `EMENI/rmt2` - *Aspergillus nidulans* Rmt2-family member; drafted in
+  this branch
 
 ## Family 20: Ppn1 Polyphosphatases
 
@@ -487,6 +490,18 @@ vegetative `sec2` and sporulation-specific `spo13`.
 ---
 
 # NOTES
+
+## 2026-11-20
+
+- Completed the compact `PTHR32379` Rmt2/GAMT set with `ASPFU/rmt2` and
+  `EMENI/rmt2`, after the earlier `yeast/RMT2`, `SCHPO/rmt2`, and
+  `NEUCR/ant-1` reviews had already accepted the fungal `PTN001285370`
+  protein arginine N5-methyltransferase node in PRs #6035, #6037, and #6038.
+  The Aspergillus reviews accept the same exact Rmt2 activity and broad
+  nucleus/cytoplasm transfers, keep InterPro's parent PRMT row as true but too
+  general, and flag EnsemblFungi transfer of the budding-yeast
+  translational-fidelity phenotype as over-propagated without direct
+  Aspergillus Rpl12 or ribosome-function evidence.
 
 ## 2026-11-06
 
