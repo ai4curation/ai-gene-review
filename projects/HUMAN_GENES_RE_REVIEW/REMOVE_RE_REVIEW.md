@@ -27,6 +27,9 @@ row with its old and new action and the rule applied, and 97 REMOVE rows
 that were examined closely and left in place, each with a note. 48 of those
 are marked `close_call`: a curator might decide them differently.
 
+The yeast reviews had the same pass on 20 November 2026: see
+[Re-review of REMOVE actions in yeast gene reviews](YEAST_REMOVE_RE_REVIEW.md).
+
 ## Why this pass
 
 `REMOVE` says the claim is unlikely to be correct. The first-pass reviews
