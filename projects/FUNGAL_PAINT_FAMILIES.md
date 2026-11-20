@@ -498,10 +498,9 @@ vegetative `sec2` and sporulation-specific `spo13`.
   `NEUCR/ant-1` reviews had already accepted the fungal `PTN001285370`
   protein arginine N5-methyltransferase node in PRs #6035, #6037, and #6038.
   The Aspergillus reviews accept the same exact Rmt2 activity and broad
-  nucleus/cytoplasm transfers, keep InterPro's parent PRMT row as true but too
-  general, and flag EnsemblFungi transfer of the budding-yeast
-  translational-fidelity phenotype as over-propagated without direct
-  Aspergillus Rpl12 or ribosome-function evidence.
+  nucleus/cytoplasm transfers, modify InterPro's parent PRMT row to the
+  N5-specific activity, and keep EnsemblFungi's budding-yeast
+  translational-fidelity transfer as a plausible non-core orthology assertion.
 
 ## 2026-11-06
 

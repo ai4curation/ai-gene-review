@@ -31,10 +31,7 @@ them.
 
 The EnsemblFungi GO_REF:0000107 row for `GO:0019702` matches the fungal PAINT
 activity and should be accepted. Its `GO:0045903 positive regulation of
-translational fidelity` row also comes from experimentally characterized
-S. cerevisiae RMT2. As a substrate-site check, the inferred A. nidulans 60S
-ribosomal protein L12 C8VUJ2 retains the IQNRQ motif around the arginine
-orthologous to S. cerevisiae Rpl12 Arg67 (`LKIQNRQ` in RPL12A/B and `LTIQNRQ`
-in C8VUJ2), supporting a plausible non-core translation-process transfer while
-leaving direct A. nidulans Rpl12 methylation and reporter assays as open
-experiments.
+translational fidelity` row also comes from the experimentally characterized
+S. cerevisiae RMT2 donor, so it is a plausible non-core translation-process
+transfer while direct A. nidulans Rpl12 methylation and reporter assays remain
+open experiments.
