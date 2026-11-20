@@ -37,6 +37,8 @@ def _site_fixture(root: Path) -> None:
     _write(root / "pages" / ".DS_Store")
     for filename in ("index.html", "data.js", "schema.js"):
         _write(root / "app" / filename)
+    for filename in ("index.html", "data.js"):
+        _write(root / "app" / "guidelines" / filename)
     _write(root / "app" / "developer-only.txt")
 
 
@@ -55,6 +57,7 @@ def test_stage_pages_preserves_urls_and_copies_linked_sources(tmp_path: Path) ->
     assert (output / "pages/projects/index.html").is_file()
     assert not (output / "pages/.DS_Store").exists()
     assert (output / "app/data.js").is_file()
+    assert (output / "app/guidelines/data.js").is_file()
     assert not (output / "app/developer-only.txt").exists()
     assert manifest.gene_pages == 1
     assert manifest.project_pages == 1

@@ -35,6 +35,8 @@ PAGES_SUPPORTED_SIZE_BYTES = 1_000_000_000
 MIB = 1024 * 1024
 BROWSER_FILES = ("index.html", "data.js", "schema.js")
 PREDICTION_BROWSER_FILES = (*BROWSER_FILES, "source-files.json")
+#: Self-contained browsers staged as-is: (directory, files).
+STATIC_BROWSERS = ((Path("app/guidelines"), ("index.html", "data.js")),)
 #: Standalone browsers whose rows link to repository files: (label, dir, files).
 MANIFEST_BROWSERS = (
     ("prediction browser", Path("app/predictions"), PREDICTION_BROWSER_FILES),
@@ -352,6 +354,12 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
         source = repo_root / "app" / browser_file
         _require_file(source)
         _copy_file(source, output_dir / "app" / browser_file)
+
+    for static_dir, static_files in STATIC_BROWSERS:
+        for static_file in static_files:
+            source = repo_root / static_dir / static_file
+            _require_file(source)
+            _copy_file(source, output_dir / static_dir / static_file)
 
     for label, browser_dir, browser_files in MANIFEST_BROWSERS:
         _stage_prediction_browser(repo_root, output_dir, browser_dir, browser_files, label)

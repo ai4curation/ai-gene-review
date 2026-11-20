@@ -2893,6 +2893,17 @@ project-counterparts *ARGS:
 new-history *ARGS:
     uv run python scripts/new_history.py "$@"
 
+# Regenerate GO_GUIDELINES derived blocks and the guidelines browser (app/guidelines/)
+[group('QC')]
+build-guidelines:
+    uv run ai-gene-review guidelines build
+
+# Validate GO_GUIDELINES decision records (add --check-terms to check GO labels locally)
+[group('QC')]
+[positional-arguments]
+validate-guidelines *ARGS:
+    uv run ai-gene-review guidelines validate "$@"
+
 # Validate a single history record
 [group('QC')]
 validate-history file:

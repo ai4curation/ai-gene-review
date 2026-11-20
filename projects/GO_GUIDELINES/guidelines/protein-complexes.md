@@ -29,7 +29,7 @@ homo- and hetero-oligomerization, Complex Portal-derived annotations, and how a 
 complex roles in `core_functions`. The modelling of complexes in GO-CAM is summarised in PC-14
 and covered fully in [gocam-modeling.md](gocam-modeling.md). The gp2term relations in general
 are in [qualifiers-and-negation.md](qualifiers-and-negation.md); binding terms in general in
-[molecular-function.md](molecular-function.md); IPI and IDA in
+[molecular-function.md](MF/README.md); IPI and IDA in
 [evidence-codes.md](evidence-codes.md).
 
 ## Principles

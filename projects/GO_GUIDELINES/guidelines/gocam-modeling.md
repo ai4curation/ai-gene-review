@@ -20,7 +20,7 @@ processes are attached, how complexes are represented, how evidence attaches
 to edges, and how standard annotations are derived from a model.
 
 It does not repeat the term-choice rules for molecular functions in general
-([molecular-function.md](molecular-function.md)), for complexes in standard
+([molecular-function.md](MF/README.md)), for complexes in standard
 annotation ([protein-complexes.md](protein-complexes.md)), or for annotation
 extensions ([annotation-extensions.md](annotation-extensions.md)). Many GO-CAM
 relations (`has input`, `occurs in`, `part of`) are also extension relations,

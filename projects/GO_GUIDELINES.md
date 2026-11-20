@@ -24,7 +24,7 @@ proposal.
 
 ## The guidelines
 
-Every rule has a stable id (for example [MF-5](GO_GUIDELINES/guidelines/molecular-function.md#mf-5)),
+Every rule has a stable id (for example [MF-5](GO_GUIDELINES/guidelines/MF/MF-5.md)),
 a one-line normative statement, a rationale, worked examples with verified GO
 ids, sources, and a provenance tag:
 
@@ -32,11 +32,45 @@ ids, sources, and a provenance tag:
 - **[GOC+]** clarifies, sharpens or extends it.
 - **[NEW]** is our own synthesis, absent from GOC guidance or departing from it.
 
+### How the guidelines are stored
+
+Guidelines are moving from one long document per topic to one **decision record
+per rule**, in the manner of architecture decision records. The molecular function
+chapter is converted; the other 15 are still single documents and convert with the
+same script.
+
+- `guidelines/<TOPIC>/<ID>.md` is one guideline, e.g.
+  [MF-5](GO_GUIDELINES/guidelines/MF/MF-5.md). Its YAML frontmatter holds the
+  metadata: `status` (proposed, accepted, superseded, deprecated, rejected),
+  `provenance`, the GO terms and evidence codes it concerns, `related` and
+  `supersedes`/`superseded_by` links, the validator that enforces it
+  (`enforced_by`), its rows of "differences from prior guidance", its open
+  questions, its sources, and curator `reviews`. The body has the Decision, the
+  Context (why) and the Application (worked examples).
+- `guidelines/<TOPIC>/README.md` is the chapter: scope, principles, decision aid,
+  common errors and a generated rule index. Differences and questions that no
+  single rule owns sit in its frontmatter.
+- The frontmatter schema is
+  [`guideline.yaml`](../src/ai_gene_review/schema/guideline.yaml). Ids are never
+  renumbered or reused; a replaced rule is marked superseded.
+- Edit the frontmatter, then run `just build-guidelines`. It regenerates the
+  Record / Differences / Open questions / Sources block at the end of each file
+  and the browser data. `just validate-guidelines` checks the schema,
+  cross-references, supersession links, paths and stale generated text, and
+  `--check-terms` also checks every GO id and label against the local GO build.
+  The committed records are also checked in the test suite.
+- The [guidelines browser](https://ai4curation.io/ai-gene-review/app/guidelines/)
+  (`app/guidelines/`) filters rules by chapter, status, provenance, aspect,
+  evidence code and enforcement. It has cross-cutting views of all differences
+  and all open questions.
+- `GO_GUIDELINES/scripts/split_chapter.py` converts a chapter. Rows and questions
+  that cite no single rule are assigned by hand in `scripts/assign/<TOPIC>.yaml`.
+
 | Document | Rules | Differences | Open questions | Scope |
 |---|---|---|---|---|
 | [Evidence codes](GO_GUIDELINES/guidelines/evidence-codes.md) | EV-1–16 | 13 | 6 | choosing codes and ECO classes; IPI, IGI, IEP, HTP, IC, TAS, ND |
 | [From paper to annotation](GO_GUIDELINES/guidelines/from-paper-to-annotation.md) | LIT-1–14 | 13 | 5 | assay → aspect and depth; overexpression; negative results; what not to annotate |
-| [Molecular function](GO_GUIDELINES/guidelines/molecular-function.md) | MF-1–18 | 15 | 7 | activity vs binding; protein binding; enzymes and promiscuity; pseudoenzymes; transporters; regulators |
+| [Molecular function](GO_GUIDELINES/guidelines/MF/README.md) | MF-1–18 | 15 | 7 | activity vs binding; protein binding; enzymes and promiscuity; pseudoenzymes; transporters; regulators |
 | [Transcription regulation](GO_GUIDELINES/guidelines/transcription-regulation.md) | TR-1–16 | 14 | 8 | dbTF vs coTF vs GTF; DNA-binding evidence; chromatin proteins; bacterial and plant regulators |
 | [Biological process](GO_GUIDELINES/guidelines/biological-process.md) | BP-1–15 | 14 | 6 | participation vs necessity; acts upstream of; phenotypes; development; precomposed terms |
 | [Regulation and signaling](GO_GUIDELINES/guidelines/regulation-and-signaling.md) | RS-1–14 | 13 | 7 | part of vs regulation of; sign; pathway boundaries; ligands and receptors; response to |
@@ -69,13 +103,13 @@ the core of what we think GO best practice is.
    [QN-3](GO_GUIDELINES/guidelines/qualifiers-and-negation.md#qn-3)).
 3. **Activities, not bindings.** Bare protein binding is uninformative. A binding
    term is a fallback for when the activity the binding serves is unknown
-   ([MF-3](GO_GUIDELINES/guidelines/molecular-function.md#mf-3),
-   [MF-5](GO_GUIDELINES/guidelines/molecular-function.md#mf-5),
+   ([MF-3](GO_GUIDELINES/guidelines/MF/MF-3.md),
+   [MF-5](GO_GUIDELINES/guidelines/MF/MF-5.md),
    [CAM-4](GO_GUIDELINES/guidelines/gocam-modeling.md#cam-4)).
 4. **Depth follows this row's own evidence.** Annotate the deepest term the
    evidence reaches and no deeper. A correct but general term is refined only on
    evidence that reaches the specific term
-   ([MF-2](GO_GUIDELINES/guidelines/molecular-function.md#mf-2),
+   ([MF-2](GO_GUIDELINES/guidelines/MF/MF-2.md),
    [BP-13](GO_GUIDELINES/guidelines/biological-process.md#bp-13),
    [REV-3](GO_GUIDELINES/guidelines/reviewing-annotations.md#rev-3)).
 5. **Attribute the activity to the entity that performs it.** This applies to the
@@ -152,7 +186,7 @@ its own rules or GOC guidance. Each is filed as an issue; none is fixed in this 
   `CLAUDE.md` links `docs/isoform_tracking.md`, which does not exist.
 - **Protein-binding policy** ([#6443](https://github.com/ai4curation/ai-gene-review/issues/6443)).
   `MOLECULAR_ADAPTOR_ACTIVITY` says the policy prefers MODIFY; the policy
-  docstring makes REMOVE the default. [MF-5](GO_GUIDELINES/guidelines/molecular-function.md#mf-5)
+  docstring makes REMOVE the default. [MF-5](GO_GUIDELINES/guidelines/MF/MF-5.md)
   and [REV-13](GO_GUIDELINES/guidelines/reviewing-annotations.md#rev-13) follow
   the docstring: MODIFY when the row's own paper supports an informative MF,
   otherwise REMOVE.
@@ -210,12 +244,13 @@ recur across documents:
 
 ## Next steps
 
-1. Curator review of each document, starting with the [NEW] rules and the
-   Differences tables. Record sign-offs under `manual_reviews` in this page's
-   frontmatter.
-2. Resolve the cross-document overlaps: the CC/QN rules on `colocalizes_with` and
+1. Convert the remaining 15 chapters to decision records.
+2. Curator review of each rule, starting with the [NEW] rules and their
+   differences. Record sign-offs in each rule's `reviews` and move it to
+   `accepted`.
+3. Resolve the cross-document overlaps: the CC/QN rules on `colocalizes_with` and
    `is_active_in`, and the PC/QN/MF rules on `contributes_to`. They agree at
    present, but each topic currently restates them.
-3. Feed settled rules back into `CLAUDE.md` and the validators, and fix the
+4. Feed settled rules back into `CLAUDE.md` and the validators, and fix the
    repository defects listed above.
-4. Take the open questions to the GO annotation call.
+5. Take the open questions to the GO annotation call.

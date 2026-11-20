@@ -33,7 +33,7 @@ specificity, activator versus repressor, cis-regulatory binding terms and target
 extensions.
 
 Covered elsewhere: general MF principles and the protein binding policy
-([molecular-function.md](molecular-function.md)); evidence codes, including how to
+([molecular-function.md](MF/README.md)); evidence codes, including how to
 code ChIP and EMSA ([evidence-codes.md](evidence-codes.md)); extension syntax
 ([annotation-extensions.md](annotation-extensions.md)); signaling pathways ending in a
 transcription factor ([regulation-and-signaling.md](regulation-and-signaling.md));
@@ -310,7 +310,7 @@ dimerisation; they are correctly excluded from dbTF annotation
 Note that GO:0140416 and GO:0140537 are defined "via direct binding and/or
 post-translational modification". Where the effect is a covalent modification of the
 regulator (a kinase or SUMO ligase acting on a dbTF), annotate the catalytic activity with
-`has_input` the regulator, consistent with [MF-17](molecular-function.md#mf-17).
+`has_input` the regulator, consistent with [MF-17](MF/MF-17.md).
 
 Provenance: [GOC] for the class; [GOC+] for the covalent-modification exclusion. Sources:
 as cited.
@@ -698,7 +698,7 @@ bare `GO:0003677` DNA binding beside a specific dbTF or binding term is `TOO_GEN
 | `GO:0000976` term text | Definition: binding "to a specific sequence of DNA"; comment: "meant to also capture non-specific binding" | Use GO:0000976 for non-specific regulatory-region binding by coTFs, as the comment and [go-annotation#5743](https://github.com/geneontology/go-annotation/issues/5743) intend ([TR-5](#tr-5)) | The definition and the comment contradict each other; we follow the usage guidance and flag the definition |
 | [wiki: Transcription jamboree](https://wiki.geneontology.org/index.php/Transcription_jamboree) (archived) | CUP9 example annotated to "RNA polymerase II core promoter proximal region sequence-specific DNA binding" | `GO:0000978` RNA polymerase II cis-regulatory region sequence-specific DNA binding, region in `has_input` ([TR-10](#tr-10)) | Region-named binding terms were merged or obsoleted in 2018 |
 | [Drive: TF annotation guidelines](https://drive.google.com/open?id=1bqCxx7QUblrc9q4PIynbJzoCXv248UWBxJa7fguJyXs) | dbTFs and coTFs "part of GO:0005667 transcription factor complex" | `GO:0005667` (now "transcription regulator complex") or `GO:0090575` only when the complex is shown | A dbTF is not by definition in a stable complex; the label has also changed |
-| GO:0140416 / GO:0140537 definitions | Regulator-of-regulator activity "via direct binding and/or post-translational modification" | Covalent modification of a regulator is a catalytic activity with `has_input` ([TR-7](#tr-7)) | Aligns with the general regulator principle in [molecular-function.md](molecular-function.md#mf-17) |
+| GO:0140416 / GO:0140537 definitions | Regulator-of-regulator activity "via direct binding and/or post-translational modification" | Covalent modification of a regulator is a catalytic activity with `has_input` ([TR-7](#tr-7)) | Aligns with the general regulator principle in [molecular-function.md](MF/MF-17.md) |
 | GOC transcription guidelines (eukaryote-only) | No guidance on sigma factors or two-component regulators | Sigma factors to `GO:0016987`; DNA-binding response regulators to dbTF, plus `GO:0000156` when phosphotransfer is shown ([TR-15](#tr-15)) | Fills a gap; follows the current ontology structure |
 
 ## Open questions

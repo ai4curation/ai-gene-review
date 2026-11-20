@@ -24,7 +24,7 @@ Related documents:
 
 - The general participation test (`involved_in` versus `acts upstream of`) is in [biological-process.md](biological-process.md).
 - Transcription regulation, DNA-binding transcription factor activity and target genes are in [transcription-regulation.md](transcription-regulation.md).
-- The MF side of regulators (enzyme regulator, molecular adaptor, receptor ligand activity) is in [molecular-function.md](molecular-function.md).
+- The MF side of regulators (enzyme regulator, molecular adaptor, receptor ligand activity) is in [molecular-function.md](MF/README.md).
 - GO-CAM causal relations (`directly positively regulates`, `constitutively upstream of`, `removes input for`) are in [gocam-modeling.md](gocam-modeling.md).
 - Evidence codes, including IEP, are in [evidence-codes.md](evidence-codes.md).
 

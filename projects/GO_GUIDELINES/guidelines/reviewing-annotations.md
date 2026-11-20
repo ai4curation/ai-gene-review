@@ -28,7 +28,7 @@ tickets (obsoletion-driven and rule-driven reviews in the `go-annotation` tracke
 rules (gorules) that run on every load.
 
 It does not repeat the term-choice rules for each aspect; those live in
-[molecular-function.md](molecular-function.md), [biological-process.md](biological-process.md),
+[molecular-function.md](MF/README.md), [biological-process.md](biological-process.md),
 [cellular-component.md](cellular-component.md) and the other sibling documents. Ontology
 change (obsoletion, merges, term requests, taxon constraints) is in
 [ontology-change-and-taxa.md](ontology-change-and-taxa.md). How to read a phylogenetic
@@ -412,7 +412,7 @@ ISS and IEA binding rows in 2024 (GORULE:0000005)
 Descendants such as enzyme binding are informative and follow the normal rules. Projects with
 their own standing instructions (the ClinGen Mendelian project) may keep supported generic
 binding as non-core when nothing more specific is evidenced. Details:
-[molecular-function.md](molecular-function.md).
+[molecular-function.md](MF/README.md).
 
 Provenance: [GOC+].
 
