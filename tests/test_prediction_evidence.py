@@ -141,3 +141,27 @@ def test_source_documents_external_ids_pass_missing_files_fail(
     data["source_documents"].append(source)
     path.write_text(yaml.safe_dump(data))
     assert validate_prediction_evidence(path, tmp_path).is_valid is valid
+
+
+@pytest.mark.parametrize("prefix", ["DOI", "doi"])
+@pytest.mark.parametrize("title_ok", [True, False])
+def test_doi_reference_is_resolved_whatever_the_prefix_case(
+    tmp_path: Path, prefix: str, title_ok: bool
+) -> None:
+    path = write_case(tmp_path)
+    publications = tmp_path / "publications"
+    publications.mkdir()
+    (publications / "DOI_10.1_x.md").write_text(
+        "---\nreference_id: DOI:10.1/x\ntitle: Source title.\ndoi: 10.1/x\n"
+        "content_type: abstract_only\n---\n\n# Source title.\n\n## Content\n\nAbstract.\n"
+    )
+    data = yaml.safe_load(path.read_text())
+    data["references"].append(
+        {"id": f"{prefix}:10.1/x", "title": "Source title." if title_ok else "Unrelated experiment."}
+    )
+    path.write_text(yaml.safe_dump(data))
+    report = validate_prediction_evidence(path, tmp_path)
+    assert report.is_valid is title_ok
+    assert not any("Unsupported source" in issue.message for issue in report.issues)
+    assert report.metadata["verified_titles"] == (1 if title_ok else 0)
+

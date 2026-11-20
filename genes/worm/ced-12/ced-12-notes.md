@@ -60,3 +60,7 @@ publications (most are abstract-only; PMID:20126385 and PMID:24225442 are full t
   21490059, 11449278, 11449279.
 - PMID:14688791 (mig-23 NDPase paper) does not mention ced-12 in the abstract; its ced-12 rows were kept as non-core.
 - PMID:26292279 (CED-12 and UNC-5 in DTC steering, cited by UniProt) is not cached; it was not used as evidence.
+
+Round 6 of projects/INVOLVED_IN_PRECOMPOSITION.md (2026-11-10): the two GO:1902742 MODIFY replacements now use GO:0043065 positive regulation of apoptotic process instead of the precomposed GO:1904747 positive regulation of apoptotic process involved in development, with `decomposed_into.context_dropped`. The sign correction (the gene promotes death from the engulfing cell rather than taking part in the dying cell's program) is unchanged; only the developmental context is dropped. Earlier mentions of GO:1904747 above are superseded.
+
+Round 7 of projects/INVOLVED_IN_PRECOMPOSITION.md (2026-11-18) supersedes the round-6 paragraph above: a MODIFY's replacement must be a claim the review would accept, and this gene's pro-death role is non-core. The two GO:1902742 rows are MARK_AS_OVER_ANNOTATED, with no replacement; the positive-regulation reading is recorded in their reason. The sign correction (regulation from the engulfing cell, not participation) is unchanged.

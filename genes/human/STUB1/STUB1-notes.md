@@ -42,3 +42,11 @@ Functions as a homodimer. Ubiquitinates chaperone-bound misfolded/damaged client
   term); those with HSP70/HSC70/HSP90 partners MODIFY to Hsp70/Hsp90/heat-shock protein
   binding. HSP-partner PMIDs identified from goa WITH column (P11142=HSPA8, P07900=HSP90AA1,
   P08238=HSP90AB1, P0DMV8/9=HSPA1A/B).
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+- Rows: GO:0005739 IEA (GO_REF:0000120, SL-0173 + rat A6HD62) and ISS (GO_REF:0000024, WITH rat A6HD62; GOA lists the ISS row twice with different dates, one review entry). All located_in, all KEEP_AS_NON_CORE (unchanged; reasons extended).
+- Human UniProt: [file:human/STUB1/STUB1-uniprot.txt "Mitochondrion {ECO:0000250|UniProtKB:A6HD62}"]; stress-induced relocation note.
+- Rat source: A6HD62 has one IDA, PMID:29934347 (QuickGO), plus its own SL-0173 IEA. Neurons, TOM20 co-staining [PMID:29934347 "We observed increased overlap of CHIP with TOM20-positive mitochondria as early as 3 h after acute stress"]; [PMID:29934347 "CHIP does not contain a canonical mitochondrial targeting sequence"].
+- WITH/FROM is a true orthologue, so no source defect.
+- Outcome: root only; stress-induced pool of a cytosolic E3 ligase acting in mitophagy; co-staining only, no fractionation or protease protection, so no sub-compartment.

@@ -234,3 +234,148 @@ The deep research focused primarily on OASS (CysK/CysM) and CBS subfamilies. The
 
 ---
 *Analysis performed 2026-01-06*
+
+## 2026-11-03 re-review for the bacterial cysteine biosynthesis module
+
+Subfamily membership was read from the PANTHER 19.0 organism classification
+files (`.cache/panther/PTHR19.0_*`) and node recipients from the PAINT UniProt
+GAF (`.cache/panther/gene_association.paint_uniprot.gaf.gz`, column 8 carries
+the PTN node), for example
+
+```
+zcat .cache/panther/gene_association.paint_uniprot.gaf.gz | awk -F'\t' '$2=="O69652"{print $2,$3,$5,$8}'
+```
+
+Findings:
+
+- PTHR10314:SF194 (named CYSTATHIONINE BETA-SYNTHASE) is not a CBS-only
+  subfamily. Besides human CBS P35520 and yeast CYS4 P32582 it holds the
+  bacterial cysteine synthase A proteins: E. coli CysK P0ABK5, Salmonella CysK
+  P0A1E3, B. subtilis CysK P37887, M. tuberculosis CysK1 P9WP55 and CysK2
+  Q79FV4, and P. aeruginosa CysK Q9I0D3.
+- PTHR10314:SF162 (CYSTEINE SYNTHASE B) holds E. coli CysM P16703,
+  P. aeruginosa CysM Q9I526, Salmonella CysM P29848 and M. tuberculosis CysM
+  P9WP53.
+- PTHR10314:SF5 (THREONINE SYNTHASE 1, CHLOROPLASTIC) holds the threonine
+  synthases B. subtilis ThrC P04990, M. tuberculosis ThrC P9WG59 and
+  Arabidopsis TS1 Q9S7B5. PTN000741516 is this threonine-synthase clade: its
+  IBDs are threonine synthase activity and threonine biosynthesis (seeds
+  P9WG59 and AT4G29840), and its recipients include P04990 and P9WG59. The
+  IRD for GO:0019344 at PTN000741516 therefore prunes cysteine biosynthesis
+  from threonine synthases, not from the cysteine desulfhydrases.
+- The SF135 cysteine desulfhydrase M. tuberculosis Cds1 O69652 still receives
+  the GO:0019344 IBA from PTN000034104 in the current PAINT GAF, so the
+  over-propagation described above is not repaired by any IRD.
+- PTN000034668 (IRD, GO:0019344, taxon Eukaryota) is not resolved to a clade in
+  the slice. Its likely recipients are the eukaryotic SF35 (MITOCHONDRIAL
+  CYSTEINE SYNTHASE-RELATED) proteins: yeast MCY1 P53206, S. pombe cys12
+  P87131, N. crassa cys-12 Q7SHQ1 and Arabidopsis At1g55880 Q6NKY5 all receive
+  the PTN000034104 cytoplasm IBA but no GO:0019344 IBA.
+- B. subtilis MccA O05393 (SF242, O-ACETYLSERINE DEPENDENT CYSTATHIONINE
+  BETA-SYNTHASE) is the only seed of PTN008497437, which carries both GO:0004122
+  and GO:0004124.
+
+
+## 2026-11-06: CysM substrate scope and PAINT assertion audit
+
+The current compact-tree descendant check, recorded in
+`analysis/module_audits/bacterial_cysteine_biosynthesis_via_o_acetylserine/family-placement-audit.yaml`,
+shows that P9WP53 maps to PTN002232520 in SF162 and descends from PTN008497439.
+This is positive membership evidence, not a reclassification from the gene name.
+The E. coli P16703 seed and PAO1 Q9I526 OAS/sulfide activity remain valid positive evidence.
+Thiosulfate-dependent S-sulfocysteine production is a different complete reaction.
+
+PMID18842002 measures slow OAS aminoacrylate formation and strong OPS/CysO-COSH
+preference. The independently inspected PMID18799456 primary excerpt and construct
+limits are preserved in `genes/MYCTU/cysM/cysM-source-analysis/18799456-assay-scope.md`.
+Its tested recombinant protein contains Thr2Ala and a residual GSH prefix; OAS plus
+sodium sulfide gave no detected cysteine, without a formal detection limit. Neither
+that result nor slow first-half-reaction chemistry proves zero intrinsic OAS turnover
+for native P9WP53. Conversely, these measurements do not establish the complete
+GO:0004124 reaction or a native OAS route. The node assessment and broader term scope
+are therefore UNRESOLVED, while positive seeds and all PAINT node metadata are retained.
+
+The family-root cysteine-biosynthesis BP cannot establish ancestral OAS-specific
+chemistry. That unsupported inference was removed without denying demonstrated
+cysteine synthase activities in the relevant members. No PAINT table, seed set,
+provider report or raw member file was changed.
+
+### Archived scope-carving entries
+
+These exact prior GO:0004124 member exceptions are preserved for provenance.
+Their functional distinctions remain valid, but the active UNRESOLVED scope no
+longer makes a family-wide assertion from which to carve exceptions.
+
+```yaml
+  member_exceptions:
+  - member:
+      id: UniProtKB:P32582
+      label: Cystathionine beta-synthase
+      gene_symbol: CYS4
+      organism: Saccharomyces cerevisiae
+      gene_review: genes/yeast/CYS4/CYS4-ai-review.yaml
+    exception_reason: >-
+      Cystathionine beta-synthase; it receives the CBS IBA from PTN000034107 and no cysteine synthase
+      IBA.
+    supported_by:
+    - reference_id: file:interpro/panther/PTHR10314/PTHR10314-paint.tsv
+      supporting_text: "PTHR10314\tPTN000034107\tGO:0004122\tF\tIBD\tfalse"
+  - member:
+      id: UniProtKB:P9WG59
+      label: Threonine synthase
+      gene_symbol: thrC
+      organism: Mycobacterium tuberculosis H37Rv
+    exception_reason: >-
+      Threonine synthase in the SF5 clade, where PAINT places threonine synthase activity and
+      negates cysteine biosynthesis.
+    lost_in_clade_node_id: PANTHER:PTN000741516
+    supported_by:
+    - reference_id: file:interpro/panther/PTHR10314/PTHR10314-paint.tsv
+      supporting_text: "PTHR10314\tPTN000741516\tGO:0004795\tF\tIBD\tfalse"
+  - member:
+      id: UniProtKB:O69652
+      label: L-cysteine desulfhydrase Cds1
+      gene_symbol: cds1
+      organism: Mycobacterium tuberculosis H37Rv
+      gene_review: genes/MYCTU/cds1/cds1-ai-review.yaml
+    exception_reason: >-
+      SF135 cysteine desulfhydrase that degrades rather than synthesises cysteine; the slice has no
+      PAINT node for this clade, so no lost_in_clade node is given.
+    supported_by:
+    - reference_id: file:genes/MYCTU/cds1/cds1-ai-review.yaml
+      supporting_text: catalyzes L-cysteine CATABOLISM, not biosynthesis
+```
+
+
+## 2026-11-06: MccA biochemical activity versus node scope
+
+Persistent audit marker: `CYSTEINE-MCCA-SUBSTRATE-SCOPE-20261106`.
+
+PMID17056751 is cached with its primary abstract (full_text_available:false), which
+explicitly reports purified recombinant YrhA/MccA OAS-thiol-lyase activity at 75-fold
+lower activity than CysK and atypical OAS-plus-homocysteine cystathionine synthesis.
+The former supports the seed molecular function even if it is secondary in vivo;
+physiological prominence is not a prerequisite for biochemical activity. The
+PTN008497437 GO:0004124 overall assessment remains UNRESOLVED about the breadth
+of phylogenetic propagation, not about whether the cited seed activity was observed.
+
+QuickGO GO:0004122 was checked on 2026-11-06: its reaction uses L-serine and
+L-homocysteine, producing cystathionine and water. OAS-dependent MccA chemistry
+cannot establish this exact serine-dependent reaction merely through the CBS name.
+The GO:0004122 assessment remains substrate-specifically UNRESOLVED. The prior
+statement that there was no cached MccA biochemistry was incorrect and is superseded.
+The broad phrase every CBS was narrowed to reviewed canonical serine-dependent CBS
+proteins, leaving the atypical SF242 MccA distinction explicit. All PAINT node ids,
+assertions, dates and seeds were preserved; no new MccA gene review or native OAS
+route claim was created.
+
+
+## 2026-11-06 PR6120 round 1: explicit scope comparison
+
+The [structured scope proof](PTHR10314-source-analysis/round1-go0004124-scope.yaml) restores the three historical GO:0004124 exception objects unchanged and records P9WP53 separately as an over-annotated member assignment, with its assay and construct limits. This supersedes the earlier prose-only archive as the machine-readable comparison artifact; it does not silently grant activity to the family.
+
+The frozen compact tree resolves the bacterial CysK node PTN000034535 to 40 leaves (36 SF194, two SF102, two SF191), the CysM node PTN008497439 to 25 SF162 leaves, and the eukaryotic OAS-TL node PTN000034468 to 420 leaves in 28 subfamilies. The CBS node PTN000034107 contains 69 SF194 leaves and six SF243 leaves. Thus SF194 cannot substitute for the CysK node: a single yeast exception would still leave human CBS P35520 and other CBS proteins inside a false whole-subfamily grant. No OAS-TL subfamily identifier is guessed.
+
+The current checker only computes positive coverage for FAMILY_WIDE/SUBFAMILY_ONLY (family_gene_crosscheck.py:367), rejects member_exceptions under UNRESOLVED (line 439), and rejects an exception outside the selected subfamilies (line 475). Restoring Cds1/SF135 as an exception under SF194/SF162 would therefore be contradictory. The production join sees family-only raw crossreferences for CYS4, MYCTU Cds1 and MYCTU CysM, so the proof distinguishes its missing-subfamily result from a read-only overlay of verified tree membership. The linked proof includes executable read-only counterexamples and actual current gene actions so the unresolved family boundary cannot hide the target-specific disagreements. No validation semantics were changed.
+
+P9WP53's OAS/free-sulfide assignment is over-annotated; slow OAS aminoacrylate formation in PMID18842002 is not a demonstrated weak complete reaction. PMID18799456 reports no detected complete product under the tested conditions, with the documented recombinant construct and detection limits. These observations justify challenging an inherited OAS assignment but do not establish an evolutionary loss or exactly zero residual turnover. NEEDS_PRUNING explicitly asserts a loss (family_review.yaml:811), so that stronger node verdict is not adopted. The E. coli P16703 and PAO1 Q9I526 positive activities remain supported; UNRESOLVED at the mixed node is limited to its retention boundary.

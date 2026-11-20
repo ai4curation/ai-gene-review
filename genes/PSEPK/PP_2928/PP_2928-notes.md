@@ -16,3 +16,58 @@ condenses putrescine and aspartate β-semialdehyde into carboxyspermidine in
 an NADPH-dependent manner"]
 
 No direct KT2440 PP_2928 enzyme assay is available, so the assignment remains ISS.
+
+## 2026-11-02 (module curation: bacterial_carboxyspermidine_biosynthesis)
+
+- Added verbatim quotes to the two NEW rows and the core function: V. cholerae
+  genetics showing the CANSDH uses putrescine to make carboxyspermidine
+  [PMID:19196710 "it increasingly uses putrescine as a substrate and forms
+  carboxyspermidine, which is then converted to spermidine by CANSDC"] and the
+  comparative-genomics result that CASDH/CASDC orthologues cluster with
+  putrescine-biosynthesis genes [PMID:22025614].
+- The PTHR43796 family review (interpro/panther/PTHR43796/PTHR43796-review.yaml)
+  now records SF2 as the CASDH/CANSDH subfamily, with V. cholerae Q9KRL3
+  (VC_1624; genes/VIBCH/VC_1624) as the experimentally characterized reference.
+- No GOA rows exist for Q88IS1; both annotations remain NEW ISS inferences.
+
+
+## 2026-11-05 complete gene-level comparative audit
+
+Re-read every existing annotation, core function, raw UniProt record, relevant
+provider report and primary literature. Original annotation payloads and raw
+UniProt/GOA snapshots were preserved; no new annotation rows were added. Five
+authored NEW rows across the four-gene baseline remain inherited proposals, not
+new proposals from this audit. Default Falcon research was attempted with
+`just deep-research ORGANISM GENE --provider falcon`; it failed with HTTP 403
+authentication. No provider report was fabricated or overwritten. Manual findings
+are recorded here; the command logs are in the ignored module-audit cache.
+
+QuickGO on 2026-11-05 confirmed active GO:0102143 includes both carboxynorspermidine
+and carboxyspermidine dehydrogenase reactions, and GO:0102144 is obsolete as the
+same activity. Searches for carboxyspermidine/carboxynorspermidine decarboxylase
+and carboxypolyamine returned no specific decarboxylase term. The existing NTR
+name was retained; no GO or PTN identifier was invented. PANTHER official names
+were checked in panther.obo, and exact protein/subfamily assignments against the
+unchanged UniProt records (PTHR43796:SF2 for the dehydrogenases; PTHR43727:SF1 for
+the decarboxylases).
+
+The comparative literature requires a substrate-specific reading. The B. fragilis
+and C. leptum enzymes have measured putrescine/DAP kinetics, but these are not
+measurements of this target [PMID:37437886, "These data suggest that both enzymes
+can use putrescine or DAP and thus produce carboxyspermidine or
+carboxynorspermidine."]. Agmatine was not tested in those comparisons. The 2025
+reconstruction shows that related pairs can make tetramines or use agmatine;
+those functions are not transferred here [PMID:40074085, "The ASA-dependent
+pathway consisting of CASDH/CASDC homologs has diversified during evolution
+to produce norspermidine (29), N1-aminopropylagmatine (37), and as we have shown
+here, spermidine and Spm/Tspm."]. Physiological product identity, reconstructed
+pathway activity and isolated-enzyme turnover are distinct evidence.
+
+Targeted searches for PP_2928/carboxyspermidine and nspC/KT2440 did not recover
+a direct target assay. The paired pathway remains a comparative proposal.
+Family identity and adjacency are supportive but insufficient to establish
+native diamine preference, particularly after CAPA-pathway diversification
+[PMID:37878710]. The H. pylori putrescine assay cited previously cannot establish
+physiological substrate preference: that homolog was also characterized as CAPADH.
+No new PLP-binding or homodimerization row was added solely from family architecture;
+the specific catalytic proposal already captures the core activity.

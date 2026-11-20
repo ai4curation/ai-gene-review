@@ -8,7 +8,7 @@ InterPro IPR004446 is the heptose-bisphosphate phosphatase signature; IPR036412/
 
 ## Decisions
 
-Three seeded rows: two MODIFY (specific precursor process and beta-C7 phosphatase) and one UNDECIDED (cytoplasm). The localization statement is ARBA-only in UniProt and the primary study assays recombinant protein, not native localization. No location is asserted in the core function. The broader phosphatase term remains true but is refined rather than removed. One core function represents the measured hydrolysis reaction.
+Three seeded rows: two MODIFY (specific precursor process and beta-C7 phosphatase) and one that was UNDECIDED in this round (cytoplasm), now KEEP_AS_NON_CORE (see the 2026-11-02 entry). The localization statement is ARBA-only in UniProt and the primary study assays recombinant protein, not native localization. No location is asserted in the core function. The broader phosphatase term remains true but is refined rather than removed. One core function represents the measured hydrolysis reaction.
 
 ## Research and source access
 
@@ -33,3 +33,25 @@ PMID:32567317 (abstract inspected) demonstrates the downstream use of ADP-L-glyc
 QuickGO term definitions were checked on 2026-10-25 for GO:0008968, GO:0033785, GO:0033786, GO:0034200, GO:0008712, GO:0097171, GO:0030246 and GO:0097367. GO:0097171 has nucleotide-sugar/carbohydrate-derivative biosynthesis ancestors, not an LPS-process ancestor. Its definition mentions the familiar LPS use of the same product but the named chemical biosynthetic process applies to the reconstituted septacidin precursor pathway. No LPS process is asserted.
 
 No new broad downstream antibiotic biosynthesis term is proposed. Only the chemically established precursor pathway and exact enzyme functions are represented. Substrate use does not create an independent sugar-transport, lectin or host immune function.
+
+## 2026-11-02 — cytoplasm resolved to KEEP_AS_NON_CORE
+
+GO:0005737 moves from `UNDECIDED` to `KEEP_AS_NON_CORE`. Nothing new was measured;
+the claim is now judged rather than deferred.
+
+The compartment claim is sound: SepL is a soluble HAD-superfamily phosphatase acting
+on an intracellular heptose bisphosphate in a cytoplasmic route, and the new
+`PTHR42891` family review assesses the equivalent cytosol node for this family as
+SOUND on an E. coli GmhB experimental seed.
+
+The term is **kept rather than refined** because cytoplasm is already as precise as
+the evidence allows — nothing distinguishes cytosol from other cytoplasmic locations
+in *Streptomyces*. It is marked non-core only in the weak sense that this review
+centres on the catalytic step, which is a statement about the review's focus and not
+a claim that the enzyme acts elsewhere; that is why it does not conflict with the
+sibling KT2440 hldE row, where cytosol is `ACCEPT` as the compartment the core
+activity operates in and the sub-compartment is resolved.
+
+The UniProt localization statement is ARBA-only, an unvetted prediction, so it is
+still not cited as evidence. The judgement rests on the enzyme's solubility, its
+substrate compartment and the family-level assessment instead.

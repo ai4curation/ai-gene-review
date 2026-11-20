@@ -44,6 +44,21 @@ module-level MF concepts only when the node itself is intentionally a
   multiple mechanistic roles, model those roles explicitly, but do not mistake a
   single leaf annoton for a module.
 
+## Explaining GO-CAM Edges
+
+GO-CAM models compress: a plasma-membrane kinase "directly positively
+regulates" a nuclear transcription factor activity with no step between. When
+a module covers that pathway, state the missing steps (release, partner
+binding, nuclear import), reuse a transport module by `module_ref`
+(`karyopherin_nuclear_protein_import` for nuclear entry), and give the bridging
+node `module_type: TRANSPORT_STEP`. Then pin the GO-CAM activities at both ends
+of the edge with `gocam_associations` (`model` and `activity`) on the module
+elements they realize; `just gocam-compartments` reports such edges as
+`EXPLAINED` with the module path. Pin only what the module really models (pin a
+receptor paralog the module does not list to its node, not to another
+receptor's annoton), and say which other gene products the hidden steps need.
+See `projects/GOCAM_COMPARTMENTS.md`.
+
 ## Participants
 
 - Use `selector_type: GENE` or `GENE_PRODUCT` for a concrete species member.

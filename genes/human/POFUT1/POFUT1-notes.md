@@ -116,3 +116,15 @@ Findings I did NOT use / treated with caution (and why):
   single cancer-context, catalysis-independent claim; not fetched/verified, not annotated.
 - Mammalian enzyme-independent chaperone activity: Falcon leans on it; primary source
   (PMID:28334865) says this is explicitly unresolved in mammals -> kept as hypothesis only.
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IBA (is_active_in), IEA (GO_REF:0000044, SL-0095), ISS (from rat Q6EV70), IDA (PMID:15653671). All ACCEPT (core); kept.
+
+Checks:
+- PAINT PTHR21420 node PTN001086401 IBD seeds: RGD:1303001 (rat Pofut1) and UniProtKB:Q9H488 (POFUT1 itself).
+- Human UniProt ER line is by similarity to Q6EV70, which UniProt REST (2026-11-05) identifies as rat OFUT1, curated from PMID:15653671.
+- PMID:15653671 (abstract-only): "O-FucT-1 is a soluble protein that localizes to the endoplasmic reticulum (ER). In addition, it appears that O-FucT-1 is retained in the ER by a KDEL-like sequence at its C terminus. Our results also suggest that enzymatic addition of O-fucose to proteins occurs in the ER".
+- UniProt sequence: FT SIGNAL 1..26 (ECO:0000255), no TRANSMEM, C-terminal RDEF (FT MOTIF 385..388 "Prevents secretion from ER"), N-glycans at N62 and N160 (ECO:0000269).
+
+Outcome: root rows unchanged in action, dated reasons added; the IBA is_active_in is defensible (fucosylation shown in the ER). NEW GO:0005788 ER lumen (IC): signal peptide and soluble + KDEL-like retention + lumenal N-glycosylation + function on folded EGF repeats. core_functions left at the root.

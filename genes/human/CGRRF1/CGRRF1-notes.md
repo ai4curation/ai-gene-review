@@ -34,3 +34,14 @@
 
 ## Proposed (not in GOA, supported by structure/homology, not added as accepted annotations)
 - MF GO:0061630 ubiquitin protein ligase activity and BP GO:0036503 ERAD pathway are strongly suggested by the RING+TM+ER+UPR profile but lack positive functional evidence (the one in vitro test was negative). Raised in suggested_experiments rather than asserted.
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095) and IDA (PMID:27485036), both ACCEPT (unchanged).
+
+Checks:
+- UniProt: "Endoplasmic reticulum {ECO:0000269|PubMed:27485036}"; no TRANSMEM, SIGNAL or TOPO_DOM features [file:human/CGRRF1/CGRRF1-uniprot.txt].
+- PMID:27485036 (full text): candidates chosen by "(1) having a RING-finger motif (C3H2C3 or C3HC4) and (2) having transmembrane domain(s)" (TMHMM); "RNFT1, RNF185, CGRRF1 and RNF19B partially colocalised with endogenous PDI, an ER-resident chaperone, indicating their localisation to the ER" (stably overexpressed V5-tagged protein, COS-1).
+- InterPro extra features (queried 2026-11-05): Phobius TM 15-38, N-terminus 1-14 non-cytoplasmic, 39-332 cytoplasmic; no signal peptide. This is the same sequence line as TMHMM, not an independent one.
+
+Outcome: both rows stay ACCEPT with dated ORGANELLES sentences. NEW GO:0005789 considered and not added: the anchor is predicted only, and the only ER assay is partial co-staining of an overexpressed tagged construct (organelle-level); UniProt's other curated location is the nucleus (PMID:22361696). Judgement call: by the BAK1 tail-anchor logic (TM, no signal peptide, one ER assay) a membrane row could be argued; it was held back because the ER assay is on overexpressed protein and UniProt does not annotate the TM.

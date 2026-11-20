@@ -1,5 +1,6 @@
 ---
 title: "RHEA → GO Contribution & Gap Project"
+collections: [MAPPINGS]
 maturity: IN_PROGRESS
 last_reviewed: 2026-10-05
 tags: [PIPELINE]
@@ -11,6 +12,7 @@ manifest:
   slides:
     - href: RHEA/slides/RHEA-slides.html
       description: AI generated
+index_group: CROSS_CUTTING
 ---
 
 # RHEA → GO Contribution & Gap Project

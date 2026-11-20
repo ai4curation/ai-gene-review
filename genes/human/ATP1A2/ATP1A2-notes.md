@@ -79,3 +79,10 @@ Thus the two steroid-hormone-binding rows retain their non-core decisions. The s
 The ATP-metabolism comment concerns the existing GO:0046034 row (the review comment named GO:0006200). It remains ACCEPT because alpha2 performs ATP hydrolysis as part of the core transport reaction, which the single GO:0005391 core already states. The distilled core need not duplicate all broad parent annotations. The two cardiac specificity cautions remain MARK_AS_OVER_ANNOTATED: this follow-up adds no evidence that would warrant escalating the conservative calls to REMOVE. Other physiological and unresolved donor-assay decisions are unchanged. The older notes remain an append-only record; this section provides the concise biological rationale for the current changes.
 
 The independently reviewed follow-up passed focused validation (`just validate human ATP1A2`, 3fd1e7), rendering (f2c5c7), and validation of the new EDIT history record `2026-09-29T201203Z-codex-06c8e5.yaml` (399a22). The single generic-binding advisory is resolved by the supported molecular-function refinement. No repository-wide validation result is inferred from these focused checks.
+
+## 2026-11-04 ORGANELLES ER batch 1 (endoplasmic reticulum rows)
+
+- Row: GO:0005783 IEA (GO_REF:0000107, Ensembl projection from mouse Q6PIE5), qualifier is_active_in. No ER sub-compartment rows.
+- Traced the source via QuickGO: mouse Q6PIE5 GO:0005783 is_active_in IDA PMID:21731499 (MGI). Fetched the paper (full text). Myc-tagged alpha2 overexpressed in HeLa: [PMID:21731499 "Wild type α2 Na,K ATPase showed a typical plasmamembrane and slightly endoplasmic reticulum staining"]; the FHM2 R887 mutant colocalizes with calnexin and [PMID:21731499 "the mutant R887 protein is ineffectively exported from the endoplasmic reticulum-Golgi system"].
+- No pumping activity in the ER is shown, so the is_active_in qualifier is unsupported (qualifier left unchanged per policy).
+- Outcome: KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED (transit pool plus QC retention of an overexpressed mutant). No sub-compartment row. Added PMID:21731499 to references and publications/.

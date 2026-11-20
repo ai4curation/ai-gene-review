@@ -55,7 +55,17 @@ cover (see "Do not add what curators deliberately declined to add" in CLAUDE.md)
   and my gene does not", name two or three other gene products in the **same role**
   relative to the same kind of process and query whether they carry it. A systematic
   absence across species and MODs is a convention you have not identified yet, not a
-  curation lapse. Check the term's parents too: a process under `GO:0006508 proteolysis`
+  curation lapse. **A negative result is the fragile one, because it is the one that
+  licenses the strong conclusion, so confirm the query can return a positive before you
+  trust it** — query the term id directly, or run it against a gene you know carries the
+  term. A malformed query returns a clean, confident, false absence and does not look
+  like an error; a result too tidy to be curation usually is not curation. (This has
+  happened: a GZMB review declined `GO:0042742` on a reported absence across all four
+  granule effectors, from a query that filtered on a field it returned empty. GNLY
+  carries that term by IDA.) A positive result does not compel the annotation either:
+  comparators show whether a convention exists, never that your gene does the work, and
+  the participation test still governs. Check the term's parents too: a process under
+  `GO:0006508 proteolysis`
   names whatever does the cleaving, which is the substrate itself in the autoprocessing
   case (`GO:0016540`) and otherwise is not.
 
@@ -113,6 +123,13 @@ review's own rows on the blocked term. Act on what it reports:
 - If the family has a FamilyReview, check its `node_assessments` for the loss node. A
   LOSS_TOO_BROAD or LOSS_CONTRADICTED verdict there is the argument to cite.
 - "Re-annotated below: yes" means PAINT lifts the block for this gene; the IBA is current.
+- Record each loss that applies on the row itself, as
+  `review.propagation_review.paint_losses` (`node_id`, `evidence`, `date`, and `agreement`:
+  AGREES, CONTRADICTED, TOO_BROAD or UNRESOLVED). Validation checks the node, term,
+  code and date against the family's paint.tsv when the family has one. For a
+  CONTRADICTED or TOO_BROAD loss, also give `argument` (the case for PAINT, with
+  citations and the clade) and `suggestion` (the change to propose):
+  `projects/IRD_EVIDENCE/paint_report.py` collects these rows for the PAINT team.
 
 The tool matches terms exactly, so a review row on a descendant of the blocked term is not
 listed. See [projects/IRD_EVIDENCE.md](../../../projects/IRD_EVIDENCE.md).

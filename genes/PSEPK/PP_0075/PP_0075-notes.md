@@ -31,3 +31,22 @@ The report correctly retrieves the SulP/SLC26-STAS architecture and the absence
 of a direct transport assay. Its proposed sulfate cargo remains speculative.
 Its assignment of intact choline-O-sulfate uptake to an unspecified ABC route
 is also not established by the target or cached KT2440 evidence.
+
+## 2026-11-02 completion (choline-O-sulfate module curation)
+
+- GO:0016020 membrane changed from KEEP_AS_NON_CORE to MODIFY -> GO:0005886 plasma
+  membrane: correct but general; nine Phobius helices plus SLC26A/SulP domain in a
+  Gram-negative bacterium place the protein in the cytoplasmic (inner) membrane.
+- Removed reliance on the ARBA-only SUBCELLULAR LOCATION line as support.
+- Status set to COMPLETE.
+
+
+## 2026-11-06 cross-taxon choline-sulfate audit
+
+Retained all three original rows, including the inherited NEW generic transporter activity. Exact cargo/coupling and partnership with PP_0076 remain unresolved. Replaced an incorrect universal Gram-negative membrane argument with target architecture and added inferred plasma-membrane core location. SulP/STAS and adjacency are not direct COS-uptake evidence.
+
+Reviewed the existing OpenScientist provider report and primary/cached sources; preserved the provider report and its PDF/HTML artifacts. A provider report is already present, so no replacement research run was needed. All machine annotation payloads and raw UniProt/GOA files are unchanged. No new annotation rows were added. Generic family labels and locus proximity do not establish COS transport, a BetD-BetE complex, or substrate promiscuity in unassayed homologs.
+
+Normal force-fetches of PMID:17116241 and PMID:21369825 still returned abstract-only caches; their assay limitations remain explicit. PMID:9736747 also remains abstract-only in the cache after the root fetch. PMC methods were independently accessible at https://pmc.ncbi.nlm.nih.gov/articles/PMC21653/ and explicitly name 102F34R; direct HTML retrieval encountered a challenge, Europe PMC XML returned HTTP500, and NCBI BioC returned no result. No publication cache was hand-edited or invented. Existing abstract quotations remain used as such. Full-text PMID:29458126 and PMID:35503214 distinguish recombinant source strains and assay conditions.
+
+Focused gene validation passed. Preservation is reproducibly checked by `.cache/module-audit-logs/choline-sulfate-20261106/check-existing-four.py`, against the frozen original baseline: 16 total rows, one inherited NEW, zero added rows, eight raw and twelve provider/artifact hashes unchanged. PSEPK/betC retains the advisory about not citing its low-quality provider in annotation support; primary and curated family evidence are used instead.

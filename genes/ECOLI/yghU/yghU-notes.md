@@ -1,0 +1,13 @@
+# YghU curation notes
+
+## 2026-11-02 — K-12 core and strain-qualified Nu-class comparison
+
+Q46845 is the reviewed K-12 YghU protein (b2989/JW5492), taxon83333. PMID:21222452 explicitly amplified yghU from K-12 genomic DNA and identified the reviewed accession. It directly measures the disulfide-reductase activity, soluble dimer behavior and two-GSH active-site architecture. The high activity on 2-hydroxyethyl disulfide supports GO:0015036 as the core activity class; the actual endogenous substrate is unknown. Neither artificial-substrate kinetics nor a GST fold establishes a native lignin-catabolic role.
+
+All four seeded machine rows are preserved. The glutathione-transferase IBA is KEEP_AS_NON_CORE because the primary study measured CDNB conjugation, with kcat0.109/s, while most other tested electrophiles were inactive. This is a real halide-displacement reaction consistent with the live GO:0004364 definition, even though the dominant measured redox activity differs. It should not be removed merely because many Nu-class reactions are not conventional GST reactions. The IDA disulfide-oxidoreductase and homodimerization rows are accepted. The inherited cytoplasm row is retained as consistent with a soluble intracellular redox enzyme; recombinant purification is not presented as direct subcellular-localization evidence.
+
+The prescribed `just paint-losses ECOLI yghU` query found no IRD or IKR loss on the Q46845 lineage. PANTHER:PTHR44051:SF22 has official name DISULFIDE-BOND OXIDOREDUCTASE YGHU. Its shared placement with sphingomonad Nu enzymes does not imply that all members have the same physiological substrate or a complete beta-etherase pathway.
+
+PMID:29449375 is an informative comparison, with a crucial strain boundary. Its yghU construct came from DH5alpha and was expressed in B834. The DH5alpha-derived enzyme cleaved both GS-HPV stereoisomers less efficiently than NaGSTNu and complemented the missing F199 deglutathionylation step. That is isolated catalytic/heterologous-complementation capacity. No sequence bridge from the DH5alpha construct to the reviewed K-12 sequence has been established here, and no native K-12 lignin-dimer process or new core function is asserted from it. The study explicitly discusses Nu enzymes from organisms lacking the beta-etherase pathway.
+
+A real Falcon request failed HTTP403 authentication; no provider report was fabricated. Primary full-text studies, the curated UniProt record, live QuickGO definitions and PAINT-losses output supply the manual review evidence. No NEW rows are added. Open biological question: which endogenous disulfide or organic hydroperoxide is YghU's physiological substrate?

@@ -246,3 +246,17 @@ The remaining seven generic-binding decisions implement the user's explicit inst
 The seven retained rows remain TPT1/TCTP twice, NDRG1 twice, NKD2, POST/SLC35G1 (Q2M3R5), and RNF183. Their existing source-specific reasons and access limits govern what is retained. In particular, the NDRG1 target-table entries were not independently inspected; curated-source deference and the separate UniProt corroboration must not be described as primary-table verification. Retention does not assign a partner's activity to ATP1A1 or establish direct binary contact for every association. The unresolved LCK pair remains UNDECIDED; this task instruction does not turn missing or unadjudicated evidence into positive support.
 
 The seven evidence-backed alpha/beta refinements to GO:0046982 and all other annotation decisions remain unchanged. All 127 source and review objects, four alternative products, the single sodium/potassium-pump core, literal evidence excerpts, and cached sources are preserved. This addendum clarifies the authority and exclusion criterion for the existing decisions; it adds no primary-source reading or biological claim. Prior validation results remain historical observations, and this clarification does not claim reviewer approval or completion of the PR.
+
+## 2026-11-04 ORGANELLES ER batch 1 (endoplasmic reticulum rows)
+
+- Row: GO:0005783 ISS (GO_REF:0000024, from rat P06685, BHF-UCL). No ER sub-compartment rows.
+- Traced the source via QuickGO: rat P06685 GO:0005783 IDA PMID:18768923 (BHF-UCL). Cached full text: MDCK-cell study of ankyrin-dependent ER-to-Golgi export. [PMID:18768923 "the α- and β-ATPase subunits assemble in the ER and exit efficiently only as a complex"]; ER accumulation appears only when export is blocked: [PMID:18768923 "accumulated significant amounts of α 1 -Na + -K + -ATPase in a cytosolic compartment that appeared to be the ER"] (eGFP-MAB overexpression), and the MAB deletion mutant binds BiP (misfolded).
+- UniProt human location: cell membrane, basolateral, sarcolemma, axon, melanosome; no ER.
+- Outcome: KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED (biosynthetic transit plus perturbation-induced retention of a plasma-membrane pump). No sub-compartment row. Added PMID:18768923 to references. Golgi ISS row (same source) not touched in this batch; it likely deserves the same check in the Golgi batch.
+
+## 2026-11-13 ORGANELLES Golgi batch 1 (Golgi apparatus rows)
+
+- Row: GO:0005794 ISS (GO_REF:0000024, BHF-UCL, with UniProtKB:P06685). QuickGO: rat P06685 GO:0005794 IDA PMID:18768923 (BHF-UCL), the same paper as the ER ISS row reviewed 2026-11-04.
+- PMID:18768923 (full text) measures ER-to-Golgi export: reporters (VSV-G, VSV-MAB) reaching the Golgi and Golgi glycosylation of the beta subunit as a proxy for alpha,beta passage. Alpha1 is never shown in a marker-defined Golgi compartment; wild-type alpha1 goes on to the surface [PMID:18768923 "Upon transient expression, Flag-tagged WT α 1 -Na + -K + -ATPase moved to the plasma membrane"]; conclusion [PMID:18768923 "These results establish that ankyrin facilitates the passage of α 1 -Na + -K + -ATPase through the secretory pathway, at least to the Golgi"].
+- UniProt human location: no Golgi.
+- Outcome: KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED (biosynthetic transit of a plasma-membrane pump), consistent with the ER ISS row. Removed the "Neighbouring Golgi row not re-reviewed here" sentence from the ER row reason (no other change to that row). No sub-compartment row.

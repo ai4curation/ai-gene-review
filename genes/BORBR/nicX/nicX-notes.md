@@ -12,3 +12,12 @@ The DOI validator could not retrieve the meeting abstract from Crossref/DataCite
 ## PR 5544 follow-up (2026-10-25)
 
 No NEW GO:0047075 annotation row is proposed at this stage: the provisional core activity summarizes locus-specific product analysis reported only in a primary meeting abstract plus independent NicX-family membership. A full experimental article or accessible complete assay record would strengthen an upstream annotation proposal. This differs from RB50 NicC, whose exact accession has full primary mechanistic enzymology and native pathway-context evidence. The folder uses the literature name nicX because the BB1781 product is explicitly characterized under that name; BB1776/BB1783 retain locus symbols because NicB1/NicB2 remain comparative architectural assignments. Neither choice derives a gene symbol from a machine-generated protein name.
+
+## 2026-11-02 module completion follow-up (revised after PR #5897 review)
+
+Revised the earlier "no NEW row" decision. The protein has no GOA rows, so its NicX activity had no annotation; a single NEW molecular-function row (GO:0047075) now records it. The evidence is ISS (GO_REF:0000024), with UniProtKB:Q88FY1 as the with/from donor:
+1. The protein carries the reaction-specific NicX signature (IPR058739, PF26233), which separates NicX from the M29 aminopeptidases in the same PANTHER family.
+2. It shares PANTHER subfamily PTHR34448:SF1 with KT2440 NicX (Q88FY1). Q88FY1 has purified-enzyme, product, structural and mutagenesis evidence for ring cleavage of 2,5-dihydroxypyridine to N-formylmaleamate.
+The broad PANTHER family label is not used as evidence, and no process row is proposed.
+
+The FASEB 2011 meeting abstract (DOI:10.1096/fasebj.25.1_supplement.714.2) is not relied on for this row. The earlier entry above records that a previous curator read the publisher page. However, the only cacheable source is OpenAlex metadata with a truncated abstract fragment, in `publications/DOI_10.1096_fasebj.25.1_supplement.714.2.md`, so its experimental content cannot be re-checked. Its reference_review keeps identifier verification (correct) separate from content verification (unverified).

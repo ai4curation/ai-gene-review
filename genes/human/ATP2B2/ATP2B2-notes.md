@@ -143,3 +143,10 @@ Sources checked:
 - https://www.ncbi.nlm.nih.gov/protein/1476413357
 
 Focused validation after applying this follow-up passed (`just validate human ATP2B2`, actual e0146a); gene rendering passed (2b0526). The new EDIT history record `2026-09-29T200440Z-codex-582807.yaml` passed history validation (1f3081). The earlier validation 07adfd ran before the follow-up was applied and is not evidence for this revision. All source assertions and alternative products remain unchanged.
+
+## 2026-11-04 ORGANELLES ER batch 1 (endoplasmic reticulum rows)
+
+- Row: GO:0005783 IEA (GO_REF:0000107, Ensembl projection from mouse Q9R0K7). No ER sub-compartment rows.
+- Traced the source via QuickGO: mouse Q9R0K7 GO:0005783 IDA PMID:17234811 (MGI), the same CHO overexpression paper behind this review's EXP rows. [PMID:17234811 "In the remainder of the cell population both rim staining and endoplasmic reticulum expression patterns were visible."] and [PMID:17234811 "Because the PMCA units retained in the endoplasmic reticulum are normally inactive"]. No ER marker mentioned in the cached full text.
+- UniProt human location: cell membrane, synapse, apical/basolateral membrane (isoform WA); no ER.
+- Outcome: UNDECIDED -> MARK_AS_OVER_ANNOTATED (overexpression retention artefact of a plasma-membrane pump). No sub-compartment row.

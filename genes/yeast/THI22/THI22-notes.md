@@ -280,3 +280,7 @@ validator's skip list, so nothing checks them automatically.
 calls be annotated properly and would settle the cytosol IBA. Note this review's own earlier
 falcon-derived note that "Huh et al. 2003 GFP screen did not give a clear THI22 localization"
 (PMID:14562095) is consistent — SWAT is a later, more sensitive N-terminal tagging method.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[10], GO:0005575 cellular_component (ND, GO_REF:0000015), ACCEPT: the ND may be stale. These notes record SGD's statement that "SWAT-GFP and mCherry fusion proteins localize to the endoplasmic reticulum and vacuole respectively". Those are genome-wide localization screens identifying locations for this gene product in S. cerevisiae. The primary screen papers are not cached, so a curator should check them before adding an ER or vacuole annotation. The review action was left unchanged.

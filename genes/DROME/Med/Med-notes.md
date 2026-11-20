@@ -25,3 +25,7 @@ UniProt quotes are from curated experimental/function/location statements or leg
 ## Completion
 
 87 original annotations reviewed: ACCEPT 53, KEEP_AS_NON_CORE 13, REMOVE 1, MODIFY 15, UNDECIDED 5. Core functions and source reviews completed; gene validation passed without warnings. No branch change or commit was made.
+
+## 2026-11-15 re-review: PMID:11071761 source-defect queries withdrawn
+
+The two `WRONG_REFERENCE` queries to FlyBase on the Med IDA rows citing PMID:11071761 (Dai et al. 2000; BMP signaling pathway GO:0030509 and positive regulation of transcription by RNA polymerase II GO:0045944) were withdrawn. Their only ground was that the abstract names Schnurri and Mad but not Medea. QuickGO by reference shows FlyBase annotated this paper as a whole: on 2019-04-24 it placed the same GO:0030509 IDA on Med, Mad and tkv and the same GO:0045944 IDA on Med and Mad, alongside the shn rows. That is a deliberate annotation of the components of the paper's Dpp-response cell culture assay, not a slip, and an abstract that omits a gene cannot show it was not assayed. The full text was not read (not open access), so the assay composition is unverified here; the rows stay ACCEPT on the independent evidence already cited.

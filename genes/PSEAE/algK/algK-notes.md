@@ -18,3 +18,7 @@ UniProt PTHR11102:SF160 official name ERAD-ASSOCIATED E3 UBIQUITIN-PROTEIN LIGAS
 - [PMID:20159471] AlgK is a TPR-containing protein and the periplasmic component of a novel exopolysaccharide secretin.: The crystallized TPR-rich AlgK is from P. fluorescens WCS374r; P. aeruginosa lipidation/localization experiments are separate.
 - [PMID:36494359] Structure of the AlgKX modification and secretion complex required for alginate production and biofilm attachment in Pseudomonas aeruginosa.: The AlgKX crystal structure and purified polymer-binding assays use P. putida KT2440 proteins, not P. aeruginosa proteins.
 - [PMID:42766672] MucD regulates alginate biosynthesis through the proteolytic control of AlgX and AlgK in Pseudomonas aeruginosa.: Direct P. aeruginosa reconstitution and proteolysis; being a protease substrate does not make AlgK an enzyme or participant in proteolysis.
+
+## 2026-11-02 update
+
+Removed GO:0042597 periplasmic space from core_functions locations. No cellular-component row in this review backs it: the only CC annotation is GO:0009279 cell outer membrane (IEA), and no periplasmic-space annotation exists in GOA or was proposed as NEW. A core location must be reflected in the reviewed annotations, and the evidence (outer-membrane lipidation and fractionation, PMID:20159471) supports a membrane-anchored lipoprotein, not a soluble periplasmic protein. Its TPR scaffold faces the periplasm, which stays described in prose. Cell outer membrane matches the KT2440 and Azotobacter AlgK reviews and the module.

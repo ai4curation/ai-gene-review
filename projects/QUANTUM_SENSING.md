@@ -8,6 +8,7 @@ manifest:
   slides:
     - href: QUANTUM_SENSING/slides/QUANTUM_SENSING-slides.html
       description: AI generated
+index_group: OTHER_ORGANISM
 ---
 
 # Quantum Sensing Proteins and Engineering Chassis

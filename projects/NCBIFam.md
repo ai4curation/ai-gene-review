@@ -1,6 +1,6 @@
 ---
 title: "NCBIFAM / CDD → GO Contribution & Gap Project"
-collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
+collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION, MAPPINGS]
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 autolink_exclude: [ParB, parB]
@@ -15,6 +15,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/PRhzN8YSgWkDn7ifMW8qur
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # NCBIFAM / CDD → GO Contribution & Gap Project
@@ -491,6 +492,49 @@ nested view [`ncbifam2go.terms.yaml`](NCBIFam/ncbifam2go.terms.yaml)). The seed
 A `cdd2go` set is **not** planned: per the [CDD section](#does-cdd-have-its-own-go-mappings-no-for-cdd-proper),
 CDD-proper has no native GO, and the GO surfaced through CDD belongs to NCBIFAM
 (captured here) or Pfam (InterPro-routed) — a `cdd2go` would be largely redundant.
+
+### Would an *authored* `cdd2go` be worth it? Measured: no as a file, yes as rules
+
+The paragraph above settles the *ingestion* question: there is no CDD GO to ingest.
+It leaves open a different one, which came up while reviewing the Geobacter nanowire
+cytochromes — whether it is worth **authoring** terms for the CDD models InterPro never
+integrated, which therefore reach GOA by no route at all. Measured live on 2026-11-10
+with [`cdd_go_gap_probe.py`](NCBIFam/cdd_go_gap_probe.py) (companion to the gain script,
+which cannot be reused here because there is no term to propagate):
+
+| Quantity | Value |
+|---|---|
+| CDD models InterPro knows | 19,902 |
+| integrated into an InterPro entry | 5,475 (27.5%) |
+| **not integrated — reach GOA by no route** | **14,427 (72.5%)** |
+| carrying GO terms of their own | 0 |
+
+The 72.5% confirms the ~75% cited above, and the 0 confirms the CDD-proper finding
+independently, from InterPro's side rather than NCBI's.
+
+But the headroom is thin and extremely skewed. For a deterministic 40-model sample of
+the unintegrated set, counting entries that carry the model and lack **any** molecular
+function (`go:0003674`, closure-aware — a term-free proxy for what an authored mapping
+could reach): **26 reviewed entries in total across all 40 models**, and 24 of those 26
+come from a single model (`cd02245`). Most models score zero because their matched
+proteins already have an MF from another route — `cd00822`, for instance, matches 36,803
+entries of which 36,759 already have one. All-UniProtKB headroom is 9,406, again
+concentrated in three models (`cd07818` 3,267, `cd16406` 2,495, `cd02245` 2,246).
+
+So a blanket authored `cdd2go` is not worth building, which agrees with the verdict
+above but for a second, independent reason: not only is the GO redundant, the *protein
+space* is mostly already covered. What the data does support is **per-model curated
+rules** for the handful of models that match genuinely dark space, or that support a
+specific term their members lack.
+
+[`CR-0007`](../rules/curated/CR-0007.yaml) is the first of these, and shows why the
+choice has to be per model *and* per term. `cd21555` ("C-type cytochrome OmcS and
+similar proteins") is unintegrated and matches 56 proteins across Geobacteraceae,
+*Anaeromyxobacter* and *Ca.* Sulfobium. For `GO:0009055` electron transfer activity the
+gain is **3** — nearly all members already have it. For `GO:0020037` heme binding the
+gain is **52 of 56**, even though every member is a c-type cytochrome. Same model,
+same day, two terms, two opposite answers. A file-level mapping cannot express that;
+a rule can.
 
 ## Scaling the seed to the whole collection (EC-bridge candidates)
 

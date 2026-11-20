@@ -51,3 +51,10 @@ This is the primary experimental paper for aah1 function. Key findings:
 - No direct enzymology on purified Aah1 (substrate specificity inferred from A. niger orthologs AgtA/AgtB)
 - Individual contribution of aah1 vs aah3 unclear (strong phenotype only in double mutant)
 - The "nonredundant" collaboration mentioned in PMID:40668835 suggests they may have distinct but overlapping substrate preferences
+
+## 2026-11-01 consistency pass (with the aah3 review)
+- Plasma membrane IEA: KEEP_AS_NON_CORE changed to MODIFY to GO:0009897, because the reason argued the term was too general.
+- Carbohydrate metabolic process: MARK_AS_OVER_ANNOTATED changed to MODIFY to GO:0070600 (correct but general).
+- Fungal-type cell wall polysaccharide biosynthetic process (ISS): ACCEPT changed to MODIFY to GO:0070600, its IMP-supported descendant, and removed from core_functions.
+- Description and core function now say that the 4-alpha-glucanotransferase activity is inferred from A. niger AgtA/AgtB [PMID:17496125 "Both enzymes showed transglycosylation activity on donor substrates with alpha-(1,4)-glycosidic bonds and at least five anhydroglucose units."] and has not been assayed on Aah1.
+- Replaced three non-verbatim deep-research quotes with PMID quotes; fixed the beta-glucan figure (55% to 89%, not 54%) and a suggested question that called Aah1/Aah3 nonredundant with each other (they are redundant with each other and nonredundant with Ags1).

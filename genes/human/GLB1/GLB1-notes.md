@@ -83,3 +83,21 @@ Two disease-relevant catabolic roles:
 - The SA-beta-gal paper (PMID:11927518) beta-galactosidase activity IDA is now ACCEPT for consistency with every other row on that term (SA-beta-gal is lysosomal beta-galactosidase activity); carbohydrate metabolic process IDA is KEEP_AS_NON_CORE, matching the IEA row.
 - Core function 1 (GO:0004565 beta-galactosidase activity, directly involved in GO:0006689 ganglioside catabolic process, lysosomal lumen) matches the dismech GM1_Gangliosidosis_Type_1 and _Type_3 molecular nodes, which mark the same MF and BP DECREASED.
 - GLB1 added as the GM1/lactosylceramide entry step of modules/glycosphingolipid_lysosomal_degradation.yaml (Reactome R-HSA-1605624, R-HSA-1606312).
+
+## 2026-11-06: product-specific functional review
+
+The long GLB1 product supplies lysosomal beta-galactosidase activity. The shorter S-Gal product has a distinct matrix-binding role; the same historical elastin-binding abbreviation also occurs in literature about the unrelated sterol-isomerase locus, so construct identity matters. [PMID:2511208](https://pubmed.ncbi.nlm.nih.gov/2511208/), [PMID:8383699](https://pubmed.ncbi.nlm.nih.gov/8383699/).
+
+The review now separates recombinant self-association, cellular staining, granule cargo and urinary-vesicle detection from the principal catalytic function. The 647-residue alternative product remains represented without assigning its localization or activity from sequence length alone. The primary-evidence details and remaining access limits are in [the manual synthesis](GLB1-deep-research-manual.md).
+
+All 62 incoming annotation contexts are retained, including the two source-distinct cDNA rows and four AND extension groups. One isoform-specific matrix-binding MF is proposed; no new biological process is inferred from necessity or cargo membership. The prior notes above, historical sessions and quote associations remain preserved.
+
+## 2026-11-06: review follow-up
+
+The follow-up harmonizes the two repeated-term decisions while preserving all incoming contexts. Direct publication support replaces the duplicated guide quotations. Cache availability remains distinct from separately read original material. The earlier notes and initial validation/status record above remain preserved; current status is recorded in the review and source guide.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0005515 / PMID:15498789: defect retyped (evidence depth: ABSTRACT). The PMID is the intended paper (its abstract reports NGX6 associating with ezrin); the data concern NGX6 = TMEM8B (A6NDV4, EMBL AF188239 verified), which already carries the ezrin IPI from this paper, so this is WRONG_GENE_PRODUCT, not WRONG_REFERENCE. Retyped (slot DB_Object_ID, asserted P16278, corrected A6NDV4, CHECK, PROBABLE). A BHF-UCL row on EZR with With P16278 (GO:0050839) is the likely origin and is flagged in the explanation. Full text paywalled (OUP), so the action stays UNDECIDED.

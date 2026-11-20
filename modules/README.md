@@ -213,6 +213,21 @@ Design notes:
           title: "Antibacterial innate immune response in the intestine via MAPK cascade (C. elegans)"
   ```
 
+#### Explaining GO-CAM edges
+
+Pins on both ends of a GO-CAM edge turn a module into an explanation of that
+edge. `just gocam-compartments` marks a GO-CAM causal edge between
+non-adjacent compartments as `EXPLAINED` when its upstream and downstream
+activities are pinned (`gocam_associations` with `activity`) to elements of one
+module, and the module's `connections` lead from the first to the second
+through a `TRANSPORT_STEP` node. Typical use: a GO-CAM edge from a
+plasma-membrane kinase directly to a nuclear transcription factor activity
+compresses release, partner binding and nuclear import; the module states those
+steps (including `karyopherin_nuclear_protein_import` by `module_ref`) and the
+pins say which GO-CAM activities the module's ends correspond to. Pins are
+curated claims; nothing matches genes to modules automatically. See
+`projects/GOCAM_COMPARTMENTS.md`.
+
 ### Composing modules by reference (`module_ref`)
 
 An umbrella module (for example an organelle lifecycle) composes existing modules

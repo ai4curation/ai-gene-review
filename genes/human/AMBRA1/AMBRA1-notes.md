@@ -40,3 +40,10 @@ A Falcon (Edison Scientific) deep-research report was generated and reviewed. Mo
 - PROVISIONAL (low-confidence/review-summarized, NOT used for annotation): PP2A-binding PXP motifs mapped to aa 275-281 and 1206-1212; partner binding-region map (DDB1-CUL4 aa 1-41; BECN1 ~533-780; ULK1 1-532 and 781-1298) from a low-citation 2024 mini-review (wang2024, doi:10.33696/cancerimmunol.6.083). Useful for structure-function hypotheses only.
 
 Net effect on annotations: no existing action changed. Two genuinely-new primary references added (PMID:37993427 structure; PMID:34362797 Smad4/TGFβ). The Smad4 axis broadens AMBRA1 CRL4 substrate scope beyond cyclin-D/ELOC but is captured by the already-present `GO:1990756 ubiquitin-like ligase-substrate adaptor activity` / `GO:0080008` annotations, so no new GO rows are warranted. Disease/biomarker findings remain notes-only.
+
+## 2026-11-04 ORGANELLES ER batch 1 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095) and EXP (PMID:20921139), both located_in, both kept ACCEPT (the ER is where AMBRA1 acts in autophagosome nucleation; core_functions already lists it).
+- Check: UniProt "Endoplasmic reticulum {ECO:0000269|PubMed:20921139}" and "Upon autophagy induction, AMBRA1 relocalizes to the endoplasmic reticulum to enable autophagosome nucleation (PubMed:20921139)" [file:human/AMBRA1/AMBRA1-uniprot.txt]. Full text of PMID:20921139 (human 2FTGH/HEK293 cells): "AMBRA1 translocation from the dynein complex to the ER was confirmed by a subcellular fractionation assay"; "The calnexin-positive fractions enriched in AMBRA1–BECLIN 1 upon starvation are indicated in red."; calreticulin immunogold is listed in methods. So ER markers back the claim.
+- AMBRA1 is a soluble WD40 scaffold (no signal peptide, no TM) recruited from dynein to the ER surface: a recruited cytosolic-face pool, so root only, no NEW ER membrane row (cf. TRAF3 on mitochondria).
+- Replaced the earlier supported_by quotes (generic notes lines that did not mention the ER) with the paper and UniProt quotes on both rows.

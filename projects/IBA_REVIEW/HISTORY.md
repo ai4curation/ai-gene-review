@@ -135,6 +135,73 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
 
 ---
 
+## 2026-11-11 — High-distance & shallow-parent IBA curation batches (Batches A–D: PRs #6213, #6236, #6271, and #6289)
+
+Continued systematic triage of candidates surfaced by
+`uv run python projects/IBA_REVIEW/single_organism_distance.py --candidates --all-regimes`
+across four 5-gene batches (**20 genes total**), refreshing the corpus-wide distance tables
+in [`single-organism-distance.md`](single-organism-distance.md) across all **29,427 positive
+GOA `IBA` rows** (**7,489 GOA genes**, **7,480 reviewed**; **4,090 non-self single-organism
+IBAs**, **3,988 rated**; **9,243 rated non-self resolved IBA rows** with known donor lineages,
+**9,394 incl. 151 in Tier 0**):
+
+- **Batch A — Single-donor (`R1`) metabolic/vesicle role conflations & paralog sibling harmonization ([PR #6213](https://github.com/ai4curation/ai-gene-review/pull/6213)):**
+  - `human/GNMT` (`GO:0006111 regulation of gluconeogenesis`, `R1` Tier 1 from mouse `Gnmt` `MGI:MGI:1202304` via `PTN001046627`; `KEEP_AS_NON_CORE` $\to$ `MARK_AS_OVER_ANNOTATED`, harmonizing with `rat/Gnmt`).
+  - `human/PKM` (`GO:0032869 cellular response to insulin stimulus`, `R1` Tier 1 from rat liver `Pklr` `RGD:3336` via `PTN000212861`; `KEEP_AS_NON_CORE` $\to$ `MARK_AS_OVER_ANNOTATED`, harmonizing with `human/PKLR`, plus retirement of no-op self-replacement `MODIFY` rows and disputed PKM2 protein-kinase claims citing `PMID:26300261`).
+  - `DANRE/fen1` (`GO:0030145 manganese ion binding`, `R1` Tier 3 from mouse `Fen1` `MGI:MGI:102779` via `PTN000871763`; `KEEP_AS_NON_CORE` $\to$ `MARK_AS_OVER_ANNOTATED`, harmonizing with `human/FEN1`).
+  - `human/COPG1` & `human/COPG2` (`GO:0009306 protein secretion` from *Drosophila* `gammaCop` `FB:FBgn0028968` and `GO:0006888 ER to Golgi vesicle-mediated transport` from *S. cerevisiae* `SEC21` `SGD:S000005231` via `PTN000029440`; `KEEP_AS_NON_CORE`/`MODIFY` $\to$ `MARK_AS_OVER_ANNOTATED` as retrograde COPI role conflations).
+- **Batch B — Shallow parent `IBA`/`IEA` terms refined from `KEEP_AS_NON_CORE` to `MODIFY` ([PR #6236](https://github.com/ai4curation/ai-gene-review/pull/6236)):**
+  - `PSEAE/secF` (`GO:0015031 protein transport`, `R2` from *E. coli* `secD|secF` via `PTN000763987`, plus `IEA` parent terms $\to$ `MODIFY` to `GO:0043952 protein transport by the Sec complex`).
+  - `yeast/PTM1` (`GO:0016020 membrane`, `R1` via `PTN000043866` and `IEA` $\to$ `MODIFY` to `GO:0000139 Golgi membrane` and `GO:0031901 early endosome membrane`).
+  - `BACSU/spoVD` (`GO:0071555 cell wall organization`, `R1` from *E. coli* `ftsI` via `PTN000016686` and `IEA` $\to$ `MODIFY` to `GO:0042244 spore wall assembly` and `GO:0009252 peptidoglycan biosynthetic process`).
+  - `DICDI/dmtA` (`GO:0032259 methylation`, `R1` Tier 6 from *Arabidopsis* `OMT1` via `PTN000419655` $\to$ `MODIFY` to `GO:0031148 DIF-1 biosynthetic process`).
+  - `human/JAK1` (`GO:0035556 intracellular signal transduction`, `R1` Tier 4 from *Drosophila* `hop` via `PTN000786796`, plus `IEA`/`TAS` $\to$ `MODIFY` to `GO:0007259` and `GO:0019221`).
+- **Batch C — Cross-kingdom organelle context, acentrosomal spindle divergence, and `KEEP_AS_NON_CORE` rationale cleanups ([PR #6271](https://github.com/ai4curation/ai-gene-review/pull/6271)):**
+  - `DROME/nudE` (`GO:0007020 microtubule nucleation`, `R4` Tier 4 via `PTN000100519`; `KEEP_AS_NON_CORE` $\to$ `MARK_AS_OVER_ANNOTATED`, harmonizing with `worm/nud-2` and `EMENI/nudE`).
+  - `SCHPO/pik3` (`GO:0005777 peroxisome`, `R1` Tier 3 from *S. cerevisiae* `VPS34` `SGD:S000004240` pexophagy context via `PTN000005955`; `KEEP_AS_NON_CORE` $\to$ `MARK_AS_OVER_ANNOTATED`, harmonizing with `worm/vps-34`).
+  - `yeast/AHP1` (`GO:0005777 peroxisome`, `R3` Tier 5 via `PTN000046537`; `KEEP_AS_NON_CORE` $\to$ `MARK_AS_OVER_ANNOTATED`, harmonizing with `SCHPO/pmp20`).
+  - `XENLA/gbx2` (`GO:0051960 regulation of nervous system development` rationale cleanup matching `human/GBX2`) & `yeast/YMR1` (`GO:0016020 membrane` rationale cleanup matching `human/MTMR12`).
+- **Batch D — Deep-node eukaryotic/metazoan over-propagations, broad PPP5C/BSU1/PPEF ancestor lumping, and shallow parent `MODIFY` refinements ([PR #6289](https://github.com/ai4curation/ai-gene-review/pull/6289)):**
+  - `human/TOMM20` (`GO:0016031 tRNA import into mitochondrion`, `R1` Tier 5 from *S. cerevisiae* `TOM20` `SGD:S000003314` via `PTN000277108`; `KEEP_AS_NON_CORE` $\to$ `MARK_AS_OVER_ANNOTATED` with `LINEAGE_OR_TAXON_MISMATCH` because yeast co-imports cytosolic $\text{tRNA}^{\text{Lys}}_{\text{CUU}}$ via pre-Msk1p/Tom20 whereas human mitochondria encode a complete 22-tRNA set including `MT-TK`; plus `GO:0030943` `MODIFY` $\to$ `GO:0140436` `propagation_review` and `IEA` `MODIFY` refinements).
+  - `human/SGPP2` (`GO:0046839 phospholipid dephosphorylation`, `R1` Tier 5 from *S. cerevisiae* `LCB3` `SGD:S000001761` via `PTN000384324`; `KEEP_AS_NON_CORE` $\to$ `MODIFY` to `NTR` (`sphingoid base-1-phosphate dephosphorylation`, paired with a `proposed_new_terms` entry under `GO:0046839`) because `SGPP2` specifically dephosphorylates sphingoid-base 1-phosphates rather than glycerophospholipids (`PMID:12411432`), and `GO:0005783 endoplasmic reticulum` `IDA` $\to$ `ACCEPT` per the root-organelle policy).
+  - `human/PFAS` (`GO:0005737 cytoplasm` and `GO:0006164 purine nucleotide biosynthetic process`, `R4` via `PTN008493809`; `ACCEPT` $\to$ `MODIFY` to `GO:0005829 cytosol` and `GO:0006189 'de novo' IMP biosynthetic process` as `TERM_SCOPING_PROBLEM` / `GRANULARITY_MISMATCH`).
+  - `worm/pef-1` (`GO:0005634 nucleus`, retained as `REMOVE` with `propagation_review`, and `GO:0005829 cytosol`, `KEEP_AS_NON_CORE` $\to$ `MARK_AS_OVER_ANNOTATED` with `propagation_review`, both `R4` Tier 4 propagated at the broad `PP5/BSU1/PPEF` ancestor node `PTN001362369` from non-acylated soluble `PPP5C`/`BSU1`/`BSL1` phosphatases whereas *C. elegans* PEF-1 is constitutively myristoylated at Gly-2 and palmitoylated at Cys-3 to anchor at the plasma membrane and sensory ciliary axoneme, `PMID:11312268`, `PMID:39550471`; plus `IEA` `MODIFY` refinements).
+  - `worm/sir-2.1` (`GO:0005637 nuclear inner membrane` and `GO:0033553 rDNA heterochromatin`, `R1` Tier 4 from human `SIRT1` `UniProtKB:Q96EB6` via `PTN000872223` at `Bilateria`; `KEEP_AS_NON_CORE` $\to$ `MARK_AS_OVER_ANNOTATED` because mammalian lamin-A inner-membrane and eNoSC nucleolar rDNA silencing complex localizations are not demonstrated for *C. elegans* SIR-2.1, which acts at subtelomeric and dosage-compensated X-chromosome chromatin, `PMID:19380489`, `PMID:22393255`; plus `GO:0016740` and `GO:0010468` `MODIFY` refinements).
+
+**Synthesized impression across Batches A–D:** The remaining `--candidates` hits fall cleanly into two buckets:
+1. **True biological over-propagations (`MARK_AS_OVER_ANNOTATED` / `REMOVE`)** driven by (a) lineage-specific organelle or metabolic specializations seeded deep at `Opisthokonta`/`Bilateria` (`TOMM20` tRNA import from yeast, `pik3`/`AHP1` peroxisome, `sir-2.1` mammalian lamin-A/eNoSC sub-compartments), (b) broad PANTHER ancestor nodes that lump distinct subfamilies with different targeting motifs (`pef-1` lipid-anchored ciliary RdgC/PPEF lumped with soluble nuclear/cytosolic PP5/BSU1 at `PTN001362369`), or (c) experimental assay/indirect-effect conflations on a single donor (`GNMT` gluconeogenesis, `PKM` liver `Pklr` insulin response, `COPG1`/`COPG2` retrograde COPI vs anterograde ER-to-Golgi/secretion).
+2. **Valid homology transfers of overly general GO terms (`MODIFY` with `TERM_SCOPING_PROBLEM` / `GRANULARITY_MISMATCH`)** where earlier reviews used `KEEP_AS_NON_CORE` or `ACCEPT` while arguing in `reason` that a more specific `is_a`/`part_of` descendant is already carried on the gene (`PFAS`, `secF`, `PTM1`, `spoVD`, `dmtA`, `JAK1`) or where a specific child term (`NTR: sphingoid base-1-phosphate dephosphorylation` under `GO:0046839` for `SGPP2`) is needed in `proposed_new_terms`.
+
+---
+
+## 2026-11-06 — Donor-support topology regimes ($d_{\text{MRCA}}$ vs $d_{\text{LCA}}$) and single-clade jump audit
+
+Extended [`single_organism_distance.py`](single_organism_distance.py) (`--regimes`, `--all-regimes`) and
+[`single-organism-distance.md`](single-organism-distance.md) across all 28,945 positive GOA
+`IBA` rows (7,337 GOA genes; 3,988 non-self single-organism IBAs, 3,890 rated; 5,422 non-self
+multi-organism resolved IBAs, 5,356 rated) to compare the **donor-set MRCA clade depth
+($d_{\text{MRCA}}$)** against the **closest donor–target LCA depth ($d_{\text{LCA}}$)** across
+all 9,090 rated non-self resolved IBA rows with known donor lineages (9,246 incl. 156 in Tier 0),
+deduplicating dual-namespace seed tokens (`canonical_seed_gene`) and cross-tabulating with
+PANTHER subfamily status (`SAME_SF` vs `CROSS_SF`):
+
+1. **R1 — Single donor gene (`1 taxon, 1 distinct seed`, $n = 3{,}139$)**: **12.7% Fail**, **4.7% `REMOVE`** (7.6% Refine).
+2. **R2 — Multi-paralog single taxon (`1 taxon, >= 2 distinct seeds`, $n = 744$)**: **12.5% Fail**, **4.7% `REMOVE`** (7.0% Refine) — confirming that multiple co-annotated paralogs in a single donor organism do not reduce over-propagation risk overall, and reverse above `R1` in Tiers 3–4 (**19.2% Fail, 6.9% `REMOVE`**, $n = 261$, vs **13.2% Fail** in `R1`) and small-$n$ Tier 6 plant-to-fungi/animal jumps (**48.0% Fail, 24.0% `REMOVE`**, $n = 25$).
+3. **R3 — Multi-species single-clade jump (`>= 2 taxa`, $d_{\text{MRCA}} > d_{\text{LCA}}$, $n = 1{,}262$)**: **11.2% Fail**, **4.0% `REMOVE`** (7.0% Refine) — demonstrating that multi-species IBAs whose donors all coalesce inside a single donor clade before jumping to the target (e.g., `mouse` + `rat` $\to$ `worm`/`yeast`, `worm` + `fly` $\to$ `human`, or two bacteria $\to$ `human`) fail at nearly twice the rate of phylogenetically bracketed transfers (**12.0% vs 5.4% Fail** in Tiers 3–4; **15.2% vs 7.9% Fail** in Tiers 5–7).
+4. **R4 — Phylogenetically bracketed multi-species (`>= 2 taxa`, $d_{\text{MRCA}} \le d_{\text{LCA}}$, $n = 3{,}945$)**: **5.8% Fail**, **2.1% `REMOVE`** (7.6% Refine) overall, splitting into **3.0% Fail (`1.4% REMOVE`, $n = 1{,}353$; strict all-donor match: 3.1% Fail, `1.4% REMOVE`, $n = 795$)** for `R4 + SAME_SF` vs **9.9% Fail (`3.7% REMOVE`, $n = 1{,}182$)** for `R4 + CROSS_SF` when the target and resolved donors sit in different PANTHER subfamilies.
+
+Following the merge of the single-organism sibling harmonization and high-distance re-review
+batches ([PR #5857](https://github.com/ai4curation/ai-gene-review/pull/5857) and
+[PR #5861](https://github.com/ai4curation/ai-gene-review/pull/5861)), audited retained high-distance
+Regime 2, Regime 3, and `R4 + CROSS_SF` rows and identified **5 additional candidate genes** for curation re-review ([PR #6157](https://github.com/ai4curation/ai-gene-review/pull/6157)):
+- `ANOGA/DNAAF1` (`GO:0007368 determination of left/right symmetry`, Regime 3 Tier 4 jump from `Euteleostomi` donors `Danio rerio|Homo sapiens` via `PTN002915666`; `KEEP_AS_NON_CORE` $\to$ `REMOVE`).
+- `human/ASAH2` (`GO:0042759 long-chain fatty acid biosynthetic process`, Regime 3 Tier 7 jump from `Bacteria` donors `M. tuberculosis|P. aeruginosa` via `PTN004377481`; `ACCEPT` $\to$ `MARK_AS_OVER_ANNOTATED`, harmonizing with `DANRE/asah2`).
+- `human/PARD3B` (`GO:0007155 cell adhesion`, a Regime 3 Tier 4 jump from `Ecdysozoa` donors `C. elegans par-3|D. melanogaster baz`, and `GO:0000226 microtubule cytoskeleton organization`, a Regime 4 Tier 1 `CROSS_SF` transfer from `FB:FBgn0000163|MGI:MGI:2135608|WB:WBGene00003918` across the vertebrate `Pard3` `SF10` vs `Pard3b` `SF4` duplication via `PTN001046835`; `KEEP_AS_NON_CORE` $\to$ `MARK_AS_OVER_ANNOTATED`, harmonizing with `HORSE/PARD3B`).
+- `worm/pdr-1` (`GO:0005783 endoplasmic reticulum` and `GO:0005794 Golgi apparatus`, Regime 3 Tier 4 jump from `Euarchontoglires` donors `Homo sapiens|Rattus norvegicus` via `PTN000188399`; `UNDECIDED` $\to$ `MARK_AS_OVER_ANNOTATED`, harmonizing with `DROME/park`).
+- `human/ABHD2` (`PTHR10794:SF45`; `GO:0051792 medium-chain fatty acid biosynthetic process` from 3 *S. cerevisiae* fermentation esterase paralogs `EHT1|EEB1|YMR210W` `SGD:S000000381|SGD:S000004823|SGD:S000006016` and `GO:0051793 medium-chain fatty acid catabolic process` from `SGD:S000000381|SGD:S000006016` via `PTN000082647`, Regime 2 Tier 5; `KEEP_AS_NON_CORE` $\to$ `REMOVE` on `GO:0051792` and `MARK_AS_OVER_ANNOTATED` on `GO:0051793`).
+
+---
+
 ## 2026-10-28 — Quantitative phylogenetic distance analysis for single-organism IBAs
 
 Built [`single_organism_distance.py`](single_organism_distance.py) and

@@ -9,6 +9,7 @@ manifest:
   slides:
     - href: SATELLITE_MODEL_ORGANISMS/slides/SATELLITE_MODEL_ORGANISMS-slides.html
       description: AI generated
+index_group: OTHER_ORGANISM
 ---
 
 # Satellite Model Organisms

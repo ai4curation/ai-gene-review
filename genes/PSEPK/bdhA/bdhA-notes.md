@@ -13,3 +13,10 @@ The earlier specificity uncertainty is superseded by full PMID:34513815. Methods
 Acquisition and preservation: the complete original review payloads and raw UniProt/GOA hashes were captured before editing in the audit baseline. All rows, including inherited proposals and retirement flags, are preserved. Actual Falcon and perplexity-lite fallback attempts failed; no provider report was fabricated. Normal gene-publication acquisition succeeded, and actual FEBA/fitness attempts failed without generating usable data. Logs are in `.cache/module-audit-logs/acetoin-pseudomonas-fetch/`; this manual research note records the independent review. PMID:7813883 remains abstract-only after normal force, publisher-page and PDF recovery attempts; the publisher minimal page adds references but not full text. Full PMID:34513815/36482024/42046433 were read where relevant. Existing provider artifacts are discovery aids, not substitutes for source verification. The annotation-reviewer consultation agreed with separating component activity from isolated-subunit catalysis, native catabolism from engineering, and condition-limited negative assays from universal absence.
 
 Historical-proposal bookkeeping: The inherited acetoin-process proposal is retained as a retired historical record with its lateral butanediol-process refinement; it is not a current GOA assertion. Parent authorized this explicit `retired: true` metadata addition. Original term, evidence, reference, qualifier and row order remain unchanged; the preservation report lists this metadata delta separately.
+
+## 2026-11-02 — acetoin/butanediol module completion pass
+
+- Deep research: no provider deep-research file exists for this gene, and none could be generated
+  in this session (no deep-research provider API keys were configured). No deep-research file was
+  written by hand. The review rests on the cached primary publications, the UniProt record and the
+  PANTHER/PAINT family files cited in the review.

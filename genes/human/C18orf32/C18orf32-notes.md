@@ -62,3 +62,15 @@ region (46-76).
   efficient PGAP1-mediated inositol deacylation, but nothing says what C18orf32 does.
   PGAP1 performs the deacylation. Per the participation test, no NEW BP is proposed;
   raised as a question. No MF term fits.
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 EXP (PMID:35107634), IDA (PMID:29275994), IEA (GO_REF:0000044, SL-0095). No ER sub-compartment row existed.
+
+Checks:
+- IEA source: UniProt "SUBCELLULAR LOCATION: Endoplasmic reticulum {ECO:0000269|PubMed:29275994, ECO:0000269|PubMed:35107634}" [file:human/C18orf32/C18orf32-uniprot.txt], so the keyword is curated from the two papers behind the experimental rows.
+- PMID:29275994 (full text): "In the absence of oleate, GFP-tagged c18orf32 was present in the ER (Figure S7A)."; the N-terminal region is required: "In contrast, the c18orf32(Δ1-37)-GFP mutant was diffusely distributed throughout the cell and was absent from LDs (Figure 6I)."; endogenous protein in "ER-enriched pellet fractions"; ERAD by gp78/derlin-1 ("Affinity purification revealed that c18orf32-S interacts with both derlin-1 and gp78").
+- PMID:41351175 (full text): N-terminal helix, "The hydrophobic segment (residues 7–15) likely inserted into the lipid droplet’s core".
+- No signal peptide, no TM feature in UniProt (REGION 1..37 "Necessary for its localzation to the endoplasmic reticulum and lipid droplets").
+
+Outcome: all three root rows stay ACCEPT (constitutive ER residence, not transit), each with a dated ORGANELLES sentence. NEW GO:0005789 ER membrane (IC, PMID:29275994) added: no signal peptide plus an N-terminal hydrophobic anchor that is necessary and sufficient for targeting and that partitions onto the LD monolayer (cytosolic-leaflet insertion), the endogenous protein in the membrane pellet only, and membrane ERAD machinery. Judgement call: the anchor may be monotopic (amphipathic/hairpin) rather than spanning; it is still a membrane-embedded pool, not a recruited cytosolic one. core_functions unchanged.

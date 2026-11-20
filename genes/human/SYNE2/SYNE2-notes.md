@@ -27,3 +27,10 @@ Points for the nucleokinesis module:
 - Module says kinesin-1 restrains nuclear movement (inhibition accelerates migration; cortex,
   PMID:32619477). In cerebellar granule neurons PMID:39115447 finds both motor-binding sites are
   required and kinesin contributes productively; the relationship appears cell-type dependent.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+- Rows: GO:0005739 IDA (PMID:15671068) and IEA (GO_REF:0000044, SL-0173), located_in. Both stay KEEP_AS_NON_CORE; reasons extended.
+- PMID:15671068 is abstract-only in the cache and Europe PMC has no full text. Immunogold EM with three epitope antibodies [PMID:15671068 "detected nesprin-2 isoforms at multiple locations including intranuclear foci, both membranes of the NE, mitochondria, sarcomeric structures and plasma membrane foci"]. The curator's organelle call is deferred to (rule 2).
+- UniProt lists "Mitochondrion." without an evidence tag, beside locations tagged with PMID:15671068; the SL-0173 mapping is sound.
+- Outcome: root only. The KASH tail anchor is placed by UniProt in the outer nuclear and SR membranes, not mitochondria; nothing resolves a mitochondrial sub-compartment or the isoform involved.

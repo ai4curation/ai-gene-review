@@ -15,3 +15,7 @@ The seven seeded annotations were individually assessed. Magnesium binding, phos
 Older papers number catalytic residues differently from the current UniProt sequence (for example Lys53 versus current Lys50); UniProt records an erroneous initiation in the older sequence. No residue-level propagation claim is asserted, and current residue numbers are not silently substituted into quotations.
 
 Provider research was attempted with `just deep-research-falcon BACCE phnX --fallback perplexity-lite`. Falcon failed authentication; the fallback failed with insufficient quota. No generated research report was produced or fabricated. Manual literature research above supplies the evidence. `just fetch-fitness BACCE phnX` was also attempted; BACCE has no configured FEBA mapping and no reachable data source, so no fitness artifact was produced. The missing optional provider/fitness results do not replace or weaken the direct biochemical evidence.
+
+## 2026-11-02
+
+Cytosol row changed from UNDECIDED to KEEP_AS_NON_CORE: phosphonates are imported before catabolism (PMID:37836707, "the import of phosphonates implies the involvement of transporters"), PhnX is a soluble signal-less HAD enzyme, and the PTHR43434 family review rates the cytosol IBD at PTN001291474 SOUND. No native-cell localization assay was found; the location stays non-core.

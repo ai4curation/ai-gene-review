@@ -1,0 +1,13 @@
+# Identity of native constructs in PMID:40236303
+
+The native cloning targets called LysC, Hom, ThrB and ThrC in the 2025 KT2440 engineering study map to PP_4473/Q88EI9, PP_1470/Q88MU8, PP_0121/Q88RK8 and PP_1471/Q88MU7, respectively. This conclusion combines the terminal primer matches in Table S2 with the protein sizes reported in Figures S2/S3. It identifies the constructs; it does not turn overexpression into a purified-enzyme activity measurement.
+
+## Sources and reproduction
+
+Original supplementary DOCX: https://ars.els-cdn.com/content/image/1-s2.0-S2214030125000021-mmc1.docx (downloaded 2026-11-01). An independent copy is in the Europe PMC supplementary package at https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11999294/supplementaryFiles . The original publisher file is fetched into the ignored local `mmc1.docx` path; it is not versioned. Its MD5, 6d691d4fbe77185601516f2647c1f12f, agrees with the article XML. SHA256: 930c703e85d7f07201789550f79c9ef8669d82ddf1a727a5e867d42f6bf86a4f. The main text is cached normally at publications/PMID_40236303.md.
+
+Run `just reproduce` from this directory. The `fetch` prerequisite checks an existing `mmc1.docx` against the size, SHA256 and MD5 in `download-manifest.yaml`; if absent, it downloads the original publisher file and falls back to the Europe PMC supplementary ZIP if necessary. Downloaded bytes must pass all three checks before atomic installation. A mismatched existing file raises an error and is never silently replaced. The stable local filename preserves the historical `results.yaml` source path. Network access is required only when the source is absent; there is no dependency on an unversioned backup. To check the mirror explicitly in a fresh location, run `uv run python fetch_source.py --manifest download-manifest.yaml --output /path/to/fresh/mmc1.docx --source europe_pmc` using the repository uv environment.
+
+After source verification, the script uses the repository uv.lock (Biopython 1.85, PyYAML 6.0.2), extracts all DOCX table primers without hardcoding names, translates all three frames in both orientations, and searches for exact protein terminal matches of at least six residues. The six input UniProt files are immutable downloads, named explicitly in the justfile; their hashes are in results.yaml. `supplement.txt` is deterministic text extraction, not an authored publication cache. Reverse-primer adaptor sequences are retained; translated terminal stops provide a useful independent orientation check. Short matches alone are not whole-CDS sequence verification.
+
+See RESULTS.md for interpretation and limitations. The other input proteins PP_0664/Q88Q34 and PP_0662/Q88Q36 test whether the named Hom/ThrC constructs could instead be these paralogs.
