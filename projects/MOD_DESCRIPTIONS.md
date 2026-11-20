@@ -8,6 +8,9 @@ manifest:
   slides:
     - href: MOD_DESCRIPTIONS/slides/MOD_DESCRIPTIONS-slides.html
       description: AI generated
+    - href: https://claude.ai/artifact/1cMoocALXEhA79EL9k2ouj
+      title: "Alliance Gene Descriptions talk (Nov 2026)"
+      description: AI assisted
   artifacts:
     - href: https://claude.ai/artifact/Uak8ttS9nu4C36Fh9JypKg
       title: Project brief
