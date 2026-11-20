@@ -52,7 +52,7 @@ cuticle assembly are essential in parasitic nematodes, and the first existing
 anchor, `BRUMA/dpy-31`, is in the same PANTHER subfamily as *C. elegans*
 `dpy-31`.
 
-- [ ] `BRUMA` `dpy-31` / A8Q2D1 - cross-check existing review against the module
+- [x] `BRUMA` `dpy-31` / A8Q2D1 - cross-check existing review against the module
 - [x] `worm` `dpy-31` / P98060 - fetched and reviewed the C. elegans DPY-31 ortholog
 - [ ] `HAECO` `dpy-31` / D5FM34 - fetch and review the reviewed *H. contortus* DPY-31 ortholog
 - [ ] `BRUMA` `bma-dpy-18.1` / Q68VC1 - fetch and review a prolyl 4-hydroxylase alpha candidate
@@ -162,3 +162,9 @@ Pathogen accessions need UniProt and literature resolution before fetching.
   the cached WormBase gene description, the full text of PMID:15579684, the
   cached PMID:19883650 abstract, UniProt sequence features, and PAINT loss
   checks.
+- Cross-checked the initialized `genes/BRUMA/dpy-31` review for A8Q2D1 against
+  the new cuticle module and the freshly reviewed worm DPY-31 ortholog. The
+  updated review keeps all Brugia DPY-31 cuticle-collagen assignments, records
+  the 2026 action treatment for the generic metallopeptidase parent row, and
+  adds local supporting quotes from the B. malayi recombinant cleavage and
+  inhibitor literature.
