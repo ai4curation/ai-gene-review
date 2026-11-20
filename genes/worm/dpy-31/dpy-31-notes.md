@@ -26,5 +26,5 @@
 - Curation decision: accept the metalloendopeptidase, zinc-binding,
   extracellular, molting-cycle and cuticle-development rows as the direct DPY-31
   biology; keep the broad `proteolysis` process as non-core; mark generic
-  `metallopeptidase activity` as over-annotated beside the accepted
+  `metallopeptidase activity` as too general beside the accepted
   `metalloendopeptidase activity` rows.
