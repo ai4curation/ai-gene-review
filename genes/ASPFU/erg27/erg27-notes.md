@@ -4,8 +4,7 @@
 
 The repository QuickGO fetch for *Aspergillus fumigatus* `erg27` still returns a header-only `erg27-goa.tsv`.
 `src/ai_gene_review/etl/gene.py` currently handles a first-page QuickGO `RequestException` by returning an empty
-TSV indistinguishable from a genuine no-annotation result, but a direct QuickGO query without expanded taxon names
-returned nine rows for Q4WQ42:
+TSV indistinguishable from a genuine no-annotation result, but a direct QuickGO query returned nine rows for Q4WQ42:
 `GO:0000253` 3-beta-hydroxysteroid 3-dehydrogenase (NADP+) activity, `GO:0006696` ergosterol biosynthetic process,
 `GO:0016126` sterol biosynthetic process, and three ER-membrane / lipid-droplet evidence pairs from PAINT, UniProt
 ISS, and UniProtKB-SubCell. These are therefore treated as existing annotations to adjudicate, not as new
