@@ -482,16 +482,24 @@ animal Rabin3/Rab8 GEFs while checking the fission-yeast duplication into
 vegetative `sec2` and sporulation-specific `spo13`.
 
 - [x] `yeast/SEC2` - *S. cerevisiae* Sec4 Rab GEF; drafted in this branch
-- [ ] `SCHPO/sec2` - fission-yeast vegetative Sec2-family member
-- [ ] `SCHPO/spo13` - fission-yeast sporulation-specific Sec2-family member
-- [ ] `CANAL/SEC2` - CGD-seeded *Candida albicans* Sec2 ortholog
-- [ ] `ASPFU/sec2` - *Aspergillus fumigatus* Sec2-family member
+- [x] `SCHPO/sec2` - fission-yeast vegetative Sec2-family member
+- [x] `SCHPO/spo13` - fission-yeast sporulation-specific Sec2-family member
+- [x] `CANAL/SEC2` - CGD-seeded *Candida albicans* Sec2 ortholog
+- [x] `ASPFU/sec2` - *Aspergillus fumigatus* Sec2-family member
 
 ---
 
 # NOTES
 
 ## 2026-11-20
+
+- Finished the remaining `PTHR14430` Sec2/Rabin3 fungal reviews in a compact
+  tranche: `SCHPO/sec2`, `SCHPO/spo13`, `CANAL/SEC2`, and `ASPFU/sec2`.
+  The long Sec2 proteins accept the broad `PANTHER:PTN000374167` Rab-GEF node
+  and the fungal `PANTHER:PTN001024876` cell-tip node in true tip-growing
+  fungi, while fission-yeast `spo13` is kept separate as the
+  sporulation-specific short Sec2 paralog with direct Ypt2/Sec4-family GEF
+  evidence.
 
 - Completed the compact `PTHR32379` Rmt2/GAMT set with `ASPFU/rmt2` and
   `EMENI/rmt2`, after the earlier `yeast/RMT2`, `SCHPO/rmt2`, and
