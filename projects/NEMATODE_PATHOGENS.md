@@ -1,5 +1,6 @@
 ---
 title: "Nematode Pathogens"
+description: "Modules and gene reviews for parasitic nematode cuticle, host-interface, and drug-target biology."
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [BRUMA, HAECO, ONCVO, ASCSU, STRRB, STRER, TOXCA, TRITR, STECR, 9BILA, worm]
