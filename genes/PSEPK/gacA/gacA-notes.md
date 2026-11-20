@@ -24,3 +24,15 @@
 - The best supported KT2440-specific process term to add is `GO:1900192 positive regulation of single-species biofilm formation`.
 - K1-T6SS regulation is real and experimentally supported in KT2440, but I am treating it as secondary/non-core until direct GacA target promoters are mapped in this strain.
 - I did not find direct KT2440 evidence in the examined sources showing purified GacA binding a specific promoter or explicitly identifying the cognate `rsmY`/`rsmZ`-like promoters. Any direct promoter-binding language in the review should therefore stay conservative.
+
+## 2026-11-16 — TF batch 2: signaling and target evidence
+
+Re-reviewed all four machine-seeded GO rows and the previous authored proposals. Primary sources replace notes/provider paraphrases as annotation evidence. The receiver and HTH assignments in the preserved UniProt record are computational; predicted Asp54 phosphorylation is not a KT2440 phosphotransfer measurement. Core cis-regulatory binding stays core despite limited direct-target evidence. DNA binding refines to TF activity; response-regulator activity remains a separate IC proposal. The duplicate authored TF proposal and weakly supported cytosol proposal were withdrawn.
+
+[PMID:27489550, Genetic Dissection of the Regulatory Network Associated with High c-di-GMP Levels in Pseudomonas putida KT2440] full text identifies cfcT-5 as PP_4099/gacA. Table 3 reports loss of crinkling, floccules and increased biofilm with multicopy rup4959, and methods describe the KT2440 gacA/pMIR203 complementation construct. The retained positive-biofilm-regulation IMP is conditional on this regulatory assay. GacA does regulatory work; it does not execute adhesion or matrix synthesis.
+
+[PMID:24488315, Roles of cyclic Di-GMP and the Gac system in transcriptional control of the genes coding for the Pseudomonas putida adhesins LapA and LapF] is abstract-only locally. The exact support is “Both lapA and lapF are under the control of the two-component regulatory system GacS/GacA”. The sidecar therefore records system-level control with unknown target-specific signs and unresolved directness.
+
+[PMID:36748579, Transcriptional organization and regulation of the Pseudomonas putida K1 type VI secretion system gene cluster] full text tests a gacS mutant, not gacA. Positive PS/PV regulation is explicitly a Gac-system inference to GacA, with no demonstrated GacA occupancy. Named KT2440 RsmX/Y/Z promoter contacts are not asserted from the conserved Gac/Rsm model.
+
+Provider reports/artifacts, UniProt/GOA and existing publication caches were preserved verbatim. Existing Falcon research was reused, not regenerated. FEBA retrieval failed because no local database or remote source was reachable; no fitness artifact was fabricated. PSEPK has no applicable MOD-description source. Annotation-reviewer consultation was read-only; one writer performed the curation.

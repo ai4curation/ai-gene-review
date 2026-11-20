@@ -72,7 +72,8 @@ independent evidence.
 - [x] Select [20 calibration cases](P_PUTIDA/tf_census/data/calibration.tsv) and document [reproducible builds](P_PUTIDA/tf_census/README.md).
 - [x] Repair and validate all 84 PRECISE321 module imports; complete [20 scoped calibration assessments](P_PUTIDA/tf_census/calibration-review.md) and [importer checks](P_PUTIDA/tf_census/imodulon/calibration-results.md).
 - [x] Complete [carbon-utilization batch 1](P_PUTIDA/batches/tf_carbon_utilization_01.md): BenR, HexR, PtxS and CbrB, with structured target evidence and pathway-regulatory context.
-- [ ] Complete full GO reviews for the remaining 16 calibration cases.
+- [x] Complete [signaling/RNA batch 2](P_PUTIDA/batches/tf_signaling_rna_02.md): GacA, FleQ, RpoS and Hfq, with ten target relationships and explicit regulatory levels.
+- [ ] Complete full GO reviews for the remaining 12 calibration cases.
 - [ ] Complete regulatory-system batches, followed by remaining family-based batches.
 
 The initial candidate union contains 647 proteins: 422 provisional main-TF
