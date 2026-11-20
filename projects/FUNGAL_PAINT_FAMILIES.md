@@ -491,9 +491,9 @@ vegetative `sec2` and sporulation-specific `spo13`.
 ## 2026-11-06
 
 - Started `PTHR14430`, the compact Sec2/Rabin3-family Rab GEF family. The first
-  review covers `yeast/SEC2`: the Opisthokonta GEF PAINT node and fungal
-  cell-tip PAINT node are both sound for budding yeast, while the animal cytosol
-  PAINT node stays outside the fungal clade.
+  review covers `yeast/SEC2`: the Opisthokonta GEF PAINT node is sound for
+  budding yeast, the fungal cell-tip PAINT node over-propagates to *S.
+  cerevisiae*, and the animal cytosol PAINT node stays outside the fungal clade.
 - Started `PTHR10340`, separating the fungal Ppn1 polyphosphatase clade from
   the metazoan sphingomyelinase/SMPDL3-like branches named by the official
   PANTHER family label. The first `yeast/PPN1` review accepts the fungal
