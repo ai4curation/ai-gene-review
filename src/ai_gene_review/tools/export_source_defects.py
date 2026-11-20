@@ -15,6 +15,8 @@ places:
   the source's record of an isoform (e.g. a literature isoform missing from the
   reviewed UniProt entry); the row's ``term_id`` carries the functional isoform id;
 * ``activity_reviews[].source_defects`` in GO-CAM reviews
+* ``source_defects`` at the top level of rule reviews (``rules/**/*-review.yaml``),
+  for a defect in an annotation record the rule review cites as a receipt
   (``gocams/*/*-review.yaml``), where it is the GO-CAM activity.
 
 This module flattens them all into one row per defect and renders a Markdown report
@@ -169,6 +171,15 @@ def gocam_review_rows(path: Path, root: Path) -> Iterator[dict[str, str]]:
             yield row
 
 
+def rule_review_rows(path: Path, root: Path) -> Iterator[dict[str, str]]:
+    """Yield defect rows from a rule review: defects in annotation records it cites."""
+    data = _load(path)
+    if not data:
+        return
+    for defect in data.get("source_defects") or []:
+        yield _row(str(path.relative_to(root)), {}, defect)
+
+
 def collect(root: Path) -> list[dict[str, str]]:
     """Collect every source defect under ``root``, sorted for stable output."""
     rows: list[dict[str, str]] = []
@@ -176,6 +187,8 @@ def collect(root: Path) -> list[dict[str, str]]:
         rows.extend(gene_review_rows(path, root))
     for path in sorted(root.glob("gocams/*/*-review.yaml")):
         rows.extend(gocam_review_rows(path, root))
+    for path in sorted(root.glob("rules/**/*-review.yaml")):
+        rows.extend(rule_review_rows(path, root))
     rows.sort(
         key=lambda r: (
             r["resource"],

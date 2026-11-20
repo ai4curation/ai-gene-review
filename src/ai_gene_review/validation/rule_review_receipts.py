@@ -32,7 +32,7 @@ import urllib.parse
 import urllib.request
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Sequence, Set, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Set, Tuple
 
 import yaml
 
@@ -295,21 +295,43 @@ _COVERAGE_CLAIM = re.compile(
 )
 
 
-def coverage_claims(text: str) -> List[Tuple[int, Optional[int]]]:
-    """Statements that so many sets are covered by other rules, as ``(covered, total or None)``.
+_NEGATED_FIGURE = re.compile(r"\b(?:none|no|not\s+one)\s+(?:of\s+)?(?:the\s+)?(?:rule's\s+)?$", re.IGNORECASE)
+_NEGATED_COVER = re.compile(r"\bno\s+(?:\w+\s+){0,3}$", re.IGNORECASE)
+_BOUNDED_FIGURE = re.compile(
+    r"\b(?:(?P<le>(?:no|not)\s+more\s+than|at\s+most|up\s+to|a\s+maximum\s+of)"
+    r"|(?P<ge>(?:no|not)\s+(?:fewer|less)\s+than|at\s+least|a\s+minimum\s+of)"
+    r"|(?P<lt>fewer\s+than|less\s+than|under|below)"
+    r"|(?P<gt>more\s+than|over|above))\s+$",
+    re.IGNORECASE,
+)
+_BOUND_HOLDS: Dict[str, Callable[[int, int], bool]] = {
+    "eq": lambda actual, said: actual == said,
+    "le": lambda actual, said: actual <= said,
+    "ge": lambda actual, said: actual >= said,
+    "lt": lambda actual, said: actual < said,
+    "gt": lambda actual, said: actual > said,
+}
+_BOUND_WORDS = {"eq": "", "le": "at most ", "ge": "at least ", "lt": "fewer than ", "gt": "more than "}
 
-    Sentences about a sample are skipped: their figures are not the table's.
+
+def coverage_claims(text: str) -> List[Tuple[int, Optional[int], str]]:
+    """Statements that so many sets are covered by other rules, as ``(covered, total or None, bound)``.
+
+    ``bound`` is ``eq`` for an exact or approximate figure and ``le``, ``ge``,
+    ``lt`` or ``gt`` for a bounded one ("at most 40 sets"), which the table can
+    still contradict in one direction. Sentences about a sample are skipped:
+    their figures are not the table's.
 
     >>> coverage_claims("320 of 355 sets are covered by rules with more specific terms.")
-    [(320, 355)]
+    [(320, 355, 'eq')]
     >>> coverage_claims("48 sets are already matched by rules asserting a more specific term (48 covered sets).")
-    [(48, None), (48, None)]
+    [(48, None, 'eq'), (48, None, 'eq')]
     >>> coverage_claims("More specific rules already cover 39 sets. Sets 10 and 11 are covered by ARBA00092385.")
-    [(39, None)]
+    [(39, None, 'eq')]
     >>> coverage_claims("289 of the rule's sets are already matched by rules asserting a more specific term.")
-    [(289, None)]
+    [(289, None, 'eq')]
     >>> coverage_claims("38 of its sets are covered by more specific rules.")
-    [(38, None)]
+    [(38, None, 'eq')]
     >>> coverage_claims("In the sample, 11 of 40 sets are matched by a rule for a curated term.")
     []
     >>> coverage_claims("none of the 90 condition sets is matched by a rule for a descendant keyword.")
@@ -317,28 +339,29 @@ def coverage_claims(text: str) -> List[Tuple[int, Optional[int]]]:
     >>> coverage_claims("None of the rule's 320 sets are matched by a rule; no specific rules cover 39 sets.")
     []
     >>> coverage_claims("No more than 38 of its sets are covered by rules; at most 40 sets are covered by rules.")
-    []
-    >>> coverage_claims("Fewer than 38 of its sets are covered by rules; more than 30 sets are covered by rules.")
-    []
+    [(38, None, 'le'), (40, None, 'le')]
+    >>> coverage_claims("Fewer than 38 of its sets are covered by rules; more than 30 of 90 sets are covered by rules.")
+    [(38, None, 'lt'), (30, 90, 'gt')]
+    >>> coverage_claims("At least 30 sets are covered by rules; not fewer than 20 sets are covered by rules.")
+    [(30, None, 'ge'), (20, None, 'ge')]
     >>> coverage_claims("About 293 of 375 sets are covered by rules; roughly 80 sets are matched by rules.")
-    [(293, 375), (80, None)]
+    [(293, 375, 'eq'), (80, None, 'eq')]
     """
-    claims: List[Tuple[int, Optional[int]]] = []
+    claims: List[Tuple[int, Optional[int], str]] = []
     for sentence in re.split(r"(?<=[.;])\s+", " ".join(text.split())):
         if re.search(r"\bsampl", sentence, re.IGNORECASE):
             continue
         for match in _COVERAGE_CLAIM.finditer(sentence):
             before = sentence[:match.start()]
-            if re.search(r"\b(?:none|no|not\s+one)\s+(?:of\s+)?(?:the\s+)?(?:rule's\s+)?$", before, re.IGNORECASE) or re.search(
-                    r"\b(?:(?:no|not)\s+)?(?:more|fewer|less)\s+than\s+$|\b(?:at\s+(?:most|least)|up\s+to)\s+$",
-                    before, re.IGNORECASE) or (
-                    match.group(3) and re.search(r"\bno\s+(?:\w+\s+){0,3}$", before, re.IGNORECASE)):
+            if _NEGATED_FIGURE.search(before) or (match.group(3) and _NEGATED_COVER.search(before)):
                 continue  # "none of the 90 sets is matched by a rule" claims zero, not ninety
+            bounded = _BOUNDED_FIGURE.search(before)
+            bound = bounded.lastgroup if bounded and bounded.lastgroup else "eq"
             first, second, cover, bracket = (int(g.replace(",", "")) if g else None for g in match.groups())
             if cover is not None or bracket is not None:
-                claims.append((cover if cover is not None else bracket, None))  # type: ignore[arg-type]
+                claims.append((cover if cover is not None else bracket, None, bound))  # type: ignore[arg-type]
             elif second is not None:
-                claims.append((first, second) if first is not None else (second, None))
+                claims.append((first, second, bound) if first is not None else (second, None, bound))
     return claims
 
 
@@ -700,14 +723,15 @@ def _check_coverage_prose(data: Dict[str, Any], covered: int, total: int, table:
                 _CITES_REDUNDANCY_TABLE.search(str(item)) for item in correction.get("evidence") or [])
             claims.append((f"corrections[{c}].correction", text, backed))
     for path, text, cites_table in claims:
-        for said_covered, said_total in coverage_claims(text):
-            if said_covered == covered and said_total in (None, total):
+        for said_covered, said_total, bound in coverage_claims(text):
+            if _BOUND_HOLDS[bound](covered, said_covered) and said_total in (None, total):
                 continue
-            said = f"{said_covered} of {said_total}" if said_total is not None else str(said_covered)
+            said = _BOUND_WORDS[bound] + (
+                f"{said_covered} of {said_total}" if said_total is not None else str(said_covered))
             add(ValidationSeverity.ERROR if cites_table else ValidationSeverity.WARNING,
                 "redundancy_prose_mismatch" if cites_table else "redundancy_prose_unconfirmed",
                 f"says {said} sets are covered by more specific rules; {table} gives {covered} of {total}", path,
-                "Quote the table, or say which subset the figure is.")
+                "Quote the table, write the exact figure, or say which subset the figure is.")
 
 
 def check_meaning(
