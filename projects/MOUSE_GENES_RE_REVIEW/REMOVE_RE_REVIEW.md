@@ -95,10 +95,10 @@ Twelve are substantive rows, and eleven of those changed, all in rat/Prkaa2.
 |---|---|---|---|
 | `MARK_AS_OVER_ANNOTATED` | 32 | 8 | 40 |
 | `KEEP_AS_NON_CORE` | 32 | 0 | 32 |
-| `MODIFY` | 6 | 14 | 20 |
+| `MODIFY` | 6 | 15 | 21 |
 | `ACCEPT` | 4 | 1 | 5 |
 | `UNDECIDED` | 7 | 0 | 7 |
-| `TOO_GENERAL` | 3 | 1 | 4 |
+| `TOO_GENERAL` | 3 | 0 | 3 |
 
 What was wrong with the 108 rows:
 
@@ -108,9 +108,9 @@ What was wrong with the 108 rows:
 | A transfer removed although the donor experiment shows the claim | 6 | `KEEP_AS_NON_CORE` |
 | A transfer of a real observation that is over-read, or of unknown relevance for the target | 17 | `MARK_AS_OVER_ANNOTATED` |
 | The same term treated differently on another row of the review | 19 | Action of the sibling row |
-| The gene product regulates the process, or the sign or substrate class is wrong | 12 | `MODIFY` to the fitting term |
+| The gene product regulates the process, or the sign or substrate class is wrong | 13 | `MODIFY` to the fitting term |
 | An experimental row that records a real observation as participation in a process | 14 | `MARK_AS_OVER_ANNOTATED` |
-| Ancestor of a kept term | 4 | `TOO_GENERAL` |
+| Ancestor of a kept term | 3 | `TOO_GENERAL` |
 | The reason conceded that the claim is true | 2 | Kept or refined |
 | The paper behind the row, or behind its source row, could not be examined | 3 | `UNDECIDED` |
 
@@ -178,7 +178,7 @@ listed together. The reason of every row states the basis in full.
 | mouse/Agtr1a | inflammatory response (1) | IGI | `MARK_AS_OVER_ANNOTATED` | Marked on the IBA row; the row's own paper reports an effect that is independent of AT1 receptors (source defect). |
 | mouse/Abi3 | defense response to tumor cell (1) | IDA | `MARK_AS_OVER_ANNOTATED` | Marked on the IEA and ISO rows; the experiment used human ABI3 (source defect already recorded). |
 
-### Role, sign or substrate class corrected (12)
+### Role, sign or substrate class corrected (13)
 
 All in rat/Prkaa2, the catalytic subunit of AMPK. The review already
 redirected its TORC1 signaling row to negative regulation of TORC1 signaling;
@@ -189,6 +189,7 @@ stated reason.
 |---|---|---|
 | fatty acid biosynthetic process (1) | IEA | negative regulation of fatty acid biosynthetic process |
 | cholesterol, sterol and steroid biosynthetic process (3) | IEA | negative regulation of cholesterol biosynthetic process |
+| steroid metabolic process (1) | IEA | negative regulation of cholesterol biosynthetic process |
 | lipid biosynthetic process (3) | ISO, ISS | negative regulation of lipid biosynthetic process |
 | autophagy (1) | IEA | positive regulation of autophagy |
 | rhythmic process (1) | IEA | regulation of circadian rhythm |
@@ -214,13 +215,12 @@ what was measured is not removed as false.
 | mouse/App | protein phosphorylation | IMP | Dephosphorylation of an NMDA receptor subunit downstream of amyloid-beta. |
 | mouse/Mpo | mitochondrion | HDA | One hit in a mitochondrial proteome survey of vascularised tissues. |
 
-### Other changes (9)
+### Other changes (8)
 
 | Review | Term (rows) | Evidence | Now | Basis |
 |---|---|---|---|---|
 | mouse/Dll3 | negative regulation of neurogenesis (2) | IDA, IEA | `TOO_GENERAL` | Entailed by negative regulation of astrocyte differentiation, which the review keeps; the reading about neurons is contested (PMID:16144902). |
 | mouse/Ghr | endocytosis (1) | IEA | `TOO_GENERAL` | Entailed by receptor internalization. |
-| rat/Prkaa2 | steroid metabolic process (1) | IEA | `TOO_GENERAL` | Entailed by cholesterol metabolic process. |
 | mouse/Dnajb11 | positive regulation of ATP-dependent activity (1) | ISO | `ACCEPT` | ERdj3 stimulates the ATPase activity of BiP; the row had been removed because a function term covers the same biology. |
 | mouse/Ghr | growth factor binding (1) | ISO | `MODIFY` → peptide hormone binding | The receptor binds growth hormone; the review accepts the specific term. |
 | mouse/Trp53 | receptor tyrosine kinase binding; protein heterodimerization activity (2) | IEA | `UNDECIDED` | Transfers of human physical-interaction rows; the cached abstracts do not describe the interactions. |
@@ -285,10 +285,24 @@ eight of them are marked as close calls.
   PAX6, GRIA1, SLC16A1, TARDBP, ITPR1, VEGFA, SOX2, TP53, SERPINH1, NOTCH1 and
   PTK7. The row-level record lists each with the index and the argument. They
   were not changed here, because this pass covers mouse and rat REMOVE rows.
+- **Transfers of source rows that changed here.** Where this pass changed a
+  mouse or rat source row, its transfers in other reviews did not follow.
+  Three genes are affected. human/DNMT3L removes two transfers of male
+  meiosis I, whose mouse mutant-phenotype row is now marked; HORSE/DNMT3L
+  removes the same transfer. human/ARSB leaves undecided or keeps the
+  transfers of response to pH and response to methylmercury, whose rat
+  direct-assay rows are now marked. human/SLC10A1 removes or redirects four
+  transfers of the rat expression-pattern rows, which are now marked; that
+  difference is defensible, because an expression pattern seen in the rat is
+  not an observation on the human protein. The row-level record lists them
+  under `human_transfers_of_changed_source_rows`.
 - **Rat rows kept beside the ones changed.** rat/Akt1 keeps translation on two
   experimental rows while the same review removes gene expression because a
   kinase performs no step of it. rat/Ghr keeps or marks three transfers whose
-  human source rows are no longer in QuickGO.
+  human source rows are no longer in QuickGO. rat/Prkaa2 accepts cholesterol
+  metabolic process with a reason that describes regulation, while its rows
+  for steroid metabolism and for sterol synthesis are redirected to the
+  regulation term.
 - **Full text needed.** PMID:23027130 and PMID:10837489 (mouse Trp53),
   PMID:11584023 (mouse Dnajb11), PMID:12855682 (mouse Hsp90aa1) and
   PMID:12887892 (Sirt2).

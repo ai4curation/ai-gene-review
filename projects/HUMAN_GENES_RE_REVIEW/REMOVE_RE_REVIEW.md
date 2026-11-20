@@ -460,3 +460,5 @@ are `UNDECIDED`, like their source row.
   SERPINH1, NOTCH1, PTK7). They are listed with the argument under `followups`
   in the mouse and rat
   [row-level record](../MOUSE_GENES_RE_REVIEW/remove_rereview_changes.yaml).
+  The same record lists three genes (DNMT3L, ARSB, SLC10A1) whose human rows
+  are transfers of mouse or rat source rows that the pass changed.
