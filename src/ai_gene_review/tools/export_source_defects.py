@@ -15,9 +15,9 @@ places:
   the source's record of an isoform (e.g. a literature isoform missing from the
   reviewed UniProt entry); the row's ``term_id`` carries the functional isoform id;
 * ``activity_reviews[].source_defects`` in GO-CAM reviews
+  (``gocams/*/*-review.yaml``), where it is the GO-CAM activity;
 * ``source_defects`` at the top level of rule reviews (``rules/**/*-review.yaml``),
-  for a defect in an annotation record the rule review cites as a receipt
-  (``gocams/*/*-review.yaml``), where it is the GO-CAM activity.
+  for a defect in an annotation record the rule review cites as a receipt.
 
 This module flattens them all into one row per defect and renders a Markdown report
 per responsible resource (the thing that is actually sent upstream).
