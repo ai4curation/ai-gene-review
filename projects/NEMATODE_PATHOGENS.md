@@ -53,7 +53,7 @@ anchor, `BRUMA/dpy-31`, is in the same PANTHER subfamily as *C. elegans*
 `dpy-31`.
 
 - [ ] `BRUMA` `dpy-31` / A8Q2D1 - cross-check existing review against the module
-- [ ] `worm` `dpy-31` / P98060 - fetch and review the C. elegans DPY-31 ortholog
+- [x] `worm` `dpy-31` / P98060 - fetched and reviewed the C. elegans DPY-31 ortholog
 - [ ] `HAECO` `dpy-31` / D5FM34 - fetch and review the reviewed *H. contortus* DPY-31 ortholog
 - [ ] `BRUMA` `bma-dpy-18.1` / Q68VC1 - fetch and review a prolyl 4-hydroxylase alpha candidate
 - [ ] `BRUMA` `bma-dpy-18.2` / A0A1P6BZ71 - fetch and review the second prolyl 4-hydroxylase alpha candidate
@@ -120,7 +120,8 @@ Pathogen accessions need UniProt and literature resolution before fetching.
 - [x] Verify UniProt mnemonics for initial parasitic nematodes before using them in paths
 - [x] Choose the first real multi-part module: nematode cuticle collagen maturation
 - [x] Add `modules/nematode_cuticle_collagen_maturation.yaml`
-- [ ] Add or cross-check the first wave of cuticle member gene reviews
+- [x] Create the `worm` `dpy-31` review for the C. elegans DPY-31 ortholog
+- [ ] Add or cross-check the remaining first-wave cuticle member gene reviews
 
 # NOTES
 
@@ -154,3 +155,10 @@ Pathogen accessions need UniProt and literature resolution before fetching.
   with three ordered processing steps: ER procollagen prolyl 4-hydroxylation,
   BLI-4-dependent N-terminal cleavage before secretion, and DPY-31-dependent
   extracellular C-terminal cleavage.
+- Added `genes/worm/dpy-31` and curated DPY-31/NAS-35 as the C. elegans
+  zinc-dependent extracellular procollagen C-proteinase that processes SQT-3
+  C termini during collagenous cuticle formation and molting. Falcon and
+  Perplexity Lite deep-research providers were unavailable, so the review uses
+  the cached WormBase gene description, the full text of PMID:15579684, the
+  cached PMID:19883650 abstract, UniProt sequence features, and PAINT loss
+  checks.
