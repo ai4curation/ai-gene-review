@@ -13,5 +13,8 @@
   Caballero-Lima et al. 2014 physically associates Sec2p/SEC2 mRNA with
   secretory-vesicle fractions.
 - Marked the CGD `molecular_function` ND row for removal because GEF activity
-  is no longer unknown, and marked `filamentous growth` as too general relative
-  to the same paper's specific `hyphal growth` row.
+  is no longer unknown and direct Sec2p-mRNA binding makes the root
+  molecular-function placeholder stale. The generic `filamentous growth` row now
+  proposes `hyphal growth` as a more precise replacement.
+- Added a conservative `mRNA binding` NEW row from PMID:25231350, which directly
+  shows Sec2p binding its own mRNA by RIP and UV cross-linking.
