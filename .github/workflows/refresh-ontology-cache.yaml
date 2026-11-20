@@ -1,0 +1,114 @@
+---
+name: Refresh ontology cache
+
+# Online maintenance is separate from PR/merge-queue validation. This job does
+# not change CI's validation policy or silently accept unresolved cache misses.
+on:  # yamllint disable-line rule:truthy
+  schedule:
+    - cron: "0 4 * * 0"  # Sundays 04:00 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: refresh-ontology-cache
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    # Only trusted default-branch code can reach the App-token/push steps.
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install project
+        run: uv sync --frozen --dev
+
+      # Deliberately no restore of the OAK database cache: each scheduled run
+      # resolves the available SQLite builds afresh, then records their hashes.
+      - name: Refresh and verify ontology caches
+        run: uv run python -m ai_gene_review.tools.ontology_cache_refresh --apply
+
+      - name: Check cache ordering
+        run: uv run python -m ai_gene_review.tools.cache_lint
+
+      - name: Upload report and validator logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ontology-cache-refresh-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            reports/ontology-cache-refresh/report.yaml
+            reports/ontology-cache-refresh/summary.md
+            reports/ontology-cache-refresh/*.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Check for semantic cache changes
+        id: changes
+        shell: bash
+        run: |
+          if [ -n "$(git status --porcelain --untracked-files=all -- cache/)" ]; then
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate ai4c-agent token
+        if: steps.changes.outputs.changed == 'true'
+        id: ai4c-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
+          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
+
+      - name: Create or update cache-maintenance PR
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
+          APP_SLUG: ${{ steps.ai4c-token.outputs.app-slug }}
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
+        shell: bash
+        run: |
+          APP_USER_ID="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+          gh auth setup-git
+          BRANCH=auto/refresh-ontology-cache
+          # An absent branch is normal; other fetch failures must stop the push.
+          if git ls-remote --exit-code --heads origin "$BRANCH"; then
+            git fetch origin "$BRANCH:refs/remotes/origin/$BRANCH"
+          else
+            STATUS=$?
+            if [ "$STATUS" -ne 2 ]; then exit "$STATUS"; fi
+          fi
+          git checkout -b "$BRANCH"
+          BODY=reports/ontology-cache-refresh/summary.md
+          printf '\nWorkflow evidence: %s/%s/actions/runs/%s\n' "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" >> "$BODY"
+          # Source hashes and refresh scope survive artifact expiry in the commit.
+          git add cache/
+          git commit -F "$BODY"
+          git push --force-with-lease origin "$BRANCH"
+          EXISTING=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --base "$BASE_BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            gh pr edit "$EXISTING" --repo "$GITHUB_REPOSITORY" --body-file "$BODY"
+          else
+            gh pr create --repo "$GITHUB_REPOSITORY" --head "$BRANCH" --base "$BASE_BRANCH" --title 'Refresh ontology term caches' --body-file "$BODY"
+          fi
