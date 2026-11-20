@@ -48,7 +48,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple
 from enum import Enum
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Mapping
 
 import yaml
 
@@ -457,10 +457,10 @@ def _iter_panther_terms(review: dict):
 
 def check_panther_ids(
     review: dict,
-    labels: dict[str, str],
-    members: dict[str, str],
+    labels: Mapping[str, str],
+    members: Mapping[str, str],
     gaps: "MemberIndexGaps | None" = None,
-    alternates: "dict[str, str] | None" = None,
+    alternates: "Mapping[str, str] | None" = None,
     previous: "PreviousRelease | None" = None,
 ) -> list[ResidueCheck]:
     """Check every PANTHER family/subfamily id resolves, and that labels are verbatim.

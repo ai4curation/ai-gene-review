@@ -50,9 +50,11 @@ from pathlib import Path
 from typing import (
     Callable,
     Dict,
+    Final,
     Iterable,
     Iterator,
     List,
+    Literal,
     Mapping,
     NamedTuple,
     Optional,
@@ -434,16 +436,18 @@ class MemberIndexGaps(NamedTuple):
 # Outcomes of member_corroboration. A descriptor's members either reach the index
 # (whether they agree with its family id is the member check's job), were never looked
 # up (a refresh resolves it), were looked up and have no PANTHER family (permanent), or
-# do not exist.
-MEMBERS_INDEXED = "indexed"
-MEMBERS_NOT_LOOKED_UP = "not_looked_up"
-MEMBERS_NO_FAMILY = "no_family"
-NO_MEMBERS = "no_members"
+# do not exist. Consumers branch on it ending in typing.assert_never, so mypy names any
+# consumer that misses a new outcome.
+MemberCorroboration = Literal["indexed", "not_looked_up", "no_family", "no_members"]
+MEMBERS_INDEXED: Final = "indexed"
+MEMBERS_NOT_LOOKED_UP: Final = "not_looked_up"
+MEMBERS_NO_FAMILY: Final = "no_family"
+MEMBERS_NONE: Final = "no_members"
 
 
 def member_corroboration(
     accessions: Iterable[str], index: Mapping[str, str], gaps: MemberIndexGaps
-) -> str:
+) -> MemberCorroboration:
     """How far a descriptor's representative members can corroborate its family id.
 
     Label tools act on the answer. ``MEMBERS_NOT_LOOKED_UP`` (no member in the index,
@@ -451,8 +455,8 @@ def member_corroboration(
     member can confirm or dispute it yet. ``MEMBERS_NO_FAMILY`` (every member looked
     up, none with a PANTHER family) carries the same risk -- a wrong id behind an
     official name -- but no refresh will ever change it, so skipping would leave the
-    label wrong for good; tools relabel it and say so. ``NO_MEMBERS`` has nothing to
-    look up.
+    label wrong for good; tools relabel it and say so. ``MEMBERS_NONE`` has nothing to
+    look up, and nothing could ever confirm the id either, so it is treated the same.
 
     >>> gaps = MemberIndexGaps(absent={"P3"}, unchecked={"P2"})
     >>> member_corroboration({"P1", "P2"}, {"P1": "PTHR1"}, gaps)
@@ -466,7 +470,7 @@ def member_corroboration(
     """
     accessions = set(accessions)
     if not accessions:
-        return NO_MEMBERS
+        return MEMBERS_NONE
     if any(accession in index for accession in accessions):
         return MEMBERS_INDEXED
     return MEMBERS_NOT_LOOKED_UP if accessions - gaps.absent else MEMBERS_NO_FAMILY
@@ -1152,15 +1156,20 @@ def load_subfamily_counts(path: Path) -> Dict[str, int]:
     return counts
 
 
+# Why rewrite_panther_labels held a label back: the label names a different protein
+# than the id's official name, or the id was renamed since the previous release.
+DeferralReason = Literal["divergent", "renamed_in_switch"]
+
+
 class DeferredLabel(NamedTuple):
     """A label :func:`rewrite_panther_labels` held back, and why."""
 
     curie: str
     old: str
     new: str
-    # "divergent" | "renamed_in_switch". A new value must also be named in
-    # cli.fix_panther_labels (also_deferred), which reports deferrals by reason.
-    reason: str
+    # Consumers branch on it ending in typing.assert_never (cli.fix_panther_labels),
+    # so mypy names any consumer that misses a new reason.
+    reason: DeferralReason
 
 
 def rewrite_panther_labels(
@@ -1602,10 +1611,11 @@ def previous_release_members(
 class PantherArtifacts(NamedTuple):
     """The pinned release's PANTHER artifacts, as the validators use them."""
 
-    names: Dict[str, str]  # PANTHER:<id> -> official name, from panther.obo
-    members: Dict[str, str]  # UniProt accession -> PTHR family:SF, from the member index
+    # Read-only: the lru_cache in panther_artifacts hands every caller the same objects.
+    names: Mapping[str, str]  # PANTHER:<id> -> official name, from panther.obo
+    members: Mapping[str, str]  # UniProt accession -> PTHR family:SF, from the member index
     gaps: MemberIndexGaps
-    alternates: Dict[str, str]
+    alternates: Mapping[str, str]
 
 
 def panther_artifacts(panther_dir: Path) -> PantherArtifacts:
@@ -1653,7 +1663,7 @@ class PreviousRelease(NamedTuple):
 
     release: str
     labels: Mapping[str, str]  # read-only, shared with the cached PreviousLabels
-    members: Dict[str, str]
+    members: Mapping[str, str]  # read-only, shared through the lru_cache
 
 
 def switch_release() -> Optional[str]:

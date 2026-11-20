@@ -735,6 +735,9 @@ def test_fix_panther_labels_refuses_apply_with_a_cold_member_index(tmp_path: Pat
     dry_run = CliRunner().invoke(app, args)
     assert dry_run.exit_code == 0
     assert "member index is empty" in dry_run.output
+    # The hint is right whichever way the command was reached.
+    assert "`just fix-panther-labels` runs it first" in dry_run.output
+    assert "run it yourself" in dry_run.output
     assert "Would apply 1 label correction(s)" in dry_run.output
 
 
@@ -887,7 +890,6 @@ def test_fix_panther_labels_reports_an_unconfirmed_id_whose_label_diverges(tmp_p
     assert module.read_text() == before
 
 
-
 def test_fix_panther_labels_relabels_but_lists_ids_panther_has_no_family_for(
     tmp_path: Path,
 ) -> None:
@@ -917,5 +919,22 @@ def test_fix_panther_labels_relabels_but_lists_ids_panther_has_no_family_for(
     assert "Applied 1 label correction(s)" in result.output
     assert "1 label(s) rewritten without member corroboration" in result.output
     assert "PANTHER:PTHR00002  'OTHER NAMES' -> 'OTHER NAME'" in result.output
+    assert "(PANTHER has no family for any representative member)" in result.output
     assert "NOT rewritten" not in result.output
     assert "label: OTHER NAME\n" in module.read_text()
+
+
+def test_fix_panther_labels_lists_a_relabel_on_an_id_no_member_names(tmp_path: Path) -> None:
+    """A descriptor naming no UniProtKB member can never be confirmed: rewritten, and listed."""
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = _label_fix_repo(tmp_path, with_member_index=True)  # descriptor has no members
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+
+    assert result.exit_code == 0, result.output
+    assert "Applied 1 label correction(s)" in result.output
+    assert "1 label(s) rewritten without member corroboration" in result.output
+    assert "(no UniProtKB representative member names the id)" in result.output
+    assert "label: REAL NAME\n" in (repo / "modules" / "m.yaml").read_text()

@@ -1129,7 +1129,7 @@ def validate_family_members(
     paint_index: Optional[PaintIndex] = None,
     subfamily_counts: Optional[Dict[str, int]] = None,
     alternates: Optional[Dict[str, str]] = None,
-    previous: Optional[Tuple[str, Dict[str, str]]] = None,
+    previous: Optional[Tuple[str, Mapping[str, str]]] = None,
 ) -> Tuple[List[str], List[str]]:
     """Check that a declared PANTHER family really contains its own members.
 
@@ -1438,7 +1438,7 @@ def compare_label(
 
 def defer_previous_release_panther_terms(
     terms: List[Tuple[str, str]],
-    current_names: Dict[str, str],
+    current_names: Mapping[str, str],
     previous_names: Mapping[str, str],
     previous_release: str,
 ) -> Tuple[List[Tuple[str, str]], List[str]]:
