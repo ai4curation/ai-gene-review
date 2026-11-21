@@ -27,7 +27,7 @@ Ready to paste into a new [geneontology/go-ontology](https://github.com/geneonto
    | Annotations | Proteins | Route |
    |---:|---|---|
    | 12,690 | PTHR43605 AMP-forming acyl-CoA ligases (EC 6.2.1) | PAINT IBD on PTN001944787 seeded by one RGD IDA, then IBA and TreeGrafter (geneontology/go-annotation#6642) |
-   | 520 | Bacterial modular polyketide and PUFA synthases | EC2GO from EC 2.3.1.86 added by UniProt rule ARBA00048237 |
+   | 520 | Bacterial modular polyketide and PUFA synthases | EC2GO from EC 2.3.1.86 added by an earlier version of UniProt rule ARBA00048237 (removed in UniProt 2026_04; the GO rows are stale) |
    | 163 | Other bacterial acyl-CoA ligases | EC2GO from EC 2.3.1.86 typed by genome submitters (e.g. "Long-chain-fatty-acid--CoA ligase, EC=2.3.1.86") |
    | 39 | Other acyl-CoA ligases | IDA, IMP and ISO rows (GeneDB, MTBBASE, TAIR, MGI, RGD) and EnsemblPlants projections |
    | 83 | Oomycete and other non-fungal FAS-like proteins | EC2GO; uncertain |

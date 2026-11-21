@@ -89,7 +89,8 @@ proposed_ontology_changes:
   justification: >-
     The ec2go mapping from EC:2.3.1.86 to GO:0004321 is how UniProt EC assignments
     become GO annotations, including EC 2.3.1.86 that genome submitters typed on
-    acyl-CoA ligases and that ARBA00048237 adds to bacterial polyketide synthases.
+    acyl-CoA ligases and that an earlier version of ARBA00048237 added to bacterial
+    polyketide synthases (GO rows from that version are still served).
     It should go with the obsoletion; if GO keeps the term instead, the mapping should
     still be restricted so that it cannot reach non-fungal proteins. The Rhea
     (RHEA:22896) and MetaCyc (FATTY-ACYL-COA-SYNTHASE-RXN) cross-references on the
@@ -187,7 +188,7 @@ the output is [`usage_summary.yaml`](FATTY_ACYL_COA_SYNTHASE_OBSOLETION/usage_su
 | 12,690 | PTHR43605 acyl-CoA ligases | PAINT root IBD seeded by RGD Acsm4; IBA, TreeGrafter, ISO, Ensembl | wrong |
 | 3,674 | Fungal FAS subunits | EC2GO from UniProt EC 2.3.1.86; UniProt ISS | correct use |
 | 10 | Fungal FAS, curated | SGD RCA, PomBase NAS, ComplexPortal IDA | correct use |
-| 520 | Bacterial modular PKS and PUFA synthases (*Streptomyces*, Bacteroidetes) | EC2GO; EC 2.3.1.86 added by ARBA00048237 | wrong |
+| 520 | Bacterial modular PKS and PUFA synthases (*Streptomyces*, Bacteroidetes) | EC2GO; EC 2.3.1.86 added by an earlier version of ARBA00048237 (stale since UniProt 2026_04) | wrong |
 | 163 | Other bacterial acyl-CoA ligases | EC2GO; EC 2.3.1.86 typed by submitters | wrong |
 | 39 | Other acyl-CoA ligases | IDA, IMP, ISO; EnsemblPlants projections | probably wrong |
 | 83 | Oomycete and other non-fungal FAS-like proteins | EC2GO | uncertain |
@@ -200,12 +201,20 @@ Three independent routes put the term on proteins that are not fungal FAS:
    root (go-annotation#6642).
 2. **Genome submitters.** EC 2.3.1.86 typed on acyl-CoA ligase records, e.g.
    "Long-chain-fatty-acid--CoA ligase, EC=2.3.1.86" (ECO:0000313).
-3. **An ARBA rule.** ARBA00048237 adds the 2.3.1.86 reaction to 4,017
-   unreviewed entries. Six of its seven condition sets are limited to fungi,
-   eukaryotes or a fungal FAS family; the first (two phosphopantetheinyl
-   transferase signatures plus the thiolase-like superfamily) has no taxon or
-   family limit, and the *Streptomyces* PKS entries sampled get the EC from
-   this rule.
+3. **An ARBA rule, since fixed.** ARBA00048237 gave the 2.3.1.86 reaction to
+   bacterial polyketide synthases in the June and September 2026 UniProt
+   releases (19 of 20 entries sampled from the 529 stale rows show the
+   rule's evidence tag in both releases; the twentieth carried the EC from
+   another source). The rule served in release 2026_04 (eight condition sets) matches
+   no bacterial or archaeal entry, and those entries have lost the EC, but
+   QuickGO still serves 529 GO:0004321 rows on them from the earlier release.
+   (The table above counts 520 for this class: it was classified on
+   2026-11-01 against UniProtKB 2026_03 by PANTHER family, while 529 is every
+   bacterial EC2GO row whose entry no longer carries the EC, counted on
+   2026-11-17 against 2026_04.)
+   An earlier version of this page blamed condition set 1 of the current rule;
+   queried as a conjunction, that set matches only eukaryotes. See the rule
+   review, [ARBA00048237](../rules/arba/ARBA00048237/ARBA00048237-review.yaml).
 
 ### Expert curation already uses the other system term
 
@@ -248,8 +257,10 @@ one multifunctional polypeptide performs the whole cycle.
 - Prior discussion: [geneontology/go-ontology#8102](https://github.com/geneontology/go-ontology/issues/8102)
   (2010–2015, closed as out of date: whether the term is a process),
   [geneontology/go-ontology#7662](https://github.com/geneontology/go-ontology/issues/7662)
-- To report to UniProt: condition set 1 of ARBA00048237, and submitter EC
-  2.3.1.86 on acyl-CoA ligases.
+- To report to UniProt: submitter EC 2.3.1.86 on acyl-CoA ligases.
+  ARBA00048237 needs no report: the rule review (2026-11-17, release 2026_04)
+  found it matches only fungal and other eukaryote FAS. The 529 stale bacterial
+  GO rows should clear at the next GOA load; check then.
 
 ## Impact on this repo
 
@@ -281,5 +292,7 @@ instead, the module node would describe the complex through its parts.
 
 - 2026-11-02: usage audit and draft ontology ticket written; annotation ticket
   go-annotation#6642 filed.
-- Next: file the ontology ticket; report ARBA00048237 to UniProt; revisit the
-  fungal FAS reviews once GO decides.
+- 2026-11-17: ARBA00048237 reviewed (ACCEPT); the bacterial PKS route is from an
+  earlier version of the rule and is fixed upstream.
+- Next: file the ontology ticket; check that the stale bacterial EC2GO rows are
+  gone after the next GOA load; revisit the fungal FAS reviews once GO decides.
