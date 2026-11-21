@@ -141,8 +141,11 @@ and so are not a single comparable breakdown:
   propagated from an experimentally-characterised ancestor down a PANTHER
   family.
 
-Consequences for review (per the IBA guidance in CLAUDE.md and
-[IBA_REVIEW](IBA_REVIEW.md)):
+**Full per-source handling** — the tier table (IBA / TreeGrafter / UniRule /
+ARBA / InterPro2GO / Ensembl, with evidence codes and `GO_REF` ids), why adaptor
+terms are propagation-fragile, and the per-tier decision procedure — is in
+[propagation-handling.md](MOLECULAR_ADAPTOR_ACTIVITY/propagation-handling.md).
+In brief (per the IBA guidance in CLAUDE.md and [IBA_REVIEW](IBA_REVIEW.md)):
 
 - An IBA `molecular adaptor activity` / `signaling adaptor activity` row is a
   considered phylogenetic judgment, not a pairwise transfer. Challenge the node
@@ -261,8 +264,10 @@ is a candidate for its own phase. Because the branches cut across the ontology
   (CRL4 substrate receptor; 29-annotation review now COMPLETE; `protein binding`
   rows are all the DDB1 docking contact → REMOVE, with `in_complex` not
   `has input` the modelling of a ligase-subunit adaptor).
-- [ ] Decide handling of the propagated bulk (IBA vs TreeGrafter/ARBA) for
-  adaptor terms; cross-reference [IBA_REVIEW](IBA_REVIEW.md).
+- [x] Decide handling of the propagated bulk (IBA vs TreeGrafter/ARBA) for
+  adaptor terms: per-source tier table and decision procedure in
+  [propagation-handling.md](MOLECULAR_ADAPTOR_ACTIVITY/propagation-handling.md),
+  cross-referencing [IBA_REVIEW](IBA_REVIEW.md).
 - [ ] Set `index_group:` in the frontmatter when the project leaves SCOPING, so it
   appears in the right section of the generated project index.
 
