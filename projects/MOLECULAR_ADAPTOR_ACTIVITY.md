@@ -141,9 +141,10 @@ and so are not a single comparable breakdown:
   propagated from an experimentally-characterised ancestor down a PANTHER
   family.
 
-**Full per-source handling** — the tier table (IBA / TreeGrafter / UniRule /
-ARBA / InterPro2GO / Ensembl, with evidence codes and `GO_REF` ids), why adaptor
-terms are propagation-fragile, and the per-tier decision procedure — is in
+**Full per-source handling** — the group table (IBA / TreeGrafter / UniRule /
+ARBA / InterPro2GO / Ensembl and the combined/dedup set, with evidence codes and
+`GO_REF` ids), why adaptor terms are propagation-fragile, and the per-group
+decision procedure — is in
 [propagation-handling.md](MOLECULAR_ADAPTOR_ACTIVITY/propagation-handling.md).
 In brief (per the IBA guidance in CLAUDE.md and [IBA_REVIEW](IBA_REVIEW.md)):
 
@@ -265,7 +266,7 @@ is a candidate for its own phase. Because the branches cut across the ontology
   rows are all the DDB1 docking contact → REMOVE, with `in_complex` not
   `has input` the modelling of a ligase-subunit adaptor).
 - [x] Decide handling of the propagated bulk (IBA vs TreeGrafter/ARBA) for
-  adaptor terms: per-source tier table and decision procedure in
+  adaptor terms: per-source group table and decision procedure in
   [propagation-handling.md](MOLECULAR_ADAPTOR_ACTIVITY/propagation-handling.md),
   cross-referencing [IBA_REVIEW](IBA_REVIEW.md).
 - [ ] Set `index_group:` in the frontmatter when the project leaves SCOPING, so it

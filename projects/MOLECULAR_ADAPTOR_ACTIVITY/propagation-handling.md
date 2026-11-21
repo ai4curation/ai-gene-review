@@ -101,9 +101,13 @@ Apply in order; it layers on the project
      placement was sound while the inherited term was too coarse, a sibling, or
      out of context. So **check the term first**: `MODIFY` to the right
      granularity *on the row's own evidence* (else per step 2 the better term is a
-     `NEW` row), `MARK_AS_OVER_ANNOTATED` for a too-coarse or out-of-context
-     grafted term, or the lateral `MODIFY` of step 2 for a sibling/mis-typed
-     adaptor child — each with a stated reason.
+     `NEW` row); `TOO_GENERAL` for a true-but-coarse grafted term once a more
+     specific adaptor term is asserted elsewhere in the review (decision rule 5,
+     as in step 1); `MARK_AS_OVER_ANNOTATED` only for an *out-of-context* grafted
+     term, where the bridging claim itself is doubtful; or the lateral `MODIFY` of
+     step 2 for a sibling/mis-typed adaptor child — each with a stated reason. If
+     nothing more specific is supported, the coarse term is as precise as the
+     evidence allows: keep it (`ACCEPT` / `KEEP_AS_NON_CORE`) and say so.
    - **Groups C and D (rule / signature / projection):** these are *not* uniform.
      **UniRule** (curated) and **Ensembl** (projected from a manual annotation)
      deserve a reading of what they rest on before any challenge; **ARBA** (ML)
@@ -115,8 +119,9 @@ Apply in order; it layers on the project
    - **Group E (combined / dedup):** read through the `WITH/FROM` to the methods
      that actually agree and judge by them; do not treat it as a bare signature.
      Two independent pipelines reproducing the same adaptor call is mild
-     corroboration (TREEGRAFTER measured acceptance rising to ~77% for such rows,
-     though confounded by reviewers seeing the combined label).
+     corroboration (TREEGRAFTER measured acceptance rising to ~77% for TreeGrafter
+     calls another pipeline reproduced under this label, though confounded by
+     reviewers seeing the combined label).
 
 ## Which IBA_REVIEW failure patterns bite adaptors most
 
