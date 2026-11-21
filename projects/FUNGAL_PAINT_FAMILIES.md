@@ -690,6 +690,29 @@ separate MSL-complex placement and an IRD blocking NuA4 complex inheritance.
 
 # NOTES
 
+## Family 15: WIPI/PROPPIN Atg18 Phosphoinositide Adaptors
+
+`PTHR11227` contains the eukaryotic WIPI/PROPPIN beta-propeller
+phosphoinositide-binding family. The compact fungal Atg18 tranche keeps
+the root PI3P, PI(3,5)P2, and adaptor calls, retains the fungal-type
+vacuole membrane node, and marks root-level pexophagy, mitophagy,
+nucleophagy, and glycophagy rows as too broad for every Atg18/Atg21/WIPI
+paralog.
+
+- [x] `yeast/ATG18` - budding-yeast Atg18 anchor with direct Cvt,
+  PAS, lipid-binding, vacuole, Atg2, CROP and 2026 Atg8-AIM evidence
+- [x] `SCHPO/atg18` - fission-yeast Atg18 seed with PomBase PAS,
+  endosome and vacuole evidence
+- [x] `CANAL/ATG18` - C. albicans ATG18 with direct DNA damage-induced
+  autophagy and macroautophagy evidence
+- [x] `CANGA/ATG18` - C. glabrata Atg18 ortholog with CGD electronic
+  transfers pruned to conserved PROPPIN activities and locations
+- [x] `NEUCR/apg-10` - N. crassa Atg18-family ortholog
+- [x] `ASPFU/atg18` - A. fumigatus Atg18-family ortholog
+- [ ] Review the sibling fungal `ATG21` and `HSV2` PROPPIN branches
+  separately; their Cvt/Atg8-recruitment roles should not be collapsed
+  into the Atg18 branch.
+
 ## 2026-11-21
 
 - Extended `PTHR10969` with `CANGA/ATG8` and a family sidecar spanning the
@@ -699,6 +722,8 @@ separate MSL-complex placement and an IRD blocking NuA4 complex inheritance.
   transfers such as Cvt, nucleophagy, ER-phagy, VICS, lipid-droplet, and
   heat-induced vacuole-invagination annotations remain over-specific for
   *Candida glabrata* until directly assayed there.
+
+- Added the `PTHR11227` WIPI/PROPPIN Atg18 tranche across `yeast/ATG18`, `SCHPO/atg18`, `CANAL/ATG18`, `CANGA/ATG18`, `NEUCR/apg-10`, and `ASPFU/atg18`. The family review accepts the root lipid-binding/adaptor PAINT rows and fungal vacuole-membrane node while flagging root-level cargo-selective autophagy terms as too broad for every Atg18/Atg21/WIPI paralog.
 
 - Added the compact `PTHR10880` Eaf3/MRG chromatin-subunit family after
   checking the existing *S. cerevisiae*, *S. pombe*, *Candida*, and
