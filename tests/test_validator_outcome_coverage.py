@@ -57,6 +57,12 @@ CANNOT_REJECT = {
         "a site with neither its own anchor nor a family reference_protein is "
         "incomplete, not contradicted, so this check reports UNRESOLVED by design"
     ),
+    "NODE_TREE_EVIDENCE": (
+        "a verdict that disputes a PAINT placement without quoting a tree listing is "
+        "unsupported, not contradicted: the verdict may be right, and only reading the "
+        "tree can say. Whether a quoted listing really contains the quote is the quote "
+        "validator's job, and that check does fail"
+    ),
 }
 
 #: The validator test modules whose execution defines coverage.

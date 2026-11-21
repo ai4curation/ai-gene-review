@@ -1149,3 +1149,61 @@ def test_load_previous_release_is_offline_and_off_when_not_cached(tmp_path, caps
     assert "mouse" in listed and "human" not in listed
     assert previous.labels == {"PANTHER:PTHR00001:SF7": "OLD SUBFAMILY"}
     assert previous.members == {"P00002": "PTHR00001:SF7"}
+
+
+@pytest.mark.parametrize(
+    "verdict,expected",
+    [
+        ("TOO_DEEP", "UNRESOLVED"),
+        ("WRONG_NODE", "UNRESOLVED"),
+        ("NEEDS_PRUNING", "UNRESOLVED"),
+        ("LOSS_CONTRADICTED", "UNRESOLVED"),
+        ("LOSS_TOO_BROAD", "UNRESOLVED"),
+        ("SOUND", None),
+        ("LOSS_SUPPORTED", None),
+        ("LOSS_STALE", None),
+        ("UNRESOLVED", None),
+    ],
+)
+def test_verdicts_that_dispute_a_placement_are_asked_for_the_tree(verdict, expected):
+    """Only a verdict that says PAINT's placement is wrong has to show the tree was read."""
+    from ai_gene_review.validation.family_residue_validator import check_node_tree_evidence
+
+    review = {
+        "family_id": "PANTHER:PTHR11801",
+        "node_assessments": [
+            {"node_id": "PANTHER:PTN000927860", "asserted_term": {"id": "GO:0007259"}, "assessment": verdict,
+             "supported_by": [{"reference_id": "file:interpro/panther/PTHR11801/PTHR11801-paint.tsv", "supporting_text": "x"}]}
+        ],
+    }
+    results = check_node_tree_evidence(review)
+    if expected is None:
+        assert results == []
+        return
+    (result,) = results
+    assert result.outcome.value == expected
+    assert result.kind == "NODE_TREE_EVIDENCE"
+    assert "just phylo-family PTHR11801" in result.message
+    assert (result.site_id, result.accession) == ("PANTHER:PTN000927860", "GO:0007259")
+
+
+@pytest.mark.parametrize(
+    "reference",
+    [
+        "file:interpro/panther/PTHR11801/PTHR11801-tree-nodes.yaml",
+        "file:interpro/panther/PTHR48073/PTHR48073-tree-check.txt",
+        "file:worm/sta-1/sta-1-phylo.yaml",
+    ],
+)
+def test_any_tree_listing_satisfies_the_request(reference):
+    from ai_gene_review.validation.family_residue_validator import check_node_tree_evidence
+
+    review = {
+        "family_id": "PANTHER:PTHR11801",
+        "node_assessments": [
+            {"node_id": "PANTHER:PTN000927860", "asserted_term": {"id": "GO:0007259"}, "assessment": "TOO_DEEP",
+             "supported_by": [{"reference_id": reference, "supporting_text": "x"}]}
+        ],
+    }
+    (result,) = check_node_tree_evidence(review)
+    assert result.outcome.value == "PASS"

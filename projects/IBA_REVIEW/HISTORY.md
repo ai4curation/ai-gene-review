@@ -133,6 +133,163 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
     control before trusting the contrast — a mislabelled control (PGRP-LE for PGRP-LB)
     makes real enzymes look degenerate.
 
+14. **Read the tree before arguing with a node.** For most of this project I judged node
+    placements from the GOA row: a node id and a seed list. That is not what the PAINT
+    curator saw, and it let three errors stand in this project's own flagship examples
+    for months: a branch called the longest that was the second longest (Cds1), the
+    family root called a gene's own subfamily node, with an IRD recommended there
+    (CIRBP), and two rat RBMX-family seeds called rat Tra2 (CIRBP). `just phylo` states
+    where the node sits, where the seeds sit and where the gene sits, in a file a review
+    can quote. Quote it, and if it does not support the verdict, change the verdict.
+    Corollary: never count residues along a PANTHER alignment row. The rows leave out
+    unaligned stretches, so the count is not a position in the protein.
+
+---
+
+## 2026-11-17 — What review of the re-read found, and what changed
+
+The pull request was reviewed after each push. The reviews found defects in the tooling
+and in rows the re-read had already applied. All were put right
+before any further batch was run. Details: [tree-evidence.md](tree-evidence.md#the-re-read)
+and [tree-rereview](tree-rereview/README.md#what-the-script-will-not-do).
+
+What was wrong, in the order it mattered:
+
+- **The flagship example quoted around the fact that stood against it.** The CIRBP reasons
+  said the seeds "all sit in one branch below" the node and that "CIRBP's own branch holds
+  none of them": two different nodes, 14 steps apart, with the extract's "CIRBP is inside
+  that clade" sitting unquoted between the two sentences that were quoted. I had corrected
+  two factual errors in that review a week earlier and written the new reason from the
+  parts of the extract that suited the verdict. The verdict is right; the argument for it
+  is the duplications that separate CIRBP from each seed, and it now says so.
+- **The same shortcut was open to the script.** A row could be applied with a quote that
+  named the term and nothing adverse. 65 applied rows had left out the sentence saying the
+  gene is inside the seed clade or shares its branch with seeds. A reading must now quote
+  every such sentence, and `just validate` warns on any review that does not
+  (`tree_evidence_adverse_unquoted`).
+- **The extract called a seed a one-to-one ortholog across a horizontal-transfer node.**
+  The re-read then used "all six seeds are one-to-one orthologs" to rewrite cab4's reason
+  and swap its failure mode. Four of the six are separated from cab4 by transfer nodes.
+- **An ortholog call was used against two reviews that dispute the placement itself**
+  (mam, cab4). The call is read from the placement, so it cannot refute an argument that
+  the placement is wrong. Failure modes are now a curator's to change.
+- **Correcting a reason left the same claim standing in the summary, a source note or the
+  list of affected subfamilies** (ten rows), and one edit reached a second row through a
+  shared YAML block.
+- **History records said "added to the reason" where the reason had been rewritten.**
+
+What I take from it:
+
+- **A quote check that asks only "is it verbatim" is passed by a true sentence chosen to
+  mislead.** The check has to know which sentences are adverse.
+- **A tool that refuses an edit must refuse it from both ends of a shared value**, and the
+  check that compares the result with the intent must not share objects with the result.
+- **A row's fields have to agree after an edit, not only the field that was edited.** If
+  the script cannot make the whole correction, it should make none.
+- **Review the first batches before running the rest.** The 61 unread batches would have
+  repeated every one of these.
+
+Since the plan was made, reviews merged on main have added 277 overruled IBA rows in 204
+genes and 174 disputed node assessments in 106 families. They have extracts and listings
+and are in neither plan.
+
+**Pilot of the corrected rules.** Asked to run two of the unread batches on Opus before
+any more. `g013` and `g014`: 47 rows, 46 applied, 1 left for a curator because the claim
+the tree contradicts is in the summary and a source note as well as the reason. Every
+reading quoted the sentences it had to; the verifier, now given every row with an adverse
+sentence, faulted 3 of 36 and corrected all three; no failure mode was proposed. Cost:
+311,000 agent tokens a batch and about two minutes of wall time each.
+
+**After review of the pilot (2026-11-18).** The row left for a curator, ARATH MNS1
+`GO:0036503`, said in its summary, its reason and a source note that no seed lies in
+MNS1's own branch; human MAN1A1 does. The reviewer's point: the script's rule about what
+it may rewrite should not decide whether a statement known to be false stays in a review.
+MNS1 was corrected by hand with the reason the verifier had checked, and so were two
+family assessments of the same kind (PTHR10048 `GO:0005944`, PTHR16675 `GO:0002476`: a
+subfamily listed as affected has no leaf below the node), each after checking the release
+tree. `finish` now names a row that both agents found contradicted and the script left,
+and `needs-curator.yaml` counts them (0). Fifteen further readings of a contradiction
+have no agreed correction, because the verifier faulted the draft; they need a fresh
+reading under the corrected rules. Also sized, since the pilot kept meeting it four rows at
+a time: 97 rows in 63 reviews are overruled for residue or sub-activity loss without a
+residue claim (`residue-evidence-backlog.yaml`).
+
+- **A rule about what a tool may edit is not a rule about what may stay wrong.** When
+  both agents agree a statement is false and the tool cannot make the whole correction,
+  the correction is made by hand before the batch ships, not filed.
+
+**Fourth merge with main (2026-11-21).** One applied row had changed on main since it was
+read (yeast SIR3 `GO:0003688`, now `MARK_AS_OVER_ANNOTATED` with a new reason) and was not
+re-applied, which makes 29 such rows over four merges. Main's new reviews brought the
+rows outside either plan to 288 overruled rows in 210 genes and 216 disputed node
+assessments in 119 families; six genes and two families among them had no extract or
+listing and now have one. From the review of the previous push: the count of
+contradictions left standing covered only readings the verifier accepted whole, so the
+15 whose draft it faulted are now counted apart (`contradiction_disputed`), and the
+PTHR16675 seeds list agrees with its PAINT row.
+
+---
+
+## 2026-11-16 — Re-read with the tree: candidate genes and families
+
+Asked to run the re-read as batches of agents. 278 gene rows (every gene with a row on the
+candidate list) and all 386 disputed family node assessments were read against the tree
+and checked by a second agent; 549 rows now quote their extract or listing and say what
+the tree shows, and 113 are left for a curator, 26 of them because the review changed on
+main between the reading and the merge. Results:
+[tree-evidence.md](tree-evidence.md#the-re-read); method and run records:
+[tree-rereview](tree-rereview/README.md).
+
+What I would do the same way again, and what I would not:
+
+- **Agents read; one script writes.** A checkout is 7.7 GB, so a worktree per agent does
+  not fit. The agents return readings, and `tree_rereview.py` makes the edits from one
+  checkout: quotes assembled from the extract's own sentences, one row's text changed at a
+  time, the file reloaded and compared, the review validated and put back if it fails.
+- **Give the reader a dossier and nothing else.** The first reader was given a 45-row
+  dossier and leave to look around the repository. It spent 400k tokens exploring and
+  returned nothing. With a 24-row dossier and an instruction to work from it alone, a
+  reader finishes in two minutes.
+- **The verifier earns its place.** It faulted about one reading in six, mostly a number
+  or relation stated loosely, and it caught the cases where a row read as harmless hid a
+  claim the tree contradicts.
+- **A smaller model is not a substitute reader.** On two batches it agreed with the
+  larger model on 38 of 43 readings and missed four of the five contradictions.
+- **Seven in ten overrulings are not about the tree at all.** The extract's job there is
+  to show that placement is not the issue.
+
+Not done: the 61 gene batches with no candidate row, about 1,420 rows.
+
+---
+
+## 2026-11-10 — Tree and alignment evidence
+
+Asked how deeply these reviews look at the full tree and the alignment, I counted the
+artifacts committed behind every IBA row: 1.8% of 29,084 rows, and 4.5% of the 1,586 we
+had overruled, had any tree or alignment artifact. The live PANTHER tree service timed
+out from this environment, so the fix reads PANTHER's release files instead.
+
+- **Tooling.** `just fetch-panther-release` (trees with events and branch lengths,
+  family alignments, full-length sequences, node table), `just phylo <org> <GENE>`
+  (`GENE-phylo.yaml`), `just phylo-family <PTHR>` (`<PTHR>-tree-nodes.yaml`). Format and
+  limits: `docs/phylo.md`.
+- **Checks.** `missing_tree_evidence`, `tree_evidence_other_row` and
+  `missing_residue_evidence` in `just validate`; `NODE_TREE_EVIDENCE` in
+  `just validate-families`. All advisory. A review row whose IBA has since been
+  withdrawn from GOA is not asked for a quote: its extract has no row for it.
+- **Backfill.** Extracts for the 1,184 genes whose review overrules an IBA row; node
+  listings for 220 families.
+- **Join.** `tree_evidence.py` joins all 29,101 reviewed IBA rows with their tree facts.
+  Results, corrections and the 233 rows to re-review are in
+  [tree-evidence.md](tree-evidence.md).
+- **Three reviews re-read with the tree** (MYCTU and VIBCH `cds1`, human CIRBP): verdicts
+  unchanged, reasons corrected, extracts quoted.
+
+Two things found while building it, both now handled in the tool: a family's rows in
+PANTHER's node table are not contiguous (its internal nodes and its leaves sit in
+different places), and the alignment rows are trimmed to the model's match columns, with
+selenocysteine written as `X`.
+
 ---
 
 ## 2026-11-11 — High-distance & shallow-parent IBA curation batches (Batches A–D: PRs #6213, #6236, #6271, and #6289)
@@ -503,6 +660,12 @@ neo-functionalization in SF135: longest branch length (0.528), different EC clas
 ~24% identity with synthases (synthases share 43%), distinct active-site motif
 (ASSGST vs PTSGNTG). Experimental: PMID:34439535 (M. tuberculosis), PMID:34283874
 (V. cholerae). Detail: `interpro/panther/PTHR10314/PTHR10314-notes.md`.
+
+*Correction (2026-11-10): "longest branch length (0.528)" was wrong. The five branches below
+the PTHR10314 root are 0.412, 0.528, 0.659, 0.458 and 0.402, so the Cds1 branch is the
+second longest; the threonine synthase branch is the longest. What the tree does show is
+that all 19 seeds sit in three of the other four branches and none in the Cds1 branch. See
+[tree-evidence.md](tree-evidence.md).*
 
 **RIMBP2** — organism/tissue context transfer: `GO:0007274` (neuromuscular synaptic
 transmission) transferred from the Drosophila ortholog (FB:FBgn0262483, NMJ is the
