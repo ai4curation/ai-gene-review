@@ -51,3 +51,10 @@ Discrepancies / annotations to revisit:
 - No direct contradiction with existing annotations or action calls. The report reinforces ACCEPT for GO:0033691 (sialic acid binding), GO:0019903 (protein phosphatase binding), GO:0008160 (protein tyrosine phosphatase activator activity), GO:0002765 (immune response-inhibiting signal transduction), and the negative-regulation/cytokine terms.
 - The HBsAg/HBV immune-suppression axis and the microglial TREM2/SYK-ERK antagonism are not captured by any current GO term in the review; these are candidate new-term / process directions to consider (e.g. negative regulation of microglial phagocytosis or innate immune response) but are based on single Falcon-sourced reports and should be verified before any term is added.
 - The report does not bear on the one UNDECIDED annotation (GO:0050714 positive regulation of protein secretion, PMID:27044754); that remains UNDECIDED pending CD33-specific full-text evidence.
+
+## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
+
+- Peroxisome (GO:0005777), EXP PMID:28747436 and IEA SL-0204: both KEEP_AS_NON_CORE (unchanged action), reasons rewritten. The location belongs to splice isoform CD33m (P20138-3) only; the abstract states it positively for endogenous CD33m in neutrophils, monocytes and a microglial line, confirmed with a CD33m-specific antibody [PMID:28747436 "unlike CD33M, the CD33m isoform does not localize to cell surfaces; instead, it accumulates in peroxisomes"].
+- Tried the full text via PMC (PMC5602391, DOI 10.1074/jbc.M117.799346) on 2026-11-21: PMC returned no full text, so the peroxisome marker and any sub-compartment data were not read.
+- No peroxisomal membrane row: CD33m keeps the predicted TM (260-282) but loses residues 13-139 (end of the signal peptide plus the V-set domain); its C-terminus (...VRTQ) is not a canonical PTS1, and the authors' "peroxisome-targeting sequence" cannot be checked from the abstract. One readable line only.
+- Added a source_defects entry (Gene_Product_Form_ID, ADD P20138-3, PROBABLE, UNIPROT) on both rows, following the ABCA7 pattern.
