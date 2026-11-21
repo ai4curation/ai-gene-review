@@ -2,8 +2,8 @@
 title: "Fungal PAINT Family Reviews"
 maturity: IN_PROGRESS
 collections: [HOMOLOGY_PROPAGATION]
-species: [yeast, SCHPO, CANAL, NEUCR, ASPFU, EMENI]
-autolink_exclude: [Ser]
+species: [yeast, SCHPO, CANAL, CANGA, NEUCR, ASPFU, EMENI]
+autolink_exclude: [AIM6, Ser]
 index_group: YEAST
 ---
 
@@ -539,9 +539,41 @@ the `LYS2`/`lys1` branch.
 
 ---
 
+## Family 24: Rtt109 Histone Acetyltransferases
+
+`PTHR31571` splits into the active fungal `PTHR31571:SF2` Rtt109/KAT11
+histone acetyltransferase branch and a separate `PTHR31571:SF1` branch whose
+PLC-like phosphodiesterase activity is still only predicted. PAINT places the
+nucleus, histone H3K56 acetyltransferase activity, and DNA-damage-response
+assertions together on the fungal `PANTHER:PTN001586545` node for the active
+Rtt109 branch.
+
+- [x] `yeast/RTT109` - *S. cerevisiae* Rtt109/KAT11 anchor; aligned before
+  this tranche
+- [x] `yeast/AIM6` - non-HAT AIM6-family member; existing review backfilled
+  with InterPro supporting entities in this branch
+- [x] `SCHPO/rtt109` - fission-yeast Rtt109-family member; aligned in this
+  branch
+- [x] `CANAL/RTT109` - CGD *Candida albicans* Rtt109 ortholog; aligned in this
+  branch
+- [x] `NEUCR/NCU09825` - *Neurospora crassa* Rtt109 ortholog; aligned in this
+  branch
+- [x] `CANGA/AIM6` - *Candida glabrata* SF1 member outside the active Rtt109
+  PAINT node; reviewed in this branch
+
+---
+
 # NOTES
 
 ## 2026-11-21
+
+- Added the compact `PTHR31571` Rtt109/AIM6 family after reviewing the
+  `CANAL/RTT109`, `SCHPO/rtt109`, and `NEUCR/NCU09825` active Rtt109
+  descendants of fungal `PTN001586545`, and the `CANGA/AIM6` member of the
+  sister AIM6 branch. The active Rtt109 node cleanly carries the fungal H3K56
+  acetyltransferase, nuclear, and DNA-damage-response PAINT assertions; AIM6
+  remains outside that inheritance and should be treated as an uncharacterized
+  PLC-like phosphodiesterase candidate.
 
 - Added the compact `PTHR44845` LYS2/Lys1 reductase family after reviewing
   `CANAL/LYS2` and `CANGA/LYS2` against the existing *S. cerevisiae* and
