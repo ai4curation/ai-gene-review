@@ -57,7 +57,7 @@ anchor, `BRUMA/dpy-31`, is in the same PANTHER subfamily as *C. elegans*
 - [x] `HAECO` `dpy-31` / D5FM34 - fetched and reviewed the reviewed *H. contortus* DPY-31 ortholog
 - [x] `BRUMA` `bma-dpy-18.1` / Q68VC1 - fetched and reviewed the Bma-PHY-2 prolyl 4-hydroxylase alpha subunit
 - [x] `BRUMA` `bma-dpy-18.2` / A0A1P6BZ71 - fetched and reviewed the Bma-PHY-1 prolyl 4-hydroxylase alpha subunit
-- [ ] `worm` `dpy-18` / Q10576 - fetch and review the C. elegans prolyl 4-hydroxylase alpha-1 ortholog
+- [x] `worm` `dpy-18` / Q10576 - fetched and reviewed the C. elegans prolyl 4-hydroxylase alpha-1 ortholog
 - [ ] `worm` `phy-2` / Q20065 - fetch and review the C. elegans prolyl 4-hydroxylase alpha-2 ortholog
 - [ ] `worm` `pdi-2` / Q17770 - fetch and review the PDI/prolyl 4-hydroxylase beta subunit
 - [ ] `worm` `bli-4` / P51559 - fetch and review the subtilisin-like convertase
@@ -133,6 +133,8 @@ the extracellular oxidant-detoxification boundary is clear.
   4-hydroxylase alpha subunit
 - [x] Fetch and review the `BRUMA` `bma-dpy-18.2` A0A1P6BZ71 prolyl
   4-hydroxylase alpha subunit
+- [x] Fetch and review the `worm` `dpy-18` Q10576 prolyl
+  4-hydroxylase alpha-1 subunit
 - [x] Move anthelmintic drug target systems ahead of the FAR,
   immune-modulator, and antioxidant lanes for the next module after cuticle
   collagen maturation
@@ -222,6 +224,13 @@ the extracellular oxidant-detoxification boundary is clear.
   direct annotations to the native prolyl 4-hydroxylase complex and
   collagenous-cuticle development from the Bma-PDI-2 co-IP and combined
   Bma-phy-1/Bma-phy-2 RNAi evidence.
+- Added `genes/worm/dpy-18` for Q10576, the C. elegans PHY-1 prolyl
+  4-hydroxylase alpha subunit. The review keeps direct and PAINT
+  procollagen-proline 4-dioxygenase activity, accepts the informative ER and
+  ER-lumen rows, treats embryonic hatching, basement-membrane morphogenesis,
+  and multicellular growth as non-core phenotype/context rows, and marks the
+  tunicamycin high-throughput expression row for IRE1-mediated unfolded
+  protein response as over-annotated.
 - Ros-orchestrate reprioritized anthelmintic drug target systems as the next
   module lane after cuticle collagen maturation. Keep the mechanism split:
   scope levamisole-sensitive nicotinic acetylcholine receptors,
