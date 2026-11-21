@@ -127,7 +127,7 @@ MAPK placement `PANTHER:PTN001172087`.
 - [x] `CANAL/MKC1` - *Candida albicans* Slt2/Spm1-family cell-wall-integrity
   MAPK; merged in PR #5868
 - [x] `yeast/FUS3` - budding-yeast pheromone MAPK; merged in PR #5872
-- [ ] `SCHPO/spk1` - fission yeast Spk1 pheromone-response MAPK; drafted in
+- [x] `SCHPO/spk1` - fission yeast Spk1 pheromone-response MAPK; merged in
   PR #5886
 - [x] `NEUCR/mak-1` - *Neurospora crassa* cell-wall-integrity MAPK;
   merged in PR #5885
@@ -135,11 +135,11 @@ MAPK placement `PANTHER:PTN001172087`.
   filamentous-growth and cell-wall evidence; revalidated in this branch
 - [x] `ASPFU/sakA` - *Aspergillus fumigatus* SakA/Hog1 stress MAPK;
   drafted in PR #5883
-- [ ] `ASPFU/mpkC` - *Aspergillus fumigatus* HOG1-subfamily MAPK;
-  drafted in this branch
-- [ ] `EMENI/mpkC` - *Aspergillus nidulans* SakA/HogA-like stress MAPK with
+- [x] `ASPFU/mpkC` - *Aspergillus fumigatus* HOG1-subfamily MpkC MAPK;
+  merged in PR #5889
+- [x] `EMENI/mpkC` - *Aspergillus nidulans* SakA/HogA-like stress MAPK with
   PbsB-dependent nuclear accumulation during development and osmotic or
-  oxidative stress; drafted in this branch
+  oxidative stress; merged in PR #5891
 
 ## Family 5: Fungal Glucanases
 
@@ -499,7 +499,37 @@ vegetative `sec2` and sporulation-specific `spo13`.
 
 ---
 
+## Family 22: HMG-CoA Synthases
+
+`PTHR43323` contains fungal ERG13/hcs1 proteins and animal cytosolic and
+mitochondrial HMG-CoA synthases. PAINT places the conserved HMG-CoA synthase
+activity and broad acetyl-CoA-process assertion at the root
+`PANTHER:PTN000222418`, confines the mitochondrial-location node to the animal
+HMGCS2 clade, and places the fungal ergosterol-biosynthesis assertion on
+`PANTHER:PTN000933803`.
+
+- [x] `yeast/ERG13` - *S. cerevisiae* HMG-CoA synthase; aligned in this branch
+- [x] `SCHPO/hcs1` - fission-yeast single-copy HMG-CoA synthase; aligned in
+  this branch
+- [x] `CANAL/ERG13` - CGD *Candida albicans* ERG13 ortholog; merged in
+  PR #6059
+- [x] `ASPFU/erg13A` - duplicated *Aspergillus fumigatus* HMG-CoA synthase;
+  merged in PR #6058
+- [x] `ASPFU/erg13B` - duplicated *Aspergillus fumigatus* HMG-CoA synthase;
+  merged in PR #6057
+
+---
+
 # NOTES
+
+## 2026-11-21
+
+- Closed the `PTHR43323` HMG-CoA synthase family by aligning the older
+  `yeast/ERG13` and `SCHPO/hcs1` reviews with the completed Candida and
+  Aspergillus reviews. The root `PTN000222418` HMG-CoA synthase activity IBA is
+  accepted as core across the fungal SF2 branch, the accompanying acetyl-CoA
+  metabolic process is valid but non-core, and the fungal `PTN000933803`
+  ergosterol IBA is accepted for all reviewed ERG13/hcs1 descendants.
 
 ## 2026-11-20
 
