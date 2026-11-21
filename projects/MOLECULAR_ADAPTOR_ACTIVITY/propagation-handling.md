@@ -7,33 +7,32 @@ species: [human]
 
 Back to the [project page](../MOLECULAR_ADAPTOR_ACTIVITY.md).
 
-Almost every annotation under the adaptor subtree is computational. Of the
-446,453 annotations in the `GO:0030674` subtree
-([data/propagation-stats.yaml](data/propagation-stats.yaml)), ~96% are
-electronic or phylogenetically propagated and only a small remainder is
-experimental. So a reviewer who opens an adaptor row is, far more often than
-not, looking at a **prediction** — and the predictions are not all of one kind.
-This page is the rule for telling them apart and deciding what each is worth. It
-specialises the general IBA guidance in CLAUDE.md and
-[IBA_REVIEW](../IBA_REVIEW.md) to adaptor terms; for the IBA tier it defers to
-that project rather than restating it.
+Almost every annotation under the adaptor subtree is computational. The five
+propagation facets recorded for the `GO:0030674` subtree in
+[data/propagation-stats.yaml](data/propagation-stats.yaml) — phylogenetic graft
+(48.1%), sequence-model rule (21.5%), combined-electronic (13.0%), orthology
+projection (12.2%) and reviewed IBA (4.1%) — sum to ~99%, leaving experimental
+evidence a low-single-digit remainder of the 446,453 rows. So a reviewer who
+opens an adaptor row is, far more often than not, looking at a **prediction** —
+and the predictions are not all of one kind. This page is the rule for telling
+them apart. It specialises the general IBA guidance in CLAUDE.md and
+[IBA_REVIEW](../IBA_REVIEW.md), and the TreeGrafter evaluation in
+[TREEGRAFTER](../TREEGRAFTER.md), to adaptor terms; for those tiers it defers to
+those projects rather than restating them.
 
-## The sources, by tier
+## The sources, by group
 
 Source labels, evidence codes and `GO_REF` ids below were read from real rows in
 the `GO:0030674` subtree (QuickGO downloadSearch) and from the GO reference
 registry (`go-site/metadata/gorefs.yaml`); percentages are the subtree
-evidence/assigned-by facets in the data file.
+evidence-code facets in the data file.
 
-| Tier | Evidence | Source (`assigned_by`) | `GO_REF` | What the row actually rests on |
-|---|---|---|---|---|
-| **1 — reviewed phylogenetic** | IBA `ECO:0000318` | GO_Central | `GO_REF:0000033` ("Annotation inferences using phylogenetic trees") | A PAINT curator's **IBD** judgment: the function was placed at a tree node after reading the family's experimental annotations. ~4% of the subtree. |
-| **2a — automatic phylogenetic** | IEA `ECO:0007826` | TreeGrafter | `GO_REF:0000118` ("TreeGrafter-generated GO annotations") | A query sequence **grafted into a PANTHER reference tree**, inheriting that branch's terms — no curator inspected the placement. The single largest slice (~48%). |
-| **2b — curated rule** | IEA `ECO:0000256` | UniProt | `GO_REF:0000104` (UniRule) | A **curated** UniProt rule transferring a manual annotation on shared sequence features. CLAUDE.md treats UniRule as good support for *membership*. |
-| **3a — ML rule** | IEA `ECO:0000256` | UniProt | `GO_REF:0000117` ("ARBA machine learning models") | A **machine-learned** association rule. CLAUDE.md classes ARBA as an *unvetted prediction* — a lead, not support. |
-| **3b — signature mapping** | IEA `ECO:0000256` | InterPro | `GO_REF:0000002` (InterPro2GO) | A domain/family **signature → GO** mapping: the protein matched a signature whose family is mapped to this term. |
-| **2c — orthology projection** | IEA `ECO:0000265` | Ensembl | `GO_REF:0000107` (Ensembl Compara) | A manual annotation **projected to an ortholog** via Compara. Only as strong as the source annotation and the ortholog call. |
-| (dedup) | IEA | UniProt | `GO_REF:0000120` | A redundancy-reduced combination of several of the above; read through to the underlying method. |
+| Group | Evidence | Source (`assigned_by`) | `GO_REF` | Share | What the row actually rests on |
+|---|---|---|---|---|---|
+| **A — reviewed phylogenetic** | IBA `ECO:0000318` | GO_Central | `GO_REF:0000033` ("Annotation inferences using phylogenetic trees") | ~4% | A PAINT curator's **IBD** judgment: the function was placed at a tree node after reading the family's experimental annotations. |
+| **B — automatic phylogenetic** | IEA `ECO:0007826` | TreeGrafter | `GO_REF:0000118` ("TreeGrafter-generated GO annotations") | ~48% | A query sequence **grafted into a PANTHER reference tree**, inheriting that branch's terms — **no curator inspected the placement or the grafted term**. The single largest slice. |
+| **C — rule / signature (sequence)** | IEA `ECO:0000256` (+ `ECO:0000501` for the combined set) | UniProt / InterPro | UniRule `GO_REF:0000104` (curated); ARBA `GO_REF:0000117` (ML); InterPro2GO `GO_REF:0000002` (signature); combined/dedup `GO_REF:0000120` | ~21% rule + ~13% combined | A sequence rule or domain/family signature mapped to the term. CLAUDE.md treats **UniRule** as good support for *membership*, but **ARBA** as an *unvetted prediction* (a lead, not support). |
+| **D — orthology projection** | IEA `ECO:0000265` | Ensembl | `GO_REF:0000107` (Ensembl Compara) | ~12% | A manual annotation **projected to an ortholog** via Compara. Only as strong as the source annotation and the ortholog call. |
 
 ## Why adaptor terms are especially fragile under propagation
 
@@ -51,39 +50,58 @@ sequence does not carry. Three consequences:
    different partners — or nothing. Domain-architecture propagation therefore has
    a high false-positive rate for the *specific* adaptor child, and often for the
    bridging role at all.
-3. **Adjacent functions are sequence-identical.** Adaptor, scaffold
-   (`GO:0032947`/`GO:0140693`), sequestering and carrier proteins are not
-   separable by signature. Propagation cannot make the distinction the project's
-   decision rule 3 requires.
+3. **Adjacent functions are sequence-identical.** Adaptor, sequestering and
+   carrier proteins — and scaffolds — are not separable by signature.
+   Propagation cannot make the distinction decision rule 3 requires, and cannot
+   even make the finer one the project page draws (`GO:0140693` molecular
+   condensate scaffold is *in-branch*, only `GO:0032947` is the out-of-branch
+   scaffold exclusion).
 
 ## Decision procedure for a propagated adaptor row
 
 Apply in order; it layers on the project
 [decision rules](../MOLECULAR_ADAPTOR_ACTIVITY.md#decision-rules-draft).
 
-1. **Is the same (or a child) term also supported experimentally on this gene?**
-   Then the propagation is corroborated — `ACCEPT`. A gene appearing in its own
-   IBA `WITH/FROM` is expected here, **not** circular (CLAUDE.md IBA note); do not
-   mark it `CIRCULAR_OR_REDUNDANT`.
+1. **Is the *same* term also supported experimentally on this gene?** Then the
+   propagation is corroborated — `ACCEPT`. A gene appearing in its own IBA
+   `WITH/FROM` is expected here, **not** circular (CLAUDE.md IBA note); do not
+   mark it `CIRCULAR_OR_REDUNDANT`. If instead a *more specific child* is the term
+   with experimental support, that child stands on its own row and the propagated
+   **parent** is judged by decision rule 5 — `TOO_GENERAL` unless it covers a
+   distinct bridging event the child does not (as BICD1's `GO:0030674` does).
+   Do not `ACCEPT` a propagated parent on the strength of an experimental child.
 2. **Can you name the two ends?** From literature or the lineage, identify the
-   partners this protein would bridge. If yes, the adaptor claim is real —
-   `ACCEPT` if core, `KEEP_AS_NON_CORE` if peripheral, and name the partners in
-   `reason`. If the evidence shows a *more specific* child (the named partners fix
-   the branch), `MODIFY` to it.
-3. **If the ends cannot be named, handle by tier — and never REMOVE merely for
+   partners this protein would bridge. If yes and the propagated term is as
+   precise as the evidence warrants, `ACCEPT` if core / `KEEP_AS_NON_CORE` if
+   peripheral, naming the partners in `reason`. If the literature shows a *more
+   specific child*, note that **`MODIFY` needs this row's own evidence to reach
+   the child** (CLAUDE.md, 2026-11-14 ruling): a signature or graft row whose
+   evidence stops at the general term is **not** a `MODIFY` — assert the child as
+   a separate `NEW` row (an `IC` inference you author and justify) and send the
+   propagated general row to step 3.
+3. **If the ends cannot be named, handle by group — and never REMOVE merely for
    being electronic** (CLAUDE.md): a challenge needs a biological argument.
-   - **Tier 1 (IBA):** argue the **node placement**, not a similarity score — is
+   - **Group A (IBA):** argue the **node placement**, not a similarity score — is
      the target inside the clade that inherited the adaptor function, and is there
      target-specific evidence of loss or divergence? A sound IBA stays. Use the
      taxonomy and failure patterns in [IBA_REVIEW](../IBA_REVIEW.md).
-   - **Tiers 2–3 (TreeGrafter / UniRule / Ensembl / ARBA / InterPro2GO):** these
-     are unreviewed predictions. `MARK_AS_OVER_ANNOTATED`, or `REMOVE` for a
-     demonstrably wrong mapping, **only** with a stated reason — e.g. the gene is a
+   - **Group B (TreeGrafter):** here the measured failure is usually **not** the
+     placement but the **grafted term's granularity**. The corpus evaluation in
+     [TREEGRAFTER](../TREEGRAFTER.md) down-graded 26.4% of TreeGrafter rows (41.5%
+     of molecular-function rows), and in roughly three-quarters of those the tree
+     placement was sound while the inherited term was too coarse, a sibling, or
+     out of context. So **check the term first**: `MODIFY` to the right
+     granularity *on the row's own evidence* (else per step 2 the better term is a
+     `NEW` row), or `MARK_AS_OVER_ANNOTATED` / `REMOVE` for a demonstrably wrong
+     grafted term — each with a stated reason.
+   - **Groups C and D (rule / signature / projection):** these are *not* uniform.
+     **UniRule** (curated) and **Ensembl** (projected from a manual annotation)
+     deserve a reading of what they rest on before any challenge; **ARBA** (ML)
+     and **InterPro2GO** (bare signature) are the weakest and the first to
+     question. A challenge still needs a biological reason — e.g. the gene is a
      divergent paralog that lost the bridging module, carries the domain but its
      partners are absent in this lineage, or is a stable structural subunit rather
-     than a transient bridge. ARBA-only and InterPro2GO-only rows are the weakest
-     and the first to question; UniRule (curated) and Ensembl (projected from a
-     manual annotation) deserve a reading of what they rest on before challenge.
+     than a transient bridge.
 
 ## Which IBA_REVIEW failure patterns bite adaptors most
 
@@ -108,6 +126,7 @@ propagated rows. We do **not** sweep the propagated bulk wholesale. This page is
 the rule a reviewer applies when a gene already on the worklist *also* carries
 propagated adaptor rows (as GRB2, RPTOR and BICD1 all did), so those rows get a
 consistent, source-aware call rather than a reflexive accept or a reflexive
-remove. A systematic sweep of TreeGrafter/ARBA adaptor over-propagation, if it is
-ever wanted, belongs in [IBA_REVIEW](../IBA_REVIEW.md)'s homology-propagation
-collection, not here.
+remove. A systematic sweep of the propagated population, if it is ever wanted,
+belongs in the projects that already evaluate those pipelines —
+[TREEGRAFTER](../TREEGRAFTER.md) for the automatic-phylogenetic group and
+[IBA_REVIEW](../IBA_REVIEW.md) for the reviewed-phylogenetic group — not here.
