@@ -32,7 +32,7 @@ description have something like:
 ---
 # STATUS
 
-<checkboxes etc here; keep this up to date>
+<checkboxes etc here; keep this up to date in separate status PRs>
 <get the date from `date`>
 
 # NOTES

@@ -50,6 +50,43 @@ def test_content_pr_with_rendered_pages_warns():
     assert "pages/modules/nematode_cuticle_collagen_maturation.html" in result.stdout
 
 
+def test_content_pr_with_shared_cache_warns():
+    result = run_warning(
+        "genes/ASPFU/pptA/pptA-ai-review.yaml",
+        "cache/go/terms.csv",
+        "interpro/panther/panther.obo",
+        "projects/collections.yaml",
+    )
+    assert result.returncode == 0
+    assert "cache/go/terms.csv" in result.stdout
+    assert "interpro/panther/panther.obo" in result.stdout
+    assert "projects/collections.yaml" in result.stdout
+
+
+def test_shared_cache_only_does_not_warn():
+    result = run_warning(
+        "cache/go/terms.csv",
+        "interpro/panther/panther.obo",
+    )
+    assert result.returncode == 0
+    assert "::warning" not in result.stdout
+
+
+def test_workflow_stdin_path_warns():
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT)],
+        input=(
+            "genes/ASPFU/pptA/pptA-ai-review.yaml\n"
+            "projects/FUNGAL_PAINT_FAMILIES.md\n"
+        ),
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode == 0
+    assert "projects/FUNGAL_PAINT_FAMILIES.md" in result.stdout
+
+
 def test_status_only_and_project_subpages_do_not_warn():
     result = run_warning(
         "history/projects/NEMATODE_PATHOGENS/session.yaml",
@@ -64,8 +101,17 @@ def test_content_paths_include_family_reviews():
     script = load_script()
 
     assert script.is_content_path("interpro/panther/PTHR43323/PTHR43323-review.yaml")
+    assert script.is_content_path("interpro/panther/PTHR43323/PTHR43323-paint.tsv")
     assert script.is_content_path("history/other/PTHR43323-family-review/session.yaml")
+    assert script.is_shared_path("interpro/panther/panther.obo")
+    assert not script.is_content_path("interpro/panther/panther.obo")
     assert not script.is_content_path("history/projects/FUNGAL_PAINT_FAMILIES/session.yaml")
+
+
+def test_github_warning_property_escape_includes_commas_and_colons():
+    script = load_script()
+
+    assert script.escape_github_command("a:b,c%\n") == "a%3Ab%2Cc%25%0A"
 
 
 def test_workflow_runs_warning_as_advisory_pr_check():
@@ -73,7 +119,9 @@ def test_workflow_runs_warning_as_advisory_pr_check():
     steps = workflow["jobs"]["validation"]["steps"]
     step = next(s for s in steps if s.get("name") == "Warn about shared files")
 
-    assert step["if"] == "github.event_name == 'pull_request'"
-    assert step["continue-on-error"] is True
+    assert "github.event_name == 'pull_request'" in step["if"]
+    assert not step.get("continue-on-error")
     assert ".github/scripts/warn_shared_content_paths.py" in step["run"]
+    assert "python3" in step["run"]
     assert "gh api --paginate" in step["run"]
+    assert "PIPESTATUS" in step["run"]

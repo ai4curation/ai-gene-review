@@ -60,7 +60,9 @@ stack it on another unmerged content branch.
   notes, module notes, or append-only history records.
 - Do not commit rendered `pages/**` HTML from content PRs. The
   `generate-pages` workflow renders `pages/` from `main` with `just render-all`
-  and `just render-projects`, then publishes those outputs.
+  and `just render-projects`, then publishes those outputs. Older rendered
+  `pages/` copies are still tracked while they are untracked in batches; do not
+  stage re-rendered versions of them.
 - Regenerate single-file shared caches, including committed `cache/**/terms.csv`
   files and `interpro/panther/panther.obo`, in dedicated refresh PRs. If a merge
   leaves a cache unsorted or duplicated, run the repair command such as

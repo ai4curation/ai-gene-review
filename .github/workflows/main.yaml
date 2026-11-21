@@ -73,15 +73,21 @@ jobs:
       # otherwise-independent PRs from the merge queue.
       - name: Warn about shared files
         if: github.event_name == 'pull_request'
-        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -euo pipefail
+          set -uo pipefail
+          set +e
           gh api --paginate \
             "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
             --jq '.[].filename' \
-            | python .github/scripts/warn_shared_content_paths.py
+            | python3 .github/scripts/warn_shared_content_paths.py
+          statuses=("${PIPESTATUS[@]}")
+          set -e
+          if [ "${statuses[0]}" -ne 0 ] || [ "${statuses[1]}" -ne 0 ]; then
+            echo "::warning title=Shared-file warning skipped::Could not inspect PR files or run the advisory shared-file checker."
+          fi
+          exit 0
 
       # https://github.com/astral-sh/setup-uv
       - name: Install uv
