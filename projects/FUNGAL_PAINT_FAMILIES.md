@@ -3,7 +3,7 @@ title: "Fungal PAINT Family Reviews"
 maturity: IN_PROGRESS
 collections: [HOMOLOGY_PROPAGATION]
 species: [yeast, SCHPO, CANAL, CANGA, NEUCR, ASPFU, EMENI]
-autolink_exclude: [AIM6, Ser]
+autolink_exclude: [AIM6, LYS2, PPN1, Ppn1, Ser, TVP18, tvp18]
 index_group: YEAST
 ---
 
@@ -50,6 +50,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR10340` SPHINGOMYELIN PHOSPHODIESTERASE | fungal Ppn1 polyphosphatase node with SMPD/SMPDL3 IRD pruning | `PPN1`/`PPN1`/`PPN1`/`ppn1`/`epp-1` |
 | `PTHR14430` RABIN3-RELATED | Opisthokonta Rab GEF node and fungal cell-tip Sec2 node | `SEC2`/`sec2`/`spo13`/`SEC2`/`sec2` |
 | `PTHR44068` Erg6/SMT methyltransferase | eukaryotic sterol C-24 methyltransferase node and fungal ergosterol node | `ERG6`/`erg6`/`ERG6`/`ERG6`/`erg-4`/`erg6` |
+| `PTHR13314` Calcium-channel Flower homologs | opisthokont vesicle-mediated transport node, ascomycete Golgi-membrane node, and metazoan calcium-channel node | `TVP18`/`tvp18`/`TVP18`/`tvp-18` |
 
 ---
 
@@ -594,9 +595,38 @@ lineage-specific unless directly observed.
 
 ---
 
+## Family 26: `TVP18`/Calcium-Channel Flower Homologs
+
+`PTHR13314` contains one PANTHER subfamily, `PTHR13314:SF2`, that mixes fungal
+`TVP18` Golgi proteins and metazoan Flower/CACFD1 calcium-channel homologs.
+PAINT places conserved vesicle-mediated transport at the opisthokont
+`PANTHER:PTN001779219` node and Golgi membrane at the ascomycete
+`PANTHER:PTN001779222` node, but the `GO:0005262` calcium-channel activity IBD
+on `PTN001779219` appears too deep because its seed is Drosophila `fwe` alone
+and the narrower calcium-transport, plasma-membrane, endosome, and synaptic
+terms already sit at the eumetazoan `PANTHER:PTN000999743` node.
+
+- [x] `yeast/TVP18` - *S. cerevisiae* Golgi/endosomal `TVP18` anchor; aligned
+  before this tranche
+- [x] `SCHPO/tvp18` - fission-yeast `TVP18` member; aligned before this tranche
+- [x] `CANAL/TVP18` - *Candida albicans* `TVP18` member; aligned before this
+  tranche
+- [x] `NEUCR/tvp-18` - *Neurospora crassa* `TVP18` member; aligned before this
+  tranche
+- [x] `CANGA/TVP18` - *Candida glabrata* `TVP18` member; reviewed in this branch
+
+---
+
 # NOTES
 
 ## 2026-11-21
+
+- Added the compact `PTHR13314` `TVP18`/calcium-channel Flower family after
+  reviewing `CANGA/TVP18` against the existing *S. cerevisiae*, *S. pombe*,
+  *C. albicans*, and *N. crassa* `TVP18` anchors. The fungal Golgi membrane and
+  broad vesicle-mediated-transport calls are retained, while the opisthokont
+  calcium-channel-activity node should be moved down to the metazoan branch
+  before it propagates to fungal `TVP18` proteins.
 
 - Added the compact `PTHR44068` Erg6/SMT family after checking the existing
   *S. cerevisiae*, *S. pombe*, *C. albicans*, *N. crassa*, and
