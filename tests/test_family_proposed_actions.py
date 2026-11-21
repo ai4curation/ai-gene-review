@@ -48,6 +48,7 @@ def _assessment(verdict: str, node: str, action: str | None = None,
         ("WRONG_NODE", "PTN2", "REMOVE_IBD", None),
         ("NEEDS_PRUNING", "PTN1", "ADD_IKR", "PTN3"),
         ("NEEDS_PRUNING", "PTN2", "ADD_IRD", "PTN4"),
+        ("TERM_SUPERSEDED", "PTN1", "REMOVE_IBD", None),
         ("LOSS_CONTRADICTED", "PTN2", "REMOVE_LOSS", None),
         ("LOSS_STALE", "PTN2", "REMOVE_LOSS", None),
         ("LOSS_TOO_BROAD", "PTN2", "MOVE_LOSS", "PTN4"),
@@ -73,6 +74,9 @@ def test_valid_actions(verdict: str, node: str, action: str, target: str | None)
         ("LOSS_SUPPORTED", "PTN2", "REMOVE_LOSS", None, "takes no proposed action"),
         ("TOO_DEEP", "PTN1", "ADD_IKR", "PTN2", "not allowed for verdict TOO_DEEP"),
         ("NEEDS_PRUNING", "PTN1", "MOVE_IBD", "PTN2", "not allowed for verdict NEEDS_PRUNING"),
+        # a superseded term is retired in place; the replacement is already at the node
+        ("TERM_SUPERSEDED", "PTN1", "MOVE_IBD", "PTN2", "not allowed for verdict TERM_SUPERSEDED"),
+        ("TERM_SUPERSEDED", "PTN1", "REMOVE_IBD", "PTN2", "takes no target_node_id"),
         # target presence
         ("NEEDS_PRUNING", "PTN1", "ADD_IKR", None, "needs a target_node_id"),
         ("TOO_DEEP", "PTN1", "REMOVE_IBD", "PTN2", "takes no target_node_id"),
@@ -228,3 +232,18 @@ def test_sole_leaf_below_node_is_decidable() -> None:
     outcome, message = evaluate_proposed_action(
         _assessment("NEEDS_PRUNING", "PTN1", "ADD_IKR", "L2"), under, ["L1", "L2"])
     assert outcome is Outcome.FAIL and "is not below" in message
+
+
+def test_term_superseded_is_a_gain_verdict() -> None:
+    """TERM_SUPERSEDED judges an IBD, so it is rejected on a PAINT loss row."""
+    from types import SimpleNamespace
+
+    from ai_gene_review.validation.family_residue_validator import node_polarity_problem
+
+    gain = [SimpleNamespace(evidence="IBD", negated=False)]
+    loss = [SimpleNamespace(evidence="IRD", negated=True)]
+    assert node_polarity_problem({"assessment": "TERM_SUPERSEDED"}, gain) is None
+    problem = node_polarity_problem(
+        {"assessment": "TERM_SUPERSEDED", "negated": True, "evidence": "IRD"}, loss
+    )
+    assert problem is not None and "for gain rows" in problem
