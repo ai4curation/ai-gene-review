@@ -93,6 +93,24 @@ def _excluded(path: Path) -> bool:
     return any(part in EXCLUDED_PARTS for part in path.parts)
 
 
+def normalize_reference_id(reference_id: str | None) -> str | None:
+    """Return the canonical key used to match a quote to a changed source."""
+    if reference_id is None:
+        return None
+    prefix, sep, identifier = reference_id.partition(":")
+    if not sep:
+        return reference_id.strip()
+    return f"{prefix.strip().upper()}:{identifier.strip()}"
+
+
+def _ref_mentioned(normalized_ref: str, text_lower: str) -> bool:
+    """Cheap, over-matching prefilter for a normalised reference id."""
+    prefix, sep, identifier = normalized_ref.partition(":")
+    if not sep:
+        return normalized_ref.lower() in text_lower
+    return f"{prefix.lower()}:" in text_lower and identifier.lower() in text_lower
+
+
 def _doi_reference_from_cache(path: Path) -> str | None:
     """Return the DOI reference id for an existing DOI cache when recorded."""
     if not path.is_file():
@@ -208,8 +226,27 @@ def _source_index(
         for path in change.paths():
             rel = _repo_relative(path, project_root)
             for ref in reference_ids_for_source(rel, project_root):
-                by_ref[ref].add(rel)
+                normalized = normalize_reference_id(ref)
+                if normalized:
+                    by_ref[normalized].add(rel)
     return dict(by_ref)
+
+
+def _missing_changed_cache_result(
+    quote: Quote, changed_sources: Iterable[Path], project_root: Path
+) -> QuoteResult | None:
+    for source in sorted(changed_sources):
+        if (
+            len(source.parts) == 2
+            and source.parts[0] in {"publications", "reactome"}
+            and not (project_root / source).is_file()
+        ):
+            return QuoteResult(
+                quote,
+                Outcome.UNRESOLVED,
+                f"{quote.reference_id} does not resolve to deleted cache {source}",
+            )
+    return None
 
 
 def _baseline_marked(
@@ -267,7 +304,8 @@ def check_incoming_quotes(
         text = path.read_text(encoding="utf-8")
         if "supporting_text" not in text:
             continue
-        matched_refs = {ref for ref in refs if ref in text}
+        text_lower = text.lower()
+        matched_refs = {ref for ref in refs if _ref_mentioned(ref, text_lower)}
         if not matched_refs:
             continue
 
@@ -285,13 +323,17 @@ def check_incoming_quotes(
 
         key = rel.as_posix()
         for quote in iter_quotes(data):
-            if quote.reference_id not in matched_refs:
+            matched_ref = normalize_reference_id(quote.reference_id)
+            if matched_ref not in matched_refs:
                 continue
-            result = check_quote(quote, project_root, validator)
+            changed_sources = by_ref[matched_ref]
+            result = _missing_changed_cache_result(
+                quote, changed_sources, project_root
+            ) or check_quote(quote, project_root, validator)
             if result.outcome is Outcome.VERIFIED:
                 continue
             result = _baseline_marked(quote, result, key, baseline, local_baseline)
-            for source in sorted(by_ref[quote.reference_id]):
+            for source in sorted(changed_sources):
                 issues.append(IncomingQuoteResult(rel, source, result))
 
     return issues

@@ -176,6 +176,43 @@ def test_publication_and_reactome_cache_changes_use_existing_matchers(tmp_path: 
     }
 
 
+def test_noncanonical_reference_id_spellings_are_matched(tmp_path: Path):
+    publication = _write_text(
+        tmp_path / "publications/PMID_28132884.md",
+        "---\nreference_id: PMID:28132884\n---\n\nnew abstract\n",
+    )
+    reactome = _write_text(
+        tmp_path / "reactome/R-HSA-2454264.md",
+        "new Reactome pathway",
+    )
+    pub_record = _write_yaml(
+        tmp_path / "gocams/model/model-review.yaml",
+        _record("PMID: 28132884", "old abstract"),
+    )
+    reactome_record = _write_yaml(
+        tmp_path / "genes/human/RLBP1/RLBP1-ai-review.yaml",
+        _record("reactome:R-HSA-2454264", "old pathway"),
+    )
+
+    issues = check_incoming_quotes(
+        [
+            SourceChange("M", publication.relative_to(tmp_path)),
+            SourceChange("M", reactome.relative_to(tmp_path)),
+        ],
+        project_root=tmp_path,
+        citing_files=[pub_record, reactome_record],
+        baseline={},
+    )
+
+    assert {(i.record_path, i.changed_source) for i in issues} == {
+        (Path("gocams/model/model-review.yaml"), Path("publications/PMID_28132884.md")),
+        (
+            Path("genes/human/RLBP1/RLBP1-ai-review.yaml"),
+            Path("reactome/R-HSA-2454264.md"),
+        ),
+    }
+
+
 def test_deleted_doi_cache_finds_underscore_alias(tmp_path: Path):
     source = Path("publications/DOI_10.1096_fasebj.25.1_supplement.714.2.md")
     record = _write_yaml(
@@ -194,6 +231,53 @@ def test_deleted_doi_cache_finds_underscore_alias(tmp_path: Path):
     assert issues[0].record_path == Path("modules/doi.yaml")
     assert issues[0].changed_source == source
     assert issues[0].result.outcome is Outcome.UNRESOLVED
+
+
+def test_deleted_publication_cache_is_not_refetched(tmp_path: Path, monkeypatch):
+    class Validator:
+        def validate(self, text: str, reference_id: str):  # pragma: no cover
+            raise AssertionError(f"refetched {reference_id}: {text}")
+
+    monkeypatch.setattr(
+        "ai_gene_review.validation.incoming_quote_dependencies.build_supporting_text_validator",
+        lambda publications: (Validator(), publications),
+    )
+    source = Path("publications/PMID_1234.md")
+    record = _write_yaml(
+        tmp_path / "modules/pub.yaml",
+        _record("PMID:1234", "old abstract"),
+    )
+
+    issues = check_incoming_quotes(
+        [SourceChange("D", source)],
+        project_root=tmp_path,
+        citing_files=[record],
+        baseline={},
+    )
+
+    assert len(issues) == 1
+    assert issues[0].result.outcome is Outcome.UNRESOLVED
+    assert "deleted cache publications/PMID_1234.md" in issues[0].result.detail
+
+
+def test_changed_snapshot_source_is_excluded(tmp_path: Path):
+    source = _write_text(
+        tmp_path / "recapitulation-experiment/source.md",
+        "changed",
+    )
+    record = _write_yaml(
+        tmp_path / "modules/affected.yaml",
+        _record("file:recapitulation-experiment/source.md", "old"),
+    )
+
+    issues = check_incoming_quotes(
+        [SourceChange("M", source.relative_to(tmp_path))],
+        project_root=tmp_path,
+        citing_files=[record],
+        baseline={},
+    )
+
+    assert issues == []
 
 
 def test_unaffected_consumers_are_not_rechecked(tmp_path: Path):
