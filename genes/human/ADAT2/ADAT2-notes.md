@@ -18,3 +18,6 @@ reduced tRNA I34-dependent translation, but not direct execution of neuron migra
 
 PAINT places `GO:0052717` and `GO:0002100` at `PANTHER:PTN000118390` in the eukaryotic ADAT2/TAD2
 clade. `just paint-losses human ADAT2` reported no IRD or IKR on the human ADAT2 lineage.
+
+The two UniProt ISS `GO:0052717` GOA rows dated 2025-05-27 and 2025-10-27 are byte-identical apart
+from the annotation date, and this review records that duplicated claim once.
