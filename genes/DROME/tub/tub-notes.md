@@ -32,3 +32,5 @@ The review was drafted from UniProt and cached publications before Falcon deep r
 - Tube belongs to the Toll (not Imd) pathway, and it is a maternal dorsal-group gene.
 - The report explicitly warns against annotating Tube as an IRAK-like enzyme on the basis of distant homology. This is consistent with removing the kinase-family-derived nucleus IBA and the LPS-pathway IBA.
 Nothing in the report changes any action.
+
+- Re-review 2026-11-21 (IBA REMOVE rows against the PAINT tree): nucleus IBA changed from REMOVE to MARK_AS_OVER_ANNOTATED. The IBD is at the family root PTN000784925 (IRAK and haspin seeds), so placement is doubtful, but no loss is shown for Tube, and PMID:7867932 (abstract) reports Tube entering the nucleus with Dorsal in transfected cells. Same action as the identical row on Pelle. The LPS-pathway IBA removal stands (seeds are all vertebrate IRAKs).
