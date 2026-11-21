@@ -165,3 +165,11 @@ The automated PR review found that the batch argued both sides of some cross-gen
 - GO:0032456 (now labelled 'endosome to plasma membrane transport'; 'endocytic recycling' is a narrow synonym): MARK_AS_OVER_ANNOTATED on all five retromer subunits. Retromer is needed for Ftr1 and Chs3 to stay at the surface, but those cargoes return through the Golgi (PMID:17420293), so retromer's carriers go to the Golgi. Each subunit's row carries the same SUSPECTED WRONG_TERM query to ComplexPortal (CPX-1653).
 - CROP complex (GO:0170071): ACCEPT, with a CROP core function, on Vps35, Pep8 and Vps29. SGD's rows use is_active_in, but GORULE:0000061 allows only part_of for protein-containing complex terms; a CONFIRMED WRONG_QUALIFIER defect is filed on each.
 - The core function location moves from endosome to endosome membrane.
+
+## GO-CAMs are not support (2026-11-21)
+
+The S. pombe GO-CAMs referred to above are not independent evidence and are no longer cited as support or as comparators in the review. In gomodel:693b3c0900002174, the function nodes carry no evidence, and the retromer complexes' edges are curator inferences from complex membership (ECO:0000305). The Snx3 edge is an IBA seeded by S. cerevisiae Snx3, and in gomodel:6918f23700004102 the mvp1 edge rests on an InterPro mapping and an IBA seeded by S. cerevisiae MVP1. Claims rest on the cited papers. Comparators now come from experimental annotations only (QuickGO, experimental evidence codes, 2026-11-21):
+
+- endosome membrane tubulation (GO:0097750): human SNX1 and SNX5, IDA, ComplexPortal, PMID:37322239.
+- protein-membrane adaptor activity (GO:0043495): yeast VPS17 (IMP, PMID:12181349) and Drosophila Snx3 (IPI, FlyBase, PMID:22041890).
+- membrane bending activity (GO:0180020): no SNX-BAR protein yet; the 12 experimental annotations are on Mgm1, OPA1, CHMP2A/CHMP3 and the reticulon/Yop1 family.
