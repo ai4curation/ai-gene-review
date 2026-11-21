@@ -131,14 +131,14 @@ FIGS = [
  ("Fig. 10: evidence trail, source defects and reference adjudications", "done"),
  ("Fig. 11: predictor assessments and error types", "done"),
  ("Corpus composition by campaign type", "planned"),
- ("Per-pipeline error rates scaled to all of UniProt-GOA", "planned"),
  ("Sign-error and obsoletion figures", "planned"),
- ("Table 1: corpus composition by evidence class and aspect", "done, GOA share planned"),
+ ("Table 1: corpus composition by evidence class and aspect, with share of GOA", "done"),
  ("Tables: actions by evidence class, pipeline, aspect, annotating group", "done"),
  ("Table: GO terms with the highest rejection rate", "done"),
  ("Table: curation sessions by agent tool and model", "done"),
  ("Table: residue claims by matching method and claim type, with validator results", "done"),
  ("Release: alignment manifest (SHA-256), residue-loss audit and triage", "done"),
+ ("Fig. 12: corpus error rates scaled to UniProt-GOA volume", "done"),
  ("Supplement: actions by code, taxon folder, clade; protein binding", "done"),
 ]
 figs_html = "".join(f'<li><span class="chip {"ok" if s == "done" else "warn" if "done" in s else "plain"}">{e(s)}</span>{e(n)}</li>' for n, s in FIGS)
@@ -149,7 +149,7 @@ NEXT = [
  ("Reconcile keyword numbers", "Corpus-wide keyword2GO rejection (14–24%) is far below the SPKW project subsets (79–100%); state the selection."),
  ("Re-derive project numbers", f"{n_proj} numbers are still copied from project pages; each needs a script under paper/scripts/."),
  ("Gene selection", "Not a random sample: report results by campaign type (whole proteome, thematic, term audit)."),
- ("Extrapolate", "Multiply per-pipeline error rates by current UniProt-GOA volumes."),
+ ("Re-estimate on unreviewed proteins", "The GOA extrapolation uses corpus rates from mostly curated eukaryotic proteins; check rates on a random sample of unreviewed bacterial proteins."),
  ("References", "refs.bib holds placeholders only; every entry to be looked up, never written from memory."),
 ]
 next_html = "".join(f"<li><strong>{e(a)}.</strong> {e(b)}</li>" for a, b in NEXT)
