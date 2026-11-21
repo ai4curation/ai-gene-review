@@ -377,6 +377,8 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
         UNC93B1 UVRAG)
   - [ ] Write peroxisome and lysosome rules once the lysosome list is done
         (lessons so far in the 2026-11-21 NOTES entry)
+  - [ ] GRIN2B keeps late-endosome rows resting on the same SEP-NR2B figure that sank its
+        lysosome rows; revisit in the endosome series
   - [ ] MFF's two mitochondrion rows are MODIFY to GO:0005741 from an earlier
         non-ORGANELLES pass, against rule 1; fix in a mitochondrion follow-up
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
@@ -389,15 +391,15 @@ The first batch for both organelles, from a survey regenerated on 2026-11-21: al
 human genes whose peroxisome (GO:0005777) rows are root-only with a synthesis row, and
 the first 12 of 25 such genes for the lysosome (GO:0005764), alphabetically, with SOD1
 on both lists. No gene gained a sub-compartment row. Peroxisome rows changed action on
-6 genes, lysosome rows on 6.
+6 genes, lysosome rows on 6 (BACE1's moved again after review).
 
 Peroxisome:
 
 | gene | outcome | evidence |
 |---|---|---|
 | CD33 | root; EXP and IEA stay KEEP_AS_NON_CORE; isoform source defect | endogenous CD33m in neutrophils, monocytes and microglia with a CD33m-specific antibody (PMID:28747436, abstract-only); UniProt restricts the item to CD33m; its C-terminus is not a canonical PTS1 |
-| IDI1 | root; five rows ACCEPT to KEEP_AS_NON_CORE; peroxisome out of core_functions | three abstract-only papers place it in peroxisomes (PTS1-dependent, PMID:17202134); the C-terminus YRM is a non-canonical PTS1; enzyme fully active and cholesterol synthesis normal in PEX-deficient fibroblasts (PMID:14680974); ISS donor is hamster, not rat |
-| IDI2 | root; three rows ACCEPT to KEEP_AS_NON_CORE; peroxisome out of core_functions | one abstract-only localization paper (PMID:17202134); C-terminus HRV; same counter-evidence as IDI1 |
+| IDI1 | root; five rows ACCEPT to KEEP_AS_NON_CORE; peroxisome out of core_functions; WRONG_QUALIFIER CHECK on the IBA (after review) | three abstract-only papers place it in peroxisomes (PTS1-dependent, PMID:17202134); the C-terminus YRM is a non-canonical PTS1; enzyme fully active and cholesterol synthesis normal in PEX-deficient fibroblasts (PMID:14680974); ISS donor is hamster, not rat |
+| IDI2 | root; three rows ACCEPT to KEEP_AS_NON_CORE; peroxisome out of core_functions; WRONG_QUALIFIER CHECK on the IBA (after review) | one abstract-only localization paper (PMID:17202134); C-terminus HRV; same counter-evidence as IDI1 |
 | MFF | root; four rows stay ACCEPT (core) | endogenous MFF knockdown elongates catalase- or PMP70-stained peroxisomes (PMID:18353969, PMID:21149567); the peroxisomal pool itself is shown only for tagged overexpressed Mff, so no GO:0005778 row despite the tail anchor |
 | PIK3C3 | root; IBA UNDECIDED to KEEP_AS_NON_CORE | the single PAINT seed, yeast Vps34, has a readable positive abstract (PtdIns3P synthesis at peroxisomes, PMID:21121900); no human loss and no readable negative |
 | SOD1 | root; four rows MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE; WRONG_QUALIFIER CHECK on the IBA | the earlier call misread PMID:1332049, whose immuno-EM shows peroxisome labelling "slightly less than that of cytoplasm"; rat liver peroxisome proteomics and piggyback import on PTS1-bearing CCS (PMID:19686298); no matrix row, the import assay is co-overexpression |
@@ -412,9 +414,9 @@ Lysosome:
 | ADA | root; IDA and IEA stay KEEP_AS_NON_CORE | ADA activity measured in Percoll-purified lysosomes with ADA1 properties, and a function proposed (PMID:8452534); no lumen row: no signal peptide or M6P route |
 | ANK2 | root; IEA and ISS stay ACCEPT | mouse full texts: AnkB with LAMP1 lysosomes and needed for their axonal retrograde transport (PMID:27718357, PMID:25533844); PI3P binding, no integral partner, so no GO:0098574 |
 | ARRDC3 | root; two EXP and IEA stay KEEP_AS_NON_CORE; UniProt CHECK defect | both sources abstract-only; "lysosome-associated" rests on LDL colocalization, a cargo marker; the readable full text places ARRDC3 in endosomes only (PMID:26490116) |
-| BACE1 | root; IEA and four IDA ACCEPT to KEEP_AS_NON_CORE; lysosome out of core_functions | turnover studies: the lysosome is where BACE1 is degraded, not where it cleaves APP; endogenous BACE in LAMP2-positive compartments (PMID:16033761) |
+| BACE1 | root; IEA and four IDA ACCEPT to MARK_AS_OVER_ANNOTATED; lysosome out of core_functions | turnover studies: the lysosome is where BACE1 is degraded, not where it cleaves APP; the endogenous LAMP2 signal appears only when lysosomal hydrolases are inhibited (PMID:16033761), the rest with mutants or USP8 depletion |
 | CRYAB | root; IEA ACCEPT to KEEP_AS_NON_CORE | mouse abstract: "localizes partially in the lysosome" by fractionation (PMID:31786107); bound to the peripheral V1 subunit ATP6V1A and released by rapamycin, so not tethering |
-| CXCR4 | root; two IDA and IEA stay KEEP_AS_NON_CORE | degradation cargo, but two readable full texts image the receptor with LAMP-1 or LAMP2 after agonist (PMID:21540189, PMID:24790097) |
+| CXCR4 | root; two IDA and IEA stay KEEP_AS_NON_CORE | degradation cargo, but the endogenous receptor colocalizes with LAMP2 after its own agonist in unperturbed HeLa cells (PMID:24790097; HA-CXCR4 in HEK293, PMID:21540189): a ligand-driven pool |
 | GABARAP | root; IEA stays KEEP_AS_NON_CORE | the mouse donor is abstract-only with no lysosome; readable human CASM data (PMID:34597140) show ATG8 conjugation to LAMP1-positive lysosomes and GABARAP holding FLCN-FNIP there, a regulated pool with a function |
 | GRIN2B | root; IEA and ISS KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED; UniProt CHECK defect | the mouse donor (PMID:31424425, full text read in PMC) shows only overexpressed SEP-NR2B with LAMP2 in HEK293 cells, as the place NR2B is degraded |
 | HCK | root; IDA and IEA stay KEEP_AS_NON_CORE; isoform CHECK defect | abstracts: p61Hck at lysosomes drives podosome rosettes (PMID:15998323); UniProt's p59Hck lysosome item cites a paper placing p59Hck at the plasma membrane |
@@ -424,14 +426,18 @@ Lysosome:
 
 Lessons (first batch for both organelles; to become rules once the lysosome list is done):
 
-- **Degradation is not a lysosome location, and what was imaged decides the action.**
-  Where only degradation data, overexpression in a foreign cell, or the source's own
-  framing ("targeted to lysosomes for degradation", an autophagy-derived pool) support
-  the row, every row on the term is MARK_AS_OVER_ANNOTATED, direct-evidence rows
-  included (GRIN2B, NBR1, SOD1). Where the endogenous protein, or a readable full text,
-  is imaged with a lysosome marker, the pool is real but non-core (BACE1, CXCR4). Either
-  way the lysosome stays out of core_functions, and degradation cargo gets no
-  sub-compartment row even with its own TM.
+- **Degradation is not a lysosome location unless the pool exists in an unperturbed
+  cell** (restated after review; the first wording tracked source readability, not
+  biology). A pool present without blocking the protein's own destruction, reached under
+  its physiological trigger (the endogenous receptor after its own agonist), is the
+  ligand-driven pool of rule 8: real and non-core (CXCR4, like TLR1, TLR6 and ADRB2). A
+  pool seen only when lysosomal degradation is inhibited, with a mutant, after depleting a
+  deubiquitinase, with overexpression in a foreign cell, or that the source itself frames
+  as the place of degradation, is MARK_AS_OVER_ANNOTATED on every row of the term,
+  direct-evidence rows included (BACE1, GRIN2B, NBR1, SOD1). Either way the lysosome
+  stays out of core_functions, and degradation cargo gets no sub-compartment row even with
+  its own TM. GO's `located_in` does not require a function, so a function is not part of
+  the test; it decides only whether a kept pool could be core.
 - **A function at the lysosome makes a pool more than cargo**: an activity measured in
   purified lysosomes (ADA), FLCN sequestration on CASM-conjugated lysosomes (GABARAP),
   organelle transport (ANK2), podosome rosettes (HCK).

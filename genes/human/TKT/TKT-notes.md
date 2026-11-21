@@ -78,8 +78,6 @@ peroxisomal or nuclear enzyme in any established sense:
   metabolic processes; xylulose-5-P biosynthetic process.
 - Over-annotation (peroxisome ISS re-judged non-core on 2026-11-21, see below): exosome/vesicle (HDA), calcium ion binding (structural
   surrogate metal), transketolase-or-transaldolase (ARBA grouping term), bare protein binding.
-</content>
-</invoke>
 
 ## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
 
