@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Mapping, Protocol
+from typing import Any, Protocol
 
 
 @dataclass(frozen=True)
@@ -30,12 +31,24 @@ class ClassificationTask:
         if not self.context.strip():
             raise ValueError("ClassificationTask.context must be non-empty")
         if self.output_schema is not None:
-            if self.output_schema.get("type") != "object" or not self.output_schema.get(
-                "properties"
+            properties = self.output_schema.get("properties")
+            if (
+                self.output_schema.get("type") != "object"
+                or not isinstance(properties, Mapping)
+                or not properties
             ):
                 raise ValueError(
                     "ClassificationTask.output_schema must be a non-empty JSON object schema"
                 )
+            for prop_name, prop_schema in properties.items():
+                if (
+                    not isinstance(prop_schema, Mapping)
+                    or not isinstance(prop_schema.get("enum"), list)
+                    or not prop_schema["enum"]
+                ):
+                    raise ValueError(
+                        f"ClassificationTask.output_schema property {prop_name!r} must define a non-empty 'enum' list"
+                    )
             return
         if len(self.choices) < 2:
             raise ValueError("ClassificationTask requires at least two choices")

@@ -107,7 +107,22 @@ ANNOTATION_ACTION_INSTRUCTION = (
     "an experimental annotation solely because a cached abstract mentions another "
     "gene if the full text is unavailable.\n"
     "8. UNDECIDED: The evidence is genuinely ambiguous or the relevant primary "
-    "publication full text is unavailable and cannot be verified from other sources."
+    "publication full text is unavailable and cannot be verified from other sources.\n"
+    "9. Special GO policy carve-outs (mandatory):\n"
+    "   - ND rows (`evidence_type: ND`, `GO_REF:0000015`): `ACCEPT` means no "
+    "literature on this gene product in this species identifies a function in "
+    "that GO aspect (not 'accurate and core'). Propagated/electronic siblings "
+    "(`IBA`, `ISO`, `ISS`, `IEA`) never make an ND row stale. `KEEP_AS_NON_CORE`, "
+    "`MARK_AS_OVER_ANNOTATED`, and `TOO_GENERAL` are never valid on an ND row.\n"
+    "   - Root organelle CC terms (`GO:0005739` mitochondrion, `GO:0005783` "
+    "endoplasmic reticulum, `GO:0005794` Golgi apparatus, `GO:0005777` "
+    "peroxisome, `GO:0005764` lysosome): explicit exception — never mark "
+    "`TOO_GENERAL` and never `MODIFY` to a sub-compartment.\n"
+    "   - Negated rows (`negated: true`, i.e. `NOT` qualifier): judge whether "
+    "the evidence supports the negated claim (that the gene product does NOT "
+    "have that function, process, or localization); `ACCEPT` if the negative "
+    "evidence is sound and core, `REMOVE` if the negation is contradicted or "
+    "unsupported."
 )
 
 ANNOTATION_ACTION_CHOICES = (
@@ -160,6 +175,13 @@ COARSE_ACTION_CHOICES = (
     ),
 )
 
+# Coarse grouping note:
+# - `TOO_GENERAL` is grouped with `MODIFY` under `REFINE` because both indicate
+#   a true-in-essence annotation whose specificity is suboptimal, even though
+#   `TOO_GENERAL` retains the row without proposing a replacement term.
+# - In `derive_annotation_review_target`, `is_core` maps `MODIFY` to
+#   `NOT_APPLICABLE` because the original GO term is being replaced rather than
+#   retained as-is (even if the replacement term represents a core function).
 COARSE_ACTION_MAP: dict[str, str] = {
     "ACCEPT": "KEEP",
     "KEEP_AS_NON_CORE": "KEEP",
@@ -172,7 +194,17 @@ COARSE_ACTION_MAP: dict[str, str] = {
 
 
 def coarse_action(action: str) -> str:
-    """Map a fine-grained ``ActionEnum`` value to its 4-way coarse category."""
+    """Map a fine-grained ``ActionEnum`` value to its 4-way coarse category.
+
+    >>> coarse_action("ACCEPT")
+    'KEEP'
+    >>> coarse_action("TOO_GENERAL")
+    'REFINE'
+    >>> coarse_action("MARK_AS_OVER_ANNOTATED")
+    'REJECT'
+    >>> coarse_action("UNDECIDED")
+    'DEFER'
+    """
     if action not in COARSE_ACTION_MAP:
         raise ValueError(f"Unsupported annotation review action: {action!r}")
     return COARSE_ACTION_MAP[action]

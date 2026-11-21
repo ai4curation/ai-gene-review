@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping, Sequence
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
+
+from linkml_runtime.utils.schemaview import SchemaView
 
 from ai_gene_review.classifier.base import Choice
-from ai_gene_review.classifier.claims import _encode_pointer
+from ai_gene_review.classifier.claims import encode_pointer
 from ai_gene_review.classifier.rubric import (
     ANNOTATION_ACTION_CHOICES,
     COARSE_ACTION_CHOICES,
@@ -87,49 +90,23 @@ CORE_STATUS_CHOICES = (
 
 
 @lru_cache(maxsize=1)
-def _schema_view():
-    try:
-        from linkml_runtime.utils.schemaview import SchemaView
-
-        return SchemaView(str(SCHEMA_PATH))
-    except Exception:
-        return None
+def _schema_view() -> SchemaView:
+    return SchemaView(str(SCHEMA_PATH))
 
 
 def _slot_description(slot_name: str) -> str:
     view = _schema_view()
-    if view is not None:
-        slot = view.induced_slot(slot_name) if slot_name in view.all_slots() else None
-        if slot and slot.description:
-            return " ".join(str(slot.description).split())
-    fallback = {
+    slot = view.induced_slot(slot_name) if slot_name in view.all_slots() else None
+    if slot and slot.description:
+        return " ".join(str(slot.description).split())
+    # Synthetic wrapper keys in `about` that are not LinkML slots in gene_review.yaml
+    wrapper_descriptions = {
         "gene": "Target gene identity (UniProt accession, HGNC/MOD symbol, and taxon).",
         "module": "Target biological module identity.",
         "rule": "Target UniProt annotation rule identity.",
         "entity": "Target biological entity identity.",
-        "term": "The Gene Ontology (GO) term ID and label asserted for the gene.",
-        "qualifier": "The GO annotation qualifier (enables, contributes_to, involved_in, located_in, part_of, etc.).",
-        "extensions": "Contextual GO annotation extensions (e.g. occurs_in, has_input).",
-        "negated": "Whether the annotation is negated (NOT).",
-        "evidence_type": "GO evidence code for the annotation.",
-        "isoform": "Specific protein isoform identifier to which the claim applies.",
-        "review": "Curator review summary, action, and replacement terms for the annotation.",
-        "description": "Narrative description of the core function.",
-        "molecular_function": "Molecular function GO term directly enabled by the gene product.",
-        "proposed_molecular_function": "Proposed new molecular function name when no GO term exists yet.",
-        "contributes_to_molecular_function": "Complex-level molecular function to which this subunit contributes.",
-        "directly_involved_in": "Biological process GO terms in which this gene product directly participates.",
-        "locations": "Cellular anatomical locations where the gene product acts.",
-        "anatomical_locations": "Tissue or anatomical structures where the function occurs.",
-        "substrates": "Direct chemical or protein substrates/cargoes of the molecular function.",
-        "in_complex": "Protein-containing complex of which this gene product is an active unit.",
-        "statement": "Concise statement of the experimental or literature finding.",
-        "gap_statement": "Statement of what remains unknown about the gene's function.",
-        "boundary": "Established knowledge that delimits the knowledge gap.",
-        "proposed_name": "Proposed name for a new ontology term.",
-        "proposed_definition": "Proposed definition for a new ontology term.",
     }
-    return fallback.get(slot_name, f"Claim field {slot_name!r}.")
+    return wrapper_descriptions.get(slot_name, f"Claim field {slot_name!r}.")
 
 
 def _choice_property(description: str, choices: Sequence[Choice]) -> dict[str, Any]:
@@ -150,14 +127,14 @@ def claim_aspect_paths(claim: Mapping[str, Any]) -> list[str]:
     if isinstance(about, Mapping):
         for key in ("gene", "module", "rule", "entity"):
             if key in about:
-                paths.append(_encode_pointer(["about", key]))
+                paths.append(encode_pointer(["about", key]))
                 break
     assertion = claim.get("assertion")
     if isinstance(assertion, Mapping):
         for key, value in assertion.items():
             if key in SKIP_ASPECT_SLOTS or value is None or value == [] or value == {}:
                 continue
-            paths.append(_encode_pointer(["assertion", key]))
+            paths.append(encode_pointer(["assertion", key]))
     return paths
 
 

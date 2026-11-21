@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 import json
 import math
 import os
+import re
 import time
-from typing import Any, Callable, Mapping
+from typing import Any
 
 import httpx
 
@@ -17,7 +19,18 @@ DEFAULT_MODEL = "jev-1.13.0"
 
 
 def render_prompt(task: ClassificationTask) -> str:
-    """Format a classification task for a JSON-constrained TypeSafe request."""
+    """Format a classification task for a JSON-constrained TypeSafe request.
+
+    >>> from ai_gene_review.classifier.base import Choice, ClassificationTask
+    >>> t = ClassificationTask(
+    ...     instruction="Classify.",
+    ...     context="Gene X.",
+    ...     choices=(Choice("YES", "supported"), Choice("NO", "unsupported")),
+    ...     question="Verdict?",
+    ... )
+    >>> "Options:" in render_prompt(t) and "- YES: supported" in render_prompt(t)
+    True
+    """
     options = "\n".join(
         f"- {choice.value}: {choice.description}" for choice in task.choices
     )
@@ -53,11 +66,15 @@ def response_schema(task: ClassificationTask) -> dict[str, Any]:
 
 
 def _find_value_token(
-    tokens: list[dict[str, Any]], allowed: set[str], start: int = 0
+    tokens: list[dict[str, Any]],
+    allowed: set[str],
+    start: int = 0,
+    end: int | None = None,
 ) -> tuple[dict[str, Any], int] | None:
-    """Locate the constrained enum token rather than assuming a fixed offset."""
+    """Locate the constrained enum token within ``tokens[start:end]``."""
+    stop = len(tokens) if end is None else min(end, len(tokens))
     candidates: list[tuple[dict[str, Any], int]] = []
-    for index in range(start, len(tokens)):
+    for index in range(start, stop):
         token = tokens[index]
         text = str(token.get("token", "")).strip()
         alts = {
@@ -73,7 +90,58 @@ def _find_value_token(
         }
         if len(alts & allowed) >= 2:
             return token, next_index
-    return candidates[-1]
+    return candidates[0]
+
+
+def _property_value_windows(
+    tokens: list[dict[str, Any]],
+    property_names: list[str],
+) -> dict[str, tuple[int, int]]:
+    """Anchor each JSON property to its ``(val_start, val_end)`` token index window.
+
+    Reconstructs the raw token text and locates each ``"<name>":`` key in
+    order, preventing multi-token enum values (e.g. ``KEEP`` + ``_AS`` +
+    ``_NON`` + ``_CORE``) from bleeding into subsequent properties.
+    """
+    spans: list[tuple[int, int]] = []
+    pieces: list[str] = []
+    pos = 0
+    for token in tokens:
+        text = str(token.get("token", ""))
+        pieces.append(text)
+        spans.append((pos, pos + len(text)))
+        pos += len(text)
+    full_text = "".join(pieces)
+
+    key_matches: list[tuple[str, int, int]] = []
+    search_from = 0
+    for name in property_names:
+        pattern = re.compile(re.escape(json.dumps(name)) + r"\s*:")
+        match = pattern.search(full_text, search_from)
+        if match is None:
+            continue
+        key_matches.append((name, match.start(), match.end()))
+        search_from = match.end()
+
+    if not key_matches:
+        return {}
+
+    def _first_token_at_or_after(char_offset: int) -> int:
+        for idx, (_start, tok_end) in enumerate(spans):
+            if tok_end > char_offset:
+                return idx
+        return len(tokens)
+
+    windows: dict[str, tuple[int, int]] = {}
+    for i, (name, _key_start, val_char_start) in enumerate(key_matches):
+        val_start = _first_token_at_or_after(val_char_start)
+        if i + 1 < len(key_matches):
+            next_key_char_start = key_matches[i + 1][1]
+            val_end = _first_token_at_or_after(next_key_char_start)
+        else:
+            val_end = len(tokens)
+        windows[name] = (val_start, val_end)
+    return windows
 
 
 def _probabilities(
@@ -89,8 +157,8 @@ def _probabilities(
         probs[selected] = math.exp(float(token["logprob"]))
     total = sum(probs.values())
     if total > 0:
-        probs = {label: value / total for label, value in probs.items()}
-    return probs
+        return {label: value / total for label, value in probs.items()}
+    return {choice: (1.0 if choice == selected else 0.0) for choice in choices}
 
 
 def extract_probabilities(
@@ -116,6 +184,8 @@ def extract_schema_answers(
     tokens = (
         response.get("logprobs") if isinstance(response.get("logprobs"), list) else []
     )
+    prop_names = list(schema["properties"].keys())
+    windows = _property_value_windows(tokens, prop_names) if tokens else {}
     cursor = 0
     answers: dict[str, dict[str, Any]] = {}
     for name, prop in schema["properties"].items():
@@ -127,12 +197,20 @@ def extract_schema_answers(
             raise ValueError(
                 f"TypeSafe label {selected!r} for {name!r} is not in {choices}"
             )
-        found = _find_value_token(tokens, set(choices), cursor) if tokens else None
+        if tokens and name in windows:
+            win_start, win_end = windows[name]
+            found = _find_value_token(tokens, set(choices), win_start, win_end)
+            cursor = max(cursor, win_end)
+        elif tokens:
+            found = _find_value_token(tokens, set(choices), cursor)
+            if found is not None:
+                cursor = found[1]
+        else:
+            found = None
         if found is None:
             probs = {choice: (1.0 if choice == selected else 0.0) for choice in choices}
         else:
-            token, cursor = found
-            probs = _probabilities(token, choices, selected)
+            probs = _probabilities(found[0], choices, selected)
         answers[name] = {"label": selected, "probabilities": probs}
     return answers
 

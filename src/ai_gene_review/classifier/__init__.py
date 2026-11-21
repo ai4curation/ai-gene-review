@@ -16,7 +16,12 @@ from ai_gene_review.classifier.base import (
     ClassificationTask,
     Classifier,
 )
-from ai_gene_review.classifier.claims import extract_claim, parse_pointer
+from ai_gene_review.classifier.claims import (
+    encode_pointer,
+    extract_claim,
+    parse_pointer,
+    resolve_pointer,
+)
 from ai_gene_review.classifier.rubric import (
     ANNOTATION_ACTION_CHOICES,
     ANNOTATION_ACTION_INSTRUCTION,
@@ -70,10 +75,12 @@ __all__ = [
     "claim_aspects_schema",
     "coarse_action",
     "derive_annotation_review_target",
+    "encode_pointer",
     "extract_annotation_case",
     "extract_claim",
     "parse_pointer",
     "render_prompt",
+    "resolve_pointer",
     "response_schema",
     "structured_evidence_claim_aspects_task",
     "structured_evidence_claim_match_task",

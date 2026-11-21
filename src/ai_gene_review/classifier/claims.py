@@ -13,8 +13,9 @@ Supports extracting evidence-backed assertions via RFC 6901 JSON Pointer
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from copy import deepcopy
-from typing import Any, Mapping
+from typing import Any
 
 EVIDENCE_CONTAINERS = frozenset({"supported_by", "provenance", "evidence"})
 STRIP_ASSERTION_FIELDS = frozenset(
@@ -32,7 +33,16 @@ def _decode_token(token: str) -> str:
     return token.replace("~1", "/").replace("~0", "~")
 
 
-def _encode_pointer(tokens: list[str]) -> str:
+def encode_pointer(tokens: list[str]) -> str:
+    """Encode path tokens into an RFC 6901 JSON Pointer.
+
+    >>> encode_pointer([])
+    '/'
+    >>> encode_pointer(["existing_annotations", "0"])
+    '/existing_annotations/0'
+    >>> encode_pointer(["a/b", "c~d"])
+    '/a~1b/c~0d'
+    """
     if not tokens:
         return "/"
     return "/" + "/".join(
@@ -41,7 +51,15 @@ def _encode_pointer(tokens: list[str]) -> str:
 
 
 def parse_pointer(pointer: str) -> list[str]:
-    """Parse an RFC 6901 JSON Pointer into decoded path tokens."""
+    """Parse an RFC 6901 JSON Pointer into decoded path tokens.
+
+    >>> parse_pointer("/")
+    []
+    >>> parse_pointer("/existing_annotations/0")
+    ['existing_annotations', '0']
+    >>> parse_pointer("/a~1b/c~0d")
+    ['a/b', 'c~d']
+    """
     if not pointer.startswith("/"):
         raise ValueError(f"JSON Pointer must start with '/': {pointer!r}")
     if pointer == "/":
@@ -137,10 +155,6 @@ def _normalize_evidence_item(
     if raw_evidence.get("reference_section_type"):
         normalized["reference_section_type"] = deepcopy(
             raw_evidence["reference_section_type"]
-        )
-    if "full_text_unavailable" in raw_evidence:
-        normalized["full_text_unavailable"] = bool(
-            raw_evidence["full_text_unavailable"]
         )
     if raw_evidence.get("statement"):
         normalized["statement"] = deepcopy(raw_evidence["statement"])
@@ -238,7 +252,7 @@ def extract_claim(
             }
             if fr:
                 assertion["finding_review"] = fr
-        assertion_path = _encode_pointer(tokens)
+        assertion_path = encode_pointer(tokens)
         return {
             "about": about,
             "origin": {
@@ -288,7 +302,7 @@ def extract_claim(
         ann_node = steps[1][1]
         if not isinstance(ann_node, Mapping):
             raise ValueError(
-                f"Annotation node at {_encode_pointer(assertion_tokens)!r} is not a mapping"
+                f"Annotation node at {encode_pointer(assertion_tokens)!r} is not a mapping"
             )
         assertion = _clean_mapping(
             ann_node, include_review_reason=include_review_reason
@@ -298,7 +312,7 @@ def extract_claim(
         target_node = steps[-3][1]
         if not isinstance(target_node, Mapping):
             raise ValueError(
-                f"Assertion node at {_encode_pointer(assertion_tokens)!r} is not a mapping"
+                f"Assertion node at {encode_pointer(assertion_tokens)!r} is not a mapping"
             )
         assertion = _clean_mapping(
             target_node, include_review_reason=include_review_reason
@@ -319,7 +333,7 @@ def extract_claim(
     return {
         "about": about,
         "origin": {
-            "assertion_path": _encode_pointer(assertion_tokens),
+            "assertion_path": encode_pointer(assertion_tokens),
             "evidence_path": evidence_path,
             "section": section,
         },

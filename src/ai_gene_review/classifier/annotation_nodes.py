@@ -10,21 +10,26 @@ curator-authored `review` (`action`, `summary`, `reason`,
 To benchmark an agent or classifier on predicting `review.action` (and related
 accept-state facets) without data leakage, `extract_annotation_case` strips:
 - Every `review` object on `target_annotation` and all `sibling_annotations`
+  (including `review.supported_by` by default; `include_supporting_excerpts=True`
+  is opt-in for paired ablation experiments only because curator-selected quotes
+  correlate with `review.action`)
 - Any `existing_annotations` row where `review.action == "NEW"` (since `NEW`
   rows were proposed by the reviewer and did not exist in the input GOA file)
 - Top-level curator syntheses: `description`, `core_functions`,
   `proposed_new_terms`, `suggested_questions`, `suggested_experiments`,
   `knowledge_gaps`, `status`, and `functional_isoforms`
-- Reviewer-authored fields on `references[]`: `findings` and `reference_review`
+- Reviewer-authored fields on `references[]`: `findings`, `reference_review`,
+  `full_text_unavailable`, and `is_invalid`
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from copy import deepcopy
-from typing import Any, Mapping
+from typing import Any
 
 from ai_gene_review.classifier.claims import (
-    _encode_pointer,
+    encode_pointer,
     parse_pointer,
     resolve_pointer,
 )
@@ -37,6 +42,7 @@ GOA_ROW_FIELDS = (
     "negated",
     "evidence_type",
     "original_reference_id",
+    # Machine-derived post-hoc from GOA snapshots via `just fix-goa-retired`
     "retired",
     "isoform",
     "supporting_entities",
@@ -103,7 +109,14 @@ def _extract_supporting_excerpts(review: Mapping[str, Any]) -> list[dict[str, st
 
 
 def _collapse_sibling_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Deduplicate sibling GOA rows by (term.id, qualifier, negated) for compact context."""
+    """Deduplicate sibling GOA rows by (term.id, term.label, qualifier, negated).
+
+    Note: collapsing keeps only ``term``, ``qualifier``, ``negated``,
+    ``evidence_types``, and ``count`` for context-window efficiency; it omits
+    per-row ``extensions``, ``isoform``, ``supporting_entities``, and
+    ``annotation_path``. Set ``collapse_siblings=False`` when per-row
+    extensions or isoforms are needed.
+    """
     grouped: dict[tuple[str, str, str, bool], dict[str, Any]] = {}
     for row in rows:
         term = row.get("term") or {}
@@ -132,14 +145,16 @@ def _collapse_sibling_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def _strip_reference_metadata(ref: Mapping[str, Any]) -> dict[str, Any]:
-    """Return only non-leaky publication metadata for a reference entry."""
+    """Return only non-leaky publication metadata for a reference entry.
+
+    Reviewer-authored flags (`is_invalid`, `full_text_unavailable`, `findings`,
+    `reference_review`) are excluded to prevent leaking `UNDECIDED`/`REMOVE`.
+    """
     cleaned: dict[str, Any] = {}
     for field in (
         "id",
         "title",
-        "is_invalid",
         "publication_type",
-        "full_text_unavailable",
     ):
         if ref.get(field) is not None:
             cleaned[field] = deepcopy(ref[field])
@@ -152,7 +167,7 @@ def extract_annotation_case(
     *,
     include_sibling_annotations: bool = True,
     collapse_siblings: bool = True,
-    include_supporting_excerpts: bool = True,
+    include_supporting_excerpts: bool = False,
     include_references_metadata: bool = True,
     relevant_references_only: bool = True,
     allow_generic_protein_binding: bool = False,
@@ -172,14 +187,17 @@ def extract_annotation_case(
         by default because GO curation rules (`TOO_GENERAL`, `SAME_TERM`
         consistency) depend on the gene's other GOA rows.
     collapse_siblings:
-        When True (default), deduplicate sibling GOA rows by `(term, qualifier)`
-        into compact summary entries (`evidence_types`, `count`) so genes with
-        many GOA annotations do not bloat the classifier context window.
+        When True (default), deduplicate sibling GOA rows by
+        `(term.id, term.label, qualifier, negated)` into compact summary
+        entries (`evidence_types`, `count`) so genes with many GOA annotations
+        do not bloat the classifier context window.
     include_supporting_excerpts:
-        When True (default), preserve verbatim `supporting_text` quotes from
-        primary sources (`PMID:`, `GO_REF:`, `*-uniprot.txt`) in
-        `supporting_excerpts` while excluding curator rationale/action and
-        internal agent synthesis files.
+        When True, preserve verbatim `supporting_text` quotes from primary
+        sources (`PMID:`, `GO_REF:`, `*-uniprot.txt`) in `supporting_excerpts`
+        while excluding curator rationale/action and internal agent synthesis
+        files. Defaults to ``False`` because quotes drawn from
+        ``review.supported_by`` are curator-selected evidence whose presence
+        and polarity correlate with ``review.action``.
     include_references_metadata:
         Whether to include non-leaky reference titles/types from `references[]`.
     relevant_references_only:
@@ -215,7 +233,7 @@ def extract_annotation_case(
     ):
         raise ValueError(
             f"Annotation at {annotation_path!r} uses generic GO:0005515 protein binding, "
-            "which is governed by a deterministic policy and is not an informative benchmark target"
+            "which is governed by a mechanical policy rule and is not an informative benchmark target"
         )
 
     gene_info: dict[str, Any] = {
@@ -264,9 +282,10 @@ def extract_annotation_case(
             ):
                 continue
             sibling_entry = _strip_goa_row(row)
-            sibling_entry["annotation_path"] = _encode_pointer(
-                ["existing_annotations", str(idx)]
-            )
+            if not collapse_siblings:
+                sibling_entry["annotation_path"] = encode_pointer(
+                    ["existing_annotations", str(idx)]
+                )
             raw_siblings.append(sibling_entry)
 
     sibling_annotations = (
@@ -315,6 +334,10 @@ def derive_annotation_review_target(
     aspect judgments. Never included in the model's `annotation_case` input.
     """
     tokens = parse_pointer(annotation_path)
+    if len(tokens) != 2 or tokens[0] != "existing_annotations":
+        raise ValueError(
+            f"annotation_path must be '/existing_annotations/<i>', got {annotation_path!r}"
+        )
     steps = resolve_pointer(document, tokens)
     raw_target = steps[-1][1]
     if not isinstance(raw_target, Mapping):
