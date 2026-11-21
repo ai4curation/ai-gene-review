@@ -326,3 +326,86 @@ def test_residue_and_motif_positions_are_unioned(tmp_path):
         ],
     }))
     assert load_family_sites(tmp_path)["PANTHER:PTHR00002#mixed"] == {5, 20, 21, 22}
+
+
+# --------------------------------------------------------------------------
+# Archived alignments (alignment_file)
+# --------------------------------------------------------------------------
+#
+# CACHE sequences:   ANCHOR1 MAHKCDEFGH   TARGET1 MAAKSDEFGH
+# The alignment below inserts a gap in TARGET1 after position 2, so anchor position 3 (H)
+# sits opposite target position 3 (A) only if the gap is accounted for correctly.
+
+ALN_OK = ">sp|ANCHOR1|A_X\nMAHKCDEFGH-\n>TARGET1 some description\nMA-AKSDEFGH\n"
+# anchor col of H is 3; target col 3 is a gap, so anchor 3 is opposite nothing, anchor 4 (K)
+# opposite target 3 (A)
+
+
+def _aln_claim(tmp_path, text, **kw):
+    (tmp_path / "aln.fasta").write_text(text)
+    c = _claim(kw.pop("claim_type", "LOST"), kw.pop("a_pos", 4), kw.pop("a_res", "K"),
+               kw.pop("t_pos", 3), kw.pop("t_res", "A"))
+    c["alignment_file"] = "aln.fasta"
+    return c
+
+
+def _aln_results(tmp_path, claim):
+    return check_claim(claim, "UniProtKB:TARGET1", "G", "GO:1", CACHE, None, repo_root=tmp_path)
+
+
+def test_alignment_confirms_the_position_correspondence(tmp_path):
+    results = _aln_results(tmp_path, _aln_claim(tmp_path, ALN_OK))
+    assert _outcomes(results, "ALIGNMENT") == [ClaimOutcome.PASS], [str(r) for r in results]
+
+
+def test_alignment_contradicting_the_claimed_target_position_fails(tmp_path):
+    """The claim says anchor 3 corresponds to target 3, but the alignment puts a gap there."""
+    results = _aln_results(tmp_path, _aln_claim(tmp_path, ALN_OK, a_pos=3, a_res="H"))
+    assert _outcomes(results, "ALIGNMENT") == [ClaimOutcome.FAIL]
+    assert "gap" in next(r.detail for r in results if r.kind == "ALIGNMENT")
+
+
+def test_alignment_placing_a_different_target_residue_fails(tmp_path):
+    claim = _aln_claim(tmp_path, ">ANCHOR1\nMAHKCDEFGH\n>TARGET1\nMAAKSDEFGH\n")
+    # without the gap, anchor 4 (K) faces target 4 (K), not target 3
+    results = _aln_results(tmp_path, claim)
+    assert _outcomes(results, "ALIGNMENT") == [ClaimOutcome.FAIL]
+    assert "target position 4" in next(r.detail for r in results if r.kind == "ALIGNMENT")
+
+
+def test_missing_alignment_file_fails(tmp_path):
+    claim = _claim("LOST", 3, "H", 3, "A")
+    claim["alignment_file"] = "no/such/file.fasta"
+    results = _aln_results(tmp_path, claim)
+    assert _outcomes(results, "ALIGNMENT") == [ClaimOutcome.FAIL]
+
+
+def test_alignment_without_the_target_record_fails(tmp_path):
+    results = _aln_results(tmp_path, _aln_claim(tmp_path, ">ANCHOR1\nMAHKCDEFGH\n>OTHER\nMAHKCDEFGH\n"))
+    assert _outcomes(results, "ALIGNMENT") == [ClaimOutcome.FAIL]
+    assert "TARGET1" in next(r.detail for r in results if r.kind == "ALIGNMENT")
+
+
+def test_unequal_row_lengths_are_not_an_alignment(tmp_path):
+    results = _aln_results(tmp_path, _aln_claim(tmp_path, ">ANCHOR1\nMAHKCDEFGH\n>TARGET1\nMAAKSDEFG\n"))
+    assert _outcomes(results, "ALIGNMENT") == [ClaimOutcome.FAIL]
+
+
+def test_alignment_row_must_match_the_current_sequence(tmp_path):
+    """An archived row for a different sequence version cannot vouch for the claim."""
+    results = _aln_results(tmp_path, _aln_claim(tmp_path, ">ANCHOR1\nMAHKCDEFGW-\n>TARGET1\nMA-AKSDEFGH\n"))
+    assert _outcomes(results, "ALIGNMENT") == [ClaimOutcome.FAIL]
+    assert "differs" in next(r.detail for r in results if r.kind == "ALIGNMENT")
+
+
+def test_lost_claim_without_target_is_confirmed_by_a_gap(tmp_path):
+    """'No residue aligns to that position' is exactly what a gap column shows."""
+    claim = _aln_claim(tmp_path, ALN_OK, a_pos=3, a_res="H", t_pos=None)
+    results = _aln_results(tmp_path, claim)
+    assert _outcomes(results, "ALIGNMENT") == [ClaimOutcome.PASS]
+
+
+def test_claims_without_alignment_file_get_no_alignment_check():
+    """Forward-only: existing MSA claims without an archived file are not failed."""
+    results = check_claim(_claim("LOST", 3, "H", 3, "A"), "UniProtKB:TARGET1", "G", "GO:1", CACHE)
+    assert _outcomes(results, "ALIGNMENT") == []

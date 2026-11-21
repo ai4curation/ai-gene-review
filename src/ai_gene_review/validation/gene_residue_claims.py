@@ -26,6 +26,12 @@ Four checks:
     When the claim cites a family-level site, the site must exist in that family review and
     the anchor position must be one the site actually declares. This is what stops a gene
     review and a family review drifting apart silently.
+``check_alignment``
+    When the claim names an archived ``alignment_file``, the alignment must contain rows for
+    the anchor and the target whose ungapped sequences equal the current UniProt sequences,
+    and it must place the anchor position opposite the claimed target position (or opposite
+    a gap, for a LOST claim with no target). This is the only check that tests the
+    correspondence itself; the others take it on trust.
 
 Enforcement is forward-only by construction: ``residue_claims`` is optional, so the 900-odd
 existing reviews that make residue arguments in prose remain valid and are never
@@ -138,6 +144,114 @@ def _check_position(
     )
 
 
+def read_alignment(path: Path) -> dict[str, str]:
+    r"""Read an aligned FASTA file into ``{header: gapped row}``; rows must be equal length.
+
+    >>> import tempfile, os
+    >>> f = tempfile.NamedTemporaryFile("w", suffix=".fasta", delete=False)
+    >>> _ = f.write(">sp|P1|X\nMA-K\n>P2 desc\nMAAK\n"); f.close()
+    >>> read_alignment(Path(f.name))
+    {'sp|P1|X': 'MA-K', 'P2 desc': 'MAAK'}
+    >>> os.unlink(f.name)
+    """
+    rows: dict[str, list[str]] = {}
+    header = None
+    for line in path.read_text().splitlines():
+        if line.startswith(">"):
+            header = line[1:].strip()
+            rows[header] = []
+        elif header is not None and line.strip():
+            rows[header].append(line.strip())
+    out = {h: "".join(r) for h, r in rows.items()}
+    if len(out) < 2 or len({len(r) for r in out.values()}) != 1:
+        raise ValueError(f"{path} is not an aligned FASTA file (needs >= 2 rows of equal length)")
+    return out
+
+
+def _row_for(rows: dict[str, str], accession: str) -> str | None:
+    """Find the row whose header names ``accession`` as a token (``sp|ACC|NAME``, ``ACC desc``).
+
+    >>> _row_for({"sp|P12345|X_HUMAN": "M-A", "Q9 other": "MKA"}, "UniProtKB:P12345")
+    'M-A'
+    >>> _row_for({"P123456": "MA"}, "P12345") is None
+    True
+    """
+    acc = accession.split(":")[-1]
+    for header, row in rows.items():
+        tokens = header.replace("|", " ").replace(":", " ").split()
+        if acc in tokens:
+            return row
+    return None
+
+
+def _column_of(row: str, position: int) -> int | None:
+    """0-based alignment column holding residue ``position`` (1-based, ungapped) of ``row``."""
+    seen = 0
+    for col, ch in enumerate(row):
+        if ch not in "-.":
+            seen += 1
+            if seen == position:
+                return col
+    return None
+
+
+def _position_at(row: str, col: int) -> int | None:
+    """1-based ungapped position of ``row`` at alignment column ``col``, or None for a gap."""
+    if row[col] in "-.":
+        return None
+    return sum(1 for ch in row[: col + 1] if ch not in "-.")
+
+
+def check_alignment(
+    claim: dict, cache: SequenceCache, gene: str, term: str, repo_root: Path
+) -> ClaimCheck:
+    """Check that an archived alignment supports the claimed anchor-target correspondence."""
+    rel = claim["alignment_file"]
+    path = repo_root / rel
+
+    def fail(msg: str) -> ClaimCheck:
+        return ClaimCheck("ALIGNMENT", gene, term, f"{rel}: {msg}", ClaimOutcome.FAIL)
+
+    if not path.is_file():
+        return fail("file does not exist")
+    try:
+        rows = read_alignment(path)
+    except ValueError as exc:
+        return fail(str(exc))
+    anchor, target = claim.get("anchor") or {}, claim.get("target")
+    sides = [("anchor", anchor)] + ([("target", target)] if target else [])
+    found: dict[str, str] = {}
+    for label, spec in sides:
+        row = _row_for(rows, spec["accession"])
+        if row is None:
+            return fail(f"no row for {label} {spec['accession']}")
+        ungapped = "".join(ch for ch in row if ch not in "-.")
+        if ungapped != cache.get(spec["accession"]):
+            return fail(f"{label} row differs from the current sequence of {spec['accession']}")
+        found[label] = row
+    col = _column_of(found["anchor"], anchor["position"])
+    if col is None:
+        return fail(f"anchor position {anchor['position']} is beyond the anchor row")
+    if target is None:
+        target_row = next((r for h, r in rows.items() if r is not found["anchor"]), None)
+        return ClaimCheck(
+            "ALIGNMENT", gene, term,
+            f"{rel}: no target given; alignment column {col + 1} recorded",
+            ClaimOutcome.PASS if claim.get("claim_type") == "LOST" and target_row is not None
+            and target_row[col] in "-." else ClaimOutcome.UNRESOLVED,
+        )
+    tpos = _position_at(found["target"], col)
+    if tpos is None:
+        return fail(f"anchor position {anchor['position']} faces a gap in the target, "
+                    f"not target position {target['position']}")
+    if tpos != target["position"]:
+        return fail(f"anchor position {anchor['position']} faces target position {tpos}, "
+                    f"not the claimed {target['position']}")
+    return ClaimCheck("ALIGNMENT", gene, term,
+                      f"{rel}: anchor {anchor['position']} faces target {tpos} (column {col + 1})",
+                      ClaimOutcome.PASS)
+
+
 def check_claim(
     claim: dict,
     gene_accession: str,
@@ -145,8 +259,12 @@ def check_claim(
     term: str,
     cache: SequenceCache,
     family_sites: dict[str, set[int]] | None = None,
+    repo_root: Path | None = None,
 ) -> list[ClaimCheck]:
-    """Run every check for a single residue claim."""
+    """Run every check for a single residue claim.
+
+    ``repo_root`` resolves a claim's repository-relative ``alignment_file`` (default: cwd).
+    """
     results: list[ClaimCheck] = []
     anchor = claim.get("anchor") or {}
     target = claim.get("target")
@@ -239,6 +357,8 @@ def check_claim(
             results.append(
                 ClaimCheck("SITE_REF", gene, term,
                            f"anchor position matches site {site_ref}", ClaimOutcome.PASS))
+    if claim.get("alignment_file"):
+        results.append(check_alignment(claim, cache, gene, term, repo_root or Path.cwd()))
     return results
 
 
@@ -303,11 +423,19 @@ def main(argv: list[str] | None = None) -> int:
 
     counts = {o.value: 0 for o in ClaimOutcome}
     genes_with_claims = 0
+    msa_total = msa_unarchived = 0
     for path in paths:
         text = path.read_text()
         if "residue_claims" not in text:      # cheap skip; most reviews have none
             continue
         results = validate_gene_residue_claims(path, cache, family_sites)
+        doc = yaml.load(text, Loader=_Loader) or {}
+        for ann in doc.get("existing_annotations") or []:
+            pr = (ann.get("review") or {}).get("propagation_review") or {}
+            for claim in pr.get("residue_claims") or []:
+                if claim.get("method") == "MSA":
+                    msa_total += 1
+                    msa_unarchived += not claim.get("alignment_file")
         if results:
             genes_with_claims += 1
         for r in results:
@@ -318,6 +446,10 @@ def main(argv: list[str] | None = None) -> int:
     print(
         f"residue-claim validation over {genes_with_claims} gene review(s) with claims: "
         f"{counts['PASS']} pass, {counts['FAIL']} fail, {counts['UNRESOLVED']} unresolved"
+    )
+    print(
+        f"MSA-based claims without an archived alignment_file: {msa_unarchived} of {msa_total} "
+        "(new MSA claims should archive the alignment; see ResidueClaim.alignment_file)"
     )
     return 1 if counts["FAIL"] else 0
 
