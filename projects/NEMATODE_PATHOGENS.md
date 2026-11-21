@@ -73,14 +73,41 @@ literature before choosing review folders.
 Treat target biology, not drug class, as the module boundary. Candidate modules
 are the levamisole-sensitive nicotinic acetylcholine receptor, avermectin-
 sensitive glutamate-gated chloride channels, and beta-tubulin microtubules.
-Pathogen accessions need UniProt and literature resolution before fetching.
+The first anthelmintic draft is
+`modules/nematode_levamisole_sensitive_nachr.yaml`, centered on the C. elegans
+five-subunit L-AChR and the RIC-3/UNC-50/UNC-74 expression factors.
 
-- [ ] `worm` `unc-29` / P48181 - existing nAChR beta-type receptor subunit review
-- [ ] `worm` `lev-1` / Q27218 - fetch if the nAChR module proceeds
-- [ ] `worm` `unc-38` / Q23022 - fetch if the nAChR module proceeds
-- [ ] `worm` `unc-63` / Q9N587 - fetch if the nAChR module proceeds
+Levamisole-sensitive nicotinic acetylcholine receptor:
+
+- [x] `worm` `unc-29` / P48181 - existing nAChR beta-type receptor subunit review reused and cross-checked as the non-alpha anchor for the new L-AChR module
+- [ ] `worm` `lev-1` / Q27218 - fetch and review as the second non-alpha L-AChR pore subunit
+- [ ] `worm` `unc-38` / Q23022 - fetch and review as an alpha L-AChR pore subunit
+- [ ] `worm` `unc-63` / Q9N587 - fetch and review as an alpha L-AChR pore subunit
+- [ ] `worm` `lev-8` / Q93329 - fetch and review as the fifth C. elegans L-AChR pore subunit
+- [ ] `worm` `ric-3` / Q22472 - fetch and review as a receptor maturation/assembly ancillary factor
+- [ ] `worm` `unc-50` / Q10045 - fetch and review as an L-AChR trafficking ancillary factor
+- [ ] `worm` `unc-74` / Q9N4L6 - fetch and review as the thioredoxin-domain L-AChR ancillary factor
+
+Parasite L-AChR candidates to resolve before fetching: BRUMA A0A1P6C5A7,
+A0A4E9EUJ4, A0A4E9FKF9 and the short UniProt `Bma-acr-8.1` record A0A4E9EXN3;
+HAECO D6MYE9, D6MYF0, D6MYF1, D6MYF2, D6MYF3, D6MYF4, D6MYF5, D6MYF6,
+A0A7I4XYK7, A0A7I4Z1Z2, A0A7I4Z2R2, A0A7I4XVV4, A0A7I4XVC3, A9XX24,
+A0A7I4YXE5, A0A7I4YWD8, D2XI63, P92039, G0XFE0, G0XFE1, G0XFD9 and G0XFD8;
+ONCVO P54247 and the A0A8R1* PTHR18945 candidates, with the ACR-8-like member
+still unresolved from anonymous live UniProt labels; ASCSU A0A2I6TEN1,
+A0ACT4VCM3, A0ACT4VCM4, A0ACT4VCM5, A0ACT4VCM6, A0ACT4VCM7, F1KYN0,
+F1L123, F1L348, F1L897 and O96760. Resolve broad PTHR18945 Cys-loop
+membership, ACR-8 placement, cloned paralogs, truncated entries and gene-model
+duplicates before choosing review folders.
+
+Avermectin-sensitive glutamate-gated chloride channels:
+
 - [ ] `worm` `glc-1` / G5EBR3 - fetch if the GluCl module proceeds
 - [ ] `worm` `glc-2` / Q17328 - fetch if the GluCl module proceeds
+
+Beta-tubulin/benzimidazole target biology:
+
+- [ ] C. elegans beta-tubulins - decide whether the benzimidazole target is a multi-part microtubule module or a gene-family review lane before fetching
 
 ### 3. Secreted fatty-acid and retinol binding
 
@@ -144,6 +171,12 @@ the extracellular oxidant-detoxification boundary is clear.
 - [x] Move anthelmintic drug target systems ahead of the FAR,
   immune-modulator, and antioxidant lanes for the next module after cuticle
   collagen maturation
+- [x] Add a draft levamisole-sensitive nicotinic acetylcholine receptor module
+  with the five C. elegans pore subunits, RIC-3/UNC-50/UNC-74 ancillary
+  factors, and UniProt-resolved BRUMA, HAECO, ONCVO and ASCSU candidate lists
+- [x] Expand the L-AChR parasite queue with ACR-8 candidates after HAECO
+  reconstitution and resistance evidence showed parasite pore composition is not
+  a one-to-one LEV-8 projection
 
 # NOTES
 
@@ -173,6 +206,22 @@ the extracellular oxidant-detoxification boundary is clear.
   (`PTHR31418:SF7`), BRUMA CPI-2 to worm CPI-2 (`PTHR46186:SF2`), BRUMA MF1 to
   worm CHT-1 (`PTHR11177:SF400`), and BRUMA GP29 to worm GPX-3
   (`PTHR11592:SF88`).
+- HAECO L-AChR oocyte reconstitution identified Hco-ACR-8 as important for
+  selective levamisole sensitivity (PMID:21486278, *Br J Pharmacol* 2011), and
+  Hco-acr-8b truncation/resistance papers make ACR-8 a named
+  parasite-specific resolution lane rather than a simple C. elegans LEV-8
+  ortholog slot (PMID:21945142, *Mol Biochem Parasitol* 2011; PMID:24503202,
+  *Int J Parasitol* 2014). All three records are now cached in `publications/`.
+- UniProtKB live query receipt for ACR-8 candidates: exact-accession query
+  against release 2026_04, dated 2026-11-04, returned BRUMA A0A4E9EXN3
+  (`Bma-acr-8.1`; "Neurotransmitter-gated ion-channel ligand-binding
+  domain-containing protein"); HAECO A9XX24 and A0A7I4YXE5 ("Nicotinic
+  acetylcholine receptor 8"), A0A7I4YWD8 ("Nicotinic acetylcholine receptor
+  8"), and D2XI63 (`acr8`; "Nicotinic acetylcholine receptor alpha subunit
+  isoform b"); and ASCSU A0A2I6TEN1, A0ACT4VCM3, A0ACT4VCM4, A0ACT4VCM5,
+  A0ACT4VCM6 and A0ACT4VCM7 (all "Nicotinic acetylcholine receptor alpha
+  subunit 8", no gene name in UniProt). The ONCVO ACR-8 member remains to be
+  placed among anonymous PTHR18945 A0A8R1* records.
 - Added the first draft of `modules/nematode_cuticle_collagen_maturation.yaml`
   with three ordered processing steps: ER procollagen prolyl 4-hydroxylation,
   BLI-4-dependent N-terminal cleavage before secretion, and DPY-31-dependent
@@ -270,3 +319,11 @@ the extracellular oxidant-detoxification boundary is clear.
   beta-tubulin/benzimidazole as separate candidate modules, resolving parasite
   orthologs from UniProt/PANTHER before adding HAECO, BRUMA, ONCVO, ASCSU, or
   other accessions.
+- Added `modules/nematode_levamisole_sensitive_nachr.yaml` as the first
+  anthelmintic target module. The draft models the C. elegans
+  levamisole-sensitive AChR as a five-subunit UNC-29/LEV-1/UNC-38/UNC-63/LEV-8
+  acetylcholine-gated cation channel plus RIC-3, UNC-50 and UNC-74 ancillary
+  expression factors. The parasite accessions from BRUMA, HAECO, ONCVO and
+  ASCSU are listed as candidates to resolve rather than as asserted
+  one-to-one orthologs, because UniProt/PTHR18945 currently mixes L-AChR,
+  GluCl, GABA/glycine, MOD-1-like, ACR-16-like and monepantel-channel records.
