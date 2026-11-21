@@ -55,7 +55,7 @@ anchor, `BRUMA/dpy-31`, is in the same PANTHER subfamily as *C. elegans*
 - [x] `BRUMA` `dpy-31` / A8Q2D1 - cross-check existing review against the module
 - [x] `worm` `dpy-31` / P98060 - fetched and reviewed the C. elegans DPY-31 ortholog
 - [x] `HAECO` `dpy-31` / D5FM34 - fetched and reviewed the reviewed *H. contortus* DPY-31 ortholog
-- [ ] `BRUMA` `bma-dpy-18.1` / Q68VC1 - fetch and review a prolyl 4-hydroxylase alpha candidate
+- [x] `BRUMA` `bma-dpy-18.1` / Q68VC1 - fetched and reviewed the Bma-PHY-2 prolyl 4-hydroxylase alpha subunit
 - [ ] `BRUMA` `bma-dpy-18.2` / A0A1P6BZ71 - fetch and review the second prolyl 4-hydroxylase alpha candidate
 - [ ] `worm` `dpy-18` / Q10576 - fetch and review the C. elegans prolyl 4-hydroxylase alpha-1 ortholog
 - [ ] `worm` `phy-2` / Q20065 - fetch and review the C. elegans prolyl 4-hydroxylase alpha-2 ortholog
@@ -129,6 +129,8 @@ Pathogen accessions need UniProt and literature resolution before fetching.
 - [x] Cross-check the initialized `BRUMA` `far-1` review for the secreted
   filarial fatty-acid and retinol-binding protein Bm20
 - [x] Fetch and review the `worm` `far-1` P34382 same-subfamily ortholog
+- [x] Fetch and review the `BRUMA` `bma-dpy-18.1` Q68VC1 prolyl
+  4-hydroxylase alpha subunit
 
 # NOTES
 
@@ -198,3 +200,12 @@ Pathogen accessions need UniProt and literature resolution before fetching.
   assays in PMID:12502713. No C. elegans biological-process term was proposed:
   native FAR-1 cargoes and far-1 loss-of-function phenotypes remain explicit
   open questions.
+- Added `genes/BRUMA/bma-dpy-18.1` for Q68VC1, the Bma-PHY-2 collagen
+  prolyl 4-hydroxylase alpha subunit. The UniProt symbol resolver initially
+  selected the shorter duplicate A0A4E9F4D5 for the same WormBase gene, so the
+  review was re-fetched with `--uniprot-id Q68VC1`; the curated review keeps
+  the core ER-lumen procollagen-proline 4-dioxygenase activity, adds the
+  directly supported native procollagen-proline 4-dioxygenase complex
+  membership, and treats broad cofactor/oxygenase terms and generic embryonic
+  or growth process transfers as accepted, refined, or over-annotated
+  according to the Q68VC1 evidence.
