@@ -4,7 +4,7 @@ description: "Modules and gene reviews for parasitic nematode cuticle, host-inte
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [BRUMA, HAECO, ONCVO, ASCSU, STRRB, STRER, TOXCA, TRITR, STECR, 9BILA, worm]
-genes: [dpy-31, bma-dpy-18.1, bma-dpy-18.2, far-1, cpi-2, gp29, mf1]
+genes: [dpy-31, bma-dpy-18.1, bma-dpy-18.2, far-1, lev-1, cpi-2, gp29, mf1]
 index_group: OTHER_ORGANISM
 ---
 
@@ -80,7 +80,7 @@ five-subunit L-AChR and the RIC-3/UNC-50/UNC-74 expression factors.
 Levamisole-sensitive nicotinic acetylcholine receptor:
 
 - [x] `worm` `unc-29` / P48181 - existing nAChR beta-type receptor subunit review reused and cross-checked as the non-alpha anchor for the new L-AChR module
-- [ ] `worm` `lev-1` / Q27218 - fetch and review as the second non-alpha L-AChR pore subunit
+- [x] `worm` `lev-1` / Q27218 - fetched and reviewed as the second non-alpha L-AChR pore subunit
 - [ ] `worm` `unc-38` / Q23022 - fetch and review as an alpha L-AChR pore subunit
 - [ ] `worm` `unc-63` / Q9N587 - fetch and review as an alpha L-AChR pore subunit
 - [ ] `worm` `lev-8` / Q93329 - fetch and review as the fifth C. elegans L-AChR pore subunit
@@ -177,6 +177,8 @@ the extracellular oxidant-detoxification boundary is clear.
 - [x] Expand the L-AChR parasite queue with ACR-8 candidates after HAECO
   reconstitution and resistance evidence showed parasite pore composition is not
   a one-to-one LEV-8 projection
+- [x] Fetch and review the `worm` `lev-1` Q27218 non-alpha L-AChR
+  pore subunit
 
 # NOTES
 
@@ -222,6 +224,12 @@ the extracellular oxidant-detoxification boundary is clear.
   A0ACT4VCM6 and A0ACT4VCM7 (all "Nicotinic acetylcholine receptor alpha
   subunit 8", no gene name in UniProt). The ONCVO ACR-8 member remains to be
   placed among anonymous PTHR18945 A0A8R1* records.
+- Added `genes/worm/lev-1` and curated LEV-1 as the second non-alpha pore
+  subunit of the five-subunit C. elegans L-AChR. The review adds the missing
+  neuromuscular synaptic transmission row, refines generic Cys-loop receptor,
+  channel, transport, membrane, and membrane-potential rows in parallel with
+  `unc-29`, and keeps calcium flux, neuronal localization, locomotion, and
+  egg-laying behavior as non-core contexts.
 - Added the first draft of `modules/nematode_cuticle_collagen_maturation.yaml`
   with three ordered processing steps: ER procollagen prolyl 4-hydroxylation,
   BLI-4-dependent N-terminal cleavage before secretion, and DPY-31-dependent
