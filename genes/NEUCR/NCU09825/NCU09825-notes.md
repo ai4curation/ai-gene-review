@@ -5,8 +5,9 @@
 - NCU09825 is the *Neurospora crassa* `PTHR31571:SF2` RTT109 ortholog. The
   UniProt entry lists the same GO-Central IBA trio as the PANTHER
   `PTN001586545` node: nucleus, H3K56 acetyltransferase activity, and DNA
-  damage response. The local QuickGO fetch returned an empty GOA TSV, so the
-  review records those as `NEW` PAINT-backed rows.
+  damage response. An initial local QuickGO fetch returned an empty GOA TSV,
+  but a refreshed QuickGO snapshot recovered those PAINT rows plus newer
+  automated UniProt/Rhea/InterPro parent rows.
 - PMID:24554705 directly shows that the rtt109 knockout loses H3K56ac and is
   defective in quelling / qiRNA production tied to homologous recombination.
 - PMID:42832562 is a newer 2026 *Neurospora* paper showing that RTT109 has a
