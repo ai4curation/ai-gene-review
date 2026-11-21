@@ -94,7 +94,7 @@ Upheld rows by ground: loss or divergence in the target clade 359, misplaced IBD
 bad seed 73, lineage-inappropriate term 38. Each names a PAINT change and a node.
 
 Changed rows by new action: `MARK_AS_OVER_ANNOTATED` 50, `MODIFY` 12,
-`KEEP_AS_NON_CORE` 10, `UNDECIDED` 5. They are in 72 gene reviews. A further 83 rows
+`KEEP_AS_NON_CORE` 10, `UNDECIDED` 5. They are in 72 gene reviews. A further 78 rows
 kept REMOVE but had the written reason corrected, because it rested on a non-ground or
 misstated the tree.
 
