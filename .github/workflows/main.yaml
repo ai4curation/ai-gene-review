@@ -68,6 +68,27 @@ jobs:
           list-files: shell
           filters: .github/ci-path-filters.yaml
 
+      # Advisory only: content PRs should not also edit shared status pages or
+      # rendered Pages output, because those churny files repeatedly eject
+      # otherwise-independent PRs from the merge queue.
+      - name: Warn about shared files
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -uo pipefail
+          set +e
+          gh api --paginate \
+            "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
+            --jq '.[].filename' \
+            | python3 .github/scripts/warn_shared_content_paths.py
+          statuses=("${PIPESTATUS[@]}")
+          set -e
+          if [ "${statuses[0]}" -ne 0 ] || [ "${statuses[1]}" -ne 0 ]; then
+            echo "::warning title=Shared-file warning skipped::Could not inspect PR files or run the advisory shared-file checker."
+          fi
+          exit 0
+
       # https://github.com/astral-sh/setup-uv
       - name: Install uv
         uses: astral-sh/setup-uv@v6
@@ -494,12 +515,13 @@ jobs:
             tests/test_apply_cron_profile.py tests/test_auto_merge_ready_prs.py \
             tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py \
             tests/test_sequence_cache_persistence.py tests/test_merge_group_ci.py tests/test_merge_queue.py \
-            tests/test_reject_added_review_html.py -q
+            tests/test_reject_added_review_html.py tests/test_warn_shared_content_paths.py -q
           uv run ruff check --no-force-exclude scripts/auto_merge_ready_prs.py \
             scripts/retry_failed_reviews.py tests/test_auto_merge_ready_prs.py \
             tests/test_pr_shepherd_workflow.py tests/test_retry_failed_reviews.py \
             .github/scripts/sequence_cache_manifest.py tests/test_sequence_cache_persistence.py \
-            tests/test_merge_group_ci.py tests/test_merge_queue.py
+            .github/scripts/warn_shared_content_paths.py tests/test_merge_group_ci.py \
+            tests/test_merge_queue.py tests/test_warn_shared_content_paths.py
           just test-js
 
   # Keep the branch-protection context unchanged. An unconditional gate is needed:
