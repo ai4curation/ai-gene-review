@@ -594,9 +594,36 @@ lineage-specific unless directly observed.
 
 ---
 
+## Family 26: Mon1/SAND Rab7 GEF Subunits
+
+`PTHR13027` contains Mon1/SAND-family subunits of the Mon1-Ccz1 Rab7/Ypt7
+guanine-nucleotide exchange factor. PAINT places the contributed GEF activity
+at the eukaryotic `PANTHER:PTN000315021` node, Mon1-Ccz1 complex membership at
+the opisthokont `PANTHER:PTN000315023` node, and fungal-type vacuole membrane
+plus protein targeting to vacuole at fungal `PANTHER:PTN000989606`.
+
+- [x] `yeast/MON1` - *S. cerevisiae* Mon1-Ccz1 subunit and seed for the fungal
+  vacuolar rows; aligned before this tranche
+- [x] `SCHPO/mon1` - fission-yeast Mon1 ortholog with PomBase
+  orthology-supported complex membership
+- [x] `CANAL/MON1` - CGD *Candida albicans* Mon1 ortholog
+- [x] `NEUCR/apg-13` - *Neurospora crassa* Mon1 ortholog
+- [x] `ASPFU/mon1` - *Aspergillus fumigatus* Mon1 ortholog
+- [x] `CANGA/MON1` - CGD *Candida glabrata* Mon1 ortholog with inferred GOA
+  rows and current CGD no-direct-data placeholders; reviewed in this branch
+
+---
+
 # NOTES
 
 ## 2026-11-21
+
+- Added the compact `PTHR13027` Mon1/SAND family after filling the missing
+  `CANGA/MON1` review and writing the family sidecar. The eukaryotic GEF,
+  opisthokont Mon1-Ccz1 complex, and fungal vacuole-delivery PAINT nodes match
+  the reviewed fungal genes; the current S. pombe IRD against Mon1-Ccz1 complex
+  membership is contradicted by PomBase's retained mon1 orthology transfer and
+  is recorded for removal.
 
 - Added the compact `PTHR44068` Erg6/SMT family after checking the existing
   *S. cerevisiae*, *S. pombe*, *C. albicans*, *N. crassa*, and
