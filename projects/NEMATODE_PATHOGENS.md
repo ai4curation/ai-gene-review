@@ -75,7 +75,7 @@ still to be decided. If FAR-1 remains a single binding role rather than a
 multi-part process, keep it as gene/family curation until it can be joined to a
 broader host lipid-scavenging module.
 
-- [ ] `BRUMA` `far-1` / Q93142 - cross-check existing review
+- [x] `BRUMA` `far-1` / Q93142 - cross-check existing review
 - [ ] `worm` `far-1` / P34382 - fetch and review the same PANTHER subfamily exemplar
 - [ ] `worm` `far-2` / P34383 - fetch only if needed for paralog-specific comparison
 
@@ -123,6 +123,12 @@ Pathogen accessions need UniProt and literature resolution before fetching.
 - [x] Create the `worm` `dpy-31` review for the C. elegans DPY-31 ortholog
 - [x] Create the `HAECO` `dpy-31` review for the H. contortus DPY-31 ortholog
 - [ ] Add or cross-check the remaining first-wave cuticle member gene reviews
+
+## 2026-11-21
+
+- [x] Cross-check the initialized `BRUMA` `far-1` review for the secreted
+  filarial fatty-acid and retinol-binding protein Bm20
+- [ ] Fetch and review the `worm` `far-1` P34382 same-subfamily ortholog
 
 # NOTES
 
@@ -175,3 +181,12 @@ Pathogen accessions need UniProt and literature resolution before fetching.
   reporting H. contortus dpy-31 rescue of a C. elegans dpy-31 mutant and
   recombinant SQT-3 cleavage, and leaves parasite-native H. contortus substrates
   and in-species loss-of-function phenotypes as explicit biology gaps.
+
+## 2026-11-21
+
+- Cross-checked `genes/BRUMA/far-1` as the Q93142/Bm20 filarial FAR protein in
+  PANTHER `PTHR31418:SF7`. The existing direct fatty-acid and retinol-binding
+  rows were sound; the InterPro2GO `lipid binding` parent is now treated as a
+  true-but-too-general row beside the direct ligand annotations, and the review
+  records an explicit remaining gap around native in vivo cargoes and far-1
+  loss-of-function phenotypes in *B. malayi*.
