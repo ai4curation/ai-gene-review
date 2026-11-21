@@ -617,6 +617,30 @@ terms already sit at the eumetazoan `PANTHER:PTN000999743` node.
 
 ---
 
+## Family 27: MON1/SAND Ypt7 GEF Subunits
+
+`PTHR13027` contains MON1/SAND-family subunits of the `MON1-CCZ1` Ypt7
+guanine-nucleotide exchange factor. PAINT places the contributed GEF activity
+at the eukaryotic `PANTHER:PTN000315021` node, `MON1-CCZ1` complex membership at
+the opisthokont `PANTHER:PTN000315023` node, and fungal-type vacuole membrane
+plus protein targeting to vacuole at fungal `PANTHER:PTN000989606`.
+
+- [x] `yeast/MON1` - *S. cerevisiae* <gene species="yeast" symbol="MON1">Mon1</gene>
+  subunit and seed for the fungal vacuolar rows; aligned before this tranche
+- [x] `SCHPO/mon1` - fission-yeast <gene species="SCHPO" symbol="mon1">Mon1</gene>
+  ortholog with PomBase
+  orthology-supported complex membership
+- [x] `CANAL/MON1` - CGD *Candida albicans* <gene species="CANAL" symbol="MON1">MON1</gene>
+  ortholog
+- [x] `NEUCR/apg-13` - *Neurospora crassa* PTHR13027 ortholog
+- [x] `ASPFU/mon1` - *Aspergillus fumigatus* <gene species="ASPFU" symbol="mon1">mon1</gene>
+  ortholog
+- [x] `CANGA/MON1` - CGD *Candida glabrata* <gene species="CANGA" symbol="MON1">MON1</gene>
+  ortholog with inferred GOA rows and current CGD no-direct-data placeholders;
+  reviewed in this branch
+
+---
+
 # NOTES
 
 ## 2026-11-21
@@ -627,6 +651,14 @@ terms already sit at the eumetazoan `PANTHER:PTN000999743` node.
   broad vesicle-mediated-transport calls are retained, while the opisthokont
   calcium-channel-activity node should be moved down to the metazoan branch
   before it propagates to fungal `TVP18` proteins.
+
+- Added the compact `PTHR13027` MON1/SAND family after filling the missing
+  `CANGA/MON1` review and writing the family sidecar. The eukaryotic GEF,
+  opisthokont `MON1-CCZ1` complex, and fungal vacuole-delivery PAINT nodes match
+  the reviewed fungal genes; the current S. pombe IRD blocks `MON1-CCZ1` complex
+  membership even though the same PAINT slice still propagates eukaryotic
+  GO:0005085 GEF activity to S. pombe <gene species="SCHPO" symbol="mon1">mon1</gene>,
+  leaving an internally inconsistent loss call recorded for removal.
 
 - Added the compact `PTHR44068` Erg6/SMT family after checking the existing
   *S. cerevisiae*, *S. pombe*, *C. albicans*, *N. crassa*, and
