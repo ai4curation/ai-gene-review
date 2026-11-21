@@ -69,7 +69,7 @@ PantherDB inventory gives usable subfamily assignments.
     core family work was self-contained in gene and PANTHER reviews.
 
 - [ ] **PTHR10030, alpha-L-fucosidase family**
-  - STATUS: in progress on FUCA2.
+  - STATUS: merged in PR #6567.
   - Seed: `FUCA2` / UniProtKB:Q9BTY2, reviewed Swiss-Prot, unreviewed locally,
     with 35 GOA rows and a compact PANTHER family containing one reviewed human
     paralog.
@@ -87,10 +87,33 @@ PantherDB inventory gives usable subfamily assignments.
     excludes upstream free-fucose release by FUCA1/FUCA2, and `gocams/index.tsv`
     has no FUCA2 production model.
 
+- [ ] **PTHR24348, Atg1/ULK kinase family**
+  - STATUS: ready to open as the next family PR.
+  - Seed: `ULK2` / UniProtKB:Q8IYT8, reviewed Swiss-Prot, unreviewed locally,
+    with a compact ULK1/ULK2/ULK3 human family that exposes canonical Atg1
+    autophagy propagation onto the divergent ULK3 Hedgehog branch.
+  - Human family members in this checkout:
+    - [x] `ULK1` / UniProtKB:O75385: already COMPLETE; cross-checked as the
+      canonical ULK1/Atg1 autophagy-initiation kinase.
+    - [x] `ULK2` / UniProtKB:Q8IYT8: new review with conserved Atg1/ULK
+      autophagy initiation retained.
+    - [x] `ULK3` / UniProtKB:Q6PHR2: new review with direct Hedgehog/GLI
+      kinase evidence retained and canonical ULK1/ULK2 autophagy rows pruned.
+  - PANTHER: `interpro/panther/PTHR24348/PTHR24348-review.yaml` records the
+    family-wide serine/threonine kinase and cytoplasm gains, the Atg1/ULK
+    autophagy PAINT rows that should be pruned away from human ULK3, and the
+    ULK3-specific Hedgehog signaling branch.
+  - Module/GO-CAM split: the existing
+    `modules/autophagosome_core_biogenesis.yaml` module now lists ULK2 beside
+    ULK1 as a human Atg1/ULK representative, and the production Smoothened/ULK3
+    GO-CAM `gomodel:696022cd00001523` has a COMPLETE review that flags the
+    unsupported CDK1 edge in the ULK3-to-GLI2 branch.
+
 - [ ] Next human Swiss-Prot seed family
-  - STATUS: queued after the PTHR10030 branch validates and is ready for PR.
-  - NOTES: pick another small, biologically characterized, cached PANTHER family
-    from the missing-accession table while this family PR waits for review.
+  - STATUS: queued after the PTHR24348 branch opens for review.
+  - NOTES: keep selecting small, biologically characterized, cached PANTHER
+    families from the missing-accession table while the ULK branch waits for
+    review.
 
 # NOTES
 
@@ -100,9 +123,9 @@ PantherDB inventory gives usable subfamily assignments.
   `/srv/home/cmungall/orca/workspaces/ai-gene-review/*` directories occupied
   about 62 GB, and this checkout occupied about 7 GB. The worktree is a
   registered Orca worktree at
-  `/srv/home/cmungall/orca/workspaces/ai-gene-review/aigr-ros-human-families`,
+  `/srv/home/cmungall/orca/workspaces/ai-gene-review/aigr-ros-human-families-3`,
   with Git metadata in
-  `/srv/home/cmungall/repos/ai-gene-review/.git/worktrees/aigr-ros-human-families`.
+  `/srv/home/cmungall/repos/ai-gene-review/.git/worktrees/aigr-ros-human-families-3`.
 - The CCS/SOD3 seed exposed a QuickGO fetch regression: requesting
   `includeFields=taxonName` could return empty result sets or time out. The local
   fetcher now omits that display-only field and backfills `TAXON NAME` from the
@@ -118,3 +141,11 @@ PantherDB inventory gives usable subfamily assignments.
   disconnected nuclear ATOX1 regulatory branch called out, and a full
   `just validate-families` pass leaves `PTHR10003` conflict-free against the
   reviewed gene corpus.
+- `PTHR10030` was selected next as a two-human-member alpha-L-fucosidase family:
+  FUCA1 is a lysosomal paralog with an existing local DRAFT, while FUCA2 lacked
+  a review and exercises the same root alpha-L-fucosidase PAINT gains without
+  requiring a family module or GO-CAM split. PR #6567 merged.
+- `PTHR24348` was selected as a three-human-member Atg1/ULK kinase family:
+  ULK2 lacked a local review, while ULK1 already anchored the canonical
+  autophagy-initiation branch and ULK3 gave the family a useful PAINT pruning
+  case for divergent Hedgehog-pathway Fused-family kinases.
