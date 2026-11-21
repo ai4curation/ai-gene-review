@@ -98,6 +98,34 @@ Changed rows by new action: `MARK_AS_OVER_ANNOTATED` 50, `MODIFY` 12,
 kept REMOVE but had the written reason corrected, because it rested on a non-ground or
 misstated the tree.
 
+### Removals PAINT has since made itself
+
+`upstream_outcomes.py` replays each row's propagation in every dated PAINT snapshot of
+the pinned PANTHER release (11 snapshots, 2024-09-23 to 2026-08-28) and, for rows PAINT
+has dropped, finds in git history when the review first said REMOVE. It writes
+`upstream_outcomes.tsv`. Re-running it after a new snapshot scores the rows still
+outstanding, so the 658 upheld removals are open predictions against future releases.
+
+| Outcome | Rows |
+|---|---:|
+| `PREDICTED`: the review said REMOVE while PAINT still carried the term | 5 |
+| `ORDER_UNDETERMINED`: the review fell between two snapshots | 8 |
+| `AGREED_AFTER`: PAINT had already dropped it; the review used a GOA file that still listed the row | 30 |
+| `NOT_REPLAYABLE`: the gene is not a leaf of a readable tree | 8 |
+| `STILL_PROPAGATED` | 737 |
+
+The five predictions are SCHPO `cts2` chitinase activity and human CASP14 positive
+regulation of neuron apoptotic process (PAINT added a loss), yeast ACL4 mitochondrion
+targeting sequence binding and SIR3 mitotic DNA replication checkpoint signaling
+(PAINT withdrew the IBD), and yeast LPL1 monoacylglycerol lipase activity (PAINT moved
+the IBD off the lineage). `AGREED_AFTER` rows are independent agreement, not
+prediction: the reviewer could not see PAINT's change. Three GID1 rows are absent from
+the snapshot's leaf file although the replay still propagates them; they are counted as
+`STILL_PROPAGATED` here and as withdrawn in the batch record, and need a look.
+
+Snapshots are months apart, so only a loss record, which carries its own date, pins the
+order to the day.
+
 ### What the spurious removals had in common
 
 `reason_scan.py` flags reasons by phrase and by where the seeds sit; `reason_scan.tsv`
