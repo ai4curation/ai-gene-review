@@ -42,6 +42,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
 | `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | Ascomycota WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
 | `PTHR10969` MICROTUBULE-ASSOCIATED PROTEINS 1A/1B LIGHT CHAIN 3-RELATED | eukaryotic ATG8 node and fungal vacuole-membrane node | `ATG8`/`atg8`/`apg-6` |
+| `PTHR11227` WIPI/PROPPIN phosphoinositide adaptors | root lipid-binding/adaptor nodes and fungal vacuole-membrane node | `ATG18`/`atg18`/`apg-10` |
 | `PTHR10806` SIGNAL PEPTIDASE COMPLEX CATALYTIC SUBUNIT SEC11 | PTHR10806 root peptidase node and eukaryotic Sec11/SPC node | `SEC11`/`sec11`/`SEC11`/`sec11` |
 | `PTHR11671` V-TYPE ATP SYNTHASE SUBUNIT D | fungal V-ATPase subunit D node | `VMA8`/`vma8`/`VMA8`/`vma-8` |
 | `PTHR43607` V-TYPE PROTON ATPASE CATALYTIC SUBUNIT A | conserved A-subunit and fungal vacuole-membrane nodes | `VMA1`/`vma1`/`TFP1`/`vma-1` |
@@ -686,11 +687,7 @@ separate MSL-complex placement and an IRD blocking NuA4 complex inheritance.
 - [x] `EMENI/eaf3` - *Aspergillus nidulans* Eaf3-family chromatin subunit;
   aligned before this family review
 
----
-
-# NOTES
-
-## Family 15: WIPI/PROPPIN Atg18 Phosphoinositide Adaptors
+## Family 30: WIPI/PROPPIN Atg18 Phosphoinositide Adaptors
 
 `PTHR11227` contains the eukaryotic WIPI/PROPPIN beta-propeller
 phosphoinositide-binding family. The compact fungal Atg18 tranche keeps
@@ -712,6 +709,10 @@ paralog.
 - [ ] Review the sibling fungal `ATG21` and `HSV2` PROPPIN branches
   separately; their Cvt/Atg8-recruitment roles should not be collapsed
   into the Atg18 branch.
+
+---
+
+# NOTES
 
 ## 2026-11-21
 
