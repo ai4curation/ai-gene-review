@@ -356,7 +356,7 @@ the extracellular oxidant-detoxification boundary is clear.
   continues through anthelmintic drug targets.
 - Added `genes/worm/lev-8` for Q93329, the fifth C. elegans L-AChR pore
   subunit. The review anchors LEV-8 to the native UNC-29/UNC-38/UNC-63/LEV-8/LEV-1
-  receptor purified by Culetto et al. and the Boulin et al. five-subunit oocyte
+  receptor purified by Gottschalk et al. and the Boulin et al. five-subunit oocyte
   reconstitution, refines broad Cys-loop receptor, channel, transport and
   membrane-potential rows to the L-AChR functions, and records that LEV-8 is
   L-AChR-specific rather than an ACR-2R shared subunit like UNC-38 and UNC-63.
