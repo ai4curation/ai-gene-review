@@ -166,6 +166,15 @@ Three further groups of values are easy to confuse:
   upstream of any gene. Use `INTERPRO` for the InterPro2GO mappings behind
   `GO_REF:0000002` and for signature descriptions, and `PANTHER` for a family or
   ancestral-node GO association propagated by TreeGrafter (`GO_REF:0000118`).
+  An `INTERPRO` defect's `record:` is the signature, written `InterPro:IPR006108`
+  and joined with `|` for several, as GOA writes WITH/FROM:
+  `InterPro:IPR006108|InterPro:IPR006176`. Take the ids from the GOA row's own
+  WITH/FROM for the faulted term, keeping those the explanation also names. That
+  intersection matters: an explanation often names a further signature as the one
+  that should be *excluded* from the mapping (IPR026578 for the L-carnitine
+  dehydrogenases), and that signature is not the defective record. Without
+  `record:` the report falls back to the GAF-row tuple, heading an InterPro
+  defect with a row InterPro never wrote.
 - **`INTERPRO` is not `GOA_EBI`.** Ask what the fix changes. The *content* of a
   mapping - its GO term, its qualifier, the signatures it covers - or the
   signature's own description is `INTERPRO`, and stays `INTERPRO` however the
@@ -181,14 +190,15 @@ Three further groups of values are easy to confuse:
   to the pipeline - also GOA's, and also not the mapping's content.) This split
   is easy to reopen. It was closed corpus-wide in #6027, and reopened twice
   while that PR waited to merge, in reviews that had carried no defects at all.
-  As of `485113c854`: `ECOLI/pssA` and `PSEPK/pssA` each file two `GOA_EBI`
-  defects asking that the IPR016270 PGS1 mapping be suppressed for the type-I
-  PssA members - that is mapping scope, so `INTERPRO` - and none of the four
-  names the mapping in `record:`. The same shape sits on IPR006327, filed
-  `INTERPRO` with a `record:` in `XANCP/fruA` but `GOA_EBI` with none in
-  `RHOCA/fruA` and `AZOBR/fruA1`, each of which also carries a correctly-filed
-  `INTERPRO` defect on that very mapping. So check the filing whenever a
-  defect's fix is a mapping, whatever the row's `assigned_by` says.
+  The worked examples this paragraph used to carry - the IPR016270 PGS1 mapping
+  in `ECOLI/pssA` and `PSEPK/pssA`, and IPR006327 across `XANCP/fruA`,
+  `RHOCA/fruA` and `AZOBR/fruA1` - were pinned to commit `485113c854`, where
+  they were filed `GOA_EBI` and named no mapping in `record:`. All of them are
+  now filed `INTERPRO` and carry one, so the examples are gone rather than
+  rewritten: a passage that describes the corpus goes stale the moment the
+  corpus moves, and these had. The rule they illustrated stands on its own:
+  check the filing whenever a defect's fix is a mapping, whatever the row's
+  `assigned_by` says.
 - **`PANTHER` is not `GO_CENTRAL`.** `GO_CENTRAL` is PAINT's own IBD/IBA
   curation. A term can sit on a PANTHER node without PAINT ever asserting it,
   and the two are fixed in different places; a gene can carry rows from both.
