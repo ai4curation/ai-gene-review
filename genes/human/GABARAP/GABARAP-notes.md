@@ -16,3 +16,15 @@ installed). Review based on cached publications and the UniProt record.
 - Core: PE binding (autophagosome maturation/assembly/mitophagy); protein sequestering activity (lysosome biogenesis); GABA receptor binding (neuronal trafficking).
 - Death-domain receptor apoptosis (DDX47 co-overexpression) and chemical synaptic transmission: MARK_AS_OVER_ANNOTATED.
 - Mouse-derived locations (smooth ER, sperm midpiece, axoneme, Golgi, plasma membrane, lysosome) kept as non-core.
+
+## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
+
+- Lysosome (GO:0005764) IEA row: Ensembl projection (GO_REF:0000107) of the MGI IDA on mouse
+  Gabarap (Q9DCD6) from PMID:11146101 (abstract-only; abstract reports punctate structures only, no
+  lysosome). Donor unreadable, so alone UNDECIDED; rescued for the root by readable human evidence in
+  PMID:34597140 (full text cached): CASM conjugates ATG8s to LAMP1-positive single-membrane
+  lysosomes, and GABARAP sequesters FLCN-FNIP there (confirmed on TMEM192 immuno-isolated lysosomes)
+  to activate TFEB. Kept KEEP_AS_NON_CORE as a regulated functional pool, distinct from autophagic
+  delivery of GABARAP for degradation (which alone would not be a location). LAMP1 images show LC3B
+  and GABARAPL1 rather than GABARAP; recruitment is stimulus-dependent, so no GO:0098574 row.
+  Autophagosome rows out of scope.
