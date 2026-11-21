@@ -253,8 +253,9 @@ plastids come later.
    isoform bullets apply to the Golgi unchanged; these are the Golgi-specific
    points.
    - **A Golgi claim needs a Golgi line.** That is a Golgi marker (GM130/GOLGA2,
-     GRASP65, giantin/GOLGB1, TGN46, golgin-97, mannosidase II, p58, beta-COP
-     with a Golgi counterpart) or brefeldin A dispersal of the protein itself.
+     GRASP65, giantin/GOLGB1, TGN46, golgin-97, mannosidase II, or p58 or
+     beta-COP with a Golgi counterpart, since neither separates the ERGIC from
+     the cis-Golgi on its own) or brefeldin A dispersal of the protein itself.
      Immuno-EM ultrastructure counts without a marker (KIFAP3). "Perinuclear",
      "juxtanuclear" or "resembling the Golgi" alone is not the Golgi, and
      brefeldin A sensitivity of a coat shows ARF-dependent binding, not Golgi
@@ -269,7 +270,7 @@ plastids come later.
      with direct evidence on the gene or the endogenous protein in its native
      cell (SUN5); a soluble cytosolic protein has no transit pool, so marker
      data must decide (SYN1). Acting on a Golgi substrate is not a Golgi
-     location (ERK2 and GRASP55).
+     location (MAPK1, ERK2, acting on GORASP2, GRASP55).
    - **Recruited Golgi proteins** (golgins, coats, adaptors, ARF and RAB
      regulators, motors) stay at the root, core only when the activity is
      shown at the Golgi (BICD2, TBC1D14). Markers that span cis, medial and
@@ -329,8 +330,9 @@ plastids come later.
      re-read when the paper cannot be.
    - **`reference_review.correctness`** judges whether the identifier
      resolves to the intended paper: an abstract-only paper whose organelle
-     content cannot be read is `VERIFIED`, with the unreadability in
-     `review_notes`.
+     content cannot be read is `VERIFIED`, with `full_text_unavailable: true`
+     on the reference and the unreadability in `review_notes`, so the rows
+     waiting on a reading can be found by query.
    - **Record what the source got wrong as structured `source_defects`**, not
      prose, with `CHECK` unless the paper was read (CLAUDE.md, wrong gene and
      wrong reference). Fix the attribution before the qualifier.
