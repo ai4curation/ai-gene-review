@@ -96,3 +96,12 @@
   SLC26A2/A6/A7). Pendrin is in that clade but oxalate transport is not among its experimentally
   characterized substrates (Cl/I/HCO3/formate). No target-specific disproof as for sulfate →
   KEEP_AS_NON_CORE (respect IBA node placement; not a core pendrin activity).
+
+## 2026-11-21 correction to the sulfate tree reading (IBA REMOVE re-review)
+
+The statement above that the Cl/HCO3 exchanger branch PTN000929177 lost sulfate cargo is too
+broad. SLC26A2, SLC26A6, SLC26A7 and SLC26A8 are seeds of the sulfate IBDs (PTN000929279,
+PTN000212046) and sit with pendrin in the vertebrate SLC26 radiation PTN002273826. The loss
+is specific to the pendrin clade PTN002624472 (26 leaves, vertebrate SLC26A4 orthologs),
+supported by [PMID:10192399 "chloride and iodide, but not sulfate"]. The review rows were
+reworded; the REMOVE actions stand.
