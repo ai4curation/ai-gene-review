@@ -594,23 +594,27 @@ lineage-specific unless directly observed.
 
 ---
 
-## Family 26: Mon1/SAND Rab7 GEF Subunits
+## Family 26: MON1/SAND Ypt7 GEF Subunits
 
-`PTHR13027` contains Mon1/SAND-family subunits of the Mon1-Ccz1 Rab7/Ypt7
+`PTHR13027` contains MON1/SAND-family subunits of the `MON1-CCZ1` Ypt7
 guanine-nucleotide exchange factor. PAINT places the contributed GEF activity
-at the eukaryotic `PANTHER:PTN000315021` node, Mon1-Ccz1 complex membership at
+at the eukaryotic `PANTHER:PTN000315021` node, `MON1-CCZ1` complex membership at
 the opisthokont `PANTHER:PTN000315023` node, and fungal-type vacuole membrane
 plus protein targeting to vacuole at fungal `PANTHER:PTN000989606`.
 
-- [x] `yeast/MON1` - *S. cerevisiae* Mon1-Ccz1 subunit and seed for the fungal
-  vacuolar rows; aligned before this tranche
-- [x] `SCHPO/mon1` - fission-yeast Mon1 ortholog with PomBase
+- [x] `yeast/MON1` - *S. cerevisiae* <gene species="yeast" symbol="MON1">Mon1</gene>
+  subunit and seed for the fungal vacuolar rows; aligned before this tranche
+- [x] `SCHPO/mon1` - fission-yeast <gene species="SCHPO" symbol="mon1">Mon1</gene>
+  ortholog with PomBase
   orthology-supported complex membership
-- [x] `CANAL/MON1` - CGD *Candida albicans* Mon1 ortholog
-- [x] `NEUCR/apg-13` - *Neurospora crassa* Mon1 ortholog
-- [x] `ASPFU/mon1` - *Aspergillus fumigatus* Mon1 ortholog
-- [x] `CANGA/MON1` - CGD *Candida glabrata* Mon1 ortholog with inferred GOA
-  rows and current CGD no-direct-data placeholders; reviewed in this branch
+- [x] `CANAL/MON1` - CGD *Candida albicans* <gene species="CANAL" symbol="MON1">MON1</gene>
+  ortholog
+- [x] `NEUCR/apg-13` - *Neurospora crassa* PTHR13027 ortholog
+- [x] `ASPFU/mon1` - *Aspergillus fumigatus* <gene species="ASPFU" symbol="mon1">mon1</gene>
+  ortholog
+- [x] `CANGA/MON1` - CGD *Candida glabrata* <gene species="CANGA" symbol="MON1">MON1</gene>
+  ortholog with inferred GOA rows and current CGD no-direct-data placeholders;
+  reviewed in this branch
 
 ---
 
@@ -618,13 +622,13 @@ plus protein targeting to vacuole at fungal `PANTHER:PTN000989606`.
 
 ## 2026-11-21
 
-- Added the compact `PTHR13027` Mon1/SAND family after filling the missing
+- Added the compact `PTHR13027` MON1/SAND family after filling the missing
   `CANGA/MON1` review and writing the family sidecar. The eukaryotic GEF,
-  opisthokont Mon1-Ccz1 complex, and fungal vacuole-delivery PAINT nodes match
-  the reviewed fungal genes; the current S. pombe IRD blocks Mon1-Ccz1 complex
+  opisthokont `MON1-CCZ1` complex, and fungal vacuole-delivery PAINT nodes match
+  the reviewed fungal genes; the current S. pombe IRD blocks `MON1-CCZ1` complex
   membership even though the same PAINT slice still propagates eukaryotic
-  GO:0005085 GEF activity to S. pombe mon1, leaving an internally inconsistent
-  loss call recorded for removal.
+  GO:0005085 GEF activity to S. pombe <gene species="SCHPO" symbol="mon1">mon1</gene>,
+  leaving an internally inconsistent loss call recorded for removal.
 
 - Added the compact `PTHR44068` Erg6/SMT family after checking the existing
   *S. cerevisiae*, *S. pombe*, *C. albicans*, *N. crassa*, and
