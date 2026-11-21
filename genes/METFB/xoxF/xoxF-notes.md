@@ -50,3 +50,18 @@ all cached: 43058125, 40626421, 38269599, 37074219, 34544276, 32913059, 32631865
 - New: metal ion binding IDA (lanthanide; GO has no
   lanthanide term, re-used the `lanthanide ion binding` proposal from METEA/xoxF1),
   PQQ binding IDA (PMID:24034209 structure).
+
+## 2026-11-21: evolved function vs. metal-site tolerance
+
+Question raised: is Pm use a wild-type evolved function? The strain (wild-type SolV,
+La-grown pre-cultures, one 60 h culture) and the protein (native sequence without its
+signal peptide) are wild type, but Pm has no stable isotope and is virtually absent
+from nature, so Pm use cannot have been selected for. The same holds for the synthetic
+actinides Am and Cm. These results show the metal site accepts trivalent ions of
+similar radius; the evolved cofactors are the early lanthanides (La–Nd). Caveats from
+PMID:43058125 itself: Pm activity was measured on apo-enzyme reconstituted in vitro,
+and the lanthanide-free control grew a little from La carried over from pre-cultures.
+
+Change: the metal ion binding row and core function now rest on the native Ce-containing
+enzyme (PMID:24034209, PDB 4MAE) and the UniProt cofactor note; the Eu and Pm papers are
+reasons/context, not primary support.
