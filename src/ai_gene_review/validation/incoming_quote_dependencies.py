@@ -326,14 +326,14 @@ def check_incoming_quotes(
             matched_ref = normalize_reference_id(quote.reference_id)
             if matched_ref not in matched_refs:
                 continue
-            changed_sources = by_ref[matched_ref]
+            quote_changed_sources = by_ref[matched_ref]
             result = _missing_changed_cache_result(
-                quote, changed_sources, project_root
+                quote, quote_changed_sources, project_root
             ) or check_quote(quote, project_root, validator)
             if result.outcome is Outcome.VERIFIED:
                 continue
             result = _baseline_marked(quote, result, key, baseline, local_baseline)
-            for source in sorted(changed_sources):
+            for source in sorted(quote_changed_sources):
                 issues.append(IncomingQuoteResult(rel, source, result))
 
     return issues

@@ -3,6 +3,8 @@ from pathlib import Path
 import yaml
 
 from ai_gene_review.validation.incoming_quote_dependencies import (
+    IncomingIssue,
+    IncomingQuoteResult,
     SourceChange,
     check_incoming_quotes,
     format_issue,
@@ -36,6 +38,14 @@ def _record(reference_id: str, supporting_text: str) -> dict:
     }
 
 
+def _only_quote_results(issues: list[IncomingIssue]) -> list[IncomingQuoteResult]:
+    results = []
+    for issue in issues:
+        assert isinstance(issue, IncomingQuoteResult)
+        results.append(issue)
+    return results
+
+
 def test_edit_changed_family_review_rechecks_unchanged_gene_quote(tmp_path: Path):
     source = _write_text(
         tmp_path / "interpro/panther/PTHR43323/PTHR43323-review.yaml",
@@ -57,16 +67,17 @@ def test_edit_changed_family_review_rechecks_unchanged_gene_quote(tmp_path: Path
     )
 
     assert len(issues) == 1
-    assert issues[0].record_path == Path("genes/CANAL/ERG13/ERG13-ai-review.yaml")
-    assert issues[0].changed_source == Path(
+    issue = _only_quote_results(issues)[0]
+    assert issue.record_path == Path("genes/CANAL/ERG13/ERG13-ai-review.yaml")
+    assert issue.changed_source == Path(
         "interpro/panther/PTHR43323/PTHR43323-review.yaml"
     )
-    assert issues[0].result.quote.path == "evidence[0].supporting_text"
-    assert issues[0].result.outcome is Outcome.NOT_FOUND
-    assert issues[0].blocking
+    assert issue.result.quote.path == "evidence[0].supporting_text"
+    assert issue.result.outcome is Outcome.NOT_FOUND
+    assert issue.blocking
     assert (
         "changed source interpro/panther/PTHR43323/PTHR43323-review.yaml"
-        in format_issue(issues[0])
+        in format_issue(issue)
     )
 
 
@@ -83,7 +94,10 @@ def test_deleted_local_source_reports_the_citing_slot(tmp_path: Path):
         baseline={},
     )
 
-    assert [(i.record_path, i.changed_source, i.result.outcome) for i in issues] == [
+    assert [
+        (issue.record_path, issue.changed_source, issue.result.outcome)
+        for issue in _only_quote_results(issues)
+    ] == [
         (
             Path("modules/demo.yaml"),
             Path("genes/human/TP53/TP53-notes.md"),
@@ -111,8 +125,9 @@ def test_renamed_local_source_checks_the_old_and_new_aliases(tmp_path: Path):
     )
 
     assert len(issues) == 1
-    assert issues[0].record_path == Path("modules/stale.yaml")
-    assert issues[0].result.outcome is Outcome.UNRESOLVED
+    issue = _only_quote_results(issues)[0]
+    assert issue.record_path == Path("modules/stale.yaml")
+    assert issue.result.outcome is Outcome.UNRESOLVED
 
 
 def test_gene_local_file_aliases_match_both_legal_spellings(tmp_path: Path):
@@ -228,9 +243,10 @@ def test_deleted_doi_cache_finds_underscore_alias(tmp_path: Path):
     )
 
     assert len(issues) == 1
-    assert issues[0].record_path == Path("modules/doi.yaml")
-    assert issues[0].changed_source == source
-    assert issues[0].result.outcome is Outcome.UNRESOLVED
+    issue = _only_quote_results(issues)[0]
+    assert issue.record_path == Path("modules/doi.yaml")
+    assert issue.changed_source == source
+    assert issue.result.outcome is Outcome.UNRESOLVED
 
 
 def test_deleted_publication_cache_is_not_refetched(tmp_path: Path, monkeypatch):
@@ -256,8 +272,9 @@ def test_deleted_publication_cache_is_not_refetched(tmp_path: Path, monkeypatch)
     )
 
     assert len(issues) == 1
-    assert issues[0].result.outcome is Outcome.UNRESOLVED
-    assert "deleted cache publications/PMID_1234.md" in issues[0].result.detail
+    issue = _only_quote_results(issues)[0]
+    assert issue.result.outcome is Outcome.UNRESOLVED
+    assert "deleted cache publications/PMID_1234.md" in issue.result.detail
 
 
 def test_changed_snapshot_source_is_excluded(tmp_path: Path):
