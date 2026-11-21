@@ -1002,6 +1002,17 @@ Never hardcode the results of the script, it's OK for a script to return inconcl
 2. Write scripts that can parse/process the output from the tool if the user runs it manually
 3. Never write misleading code that pretends to do something it doesn't actually do
 
+**Residue arguments are claims, and their alignments are evidence.** When an action rests on a
+protein having lost, kept or substituted a functional residue, record it as a
+`propagation_review.residue_claims` entry (anchor and target positions and residues, each in
+the protein's own numbering) rather than only in prose; `just validate-families` checks it
+against the sequences. For `method: MSA` (pairwise counts), save the aligned FASTA in the
+gene's `-bioinformatics/` folder with the script that made it, and give its path in
+`alignment_file`: the validator then confirms the alignment really places the anchor residue
+opposite the claimed target residue. Check every residue the prose names: "lacks key catalytic
+residues" on a kinase can mean the DFG aspartate while UniProt's ACT_SITE marks the retained
+HRD aspartate.
+
 You can summarize the results of the bioinformatics analyses in the `<GENE>-bioinformatics/RESULTS.md` file. This can be referenced as any other reference
 as e.g `file:<SPECIES>/<GENE>/bioinformatics/RESULTS.md`.
 

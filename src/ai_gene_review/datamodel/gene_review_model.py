@@ -1191,7 +1191,7 @@ class ResidueClaimMethodEnum(str, Enum):
     """
     MSA = "MSA"
     """
-    Multiple sequence alignment; record the alignment_release.
+    Sequence alignment (multiple or pairwise). Archive the alignment and give its path in alignment_file; for a shared resource also record the alignment_release.
     """
     STRUCTURE = "STRUCTURE"
     """
@@ -6718,6 +6718,7 @@ class ResidueClaim(ConfiguredBaseModel):
     method: ResidueClaimMethodEnum = Field(default=..., description="""How the correspondence between anchor and target positions was established.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidueClaim']} })
     alignment_release: Optional[str] = Field(default=None, description="""Version of the alignment *resource* the correspondence was taken from, when one exists -- e.g. \"PANTHER 19.0\" or \"Pfam 37.0\". A tool name or a script path is not a release and does not belong here; put that in comment.
 Omit it for an alignment computed ad hoc. That is not a gap: the claim states both positions and both residues, so the alignment is only how the correspondence was *discovered*, while the evidence is the two sequence lookups the validator performs. Pinning matters for a shared resource whose coordinates can shift under you, not for a one-off computation.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidueClaim']} })
+    alignment_file: Optional[str] = Field(default=None, description="""Repository-relative path to the archived aligned FASTA file the correspondence was read from, normally in the gene's ``<GENE>-bioinformatics/`` folder next to the script that produced it. Required in practice for new MSA claims: when present, the validator checks that the file has rows for the anchor and the target, that their ungapped sequences equal the current UniProt sequences, and that the alignment places the anchor position opposite the claimed target position (or opposite a gap, for a LOST claim with no target). That is the only check that tests the correspondence itself rather than taking it on trust. A pairwise alignment counts.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidueClaim']} })
     comment: Optional[str] = Field(default=None, description="""Short note, e.g. why the target position is absent rather than substituted.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidueClaim', 'PropagationSource']} })
 
     @field_validator('site_ref')
@@ -6730,6 +6731,19 @@ Omit it for an alignment computed ad hoc. That is not a gap: the claim states bo
                     raise ValueError(err_msg)
         elif isinstance(v, str) and not pattern.match(v):
             err_msg = f"Invalid site_ref format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('alignment_file')
+    def pattern_alignment_file(cls, v):
+        pattern=re.compile(r"^genes/.+")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid alignment_file format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid alignment_file format: {v}"
             raise ValueError(err_msg)
         return v
 
