@@ -49,6 +49,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR32379` GUANIDINOACETATE N-METHYLTRANSFERASE | fungal Rmt2 N5-arginine methyltransferase node and vertebrate GAMT node in the same family | `RMT2`/`rmt2`/`ant-1`/`rmt2` |
 | `PTHR10340` SPHINGOMYELIN PHOSPHODIESTERASE | fungal Ppn1 polyphosphatase node with SMPD/SMPDL3 IRD pruning | `PPN1`/`PPN1`/`PPN1`/`ppn1`/`epp-1` |
 | `PTHR14430` RABIN3-RELATED | Opisthokonta Rab GEF node and fungal cell-tip Sec2 node | `SEC2`/`sec2`/`spo13`/`SEC2`/`sec2` |
+| `PTHR44068` Erg6/SMT methyltransferase | eukaryotic sterol C-24 methyltransferase node and fungal ergosterol node | `ERG6`/`erg6`/`ERG6`/`ERG6`/`erg-4`/`erg6` |
 
 ---
 
@@ -563,9 +564,47 @@ Rtt109 branch.
 
 ---
 
+## Family 25: Sterol 24-C-Methyltransferases
+
+`PTHR44068` contains the fungal Erg6/SMT sterol C-24 methyltransferases, plant
+sterol SMTs, and specialized-metabolism methyltransferases in other branches.
+The family-root `PANTHER:PTN000010968` node carries generic
+`GO:0008168 methyltransferase activity`, `PANTHER:PTN002226525` carries
+eukaryotic sterol C-24 methyltransferase activity, ER localization, and broad
+sterol biosynthesis, and the fungal `PANTHER:PTN000802684` node carries
+ergosterol biosynthesis. Fungal reviews should refine the broad
+InterPro-derived methyltransferase and steroid-biosynthesis rows to the exact
+Erg6 activity and pathway, and should treat lipid-droplet transfer as
+lineage-specific unless directly observed.
+
+- [x] `yeast/ERG6` - *S. cerevisiae* zymosterol C-24 methyltransferase; aligned
+  before this tranche
+- [x] `SCHPO/erg6` - fission-yeast sterol C-24 methyltransferase with PomBase
+  Erg6 GO-CAM context; aligned before this tranche
+- [x] `CANAL/ERG6` - CGD-seeded *Candida albicans* Erg6 with purified
+  zymosterol-to-fecosterol activity; aligned before this tranche
+- [x] `CANGA/ERG6` - CGD *Candida glabrata* Erg6 with clinical
+  loss-of-function and erg6 deletion membrane-sterol evidence; drafted in this
+  branch
+- [x] `NEUCR/erg-4` - *Neurospora crassa* sterol C-24 methyltransferase with
+  lanosterol-to-eburicol inference; aligned before this tranche
+- [x] `ASPFU/erg6` - *Aspergillus fumigatus* Erg6 sterol C-24
+  methyltransferase with direct erg6 repression, lanosterol-accumulation, and
+  lipid-droplet evidence; aligned before this tranche
+
+---
+
 # NOTES
 
 ## 2026-11-21
+
+- Added the compact `PTHR44068` Erg6/SMT family after checking the existing
+  *S. cerevisiae*, *S. pombe*, *C. albicans*, *N. crassa*, and
+  *A. fumigatus* reviews and drafting `CANGA/ERG6`. The PTHR44068 PAINT
+  review cleanly separates the generic methyltransferase family root from the
+  sterol-SMT and fungal Erg6 branches, and the new *C. glabrata* review accepts
+  exact C-24 methyltransferase and ergosterol-biosynthesis support while
+  keeping lipid droplets and Erg6 self-association unresolved for this species.
 
 - Added the compact `PTHR31571` Rtt109/AIM6 family after reviewing the
   `CANAL/RTT109`, `SCHPO/rtt109`, and `NEUCR/NCU09825` active Rtt109
