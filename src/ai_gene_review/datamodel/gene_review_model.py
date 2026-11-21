@@ -478,6 +478,42 @@ class SourceResourceEnum(str, Enum):
     """
     SynGO expert curation of synaptic genes (assigned_by SynGO in GOA). SynGO annotates the species studied and maps the annotation to the human ortholog, so a defect can sit on the rodent row, the human row, or both.
     """
+    AGBASE = "AGBASE"
+    """
+    AgBase curation (assigned_by AgBase in GOA).
+    """
+    HGNC_UCL = "HGNC_UCL"
+    """
+    The HGNC-UCL curation group (assigned_by HGNC-UCL in GOA). A separate group from ARUK_UCL: both are at UCL, but a report has to reach the team that made the row.
+    """
+    PARKINSONSUK_UCL = "PARKINSONSUK_UCL"
+    """
+    The ParkinsonsUK-UCL curation group (assigned_by ParkinsonsUK-UCL in GOA). As for HGNC_UCL, distinct from ARUK_UCL despite the shared institution.
+    """
+    GDB = "GDB"
+    """
+    The legacy GDB annotation set (assigned_by GDB in GOA), largely TAS rows on human entries.
+    """
+    YUBIOLAB = "YUBIOLAB"
+    """
+    YuBioLab curation (assigned_by YuBioLab in GOA).
+    """
+    MENGO = "MENGO"
+    """
+    MENGO, the microbial energy processes GO curation project (assigned_by MENGO in GOA).
+    """
+    PROSITE = "PROSITE"
+    """
+    A PROSITE pattern or its ProRule (e.g. PS00161 / PRU10119), where the rule places a protein name, EC number or feature on every match of a motif too broad to support it. The fix is to the rule's scope. Distinct from UNIPROT, which only applies the rule, and from INTERPRO, whose InterPro2GO mappings are a different mechanism; PROSITE assigns no GOA rows of its own.
+    """
+    RCSB_PDB = "RCSB_PDB"
+    """
+    RCSB PDB entry or entity metadata - a deposition's description strings rather than its sequences or coordinates.
+    """
+    AFFINAGE = "AFFINAGE"
+    """
+    An Affinage gene record (the Cheeseman Lab LLM synthesis served at affinage.wi.mit.edu and cached here as GENE-deep-research-affinage.md). The defect is in the synthesis itself - a wrong grounding, an omitted complex, a malformed citation - not in any GOA row, so `record` is the record's URL and `slot` is the field within it.
+    """
     OTHER = "OTHER"
     """
     Name the resource in the explanation.
@@ -5542,6 +5578,7 @@ class ModuleNode(ConfiguredBaseModel):
                        'RuleReview',
                        'CuratedRule',
                        'PredictionReview']} })
+    intentionally_ungrounded: Optional[bool] = Field(default=None, description="""Whether this terminal node intentionally represents a distributed or open-ended role that cannot be grounded to a single representative protein without misrepresenting the module. Set this only on leaf nodes whose abstract participant selector is part of the biological model, not a placeholder awaiting curation.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode']} })
     concepts: Optional[list[Descriptor]] = Field(default=None, description="""Optional ontology/database grounding for this module node.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode']} })
     context: Optional[ModuleContext] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode', 'ModuleConnection']} })
     annotons: Optional[list[ModuleAnnoton]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ModuleNode']} })

@@ -338,6 +338,35 @@ def test_source_resource_enum_has_the_pipeline_values_reports_route_on() -> None
     assert "GO_CENTRAL" in values, "PANTHER must not have replaced GO_CENTRAL"
 
 
+def test_source_resource_enum_covers_non_goa_resources() -> None:
+    """Two resources assign no GOA rows, and their defects still need a home.
+
+    AFFINAGE is an Affinage gene record (an LLM synthesis cached as
+    GENE-deep-research-affinage.md); PROSITE is a pattern or ProRule whose
+    scope is too broad. Both were added in batch 3 because 23 defects had
+    been parked on OTHER for want of a value. PROSITE in particular must not
+    collapse into UNIPROT (which only applies the rule) or INTERPRO (whose
+    InterPro2GO mappings are a different mechanism).
+    """
+    values = set(_schema_enum_values("SourceResourceEnum"))
+    for expected in ("AFFINAGE", "PROSITE"):
+        assert expected in values, f"SourceResourceEnum lost {expected}"
+    for distinct in ("UNIPROT", "INTERPRO"):
+        assert distinct in values
+
+
+def test_source_resource_enum_keeps_ucl_groups_separate() -> None:
+    """Three UCL curation groups, three values.
+
+    ARUK_UCL already groups ARUK-UCL with BHF-UCL, but HGNC-UCL and
+    ParkinsonsUK-UCL are separate teams: a correction request has to reach
+    whoever made the row, so merging them would misroute it.
+    """
+    values = set(_schema_enum_values("SourceResourceEnum"))
+    for expected in ("ARUK_UCL", "HGNC_UCL", "PARKINSONSUK_UCL"):
+        assert expected in values, f"SourceResourceEnum lost {expected}"
+
+
 def test_source_resource_enum_names_syngo() -> None:
     """SynGO is a curation group in its own right, not a pipeline.
 

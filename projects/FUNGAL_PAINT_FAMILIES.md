@@ -48,12 +48,13 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
 | `PTHR32379` GUANIDINOACETATE N-METHYLTRANSFERASE | fungal Rmt2 N5-arginine methyltransferase node and vertebrate GAMT node in the same family | `RMT2`/`rmt2`/`ant-1`/`rmt2` |
 | `PTHR10340` SPHINGOMYELIN PHOSPHODIESTERASE | fungal Ppn1 polyphosphatase node with SMPD/SMPDL3 IRD pruning | `PPN1`/`PPN1`/`PPN1`/`ppn1`/`epp-1` |
+| `PTHR14430` RABIN3-RELATED | Opisthokonta Rab GEF node and fungal cell-tip Sec2 node | `SEC2`/`sec2`/`spo13`/`SEC2`/`sec2` |
 
 ---
 
 # STATUS
 
-Last updated: 2026-11-06
+Last updated: 2026-11-20
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -113,9 +114,10 @@ biosynthetic process, protein folding, and protein folding chaperone activity.
 ## Family 4: MAP Kinases
 
 `PTHR24055` includes broad MAPK-family PAINT placements for generic kinase
-activity and active compartments, plus fungal HOG/Sty1 stress-MAPK placements
-such as `PANTHER:PTN001172058` for osmosensory, oxidative-stress, and
-stress-activated MAPK-cascade assertions.
+activity and active compartments, fungal HOG/Sty1 stress-MAPK placements such
+as `PANTHER:PTN001172058` for osmosensory, oxidative-stress, and
+stress-activated MAPK-cascade assertions, and the fungal Spk1/Fus3 pheromone
+MAPK placement `PANTHER:PTN001172087`.
 
 - [x] `NEUCR/hog-1` - *Neurospora crassa* OS-2/HOG-1 stress MAPK; merged in PR
   #4570
@@ -125,10 +127,16 @@ stress-activated MAPK-cascade assertions.
 - [x] `CANAL/MKC1` - *Candida albicans* Slt2/Spm1-family cell-wall-integrity
   MAPK; merged in PR #5868
 - [x] `yeast/FUS3` - budding-yeast pheromone MAPK; merged in PR #5872
+- [ ] `SCHPO/spk1` - fission yeast Spk1 pheromone-response MAPK; drafted in
+  PR #5886
 - [x] `NEUCR/mak-1` - *Neurospora crassa* cell-wall-integrity MAPK;
   merged in PR #5885
 - [x] `CANAL/CEK1` - CGD ERK/Kss1/Fus3-like MAPK with Cek2-redundant mating plus
   filamentous-growth and cell-wall evidence; revalidated in this branch
+- [x] `ASPFU/sakA` - *Aspergillus fumigatus* SakA/Hog1 stress MAPK;
+  drafted in PR #5883
+- [ ] `ASPFU/mpkC` - *Aspergillus fumigatus* HOG1-subfamily MpkC MAPK;
+  drafted in this branch
 
 ## Family 5: Fungal Glucanases
 
@@ -439,12 +447,15 @@ node for protein arginine N5-methyltransferase activity. The official PANTHER
 family name is GUANIDINOACETATE N-METHYLTRANSFERASE, so each fungal review needs
 to keep the GAMT branch separate from Rpl12/RMT2 methylation.
 
-- [ ] `yeast/RMT2` - *S. cerevisiae* protein-arginine N5-methyltransferase;
-  drafted in this branch
-- [ ] `SCHPO/rmt2` - fission-yeast Rmt2 ortholog
-- [ ] `NEUCR/ant-1` - *Neurospora crassa* Rmt2-family member
-- [ ] `ASPFU/rmt2` - *Aspergillus fumigatus* Rmt2-family member
-- [ ] `EMENI/rmt2` - *Aspergillus nidulans* Rmt2-family member
+- [x] `yeast/RMT2` - *S. cerevisiae* protein-arginine N5-methyltransferase;
+  merged in PR #6035
+- [x] `SCHPO/rmt2` - fission-yeast Rmt2 ortholog; merged in PR #6037
+- [x] `NEUCR/ant-1` - *Neurospora crassa* Rmt2-family member; merged in PR
+  #6038
+- [x] `ASPFU/rmt2` - *Aspergillus fumigatus* Rmt2-family member; drafted in
+  this branch
+- [x] `EMENI/rmt2` - *Aspergillus nidulans* Rmt2-family member; drafted in
+  this branch
 
 ## Family 20: Ppn1 Polyphosphatases
 
@@ -468,10 +479,50 @@ assertions inherited from non-fungal branches.
 
 ---
 
+## Family 21: Sec2 Rab GEFs
+
+`PTHR14430` contains a broad Opisthokonta `PANTHER:PTN000374167`
+guanyl-nucleotide exchange factor node, a fungal `PANTHER:PTN001024876`
+cell-tip active-location node, and a separate animal `PANTHER:PTN002683547`
+cytosol node. The next pass should keep the fungal Sec2 branch separate from
+animal Rabin3/Rab8 GEFs while checking the fission-yeast duplication into
+vegetative `sec2` and sporulation-specific `spo13`.
+
+- [x] `yeast/SEC2` - *S. cerevisiae* Sec4 Rab GEF; drafted in this branch
+- [x] `SCHPO/sec2` - fission-yeast vegetative Sec2-family member
+- [x] `SCHPO/spo13` - fission-yeast sporulation-specific Sec2-family member
+- [x] `CANAL/SEC2` - CGD-seeded *Candida albicans* Sec2 ortholog
+- [x] `ASPFU/sec2` - *Aspergillus fumigatus* Sec2-family member
+
+---
+
 # NOTES
+
+## 2026-11-20
+
+- Finished the remaining `PTHR14430` Sec2/Rabin3 fungal reviews in a compact
+  tranche: `SCHPO/sec2`, `SCHPO/spo13`, `CANAL/SEC2`, and `ASPFU/sec2`.
+  The long Sec2 proteins accept the broad `PANTHER:PTN000374167` Rab-GEF node
+  and the fungal `PANTHER:PTN001024876` cell-tip node in true tip-growing
+  fungi, while fission-yeast `spo13` is kept separate as the
+  sporulation-specific short Sec2 paralog with direct Ypt2/Sec4-family GEF
+  evidence.
+
+- Completed the compact `PTHR32379` Rmt2/GAMT set with `ASPFU/rmt2` and
+  `EMENI/rmt2`, after the earlier `yeast/RMT2`, `SCHPO/rmt2`, and
+  `NEUCR/ant-1` reviews had already accepted the fungal `PTN001285370`
+  protein arginine N5-methyltransferase node in PRs #6035, #6037, and #6038.
+  The Aspergillus reviews accept the same exact Rmt2 activity and broad
+  nucleus/cytoplasm transfers, modify InterPro's parent PRMT row to the
+  N5-specific activity, and keep EnsemblFungi's budding-yeast
+  translational-fidelity transfer as a plausible non-core orthology assertion.
 
 ## 2026-11-06
 
+- Started `PTHR14430`, the compact Sec2/Rabin3-family Rab GEF family. The first
+  review covers `yeast/SEC2`: the Opisthokonta GEF PAINT node is sound for
+  budding yeast, the fungal cell-tip PAINT node over-propagates to *S.
+  cerevisiae*, and the animal cytosol PAINT node stays outside the fungal clade.
 - Started `PTHR10340`, separating the fungal Ppn1 polyphosphatase clade from
   the metazoan sphingomyelinase/SMPDL3-like branches named by the official
   PANTHER family label. The first `yeast/PPN1` review accepts the fungal

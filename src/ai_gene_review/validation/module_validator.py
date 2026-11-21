@@ -86,7 +86,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from enum import Enum
-from typing import Callable, Dict, Iterator, List, NamedTuple, Optional, Set, Tuple
+from typing import Callable, Dict, Iterator, List, Mapping, NamedTuple, Optional, Set, Tuple
 
 import yaml
 
@@ -1129,7 +1129,7 @@ def validate_family_members(
     paint_index: Optional[PaintIndex] = None,
     subfamily_counts: Optional[Dict[str, int]] = None,
     alternates: Optional[Dict[str, str]] = None,
-    previous: Optional[Tuple[str, Dict[str, str]]] = None,
+    previous: Optional[Tuple[str, Mapping[str, str]]] = None,
 ) -> Tuple[List[str], List[str]]:
     """Check that a declared PANTHER family really contains its own members.
 
@@ -1438,8 +1438,8 @@ def compare_label(
 
 def defer_previous_release_panther_terms(
     terms: List[Tuple[str, str]],
-    current_names: Dict[str, str],
-    previous_names: Dict[str, str],
+    current_names: Mapping[str, str],
+    previous_names: Mapping[str, str],
     previous_release: str,
 ) -> Tuple[List[Tuple[str, str]], List[str]]:
     """Set aside PANTHER terms that were right in the previous release (switch window).
@@ -1958,20 +1958,17 @@ def validate_module_file(
 
     # During a PANTHER switch, ids, labels and memberships that were right in the
     # release being left are warnings until remapped (PANTHER_PREVIOUS_RELEASE).
-    from ai_gene_review.validation.family_residue_validator import (
-        _panther_index,
-        _previous_release,
-    )
+    from ai_gene_review.etl.panther_families import panther_artifacts, previous_release
 
-    panther_artifacts = panther_dir or project_root / "interpro" / "panther"
-    previous = _previous_release(panther_artifacts)
+    panther_root = panther_dir or project_root / "interpro" / "panther"
+    previous = previous_release(panther_root)
 
     member_errors, member_warnings = validate_family_members(
         list(iter_family_member_uses(doc)),
         member_index,
         paint_index,
         alternates=alternates,
-        subfamily_counts=load_subfamily_counts(panther_artifacts / "panther.obo"),
+        subfamily_counts=load_subfamily_counts(panther_root / "panther.obo"),
         previous=None if previous is None else (previous.release, previous.members),
     )
 
@@ -1979,7 +1976,7 @@ def validate_module_file(
     transition_warnings: List[str] = []
     if previous is not None:
         terms, transition_warnings = defer_previous_release_panther_terms(
-            terms, _panther_index(panther_artifacts)[0], previous.labels, previous.release
+            terms, panther_artifacts(panther_root).names, previous.labels, previous.release
         )
     errors, warnings = validate_terms(terms, adapter_map, resolver, label_aliases)
     warnings.extend(transition_warnings)
@@ -2031,6 +2028,8 @@ def validate_module_file(
     errors.extend(conformance_errors)
     warnings.extend(conformance_warnings)
     errors.extend(validate_module_refs(doc, path.parent, path.stem))
+
+    errors.extend(validate_leaf_grounding_completeness(doc))
 
     # Reaction chaining: advisory only (never blocks). A `chaining_status`
     # override on a connection acknowledges a known gap and suppresses its
@@ -2311,6 +2310,43 @@ def validate_feedback_loops(doc: object) -> List[str]:
         for f in feedback_loop_findings(doc)
         if f.get("severity") == "warning"
     ]
+
+
+def validate_leaf_grounding_completeness(doc: object) -> List[str]:
+    """Require completed concrete modules to ground every leaf participant.
+
+    Draft modules are allowed to bottom out in an abstract selector while the
+    curator is still finding exemplar accessions. Once a concrete module is
+    marked ``status: COMPLETE``, every terminal participant role should name at
+    least one concrete UniProtKB protein representative or a concrete
+    non-protein participant id. Reusable templates with ``scope: ABSTRACT`` are
+    skipped by the shared QC helper because they are intentionally gene-free.
+    A terminal node marked ``intentionally_ungrounded`` is skipped too when the
+    curator has explicitly recorded that the role is distributed/open-ended
+    rather than awaiting a representative.
+    """
+    if not isinstance(doc, dict):
+        return []
+    if str(doc.get("status") or "").strip().upper() != "COMPLETE":
+        return []
+
+    # Imported here to avoid pulling renderer/QC dependencies into module load.
+    from ai_gene_review.module_qc import leaf_nodes_missing_representatives
+
+    errors: List[str] = []
+    for gap in leaf_nodes_missing_representatives(doc):
+        node_id = gap.get("id") or "<unknown>"
+        label = gap.get("label") or node_id
+        selector_types = gap.get("selector_types") or []
+        selector_text = ", ".join(selector_types) if selector_types else "none"
+        errors.append(
+            "Completeness: COMPLETE concrete modules must ground every leaf to "
+            "at least one concrete protein representative or non-protein "
+            f"participant; leaf {node_id!r} "
+            f"({label}) has {gap.get('annoton_count', 0)} annoton(s) "
+            f"with selector_types: {selector_text}"
+        )
+    return errors
 
 
 def validate_executable_models(

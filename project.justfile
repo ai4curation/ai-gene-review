@@ -336,6 +336,13 @@ gocam-index *args="":
 export-source-defects *args="":
     uv run python -m ai_gene_review.tools.export_source_defects {{args}}
 
+# Writes reports/paint-change-requests.tsv and reports/paint-change-requests/<PTHR>.md
+# from node_assessments[].proposed_action; exits 1 on conflicting requests for one
+# PAINT row. See the IBA section of CLAUDE.md.
+# Collect PAINT change requests from family reviews, one report per family.
+export-paint-change-requests *args="":
+    uv run python -m ai_gene_review.tools.export_paint_change_requests {{args}}
+
 # Collect proposed ontology changes (top-level proposed_ontology_changes on gene
 # and module reviews, and in project-page frontmatter) into
 # reports/ontology-changes.tsv plus one Markdown report

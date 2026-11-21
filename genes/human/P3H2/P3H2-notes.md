@@ -60,3 +60,17 @@ Falcon surfaced three genuinely new, verified P3H2-specific references (all PubM
 - New renal disease association: P3H2 is a glomerular basement membrane (GBM) modifier; podocyte-specific loss in mice causes thin basement membrane nephropathy (TBMN) with progressive microhematuria/microalbuminuria, and P3H2 loss/mutation causes TBMN and FSGS in mice and humans [PMID:35499085 (DOI 10.1172/JCI147253) "P3H2 protein is the first identified GBM modifier, and loss or mutation of P3H2 causes TBMN and focal segmental glomerulosclerosis in mice and humans"]. Complements the previously-noted ocular MCVD high-myopia phenotype; in vivo proof of collagen IV as the physiological substrate (GBM proteomics shows decreased collagen IV subchains on P3H2 loss). Added as HIGH relevance.
 - Angiogenesis role: P3H2 is induced by VEGF-A via VEGFR-2/p38 MAPK in endothelial cells and, through its collagen IV activity, supports angiogenesis; knockdown reduces pathological choroidal neovascularization in vivo [PMID:33918807 (DOI 10.3390/ijms22083896) "P3H2 is a new molecular player involved in new vessels formation and could be considered as a potential target for anti-angiogenesis therapy"]. Added as MEDIUM relevance (context-dependent physiological role downstream of the core MF).
 - These are additive references only; no `action:` changes (review was COMPLETE). The findings reinforce, rather than alter, the core MF (GO:0019797, collagen IV-preferring prolyl 3-hydroxylase) and the ER site of action. The Aypek/Montgomery in vivo evidence further supports that "basement membrane" (GO:0005604) is the destination of the collagen IV substrate, consistent with the existing MARK_AS_OVER_ANNOTATED decision for that CC term on the enzyme itself.
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- Three Golgi rows: IDA PMID:15063763, IDA GO_REF:0000052 (HPA) and IEA GO_REF:0000044. All stay
+  KEEP_AS_NON_CORE; reasons now record the check.
+- PMID:15063763 (Jaernum et al. 2004) is abstract-only with no PMC record: the abstract says "ER and
+  Golgi network" and the title "ER and Golgi resident", but the marker and whether the protein was
+  endogenous or over-expressed cannot be read. Kept on curator deference; the UniProt Golgi item cites
+  it with ECO:0000269.
+- Human Protein Atlas (ENSG00000090530 JSON, queried 2026-11-18): main location Golgi apparatus,
+  additional nucleoplasm, vesicles, cytosol; IF reliability Supported. HPA's standard counterstains
+  are nucleus, microtubules and ER, so the Golgi call is pattern-based (whole organelle).
+- No sub-compartment row: a KDEL-retained enzyme could be retrieved from cis-Golgi, but no line
+  resolves a Golgi sub-compartment.

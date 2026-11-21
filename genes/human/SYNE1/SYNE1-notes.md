@@ -13,3 +13,20 @@
 - Isoform-specific locations (Golgi, P-body, sarcomere, nucleus, lamin binding via myne-1) kept as non-core.
 - Nucleolus IDA (PMID:24862572, abstract only; abstract does not mention nucleolus) left UNDECIDED.
 - Falcon deep research used for muscle nuclear-shape/spacing statements (Leong 2023 via deep research).
+
+## 2026-11-19 ORGANELLES Golgi batch 4 (Golgi apparatus rows)
+
+- Two GO:0005794 rows: IDA PMID:12808039 (Gough et al. 2003) and IEA GO_REF:0000044 mapped from the
+  UniProt item "[Isoform GSRP-56]: Golgi apparatus" (ECO:0000269, PMID:16875688).
+- PMID:12808039 (full text in cache): tagged fragments co-stain Golgi ankyrin, KDEL receptor and p58;
+  specificity-controlled antibodies stain endogenous Syne-1 with p58 and beta-COP in MDBK and human LB10
+  cells [PMID:12808039 "These immunoreactive structures costained with antibodies to two markers of the
+  Golgi complex, p58"]; endogenous protein leaves mannosidase II-positive membranes after brefeldin A
+  [PMID:12808039 "bSyne-1 rapidly dissociates from Golgi membranes after 10-min treatment with BFA"].
+- PMID:16875688 fetched; abstract only (no PMC record). Abstract reports endogenous 56-kDa GSRP-56
+  predominantly in the Golgi of cardiomyocytes and C2C12 cells.
+- Verdict: root supported, both rows KEEP_AS_NON_CORE (recruited, BFA-sensitive pool; core function is
+  LINC at the nuclear envelope). Earlier "isoform-specific" wording softened: Gough also saw Golgi
+  staining with antibodies to an upstream peptide. Added a SUSPECTED/CHECK source defect on the IEA row
+  (no gene product form although the UniProt line names isoform GSRP-56, Q8NF91-12). No NEW
+  sub-compartment row (markers span cis, medial and coat; recruited protein stays at the root).

@@ -10,7 +10,7 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, List, Optional
 
 import typer
-from typing_extensions import Annotated
+from typing_extensions import Annotated, assert_never
 
 if TYPE_CHECKING:
     from ai_gene_review.etl.arba_match import RuleMatch
@@ -5003,10 +5003,10 @@ def refresh_panther_members(
 
     repo_root = output_dir or Path.cwd()
     from ai_gene_review.etl.panther_families import (
-        PANTHER_PREVIOUS_RELEASE,
         fetch_hmm_classifications,
         hmm_url,
         panther_cache_dir,
+        switch_release,
     )
 
     cache = cache_dir or panther_cache_dir(repo_root)
@@ -5015,11 +5015,12 @@ def refresh_panther_members(
     # During a PANTHER switch, validators read the previous release's names and
     # memberships from this cache without downloading anything; warm it here. Only the
     # default organisms: they are what the validators read, whatever --organism says.
-    if PANTHER_PREVIOUS_RELEASE is not None:
-        fetch_hmm_classifications(cache, url=hmm_url(PANTHER_PREVIOUS_RELEASE))
+    previous = switch_release()  # raises on a misconfigured switch
+    if previous is not None:
+        fetch_hmm_classifications(cache, url=hmm_url(previous))
         for slug in DEFAULT_ORGANISMS:
-            fetch_sequence_classification(slug, cache, release=PANTHER_PREVIOUS_RELEASE)
-        typer.echo(f"cached PANTHER {PANTHER_PREVIOUS_RELEASE} classifications for the switch allowance")
+            fetch_sequence_classification(slug, cache, release=previous)
+        typer.echo(f"cached PANTHER {previous} classifications for the switch allowance")
 
     # Every representative member, grounded or not -- an ungrounded descriptor's
     # members are the ones whose real family most needs resolving -- plus the
@@ -5088,6 +5089,18 @@ def refresh_panther_members(
             # files miss: for some proteins the two sources disagree, and neither
             # is privileged, so the UniProt value is recorded as an alternate that
             # membership checks also accept (reporting the disagreement).
+            #
+            # One gap, left open deliberately: a cited chain or isoform id
+            # (P57764-PRO_0000437526, Q14114-4) can never appear in the
+            # classification files, which key on bare accessions, so it always
+            # takes UniProt's value with nothing to conflict against. Where the
+            # two sources disagree about the parent entry, the index can hold the
+            # file value for the entry beside the UniProt value for its chain with
+            # no alternate recorded. Closing it means asking the files about each
+            # cited id's parent and fanning the answer back out, which changes
+            # which source wins for those ids -- a data change to the index, and
+            # to what validate-families accepts for them, so it belongs in its own
+            # change rather than riding along with the resolver fix.
             typer.echo(f"checking {len(needed)} accession(s) against UniProt...")
             from_uniprot = fetch_panther_from_uniprot(needed)
             for accession, family_sf in from_uniprot.items():
@@ -5389,7 +5402,9 @@ def fix_panther_labels(
             "--allow-divergent",
             help="Also rewrite labels that describe a different protein than the "
             "id's official name. Held back by default because that pattern "
-            "usually means the ID is wrong; only pass this after checking.",
+            "usually means the ID is wrong; only pass this after checking. "
+            "During a PANTHER switch it does not apply to ids renamed since the "
+            "previous release: those are remapped, never relabelled.",
         ),
     ] = False,
 ):
@@ -5399,7 +5414,19 @@ def fix_panther_labels(
     verified; the curator's readable description belongs in `preferred_term`.
     Descriptors whose declared family does not contain their representative
     member are deliberately SKIPPED -- relabelling those would hide a wrong
-    family id behind an authoritative-looking name. Fix the id first.
+    family id behind an authoritative-looking name. Fix the id first. So are
+    descriptors none of whose representative members has been looked up yet:
+    their id can be neither confirmed nor disputed until the index is refreshed.
+    A label on an id that no member can ever confirm (PANTHER has no family for
+    its members, or it names none) is rewritten, since no refresh would change
+    that, and listed for a check by hand.
+
+    The guards read cached data (the member index and, during a PANTHER switch,
+    the previous release's names). When that data is missing a guard cannot
+    act, so --apply refuses to run; a dry run reports the same and continues.
+    `just fix-panther-labels` builds the caches first with
+    `just ensure-panther-members`; when calling this command directly, run that
+    recipe yourself.
 
     Example:
         ai-gene-review fix-panther-labels --apply
@@ -5407,10 +5434,21 @@ def fix_panther_labels(
     import yaml
 
     from ai_gene_review.etl.panther_families import (
+        load_member_index_alternates,
+        load_member_index_gaps,
         load_obo_names,
+        MEMBERS_INDEXED,
+        MEMBERS_NO_FAMILY,
+        MEMBERS_NONE,
+        MEMBERS_NOT_LOOKED_UP,
+        DeferralReason,
+        member_corroboration,
+        member_index_path,
+        panther_cache_dir,
+        previous_release_labels,
         rewrite_panther_labels,
+        switch_release,
     )
-    from ai_gene_review.validation.family_residue_validator import previous_release_labels
     from ai_gene_review.validation.module_validator import (
         iter_family_member_uses,
         load_member_index,
@@ -5423,13 +5461,41 @@ def fix_panther_labels(
     # During a PANTHER switch, a label still carrying the previous release's name is
     # held back for remapping rather than relabelled (see rewrite_panther_labels).
     previous = previous_release_labels(repo_root / "interpro" / "panther")
-    previous_names = previous[1] if previous is not None else None
-    from ai_gene_review.etl.panther_families import member_index_path
-
-    from ai_gene_review.etl.panther_families import load_member_index_alternates
-
     member_index = load_member_index(member_index_path(repo_root))
     member_alternates = load_member_index_alternates(member_index_path(repo_root))
+    member_gaps = load_member_index_gaps(member_index_path(repo_root))
+
+    # Without their cached data the guards are silently off: never relabel unguarded.
+    # An empty index refuses outright; a partial one skips, per descriptor, the ids
+    # none of whose members has been looked up (see member_corroboration below).
+    # `just fix-panther-labels` runs ensure-panther-members first, which only warns
+    # when the build fails; calling this command directly runs nothing first.
+    refresh_log = panther_cache_dir(repo_root) / "refresh.log"
+    build_hint = (
+        "`just ensure-panther-members` builds the member index and the switch caches. "
+        "`just fix-panther-labels` runs it first: if it ran and failed, see "
+        f"{refresh_log}; if you called `ai-gene-review fix-panther-labels` directly, "
+        "run it yourself."
+    )
+    unguarded: list[str] = []
+    switch = switch_release()
+    if switch is not None and previous is None:
+        unguarded.append(
+            f"PANTHER {switch} names are not cached, so labels on ids renamed in the "
+            "switch cannot be held back"
+        )
+    if not member_index:
+        unguarded.append(
+            "the PANTHER member index is empty, so descriptors whose representative "
+            "members contradict their family id cannot be skipped"
+        )
+    for reason in unguarded:
+        typer.echo(f"⚠  {reason}.", err=True)
+    if unguarded:
+        typer.echo(build_hint, err=True)
+        if apply:
+            typer.echo("Refusing --apply until they are built.", err=True)
+            raise typer.Exit(1)
     # Same PAINT-corroboration rule the validator applies, so a grounding the
     # validator merely warns about is not treated here as disputed.
     paint_index = load_paint_index(repo_root / "interpro" / "panther")
@@ -5438,27 +5504,87 @@ def fix_panther_labels(
     total = 0
     held_back: list[tuple[Path, str, str, str, bool]] = []
     renamed: list[tuple[Path, str, str, str]] = []
+    not_looked_up: list[tuple[Path, str, str, str, str]] = []
+    uncorroborated_changes: list[tuple[Path, str, str, str, str]] = []
+
+    def also_deferred(reason: DeferralReason) -> str:
+        """Why a withheld label would also have been deferred had its id been confirmed."""
+        if reason == "divergent":
+            return "the label also describes a different protein than the id's name"
+        if reason == "renamed_in_switch":
+            return "the id was also renamed in the PANTHER switch"
+        assert_never(reason)
+
     for path in targets:
         text = path.read_text()
         doc = yaml.safe_load(text)
         skip: set[str] = set()
+        unconfirmed: set[str] = set()
         corroborated: set[str] = set()
+        no_family: set[str] = set()
         for use in iter_family_member_uses(doc):
             errors, _ = validate_family_members(
                 [use], member_index, paint_index, alternates=member_alternates
             )
+            corroboration = member_corroboration(
+                use.representative_accessions, member_index, member_gaps
+            )
             if errors:
                 skip.update(use.declared_family_curies)
-            elif any(a in member_index for a in use.representative_accessions):
+            elif corroboration == MEMBERS_NOT_LOOKED_UP:
+                unconfirmed.update(use.declared_family_curies)
+            elif corroboration == MEMBERS_INDEXED:
                 corroborated.update(use.declared_family_curies)
+            elif corroboration == MEMBERS_NO_FAMILY:
+                no_family.update(use.declared_family_curies)
+            elif corroboration == MEMBERS_NONE:
+                pass  # never yielded: iter_family_member_uses requires members
+            else:
+                assert_never(corroboration)
+        previous_names = None if previous is None else previous.labels
         new_text, changes, deferred = rewrite_panther_labels(
-            text, names, skip, allow_divergent=allow_divergent, previous_names=previous_names
+            text,
+            names,
+            skip | unconfirmed,
+            allow_divergent=allow_divergent,
+            previous_names=previous_names,
         )
+        if unconfirmed - skip:
+            # Report every label the skip withheld, including those the rewrite would
+            # also have deferred: a skipped id is never deferred, so it would otherwise
+            # be listed nowhere.
+            _, would_change, would_defer = rewrite_panther_labels(
+                text, names, skip, allow_divergent=allow_divergent, previous_names=previous_names
+            )
+            withheld = unconfirmed - skip
+            not_looked_up.extend(
+                (path, curie, old, new, "") for curie, old, new in would_change if curie in withheld
+            )
+            not_looked_up.extend(
+                (path, item.curie, item.old, item.new, also_deferred(item.reason))
+                for item in would_defer
+                if item.curie in withheld
+            )
+        # Relabelled although no member corroborates the id: PANTHER has no family for
+        # any of its members, or it names no UniProtKB member at all. No refresh will
+        # change either, so the label is rewritten; it is listed because the risk the
+        # skip guards against (a wrong id behind an official name) is the same.
+        for curie, old, new in changes:
+            if curie in corroborated:
+                continue
+            why = (
+                "PANTHER has no family for any representative member"
+                if curie in no_family
+                else "no UniProtKB representative member names the id"
+            )
+            uncorroborated_changes.append((path, curie, old, new, why))
         for item in deferred:
             if item.reason == "renamed_in_switch":
                 renamed.append((path, item.curie, item.old, item.new))
-            else:
+            elif item.reason == "divergent":
                 held_back.append((path, item.curie, item.old, item.new, item.curie in corroborated))
+            else:
+                assert_never(item.reason)
         if not changes:
             continue
         total += len(changes)
@@ -5473,11 +5599,35 @@ def fix_panther_labels(
     if renamed and previous is not None:
         typer.echo(
             f"\n⚠  {len(renamed)} label(s) NOT rewritten: they are on ids whose name "
-            f"changed since PANTHER {previous[0]}, so the id may now "
-            "name something else. Remap them from `just panther-release-diff`."
+            f"changed since PANTHER {previous.release}, so the id may now "
+            "name something else. Remap them from `just panther-release-diff`; "
+            "--allow-divergent does not apply to these."
         )
         for path, curie, old, new in renamed:
             typer.echo(f"  {path.name}: {curie}  {old!r} -> now {new!r}")
+
+    if not_looked_up:
+        typer.echo(
+            f"\n⚠  {len(not_looked_up)} label(s) NOT rewritten: no representative "
+            "member of the id has been looked up in the member index yet, so the id "
+            f"can be neither confirmed nor disputed. {build_hint} --allow-divergent "
+            "does not override this skip."
+        )
+        for path, curie, old, new, note in not_looked_up:
+            typer.echo(f"  {path.name}: {curie}  {old!r} -> {new!r}")
+            if note:
+                typer.echo(f"      ({note}; check the id once its members are looked up)")
+
+    if uncorroborated_changes:
+        verb = "rewritten" if apply else "to be rewritten"
+        typer.echo(
+            f"\nℹ  {len(uncorroborated_changes)} label(s) {verb} without member "
+            "corroboration: no representative member can confirm the id itself, and no "
+            "refresh will change that. Check these ids by hand."
+        )
+        for path, curie, old, new, why in uncorroborated_changes:
+            typer.echo(f"  {path.name}: {curie}  {old!r} -> {new!r}")
+            typer.echo(f"      ({why})")
 
     if held_back:
         typer.echo(

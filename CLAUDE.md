@@ -280,7 +280,11 @@ in the corpus.
 **Decomposing precomposed "X involved in Y" terms.** When you MODIFY such a term to its genus X, say where Y
 went in `review.decomposed_into`: `gocam_associations` or `module_associations` (Y is a mechanism with a
 model), `in_core_functions` (Y is central to the gene), or `context_dropped: true` (Y is peripheral context or
-was itself the over-annotation). Do not encode Y as an annotation extension (X plus `part_of(Y)` restates the
+was itself the over-annotation). The replacement must be a claim you would `ACCEPT`: when the claim is
+non-core, keep the row `KEEP_AS_NON_CORE` on the precomposed term, or `MARK_AS_OVER_ANNOTATED` if GO has
+obsoleted it, and do not MODIFY it (the `decomposition_replacement_not_acceptable` check warns when the
+replacement sits on another row as non-core, over-annotated or removed). Ordinary refinements of a general
+term are not decompositions and keep their own rule above. Do not encode Y as an annotation extension (X plus `part_of(Y)` restates the
 retired class), and do not split the term into two unrelated annotations. Modules model reusable mechanisms,
 not tissue or developmental contexts: do not create a module per Y. GO's `consider` is curator advice: check each half against the evidence before using it. Its
 `replaced_by` is an automated mapping, so if it is wrong for your gene, record the correct term and flag the
@@ -612,6 +616,9 @@ action fits the verdict and that the target sits correctly in the family's PANTH
 (below the node for TOO_DEEP, NEEDS_PRUNING and LOSS_TOO_BROAD). PAINT prunes per
 annotation: a loss of a general term does not block a more specific term asserted at an
 ancestral node, so request each change separately.
+`just export-paint-change-requests` turns these rows into one Markdown change request per
+family in `reports/paint-change-requests/` (generated and git-ignored; do not commit), and
+fails if a family asks for incompatible changes to one PAINT row.
 
 ### Term-id validation: GOA ids are trusted, your `core_functions` ids are checked
 

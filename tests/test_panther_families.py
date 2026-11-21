@@ -6,13 +6,19 @@ that ``conf/oak_config.yaml`` configures -- including the awkward
 ``PANTHER:PTHR1:SF2`` CURIE, whose second colon several OAK backends mishandle.
 """
 
+import io
+import json
+import urllib.error
 from pathlib import Path
 
 import pytest
 import yaml
 
+from ai_gene_review.etl import panther_families
 from ai_gene_review.etl.panther_families import (
     PantherEntry,
+    fetch_panther_from_uniprot,
+    parent_accession,
     emit_yaml_scalar,
     label_drift,
     rewrite_panther_labels,
@@ -471,6 +477,193 @@ def test_repo_member_overrides_are_reflected_in_index():
             assert accession not in alternates, accession
 
 
+# --------------------------------------------------------------------------- #
+# UniProt fallback: chain and isoform ids, and a poisoned batch
+#
+# ``/uniprotkb/accessions`` rejects the WHOLE request with HTTP 400 when any id
+# in it is not a bare accession, and modules legitimately cite UniProt chain ids
+# (``P57764-PRO_0000437526``, the gasdermin-D N-terminal fragment). One such id
+# therefore used to abort the entire member-index build, which made
+# ``validate-families`` report "not indexed yet" for the whole corpus.
+# --------------------------------------------------------------------------- #
+
+
+def _panther_payload(*records: tuple[str, str]) -> bytes:
+    """UniProt-shaped JSON for ``(accession, panther_subfamily)`` pairs."""
+    return json.dumps(
+        {
+            "results": [
+                {
+                    "primaryAccession": accession,
+                    "uniProtKBCrossReferences": [
+                        {"database": "PANTHER", "id": family_sf.split(":")[0]},
+                        {"database": "PANTHER", "id": family_sf},
+                    ],
+                }
+                for accession, family_sf in records
+            ]
+        }
+    ).encode()
+
+
+class _FakeResponse(io.BytesIO):
+    """Context-manager response, as ``urlopen`` returns."""
+
+    def __enter__(self):  # noqa: D105 - trivial
+        return self
+
+    def __exit__(self, *_exc):  # noqa: D105 - trivial
+        self.close()
+        return False
+
+
+@pytest.mark.parametrize(
+    "cited,expected",
+    [
+        ("P57764-PRO_0000437526", "P57764"),  # chain (cleavage product)
+        ("Q9D8T2-PRO_0000437528", "Q9D8T2"),
+        ("P19544-1", "P19544"),  # displayed isoform
+        ("Q9UJF2-2", "Q9UJF2"),  # non-displayed isoform
+        ("P0AEK4", "P0AEK4"),  # already bare
+        ("A0A0B4J2F0", "A0A0B4J2F0"),  # long-form accession, untouched
+    ],
+)
+def test_parent_accession_strips_chain_and_isoform_suffixes(cited, expected):
+    assert parent_accession(cited) == expected
+
+
+def test_fetch_panther_from_uniprot_resolves_chain_ids_through_their_parent(monkeypatch):
+    """A cited chain id gets its parent's family, keyed by the id as cited.
+
+    A ``PRO_`` chain has no PANTHER cross-reference of its own, so querying the
+    parent is the correct answer rather than merely a way round the 400.
+    """
+    queried: list[str] = []
+
+    def fake_urlopen(url, timeout=None):
+        queried.append(url)
+        assert "PRO_" not in url, "chain ids must not reach the endpoint"
+        return _FakeResponse(
+            _panther_payload(("P57764", "PTHR20750:SF4"), ("P0AEK4", "PTHR43159:SF2"))
+        )
+
+    monkeypatch.setattr(panther_families.urllib.request, "urlopen", fake_urlopen)
+    resolved = fetch_panther_from_uniprot(
+        ["P57764-PRO_0000437526", "P57764", "P0AEK4"]
+    )
+
+    assert resolved == {
+        "P57764-PRO_0000437526": "PTHR20750:SF4",
+        "P57764": "PTHR20750:SF4",
+        "P0AEK4": "PTHR43159:SF2",
+    }
+    # One request, and the parent is asked for once however many of its chains
+    # and isoforms are cited.
+    assert len(queried) == 1
+    assert queried[0].count("P57764") == 1
+
+
+def test_fetch_panther_from_uniprot_falls_back_per_accession_when_a_batch_is_rejected(
+    monkeypatch,
+):
+    """One unusable id costs one row, not the whole index.
+
+    The suffix stripping above is the fix for the ids we know about; this is the
+    guard for the next odd id someone cites, since aborting the build turns a
+    single bad row into a corpus-wide "membership not indexed yet".
+    """
+    calls: list[str] = []
+
+    def fake_urlopen(url, timeout=None):
+        calls.append(url)
+        if "BOGUS" in url:
+            raise urllib.error.HTTPError(url, 400, "Bad Request", {}, None)
+        accession = url.split("accessions=")[1].split("&")[0]
+        return _FakeResponse(_panther_payload((accession, "PTHR43159:SF2")))
+
+    monkeypatch.setattr(panther_families.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(panther_families, "UNIPROT_BATCH_SIZE", 3)
+
+    resolved = fetch_panther_from_uniprot(["P0AEK4", "P0A6R0", "BOGUS_ID"])
+
+    assert resolved == {"P0AEK4": "PTHR43159:SF2", "P0A6R0": "PTHR43159:SF2"}
+    # The rejected batch is retried one accession at a time: the batch call plus
+    # one call per member of it.
+    assert len(calls) == 4
+
+
+def test_fetch_panther_from_uniprot_gives_up_quietly_on_a_single_bad_accession(monkeypatch):
+    def fake_urlopen(url, timeout=None):
+        raise urllib.error.HTTPError(url, 400, "Bad Request", {}, None)
+
+    monkeypatch.setattr(panther_families.urllib.request, "urlopen", fake_urlopen)
+    assert fetch_panther_from_uniprot(["BOGUS_ID"]) == {}
+
+
+@pytest.mark.parametrize("code", [429, 500, 503])
+def test_fetch_panther_from_uniprot_propagates_transient_http_failures(monkeypatch, code):
+    """"Ask again later" must not be recorded as "this protein has no family".
+
+    The caller writes every accession missing from the result under
+    ``UNRESOLVED_MARKER``, which ``load_member_index_gaps`` classifies as
+    ``absent`` and the next incremental run then treats as ``known_absent`` and
+    never re-queries short of ``--rebuild``. Swallowing a 429 or a 5xx would
+    therefore turn one throttled request into a sticky false absence for up to a
+    whole batch, so only a 400 is tolerated and the rest propagate. One failed
+    call must also not fan out into a batch's worth of un-backed-off retries.
+    """
+    calls: list[str] = []
+
+    def fake_urlopen(url, timeout=None):
+        calls.append(url)
+        raise urllib.error.HTTPError(url, code, "Transient", {}, None)
+
+    monkeypatch.setattr(panther_families.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(panther_families, "UNIPROT_BATCH_SIZE", 3)
+
+    with pytest.raises(urllib.error.HTTPError) as raised:
+        fetch_panther_from_uniprot(["P0AEK4", "P0A6R0", "P0A6Q6"])
+    assert raised.value.code == code
+    assert len(calls) == 1
+
+
+def test_fetch_panther_from_uniprot_propagates_a_transient_failure_on_one_accession(
+    monkeypatch,
+):
+    """The single-accession path takes the same gate as the batch path."""
+
+    def fake_urlopen(url, timeout=None):
+        raise urllib.error.HTTPError(url, 503, "Service Unavailable", {}, None)
+
+    monkeypatch.setattr(panther_families.urllib.request, "urlopen", fake_urlopen)
+    with pytest.raises(urllib.error.HTTPError):
+        fetch_panther_from_uniprot(["P0AEK4"])
+
+
+def test_fetch_panther_from_uniprot_propagates_a_transient_failure_during_retries(
+    monkeypatch,
+):
+    """A 400 opens the per-accession retry; a 5xx inside it still propagates."""
+    calls: list[str] = []
+
+    def fake_urlopen(url, timeout=None):
+        calls.append(url)
+        asked = url.split("accessions=")[1].split("&")[0]
+        if "%2C" in asked:  # the whole batch in one request
+            raise urllib.error.HTTPError(url, 400, "Bad Request", {}, None)
+        if "P0A6R0" in asked:
+            raise urllib.error.HTTPError(url, 503, "Service Unavailable", {}, None)
+        accession = url.split("accessions=")[1].split("&")[0]
+        return _FakeResponse(_panther_payload((accession, "PTHR43159:SF2")))
+
+    monkeypatch.setattr(panther_families.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(panther_families, "UNIPROT_BATCH_SIZE", 3)
+
+    with pytest.raises(urllib.error.HTTPError) as raised:
+        fetch_panther_from_uniprot(["P0AEK4", "P0A6R0", "P0A6Q6"])
+    assert raised.value.code == 503
+
+
 def test_previous_release_differs_from_the_pinned_release():
     """During a switch the allowance compares two releases; equal ones would make it a no-op."""
     from ai_gene_review.etl.panther_families import PANTHER_PREVIOUS_RELEASE, PANTHER_RELEASE
@@ -503,3 +696,245 @@ def test_rewrite_holds_back_any_label_on_an_id_renamed_in_the_switch():
     new, applied, deferred = rewrite_panther_labels(text, names, previous_names=previous)
     assert applied == [] and new == text
     assert [(d.curie, d.reason) for d in deferred] == [("PANTHER:PTHR1:SF3", "renamed_in_switch")]
+
+
+def _label_fix_repo(tmp_path: Path, with_member_index: bool) -> Path:
+    """A repository with one module whose PANTHER label is a near miss of the official name."""
+    from ai_gene_review.etl.panther_families import member_index_path
+
+    panther = tmp_path / "interpro" / "panther"
+    panther.mkdir(parents=True)
+    (panther / "panther.obo").write_text("[Term]\nid: PANTHER:PTHR00001\nname: REAL NAME\n")
+    (tmp_path / "modules").mkdir()
+    (tmp_path / "modules" / "m.yaml").write_text(
+        "id: m\nparts:\n- family:\n    preferred_term: x\n    term:\n"
+        "      id: PANTHER:PTHR00001\n      label: REAL NAMES\n"
+    )
+    if with_member_index:
+        index = member_index_path(tmp_path)
+        index.parent.mkdir(parents=True)
+        index.write_text("uniprot_accession\tpanther_family_sf\nP00001\tPTHR00001\n")
+    return tmp_path
+
+
+def test_fix_panther_labels_refuses_apply_with_a_cold_member_index(tmp_path: Path) -> None:
+    """With no member index the grounding guard cannot skip anything, so --apply refuses."""
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = _label_fix_repo(tmp_path, with_member_index=False)
+    before = (repo / "modules" / "m.yaml").read_text()
+    args = ["fix-panther-labels", "--output-dir", str(repo)]
+
+    refused = CliRunner().invoke(app, [*args, "--apply"])
+    assert refused.exit_code == 1
+    assert "member index is empty" in refused.output
+    assert (repo / "modules" / "m.yaml").read_text() == before
+
+    dry_run = CliRunner().invoke(app, args)
+    assert dry_run.exit_code == 0
+    assert "member index is empty" in dry_run.output
+    # The hint is right whichever way the command was reached.
+    assert "`just fix-panther-labels` runs it first" in dry_run.output
+    assert "run it yourself" in dry_run.output
+    assert "Would apply 1 label correction(s)" in dry_run.output
+
+
+def test_fix_panther_labels_applies_with_its_caches_built(tmp_path: Path) -> None:
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = _label_fix_repo(tmp_path, with_member_index=True)
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+    assert result.exit_code == 0, result.output
+    assert "⚠" not in result.output
+    assert "label: REAL NAME\n" in (repo / "modules" / "m.yaml").read_text()
+
+
+def test_fix_panther_labels_refuses_apply_in_a_switch_without_the_previous_names(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A switch whose previous-release names are not cached cannot hold back renamed ids."""
+    from typer.testing import CliRunner
+
+    import ai_gene_review.etl.panther_families as panther_families
+    from ai_gene_review.cli import app
+
+    monkeypatch.setattr(panther_families, "PANTHER_PREVIOUS_RELEASE", "18.0")
+    repo = _label_fix_repo(tmp_path, with_member_index=True)
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+    assert result.exit_code == 1
+    assert "PANTHER 18.0 names are not cached" in result.output
+    assert "label: REAL NAMES" in (repo / "modules" / "m.yaml").read_text()
+
+
+def test_previous_release_labels_tells_no_switch_from_an_uncached_one(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import ai_gene_review.etl.panther_families as panther_families
+
+    panther = tmp_path / "interpro" / "panther"
+    assert panther_families.switch_release() is None
+    assert panther_families.previous_release_labels(panther) is None
+
+    monkeypatch.setattr(panther_families, "PANTHER_PREVIOUS_RELEASE", "18.0")
+    assert panther_families.switch_release() == "18.0"
+    assert panther_families.previous_release_labels(panther) is None  # not cached
+
+    monkeypatch.setattr(panther_families, "PANTHER_PREVIOUS_RELEASE", panther_families.PANTHER_RELEASE)
+    with pytest.raises(ValueError, match="equals PANTHER_RELEASE"):
+        panther_families.switch_release()
+
+
+def test_switch_release_doctest_holds_during_a_switch(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The doctest must not pin the no-switch state, or the bump PR breaks `just test`."""
+    import doctest
+
+    import ai_gene_review.etl.panther_families as panther_families
+
+    monkeypatch.setattr(panther_families, "PANTHER_PREVIOUS_RELEASE", "18.0")
+    (example,) = doctest.DocTestFinder().find(
+        panther_families.switch_release, "switch_release", globs=vars(panther_families)
+    )
+    assert doctest.DocTestRunner().run(example).failed == 0
+
+
+def test_fix_panther_labels_holds_back_a_renamed_id_during_a_switch(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """With the previous names cached, a label carrying the old name is kept for remapping."""
+    from typer.testing import CliRunner
+
+    import ai_gene_review.etl.panther_families as panther_families
+    from ai_gene_review.cli import app
+
+    monkeypatch.setattr(panther_families, "PANTHER_PREVIOUS_RELEASE", "18.0")
+    repo = _label_fix_repo(tmp_path, with_member_index=True)
+    module = repo / "modules" / "m.yaml"
+    module.write_text(module.read_text().replace("label: REAL NAMES", "label: OLD NAME"))
+    cache = panther_families.panther_cache_dir(repo)
+    panther_families.hmm_classifications_path(cache, "18.0").write_text("PTHR00001\tOLD NAME\n")
+    before = module.read_text()
+
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+
+    assert result.exit_code == 0, result.output
+    assert "1 label(s) NOT rewritten" in result.output
+    assert "changed since PANTHER 18.0" in result.output
+    assert "Applied 0 label correction(s)" in result.output
+    assert module.read_text() == before
+
+
+def test_fix_panther_labels_skips_ids_whose_members_were_never_looked_up(tmp_path: Path) -> None:
+    """With a partial index, an id no member confirms yet is held back, not relabelled."""
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = _label_fix_repo(tmp_path, with_member_index=True)  # index knows only P00001
+    (repo / "interpro" / "panther" / "panther.obo").write_text(
+        "[Term]\nid: PANTHER:PTHR00001\nname: REAL NAME\n\n"
+        "[Term]\nid: PANTHER:PTHR00002\nname: OTHER NAME\n"
+    )
+    module = repo / "modules" / "m.yaml"
+    module.write_text(
+        "id: m\nparts:\n"
+        "- family:\n    preferred_term: confirmed\n    term:\n"
+        "      id: PANTHER:PTHR00001\n      label: REAL NAMES\n"
+        "    representative_members:\n    - preferred_term: a\n      term:\n"
+        "        id: UniProtKB:P00001\n"
+        "- family:\n    preferred_term: not looked up\n    term:\n"
+        "      id: PANTHER:PTHR00002\n      label: OTHER NAMES\n"
+        "    representative_members:\n    - preferred_term: b\n      term:\n"
+        "        id: UniProtKB:Q99999\n"
+    )
+
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+
+    assert result.exit_code == 0, result.output
+    assert "Applied 1 label correction(s)" in result.output
+    assert "1 label(s) NOT rewritten: no representative member" in result.output
+    assert "PANTHER:PTHR00002  'OTHER NAMES' -> 'OTHER NAME'" in result.output
+    assert "refresh.log" in result.output  # the recipe already ran the build
+    assert "--allow-divergent does not override this skip" in result.output
+    text = module.read_text()
+    assert "label: REAL NAME\n" in text and "label: OTHER NAMES\n" in text
+
+
+def test_fix_panther_labels_reports_an_unconfirmed_id_whose_label_diverges(tmp_path: Path) -> None:
+    """An id no member confirms yet, whose label names another protein, is still listed."""
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = _label_fix_repo(tmp_path, with_member_index=True)  # index knows only P00001
+    (repo / "interpro" / "panther" / "panther.obo").write_text(
+        "[Term]\nid: PANTHER:PTHR00002\nname: OTHER NAME\n"
+    )
+    module = repo / "modules" / "m.yaml"
+    module.write_text(
+        "id: m\nparts:\n- family:\n    preferred_term: x\n    term:\n"
+        "      id: PANTHER:PTHR00002\n      label: SUCCINATE DEHYDROGENASE\n"
+        "    representative_members:\n    - preferred_term: b\n      term:\n"
+        "        id: UniProtKB:Q99999\n"
+    )
+    before = module.read_text()
+
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+
+    assert result.exit_code == 0, result.output
+    assert "PANTHER:PTHR00002  'SUCCINATE DEHYDROGENASE' -> 'OTHER NAME'" in result.output
+    assert "describes a different protein" in result.output
+    assert module.read_text() == before
+
+
+def test_fix_panther_labels_relabels_but_lists_ids_panther_has_no_family_for(
+    tmp_path: Path,
+) -> None:
+    """Members looked up with no PANTHER family: relabelled (no refresh will help), but listed."""
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+    from ai_gene_review.etl.panther_families import member_index_path
+
+    repo = _label_fix_repo(tmp_path, with_member_index=True)
+    index = member_index_path(repo)
+    index.write_text(index.read_text() + "\n# unresolved: Q99999\n")
+    (repo / "interpro" / "panther" / "panther.obo").write_text(
+        "[Term]\nid: PANTHER:PTHR00002\nname: OTHER NAME\n"
+    )
+    module = repo / "modules" / "m.yaml"
+    module.write_text(
+        "id: m\nparts:\n- family:\n    preferred_term: x\n    term:\n"
+        "      id: PANTHER:PTHR00002\n      label: OTHER NAMES\n"
+        "    representative_members:\n    - preferred_term: b\n      term:\n"
+        "        id: UniProtKB:Q99999\n"
+    )
+
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+
+    assert result.exit_code == 0, result.output
+    assert "Applied 1 label correction(s)" in result.output
+    assert "1 label(s) rewritten without member corroboration" in result.output
+    assert "PANTHER:PTHR00002  'OTHER NAMES' -> 'OTHER NAME'" in result.output
+    assert "(PANTHER has no family for any representative member)" in result.output
+    assert "NOT rewritten" not in result.output
+    assert "label: OTHER NAME\n" in module.read_text()
+
+
+def test_fix_panther_labels_lists_a_relabel_on_an_id_no_member_names(tmp_path: Path) -> None:
+    """A descriptor naming no UniProtKB member can never be confirmed: rewritten, and listed."""
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = _label_fix_repo(tmp_path, with_member_index=True)  # descriptor has no members
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+
+    assert result.exit_code == 0, result.output
+    assert "Applied 1 label correction(s)" in result.output
+    assert "1 label(s) rewritten without member corroboration" in result.output
+    assert "(no UniProtKB representative member names the id)" in result.output
+    assert "label: REAL NAME\n" in (repo / "modules" / "m.yaml").read_text()

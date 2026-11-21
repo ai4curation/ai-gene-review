@@ -1028,7 +1028,7 @@ def test_atom_provenance_is_optional_and_does_not_affect_checking():
 # has moved to SF9 (see PANTHER_LABELS / PANTHER_MEMBERS above).
 
 def _previous():
-    from ai_gene_review.validation.family_residue_validator import PreviousRelease
+    from ai_gene_review.etl.panther_families import PreviousRelease
     return PreviousRelease(
         "19.0",
         {**PANTHER_LABELS, "PANTHER:PTHR00001:SF1": "AN OLD NAME",
@@ -1098,7 +1098,7 @@ def test_transition_defers_unclassified_member_of_a_changed_id():
     ]
     assert outcomes == [("PANTHER_LABEL", Outcome.UNRESOLVED), ("PANTHER_MEMBERSHIP", Outcome.UNRESOLVED)]
     unchanged_family = {**_previous().labels, "PANTHER:PTHR00001:SF1": "A SUBFAMILY"}
-    from ai_gene_review.validation.family_residue_validator import PreviousRelease
+    from ai_gene_review.etl.panther_families import PreviousRelease
     same_name = PreviousRelease("19.0", unchanged_family, _previous().members)
     outcomes = [
         (r.kind, r.outcome)
@@ -1120,10 +1120,8 @@ def test_transition_defers_unclassified_member_of_a_changed_id():
 )
 def test_transition_does_not_defer_release_independent_scope_errors(sf_id, kind):
     """An id gone in the current release still fails a scope rule it breaks in every release."""
-    from ai_gene_review.validation.family_residue_validator import (
-        PreviousRelease,
-        check_panther_ids,
-    )
+    from ai_gene_review.etl.panther_families import PreviousRelease
+    from ai_gene_review.validation.family_residue_validator import check_panther_ids
     # current release: the review's family exists, the id in the subfamily slot is gone
     labels = {"PANTHER:PTHR00001": "SOME FAMILY", "PANTHER:PTHR00001:SF1": "A SUBFAMILY"}
     previous = PreviousRelease("19.0", {sf_id: "OLD NAME"}, {})
@@ -1135,7 +1133,7 @@ def test_transition_does_not_defer_release_independent_scope_errors(sf_id, kind)
 
 
 def test_load_previous_release_is_offline_and_off_when_not_cached(tmp_path, capsys):
-    from ai_gene_review.validation.family_residue_validator import load_previous_release
+    from ai_gene_review.etl.panther_families import load_previous_release
     assert load_previous_release(tmp_path, "99.0") is None
     assert "switch allowance is off" in capsys.readouterr().err
 

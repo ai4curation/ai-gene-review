@@ -10,12 +10,15 @@ UniProt accessions, and a protein-complex step holds when every active unit's PA
 the engine's atom for a complex carries no unit selectors). The ``unsatisfied_gaps`` of an organism are
 the engine's innermost gaps. Every step of the compiled module is classified once, before any organism
 is evaluated: ``unevaluable_steps`` lists the steps this oracle cannot evaluate at all (a step with
-neither a PANTHER id nor an accession), which never hold, and ``mixed_complex_steps`` the complexes
-whose units mix PANTHER-keyed and gene-keyed selectors, which are evaluated on their PANTHER-keyed
-units alone. A family step that also names an InterPro domain (``domain`` or ``required_domain``) holds only
+neither a PANTHER id nor an accession), which never hold; ``gaps_on_unevaluable_steps`` names, per
+organism, the unsatisfied gaps whose absent steps include one of those, so they are not read as
+observed absences (when the unevaluable step is a whole alternative, as in a variant set, it could
+fill the gap); and ``mixed_complex_steps`` the complexes whose units mix PANTHER-keyed and
+gene-keyed selectors, which are evaluated on their PANTHER-keyed units alone. A family step that also names an InterPro domain (``domain`` or ``required_domain``) holds only
 when a selected protein carries that domain in UniProt's InterPro cross-references, fetched once and
 cached in ``.cache/panther/uniprot-interpro.json``; such rows also report
-``proteins_with_required_domains_per_organism``. Annoton functions are not checked. Each descriptor row's ``required`` flag marks only whether its top-level part
+``proteins_with_required_domains_per_organism``. A domain on a step selected only by UniProt
+accession is not checked. Annoton functions are not checked. Each descriptor row's ``required`` flag marks only whether its top-level part
 is ``optional``; it is a reading aid, not the verdict. Classification rows with an empty
 accession column are skipped, so they cannot turn a zero count into a hit.
 
@@ -233,11 +236,12 @@ def fetch_interpro_domains(accessions: set[str], cache_file: Path) -> DomainLook
                 if acc in found
             }
         )
-    if missing:
+        # Written after every batch, so a failure in a later batch keeps the earlier answers;
+        # written to a temporary file and renamed, so an interrupted write cannot corrupt it.
         cache_file.parent.mkdir(parents=True, exist_ok=True)
-        cache_file.write_text(
-            json.dumps({"accessions": entries}, sort_keys=True, indent=0)
-        )
+        tmp = cache_file.with_name(cache_file.name + ".tmp")
+        tmp.write_text(json.dumps({"accessions": entries}, sort_keys=True, indent=0))
+        tmp.replace(cache_file)
     answered = accessions & set(entries)
     return DomainLookup(
         domains={acc: set(entries[acc]["interpro"]) for acc in answered},
@@ -423,23 +427,26 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
             if (
                 a.domain_ids
                 and panther_ids(a)
-                and not interpro_ids([{"term": {"id": d}} for d in a.domain_ids])
+                and any(not d.startswith("InterPro:") for d in a.domain_ids)
             ):
                 raise SystemExit(
                     f"{name}: step {a.node_id} names a domain the census cannot check "
                     f"({', '.join(a.domain_ids)}); use an InterPro id"
                 )
-        lookup = fetch_interpro_domains(
-            {
+        candidates = {
+            o.slug: {
                 acc
                 for selectors in domain_families
-                for index in data.values()
                 for f in selectors
-                for acc in index.get(f, set())
-            },
-            cache / "uniprot-interpro.json",
+                for acc in data[o.slug].get(f, set())
+            }
+            for o in ORGANISMS
+        }
+        lookup = fetch_interpro_domains(
+            set().union(*candidates.values(), set()), cache / "uniprot-interpro.json"
         )
         domains = lookup.domains
+        unanswered = set(lookup.unanswered)
         rows = []
         for d in descriptors(doc["module"]):
             selected = {
@@ -476,18 +483,33 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
                 {f"{ref}#{k}": v for k, v in complex_units(ref_doc["module"]).items()}
             )
         kinds = {a.node_id: step_kind(a, units) for a in iter_atoms(circuit)}
-        met, gaps = {}, {}
+        met, gaps, undetermined = {}, {}, {}
         for o in ORGANISMS:
             holds = atom_holds(data[o.slug], units, all_accessions[o.slug], domains)
             met[o.slug] = is_satisfied(circuit, holds)
             if not met[o.slug]:
-                gaps[o.slug] = ["/".join(g.path) for g in gap_report(circuit, holds)]
+                report = gap_report(circuit, holds)
+                gaps[o.slug] = ["/".join(g.path) for g in report]
+                # A gap that an unevaluable step could fill is not an observed absence.
+                marked = {
+                    "/".join(g.path): sorted(
+                        {
+                            a.node_id
+                            for a in g.absent
+                            if kinds[a.node_id] == "unevaluable"
+                        }
+                    )
+                    for g in report
+                }
+                if any(marked.values()):
+                    undetermined[o.slug] = {k: v for k, v in marked.items() if v}
         modules.append(
             {
                 "module": name,
                 "descriptors": rows,
                 "required_parts_met": met,
                 "unsatisfied_gaps": gaps,
+                "gaps_on_unevaluable_steps": undetermined,
                 "unevaluable_steps": sorted(
                     k for k, v in kinds.items() if v == "unevaluable"
                 ),
@@ -500,6 +522,11 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
                             "source": "UniProt InterPro cross-references",
                             "uniprot_releases": list(lookup.uniprot_releases),
                             "unanswered_accessions": list(lookup.unanswered),
+                            "unanswered_by_organism": {
+                                o.slug: sorted(unanswered & candidates[o.slug])
+                                for o in ORGANISMS
+                                if unanswered & candidates[o.slug]
+                            },
                         }
                     }
                     if domain_families

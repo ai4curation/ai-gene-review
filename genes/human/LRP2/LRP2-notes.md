@@ -149,3 +149,9 @@ Row: GO:0005783 IEA (GO_REF:0000107, Ensembl projection from mouse Lrp2 A2ARV4).
 - Outcome: KEEP_AS_NON_CORE changed to UNDECIDED (projection whose donor paper cannot be read;
   KEAP1/DLG4/CAVIN1 precedent). A megalin immuno-EM or ER-marker figure in PMID:15616221
   would settle KEEP_AS_NON_CORE vs MARK_AS_OVER_ANNOTATED. No ER membrane row.
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- Row: GO:0005794 IEA (GO_REF:0000107, Ensembl projection from mouse A2ARV4). Changed KEEP_AS_NON_CORE -> UNDECIDED.
+- Donor traced in QuickGO: mouse Lrp2 GO:0005794 IDA, MGI, PMID:15616221, the same cubilin paper behind the ER projection (UNDECIDED since 2026-11-05). Abstract-only, no PMC copy, publisher page (academic.oup.com) 403 on 2026-11-18; the abstract places megalin only at the apical pole. Human UniProt record has no Golgi item.
+- Unreadable donor -> UNDECIDED (CD247 line), consistent with the ER row. ARH-megalin "recycling endosomes in the Golgi region" (PMID:14528014) is not a Golgi claim. propagation_review set to UNRESOLVED. PMID:15616221 reference_review correctness UNVERIFIED -> VERIFIED (identifier is right; unreadability recorded), per the batch-2 convention.
