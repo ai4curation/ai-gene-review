@@ -3,7 +3,7 @@ title: "Fungal PAINT Family Reviews"
 maturity: IN_PROGRESS
 collections: [HOMOLOGY_PROPAGATION]
 species: [yeast, SCHPO, CANAL, CANGA, NEUCR, ASPFU, EMENI]
-autolink_exclude: [AIM6, Ser]
+autolink_exclude: [AIM6, ERG6, Erg6, LYS2, PPN1, Ppn1, Ser]
 index_group: YEAST
 ---
 
@@ -621,9 +621,10 @@ plus protein targeting to vacuole at fungal `PANTHER:PTN000989606`.
 - Added the compact `PTHR13027` Mon1/SAND family after filling the missing
   `CANGA/MON1` review and writing the family sidecar. The eukaryotic GEF,
   opisthokont Mon1-Ccz1 complex, and fungal vacuole-delivery PAINT nodes match
-  the reviewed fungal genes; the current S. pombe IRD against Mon1-Ccz1 complex
-  membership is contradicted by PomBase's retained mon1 orthology transfer and
-  is recorded for removal.
+  the reviewed fungal genes; the current S. pombe IRD blocks Mon1-Ccz1 complex
+  membership even though the same PAINT slice still propagates eukaryotic
+  GO:0005085 GEF activity to S. pombe mon1, leaving an internally inconsistent
+  loss call recorded for removal.
 
 - Added the compact `PTHR44068` Erg6/SMT family after checking the existing
   *S. cerevisiae*, *S. pombe*, *C. albicans*, *N. crassa*, and
