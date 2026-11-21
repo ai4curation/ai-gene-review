@@ -23,3 +23,7 @@
 - GO:0016709 captures the supported monooxygenase reaction class. GO:0009812 is
   used for the predicted pathway role because no flavonoid-catabolic child is
   present in the local ontology. No cellular-component assertion is made.
+
+## 2026-11-06 comparative audit
+
+Current KEGG K26180 bulk, PP_3199 entry and gene-to-KO queries no longer carry the historical KO assignment (source endpoints and dated results in `analysis/module_audits/bacterial_flavonoid_degradation/taxonomy-snapshot.json`). This is not a negative functional assay. The committed reciprocal-best-hit comparison and FAD-monooxygenase architecture still support the qualified FdeE inference; exact substrate and native flux remain untested. The earlier GO:0009812 note above is historical: the current review carries the more specific GO:0046275 flavonoid catabolic process proposal. No raw source or annotation payload was changed.

@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 collections: [HOMOLOGY_PROPAGATION]
 species: [yeast, SCHPO, CANAL, NEUCR, ASPFU, EMENI]
 autolink_exclude: [Ser]
+index_group: YEAST
 ---
 
 # Fungal PAINT Family Reviews
@@ -45,12 +46,15 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR11671` V-TYPE ATP SYNTHASE SUBUNIT D | fungal V-ATPase subunit D node | `VMA8`/`vma8`/`VMA8`/`vma-8` |
 | `PTHR43607` V-TYPE PROTON ATPASE CATALYTIC SUBUNIT A | conserved A-subunit and fungal vacuole-membrane nodes | `VMA1`/`vma1`/`TFP1`/`vma-1` |
 | `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
+| `PTHR32379` GUANIDINOACETATE N-METHYLTRANSFERASE | fungal Rmt2 N5-arginine methyltransferase node and vertebrate GAMT node in the same family | `RMT2`/`rmt2`/`ant-1`/`rmt2` |
+| `PTHR10340` SPHINGOMYELIN PHOSPHODIESTERASE | fungal Ppn1 polyphosphatase node with SMPD/SMPDL3 IRD pruning | `PPN1`/`PPN1`/`PPN1`/`ppn1`/`epp-1` |
+| `PTHR14430` RABIN3-RELATED | Opisthokonta Rab GEF node and fungal cell-tip Sec2 node | `SEC2`/`sec2`/`spo13`/`SEC2`/`sec2` |
 
 ---
 
 # STATUS
 
-Last updated: 2026-11-01
+Last updated: 2026-11-20
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -110,18 +114,29 @@ biosynthetic process, protein folding, and protein folding chaperone activity.
 ## Family 4: MAP Kinases
 
 `PTHR24055` includes broad MAPK-family PAINT placements for generic kinase
-activity and active compartments, plus fungal HOG/Sty1 stress-MAPK placements
-such as `PANTHER:PTN001172058` for osmosensory, oxidative-stress, and
-stress-activated MAPK-cascade assertions.
+activity and active compartments, fungal HOG/Sty1 stress-MAPK placements such
+as `PANTHER:PTN001172058` for osmosensory, oxidative-stress, and
+stress-activated MAPK-cascade assertions, and the fungal Spk1/Fus3 pheromone
+MAPK placement `PANTHER:PTN001172087`.
 
 - [x] `NEUCR/hog-1` - *Neurospora crassa* OS-2/HOG-1 stress MAPK; merged in PR
   #4570
 - [x] `CANAL/HOG1` - *Candida albicans* HOG stress MAPK; merged in PR #4565
 - [x] `SCHPO/sty1` - fission yeast Sty1/Spc1 stress MAPK; merged in PR #4573
 - [x] `yeast/HOG1` - *S. cerevisiae* HOG stress MAPK; merged in PR #4703
-- [ ] `CANAL/MKC1` - *Candida albicans* Slt2/Spm1-family cell-wall-integrity
-  MAPK; drafted in this branch
-- [ ] `yeast/FUS3` - budding-yeast pheromone MAPK; drafted in PR #5872
+- [x] `CANAL/MKC1` - *Candida albicans* Slt2/Spm1-family cell-wall-integrity
+  MAPK; merged in PR #5868
+- [x] `yeast/FUS3` - budding-yeast pheromone MAPK; merged in PR #5872
+- [ ] `SCHPO/spk1` - fission yeast Spk1 pheromone-response MAPK; drafted in
+  PR #5886
+- [x] `NEUCR/mak-1` - *Neurospora crassa* cell-wall-integrity MAPK;
+  merged in PR #5885
+- [x] `CANAL/CEK1` - CGD ERK/Kss1/Fus3-like MAPK with Cek2-redundant mating plus
+  filamentous-growth and cell-wall evidence; revalidated in this branch
+- [x] `ASPFU/sakA` - *Aspergillus fumigatus* SakA/Hog1 stress MAPK;
+  drafted in PR #5883
+- [ ] `ASPFU/mpkC` - *Aspergillus fumigatus* HOG1-subfamily MpkC MAPK;
+  drafted in this branch
 
 ## Family 5: Fungal Glucanases
 
@@ -419,12 +434,129 @@ refining the root oxidoreductase transfer.
   #4741
 - [x] `EMENI/mcr1` - *Aspergillus nidulans* mitochondrial MCR1-family member;
   merged in PR #5415
-- [ ] `EMENI/alnC` - *Aspergillus nidulans* membrane AlnC-family reductase in
-  the (+)-asperlin cluster; drafted in PR #5873
+- [x] `EMENI/alnC` - *Aspergillus nidulans* membrane AlnC-family reductase in
+  the (+)-asperlin cluster; merged in PR #5873
+
+## Family 19: Rmt2/GAMT Methyltransferases
+
+`PTHR32379` contains a broad eukaryotic root with cytoplasmic/nuclear
+localization and generic SAM-dependent methyltransferase placements, a vertebrate
+`PANTHER:PTN001285367` GAMT node for guanidinoacetate N-methyltransferase
+activity and creatine biosynthesis, and a fungal `PANTHER:PTN001285370` Rmt2
+node for protein arginine N5-methyltransferase activity. The official PANTHER
+family name is GUANIDINOACETATE N-METHYLTRANSFERASE, so each fungal review needs
+to keep the GAMT branch separate from Rpl12/RMT2 methylation.
+
+- [x] `yeast/RMT2` - *S. cerevisiae* protein-arginine N5-methyltransferase;
+  merged in PR #6035
+- [x] `SCHPO/rmt2` - fission-yeast Rmt2 ortholog; merged in PR #6037
+- [x] `NEUCR/ant-1` - *Neurospora crassa* Rmt2-family member; merged in PR
+  #6038
+- [x] `ASPFU/rmt2` - *Aspergillus fumigatus* Rmt2-family member; drafted in
+  this branch
+- [x] `EMENI/rmt2` - *Aspergillus nidulans* Rmt2-family member; drafted in
+  this branch
+
+## Family 20: Ppn1 Polyphosphatases
+
+`PTHR10340` contains metazoan and amoebozoan sphingomyelinase or cyclic
+GMP-AMP phosphodiesterase branches plus a compact fungal Ppn1 ancestor,
+`PANTHER:PTN000818947`. PAINT places `GO:0000298 endopolyphosphatase activity`,
+`GO:0004309 exopolyphosphatase activity`, `GO:0000324 fungal-type vacuole`, and
+`GO:0006798 polyphosphate catabolic process` on that fungal node, while 2026
+IRD rows prune the extracellular-region and phosphoric-diester-hydrolase
+assertions inherited from non-fungal branches.
+
+- [x] `yeast/PPN1` - *S. cerevisiae* endo/exopolyphosphatase anchor; drafted in
+  this branch
+- [x] `CANAL/PPN1` - CGD *Candida albicans* seed for the fungal polyphosphate
+  catabolic-process node
+- [x] `CANGA/PPN1` - CGD *Candida glabrata* ortholog reviewed against the
+  fungal polyphosphate catabolic-process node
+- [x] `SCHPO/ppn1` - fission-yeast Ppn1 ortholog with inferred fungal
+  vacuolar polyphosphatase activity
+- [x] `NEUCR/epp-1` - *Neurospora crassa* Ppn1-family member
+
+---
+
+## Family 21: Sec2 Rab GEFs
+
+`PTHR14430` contains a broad Opisthokonta `PANTHER:PTN000374167`
+guanyl-nucleotide exchange factor node, a fungal `PANTHER:PTN001024876`
+cell-tip active-location node, and a separate animal `PANTHER:PTN002683547`
+cytosol node. The next pass should keep the fungal Sec2 branch separate from
+animal Rabin3/Rab8 GEFs while checking the fission-yeast duplication into
+vegetative `sec2` and sporulation-specific `spo13`.
+
+- [x] `yeast/SEC2` - *S. cerevisiae* Sec4 Rab GEF; drafted in this branch
+- [x] `SCHPO/sec2` - fission-yeast vegetative Sec2-family member
+- [x] `SCHPO/spo13` - fission-yeast sporulation-specific Sec2-family member
+- [x] `CANAL/SEC2` - CGD-seeded *Candida albicans* Sec2 ortholog
+- [x] `ASPFU/sec2` - *Aspergillus fumigatus* Sec2-family member
 
 ---
 
 # NOTES
+
+## 2026-11-20
+
+- Finished the remaining `PTHR14430` Sec2/Rabin3 fungal reviews in a compact
+  tranche: `SCHPO/sec2`, `SCHPO/spo13`, `CANAL/SEC2`, and `ASPFU/sec2`.
+  The long Sec2 proteins accept the broad `PANTHER:PTN000374167` Rab-GEF node
+  and the fungal `PANTHER:PTN001024876` cell-tip node in true tip-growing
+  fungi, while fission-yeast `spo13` is kept separate as the
+  sporulation-specific short Sec2 paralog with direct Ypt2/Sec4-family GEF
+  evidence.
+
+- Completed the compact `PTHR32379` Rmt2/GAMT set with `ASPFU/rmt2` and
+  `EMENI/rmt2`, after the earlier `yeast/RMT2`, `SCHPO/rmt2`, and
+  `NEUCR/ant-1` reviews had already accepted the fungal `PTN001285370`
+  protein arginine N5-methyltransferase node in PRs #6035, #6037, and #6038.
+  The Aspergillus reviews accept the same exact Rmt2 activity and broad
+  nucleus/cytoplasm transfers, modify InterPro's parent PRMT row to the
+  N5-specific activity, and keep EnsemblFungi's budding-yeast
+  translational-fidelity transfer as a plausible non-core orthology assertion.
+
+## 2026-11-06
+
+- Started `PTHR14430`, the compact Sec2/Rabin3-family Rab GEF family. The first
+  review covers `yeast/SEC2`: the Opisthokonta GEF PAINT node is sound for
+  budding yeast, the fungal cell-tip PAINT node over-propagates to *S.
+  cerevisiae*, and the animal cytosol PAINT node stays outside the fungal clade.
+- Started `PTHR10340`, separating the fungal Ppn1 polyphosphatase clade from
+  the metazoan sphingomyelinase/SMPDL3-like branches named by the official
+  PANTHER family label. The first `yeast/PPN1` review accepts the fungal
+  `PTN000818947` endopolyphosphatase, exopolyphosphatase, fungal-type vacuole,
+  and polyphosphate-catabolism IBAs; treats the S. cerevisiae self-seed in the
+  PAINT `WITH/FROM` column as direct experimental grounding rather than
+  circular support; fixes the second polyphosphate-catabolism seed as a
+  `CGD:CAL*` *Candida albicans* seed rather than the CANGA member; and records
+  the newer 2025 polyphosphate-engineering and FRET-assay papers without
+  changing the core GO conclusions.
+- Drafted `CANGA/PPN1`; it accepts the conserved fungal Ppn1
+  endopolyphosphatase, exopolyphosphatase, fungal-type vacuole, and
+  polyphosphate-catabolism transfers from `PTN000818947`; keeps vacuole
+  membrane and cytosol as non-core inherited locations; leaves the inferred
+  nuclear location undecided; and removes the stale TreeGrafter
+  `GO:0008081 phosphoric diester hydrolase activity` row because PAINT now has
+  an agreeing 2026 IRD at the fungal Ppn1 node.
+- Added `SCHPO/ppn1`, accepting the four `PTN000818947` fungal Ppn1 PAINT
+  IBAs and using the completed S. cerevisiae/C. glabrata family reviews plus
+  the Q9C1W8 UniProt entry to refine generic vacuole, vacuolar membrane,
+  membrane, hydrolase, and energy-reserve rows to fungal vacuolar
+  polyphosphate catabolism. The S. pombe GOA set has no stale TreeGrafter
+  `GO:0008081` row, so no PTHR10340 IRD loss needed to be recorded.
+- Added `NEUCR/epp-1`, accepting the four `PTN000818947` fungal Ppn1 PAINT
+  IBAs and the exact UniProt endopolyphosphatase inferences, refining generic
+  vacuole and membrane rows to fungal-type vacuole or fungal-type vacuole
+  membrane, and recording that literature searches found no direct N. crassa
+  EPP-1 deletion, localization, or purified-enzyme paper.
+- Drafted `CANAL/PPN1`; it resolves the SC5314 CGD member to UniProt
+  `A0A1D8PQR0`/PHM5, accepts the fungal Ppn1 endopolyphosphatase,
+  exopolyphosphatase, fungal-type vacuole, and polyphosphate-catabolism IBAs
+  from `PTN000818947`, accepts the CGD genetics-based
+  polyphosphate-catabolism annotation, and narrows broad predicted vacuole and
+  membrane rows to the fungal vacuolar membrane.
 
 ## 2026-11-01
 

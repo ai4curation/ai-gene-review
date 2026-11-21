@@ -1,0 +1,49 @@
+history_version: 1
+target:
+  kind: schema
+  slug: proposed_ontology_changes
+  path: src/ai_gene_review/schema/gene_review.yaml
+session:
+  id: 2026-11-01T162346Z-claude-code-b1cbcc
+  timestamp: '2026-11-01T16:23:46Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    model: claude-opus-5
+    agent_tool: claude-code
+links:
+  issues: []
+  prs: []
+  urls: []
+events:
+- type: EDIT
+  outcome: changed
+  sections:
+  - schema
+  - validation
+  - tools
+  - projects
+  - modules
+  - docs
+  summary: Distinguish proposing an ontology change from reacting to one; re-record
+    all 15 entries
+  details: |
+    The schema could not tell a change this repository asks for from a change the ontology itself proposed or already made. Raised as a question; the answer was that it could not, and that the consequence was already committed.
+
+    All 15 records written under the previous version were reactive. Both backfilled projects say so in their own prose - 'A GO obsoletion proposal retired...', 'Obsoletion plan (per upstream)', and an ontology ticket opened 2018-03-10 - yet each record carried report_status: FIXED, whose documented meaning is that the source corrected the record in response to our report, and each linked GO's own ticket through a slot described as 'once filed'. The exporter presented all 15 as 'Proposed ontology changes for GO'. None of them was a request.
+
+    Added origin (required): SELF_PROPOSED, UPSTREAM_PROPOSED, UPSTREAM_COMPLETED. Added stance (AGREE, PARTIALLY_AGREE, DISAGREE, NEEDS_CONFIRMATION) for changes we did not originate, which makes disagreeing with an upstream change expressible for the first time - two live objections in this repository previously had nowhere to go, the vesicle page's warning that GO:0099023 is a cellular-component term and must not be reused as the MF replacement, and the amino-acid page's note that batch membership needs confirming before in-repo edits. Split the single lifecycle in two: request_status (NOT_FILED/FILED/ACKNOWLEDGED/ACCEPTED/DECLINED) for what the ontology owes us, adoption_status (NOT_STARTED/IN_PROGRESS/COMPLETE/NOT_APPLICABLE) for what we owe their decision. Renamed term_tracker_issue to upstream_tracker_issue, documented as the ontology's ticket whoever opened it, since origin now says which. Added ontology_state_verified, the date a curator actually looked the term's state up as distinct from the date somebody wrote a plan. confidence became optional, required only for SELF_PROPOSED: on an upstream change the ontology's decision is not ours to grade, and what I had been recording as CONFIRMED was really a verification date.
+
+    New policy checks: missing_confidence, confidence_on_upstream_change, stance_on_self_proposed, missing_stance, request_status_on_upstream_change, thin_objection (a DISAGREE or PARTIALLY_AGREE under 20 words), unverified_completed_change, premature_adoption_status, and unmigrated_landed_change.
+
+    That last one is the point of the exercise. It fires three times on AMINO_ACID_ACTIVATION_OBSOLETION, naming nine files across four species (POPTR/ALARS, PSEPK/alaS, PSEPK/argS, PSEPK/glyS, human/AARS1, human/AARS2, DANRE/gtpbp3 and the mitochondrial tRNA charging module) that still annotate to GO terms now obsolete. Found by adding the field rather than by anyone noticing, and it is the failure the stale-audit problem of the previous session was a symptom of.
+
+    The exporter now writes two reports per ontology instead of one: <ONT>-requests.md, holding only our own open requests and therefore what is sent upstream, and <ONT>-inbound.md, holding upstream changes not yet adopted here. A row is never in both, pinned by test_the_two_reports_partition_the_work. Run over the corpus it reports 0 open requests and 8 inbound changes, 5 naming content still to migrate - which is the honest shape of what this repository currently holds.
+
+    Re-recorded all 15 entries. The five vesicle obsoletions and the exocyst one are UPSTREAM_COMPLETED with stance AGREE and a verification date; the five flagged mapping removals are UPSTREAM_PROPOSED, since upstream flagged them and nobody has acted; the four amino-acid entries are UPSTREAM_COMPLETED with their real affected_annotations in place of the project page itself.
+
+    One incidental finding pinned by a test: a bare YAML date parses to datetime.date, which LinkML's date range rejects. The repo's existing convention (reviewed_on) is a quoted string, so test_committed_changes_use_string_dates enforces it for ontology_state_verified rather than leaving it to be rediscovered as a validation failure.
+
+    Recorded in docs and not fixed: a REMOVE_MAPPING on an InterPro2GO or UniRule mapping is grouped under ontology: GO because GO owns the term, but the mapping lives in InterPro2GO or UniRule and that is who would remove it. Five records are currently misfiled that way. SourceDefect has a resource slot for exactly this; ProposedOntologyChange does not.
+
+    Validation: 1778 tests and 33 doctests pass; ruff and mypy clean; linkml-validate clean on the changed module.

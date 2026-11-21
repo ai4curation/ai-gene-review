@@ -86,7 +86,7 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from enum import Enum
-from typing import Callable, Dict, Iterator, List, NamedTuple, Optional, Set, Tuple
+from typing import Callable, Dict, Iterator, List, Mapping, NamedTuple, Optional, Set, Tuple
 
 import yaml
 
@@ -98,6 +98,8 @@ from ai_gene_review.etl.panther_families import (
     load_subfamily_counts,
     member_index_path,
 )
+from ai_gene_review.validation.quote_check import Outcome as QuoteOutcome
+from ai_gene_review.validation.quote_check import check_document
 from ai_gene_review.validation.supporting_text import (
     LITERATURE_PREFIXES,
     build_supporting_text_validator,
@@ -1127,6 +1129,7 @@ def validate_family_members(
     paint_index: Optional[PaintIndex] = None,
     subfamily_counts: Optional[Dict[str, int]] = None,
     alternates: Optional[Dict[str, str]] = None,
+    previous: Optional[Tuple[str, Mapping[str, str]]] = None,
 ) -> Tuple[List[str], List[str]]:
     """Check that a declared PANTHER family really contains its own members.
 
@@ -1144,6 +1147,10 @@ def validate_family_members(
     ``alternates`` holds UniProt's family for accessions where it disagrees with
     PANTHER's classification files. Either source is accepted: a declared family
     that matches only the UniProt value is reported as a warning, not an error.
+
+    ``previous`` is ``(release, members)`` during a PANTHER switch: a declared family
+    that matches the members' family in the release being left, but not in the current
+    one, is a warning (remap pending), not an error.
     """
     errors: List[str] = []
     warnings: List[str] = []
@@ -1192,6 +1199,24 @@ def validate_family_members(
                 "are accepted."
             )
             continue
+        if previous is not None and not declared_bases & member_bases:
+            previous_release, previous_members = previous
+            previous_bases = {
+                previous_members[accession].split(":", 1)[0]
+                for accession in known
+                if accession in previous_members
+            }
+            if declared_bases & previous_bases:
+                moved = ", ".join(
+                    f"{accession} is in PANTHER:{known[accession]}"
+                    for accession in sorted(known)
+                )
+                warnings.append(
+                    f"{use.path}: the declared family matched at least one of these "
+                    f"members in PANTHER {previous_release} but none in the current "
+                    f"release -- {moved}. Remap it from `just panther-release-diff`."
+                )
+                continue
         if declared_bases & member_bases:
             # Precision advisory: the id is right, but if every member resolves
             # to one subfamily of a large family, the subfamily is the sharper
@@ -1409,6 +1434,56 @@ def compare_label(
             "label"
         )
     return message
+
+
+def defer_previous_release_panther_terms(
+    terms: List[Tuple[str, str]],
+    current_names: Mapping[str, str],
+    previous_names: Mapping[str, str],
+    previous_release: str,
+) -> Tuple[List[Tuple[str, str]], List[str]]:
+    """Set aside PANTHER terms that were right in the previous release (switch window).
+
+    During a PANTHER switch (``PANTHER_PREVIOUS_RELEASE``), a PANTHER id that is gone in
+    the current release, or renamed, still carries the previous release's name until it
+    is remapped. Such a term is returned as a warning pointing at the remap report and
+    removed from the list, so term validation does not fail on it. A label that matches
+    neither release is kept, and still fails. The family-review check
+    (``check_panther_ids``) applies the same rule.
+
+    The comparison is with the OBO's primary names only. It reproduces the label check
+    it replaces because ``panther.obo`` carries no synonyms and no PANTHER id has a
+    ``term_label_aliases`` entry in ``conf/oak_config.yaml``; if either changes, a label
+    those would accept could be warned about here instead of passing.
+
+    >>> cur = {"PANTHER:PTHR1:SF1": "NEW NAME"}
+    >>> prev = {"PANTHER:PTHR1:SF1": "OLD NAME", "PANTHER:PTHR1:SF2": "GONE"}
+    >>> terms = [("PANTHER:PTHR1:SF1", "OLD NAME"), ("PANTHER:PTHR1:SF2", "GONE"),
+    ...          ("PANTHER:PTHR1:SF1", "WRONG"), ("GO:1", "x")]
+    >>> kept, warns = defer_previous_release_panther_terms(terms, cur, prev, "19.0")
+    >>> kept, len(warns)
+    ([('PANTHER:PTHR1:SF1', 'WRONG'), ('GO:1', 'x')], 2)
+    """
+    kept: List[Tuple[str, str]] = []
+    warnings: List[str] = []
+    for curie, label in terms:
+        previous_name = previous_names.get(curie)
+        if previous_name is None or label != previous_name:
+            kept.append((curie, label))
+        elif curie not in current_names:
+            warnings.append(
+                f"{curie} ('{label}') is gone from the current PANTHER release; it was "
+                f"valid in {previous_release}. Remap it from `just panther-release-diff`."
+            )
+        elif current_names[curie] != label:
+            warnings.append(
+                f"{curie} is renamed since PANTHER {previous_release}: '{label}' is now "
+                f"'{current_names[curie]}'. The id may now name something else; remap it "
+                "from `just panther-release-diff`."
+            )
+        else:
+            kept.append((curie, label))
+    return kept, warnings
 
 
 def validate_terms(
@@ -1881,18 +1956,30 @@ def validate_module_file(
             panther_dir = project_root / "interpro" / "panther"
         paint_index = load_paint_index(panther_dir)
 
+    # During a PANTHER switch, ids, labels and memberships that were right in the
+    # release being left are warnings until remapped (PANTHER_PREVIOUS_RELEASE).
+    from ai_gene_review.etl.panther_families import panther_artifacts, previous_release
+
+    panther_root = panther_dir or project_root / "interpro" / "panther"
+    previous = previous_release(panther_root)
+
     member_errors, member_warnings = validate_family_members(
         list(iter_family_member_uses(doc)),
         member_index,
         paint_index,
         alternates=alternates,
-        subfamily_counts=load_subfamily_counts(
-            project_root / "interpro" / "panther" / "panther.obo"
-        ),
+        subfamily_counts=load_subfamily_counts(panther_root / "panther.obo"),
+        previous=None if previous is None else (previous.release, previous.members),
     )
 
     terms = list(iter_terms(doc))
+    transition_warnings: List[str] = []
+    if previous is not None:
+        terms, transition_warnings = defer_previous_release_panther_terms(
+            terms, panther_artifacts(panther_root).names, previous.labels, previous.release
+        )
     errors, warnings = validate_terms(terms, adapter_map, resolver, label_aliases)
+    warnings.extend(transition_warnings)
     evidence_errors, evidence_warnings = validate_terms(
         list(iter_evidence_go_terms(doc)),
         adapter_map,
@@ -1941,6 +2028,8 @@ def validate_module_file(
     errors.extend(conformance_errors)
     warnings.extend(conformance_warnings)
     errors.extend(validate_module_refs(doc, path.parent, path.stem))
+
+    errors.extend(validate_leaf_grounding_completeness(doc))
 
     # Reaction chaining: advisory only (never blocks). A `chaining_status`
     # override on a connection acknowledges a known gap and suppresses its
@@ -1994,11 +2083,11 @@ def validate_module_file(
     errors.extend(title_errors)
     warnings.extend(title_warnings)
 
-    # Supporting-text snippets: every EvidenceItem literature quote (PMID/DOI
-    # source_id paired with supporting_text) must be a verbatim (normalized)
-    # substring of the cached publication. Mismatches block; unfetchable or
-    # uncached references degrade to advisory warnings.
-    st_errors, st_warnings = validate_supporting_text(doc)
+    # Supporting-text quotes: every supporting_text, whatever it cites (PMID/DOI
+    # against publications/, file:/Reactome: against the local source), must be a
+    # verbatim (normalized) substring of its source. Failures block unless listed
+    # in conf/quote_check_baseline.yaml; unreadable sources are summarised.
+    st_errors, st_warnings = validate_supporting_text(doc, yaml_file=path)
     errors.extend(st_errors)
     warnings.extend(st_warnings)
 
@@ -2009,37 +2098,6 @@ def validate_module_file(
         ungrounded_families=count_ungrounded_families(doc),
         function_conformance=function_conformance,
     )
-
-
-def iter_evidence_snippets(obj: object) -> Iterator[Tuple[str, str]]:
-    """Yield ``(source_id, supporting_text)`` for every EvidenceItem-like dict.
-
-    An EvidenceItem is recognised structurally as any mapping carrying both a
-    ``source_id`` and a non-empty ``supporting_text``. Only literature sources
-    (``PMID:``/``DOI:``) are yielded, since only those have a fetchable text to
-    check the quote against.
-
-    >>> doc = {"evidence": [{"source_id": "PMID:1", "supporting_text": "x"},
-    ...                     {"source_id": "GO:0001", "supporting_text": "y"}]}
-    >>> list(iter_evidence_snippets(doc))
-    [('PMID:1', 'x')]
-    """
-    if isinstance(obj, dict):
-        source_id = obj.get("source_id")
-        supporting_text = obj.get("supporting_text")
-        if (
-            isinstance(source_id, str)
-            and isinstance(supporting_text, str)
-            and supporting_text.strip()
-        ):
-            prefix = source_id.split(":", 1)[0].upper()
-            if prefix in LITERATURE_PREFIXES:
-                yield (source_id, supporting_text)
-        for value in obj.values():
-            yield from iter_evidence_snippets(value)
-    elif isinstance(obj, list):
-        for item in obj:
-            yield from iter_evidence_snippets(item)
 
 
 def iter_evidence_go_terms(obj: object) -> Iterator[Tuple[str, str]]:
@@ -2114,64 +2172,58 @@ def iter_reference_titles(obj: object) -> Iterator[Tuple[str, str]]:
 def validate_supporting_text(
     doc: object,
     publications_dir: Optional[Path] = None,
+    yaml_file: Optional[Path] = None,
 ) -> Tuple[List[str], List[str]]:
-    """Verify every EvidenceItem literature quote against the cached publication.
+    """Verify every ``supporting_text`` quote in a module against its source.
 
-    Uses ``linkml-reference-validator``'s own ``SupportingTextValidator`` (the
-    same normalize + deterministic-substring matcher gene reviews use), reading
-    from the ``publications/`` cache. Returns ``(errors, warnings)``:
+    Quotes are found by ``quote_check.iter_quotes``: ``EvidenceItem.source_id``,
+    ``reference_id`` (``knowledge_gaps[].provenance``, ``supported_by``) and
+    ``references[].findings``. Until #6021 only ``source_id`` quotes citing a PMID
+    or DOI were read, so ``file:`` / ``Reactome:`` quotes and every
+    ``reference_id`` / ``findings`` quote passed unchecked.
 
-    - a quote that is not a substring of the fetched/cached publication is an
-      **error** (blocks validation);
-    - a quote that *cannot be checked* -- uncached, unfetchable, or a crash in the
-      checker -- is now also an **error**. It was previously a warning, "advisory so
-      offline runs do not hard-fail", but that made an unverified quote
-      indistinguishable from a verified one, which is the only distinction this check
-      draws. The gene-review side made the same change in
-      ``validate_reference_finding_supporting_text``.
+    Returns ``(errors, warnings)``:
 
-    The second element of the tuple is therefore always empty today. It is kept so the
-    ``(errors, warnings)`` shape matches the sibling validators and callers that unpack
-    it, not because a warning case is expected.
+    - a quote not found in its source, or whose source is missing, uncached or
+      could not be read, is an **error** (a crash while checking is not a pass);
+    - a failure listed in ``conf/quote_check_baseline.yaml`` is a **warning**;
+    - quotes whose source has no readable text (``url``, ``GO:``, ``PMCID:``, a
+      quote with no reference id) are summarised in one **warning**, so the output
+      never implies they were verified.
 
-    The check is a no-op (returns empty) when the reference validator is not
-    installed, so it degrades gracefully.
+    A no-op when the reference validator is not installed.
     """
     if not isinstance(doc, dict):
         return [], []
-    snippets = list(iter_evidence_snippets(doc))
-    if not snippets:
-        return [], []
-
     validator, _ = build_supporting_text_validator(publications_dir)
     if validator is None:
         return [], []
 
     errors: List[str] = []
     warnings: List[str] = []
-    # A snippet must be deterministically checkable against the cache, and a failure to
-    # match is an error -- the same rule the gene-review validator applies in
-    # validate_reference_finding_supporting_text. Both paths used to downgrade the
-    # uncheckable cases to warnings, which made an unverified quote indistinguishable
-    # from a verified one; that is the only distinction either check exists to draw.
-    # A crash while checking is likewise not a pass: it skips validation for reasons
-    # unrelated to whether the quote is correct.
-    for source_id, supporting_text in snippets:
-        try:
-            result = validator.validate(supporting_text, source_id)
-        except Exception as exc:  # noqa: BLE001 - external publication service
-            errors.append(
-                f"Supporting text could not be checked ({source_id}): fetch failed: "
-                f"{type(exc).__name__}: {exc}"
-            )
+    unchecked: Dict[str, int] = {}
+    for result in check_document(doc, yaml_file, validator=validator):
+        ref = result.quote.reference_id
+        if result.outcome is QuoteOutcome.VERIFIED:
             continue
-        if result.is_valid:
+        if result.outcome is QuoteOutcome.UNCHECKED:
+            prefix = ref.split(":", 1)[0] if ref else "(no reference id)"
+            unchecked[prefix] = unchecked.get(prefix, 0) + 1
             continue
-        message = str(getattr(result, "message", "") or "")
-        if is_unfetchable(message):
-            errors.append(f"Supporting text could not be checked ({source_id}): {message}")
+        if result.outcome is QuoteOutcome.UNRESOLVED:
+            message = f"Supporting text could not be checked ({ref}) at {result.quote.path}: {result.detail}"
         else:
-            errors.append(f"Supporting text mismatch ({source_id}): {message}")
+            message = f"Supporting text mismatch ({ref}) at {result.quote.path}: {result.detail}"
+        if result.baselined:
+            warnings.append(f"{message} (known failure, listed in conf/quote_check_baseline.yaml)")
+        else:
+            errors.append(message)
+    if unchecked:
+        summary = ", ".join(f"{k}: {v}" for k, v in sorted(unchecked.items()))
+        warnings.append(
+            f"{sum(unchecked.values())} supporting_text quote(s) cite a source with no "
+            f"readable text and were not verified ({summary})"
+        )
     return errors, warnings
 
 
@@ -2258,6 +2310,43 @@ def validate_feedback_loops(doc: object) -> List[str]:
         for f in feedback_loop_findings(doc)
         if f.get("severity") == "warning"
     ]
+
+
+def validate_leaf_grounding_completeness(doc: object) -> List[str]:
+    """Require completed concrete modules to ground every leaf participant.
+
+    Draft modules are allowed to bottom out in an abstract selector while the
+    curator is still finding exemplar accessions. Once a concrete module is
+    marked ``status: COMPLETE``, every terminal participant role should name at
+    least one concrete UniProtKB protein representative or a concrete
+    non-protein participant id. Reusable templates with ``scope: ABSTRACT`` are
+    skipped by the shared QC helper because they are intentionally gene-free.
+    A terminal node marked ``intentionally_ungrounded`` is skipped too when the
+    curator has explicitly recorded that the role is distributed/open-ended
+    rather than awaiting a representative.
+    """
+    if not isinstance(doc, dict):
+        return []
+    if str(doc.get("status") or "").strip().upper() != "COMPLETE":
+        return []
+
+    # Imported here to avoid pulling renderer/QC dependencies into module load.
+    from ai_gene_review.module_qc import leaf_nodes_missing_representatives
+
+    errors: List[str] = []
+    for gap in leaf_nodes_missing_representatives(doc):
+        node_id = gap.get("id") or "<unknown>"
+        label = gap.get("label") or node_id
+        selector_types = gap.get("selector_types") or []
+        selector_text = ", ".join(selector_types) if selector_types else "none"
+        errors.append(
+            "Completeness: COMPLETE concrete modules must ground every leaf to "
+            "at least one concrete protein representative or non-protein "
+            f"participant; leaf {node_id!r} "
+            f"({label}) has {gap.get('annoton_count', 0)} annoton(s) "
+            f"with selector_types: {selector_text}"
+        )
+    return errors
 
 
 def validate_executable_models(

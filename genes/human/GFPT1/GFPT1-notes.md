@@ -84,3 +84,17 @@ HGNC:4241. 699 aa. EC 2.6.1.16. Reviewed from local files only (no deep-research
   but this is an indirect downstream/By-similarity role, not a core function of the enzyme;
   KEEP_AS_NON_CORE.
 - GO:0070062 extracellular exosome (HDA): KEEP_AS_NON_CORE.
+
+
+## 2026-11-05 — catalytic and context synthesis
+
+GFPT1 directly supplies the entry reaction for UDP-N-acetylglucosamine synthesis. The source-specific assay and natural-product distinctions are centralized in [selected evidence](GFPT1-external-evidence.md), with one catalytic core in the [review](GFPT1-ai-review.yaml).
+
+Clock regulation remains unresolved at the GFPT1-specific endpoint. Positive EV occurrence is retained separately from the conflicting literal pituitary-cell extension; the cell identifier has not been silently repaired. These contextual findings do not add a clock or extracellular catalytic core. Earlier decisions and quotation associations remain intact as historical material in the [archive](GFPT1-context-archive.json).
+## 2026-11-05 — review follow-up
+
+The two circadian assignments now retain a non-core role; the energy-reserve assignments are removed. The biological evidence and endpoint limits are centralized in [selected evidence](GFPT1-external-evidence.md). The asymmetric human dimer is described without adding a new functional annotation. Natural-product identities and reagent limits remain distinct.
+
+The general EV occurrence remains non-core, while the literal pituitary-cell qualification remains undecided. Recording a source defect does not establish localization in that cell type. Native TSV export has 29 data rows, while the review preserves all 30 original contexts: the collided EV rows differ in the original cell-type restriction. Neither the literal atom nor any historical context has been deleted.
+
+For PMID:1460020 and PMID:20458337, full_text_unavailable now reflects the abstract-only normal caches. The separately inspected external originals and their limits remain documented. This supersedes the earlier access-metadata interpretation and circadian decision, while preserving the prior journal and archive.

@@ -106,3 +106,10 @@ The four ordered core entries are preserved. Three describe the same heterodimer
 These are authored evidence-context and prose corrections. All 37 source objects, 36 current contexts, historical retirement, 26 reference identities/titles, two products, four cores and review actions are preserved. Whole-gene canonical validation and publication are subsequent operations and are not claimed here.
 
 Revised canonical validation passes all six checks, with all 82 authored narratives present in the private rendering. Computed DRAFT retains two supported generic-binding advisories. All 37 imported source objects (36 active and one retired), 26 reference identities, two natural products, four ordered cores and 32 inherited quotation anchors remain exact. All 40 selected normal sources and eight unrelated baseline files/modes remain unchanged.
+
+## 2026-11-04 session (Claude, AI-assisted): finished to COMPLETE
+
+- No provider deep research was generated (no API keys).
+- Every supported_by item now has a verbatim quote. Fragmentary quotes were completed to the end of the claim. GO_REF items, which cannot be quoted, were dropped from supported_by.
+- Root-organelle policy: the GO:0005739 mitochondrion rows were changed from MODIFY-to-matrix to ACCEPT. The matrix is kept as the separate GO:0005759 rows.
+- Protein-binding policy: bare GO:0005515 rows that were UNDECIDED or KEEP_AS_NON_CORE are now REMOVE. These were the HSCB, CFTR and LYRM5 partner rows. The S1P/MBTPS1 row (which has the partner subunit in WITH) is now MODIFY to GO:0046982, matching the other ETFA/ETFB partner rows.

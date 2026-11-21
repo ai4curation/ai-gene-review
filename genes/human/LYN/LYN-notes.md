@@ -76,3 +76,21 @@ The formerly generic rat-response reasons now name actual experiments: cholester
 All 320 original annotation payloads, including qualifiers and any negation flags, were preserved; no NEW assertions were added. Normal source acquisition and actual provider outcomes are retained in the acquisition logs. Failed provider calls were not replaced with fabricated reports. Source-access limits are recorded above and in the individual row reasons; partial publisher pages and captcha responses were not treated as full articles. The six-member focused strict/schema, GO-term and source-quotation check passed with zero errors and warnings before final packaging; the final package reruns those checks after finding additions. Record-section backfill, HTML rendering, helper-generated Codex provenance and exact payload/raw-hash checks accompany the package.
 
 Source-access provenance: the publisher page for PMID:24217950 was normally cached at `publications/url_https___link.springer.com_article_10.1007_s12035-013-8580-x.md`; it exposes the abstract and supplementary co-IP captions, not the full main article. Full PMC text for PMID:9113989 was normally recovered at `publications/url_https___pmc.ncbi.nlm.nih.gov_articles_PMC20722_.md` during the PI3K source audit. Captcha pages and the scanned/abstract-only PMC359464 recovery were not treated as usable full-text evidence.
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- Four GO:0005794 rows (IDA HPA GO_REF:0000052, IDA PMID:15173188, IDA PMID:20605918, IEA
+  GO_REF:0000044), all `located_in`. Changed ACCEPT -> KEEP_AS_NON_CORE on all four.
+- Check: PMID:15173188 (full text cached) shows endogenous LYN co-staining with the trans-Golgi
+  resident GalT in HeLa cells and dispersed with GalT by brefeldin A ["endogenous Lyn present at the
+  Golgi apparatus was dispersed by BFA treatment in accordance with redistribution of GalT into the
+  ER"]; cycloheximide and FRAP show the Golgi pool is newly synthesized LYN en route to the plasma
+  membrane ["suggesting that Lyn barely recycles from the plasma membrane to the Golgi apparatus"].
+  So the Golgi claim is real and rests on the endogenous protein, but it is a biosynthetic transit
+  pool; kinase activity is at the cytoplasmic face of the plasma membrane (core_functions already
+  name GO:0009898 and GO:0045121, not the Golgi).
+- PMID:20605918 is abstract-only; its abstract states Golgi accumulation and export. The HPA image
+  was not examined. The UniProt Golgi item is untagged.
+- No sub-compartment row: GalT co-staining is one line for the trans side; no integral partner shown
+  to hold LYN (caveolin co-localization is not a dependence test), so the tethering route is not met.
+- The cytoplasm MODIFY rows that list GO:0005794 among their replacements were left unchanged.

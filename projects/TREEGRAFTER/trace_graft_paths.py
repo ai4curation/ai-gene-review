@@ -37,12 +37,16 @@ the term is still in the graft node's current TreeGrafter set. The online API
 proved too slow for a full run (many families time out).
 
 Downloads (see https://data.pantherdb.org/ftp/downloads/):
-  TreeGrafter/PANTHER19.0_data_trees_hmms_only.tar.gz  (3 GB; only
-      PANTHER19.0_data/Tree_MSF/*.tree is needed)
-  paint/current/IBD.gaf
-  paint/current/PAINT_TreeGrafter_Annotations_TOTAL.txt.gz
+  TreeGrafter/PANTHER<release>_data_trees_hmms_only.tar.gz  (3 GB; only
+      PANTHER<release>_data/Tree_MSF/*.tree is needed)
+  paint/<release>/<snapshot>/IBD.gaf
+  paint/<release>/<snapshot>/PAINT_TreeGrafter_Annotations_TOTAL.txt.gz
+where <release> and <snapshot> are the ones the repo pins: PANTHER_RELEASE and
+PAINT_SNAPSHOT in ai_gene_review.etl.panther_families (PAINT_BASE is that folder).
+The script stays standard-library only, so it runs under a bare python3 and does
+not import them.
 
-Run:
+Run (the second form shows the 19.0 pin; substitute the release the repo pins now):
   python3 projects/TREEGRAFTER/trace_graft_paths.py
   python3 projects/TREEGRAFTER/trace_graft_paths.py --all \
       --panther-trees PANTHER19.0_data/Tree_MSF --ibd-gaf IBD.gaf \
@@ -163,6 +167,8 @@ def trace(case: dict) -> dict:
     root = tree["search"]["tree_topology"]["annotation_node"]
     nodes, parent = index(root)
     out = {"case": case["case"], "gene": case["gene"], "family": case["family"],
+           # the release the live API served this tree from
+           "panther_release": tree["search"].get("product", {}).get("version"),
            "family_name": root.get("sf_name", ""), "term": f"{case['term']} {case['label']}",
            "family_leaves": len(leaves_under(root)), "grafts": []}
     ibd_nodes: dict = {}

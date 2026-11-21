@@ -17,6 +17,7 @@ genes:
 manifest:
   slides:
     - href: SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION/slides/SUBSTRATE_LOCALIZATION_TO_AUTOPHAGOSOME_OBSOLETION-slides.html
+index_group: MAMMAL
 ---
 
 # Substrate Localization to Autophagosome (GO:0061753) — Obsoletion & Transfer

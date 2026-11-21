@@ -34,3 +34,13 @@ ATP-binding/hydrolysis, RNA-catabolic, and cytosolic annotations remain accepted
 the broad nucleic-acid-binding and cytoplasm parents remain non-core. The review
 continues to distinguish conserved RhlB biochemistry from unproven recruitment
 of Q88NB7 into a KT2440 RNase E complex.
+
+## 2026-11-10 module-completion pass
+
+Harmonised with the new E. coli K-12 exemplar review (`genes/ECOLI/` same
+symbol) for the RNase E degradation module: every row now carries a vetted
+quote (HAMAP-derived UniProt text, or the E. coli experimental literature
+for homology support); broad parent terms entailed by an accepted specific term
+in this review are TOO_GENERAL rather than KEEP_AS_NON_CORE; ancillary binding
+and cofactor rows are KEEP_AS_NON_CORE. No new provider deep research was run
+(no API keys available in this session).

@@ -25,3 +25,12 @@ The fragmentomics zero composites require assay-specific interpretation. All thr
 The calcium-sign refinement remains specific to the 5-HT2A neuronal assay: receptor antagonist, terminal-mutant peptide and scrambled-shRNA controls support an inhibitory PSD-95 context, without a global calcium-regulation claim ([PMID:20531396](https://pmc.ncbi.nlm.nih.gov/articles/PMC2927054/), Figure 3). High-KCl experiments instead measure regulated PSD-95 degradation; the significant extra MAP1A effect is on PSD-93. The observed abundance change is retained without claiming that the degraded PSD-95 performs the potassium-response step ([PMID:26609151](https://pubmed.ncbi.nlm.nih.gov/26609151/), Results/Figure 7).
 
 The current official GO:0099562 definition says presynaptic despite its postsynaptic label and the explicit part_of edge from structural constituent of postsynaptic density. This ontology-text discrepancy is recorded, not converted into a presynaptic functional assertion. All original annotations, products and machine caches remain unchanged.
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IEA (GO_REF:0000107, from mouse Q62108) and ISS (GO_REF:0000024, mouse Q62108), both `located_in`; no ER sub-compartment rows.
+
+- QuickGO: the only GO:0005783 annotation on mouse Q62108 is IDA from PMID:16814779 (Miyazaki et al. 2006, BSRP knockout; abstract only, no PMC id).
+- The abstract is about BSRPs: [PMID:16814779 "BSRPs were predominantly expressed in the soma and dendrites of neurons and localized in the endoplasmic reticulum (ER)."] It does not say what the PSD-95 experiment was (an ER-localized protein, or a synaptic comparator).
+- PSD-95 is a cytosolic palmitoylated scaffold with no signal peptide or TM; any ER pool would be at the root.
+- Outcome: both rows stay UNDECIDED (cannot read the source). If the full text shows PSD-95 only as a marker of another compartment, MARK_AS_OVER_ANNOTATED.

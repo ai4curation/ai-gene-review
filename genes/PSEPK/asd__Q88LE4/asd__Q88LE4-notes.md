@@ -48,3 +48,11 @@ All three original GO:1901705 rows are now MARK_AS_OVER_ANNOTATED, and the term 
 All three existing GO:0071266 rows remain ACCEPT, as do their justified author-supplied refinement/core uses. Each target has a specific HAMAP MF_02121 CC:PATHWAY assignment to step 2/3 of homoserine formation from aspartate within de novo methionine synthesis. This is independent curated pathway support, not a GOA assertion cited as its own proof. The GO definition explicitly includes that starting material, and Asd performs the chemical reaction itself. Other inherited PSEPK NEW proposals are separate gene-specific decisions, not a blanket shared-precursor exclusion. PP_4473 has an untagged curated Swiss-Prot pathway statement, Hom has an ARBA-only pathway statement, and PP_0664 has a provider prediction with unresolved native function; it would be incorrect to describe all three as ARBA-only or lacking curated support. The coordinated follow-up restores the inherited PP_4473 de novo methionine proposal using its curated pathway statement, kinase chemistry and the live GO definition; the Hom ARBA-only and PP_0664 unresolved-native-role proposals remain retired. This is a gene-specific evidence distinction, not a rule against shared precursors. Row reasons make this distinction explicit. Restraint about creating an additional claim does not automatically reverse an independently supported existing process or bar its supported use in a core function.
 
 No provider report or raw source was written or refetched. The existing full comparative publication and unchanged target curated records supply the biological evidence; official live APIs establish ontology and comparator state.
+
+## 2026-11-02 NAD binding row resolved
+
+GO:0051287 NAD binding (IEA, InterPro2GO via IPR036291 NAD(P)-binding domain superfamily) changed from
+UNDECIDED to MODIFY -> GO:0050661 NADP binding, matching the C. glutamicum Asd sibling review. The
+generic NAD(P)-binding superfamily signature does not distinguish the two cofactors; the curated HAMAP
+ASADH rule (NADPH-dependent catalysis, NADP(+)-binding residues) supports NADP binding. E. coli Asd keeps
+NAD binding as non-core only because it has direct NAD(H) measurements.

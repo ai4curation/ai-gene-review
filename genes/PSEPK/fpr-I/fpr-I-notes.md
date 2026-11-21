@@ -33,3 +33,13 @@ Research provenance: parent already attempted Falcon (403) and Perplexity-lite (
 Consolidated the PMC URL twin into canonical PMID:23794620 after normal full-text recovery. Source findings now describe each study rather than recycle a core-function sentence. Core description states electron-transfer function; the unresolved physiological carrier is separately recorded as a literature-grounded knowledge gap with an experimental resolution.
 
 All original annotation payloads and row order are preserved. Focused validation and automatic record-section backfill pass; generated pages and append-only history record this follow-up.
+
+## 2026-11-03 module completion (aps_dependent_assimilatory_sulfate_reduction)
+
+Resolved the last UNDECIDED row (GO:0042167 heme catabolic process, TreeGrafter IEA) as KEEP_AS_NON_CORE.
+Basis: the PAINT IBD at PTHR47878 PTN002500048 is seeded by P. aeruginosa FprA (Q9HYK7), whose
+NADPH-to-heme-oxygenase electron transfer is cited in [PMID:23794620 "It has been shown that P.
+aeruginosa FprA efficiently transfers electrons from NADPH to heme oxygenase"]. A UniProt REST query
+(organism_id:160488, protein name "heme oxygenase", run 2026-11-03) returned Q88P48 (hemO, PP_1005),
+Q88JR7 (PP_2582) and Q88JD9 (PP_2710), so KT2440 has the partner enzyme. No KT2440 coupling assay
+exists; the role is inherited and peripheral.

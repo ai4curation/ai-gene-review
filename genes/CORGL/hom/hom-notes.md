@@ -38,3 +38,29 @@ The three GO:0004022 decisions reflect different inspected evidence, not differe
 These decisions are cross-referenced in the respective review reasons. The evidence code alone does not dictate the outcome: the reaction provenance, inspected source content, independent family/cofactor features and remaining uncertainty do. No native purified NADH/NADPH preference measurements are invented.
 
 The review suggestion that both cited experimental papers in fact assay NADPH is established only for the recovered1970 full text. The1991 abstract cannot support that conclusion. One structured `source_defects` entry therefore uses `WRONG_REFERENCE`, `confidence: SUSPECTED`, and `requested_change: CHECK` for the RHEA:15757 experimental evidence attachment. It has no corrected_value and is NOT_REPORTED. This is an exportable curator query about attribution, not a confirmed correction, a request to delete the NAD reaction, or an unsupported reassignment of both papers to NADPH-only chemistry. PMID4394351's strain and alternate-PDF identity remain documented in hom-source-analysis.md.
+
+## 2026-11-02/03 cofactor rows resolved (bacterial aspartate-to-threonine module completion, PR #5927)
+
+The two rows previously left UNDECIDED (GO:0004022 alcohol dehydrogenase (NAD+) activity, IEA via
+RHEA:15757; GO:0070403 NAD+ binding, ISS from yeast HOM6) are now KEEP_AS_NON_CORE. The positive case
+rests on the target-specific UniProt CC:CATALYTIC ACTIVITY line, which curates the NAD-linked
+RHEA:15757 reaction for P08499 with ECO:0000269 attachments to PMID:1743520 and PMID:4394351; the
+UniProt curator's reading of the full papers is deferred to. The NADPH-linked GO:0004412 activity
+remains the core function and the suspected citation source defect on the NAD reaction is unchanged.
+
+PMID:4391829 is family context only. It surveyed coliform bacteria and pseudomonads, not
+actinobacteria [PMID:4391829 "In most of the bacteria examined, either nicotinamide adenine
+dinucleotide (NAD) or nicotinamide adenine dinucleotide phosphate can serve as a cofactor for this
+enzyme, though the relative activity with the two pyridine nucleotides varies widely."], and it also
+reports an NAD-specific enzyme in acidovorans-group pseudomonads. It is not cited as support on these
+rows. A web search for direct ATCC 13032 NADH/NADPH kinetics found none (the abstract of a 2023 Food
+Science mutant study did not state the cofactor).
+
+Provenance of the earlier UNDECIDED verdict, moved here from the row reasons: the recovered 1970 full
+paper (PMID:4394351) assays NADPH with partially purified B. flavum No.2247 enzyme, and the available
+1991 abstract (PMID:1743520) establishes C. glutamicum threonine feedback but cannot resolve cofactor
+use or exact strain, so the NAD capacity was then judged plausible but unverified and the inspected
+evidence was judged not to settle target cofactor specificity. Replacing the NAD-specific claims with
+NADP terms was rejected because GO:0004412 is NADP+-defined and that would discard the uncertainty.
+P. putida Hom makes that cofactor correction because its NAD reaction is ARBA-only; E. coli ThrA
+retains a separate curated ECO:0000250 transfer.

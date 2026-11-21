@@ -59,3 +59,19 @@ KT2440 protein.
   authored core process now use GO:0031456 (glycine betaine biosynthetic process), the
   term the bacterial_choline_to_glycine_betaine_biosynthesis module grounds the same
   step on. The evidence and reasoning are unchanged.
+
+## 2026-11-03 completion pass (choline-to-glycine-betaine module)
+- GO:0008802 (NAD+ betaine-aldehyde dehydrogenase) changed UNDECIDED -> REMOVE. The term is NAD+-specific, and BetA is a respiratory-chain-linked flavoprotein. Purified E. coli BetA "failed to further oxidize betaine aldehyde to betaine" [PMID:39510372]. A. baumannii BetA "also mediates in vitro the oxidation of glycine betaine aldehyde to glycine betaine", but as a flavoprotein "donating electrons into the respiratory chain" [PMID:34431198]. Recorded as a HAMAP MF_00750 source defect; same call on E. coli P17444.
+- Generic rows (membrane, GO:0016491, GO:0016614) changed to MODIFY, toward GO:0005886 and GO:0008812, consistent with E. coli BetA.
+- Status set to COMPLETE.
+
+
+## 2026-11-06 comparative choline/betaine module audit
+
+Retained the primary choline-dehydrogenase assignment and inherited biosynthetic process proposal. Rejection of GO0008802 is grounded in erroneous NAD-specific propagation from the Ecoli source, not a KT2440 negative assay or an inference that FAD excludes NAD. The full 2022 Acinetobacter article uses PMS and has an enriched preparation containing a peptidyl-prolyl isomerase; its in vitro secondary reaction does not establish KT2440 specificity or native BetB dispensability. Description distinguishes inferred peripheral membrane/electron-transfer features from target genetics. Flagged provider summary conflation of secondary activity and EC1.2.1.8.
+
+Existing genuine OpenScientist research was inspected and preserved; no replacement provider report was authored.
+
+All original machine row fields and raw UniProt/GOA files were preserved, with inherited NEW assertions tracked separately from this audit (zero added rows). The six-target baseline has 55 rows, three inherited NEW, twelve raw-file hashes and four provider-report hashes. Reusable check: `.cache/module-audit-logs/choline-betaine-20261106/check-original-six.py`; report `original-six-preservation.json`. Focused gene validation passed with no curation warnings. Ecoli BetT/BetA/BetB PAINT loss checks found no IRD/IKR. Status remains COMPLETE because review decisions are complete; unresolved biological/source claims are explicitly qualified.
+
+Normal force-fetches of PMIDs39510372,34431198,3512525,3512526,2194570,17322201,27718375,26913973 did not recover full text; the first fetch of PMID18156257 also remained abstract-only. PMID34431198 full publisher text was read externally (https://enviromicro-journals.onlinelibrary.wiley.com/doi/10.1111/1462-2920.15741), including assay methods and preparation purity. Source distinctions: A. baumannii ATCC19606 HMPREF0010_01460 with a recombinant His tag; PMS serves as primary acceptor and oxygen measures its reoxidation. These data are comparative, not assays of either original BetA target. No publication cache was manually edited.

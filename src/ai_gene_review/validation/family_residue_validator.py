@@ -38,21 +38,40 @@ tandem repeat needs alignment- or structure-level checking. See
 
 from __future__ import annotations
 
+import http.client
 import json
+import ssl
+import time
+import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
-from functools import lru_cache
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple
 from enum import Enum
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Mapping
 
 import yaml
 
-if TYPE_CHECKING:  # annotation only; the runtime import lives in _panther_index
+from ai_gene_review.etl.panther_families import (
+    PreviousRelease,
+    panther_artifacts,
+    previous_release,
+)
+
+if TYPE_CHECKING:
     from ai_gene_review.etl.panther_families import MemberIndexGaps
 
 UNIPROT_JSON = "https://rest.uniprot.org/uniprotkb/{acc}.json"
+
+
+def _retryable_uniprot_error(exc: Exception) -> bool:
+    """Limit retries to transient HTTP and network/read failures."""
+    if isinstance(exc, urllib.error.HTTPError):
+        return exc.code in {408, 429, 500, 502, 503, 504}
+    if isinstance(exc, urllib.error.URLError):
+        # Certificate/configuration errors will not improve after a short wait.
+        return not isinstance(exc.reason, (ssl.SSLError, PermissionError))
+    return isinstance(exc, (TimeoutError, ConnectionError, http.client.IncompleteRead))
 
 
 class Outcome(str, Enum):
@@ -90,6 +109,41 @@ class ResidueCheck:
         )
 
 
+class InactiveEntryError(LookupError):
+    """Raised when UniProtKB returns an inactive (deleted/merged/demerged) entry.
+
+    Such a record carries no sequence. This is a property of the cited accession, not a
+    retrieval failure, so callers report it as a FAIL on the claim that cites it rather
+    than letting one stale accession stop validation of every other family.
+    """
+
+    def __init__(self, accession: str, data: dict) -> None:
+        self.accession = accession
+        reason = data.get("inactiveReason") or {}
+        self.reason_type = reason.get("inactiveReasonType") or data.get("entryType") or "INACTIVE"
+        self.detail = reason.get("deletedReason") or ""
+        self.merged_into = list(reason.get("mergeDemergeTo") or [])
+        super().__init__(self.describe())
+
+    def describe(self) -> str:
+        """Human-readable explanation, for use in a check message.
+
+        >>> InactiveEntryError("C0H4F3", {"entryType": "Inactive", "inactiveReason": {
+        ...     "inactiveReasonType": "DELETED",
+        ...     "deletedReason": "Deleted from sequence source (ENSEMBL)"}}).describe()
+        'accession C0H4F3 is inactive in UniProtKB (DELETED: Deleted from sequence source (ENSEMBL))'
+        >>> InactiveEntryError("P1", {"entryType": "Inactive", "inactiveReason": {
+        ...     "inactiveReasonType": "MERGED", "mergeDemergeTo": ["P2"]}}).describe()
+        'accession P1 is inactive in UniProtKB (MERGED; now P2)'
+        """
+        msg = f"accession {self.accession} is inactive in UniProtKB ({self.reason_type}"
+        if self.detail:
+            msg += f": {self.detail}"
+        if self.merged_into:
+            msg += f"; now {', '.join(self.merged_into)}"
+        return msg + ")"
+
+
 @dataclass
 class SequenceCache:
     """Fetches and caches UniProt sequences.
@@ -106,18 +160,64 @@ class SequenceCache:
     cache_dir: Path
     _mem: dict[str, str] = field(default_factory=dict)
     _versions: dict[str, int] = field(default_factory=dict)
+    _inactive: dict[str, InactiveEntryError] = field(default_factory=dict)
 
     def _fetch_json(self, acc: str) -> dict:
         req = urllib.request.Request(
             UNIPROT_JSON.format(acc=acc), headers={"User-Agent": "ai-gene-review"}
         )
+        # Three total attempts, with only 2s and 4s waits. A successful record
+        # still passes through the same validation and persistent cache paths.
+        attempts = 3
+        for attempt in range(1, attempts + 1):
+            try:
+                with urllib.request.urlopen(req, timeout=60) as fh:
+                    return json.load(fh)
+            except (OSError, json.JSONDecodeError, http.client.HTTPException) as exc:
+                if attempt == attempts or not _retryable_uniprot_error(exc):
+                    # Keep the final HTTPError body available through __cause__;
+                    # only responses discarded before another attempt are closed.
+                    raise RuntimeError(
+                        f"Could not retrieve UniProt record {acc} from {req.full_url}"
+                    ) from exc
+                if isinstance(exc, urllib.error.HTTPError):
+                    # urlopen raised before entering the response context manager.
+                    exc.close()
+                time.sleep(2 ** attempt)
+        raise AssertionError("unreachable")
+
+    def _record_sequence(self, acc: str, data: object) -> str:
+        """Validate a response before caching or classifying a cited accession.
+
+        Only explicit inactive metadata denotes an inactive accession. Other
+        sequence-less or malformed responses remain contextual hard errors.
+        """
+        entry_type = data.get("entryType") if isinstance(data, dict) else None
         try:
-            with urllib.request.urlopen(req, timeout=60) as fh:
-                return json.load(fh)
-        except (OSError, json.JSONDecodeError) as exc:
+            if not isinstance(data, dict):
+                raise TypeError("expected a JSON object")
+            reason = data.get("inactiveReason")
+            if reason is not None and not isinstance(reason, dict):
+                raise TypeError("inactiveReason must be an object")
+            reason_type = (reason or {}).get("inactiveReasonType")
+            if entry_type == "Inactive" or (
+                isinstance(reason_type, str) and bool(reason_type.strip())
+            ):
+                # Memory only: a later run must be able to observe reactivation.
+                err = InactiveEntryError(acc, data)
+                self._inactive[acc] = err
+                raise err
+            seq = data["sequence"]["value"]
+            if not isinstance(seq, str) or not (
+                seq and seq.isascii() and seq.isalpha() and seq.isupper()
+            ):
+                raise ValueError("sequence.value must be nonempty uppercase letters")
+        except (KeyError, TypeError, ValueError) as exc:
             raise RuntimeError(
-                f"Could not retrieve UniProt record {acc} from {req.full_url}"
+                f"UniProt record {acc} from {UNIPROT_JSON.format(acc=acc)} "
+                f"has an invalid sequence payload (entryType={entry_type!r})"
             ) from exc
+        return seq
 
     def get(self, accession: str) -> str:
         """Return the amino-acid sequence for a UniProt accession.
@@ -127,6 +227,8 @@ class SequenceCache:
         of everything the first time versions were introduced.
         """
         acc = accession.split(":")[-1]
+        if acc in self._inactive:
+            raise self._inactive[acc]
         if acc in self._mem:
             return self._mem[acc]
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -135,7 +237,7 @@ class SequenceCache:
             seq = seq_path.read_text().strip()
         else:
             data = self._fetch_json(acc)
-            seq = data["sequence"]["value"]
+            seq = self._record_sequence(acc, data)
             seq_path.write_text(seq)
             version = data.get("entryAudit", {}).get("sequenceVersion")
             if version is not None:
@@ -151,6 +253,8 @@ class SequenceCache:
         an unversioned corpus costs no extra requests.
         """
         acc = accession.split(":")[-1]
+        if acc in self._inactive:
+            raise self._inactive[acc]
         if acc in self._versions:
             return self._versions[acc]
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -158,7 +262,9 @@ class SequenceCache:
         if ver_path.exists():
             version = int(ver_path.read_text().strip())
         else:
-            version = self._fetch_json(acc).get("entryAudit", {}).get("sequenceVersion")
+            data = self._fetch_json(acc)
+            self._record_sequence(acc, data)
+            version = data.get("entryAudit", {}).get("sequenceVersion")
             if version is None:
                 return None
             ver_path.write_text(str(version))
@@ -199,11 +305,21 @@ def check_anchor_residues(
             )
             continue
 
-        seq = cache.get(anchor)
-        pinned = site.get("anchor_sequence_version")
+        try:
+            seq = cache.get(anchor)
+            pinned = site.get("anchor_sequence_version")
+            current = cache.sequence_version(anchor) if pinned is not None else None
+        except InactiveEntryError as exc:
+            results.append(
+                ResidueCheck(
+                    family, site_id, anchor, 0, [], None, Outcome.FAIL,
+                    f"{exc.describe()}; choose a live anchor protein",
+                    kind="ANCHOR_RESIDUE",
+                )
+            )
+            continue
         drift = ""
         if pinned is not None:
-            current = cache.sequence_version(anchor)
             if current is not None and current != pinned:
                 drift = (
                     f" [anchor sequence version has moved {pinned} -> {current} "
@@ -294,41 +410,6 @@ def check_term_assessment_site_refs(review: dict) -> list[ResidueCheck]:
     return results
 
 
-@lru_cache(maxsize=None)
-def _panther_index(
-    panther_dir: Path,
-) -> "tuple[dict[str, str], dict[str, str], MemberIndexGaps, dict[str, str]]":
-    """Load the PANTHER artifacts once per directory.
-
-    Reuses ``etl.panther_families`` rather than reimplementing: those loaders are
-    tested, they skip the artifact's comment block deliberately rather than by luck,
-    and ``load_member_index`` degrades to an empty mapping on a fresh checkout instead
-    of raising. Cached because ``panther.obo`` is 13.8 MB and this runs once per family
-    review file.
-
-    The third element distinguishes an accession PANTHER genuinely has no family for
-    from one whose lookup was never done -- reporting both as "run
-    refresh-panther-members" would give advice that cannot work for the former.
-    """
-    from ai_gene_review.etl.panther_families import (
-        load_member_index,
-        load_member_index_alternates,
-        load_member_index_gaps,
-        load_obo_names,
-        member_index_path,
-    )
-
-    # panther_dir is <repo>/interpro/panther; the member index is a build
-    # artifact in <repo>/.cache/panther.
-    members = member_index_path(Path(panther_dir).parents[1])
-    return (
-        load_obo_names(panther_dir / "panther.obo"),
-        load_member_index(members),
-        load_member_index_gaps(members),
-        load_member_index_alternates(members),
-    )
-
-
 class PantherTerm(NamedTuple):
     """One PANTHER identifier found in a review, with the rule that governs it.
 
@@ -376,10 +457,11 @@ def _iter_panther_terms(review: dict):
 
 def check_panther_ids(
     review: dict,
-    labels: dict[str, str],
-    members: dict[str, str],
+    labels: Mapping[str, str],
+    members: Mapping[str, str],
     gaps: "MemberIndexGaps | None" = None,
-    alternates: "dict[str, str] | None" = None,
+    alternates: "Mapping[str, str] | None" = None,
+    previous: "PreviousRelease | None" = None,
 ) -> list[ResidueCheck]:
     """Check every PANTHER family/subfamily id resolves, and that labels are verbatim.
 
@@ -395,8 +477,15 @@ def check_panther_ids(
     a failure, matching the convention documented in CLAUDE.md. Where PANTHER's
     classification files and UniProt disagree (``alternates``), a member matching
     either is accepted, and the disagreement is reported as UNRESOLVED.
+
+    During a PANTHER switch (``previous`` set), an id, label or membership that was
+    right in the previous release but changed in the current one is UNRESOLVED, with
+    a pointer to ``just panther-release-diff``, so remaps can land in batches.
     """
+    from ai_gene_review.etl.panther_families import PANTHER_RELEASE
+
     alternates = alternates or {}
+    remap_hint = "remap it from `just panther-release-diff`"
     family = review.get("family_id", "?")
     results: list[ResidueCheck] = []
 
@@ -416,6 +505,31 @@ def check_panther_ids(
             )
         )
 
+    def scope_failure(term: PantherTerm, curie: str) -> "ResidueCheck | None":
+        """A subfamily slot holding a family id, or another family's subfamily.
+
+        Both are facts about the id string, true in every release, so they are
+        checked before any switch allowance can defer the id.
+        """
+        if not term.must_be_own_subfamily:
+            return None
+        if not _is_panther_subfamily(curie):
+            return ResidueCheck(
+                family, term.path, curie, 0, [], None, Outcome.FAIL,
+                f"{curie} is a family, not a subfamily; a family id here "
+                "matches no member's subfamily and would flag every one of "
+                "them as a scope violation",
+                kind="PANTHER_FAMILY_SCOPE",
+            )
+        if own_family and _panther_family_base(curie) != own_family:
+            return ResidueCheck(
+                family, term.path, curie, 0, [], None, Outcome.FAIL,
+                f"{curie} belongs to a different family; this review is "
+                f"about {family}",
+                kind="PANTHER_FAMILY_SCOPE",
+            )
+        return None
+
     for term in _iter_panther_terms(review):
         path, curie, label = term.path, term.curie, term.label
         if not curie or curie.startswith("PANTHER:PTN"):
@@ -423,6 +537,23 @@ def check_panther_ids(
         # Resolution first: a non-PANTHER CURIE is not "a family, not a subfamily",
         # it is simply unresolvable, and that is the clearer message.
         if curie not in labels:
+            # Deferred only when the review still carries the previous release's name
+            # (or no label): a label wrong in both releases fails, as in modules.
+            if (
+                previous is not None
+                and curie in previous.labels
+                and label in (None, previous.labels[curie])
+            ):
+                results.append(
+                    scope_failure(term, curie)
+                    or ResidueCheck(
+                        family, path, curie, 0, [], None, Outcome.UNRESOLVED,
+                        f"{curie} is not in PANTHER {PANTHER_RELEASE}; it was "
+                        f"{previous.labels[curie]!r} in {previous.release}; {remap_hint}",
+                        kind="PANTHER_ID",
+                    )
+                )
+                continue
             results.append(
                 ResidueCheck(
                     family, path, curie, 0, [], None, Outcome.FAIL,
@@ -431,30 +562,27 @@ def check_panther_ids(
                 )
             )
             continue
-        if term.must_be_own_subfamily:
-            if not _is_panther_subfamily(curie):
-                results.append(
-                    ResidueCheck(
-                        family, path, curie, 0, [], None, Outcome.FAIL,
-                        f"{curie} is a family, not a subfamily; a family id here "
-                        "matches no member's subfamily and would flag every one of "
-                        "them as a scope violation",
-                        kind="PANTHER_FAMILY_SCOPE",
-                    )
-                )
-                continue
-            if own_family and _panther_family_base(curie) != own_family:
-                results.append(
-                    ResidueCheck(
-                        family, path, curie, 0, [], None, Outcome.FAIL,
-                        f"{curie} belongs to a different family; this review is "
-                        f"about {family}",
-                        kind="PANTHER_FAMILY_SCOPE",
-                    )
-                )
-                continue
+        failure = scope_failure(term, curie)
+        if failure is not None:
+            results.append(failure)
+            continue
         official = labels[curie]
-        if label is not None and label != official:
+        if (
+            label is not None
+            and label != official
+            and previous is not None
+            and label == previous.labels.get(curie)
+        ):
+            results.append(
+                ResidueCheck(
+                    family, path, curie, 0, [], None, Outcome.UNRESOLVED,
+                    f"renamed since PANTHER {previous.release}: {label!r} is now "
+                    f"{official!r} in {PANTHER_RELEASE}; the id may now name something "
+                    f"else, so {remap_hint}",
+                    kind="PANTHER_LABEL",
+                )
+            )
+        elif label is not None and label != official:
             results.append(
                 ResidueCheck(
                     family, path, curie, 0, [], None, Outcome.FAIL,
@@ -478,6 +606,15 @@ def check_panther_ids(
         if not declared:
             continue
         bare = declared.split(":", 1)[1]
+        # The bump changed what this id names (gone or renamed), so a member the previous
+        # release did not classify cannot be judged against it until the id is remapped.
+        # Name equality is a proxy: a subfamily renumbered under an identical generic name
+        # reads as unchanged here, so such a member still fails and needs a look.
+        declared_changed = (
+            previous is not None
+            and declared in previous.labels
+            and previous.labels[declared] != labels.get(declared)
+        )
         for member in sub.get("representative_members") or []:
             acc = (member.get("id") or "").split(":")[-1]
             if acc not in members:
@@ -507,6 +644,31 @@ def check_panther_ids(
                         f"sources disagree: PANTHER's classification files put it in "
                         f"{members[acc]}, UniProt's cross-reference in the declared "
                         f"{bare}; both are accepted",
+                        kind="PANTHER_MEMBERSHIP",
+                    )
+                )
+            elif (
+                members[acc] != bare
+                and previous is not None
+                and previous.members.get(acc) == bare
+            ):
+                results.append(
+                    ResidueCheck(
+                        family, declared, acc, 0, [], None, Outcome.UNRESOLVED,
+                        f"is classified {members[acc]} in PANTHER {PANTHER_RELEASE}, but "
+                        f"{bare} as declared in {previous.release}; {remap_hint}",
+                        kind="PANTHER_MEMBERSHIP",
+                    )
+                )
+            elif members[acc] != bare and declared_changed and previous is not None and (
+                acc not in previous.members
+            ):
+                results.append(
+                    ResidueCheck(
+                        family, declared, acc, 0, [], None, Outcome.UNRESOLVED,
+                        f"is classified {members[acc]} in PANTHER {PANTHER_RELEASE}; the "
+                        f"declared {bare} changed meaning since {previous.release}, which "
+                        f"did not classify this protein; {remap_hint}",
                         kind="PANTHER_MEMBERSHIP",
                     )
                 )
@@ -583,6 +745,185 @@ def node_polarity_problem(assessment: dict, term_rows: list) -> str | None:
     if not declared_negated and verdict in LOSS_VERDICTS:
         return f"verdict {verdict} is for loss rows; declare negated: true and evidence"
     return None
+
+
+#: PAINT actions a node verdict may request, and whether each needs a target node.
+#: Verdicts absent from this map (SOUND, LOSS_SUPPORTED, UNRESOLVED) take no action.
+ALLOWED_PAINT_ACTIONS: dict[str, frozenset[str]] = {
+    "TOO_DEEP": frozenset({"MOVE_IBD", "REMOVE_IBD"}),
+    "WRONG_NODE": frozenset({"MOVE_IBD", "REMOVE_IBD"}),
+    "NEEDS_PRUNING": frozenset({"ADD_IRD", "ADD_IKR"}),
+    "LOSS_CONTRADICTED": frozenset({"REMOVE_LOSS"}),
+    "LOSS_STALE": frozenset({"REMOVE_LOSS"}),
+    "LOSS_TOO_BROAD": frozenset({"MOVE_LOSS"}),
+}
+TARGETED_PAINT_ACTIONS = frozenset({"MOVE_IBD", "MOVE_LOSS", "ADD_IRD", "ADD_IKR"})
+#: Verdicts whose target must lie strictly below the assessed node. WRONG_NODE is absent:
+#: a wrongly placed IBD may belong anywhere in the family.
+DESCENDANT_TARGET_VERDICTS = frozenset({"TOO_DEEP", "NEEDS_PRUNING", "LOSS_TOO_BROAD"})
+
+
+def _proposed_action_fit_problem(assessment: dict) -> str | None:
+    """Check the verdict/action pairing and target presence, without the tree.
+
+    >>> _proposed_action_fit_problem({"assessment": "SOUND",
+    ...     "proposed_action": {"paint_action": "REMOVE_IBD"}})
+    'verdict SOUND takes no proposed action'
+    >>> _proposed_action_fit_problem({"assessment": "TOO_DEEP",
+    ...     "proposed_action": {"paint_action": "REMOVE_IBD"}}) is None
+    True
+    >>> _proposed_action_fit_problem({"proposed_action": {"paint_action": "REMOVE_IBD"}})
+    'a proposed action needs an assessment verdict'
+    """
+    verdict = assessment.get("assessment", "")
+    proposal = assessment.get("proposed_action") or {}
+    action = proposal.get("paint_action", "")
+    target = proposal.get("target_node_id")
+    if not verdict:
+        return "a proposed action needs an assessment verdict"
+    allowed = ALLOWED_PAINT_ACTIONS.get(verdict)
+    if allowed is None:
+        return f"verdict {verdict} takes no proposed action"
+    if action not in allowed:
+        return f"{action} is not allowed for verdict {verdict}; use one of {sorted(allowed)}"
+    if action in TARGETED_PAINT_ACTIONS and not target:
+        return f"{action} needs a target_node_id"
+    if action not in TARGETED_PAINT_ACTIONS and target:
+        return f"{action} acts on the assessed node and takes no target_node_id"
+    return None
+
+
+def evaluate_proposed_action(
+    assessment: dict,
+    under: dict[str, list[str]],
+    leaves: Iterable[str] = (),
+) -> tuple[Outcome, str]:
+    """Judge a node assessment's ``proposed_action`` against its verdict and the tree.
+
+    ``under`` maps each internal PANTHER node of the family to the leaves below it, and
+    ``leaves`` lists the family's leaf nodes (the ``under`` and ``leaves`` tables of
+    ``ai_gene_review.etl.panther_trees``). The action must fit the verdict (see
+    ``ALLOWED_PAINT_ACTIONS``). A targeted action's node must be a node of the family,
+    internal or leaf (a loss in a single gene is placed at its leaf), other than the
+    assessed one; a target in neither table is not in the family at all and fails. For
+    TOO_DEEP, NEEDS_PRUNING and LOSS_TOO_BROAD the target must lie strictly below the
+    assessed node.
+
+    Ancestry is read from leaf sets. A leaf target is below the assessed node exactly when
+    the node's clade contains it. Two internal nodes of a single-child chain share every
+    leaf and cannot be ordered this way; such a pair is reported UNRESOLVED rather than
+    FAIL, so a correct move along the chain is never rejected.
+
+    >>> under = {"PTN1": ["a", "b", "c"], "PTN2": ["a", "b"], "PTN3": ["a", "b"]}
+    >>> leaves = ["a", "b", "c"]
+    >>> def move(node, verdict, action, target):
+    ...     return evaluate_proposed_action({"node_id": f"PANTHER:{node}",
+    ...         "assessment": verdict, "proposed_action": {"paint_action": action,
+    ...         "target_node_id": f"PANTHER:{target}"}}, under, leaves)
+    >>> move("PTN1", "TOO_DEEP", "MOVE_IBD", "PTN2")[0].value
+    'PASS'
+    >>> move("PTN2", "NEEDS_PRUNING", "ADD_IKR", "PTN1")
+    (<Outcome.FAIL: 'FAIL'>, 'target PTN1 is not below the assessed node PTN2')
+    >>> move("PTN2", "TOO_DEEP", "MOVE_IBD", "PTN3")[0].value
+    'UNRESOLVED'
+    >>> move("PTN1", "NEEDS_PRUNING", "ADD_IKR", "c")[0].value
+    'PASS'
+    >>> move("PTN1", "TOO_DEEP", "MOVE_IBD", "PTN99")
+    (<Outcome.FAIL: 'FAIL'>, "target PTN99 is not a node of this family's PANTHER tree")
+    """
+    action = (assessment.get("proposed_action") or {}).get("paint_action", "?")
+    fit = _proposed_action_fit_problem(assessment)
+    if fit:
+        return Outcome.FAIL, fit
+    target = (assessment["proposed_action"].get("target_node_id") or "").split(":")[-1]
+    if not target:
+        return Outcome.PASS, f"{action} fits the verdict"
+    node = (assessment.get("node_id") or "").split(":")[-1]
+    leaf_set = set(leaves)
+    if target == node:
+        return Outcome.FAIL, f"target {target} is the assessed node itself"
+    if target not in under and target not in leaf_set:
+        return Outcome.FAIL, f"target {target} is not a node of this family's PANTHER tree"
+    if assessment.get("assessment") in DESCENDANT_TARGET_VERDICTS:
+        node_leaves = set(under.get(node, []))
+        target_leaves = set(under.get(target, [target]))
+        if not node_leaves:
+            return Outcome.FAIL, (
+                f"assessed node {node} is not an internal node of this family's tree, so "
+                "nothing lies below it"
+            )
+        if target not in under:
+            # A leaf target: it is below the assessed node exactly when the node's clade
+            # contains it, even when it is that clade's only leaf.
+            if target in node_leaves:
+                return Outcome.PASS, f"{action} fits the verdict and the PANTHER tree"
+            return Outcome.FAIL, f"target {target} is not below the assessed node {node}"
+        if target_leaves == node_leaves:
+            return Outcome.UNRESOLVED, (
+                f"target {target} and node {node} share every leaf (a single-child "
+                "chain), so the leaf table cannot tell which is below the other"
+            )
+        if not target_leaves < node_leaves:
+            return Outcome.FAIL, f"target {target} is not below the assessed node {node}"
+    return Outcome.PASS, f"{action} fits the verdict and the PANTHER tree"
+
+
+def proposed_action_problem(
+    assessment: dict, under: dict[str, list[str]], leaves: Iterable[str] = ()
+) -> str | None:
+    """Return why a ``proposed_action`` fails, or None when it passes or is undecidable.
+
+    A boolean-style view of ``evaluate_proposed_action`` for callers (chiefly the tests)
+    that only need to know whether the action is rejected; the validator itself uses
+    ``evaluate_proposed_action`` so it can report UNRESOLVED.
+
+    >>> under = {"PTN1": ["a", "b", "c"], "PTN2": ["a", "b"]}
+    >>> proposed_action_problem({"node_id": "PANTHER:PTN1", "assessment": "TOO_DEEP",
+    ...     "proposed_action": {"paint_action": "MOVE_IBD",
+    ...                         "target_node_id": "PANTHER:PTN2"}}, under) is None
+    True
+    """
+    outcome, message = evaluate_proposed_action(assessment, under, leaves)
+    return message if outcome is Outcome.FAIL else None
+
+
+TreeLoader = Callable[[str], dict[str, Any] | None]
+
+
+def check_proposed_actions(review: dict, tree_loader: TreeLoader) -> list[ResidueCheck]:
+    """Check every node assessment's ``proposed_action`` against its verdict and the tree.
+
+    ``tree_loader(family)`` returns the compact PANTHER tree (``{"leaves": ..., "under":
+    ...}``) for a bare family id such as ``PTHR24416``, or None when it cannot be fetched.
+    It is called at most once, and only when the review proposes an action. Without a
+    usable tree (none, or one with no internal nodes) the verdict/action pairing is still
+    enforced, and the tree relation is UNRESOLVED.
+    """
+    family_id = review.get("family_id", "?")
+    proposals = [a for a in review.get("node_assessments") or [] if a.get("proposed_action")]
+    if not proposals:
+        return []
+    tree = tree_loader(family_id.split(":")[-1]) or {}
+    under = tree.get("under") or {}
+    leaves = list(tree.get("leaves") or {})
+    results: list[ResidueCheck] = []
+    for assessment in proposals:
+        node = assessment.get("node_id", "?")
+        term = (assessment.get("asserted_term") or {}).get("id", "?")
+        action = assessment["proposed_action"].get("paint_action", "?")
+        if not under:
+            problem = _proposed_action_fit_problem(assessment)
+            outcome = Outcome.FAIL if problem else Outcome.UNRESOLVED
+            message = problem or (
+                f"{action} fits the verdict; target not checked: PANTHER tree unavailable"
+            )
+        else:
+            outcome, message = evaluate_proposed_action(assessment, under, leaves)
+        results.append(
+            ResidueCheck(family_id, node, term, 0, [], None, outcome, message,
+                         kind="NODE_PROPOSED_ACTION")
+        )
+    return results
 
 
 def check_node_assessments(review: dict, paint_index: dict) -> list[ResidueCheck]:
@@ -811,7 +1152,15 @@ def _check_control_residue(  # noqa: PLR0911 - one branch per distinguishable ou
             f"{kind} control declares no position/residue, so its assertion is unchecked",
             kind="CONTROL_RESIDUE",
         )
-    observed = _residue_at(cache.get(acc), pos)
+    try:
+        seq = cache.get(acc)
+    except InactiveEntryError as exc:
+        return ResidueCheck(
+            family, site_id, acc, pos, sorted(expected), None, Outcome.FAIL,
+            f"{kind} control {exc.describe()}; replace or drop this control",
+            kind="CONTROL_RESIDUE",
+        )
+    observed = _residue_at(seq, pos)
     if observed is None:
         return ResidueCheck(
             family, site_id, acc, pos, sorted(expected), None, Outcome.FAIL,
@@ -859,7 +1208,10 @@ def _check_control_residue(  # noqa: PLR0911 - one branch per distinguishable ou
 
 
 def validate_family_review(
-    path: Path, cache_dir: Path, panther_dir: Path = Path("interpro/panther")
+    path: Path,
+    cache_dir: Path,
+    panther_dir: Path = Path("interpro/panther"),
+    tree_cache_dir: Path = Path(".cache/panther_trees"),
 ) -> list[ResidueCheck]:
     """Run all residue checks for one family review file.
 
@@ -871,18 +1223,21 @@ def validate_family_review(
     >>> all(r.outcome.value == "PASS" for r in results)   # doctest: +SKIP
     True
     """
+    from ai_gene_review.etl.panther_trees import load_family
     from ai_gene_review.validation.module_validator import load_paint_index
 
     review = yaml.safe_load(path.read_text())
     cache = SequenceCache(cache_dir)
     paint_index = load_paint_index(panther_dir)
-    labels, members, gaps, alternates = _panther_index(panther_dir)
+    labels, members, gaps, alternates = panther_artifacts(panther_dir)
+    previous = previous_release(panther_dir)
     return (
         check_anchor_residues(review, cache)
         + check_controls(review, cache)
         + check_node_assessments(review, paint_index)
+        + check_proposed_actions(review, lambda fam: load_family(fam, tree_cache_dir))
         + check_term_assessment_site_refs(review)
-        + check_panther_ids(review, labels, members, gaps, alternates)
+        + check_panther_ids(review, labels, members, gaps, alternates, previous)
     )
 
 
@@ -912,6 +1267,10 @@ def main(argv: list[str] | None = None) -> int:
         "--cache-dir", type=Path, default=Path(".cache/uniprot_seq"),
         help="Where UniProt sequences are cached.",
     )
+    parser.add_argument(
+        "--tree-cache-dir", type=Path, default=Path(".cache/panther_trees"),
+        help="Where PANTHER family trees (for proposed_action checks) are cached.",
+    )
     args = parser.parse_args(argv)
 
     paths = args.paths or sorted(Path("interpro/panther").glob("PTHR*/PTHR*-review.yaml"))
@@ -921,7 +1280,9 @@ def main(argv: list[str] | None = None) -> int:
 
     all_results: list[ResidueCheck] = []
     for path in paths:
-        results = validate_family_review(path, args.cache_dir)
+        results = validate_family_review(
+            path, args.cache_dir, tree_cache_dir=args.tree_cache_dir
+        )
         all_results.extend(results)
         for r in results:
             if r.outcome is not Outcome.PASS:
@@ -932,6 +1293,16 @@ def main(argv: list[str] | None = None) -> int:
         f"residue-site validation over {len(paths)} family review(s): "
         f"{counts['PASS']} pass, {counts['FAIL']} fail, {counts['UNRESOLVED']} unresolved"
     )
+    unchecked = [
+        r for r in all_results
+        if r.kind == "NODE_PROPOSED_ACTION" and r.outcome is Outcome.UNRESOLVED
+    ]
+    if unchecked:
+        print(
+            f"WARNING: {len(unchecked)} proposed PAINT action(s) were not checked against "
+            "the PANTHER tree (tree unavailable or single-child chain); see UNRESOLVED "
+            "NODE_PROPOSED_ACTION lines above."
+        )
     return 1 if counts["FAIL"] else 0
 
 

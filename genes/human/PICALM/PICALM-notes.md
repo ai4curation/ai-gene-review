@@ -17,3 +17,9 @@
 ## 2026-06-20 second-pass audit
 
 The second-pass audit confirmed the existing PICALM review and manual reference metadata. No annotation action changes were needed: PICALM remains curated as an ANTH-domain clathrin/SNARE cargo adaptor for clathrin-mediated endocytosis, with Alzheimer-relevant amyloid-beta/LRP1 trafficking, iron-homeostasis, tau, and nuclear-fusion contexts retained as non-core or over-annotated when they do not describe the core adaptor mechanism.
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- Both GO:0005794 rows (IEA GO_REF:0000044 and EXP PMID:10436022) changed from ACCEPT to MARK_AS_OVER_ANNOTATED, and the Golgi was removed from `core_functions.locations` (and from the description and the clathrin-binding core-function text).
+- The only Golgi source is PMID:10436022 (full text cached, PMC25500), which the UniProt Golgi item cites with ECO:0000269. Its Golgi-area signal is GFP-CALM expressed at high levels, colocalized with clathrin, with no Golgi marker and no brefeldin A test on CALM. The authors themselves write that endogenous CALM is located only in endocytic coated pits and that the Golgi-area localization of GFP-CALM "may not be related to CALM function" [PMID:10436022 "Endogenous CALM is located only in endocytic-coated pits"]. This is the CABP2 pattern: curator deference stops at a readable paper.
+- No cached PICALM paper places the endogenous protein at the Golgi. No sub-compartment row.

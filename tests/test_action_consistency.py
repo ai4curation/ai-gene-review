@@ -183,10 +183,13 @@ def test_same_direction_with_swapped_actions_is_a_different_rule():
 
 
 def test_packaged_table_puts_too_general_on_the_broader_term():
+    """TOO_GENERAL goes on the broader term; only under a REMOVE (a contradiction
+    rule) is a TOO_GENERAL row the narrower side."""
     rules = [
         r
         for r in load_rules()
         if r.relation is not Relation.SAME_TERM
+        and "REMOVE" not in r.side_1.actions | r.side_2.actions
         and not (r.negated_1 or r.negated_2)
         and "TOO_GENERAL" in r.side_1.actions | r.side_2.actions
     ]
@@ -450,6 +453,41 @@ def test_packaged_not_ancestor_rule(specs, expected):
     assert [(c.index_1, c.index_2) for c in conflicts] == expected
 
 
+@pytest.mark.parametrize(
+    "specs,expected",
+    [
+        # REMOVE on an ancestor of a kept positive term: conflict
+        ((("GO:A", "REMOVE", False), ("GO:C", "ACCEPT", False)), [(0, 1)]),
+        ((("GO:B", "REMOVE", False), ("GO:C", "TOO_GENERAL", False)), [(0, 1)]),
+        ((("GO:C", "NEW", False), ("GO:A", "REMOVE", False)), [(1, 0)]),
+        # REMOVE on the more specific term is consistent
+        ((("GO:C", "REMOVE", False), ("GO:A", "ACCEPT", False)), []),
+        # REMOVE on a NOT row only doubts the negative claim
+        ((("GO:A", "REMOVE", True), ("GO:C", "KEEP_AS_NON_CORE", False)), []),
+        # over-annotation is not a claim that the term is false
+        ((("GO:A", "MARK_AS_OVER_ANNOTATED", False), ("GO:C", "ACCEPT", False)), []),
+    ],
+)
+def test_packaged_remove_ancestor_rule(specs, expected):
+    conflicts = [c for c in iter_conflicts(hrows(*specs), ancestors=toy) if c.term_id_2]
+    assert [(c.index_1, c.index_2) for c in conflicts] == expected
+
+
+def test_packaged_remove_ancestor_rule_exempts_protein_binding():
+    pb = {"GO:0042802": frozenset({"GO:0005515"})}
+    data = hrows(("GO:0005515", "REMOVE", False), ("GO:0042802", "ACCEPT", False))
+    assert list(iter_conflicts(data, ancestors=lambda t: pb.get(t, frozenset()))) == []
+
+
+@pytest.mark.parametrize("root", ["GO:0003674", "GO:0008150", "GO:0005575"])
+def test_packaged_remove_ancestor_rule_exempts_nd_roots(root):
+    roots = {"GO:0099999": frozenset({root})}
+    data = hrows((root, "REMOVE", False), ("GO:0099999", "ACCEPT", False))
+    assert (
+        list(iter_conflicts(data, ancestors=lambda t: roots.get(t, frozenset()))) == []
+    )
+
+
 def test_hierarchical_rules_need_an_ancestor_lookup():
     data = hrows(("GO:A", "ACCEPT", True), ("GO:C", "ACCEPT", False))
     assert list(iter_conflicts(data)) == []
@@ -557,3 +595,34 @@ def test_worked_examples_are_clean_with_real_go(gene):
     )
     data = yaml.safe_load(path.read_text())
     assert issues(data, ancestors=go_ancestors()) == []
+
+
+@pytest.mark.parametrize(
+    "q_spec,q_gen,conflict",
+    [
+        # located in a sub-compartment does not make the gene active in the whole
+        ("located_in", "is_active_in", False),
+        ("is_active_in", "located_in", True),
+        ("part_of", "located_in", True),
+        # a contributed activity is not one the gene enables
+        ("contributes_to", "enables", False),
+        ("enables", "enables", True),
+        ("colocalizes_with", "located_in", False),
+        # the directional acts_upstream_of variants carry up to their parents
+        ("acts_upstream_of_positive_effect", "acts_upstream_of", True),
+        (
+            "acts_upstream_of_or_within_negative_effect",
+            "acts_upstream_of_or_within",
+            True,
+        ),
+        ("acts_upstream_of", "involved_in", False),
+        # involved_in says the gene is part of the process; acts_upstream_of says it is not
+        ("involved_in", "acts_upstream_of", False),
+        (None, "is_active_in", True),
+    ],
+)
+def test_hierarchical_rules_respect_qualifiers(q_spec, q_gen, conflict):
+    spec = row("ACCEPT", term="GO:C", **({"qualifier": q_spec} if q_spec else {}))
+    gen = row("REMOVE", term="GO:A", qualifier=q_gen)
+    found = [c for c in iter_conflicts(doc(gen, spec), ancestors=toy) if c.term_id_2]
+    assert bool(found) is conflict

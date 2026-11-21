@@ -17,3 +17,11 @@
 The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
 
 - Moved out of the YAML description: the prior wording described the selective-autophagy cargo adaptor/receptor role as PN-relevant.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+- Rows: GO:0005739 IEA (GO_REF:0000044, SL-0173; located_in) and IDA (PMID:27736772; is_active_in). Both stay KEEP_AS_NON_CORE; reasons extended.
+- UniProt: Mitochondrion {ECO:0000269|PubMed:27736772} only; mapping sound.
+- PMID:27736772 (abstract-only): [PMID:27736772 "Virus infection promotes the mitochondrial localization of TAX1BP1 and concomitant interaction with the mitochondrial adaptor MAVS."]; [PMID:27736772 "TAX1BP1 recruits the E3 ligase Itch to MAVS to trigger its ubiquitination and degradation"].
+- is_active_in: defensible; the paper gives TAX1BP1 an adaptor activity at the MAVS platform (Itch recruitment), though only for the virus-induced pool.
+- Outcome: root only. Soluble coiled-coil autophagy receptor recruited to the organelle surface (TRAF3/BRAF precedent); GO:0005741 not added.

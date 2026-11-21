@@ -65,3 +65,9 @@ dismech `LDLR-Related_Familial_Hypercholesterolemia` binds the trigger node to G
 matching core function 1 here. Its class-3 node was corrected (2026-10-09) from GO:0050750 (the
 ligand-side receptor-binding term) to GO:0030169 low-density lipoprotein particle binding, the
 receptor's own binding function.
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- Rows: GO:0005794 IDA (PMID:17461796) and IEA (GO_REF:0000044; UniProt item ECO:0000269 PMID:17461796). Both stay KEEP_AS_NON_CORE; reasons extended with the check.
+- PMID:17461796 is abstract-only in the cache (no PMC copy). The abstract: PCSK9 "sorted to post-ER compartments (i.e. endosomes in cell lines and Golgi apparatus in primary hepatocytes), where it colocalized with the LDLR". Marker and whether the receptor was endogenous cannot be read; kept on curator deference (rule 7).
+- Biologically a biosynthetic and PCSK9-routing pool of a type I receptor (processed en route to the surface, PMID:6299582), not the site of LDL binding/uptake. No sub-compartment row.

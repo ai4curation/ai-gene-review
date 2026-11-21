@@ -106,3 +106,11 @@ MARK_AS_OVER_ANNOTATED 1 (cell surface receptor signaling pathway). No NEW annot
 - GO:0035666 TRIF-dependent TLR signaling is named after this gene; IBA, ISS, IMP all agree.
 - GO:0007166 cell surface receptor signaling pathway (ARBA) is not an ancestor of GO:0002224
   (checked OLS); TICAM1 signals mainly from endosomes; marked over-annotated.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+- Rows: GO:0005739 IEA (GO_REF:0000120, SL-0173 + mouse Q80UF7) and ISS (GO_REF:0000024, WITH mouse Q80UF7; GOA lists it twice). All located_in, all KEEP_AS_NON_CORE (unchanged; reasons extended).
+- Human UniProt location is ECO:0000250 from Q80UF7 only.
+- Mouse source: Q80UF7 has one IDA, PMID:21703541 (QuickGO 2026-11-03; fetched, full text). Tagged DDX1/TRIF in HEK293T: [PMID:21703541 "there was increased expression of TRIF and DDX1 in the mitochondria after poly I:C activation"]. No fractionation with an ER marker, no sub-mitochondrial assay.
+- WITH/FROM is a true orthologue; no source defect.
+- Outcome: root only; stimulus-induced recruitment of a soluble TIR adaptor (TRAF3/BRAF precedent); no anchor or presequence.

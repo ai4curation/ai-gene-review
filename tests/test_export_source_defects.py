@@ -257,6 +257,34 @@ def test_collect_reads_reference_review_defects(tmp_path: Path) -> None:
     assert 'revise "LGG-2 has no obvious function in RNAi assays" in MOD_provided_gene_description' in report
 
 
+RULE_REVIEW_DEFECT = """
+id: ARBA00089174
+source_defects:
+- defect_type: WRONG_REFERENCE
+  resource: MGI
+  record: UniProtKB:Q704Y3 GO:0002024 IMP PMID:12161756
+  slot: reference
+  requested_change: CHECK
+  asserted_value: PMID:12161756
+  corrected_value: PMID:18503767
+  confidence: PROBABLE
+  explanation: The cited paper is on bladder function.
+"""
+
+
+def test_collect_reads_rule_review_defects(tmp_path: Path) -> None:
+    """A defect in an annotation row that a rule review cites is exported for its resource."""
+    rule = tmp_path / "rules" / "arba" / "ARBA00089174"
+    rule.mkdir(parents=True)
+    (rule / "ARBA00089174-review.yaml").write_text(RULE_REVIEW_DEFECT, encoding="utf-8")
+    (row,) = collect(tmp_path)
+    assert row["resource"] == "MGI"
+    assert row["record"] == "UniProtKB:Q704Y3 GO:0002024 IMP PMID:12161756"
+    assert row["requested_change"] == "CHECK"
+    assert row["source_path"] == "rules/arba/ARBA00089174/ARBA00089174-review.yaml"
+    assert "check PMID:12161756" in render_report("MGI", [row])
+
+
 def test_missing_statement_add_renders_without_corrected_value() -> None:
     """An ADD for missing free text has no corrected value; the explanation carries it."""
     row = {"asserted_value": "WB:WBGene1", "corrected_value": "", "corrected_label": "",
@@ -265,3 +293,115 @@ def test_missing_statement_add_renders_without_corrected_value() -> None:
     assert _describe_change(row) == (
         "add the content described in the explanation to WB:WBGene1 (MOD_provided_gene_description)"
     )
+
+
+# --- docs/source_defects.md must list the enum values the schema defines -------
+#
+# docs/source_defects.md tabulates the permissible values of SourceDefectTypeEnum
+# and SourceDefectCauseEnum. Those rows were generated from the schema, but
+# "generated once" is not "cannot drift": before this test the defect_type row
+# had silently fallen three values behind (WRONG_STATEMENT, OUTDATED_STATEMENT,
+# MISSING_STATEMENT). This asserts the invariant instead of claiming it.
+
+SCHEMA_PATH = Path(__file__).resolve().parents[1] / "src/ai_gene_review/schema/gene_review.yaml"
+DOCS_PATH = Path(__file__).resolve().parents[1] / "docs/source_defects.md"
+
+
+def _schema_enum_values(enum_name: str) -> list[str]:
+    import yaml
+
+    schema = yaml.safe_load(SCHEMA_PATH.read_text(encoding="utf-8"))
+    return list(schema["enums"][enum_name]["permissible_values"])
+
+
+def _docs_table_row(field: str) -> str:
+    for line in DOCS_PATH.read_text(encoding="utf-8").splitlines():
+        if line.startswith(f"| `{field}` |"):
+            return line
+    raise AssertionError(f"no table row for `{field}` in {DOCS_PATH.name}")
+
+
+@pytest.mark.parametrize(
+    ("field", "enum_name"),
+    [
+        ("defect_type", "SourceDefectTypeEnum"),
+        ("cause", "SourceDefectCauseEnum"),
+    ],
+)
+def test_docs_table_lists_every_schema_enum_value(field: str, enum_name: str) -> None:
+    """Every permissible value appears in the docs row for that field."""
+    row = _docs_table_row(field)
+    missing = [v for v in _schema_enum_values(enum_name) if f"`{v}`" not in row]
+    assert not missing, (
+        f"docs/source_defects.md `{field}` row is missing {missing}; "
+        f"regenerate it from {enum_name} rather than editing it by hand"
+    )
+
+
+def test_docs_table_invents_no_enum_values() -> None:
+    """The docs rows name no value the schema does not define."""
+    import re
+
+    for field, enum_name in [
+        ("defect_type", "SourceDefectTypeEnum"),
+        ("cause", "SourceDefectCauseEnum"),
+    ]:
+        row = _docs_table_row(field)
+        quoted = set(re.findall(r"`([A-Z][A-Z_]+)`", row))
+        unknown = quoted - set(_schema_enum_values(enum_name))
+        assert not unknown, f"docs `{field}` row names non-schema values {sorted(unknown)}"
+
+
+def test_source_resource_enum_has_the_pipeline_values_reports_route_on() -> None:
+    """The resources that the largest defect groups name are nameable.
+
+    export_source_defects keys one report per `resource` string, so a resource
+    with no enum value gets no report. InterPro and PANTHER are pipelines whose
+    defects affect every protein inheriting a mapping, which is why they are
+    distinct from the MOD values and from GO_CENTRAL.
+    """
+    values = set(_schema_enum_values("SourceResourceEnum"))
+    for expected in ("INTERPRO", "PANTHER", "COMPLEX_PORTAL", "GOC"):
+        assert expected in values, f"SourceResourceEnum lost {expected}"
+    assert "GO_CENTRAL" in values, "PANTHER must not have replaced GO_CENTRAL"
+
+
+def test_source_resource_enum_covers_non_goa_resources() -> None:
+    """Two resources assign no GOA rows, and their defects still need a home.
+
+    AFFINAGE is an Affinage gene record (an LLM synthesis cached as
+    GENE-deep-research-affinage.md); PROSITE is a pattern or ProRule whose
+    scope is too broad. Both were added in batch 3 because 23 defects had
+    been parked on OTHER for want of a value. PROSITE in particular must not
+    collapse into UNIPROT (which only applies the rule) or INTERPRO (whose
+    InterPro2GO mappings are a different mechanism).
+    """
+    values = set(_schema_enum_values("SourceResourceEnum"))
+    for expected in ("AFFINAGE", "PROSITE"):
+        assert expected in values, f"SourceResourceEnum lost {expected}"
+    for distinct in ("UNIPROT", "INTERPRO"):
+        assert distinct in values
+
+
+def test_source_resource_enum_keeps_ucl_groups_separate() -> None:
+    """Three UCL curation groups, three values.
+
+    ARUK_UCL already groups ARUK-UCL with BHF-UCL, but HGNC-UCL and
+    ParkinsonsUK-UCL are separate teams: a correction request has to reach
+    whoever made the row, so merging them would misroute it.
+    """
+    values = set(_schema_enum_values("SourceResourceEnum"))
+    for expected in ("ARUK_UCL", "HGNC_UCL", "PARKINSONSUK_UCL"):
+        assert expected in values, f"SourceResourceEnum lost {expected}"
+
+
+def test_source_resource_enum_names_syngo() -> None:
+    """SynGO is a curation group in its own right, not a pipeline.
+
+    Its curated rows are filed as SYNGO; PAINT IBAs propagated from SynGO
+    seeds are GO_CENTRAL. Both values must exist so each report reaches the
+    group that can fix it.
+    """
+    values = set(_schema_enum_values("SourceResourceEnum"))
+    assert "SYNGO" in values, "SourceResourceEnum lost SYNGO"
+    assert "GO_CENTRAL" in values

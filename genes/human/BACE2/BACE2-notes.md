@@ -14,3 +14,10 @@
 - The PMID:10591213 Asp2 sentence is no longer used as support. Its reference_review correctness is omitted (unassessed).
 - NEW protein autoprocessing (IDA, PMID:11316808). Also added Abeta degradation (PMID:22986058) and VEGFR3 shedding (PMID:38888964). core_functions is split into plasma-membrane shedding and melanosomal PMEL processing.
 - The IAPP IPI stays REMOVE: the binding of a substrate is captured by the endopeptidase activity, and MODIFY to an enzyme activity is not appropriate for an IPI row.
+
+## 2026-11-04 ORGANELLES ER batch 1 (endoplasmic reticulum rows)
+
+- Rows: one GO:0005783 row, IEA GO_REF:0000044 (UniProt SL-0095), located_in. No ER sub-compartment row.
+- Check: in the UniProt subcellular-location line the PubMed:11423558 tag belongs to the Golgi item; the "Endoplasmic reticulum" item has no evidence tag [file:human/BACE2/BACE2-uniprot.txt "CC       {ECO:0000269|PubMed:11423558}. Endoplasmic reticulum. Endosome."]. The same paper's abstract reports an ER pool directly [PMID:11423558 "BACE2 localizes in the endoplasmic reticulum, Golgi, trans-Golgi network, endosomes, and plasma membrane"].
+- Topology: type I membrane protease (signal 1-20, propeptide 21-62, TM 474-494); no ER-retention motif, no ER-resident function; substrates are cleaved in endosomes/melanosomes and at the surface.
+- Outcome: kept KEEP_AS_NON_CORE (real, transient biosynthetic pool shown directly). No NEW ER membrane row: the only ER-specific line is transit, not residence.

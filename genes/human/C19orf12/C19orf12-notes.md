@@ -57,3 +57,14 @@ No new literature retrieval, publication-cache edits, provider attempt or quotat
 ### Follow-up application
 
 The focused correction was applied after independent ROOT science approval. Full normal candidate and canonical validation passed with zero review warnings; status remains COMPLETE. A standard codex/gpt-6 EDIT record for PR3906 was scaffolded and validated. The targeted review page was rendered. All source fields, four products, nine reference identities, the single core, original quotations, source-cache bytes and previous history were preserved.
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 EXP (PMID:22508347, abstract only), IDA (PMID:23857908), IDA (PMID:26136767), IEA (GO_REF:0000044, SL-0095). No ER sub-compartment row existed.
+
+Checks:
+- UniProt: "Endoplasmic reticulum {ECO:0000269|PubMed:22508347}"; "Mitochondrion membrane {ECO:0000269|PubMed:21981780, ECO:0000269|PubMed:26136767}; Single-pass membrane protein {ECO:0000255}"; FT TRANSMEM 40..60 Helical (ECO:0000255); no SIGNAL feature [file:human/C19orf12/C19orf12-uniprot.txt].
+- PMID:26136767 (full text): endogenous HEK293 protein, "the wild-type protein was present in both mitochondria and ER"; markers "Anti-IP3R, VDAC, and Sigma-1R were used as ER, mitochondria and MAM markers respectively"; "a small fraction of the protein was also detected in the MAM".
+- PMID:23857908 (full text): overexpressed tagged protein "co-localized closely with the ER marker calreticulin" in many cells.
+
+Outcome: the four root rows keep ACCEPT, each with a dated ORGANELLES sentence. NEW GO:0005789 ER membrane (IC, PMID:26136767): predicted single TM without signal peptide (cannot be lumenal) plus the endogenous, marker-controlled ER fraction, with calreticulin co-staining as supportive. MAM (GO:0044233) not added: one line only (a small fraction in a Sigma-1R-marked MAM prep). Judgement call: ACCEPT on the ER rows was left as the earlier reviewer set it, although the ER pool is not part of core_functions (KEEP_AS_NON_CORE would also be defensible for all four rows together).

@@ -38,23 +38,84 @@ network. Regenerate with ``just build-panther-obo`` /
 
 from __future__ import annotations
 
+import json
 import re
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Dict, Iterable, Iterator, List, NamedTuple, Optional, Set, Tuple
+from typing import (
+    Callable,
+    Dict,
+    Final,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+)
 
 import requests
 import yaml
 
 PANTHER_RELEASE = "19.0"
+
+
+def hmm_url(release: str = PANTHER_RELEASE) -> str:
+    """URL of one release's HMM classification file (family and subfamily names).
+
+    >>> hmm_url("20.0").rsplit("/", 2)[1:]
+    ['20.0', 'PANTHER20.0_HMM_classifications']
+    """
+    return f"https://data.pantherdb.org/ftp/hmm_classifications/{release}/PANTHER{release}_HMM_classifications"
+
+
+def seq_base(release: str = PANTHER_RELEASE) -> str:
+    """Folder holding one release's per-organism sequence classification files."""
+    return (
+        f"https://data.pantherdb.org/ftp/sequence_classifications/{release}/"
+        "PANTHER_Sequence_Classification_files"
+    )
+
+
 # Release-pinned paths, not current_release/: the file names embed the release,
 # so current_release/ would 404 (or silently change) when PANTHER moves on.
-HMM_BASE = f"https://data.pantherdb.org/ftp/hmm_classifications/{PANTHER_RELEASE}"
-HMM_URL = f"{HMM_BASE}/PANTHER{PANTHER_RELEASE}_HMM_classifications"
-SEQ_BASE = (
-    f"https://data.pantherdb.org/ftp/sequence_classifications/{PANTHER_RELEASE}/"
-    "PANTHER_Sequence_Classification_files"
-)
+HMM_URL = hmm_url()
+SEQ_BASE = seq_base()
+
+# PAINT is published apart from the library, as dated snapshots under each release
+# (paint/<release>/<date>/). Pin one: paint/current/ changes without notice, and
+# would move to the next release before PANTHER_RELEASE does. Bump both together.
+PAINT_SNAPSHOT = "2026-08-28"
+PAINT_ROOT = "https://data.pantherdb.org/ftp/downloads/paint"
+PAINT_BASE = f"{PAINT_ROOT}/{PANTHER_RELEASE}/{PAINT_SNAPSHOT}"
+
+
+# The release being left during a PANTHER switch, or None outside one. The bump PR sets
+# it; the last remap PR clears it (docs/panther_node_anchoring_plan.md, Phase 2). While
+# it is set, validators report an id, label or membership that was right in this
+# release, but changed in PANTHER_RELEASE, as unresolved rather than as a failure, so
+# remaps can land in batches instead of one PR.
+PANTHER_PREVIOUS_RELEASE: Optional[str] = None
+
+
+def paint_cache_dir(cache_root: Path) -> Path:
+    """Folder under ``cache_root`` for files from the pinned PAINT snapshot.
+
+    Keyed by release and snapshot, so a bump downloads afresh instead of reusing
+    files fetched from an earlier snapshot.
+
+    >>> paint_cache_dir(Path("c")).name == f"paint-{PANTHER_RELEASE}-{PAINT_SNAPSHOT}"
+    True
+    """
+    return Path(cache_root) / f"paint-{PANTHER_RELEASE}-{PAINT_SNAPSHOT}"
 
 FAMILY_RE = re.compile(r"^PTHR\d+$")
 SUBFAMILY_RE = re.compile(r"^(PTHR\d+):(SF\d+)$")
@@ -262,22 +323,34 @@ def parse_sequence_classification(lines: Iterable[str]) -> Dict[str, str]:
     return index
 
 
+def sequence_classification_path(cache_dir: Path, organism: str, release: str) -> Path:
+    """Where :func:`fetch_sequence_classification` caches one organism's file.
+
+    >>> sequence_classification_path(Path("c"), "human", "19.0").name
+    'PTHR19.0_human'
+    """
+    return Path(cache_dir) / f"PTHR{release}_{organism}"
+
+
 def fetch_sequence_classification(
-    organism: str, cache_dir: Path, force_download: bool = False
+    organism: str,
+    cache_dir: Path,
+    force_download: bool = False,
+    release: str = PANTHER_RELEASE,
 ) -> Optional[Path]:
     """Download one organism's sequence classification, or None if absent.
 
     PANTHER publishes these per organism under fixed slugs (``human``,
     ``e_coli``, ``pseudomonas``, ...). An unknown slug 404s, which is reported as
-    ``None`` rather than raising so callers can sweep a candidate list.
+    ``None`` rather than raising so callers can sweep a candidate list. File names
+    embed the release, so several releases can share one ``cache_dir``.
     """
     cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"PTHR{PANTHER_RELEASE}_{organism}"
-    dest = cache_dir / filename
+    dest = sequence_classification_path(cache_dir, organism, release)
     if dest.exists() and not force_download:
         return dest
-    response = requests.get(f"{SEQ_BASE}/{filename}", timeout=300)
+    response = requests.get(f"{seq_base(release)}/{dest.name}", timeout=300)
     if response.status_code == 404:
         return None
     response.raise_for_status()
@@ -358,6 +431,49 @@ class MemberIndexGaps(NamedTuple):
 
     unchecked: Set[str]
     """UniProt was not consulted, so the status is unknown. Rerun to resolve."""
+
+
+# Outcomes of member_corroboration. A descriptor's members either reach the index
+# (whether they agree with its family id is the member check's job), were never looked
+# up (a refresh resolves it), were looked up and have no PANTHER family (permanent), or
+# do not exist. Consumers branch on it ending in typing.assert_never, so mypy names any
+# consumer that misses a new outcome.
+MemberCorroboration = Literal["indexed", "not_looked_up", "no_family", "no_members"]
+MEMBERS_INDEXED: Final = "indexed"
+MEMBERS_NOT_LOOKED_UP: Final = "not_looked_up"
+MEMBERS_NO_FAMILY: Final = "no_family"
+MEMBERS_NONE: Final = "no_members"
+
+
+def member_corroboration(
+    accessions: Iterable[str], index: Mapping[str, str], gaps: MemberIndexGaps
+) -> MemberCorroboration:
+    """How far a descriptor's representative members can corroborate its family id.
+
+    Label tools act on the answer. ``MEMBERS_NOT_LOOKED_UP`` (no member in the index,
+    and some never looked up) leaves the id alone until the index is refreshed: no
+    member can confirm or dispute it yet. ``MEMBERS_NO_FAMILY`` (every member looked
+    up, none with a PANTHER family) carries the same risk -- a wrong id behind an
+    official name -- but no refresh will ever change it, so skipping would leave the
+    label wrong for good; tools relabel it and say so. ``MEMBERS_NONE`` has nothing to
+    look up, and nothing could ever confirm the id either, so it is treated the same.
+
+    >>> gaps = MemberIndexGaps(absent={"P3"}, unchecked={"P2"})
+    >>> member_corroboration({"P1", "P2"}, {"P1": "PTHR1"}, gaps)
+    'indexed'
+    >>> member_corroboration({"P2"}, {}, gaps), member_corroboration({"P4"}, {}, gaps)
+    ('not_looked_up', 'not_looked_up')
+    >>> member_corroboration({"P3", "P4"}, {}, gaps)
+    'not_looked_up'
+    >>> member_corroboration({"P3"}, {}, gaps), member_corroboration(set(), {}, gaps)
+    ('no_family', 'no_members')
+    """
+    accessions = set(accessions)
+    if not accessions:
+        return MEMBERS_NONE
+    if any(accession in index for accession in accessions):
+        return MEMBERS_INDEXED
+    return MEMBERS_NOT_LOOKED_UP if accessions - gaps.absent else MEMBERS_NO_FAMILY
 
 
 def render_member_index(
@@ -792,7 +908,7 @@ def build_member_index(
 # PAINT slice integrity
 # --------------------------------------------------------------------------- #
 
-IBD_GAF_URL = "https://data.pantherdb.org/ftp/downloads/paint/current/IBD.gaf"
+IBD_GAF_URL = f"{PAINT_BASE}/IBD.gaf"
 
 # GAF columns (0-based) needed to key a node annotation.
 _GAF_COL_OBJECT_ID = 1
@@ -1040,18 +1156,36 @@ def load_subfamily_counts(path: Path) -> Dict[str, int]:
     return counts
 
 
+# Why rewrite_panther_labels held a label back: the label names a different protein
+# than the id's official name, or the id was renamed since the previous release.
+DeferralReason = Literal["divergent", "renamed_in_switch"]
+
+
+class DeferredLabel(NamedTuple):
+    """A label :func:`rewrite_panther_labels` held back, and why."""
+
+    curie: str
+    old: str
+    new: str
+    # Consumers branch on it ending in typing.assert_never (cli.fix_panther_labels),
+    # so mypy names any consumer that misses a new reason.
+    reason: DeferralReason
+
+
 def rewrite_panther_labels(
     text: str,
     names: Dict[str, str],
     skip_curies: Optional[Set[str]] = None,
     allow_divergent: bool = False,
-) -> Tuple[str, List[Tuple[str, str, str]], List[Tuple[str, str, str]]]:
+    previous_names: Optional[Mapping[str, str]] = None,
+) -> Tuple[str, List[Tuple[str, str, str]], List[DeferredLabel]]:
     """Rewrite PANTHER family/subfamily labels to their official PANTHER names.
 
-    Returns ``(new_text, applied, deferred)``, each change a
-    ``(curie, old_label, new_label)`` triple.
+    Returns ``(new_text, applied, deferred)``. Each applied change is a
+    ``(curie, old_label, new_label)`` triple; each deferred one a
+    :class:`DeferredLabel`, which also says why it was held back.
 
-    Two categories are deliberately NOT rewritten:
+    Three categories are deliberately NOT rewritten:
 
     * ``skip_curies`` -- ids whose *grounding* is disputed. Rewriting their
       label would replace an honestly-wrong label with an authoritative one and
@@ -1060,6 +1194,11 @@ def rewrite_panther_labels(
       unless ``allow_divergent``. When the authored label describes a different
       protein entirely, the likely error is the id, and normalising the label
       would manufacture consistency around a guessed identifier.
+    * during a PANTHER switch (``previous_names``, the previous release's names), any
+      label on an id whose name changed between the releases, returned in ``deferred``
+      (reason ``renamed_in_switch``) even with ``allow_divergent``. The id may now name
+      something else, so it is remapped from ``just panther-release-diff``, not
+      relabelled; that holds a typo on such an id until the remap too.
 
     >>> names = {"PANTHER:PTHR1": "ALDO/KETO REDUCTASE"}
     >>> text = "  term:\\n    id: PANTHER:PTHR1\\n    label: ALDO-KETO REDUCTASE\\n"
@@ -1077,15 +1216,25 @@ def rewrite_panther_labels(
     >>> new, applied, deferred = rewrite_panther_labels(text, names)
     >>> applied
     []
-    >>> deferred
-    [('PANTHER:PTHR1', 'SUCCINATE DEHYDROGENASE', 'ALDO/KETO REDUCTASE')]
+    >>> [(d.curie, d.old, d.reason) for d in deferred]
+    [('PANTHER:PTHR1', 'SUCCINATE DEHYDROGENASE', 'divergent')]
     >>> new == text
     True
+
+    During a switch, a label on an id the switch renamed is held back, whatever it says:
+
+    >>> text = "  term:\\n    id: PANTHER:PTHR1\\n    label: ALDO-KETO REDUCTASE\\n"
+    >>> previous = {"PANTHER:PTHR1": "ALDO KETO REDUCTASE"}
+    >>> new, applied, deferred = rewrite_panther_labels(
+    ...     text, names, allow_divergent=True, previous_names=previous)
+    >>> applied, new == text, deferred[0].reason
+    ([], True, 'renamed_in_switch')
     """
     skip = skip_curies or set()
+    previous = previous_names or {}
     lines = text.splitlines(keepends=True)
     changes: List[Tuple[str, str, str]] = []
-    deferred: List[Tuple[str, str, str]] = []
+    deferred: List[DeferredLabel] = []
     for index, line in enumerate(lines):
         match = _LABEL_ID_RE.match(line.rstrip("\n"))
         if not match or index + 1 >= len(lines):
@@ -1104,12 +1253,15 @@ def rewrite_panther_labels(
         current = str(yaml.safe_load(f"v: {label_match.group(2)}")["v"])
         if current.strip() == official:
             continue
+        if previous.get(curie, official) != official:
+            deferred.append(DeferredLabel(curie, current, official, "renamed_in_switch"))
+            continue
         if (
             not allow_divergent
             and not is_placeholder_label(current, curie)
             and label_drift(current, official) == "divergent"
         ):
-            deferred.append((curie, current, official))
+            deferred.append(DeferredLabel(curie, current, official, "divergent"))
             continue
         lines[index + 1] = f"{expected_indent}label: {emit_yaml_scalar(official)}\n"
         changes.append((curie, current, official))
@@ -1122,6 +1274,8 @@ def rewrite_panther_labels(
 
 UNIPROT_ACCESSIONS_URL = "https://rest.uniprot.org/uniprotkb/accessions"
 UNIPROT_BATCH_SIZE = 100
+#: The one status that says the request itself is unusable rather than untimely.
+HTTP_BAD_REQUEST = 400
 
 
 def _best_panther_xref(cross_references: Iterable[dict]) -> Optional[str]:
@@ -1152,6 +1306,97 @@ def _best_panther_xref(cross_references: Iterable[dict]) -> Optional[str]:
     return sorted(families)[0] if families else None
 
 
+#: A UniProt chain (``-PRO_0000437526``) or isoform (``-2``) suffix on a cited id.
+SEQUENCE_SUFFIX_RE = re.compile(r"-(?:PRO_\d+|\d+)$")
+
+
+def parent_accession(cited: str) -> str:
+    """Strip a chain or isoform suffix, giving the entry ``cited`` belongs to.
+
+    Modules and family reviews legitimately cite UniProt *chain* ids for
+    cleavage products (``P57764-PRO_0000437526`` is the gasdermin-D N-terminal
+    fragment) and isoform ids for splice variants. Neither is a UniProtKB entry
+    accession: ``/uniprotkb/accessions`` rejects the whole request with HTTP 400
+    if one appears in it. They also carry no PANTHER cross-reference of their
+    own, so the parent entry's family is the answer wanted, not a workaround.
+
+    Stripping a trailing ``-<digits>`` is safe because a UniProtKB accession
+    never contains a hyphen: both the six-character form (``P0AEK4``) and the
+    ten-character form (``A0A0B4J2F0``) are alphanumeric throughout, so a
+    hyphen can only start a suffix.
+
+    >>> parent_accession("P57764-PRO_0000437526")
+    'P57764'
+    >>> parent_accession("Q9UJF2-2")
+    'Q9UJF2'
+    >>> parent_accession("P0AEK4")
+    'P0AEK4'
+    """
+    return SEQUENCE_SUFFIX_RE.sub("", cited)
+
+
+def _request_panther_xrefs(batch: List[str]) -> Dict[str, str]:
+    """One ``/uniprotkb/accessions`` call: entry accession -> best PANTHER id."""
+    query = urllib.parse.urlencode(
+        {
+            "accessions": ",".join(batch),
+            "fields": "accession,xref_panther",
+            "format": "json",
+        }
+    )
+    with urllib.request.urlopen(
+        f"{UNIPROT_ACCESSIONS_URL}?{query}", timeout=120
+    ) as handle:
+        payload = json.load(handle)
+    found: Dict[str, str] = {}
+    for record in payload.get("results", []):
+        accession = record.get("primaryAccession")
+        best = _best_panther_xref(record.get("uniProtKBCrossReferences", []))
+        if accession and best:
+            found[accession] = best
+    return found
+
+
+def _panther_xrefs_tolerating_bad_ids(batch: List[str]) -> Dict[str, str]:
+    """Query ``batch``, retrying one accession at a time if it is rejected.
+
+    The endpoint fails the entire request when any id in it is unusable, so
+    without this one bad accession would abort the index build and make
+    ``validate-families`` report "membership not indexed yet" for every family
+    in the corpus. External interface, hence the tolerance: an id UniProt will
+    not answer for is left unresolved (and recorded as absent by the caller)
+    rather than taking the build down with it.
+
+    Only a 400 earns that tolerance. The caller writes each accession missing
+    from the result under ``UNRESOLVED_MARKER``, which
+    :func:`load_member_index_gaps` reads as ``absent`` -- both sources consulted,
+    no family -- and :func:`incremental_member_index` then takes as settled and
+    does not re-query without ``--rebuild``. A 400 means the id itself is
+    unusable, so that record is true; a 429 or 5xx means "ask again later", and
+    swallowing it would turn one throttled request into a sticky false absence
+    for up to a whole batch. Those propagate, as ``URLError`` and timeouts
+    already do, which also keeps a rate-limited batch from immediately firing a
+    batch's worth of un-backed-off single requests.
+    """
+    try:
+        return _request_panther_xrefs(batch)
+    except urllib.error.HTTPError as err:
+        if err.code != HTTP_BAD_REQUEST:
+            raise
+        if len(batch) == 1:
+            return {}
+    # Fall through only for a rejected batch of more than one: find out which
+    # id the endpoint will not answer for, and keep the rest.
+    found: Dict[str, str] = {}
+    for accession in batch:
+        try:
+            found.update(_request_panther_xrefs([accession]))
+        except urllib.error.HTTPError as err:
+            if err.code != HTTP_BAD_REQUEST:
+                raise
+    return found
+
+
 def fetch_panther_from_uniprot(accessions: Iterable[str]) -> Dict[str, str]:
     """Resolve accession -> PANTHER family/subfamily via the UniProt REST API.
 
@@ -1159,29 +1404,368 @@ def fetch_panther_from_uniprot(accessions: Iterable[str]) -> Dict[str, str]:
     proteomes, which leaves most curated bacterial accessions unresolvable. Those
     are exactly the entries the family-membership check would otherwise skip, so
     this fills the gap for any organism UniProt knows about.
-    """
-    import json
-    import urllib.parse
-    import urllib.request
 
-    pending = sorted(set(accessions))
+    Chain and isoform ids are resolved through their parent entry (see
+    :func:`parent_accession`) and returned under the id as cited, so the member
+    index stays keyed by what the YAML actually says. Each parent is asked for
+    once however many of its chains and isoforms are cited.
+    """
+    cited_by_parent: Dict[str, List[str]] = {}
+    for cited in sorted(set(accessions)):
+        cited_by_parent.setdefault(parent_accession(cited), []).append(cited)
+
+    parents = sorted(cited_by_parent)
     resolved: Dict[str, str] = {}
-    for start in range(0, len(pending), UNIPROT_BATCH_SIZE):
-        batch = pending[start : start + UNIPROT_BATCH_SIZE]
-        query = urllib.parse.urlencode(
-            {
-                "accessions": ",".join(batch),
-                "fields": "accession,xref_panther",
-                "format": "json",
-            }
-        )
-        with urllib.request.urlopen(
-            f"{UNIPROT_ACCESSIONS_URL}?{query}", timeout=120
-        ) as handle:
-            payload = json.load(handle)
-        for record in payload.get("results", []):
-            accession = record.get("primaryAccession")
-            best = _best_panther_xref(record.get("uniProtKBCrossReferences", []))
-            if accession and best:
-                resolved[accession] = best
+    for start in range(0, len(parents), UNIPROT_BATCH_SIZE):
+        batch = parents[start : start + UNIPROT_BATCH_SIZE]
+        for parent, family_sf in _panther_xrefs_tolerating_bad_ids(batch).items():
+            for cited in cited_by_parent.get(parent, ()):
+                resolved[cited] = family_sf
     return resolved
+
+
+# --------------------------------------------------------------------------- #
+# Release drift: has PANTHER moved past the pinned release or PAINT snapshot?
+# --------------------------------------------------------------------------- #
+
+HMM_ROOT = "https://data.pantherdb.org/ftp/hmm_classifications"
+# Smallest oai endpoint that reports the release the API serves (as product.version).
+API_VERSION_URL = "https://pantherdb.org/services/oai/pantherdb/supportedannotdatasets"
+
+
+def _release_key(release: str) -> Tuple[int, ...]:
+    """Sort key for a release string.
+
+    >>> _release_key("19.0") < _release_key("20.0") < _release_key("20.10")
+    True
+    """
+    return tuple(int(part) for part in release.split("."))
+
+
+def same_release(served: object, pinned: str) -> bool:
+    """Whether a release reported by the PANTHER API is the pinned one.
+
+    The API reports ``19`` where the FTP paths say ``19.0``.
+
+    >>> same_release(19, "19.0"), same_release("19.0", "19.0"), same_release(20, "19.0")
+    (True, True, False)
+    """
+    text = str(served)
+    return _release_key(text if "." in text else f"{text}.0") == _release_key(pinned)
+
+
+def newer_releases(listing_html: str, pinned: str) -> List[str]:
+    """Release folders (``NN.N/``) in an FTP listing that are newer than ``pinned``.
+
+    >>> newer_releases('<a href="18.0/"><a href="19.0/"><a href="20.0/"><a href="current/">', "19.0")
+    ['20.0']
+    """
+    found = set(re.findall(r'href="(\d+\.\d+)/"', listing_html))
+    return sorted((r for r in found if _release_key(r) > _release_key(pinned)), key=_release_key)
+
+
+_SNAPSHOT_HREF = re.compile(r'href="(\d{4}-\d{2}-\d{2})/"')
+
+
+def newer_snapshots(listing_html: str, pinned: str) -> List[str]:
+    """Dated PAINT snapshot folders in an FTP listing that are newer than ``pinned``.
+
+    >>> html = '<a href="2026-06-02/"><a href="2026-08-28/"><a href="2026-11-01/">'
+    >>> newer_snapshots(html, "2026-08-28")
+    ['2026-11-01']
+    """
+    return sorted(d for d in set(_SNAPSHOT_HREF.findall(listing_html)) if d > pinned)
+
+
+def snapshot_present(listing_html: str, pinned: str) -> bool:
+    """Whether an FTP listing still holds the ``pinned`` dated PAINT snapshot folder.
+
+    >>> html = '<a href="2026-06-02/"><a href="2026-08-28/">'
+    >>> snapshot_present(html, "2026-08-28"), snapshot_present(html, "2026-08-2")
+    (True, False)
+    """
+    return pinned in _SNAPSHOT_HREF.findall(listing_html)
+
+
+def panther_release_drift(timeout: int = 60) -> Tuple[List[str], List[str]]:
+    """Compare the pinned release and PAINT snapshot with what PANTHER serves now.
+
+    Returns ``(stale, notices)``. ``stale`` lists ways the pinned data is no longer
+    what PANTHER serves, which call for a bump: a newer PAINT snapshot, PAINT or the
+    tree API on another release. ``notices`` lists newer library releases (family and
+    subfamily classifications) that may not be in PAINT or the API yet. Needs the
+    network; raises on an HTTP error rather than reporting "no drift".
+    """
+
+    def get(url: str) -> requests.Response:
+        response = requests.get(url, timeout=timeout)
+        response.raise_for_status()
+        return response
+
+    stale: List[str] = []
+    notices: List[str] = []
+    snapshots = get(f"{PAINT_ROOT}/{PANTHER_RELEASE}/").text
+    if not snapshot_present(snapshots, PAINT_SNAPSHOT):
+        stale.append(
+            f"the pinned PAINT snapshot {PANTHER_RELEASE}/{PAINT_SNAPSHOT} is not on the FTP "
+            "site; check PAINT_SNAPSHOT (bump it together with PANTHER_RELEASE)"
+        )
+    for snapshot in newer_snapshots(snapshots, PAINT_SNAPSHOT):
+        stale.append(
+            f"PAINT snapshot {PANTHER_RELEASE}/{snapshot} is newer than the pinned {PAINT_SNAPSHOT}"
+        )
+    for release in newer_releases(get(f"{PAINT_ROOT}/").text, PANTHER_RELEASE):
+        stale.append(f"PAINT has a {release} folder, newer than the pinned {PANTHER_RELEASE}")
+    if f"Pthr_GO_{PANTHER_RELEASE}.tsv" not in get(f"{PAINT_ROOT}/current/").text:
+        stale.append(f"paint/current/ no longer holds PANTHER {PANTHER_RELEASE} data")
+    served = get(API_VERSION_URL).json()["search"]["product"]["version"]
+    if not same_release(served, PANTHER_RELEASE):
+        stale.append(f"the PANTHER API serves release {served}, not the pinned {PANTHER_RELEASE}")
+    for release in newer_releases(get(f"{HMM_ROOT}/").text, PANTHER_RELEASE):
+        notices.append(
+            f"PANTHER {release} family classifications are published; "
+            "PAINT and the tree API may not serve it yet"
+        )
+    return stale, notices
+
+
+# --------------------------------------------------------------------------- #
+# Transition window: the previous release's names and memberships
+# --------------------------------------------------------------------------- #
+
+
+def panther_cache_dir(repo_root: Path) -> Path:
+    """The git-ignored folder holding PANTHER downloads and the member index.
+
+    >>> panther_cache_dir(Path("/repo")).as_posix()
+    '/repo/.cache/panther'
+    """
+    return Path(repo_root) / MEMBER_INDEX_RELPATH.parent
+
+
+def hmm_classifications_path(cache_dir: Path, release: str) -> Path:
+    """Where :func:`fetch_hmm_classifications` caches one release's names file.
+
+    >>> hmm_classifications_path(Path("c"), "19.0").name
+    'PANTHER19.0_HMM_classifications'
+    """
+    return Path(cache_dir) / hmm_url(release).rsplit("/", 1)[-1]
+
+
+def previous_release_names(cache_dir: Path, release: str) -> Dict[str, str]:
+    r"""``PANTHER:<id> -> name`` for every family and subfamily in ``release``.
+
+    Read from that release's HMM classification file (downloaded into ``cache_dir``
+    once if absent). Keys and values match :func:`load_obo_names` on an OBO written by
+    :func:`write_panther_obo`: names go through :func:`escape_obo_value`, as they do in
+    the committed artifact, so the two can be compared directly.
+
+    >>> import tempfile
+    >>> d = Path(tempfile.mkdtemp())
+    >>> _ = hmm_classifications_path(d, "99.0").write_text("PTHR1:SF1\tA ! B\n")
+    >>> previous_release_names(d, "99.0")
+    {'PANTHER:PTHR1:SF1': 'A \\! B'}
+    """
+    path = fetch_hmm_classifications(cache_dir, url=hmm_url(release))
+    entries = parse_hmm_classifications(path.read_text(errors="replace").splitlines())
+    return {f"PANTHER:{entry.accession}": escape_obo_value(entry.name) for entry in entries}
+
+
+def previous_release_members(
+    cache_dir: Path,
+    release: str,
+    organisms: Iterable[str] = DEFAULT_ORGANISMS,
+    cached_only: bool = False,
+) -> Dict[str, str]:
+    """UniProt accession -> ``PTHR family:SF`` in ``release``, for the given organisms.
+
+    Not pruned to cited accessions: it backs a temporary allowance, and every
+    accession a review cites must be answerable from it. For the default organisms
+    that means about 305 MB of classification files on a cold cache and about 300,000
+    accessions in memory (measured for 19.0), paid once per validation process during
+    a switch.
+    ``cached_only`` reads only files already in ``cache_dir`` and downloads nothing,
+    so a validator never depends on the network.
+    """
+    index: Dict[str, str] = {}
+    for organism in organisms:
+        if cached_only:
+            cached = sequence_classification_path(cache_dir, organism, release)
+            path: Optional[Path] = cached if cached.exists() else None
+        else:
+            path = fetch_sequence_classification(organism, cache_dir, release=release)
+        if path is None:
+            continue
+        for accession, family_sf in parse_sequence_classification(
+            path.read_text(errors="replace").splitlines()
+        ).items():
+            index.setdefault(accession, family_sf)
+    return index
+
+
+# --------------------------------------------------------------------------- #
+# Loaded artifacts: the current release's, and during a switch the previous one's
+# --------------------------------------------------------------------------- #
+
+
+class PantherArtifacts(NamedTuple):
+    """The pinned release's PANTHER artifacts, as the validators use them."""
+
+    # Read-only: the lru_cache in panther_artifacts hands every caller the same objects.
+    names: Mapping[str, str]  # PANTHER:<id> -> official name, from panther.obo
+    members: Mapping[str, str]  # UniProt accession -> PTHR family:SF, from the member index
+    gaps: MemberIndexGaps
+    alternates: Mapping[str, str]
+
+
+def panther_artifacts(panther_dir: Path) -> PantherArtifacts:
+    """Load ``panther.obo`` and the member index once per ``interpro/panther`` directory.
+
+    ``panther_dir`` is ``<repo>/interpro/panther``. Cached per resolved directory,
+    because ``panther.obo`` is 13.8 MB and validators call this once per file. The
+    member index is a build artifact in ``<repo>/.cache/panther``; on a fresh checkout
+    its loaders return empty mappings rather than raising, and ``gaps`` tells an
+    accession PANTHER has no family for from one whose lookup was never done.
+    """
+    return _panther_artifacts_cached(Path(panther_dir).resolve())
+
+
+@lru_cache(maxsize=None)
+def _panther_artifacts_cached(panther_dir: Path) -> PantherArtifacts:
+    members = member_index_path(panther_dir.parents[1])
+    return PantherArtifacts(
+        load_obo_names(panther_dir / "panther.obo"),
+        load_member_index(members),
+        load_member_index_gaps(members),
+        load_member_index_alternates(members),
+    )
+
+
+class PreviousLabels(NamedTuple):
+    """The names of the PANTHER release being left during a switch.
+
+    ``labels`` maps ``PANTHER:<id>`` to that release's name, escaped as in the OBO. It
+    is read-only: the cached copy is shared with :class:`PreviousRelease`.
+    """
+
+    release: str
+    labels: Mapping[str, str]
+
+
+class PreviousRelease(NamedTuple):
+    """The PANTHER release being left during a switch (``PANTHER_PREVIOUS_RELEASE``).
+
+    ``labels`` maps ``PANTHER:<id>`` to that release's name; ``members`` maps a UniProt
+    accession to its ``PTHR family:SF`` there. While a switch is in progress, an id,
+    label or membership that matches this release but not the current one is reported
+    as UNRESOLVED (remap pending) instead of FAIL.
+    """
+
+    release: str
+    labels: Mapping[str, str]  # read-only, shared with the cached PreviousLabels
+    members: Mapping[str, str]  # read-only, shared through the lru_cache
+
+
+def switch_release() -> Optional[str]:
+    """The release being left during a PANTHER switch, or None outside one.
+
+    >>> switch_release() == PANTHER_PREVIOUS_RELEASE  # None outside a switch
+    True
+    """
+    if PANTHER_PREVIOUS_RELEASE is not None and PANTHER_PREVIOUS_RELEASE == PANTHER_RELEASE:
+        raise ValueError(
+            f"PANTHER_PREVIOUS_RELEASE equals PANTHER_RELEASE ({PANTHER_RELEASE}); "
+            "set it to the release being left, or to None outside a switch"
+        )
+    return PANTHER_PREVIOUS_RELEASE
+
+
+def load_previous_labels(repo_root: Path, release: str) -> Optional[PreviousLabels]:
+    """Load ``release``'s names from the PANTHER cache, offline, or None if not cached.
+
+    ``repo_root`` is the repository root (the cache is ``<repo>/.cache/panther``), not
+    the ``interpro/panther`` directory that :func:`previous_release_labels` takes.
+    Nothing is downloaded: ``just ensure-panther-members`` caches the names file while
+    a switch is on. When it is absent this warns once and returns None, so checks run
+    as they would without the switch allowance rather than depending on the network.
+    Tools that must not run without the allowance check :func:`switch_release` too.
+    """
+    cache = panther_cache_dir(repo_root)
+    if not hmm_classifications_path(cache, release).exists():
+        print(
+            f"warning: PANTHER {release} classifications are not cached in {cache}, so the "
+            "switch allowance is off; run `just ensure-panther-members`",
+            file=sys.stderr,
+        )
+        return None
+    return PreviousLabels(release, previous_release_names(cache, release))
+
+
+def load_previous_release(repo_root: Path, release: str) -> Optional[PreviousRelease]:
+    """Load ``release``'s names and memberships from the PANTHER cache, offline.
+
+    ``repo_root`` is the repository root, as for :func:`load_previous_labels`. The names
+    come from :func:`load_previous_labels` (and are None with it). Organisms
+    whose classification file is not cached are named in a warning and checked
+    without the allowance.
+    """
+    return _with_members(repo_root, load_previous_labels(repo_root, release))
+
+
+def _with_members(repo_root: Path, labels: Optional[PreviousLabels]) -> Optional[PreviousRelease]:
+    if labels is None:
+        return None
+    cache = panther_cache_dir(repo_root)
+    missing = [
+        organism
+        for organism in DEFAULT_ORGANISMS
+        if not sequence_classification_path(cache, organism, labels.release).exists()
+    ]
+    if missing:
+        print(
+            f"warning: PANTHER {labels.release} classifications for {', '.join(missing)} are "
+            f"not cached in {cache}, so memberships in those organisms are checked without "
+            "the switch allowance; run `just ensure-panther-members`",
+            file=sys.stderr,
+        )
+    members = previous_release_members(cache, labels.release, cached_only=True)
+    return PreviousRelease(labels.release, labels.labels, members)
+
+
+@lru_cache(maxsize=None)
+def _previous_labels_cached(repo_root: Path, release: str) -> Optional[PreviousLabels]:
+    return load_previous_labels(repo_root, release)
+
+
+@lru_cache(maxsize=None)
+def _previous_release_cached(repo_root: Path, release: str) -> Optional[PreviousRelease]:
+    # Built on the labels cache, so a process that both validates and fixes labels
+    # parses the names file once.
+    return _with_members(repo_root, _previous_labels_cached(repo_root, release))
+
+
+def previous_release_labels(panther_dir: Path) -> Optional[PreviousLabels]:
+    """The previous release's names during a switch, or None.
+
+    ``panther_dir`` is ``<repo>/interpro/panther``, as for :func:`panther_artifacts`.
+    None outside a switch, and also when the names file is not cached; callers that
+    must tell those apart check :func:`switch_release`. Reads only the names file, not
+    the per-organism member map. Cached per resolved repository, shared with
+    :func:`previous_release`.
+    """
+    release = switch_release()
+    if release is None:
+        return None
+    return _previous_labels_cached(Path(panther_dir).resolve().parents[1], release)
+
+
+def previous_release(panther_dir: Path) -> Optional[PreviousRelease]:
+    """The previous release's names and memberships during a switch, or None.
+
+    For the validators. Cached per resolved repository, so callers that spell the path
+    differently share one load.
+    """
+    release = switch_release()
+    if release is None:
+        return None
+    return _previous_release_cached(Path(panther_dir).resolve().parents[1], release)

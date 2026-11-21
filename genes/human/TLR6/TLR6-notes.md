@@ -72,3 +72,10 @@ non-core on the strength of the CD36-TLR4-TLR6 sterile-inflammation work
 TLR2:TLR6 route, which is not in dispute, so the non-core rows were left in place. The
 report also does not discuss the CD36-TLR4-TLR6 heterodimer at all, so it neither supports
 nor contradicts the removal of the amyloid-beta binding IC row.
+
+## 2026-11-19 ORGANELLES Golgi batch 4 (Golgi apparatus rows)
+
+- Rows: GO:0005794 IDA (PMID:16880211) and IEA (GO_REF:0000044, SL-0132). Both stay KEEP_AS_NON_CORE; reasons rewritten to record the check. No sub-compartment row. Neither row is is_active_in.
+- Source: Triantafilou et al. 2006, J Biol Chem, PMID:16880211, DOI 10.1074/jbc.M602794200. Abstract-only in the cache; no PMC copy (PMID-to-PMCID conversion returned none) and Europe PMC lists it as subscription required, so the full text and its Golgi marker or brefeldin A controls were not read. The abstract says ligand-recruited TLR2 clusters, including the TLR2:TLR6 (diacylated lipopeptide) heterodimer, "are targeted to the Golgi apparatus" and that the targeting "is ligand-specific" [PMID:16880211 "All TLR2 receptor clusters accumulate in lipid rafts and are targeted to the Golgi apparatus"].
+- UniProt's Golgi item for TLR6 is tagged ECO:0000269 with the same paper; the IEA row maps it.
+- Call: curator deference for an unreadable direct-evidence source; the pool is ligand-driven and reached from the plasma membrane (retrograde kind), signalling starts at the cell surface, so non-core. MARK_AS_OVER_ANNOTATED would follow if the full text showed no Golgi marker. Same call as TLR1, which carries the same two rows from the same paper.
