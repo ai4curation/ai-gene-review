@@ -238,6 +238,9 @@ seeded by budding- and fission-yeast Atg8 annotations.
   Atg38, mitophagy, ER-phagy, and nucleophagy evidence; opened in PR #5256
 - [x] `CANAL/ATG8` - CGD-seeded *Candida albicans* Atg8 ortholog with
   autophagy and ER-stress genetic-interaction evidence; opened in PR #5257
+- [x] `CANGA/ATG8` - CGD *Candida glabrata* Atg8 ortholog with direct
+  Atg8-PE evidence and C. glabrata iron-depletion mitophagy context; opened
+  in PR #6590
 - [x] `NEUCR/apg-6` - *Neurospora crassa* ATG8-family member; opened in PR
   #5255
 - [x] `ASPFU/atg8` - *Aspergillus fumigatus* ATG8-family member with direct
@@ -688,6 +691,14 @@ separate MSL-complex placement and an IRD blocking NuA4 complex inheritance.
 # NOTES
 
 ## 2026-11-21
+
+- Extended `PTHR10969` with `CANGA/ATG8` and a family sidecar spanning the
+  existing yeast, fission-yeast, *Candida*, *Neurospora*, and *Aspergillus*
+  Atg8 reviews. The shared ATG8/LC3/GABARAP PE-binding and autophagic-membrane
+  PAINT rows are sound for the compact fungal branch; precise budding-yeast
+  transfers such as Cvt, nucleophagy, ER-phagy, VICS, lipid-droplet, and
+  heat-induced vacuole-invagination annotations remain over-specific for
+  *Candida glabrata* until directly assayed there.
 
 - Added the compact `PTHR10880` Eaf3/MRG chromatin-subunit family after
   checking the existing *S. cerevisiae*, *S. pombe*, *Candida*, and
