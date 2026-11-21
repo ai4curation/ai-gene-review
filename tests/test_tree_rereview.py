@@ -302,9 +302,58 @@ def test_a_contradiction_both_agents_agree_on_that_the_script_left_is_named() ->
     assert tr.standing_contradictions(rows) == [left]
 
 
-def test_the_worklist_marks_and_counts_the_contradictions_left_standing() -> None:
+def test_a_contradiction_whose_draft_the_verifier_faulted_is_counted_apart() -> None:
+    agreed = row(tree_reading="REASON_CONTRADICTED", outcome="adjudicate", verifier=AGREED)
+    faulted = row(
+        term="GO:0005681", tree_reading="REASON_CONTRADICTED", outcome="adjudicate",
+        verifier={"agrees": False, "problem": "The reading and the false claim hold; the replacement overstates."},
+    )
+    rows = [
+        agreed,
+        faulted,
+        # the review changed on main after the reading: a new reading is needed, so it is in neither class
+        row(term="GO:0005682", tree_reading="REASON_CONTRADICTED", outcome="adjudicate", verifier=AGREED, outcome_detail=tr.NOT_REAPPLIED),
+        row(term="GO:0005683", tree_reading="REASON_CONTRADICTED", outcome="applied", verifier=AGREED),
+        row(term="GO:0005684", tree_reading="NOT_A_TREE_ARGUMENT", outcome="adjudicate", verifier={"agrees": False, "problem": "x"}),
+    ]
+    assert tr.standing_contradictions(rows) == [agreed]
+    assert tr.disputed_contradictions(rows) == [faulted]
+
+
+def test_the_worklist_marks_and_counts_both_kinds_of_contradiction(tmp_path: Path) -> None:
+    left = row(
+        tree_reading="REASON_CONTRADICTED", outcome="adjudicate", verifier=AGREED,
+        outcome_detail="the contradicted claim is in summary, which the script does not rewrite",
+    )
+    faulted = row(
+        term="GO:0005681", tree_reading="REASON_CONTRADICTED", outcome="adjudicate",
+        verifier={"agrees": False, "problem": "The finding holds; the drafted reason overstates."},
+        outcome_detail="the verifier disagrees with the reading",
+    )
+    moved = row(term="GO:0005682", tree_reading="REASON_CONTRADICTED", outcome="adjudicate", verifier=AGREED, outcome_detail=tr.NOT_REAPPLIED)
+    noted = row(term="GO:0005683", outcome="applied", note="the failure mode no longer fits")
+    plain = row(term="GO:0005684", outcome="applied")
+    (tmp_path / "g900.yaml").write_text(
+        tr.dump({"batch": "g900", "rows": [left, faulted, moved, noted, plain]}), encoding="utf-8"
+    )
+
+    worklist = tr.worklist(tmp_path)
+
+    assert worklist["counts"] == {
+        "adjudicate": 3, "not_read": 0, "applied_with_note": 1, "contradicted_and_left": 1, "contradiction_disputed": 1,
+    }
+    by_term = {entry["term"]: entry for entry in worklist["adjudicate"]}
+    assert by_term["GO:0000398"]["contradicted_and_left"] is True and "contradiction_disputed" not in by_term["GO:0000398"]
+    assert by_term["GO:0005681"]["contradiction_disputed"] is True and "contradicted_and_left" not in by_term["GO:0005681"]
+    assert by_term["GO:0005681"]["verifier_problem"] == "The finding holds; the drafted reason overstates."
+    assert not {"contradicted_and_left", "contradiction_disputed"} & set(by_term["GO:0005682"])
+    assert [entry["term"] for entry in worklist["applied_with_note"]] == ["GO:0005683"]
+
+
+def test_the_committed_worklist_agrees_with_its_own_counts() -> None:
     worklist = tr.worklist()
-    marked = [entry for entry in worklist["adjudicate"] if entry.get("contradicted_and_left")]
-    assert worklist["counts"]["contradicted_and_left"] == len(marked)
-    assert all(entry["tree_reading"] == "REASON_CONTRADICTED" for entry in marked)
-    assert "contradicted_and_left" in worklist["about"]
+    for key in ("contradicted_and_left", "contradiction_disputed"):
+        marked = [entry for entry in worklist["adjudicate"] if entry.get(key)]
+        assert worklist["counts"][key] == len(marked)
+        assert all(entry["tree_reading"] == "REASON_CONTRADICTED" for entry in marked)
+        assert key in worklist["about"]

@@ -28,11 +28,11 @@ are read against the family's node listing (`<PTHR>-tree-nodes.yaml`) in the sam
 with two additions from the release tree: where each seed sits, and how many leaves of
 each subfamily the review names as affected lie below the node.
 
-## Status (2026-11-18)
+## Status (2026-11-21)
 
 | | Batches | Rows read | Applied | Left for adjudication |
 |---|---:|---:|---:|---:|
-| Gene reviews, candidate genes (`g001` to `g012`) | 12 of 73 | 278 | 229 | 47, and 2 not read |
+| Gene reviews, candidate genes (`g001` to `g012`) | 12 of 73 | 278 | 228 | 48, and 2 not read |
 | Gene reviews, pilot of the corrected rules (`g013`, `g014`) | 2 of 73 | 47 | 47, one of them by hand | 0 |
 | Gene reviews, the rest (`g015` to `g073`) | 0 of 59 | 0 | | |
 | Family reviews (`f001` to `f018`) | 18 of 18 | 386 | 321, two of them by hand | 65 |
@@ -41,9 +41,10 @@ each subfamily the review names as affected lie below the node.
 [tree-evidence.md](../tree-evidence.md#the-re-read). What is left for a curator is in
 [`needs-curator.yaml`](needs-curator.yaml).
 
-The 59 unread gene batches hold 1,371 overruled rows in 935 genes. Since the plans were
-made, reviews merged on main have added 277 overruled IBA rows in 204 genes and 174
-disputed node assessments in 106 families. Those have extracts and listings, and are not
+The 59 unread gene batches hold 1,370 overruled rows in 934 genes. Since the plans were
+made, reviews merged on main have added 288 overruled IBA rows in 210 genes and 216
+disputed node assessments in 119 families (as of the fourth merge, 2026-11-21). Those
+have extracts and listings, and are not
 in either plan; `plan` makes a plan once and does not extend it, so they need batches of
 their own.
 
@@ -109,13 +110,20 @@ is left for a curator, with the reason in the run record:
   tree contradicts is also in the summary, in a failure mode, in a source note or in
   `affected_subfamilies`, rewriting the reason alone would leave the row contradicting
   itself, so the row is left alone. A row with no reason at all is left alone too.
-  **Such a row is then corrected by hand before its batch is pushed.** Reader and verifier
-  agree that the review states something false, and what the script may rewrite does not
-  decide whether that statement stays. `finish` names these rows, `needs-curator.yaml`
-  marks them `contradicted_and_left` and counts them (0 today), and the run record's
-  `correction` says what was done. Three rows so far: ARATH MNS1 `GO:0036503`, and the
-  family assessments PTHR10048 `GO:0005944` and PTHR16675 `GO:0002476`, each checked
-  against the release tree before the edit.
+  **Such a row is then corrected by hand before its batch is pushed.** The verifier
+  accepted the reading whole, drafted correction included, so the review states something
+  both agents found false, and what the script may rewrite does not decide whether that
+  statement stays. `finish` names these rows, `needs-curator.yaml` marks them
+  `contradicted_and_left` and counts them (0 today), and the run record's `correction`
+  says what was done. Three rows so far: ARATH MNS1 `GO:0036503`, and the family
+  assessments PTHR10048 `GO:0005944` and PTHR16675 `GO:0002476`, each checked against the
+  release tree before the edit.
+- **A contradiction whose draft the verifier faulted is not applied either.** Here no
+  agreed correction exists, so there is nothing to apply by hand. Often the verifier
+  accepted the finding and faulted only the drafted text, and then the review may still
+  state something the tree contradicts. `needs-curator.yaml` marks these rows
+  `contradiction_disputed` and counts them apart (15 today), with the verifier's objection;
+  they need a new reading.
 - **Quoting around an adverse fact.** A reading must quote more than the sentence that
   names the term, and must quote every sentence that stands against the verdict: that the
   gene is itself a seed, that it is inside the clade the seeds span, that seeds share its
@@ -157,9 +165,9 @@ horizontal-transfer node between it and the gene is never a one-to-one ortholog.
   row left for adjudication or not read, and every applied row on which the reader left a
   note. An applied row quotes its tree file, so it leaves the work list and the validator's
   warnings; the note, often about a verdict or failure mode that no longer fits, would
-  otherwise be lost in a run record. `contradicted_and_left` marks a row left for
-  adjudication although both agents agree that the review states something the tree
-  contradicts (see above).
+  otherwise be lost in a run record. `contradicted_and_left` and `contradiction_disputed`
+  mark the two kinds of row left for adjudication after a contradiction was read (see
+  above); a row whose review changed on main after the reading is in neither.
 - `workflows/`: the instructions the reading and verifying agents work from, as workflow
   scripts. They define the readings.
 - `tree_rereview.py`: `plan`, `dossier`, `inputs`, `record`, `apply`, `finish`, `status`,

@@ -218,6 +218,16 @@ residue claim (`residue-evidence-backlog.yaml`).
   both agents agree a statement is false and the tool cannot make the whole correction,
   the correction is made by hand before the batch ships, not filed.
 
+**Fourth merge with main (2026-11-21).** One applied row had changed on main since it was
+read (yeast SIR3 `GO:0003688`, now `MARK_AS_OVER_ANNOTATED` with a new reason) and was not
+re-applied, which makes 29 such rows over four merges. Main's new reviews brought the
+rows outside either plan to 288 overruled rows in 210 genes and 216 disputed node
+assessments in 119 families; six genes and two families among them had no extract or
+listing and now have one. From the review of the previous push: the count of
+contradictions left standing covered only readings the verifier accepted whole, so the
+15 whose draft it faulted are now counted apart (`contradiction_disputed`), and the
+PTHR16675 seeds list agrees with its PAINT row.
+
 ---
 
 ## 2026-11-16 — Re-read with the tree: candidate genes and families

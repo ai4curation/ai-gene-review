@@ -1255,14 +1255,28 @@ WORKLIST_FIELDS = (
 )
 
 
-def standing_contradictions(rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Rows whose review still states something that both agents found the tree to contradict.
+#: Start of the ``outcome_detail`` of a row whose review changed on main after it was read.
+NOT_REAPPLIED = "not re-applied when main was merged"
 
-    The reading is ``REASON_CONTRADICTED``, the verifier agreed with it, and no edit was
-    made, usually because the claim is also outside the reason, which is all the script
-    rewrites. What the script may rewrite does not decide whether a statement known to be
-    false stays in a review: such a row is corrected by hand before the batch is pushed,
-    and its ``correction`` says what was done.
+
+def _contradiction_left(row: dict[str, Any]) -> bool:
+    """A contradiction was read, nothing was edited, and the review is still the one that was read."""
+    return (
+        row.get("tree_reading") == "REASON_CONTRADICTED"
+        and row.get("outcome") == "adjudicate"
+        and not str(row.get("outcome_detail", "")).startswith(NOT_REAPPLIED)
+    )
+
+
+def standing_contradictions(rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Rows whose reading of a contradiction the verifier accepted whole, and that were not edited.
+
+    The reading is ``REASON_CONTRADICTED``, the verifier agreed with it, drafted correction
+    included, and no edit was made, usually because the claim is also outside the reason,
+    which is all the script rewrites. What the script may rewrite does not decide whether
+    a statement known to be false stays in a review: such a row is corrected by hand
+    before the batch is pushed, and its ``correction`` says what was done. A row whose
+    review changed on main after the reading is not counted: it needs a new reading.
 
     >>> agreed = {"agrees": True}
     >>> left = {"term": "GO:1", "tree_reading": "REASON_CONTRADICTED", "outcome": "adjudicate", "verifier": agreed}
@@ -1270,17 +1284,29 @@ def standing_contradictions(rows: Iterable[dict[str, Any]]) -> list[dict[str, An
     >>> [row["term"] for row in standing_contradictions([left, done])]
     ['GO:1']
     """
-    return [
-        row
-        for row in rows
-        if row.get("tree_reading") == "REASON_CONTRADICTED"
-        and row.get("outcome") == "adjudicate"
-        and mapping(row.get("verifier")).get("agrees") is True
-    ]
+    return [row for row in rows if _contradiction_left(row) and mapping(row.get("verifier")).get("agrees") is True]
 
 
-def worklist() -> dict[str, Any]:
-    """What the re-read leaves for a curator, from the run records.
+def disputed_contradictions(rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Rows on which a contradiction was read, nothing was edited, and no agreed correction exists.
+
+    The verifier faulted the reading or its drafted correction (or never saw the row).
+    Often it accepted the finding and faulted only the draft, and then the review still
+    states something the tree contradicts; ``verifier.problem`` says which. These rows
+    need a new reading, so they are counted apart from :func:`standing_contradictions`,
+    which a zero count would otherwise seem to cover.
+
+    >>> faulted = {"term": "GO:1", "tree_reading": "REASON_CONTRADICTED", "outcome": "adjudicate",
+    ...            "verifier": {"agrees": False, "problem": "the finding holds; the draft overstates"}}
+    >>> agreed = {"term": "GO:2", "tree_reading": "REASON_CONTRADICTED", "outcome": "adjudicate", "verifier": {"agrees": True}}
+    >>> [row["term"] for row in disputed_contradictions([faulted, agreed])]
+    ['GO:1']
+    """
+    return [row for row in rows if _contradiction_left(row) and mapping(row.get("verifier")).get("agrees") is not True]
+
+
+def worklist(runs: Path = RUNS) -> dict[str, Any]:
+    """What the re-read leaves for a curator, from the run records in ``runs``.
 
     Every row left for adjudication or not read, and every applied row on which the reader
     left a note: an applied row quotes its tree file and so drops out of the work list and
@@ -1288,11 +1314,13 @@ def worklist() -> dict[str, Any]:
     hears of it.
     """
     groups: dict[str, list[dict[str, Any]]] = {"adjudicate": [], "not_read": [], "applied_with_note": []}
-    standing = 0
-    for path in sorted(RUNS.glob("*.yaml")):
+    standing = disputed = 0
+    for path in sorted(runs.glob("*.yaml")):
         record = load(path)
         left = {id(row) for row in standing_contradictions(record["rows"])}
+        faulted = {id(row) for row in disputed_contradictions(record["rows"])}
         standing += len(left)
+        disputed += len(faulted)
         for row in record["rows"]:
             outcome = row.get("outcome", "")
             group = outcome if outcome in ("adjudicate", "not_read") else "applied_with_note" if row.get("note") else ""
@@ -1306,6 +1334,8 @@ def worklist() -> dict[str, Any]:
                 entry["negated"] = True
             if id(row) in left:
                 entry["contradicted_and_left"] = True
+            if id(row) in faulted:
+                entry["contradiction_disputed"] = True
             for field in WORKLIST_FIELDS:
                 if row.get(field) not in (None, "", []):
                     entry[field] = row[field]
@@ -1322,11 +1352,20 @@ def worklist() -> dict[str, Any]:
             "corrected reason), and the reader noted something the edit does not settle, often a verdict "
             "or failure mode that no longer fits. A note was written from the row as it stood before the "
             "edit, so it can describe something the edit has since changed, such as a row without any "
-            "supported_by. contradicted_and_left marks an adjudicate row on which reader and verifier agree "
-            "that the review states something the tree contradicts and nothing was edited; such a row is "
-            "corrected by hand before its batch is pushed, so the count is normally 0."
+            "supported_by. contradicted_and_left marks an adjudicate row whose reading of a contradiction "
+            "the verifier accepted whole, drafted correction included, and on which nothing was edited; such "
+            "a row is corrected by hand before its batch is pushed, so the count is normally 0. "
+            "contradiction_disputed marks an adjudicate row on which a contradiction was read and the "
+            "verifier faulted the reading or its drafted correction. In many of these the verifier accepted "
+            "the finding itself (verifier_problem says which), so the review may still state something the "
+            "tree contradicts; no agreed correction exists, and the row needs a new reading. A row whose "
+            "review changed on main after the reading is in neither count."
         ),
-        "counts": {**{group: len(rows) for group, rows in groups.items()}, "contradicted_and_left": standing},
+        "counts": {
+            **{group: len(rows) for group, rows in groups.items()},
+            "contradicted_and_left": standing,
+            "contradiction_disputed": disputed,
+        },
         **groups,
     }
 
