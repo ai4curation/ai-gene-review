@@ -65,3 +65,13 @@ The validated TDO2 and MEOX2 binary pairs retain their bounded partner-class ref
 ### 2026-10-18 — Thesis catalogue identifier correction
 
 The registered thesis citation now uses its [institutional HTML catalogue record](https://diposit.ub.edu/dspace/handle/2445/60858), with persistent identifier [2445/60858](https://hdl.handle.net/2445/60858). Its exact catalogue title contains *espermatozoïde*. The catalogue issue date is 2014-09-19; July 2014 is the date printed in the PDF, not the catalogue issue date. The item’s ORIGINAL bundle links the same PDF bitstream already read, with matching size and checksum. The direct PDF link, SHA-256 and target-data locators remain in [DPM1-source-evidence.md](DPM1-source-evidence.md). This is a bibliographic identity correction; the scientific findings and annotation decisions are unchanged.
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 23, O60762. Author evidence category: **Peripheral**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Cytoplasmic(1-159); interfacial(160-175); Cytoplasmic(176-245); interfacial(246-259); Cytoplasmic(260-260)`
+
+**Assessment: Retain tethering mechanism; retain root ER.** The current review distinguishes human DPM1 from the membrane-spanning DPM3 tether. Keep that complex-mediated anchoring mechanism (PMID:16280320); S20 says no further structural evidence is available. The two IF calls are additional contact hypotheses, not evidence that DPM1 spans the membrane or that DPM3 tethering is dispensable. Correct root ER actions to ACCEPT alongside ER membrane. The prior local benchmark reproduces these S20 segments.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

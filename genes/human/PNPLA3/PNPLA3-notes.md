@@ -171,3 +171,13 @@ the disease signal.
   all, or only to the variant.)
 - Reconciling Johnson 2024 (Pnpla3 KO → steatosis, reduced VLDL-TG) with Hobbs/Cohen
   (Pnpla3 KO → no phenotype).
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 15, Q9NST1. Author evidence category: **Peripheral**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Cytoplasmic(1-217); interfacial(218-222); Cytoplasmic(223-481)`
+
+**Assessment: Qualify topology; refine broad membrane.** PNPLA3 lipid-droplet association is supported experimentally, including C-terminal targeting constructs in PMID:23741432. That study does not validate the S20 IF218-222 segment. Retain ER and lipid-droplet locations, replace the categorical single-pass type II description with membrane-associated wording, and refine generic membrane rows to the already supported ER membrane. Neither the previous predicted topology nor the five-residue IF call is treated as direct insertion evidence.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

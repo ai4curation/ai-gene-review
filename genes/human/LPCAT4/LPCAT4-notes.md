@@ -43,3 +43,13 @@ Cached Reactome reactions placing LPCAT4/LPEAT2 in LPC→PC, LPE→PE, and LPS�
 - Preserve positional context for LPG/PG: 1-acyl LPG remains plausible, whereas 2-acyl LPG is directly unsupported.
 - Preserve human-cell versus mouse-knockout and mouse-overexpression boundaries.
 - No supported alternative protein isoforms or isoform-specific functions were identified.
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 27, Q643R3. Author evidence category: **?**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Cytoplasmic(1-33); interfacial(34-60); Cytoplasmic(61-87); interfacial(88-105); Cytoplasmic(106-249); interfacial(250-258); Cytoplasmic(259-524)`
+
+**Assessment: Qualify topology; retain root ER.** PMID:18458083 establishes ER localization of overexpressed human LPCAT4. Its cached abstract does not establish a two-pass topology; the UniProt model should remain explicitly predicted. PMID:21498505 tests LPCAT1/LPCAT2, not LPCAT4, so it cannot directly prove LPCAT4 is monotopic. Remove assertions that multi-pass topology was experimentally demonstrated, retain ER membrane, and accept root ER alongside it. The prior PAINT sources were retained and paint-losses found no IRD/IKR loss.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

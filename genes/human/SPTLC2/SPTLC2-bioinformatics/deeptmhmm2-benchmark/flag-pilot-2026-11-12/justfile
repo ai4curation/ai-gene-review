@@ -1,0 +1,24 @@
+repo := clean(justfile_directory() / "../../../../../..")
+benchmark := clean(justfile_directory() / "..")
+panel := justfile_directory()
+
+select:
+    "{{repo}}/.venv/bin/python" "{{benchmark}}/select_flag_panel.py" --repo "{{repo}}" --organism human --exclude-manifest "{{benchmark}}/panel-2026-11-05/inputs.tsv" --controls ATP5F1B ATP6V1A HSPA5 --output "{{panel}}"
+
+prepare:
+    "{{repo}}/.venv/bin/python" "{{benchmark}}/panel_tools.py" prepare --repo "{{repo}}" --targets "{{panel}}/targets.tsv" --organism human --taxon 9606 --output "{{panel}}"
+
+predict:
+    /usr/bin/time -l "{{benchmark}}/.venv/bin/python" -u "{{benchmark}}/benchmark.py" "{{panel}}/inputs.fasta" "{{panel}}/api" --model-dir "{{benchmark}}/.cache/deeptmhmm2" --threads 8 --repeats 1 --unbatch-api > "{{panel}}/run.stdout.txt" 2> "{{panel}}/run.stderr.txt"
+
+flag:
+    "{{repo}}/.venv/bin/python" -m ai_gene_review.tools.topology_flags --repo "{{repo}}" --manifest "{{panel}}/inputs.tsv" --predictions "{{panel}}/api" --output "{{panel}}/flags.json"
+
+summarize:
+    "{{repo}}/.venv/bin/python" "{{benchmark}}/summarize_flags.py" --repo "{{repo}}" --manifest "{{panel}}/inputs.tsv" --predictions "{{panel}}/api" --flags "{{panel}}/flags.json" --selection "{{panel}}/selection.json" --output "{{panel}}" --cli "{{panel}}/cli-check/predictions.json"
+
+cli-check:
+    /usr/bin/time -l "{{benchmark}}/.venv/bin/dtm2" "{{panel}}/cli-check.fasta" "{{panel}}/cli-check" --model-dir "{{benchmark}}/.cache/deeptmhmm2" --device cpu --threads 8 --batch-size 1 > "{{panel}}/cli-check.stdout.txt" 2> "{{panel}}/cli-check.stderr.txt"
+
+test:
+    "{{repo}}/.venv/bin/python" -m pytest "{{repo}}/tests/test_topology_flags.py" "{{repo}}/tests/test_function_requirements.py" -m 'not integration' -q

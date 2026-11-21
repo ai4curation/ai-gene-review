@@ -129,3 +129,13 @@ Source of most quotes below: `file:human/CYP46A1/CYP46A1-uniprot.txt` and cached
   ISS): indirect downstream effect of altered membrane cholesterol; kept as non-core.
 </content>
 </invoke>
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 29, Q9Y6A2. Author evidence category: **No**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Cytoplasmic(1-5); interfacial(6-17); Cytoplasmic(18-500)`
+
+**Assessment: Reject predicted topology change.** S20 labels this prediction No. PMID:19161969 explicitly describes the N-terminal transmembrane anchor while investigating additional membrane contacts of CYP46A1. Retain the existing single-pass ER topology; an IF6-17 call does not replace that evidence. Correct the root ER action to ACCEPT alongside ER membrane.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

@@ -99,3 +99,13 @@ regenerate rod and cone visual pigments.
 - GO:0016616 oxidoreductase (CH-OH...) — ARBA IEA; over-general; MARK_AS_OVER_ANNOTATED.
 - GO:0044297 cell body — Ensembl IEA from rat ortholog; REMOVE (clearly-wrong IEA, no support).
 - ER membrane / ER lumen: ACCEPT (IDA-backed; IBA/IEA duplicates KEEP/ACCEPT).
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 38, Q92781. Author evidence category: **?**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Cytoplasmic(1-4); interfacial(5-18); Cytoplasmic(19-288); interfacial(289-297); Cytoplasmic(298-318)`
+
+**Assessment: Retain pending direct topology resolution.** S20 itself labels this case uncertain. The cached PMID:11675386 abstract concerns human disease variants and does not let this audit resolve the original topology experiments. Preserve existing ER/lumenal claims and their experimental annotations; do not infer that a curator confused RDH5 with RDH16 from the supplement discussion. Revisit the full topology literature before changing the current multi-pass/lumenal model.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

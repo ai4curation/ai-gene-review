@@ -104,3 +104,13 @@ catalyzes the **NADPH-dependent reduction of all-trans-retinaldehyde to all-tran
 - CC: GO:0005789 endoplasmic reticulum membrane
 </content>
 </invoke>
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 46, O75911. Author evidence category: **Element**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Cytoplasmic(1-6); interfacial(7-26); Cytoplasmic(27-302)`
+
+**Assessment: Correct topology from direct experiment.** PMID:30104359 reports cysteine scanning of DHRS3 and identifies a partially buried amphipathic helix in lipid-droplet monolayers and the ER cytoplasmic leaflet. Its abstract supplies direct topology evidence even though full text was not recovered. Replace the multi-pass biological description and annotation rationale, retain the ER membrane claim, and refine generic membrane to the existing ER and photoreceptor outer-segment membrane locations. Record the conflicting UniProt topology as a source defect. The predictor supports discovery of this paper; it is not the evidential basis of the correction.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.
