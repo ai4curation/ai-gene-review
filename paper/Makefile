@@ -27,3 +27,7 @@ clean:
 explainer: stats
 	$(PY) scripts/build_explainer.py
 .PHONY: explainer
+
+html:
+	scripts/build_html.sh
+.PHONY: html

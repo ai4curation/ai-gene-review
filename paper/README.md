@@ -3,6 +3,9 @@
 Build: `make` (extracts corpus tables into `data/` (git-ignored, ~1.5 min), regenerates
 `generated/` macros and tables and `figures/`, then runs latexmk). `make refresh` re-extracts.
 
+**Phone-friendly HTML:** `make html` (TeX4ht) writes a single self-contained
+`html/aigr-paper.html` with figures inlined as SVG (git-ignored; regenerate as needed).
+
 **Explainer:** `make explainer` rebuilds `explainer/index.html` from `generated/stats.json`, the
 deep-dive files and `main.log`; republish it to https://claude.ai/artifact/2vpZJok8Ki5rRw4Lqff9DT.
 Hand-written claims, figure list and next steps live in `scripts/build_explainer.py`.
