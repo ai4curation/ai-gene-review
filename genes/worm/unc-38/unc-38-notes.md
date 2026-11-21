@@ -38,11 +38,13 @@
   levamisole-gated channels. The five-subunit muscle L-AChR is
   UNC-29/LEV-1/UNC-38/UNC-63/LEV-8, while ACR-2R is
   ACR-2/ACR-3/ACR-12/UNC-38/UNC-63 and is essentially levamisole-insensitive.
-- The calcium-specific `GO:0098703` row from PMID:20027209 looks too narrow for
-  the cited experiment. The paper measured an ACR-2R acetylcholine-gated cation
-  channel and calcium-dependent gain-of-function circuit output; the discussion
-  only inferred that the hyperactive channel might increase calcium influx. I
-  refined that row to `GO:0098655` and recorded a WormBase `WRONG_TERM` query.
+- The calcium-specific `GO:0098703` row from PMID:20027209 uses a term that is
+  true of UNC-38-containing nAChRs but too narrow for the cited experiment. The
+  paper measured an ACR-2R acetylcholine-gated cation channel and
+  calcium-dependent gain-of-function circuit output; the discussion only inferred
+  that the hyperactive channel might increase calcium influx. I kept that row as
+  non-core based on direct C. elegans L-AChR calcium-permeability evidence and
+  recorded a WormBase `WRONG_TERM` query about the row's source citation.
 - PMID:23351035 is abstract-only locally and the abstract identifies ACR-5 and
   ACR-15, not UNC-38, as the nAChR subunits needed for nicotine-motivated
   behavior. I left that locomotory-behavior row undecided rather than asserting
