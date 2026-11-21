@@ -320,7 +320,7 @@ an IRD the table omits is not silently lost again, and a test covers that case.
 ---
 # STATUS
 
-Updated 2026-10-06.
+Updated 2026-11-21.
 
 - [x] Extract all IRD rows from PAINT `IBD.gaf` (2,538 rows, 894 families)
 - [x] Show that IRD produces no leaf IBA (0 IRD-only NOT|IBA rows)
@@ -356,8 +356,25 @@ Updated 2026-10-06.
         substrates. Pos5 and NADK3 are NADH kinases.
       - Others contradict assays inside the clade: ATG16L2's complex membership, AQP6 CO2
         transport, RNase III dsRNA binding (Pac1), and the SLC52A1, CFLAR and papilin cases.
-- [ ] Adjudicate the remaining 82 seeded IRD rows in 76 families that have no family
-      review yet (most still need their PANTHER slice fetched first)
+- [x] Batch 2 of the unreviewed families (2026-11-21): new IN_PROGRESS family reviews for 17
+      families (PTHR11671, PTHR24115, PTHR24229, PTHR45619, PTHR47958, PTHR10134, PTHR10288,
+      PTHR10353, PTHR10424, PTHR10513, PTHR10696, PTHR11119, PTHR11486, PTHR11584, PTHR11771,
+      PTHR11831, PTHR12737), one IRD assessment each. Verdicts: 12 LOSS_CONTRADICTED,
+      1 LOSS_TOO_BROAD and 4 LOSS_SUPPORTED.
+      - Contradicted losses include core functions of the clade: SVCT1 ascorbate transport
+        (a single-leaf IRD on human SLC23A1), DDX5/Dbp2 RNA helicase activity, Klp5-Klp6
+        microtubule depolymerization, ATP6V1D at the vacuolar membrane and GBH-1 in carnitine
+        biosynthesis.
+      - Sound specificity calls: SFR2 is a galactolipid galactosyltransferase with no
+        detectable hydrolase activity, the FGF homologous factors do not activate FGF
+        receptors, and IMP3 is a processome factor, not a ribosome subunit.
+      - The conflicting rat Fgf14 growth-factor IDA cites a paper on hst-1 (FGF4); it
+        looks attached to the wrong FGF (candidate Fgf4) and needs RGD to check it.
+      - NDUFA10 (PTHR10513): the loss is right for NDUFA10 but its node also holds the
+        Dictyostelium deoxyguanosine kinase; moved to PTN000828202.
+- [ ] Adjudicate the remaining 63 seeded IRD rows in 57 families that have no family
+      review yet (most still need their PANTHER slice fetched first; PTHR42902 is skipped
+      until its slice is refreshed)
 - [x] Run the "IRD clade contains a seed of the blocked IBD" check over all IRD rows:
       144 of 2,538 IRD rows (5.7%), in 113 families, have an experimental seed of the
       blocked IBD inside their clade ([ird_seed_check.md](IRD_EVIDENCE/ird_seed_check.md),
