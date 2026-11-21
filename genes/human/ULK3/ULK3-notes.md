@@ -18,8 +18,12 @@
   evidence for inducing autophagy on overexpression in the senescence paper
   (PMID:19279323) and in CSL-depleted or ULK3-overexpressing fibroblasts
   (PMID:28877478), but neither cached source establishes ULK3 as the endogenous
-  phagophore-localized initiating kinase for autophagosome assembly, mitophagy,
-  reticulophagy, or piecemeal microautophagy of the nucleus.
+  phagophore-localized initiating kinase for autophagosome assembly,
+  reticulophagy, or piecemeal microautophagy of the nucleus. The cached full
+  text of PMID:28877478 does report that increased ulk3 expression induces
+  autophagy and decreases the mitochondrial network, but does not establish a
+  ULK3-specific mitochondrial sequestration step, so the mitophagy IBA is best
+  treated as over-specific rather than false.
 
 - Protein-binding rows: the SUFU IPI is mechanistically meaningful but has no
   precise existing GO binding term from the ULK3 side; the CDC37 and FKBP5
