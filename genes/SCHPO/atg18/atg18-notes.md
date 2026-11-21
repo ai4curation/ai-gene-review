@@ -13,8 +13,8 @@ Key family decision:
 - The same root node is too broad for pexophagy, mitophagy, nucleophagy
   and glycophagy because those processes are seeded from individual
   paralogs and should not automatically descend to every fungal Atg18.
-- GO:0034045 is obsolete and is better represented as GO:0000407
-  phagophore assembly site when the biological claim is just PAS
+- GO:0034045 is obsolete and is better represented as GO:7770114
+  phagophore membrane when the biological claim is just PAS
   recruitment.
 - The fungal PTN000881190 node for GO:0000329 fungal-type vacuole
   membrane is sound for the reviewed ascomycete Atg18 proteins.
