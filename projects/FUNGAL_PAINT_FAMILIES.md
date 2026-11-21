@@ -51,12 +51,13 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR14430` RABIN3-RELATED | Opisthokonta Rab GEF node and fungal cell-tip Sec2 node | `SEC2`/`sec2`/`spo13`/`SEC2`/`sec2` |
 | `PTHR44068` Erg6/SMT methyltransferase | eukaryotic sterol C-24 methyltransferase node and fungal ergosterol node | `ERG6`/`erg6`/`ERG6`/`ERG6`/`erg-4`/`erg6` |
 | `PTHR13314` Calcium-channel Flower homologs | opisthokont vesicle-mediated transport node, ascomycete Golgi-membrane node, and metazoan calcium-channel node | `TVP18`/`tvp18`/`TVP18`/`tvp-18` |
+| `PTHR24304` CYP51 sterol 14-demethylases | eukaryotic CYP51 sterol 14-demethylase node and fungal ergosterol node | `ERG11`/`erg11`/`ERG11`/`cyp51A`/`cyp51B` |
 
 ---
 
 # STATUS
 
-Last updated: 2026-11-20
+Last updated: 2026-11-21
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -641,9 +642,40 @@ plus protein targeting to vacuole at fungal `PANTHER:PTN000989606`.
 
 ---
 
+## Family 28: CYP51 Sterol 14-Demethylases
+
+`PTHR24304` contains CYP51 sterol 14-demethylases along with CYP7A1,
+CYP7B1, and CYP39A1 sterol hydroxylases. PAINT places
+sterol 14-demethylase activity on the eukaryotic CYP51 node
+`PANTHER:PTN008399779`, ergosterol biosynthesis on the fungal CYP51 node
+`PANTHER:PTN001209323`, and a broad oxidoreductase parent on a deep P450 node.
+
+- [x] `yeast/ERG11` - *S. cerevisiae* lanosterol 14-alpha-demethylase anchor;
+  aligned before this tranche
+- [x] `SCHPO/erg11` - fission-yeast CYP51 with PomBase activity and ER
+  localization support; aligned before this tranche
+- [x] `CANAL/ERG11` - CGD *Candida albicans* CYP51 seed for the fungal
+  ergosterol-biosynthesis IBA
+- [x] `CANGA/ERG11` - *Candida glabrata* CYP51 with sterol-depletion evidence
+  from ERG11 promoter shutoff and erg11 deletion
+- [x] `ASPFU/cyp51A` - *Aspergillus fumigatus* CYP51 paralog and major triazole
+  resistance locus
+- [x] `ASPFU/cyp51B` - *Aspergillus fumigatus* CYP51 paralog retaining the
+  conserved fungal sterol 14-demethylase placement
+
+---
+
 # NOTES
 
 ## 2026-11-21
+
+- Added the compact `PTHR24304` CYP51 family after reviewing the existing
+  *S. cerevisiae* and *S. pombe* `ERG11` anchors and drafting *C. albicans*,
+  *C. glabrata*, and *A. fumigatus* `ERG11`/`cyp51` recipients. The eukaryotic
+  `GO:0008398` sterol 14-demethylase node and fungal `GO:0006696`
+  ergosterol-biosynthesis node both align with the reviewed fungal genes; the
+  very broad `GO:0016491` oxidoreductase row is true for P450s but less
+  informative than the CYP51 activity.
 
 - Added the compact `PTHR13314` `TVP18`/calcium-channel Flower family after
   reviewing `CANGA/TVP18` against the existing *S. cerevisiae*, *S. pombe*,
