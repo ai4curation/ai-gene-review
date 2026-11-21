@@ -361,7 +361,7 @@ Updated 2026-10-06.
 - [x] Run the "IRD clade contains a seed of the blocked IBD" check over all IRD rows:
       144 of 2,538 IRD rows (5.7%), in 113 families, have an experimental seed of the
       blocked IBD inside their clade ([ird_seed_check.md](IRD_EVIDENCE/ird_seed_check.md),
-      from `ird_seed_check.py`; 7,386 of 7,393 seeds mapped to UniProt)
+      from `ird_seed_check.py`; 7,386 of 7,393 seeds mapped to UniProt; the 2026-11-14 rerun mapped one seed fewer than the previous 7,387, a change in the UniProt ID-mapping response rather than in PAINT)
 - [ ] Report the fungal Hsp70 refolding IRD (PTHR19375) to PAINT as too broad (drafted in
       [PAINT_REPORT.md](IRD_EVIDENCE/PAINT_REPORT.md), section 1; not yet sent)
 - [x] SSA2–4 gene reviews: note that the accepted refolding IBA was withdrawn upstream.
