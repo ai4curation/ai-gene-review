@@ -87,3 +87,66 @@ Verified GO ancestry live on 2026-10-25 via https://www.ebi.ac.uk/QuickGO/servic
 ## Root-organelle correction, 2026-10-26
 
 The supported root endoplasmic reticulum annotations are retained as ACCEPT, separately from unchanged subcompartment claims. This supersedes earlier journal wording that refined the root location or treated its breadth as non-core. Original annotation payloads, unrelated review decisions and core functions are preserved. Source-specific rationales distinguish curated location/inference, original experimental annotations and source access limits; no new assay or target-table inspection is claimed.
+
+## CYP17A1 variant enzymology preprint (2026-11-01)
+
+Source: Li K, Yakubu J, Jørgensen FS, Pandey AV. DOI:10.20944/preprints202610.2735.v1, posted
+2026-10-28. **Not peer reviewed.** The cached record is abstract-only (`content_type:
+abstract_only`, `is_preprint: true`, `full_text_declined: landing_page_only`), so only abstract
+sentences are quotable as `supporting_text`; the PDF's tables and figures are not, and anything
+below drawn from the PDF body is flagged as such rather than quoted.
+
+Why it is relevant here: it is the first source in this review that measures the two CYP17A1
+reactions **separately, on the same variant protein, each normalized to immunoreactive CYP17A1
+abundance**. That bears directly on the `steroid 17,20-lyase activity` term proposed in this
+review, and on the two catalytic `core_functions` entries.
+
+### The two activities dissociate within one polypeptide
+
+Seven missense variants (T131P, L209P, I296T, G303D, R340H, L361P, R449H) were expressed in
+HEK293T cells and assayed with [4-14C]-progesterone (hydroxylase) and
+[21-3H]-17alpha-hydroxypregnenolone (lyase).
+[DOI:10.20944/preprints202610.2735.v1 "Residual 17α-hydroxylase activity ranged from approximately 1% of wild type for L209P to approximately 50% for R340H, and residual 17,20-lyase activity exceeded hydroxylase activity for every variant"]
+
+Single substitutions therefore perturb the two reactions to *different* degrees. This is
+independent support for treating oxidative C17-C20 cleavage as a molecular function distinct
+from GO:0004508 (whose QuickGO definition covers only 17alpha hydroxylation, RHEA:65760), rather
+than as a second output of one activity. It does not by itself establish a new GO term; it
+strengthens the existing `proposed_new_terms` justification, which previously rested on
+EC/RHEA reaction identity (PMID:40340376) plus structural substrate-preference work
+(PMID:25301938).
+
+Caveat, from the PDF body and not quotable from the cached abstract: the lyase assay supplies
+17alpha-hydroxypregnenolone directly and so bypasses the upstream hydroxylation step. For the
+severe alleles the authors argue the hydroxylase step is the in vivo bottleneck, so measurable
+in vitro lyase capacity does not translate into sex-steroid output in patients. The dissociation
+is a statement about the enzyme's two catalytic steps, not about pathway flux.
+
+### The defect is catalytic, not loss of enzyme
+
+[DOI:10.20944/preprints202610.2735.v1 "All seven variants retained substantial immunoreactive protein, but below wild type, and the set-level reduction was significant in all assays"]
+[DOI:10.20944/preprints202610.2735.v1 "The pathogenicity of these CYP17A1 variants reflects specific catalytic and regulatory defects in a largely intact protein rather than loss of steady-state enzyme"]
+
+Two further abstract-level results, recorded for completeness but not used to support any
+annotation here: none of the seven variants altered splicing by SpliceAI or AlphaGenome
+("confirming a purely protein-level mechanism"), and the cumulative gnomAD v4.1 burden of
+pathogenic/likely pathogenic alleles implies "a carrier frequency of 1 in 1,023 globally and 1
+in 523 in East Asian individuals". The population-genetic and variant-interpretation material is
+disease-side content and was curated into the dismech `Congenital_Adrenal_Hyperplasia` entry
+instead.
+
+### Curation decisions
+
+- **No annotation action changed, and no `NEW` annotation proposed.** The paper characterizes
+  variant alleles; it does not identify a function of wild-type CYP17A1 that GOA does not
+  already carry. Variant residual-activity measurements are not grounds for a new GO process or
+  function term on the gene.
+- The reference was added to `references:` with `reference_review` recording the preprint status
+  explicitly, and cited as additional `supported_by` on (a) the 17,20-lyase `core_functions`
+  entry and (b) the `steroid 17,20-lyase activity` `proposed_new_terms` entry. In both places it
+  sits alongside, not in place of, the peer-reviewed PMID:40340376 and PMID:25301938 support.
+- Also noted for a future pass: the abstract reports the authors' own measurement that R449H
+  retains more lyase than hydroxylase activity, which is the opposite of what selective loss of
+  cytochrome b5 stimulation would predict. If this survives peer review it is relevant to how
+  this review describes b5-dependence of the lyase reaction, which currently rests on
+  PMID:9452426 and PMID:40340376. Not acted on while the source is a preprint.
