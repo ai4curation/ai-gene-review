@@ -9,3 +9,10 @@
   A. fumigatus 14-alpha sterol demethylase genes and establishes Cyp51A-focused
   triazole resistance. No cached or newer literature found in this tranche
   supported splitting cyp51B away from the conserved fungal CYP51 activity.
+- Synchronized UniProt's experimentally supported cyp51B catalytic and pathway
+  comments while addressing PR review: the lanosterol reaction names
+  PMID:18191972, PMID:26269599, PMID:26459890, and PMID:29439966; the eburicol
+  and kinetic lines name PMID:26269599; and the disruption-phenotype line names
+  PMID:18191972. The GOA snapshot still has no direct experimental row for
+  `GO:0008398` or `GO:0006696` on cyp51B despite those experimentally traced
+  UniProt assertions.
