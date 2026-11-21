@@ -4,7 +4,7 @@ description: "Modules and gene reviews for parasitic nematode cuticle, host-inte
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [BRUMA, HAECO, ONCVO, ASCSU, STRRB, STRER, TOXCA, TRITR, STECR, 9BILA, worm]
-genes: [dpy-31, bma-dpy-18.1, bma-dpy-18.2, far-1, lev-1, unc-38, unc-63, cpi-2, gp29, mf1]
+genes: [dpy-31, bma-dpy-18.1, bma-dpy-18.2, far-1, lev-1, unc-38, unc-63, lev-8, cpi-2, gp29, mf1]
 index_group: OTHER_ORGANISM
 ---
 
@@ -62,7 +62,7 @@ anchor, `BRUMA/dpy-31`, is in the same PANTHER subfamily as *C. elegans*
 - [x] `worm` `pdi-2` / Q17770 - fetched and reviewed the PDI/prolyl 4-hydroxylase beta subunit
 - [x] `worm` `bli-4` / P51559 - fetched and reviewed the subtilisin-like convertase
 
-Secondary cuticle candidates to resolve before fetching: ONCVO Q2YFS7 and
+Deferred secondary cuticle candidates for a later DPY-31-family lane: ONCVO Q2YFS7 and
 A0A8R1U276, ASCSU F1LHZ4/F1L4T8 and transcript duplicates, STRRB A0A090LLW4,
 STRER A0A0K0DV69 and A0A0K0E1H2, TOXCA dpy-31-like duplicates, and TRITR
 A0A077YYY8. Resolve duplicates by gene model, family/subfamily, sequence, and
@@ -83,7 +83,7 @@ Levamisole-sensitive nicotinic acetylcholine receptor:
 - [x] `worm` `lev-1` / Q27218 - fetched and reviewed as the second non-alpha L-AChR pore subunit
 - [x] `worm` `unc-38` / Q23022 - fetched and reviewed as an alpha L-AChR pore subunit
 - [x] `worm` `unc-63` / Q9N587 - fetched and reviewed as an alpha L-AChR/ACR-2R pore subunit
-- [ ] `worm` `lev-8` / Q93329 - fetch and review as the fifth C. elegans L-AChR pore subunit
+- [x] `worm` `lev-8` / Q93329 - fetched and reviewed as the fifth C. elegans L-AChR pore subunit
 - [ ] `worm` `ric-3` / Q22472 - fetch and review as a receptor maturation/assembly ancillary factor
 - [ ] `worm` `unc-50` / Q10045 - fetch and review as an L-AChR trafficking ancillary factor
 - [ ] `worm` `unc-74` / Q9N4L6 - fetch and review as the thioredoxin-domain L-AChR ancillary factor
@@ -183,6 +183,8 @@ the extracellular oxidant-detoxification boundary is clear.
   pore subunit shared by the L-AChR and ACR-2R
 - [x] Fetch and review the `worm` `unc-63` Q9N587 alpha nAChR
   pore subunit shared by the L-AChR and ACR-2R
+- [x] Fetch and review the `worm` `lev-8` Q93329 fifth C. elegans
+  L-AChR pore subunit
 
 # NOTES
 
@@ -347,3 +349,14 @@ the extracellular oxidant-detoxification boundary is clear.
   transport, keeps locomotion and egg laying as non-core outputs, and records
   WormBase follow-up queries for the calcium-import row and stale ACR-2R
   composition text.
+- Ros-orchestrate confirmed the initial cuticle-collagen maturation lane is
+  complete for the scoped DPY-31, Bma-DPY-18.1/.2, DPY-18, PHY-2, PDI-2 and
+  BLI-4 set. Keep the ONCVO, ASCSU, STRRB, STRER, TOXCA and TRITR DPY-31-like
+  candidates deferred as a later duplicate-resolution pass while this lane
+  continues through anthelmintic drug targets.
+- Added `genes/worm/lev-8` for Q93329, the fifth C. elegans L-AChR pore
+  subunit. The review anchors LEV-8 to the native UNC-29/UNC-38/UNC-63/LEV-8/LEV-1
+  receptor purified by Gottschalk et al. and the Boulin et al. five-subunit oocyte
+  reconstitution, refines broad Cys-loop receptor, channel, transport and
+  membrane-potential rows to the L-AChR functions, and records that LEV-8 is
+  L-AChR-specific rather than an ACR-2R shared subunit like UNC-38 and UNC-63.
