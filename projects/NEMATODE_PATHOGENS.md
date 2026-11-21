@@ -89,7 +89,7 @@ Levamisole-sensitive nicotinic acetylcholine receptor:
 - [ ] `worm` `unc-74` / Q9N4L6 - fetch and review as the thioredoxin-domain L-AChR ancillary factor
 
 Parasite L-AChR candidates to resolve before fetching: BRUMA A0A1P6C5A7,
-A0A4E9EUJ4, A0A4E9FKF9 and the short `Bma-acr-8.1` candidate A0A4E9EXN3;
+A0A4E9EUJ4, A0A4E9FKF9 and the short UniProt `Bma-acr-8.1` record A0A4E9EXN3;
 HAECO D6MYE9, D6MYF0, D6MYF1, D6MYF2, D6MYF3, D6MYF4, D6MYF5, D6MYF6,
 A0A7I4XYK7, A0A7I4Z1Z2, A0A7I4Z2R2, A0A7I4XVV4, A0A7I4XVC3, A9XX24,
 A0A7I4YXE5, A0A7I4YWD8, D2XI63, P92039, G0XFE0, G0XFE1, G0XFD9 and G0XFD8;
@@ -207,12 +207,21 @@ the extracellular oxidant-detoxification boundary is clear.
   worm CHT-1 (`PTHR11177:SF400`), and BRUMA GP29 to worm GPX-3
   (`PTHR11592:SF88`).
 - HAECO L-AChR oocyte reconstitution identified Hco-ACR-8 as important for
-  selective levamisole sensitivity (PMID:21486278), and Hco-acr-8b
-  truncation/resistance papers make ACR-8 a named parasite-specific resolution
-  lane rather than a simple C. elegans LEV-8 ortholog slot (PMID:21945142;
-  PMID:24503202). Live UniProt searches resolved named ACR-8 candidates in
-  HAECO, BRUMA and ASCSU, while the ONCVO ACR-8 member remains to be placed
-  among anonymous PTHR18945 A0A8R1* records.
+  selective levamisole sensitivity (PMID:21486278, *Br J Pharmacol* 2011), and
+  Hco-acr-8b truncation/resistance papers make ACR-8 a named
+  parasite-specific resolution lane rather than a simple C. elegans LEV-8
+  ortholog slot (PMID:21945142, *Mol Biochem Parasitol* 2011; PMID:24503202,
+  *Int J Parasitol* 2014). All three records are now cached in `publications/`.
+- UniProtKB live query receipt for ACR-8 candidates: exact-accession query
+  against release 2026_04, dated 2026-11-04, returned BRUMA A0A4E9EXN3
+  (`Bma-acr-8.1`; "Neurotransmitter-gated ion-channel ligand-binding
+  domain-containing protein"); HAECO A9XX24 and A0A7I4YXE5 ("Nicotinic
+  acetylcholine receptor 8"), A0A7I4YWD8 ("Nicotinic acetylcholine receptor
+  8"), and D2XI63 (`acr8`; "Nicotinic acetylcholine receptor alpha subunit
+  isoform b"); and ASCSU A0A2I6TEN1, A0ACT4VCM3, A0ACT4VCM4, A0ACT4VCM5,
+  A0ACT4VCM6 and A0ACT4VCM7 (all "Nicotinic acetylcholine receptor alpha
+  subunit 8", no gene name in UniProt). The ONCVO ACR-8 member remains to be
+  placed among anonymous PTHR18945 A0A8R1* records.
 - Added the first draft of `modules/nematode_cuticle_collagen_maturation.yaml`
   with three ordered processing steps: ER procollagen prolyl 4-hydroxylation,
   BLI-4-dependent N-terminal cleavage before secretion, and DPY-31-dependent
