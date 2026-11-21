@@ -6,3 +6,9 @@
 - p53 heterologous model: mitochondrial association, apoptosis resistance via NADPH [PMID:31862471 "Enhanced association of HXK2 with the mitochondria"] — indirect.
 
 Decisions: regulation of transcription by glucose UNDECIDED (disputed); nucleus rows KEEP_AS_NON_CORE; cell size HMP, apoptosis IMP, mitochondrial membrane IMP MARK_AS_OVER_ANNOTATED; same IEA/RCA treatment as HXK1.
+
+## QA pass (2026-11-19)
+
+- Regulation of transcription by glucose (IDA PMID:11311123): UNDECIDED -> MARK_AS_OVER_ANNOTATED. Lesko et al. full text: wild-type vs hxk2 deletion RNA-seq in high and low glucose [PMID:37196001 "However, we find that glucose repression is largely unaffected by hxk2Δ, suggesting that the small number of genes whose transcription changes in hxk2Δ cells are not representative of a global loss of glucose repression."]. A few genes (HXK1, SUC2) do change, so not REMOVE.
+- IBA intracellular glucose homeostasis and IBA cytoplasmic side of mitochondrial outer membrane: same donor inspection as HXK1 (sensor-type Gck/HKDC1/AtHXK1 donors; anchor-bearing HK2/M4FD55 donors; yeast N-terminus MVHLGPKKPQARKGSMADVP has no anchor). propagation_review added.
+- Generic parents -> TOO_GENERAL.

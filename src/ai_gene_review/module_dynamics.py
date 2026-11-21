@@ -309,20 +309,27 @@ def run_scenario(
 def unchecked_scenario_models(doc: dict[str, Any]) -> list[str]:
     """Ids of declared models that carry scenarios this module cannot run.
 
-    Module-derived Boolean and agent-based models are simulated; scenarios on an
-    external or unsupported model type are recorded but never checked.
+    Module-derived Boolean, agent-based, and constraint-based models are simulated;
+    scenarios on an external or unsupported model type are recorded but never checked.
 
     >>> unchecked_scenario_models({"executable_models": [
     ...   {"id": "ext", "model_type": "BOOLEAN", "derivation": "EXTERNAL",
     ...    "scenarios": [{"id": "s"}]},
     ...   {"id": "abm", "model_type": "AGENT_BASED", "derivation": "DERIVED_FROM_MODULE",
     ...    "scenarios": [{"id": "s"}]},
+    ...   {"id": "fba", "model_type": "CONSTRAINT_BASED", "derivation": "DERIVED_FROM_MODULE",
+    ...    "scenarios": [{"id": "s"}]},
     ...   {"id": "kin", "model_type": "KINETIC", "derivation": "EXTERNAL"}]})
     ['ext']
     """
     from ai_gene_review.module_abm import abm_models
+    from ai_gene_review.module_fba import fba_models
 
-    checked = {id(m) for m in boolean_models(doc)} | {id(m) for m in abm_models(doc)}
+    checked = (
+        {id(m) for m in boolean_models(doc)}
+        | {id(m) for m in abm_models(doc)}
+        | {id(m) for m in fba_models(doc)}
+    )
     return [
         str(m.get("id"))
         for m in as_list(doc.get("executable_models"))
@@ -331,8 +338,9 @@ def unchecked_scenario_models(doc: dict[str, Any]) -> list[str]:
 
 
 def run_declared_scenarios(doc: dict[str, Any]) -> list[ScenarioResult]:
-    """Run every scenario of every derived Boolean or ABM model the module declares."""
+    """Run every scenario of every derived Boolean, ABM, or FBA model the module declares."""
     from ai_gene_review.module_abm import run_declared_abm_scenarios
+    from ai_gene_review.module_fba import run_declared_fba_scenarios
 
     results: list[ScenarioResult] = []
     for model in boolean_models(doc):
@@ -340,6 +348,7 @@ def run_declared_scenarios(doc: dict[str, Any]) -> list[ScenarioResult]:
             if isinstance(scenario, dict):
                 results.append(run_scenario(doc, str(model.get("id")), scenario))
     results.extend(run_declared_abm_scenarios(doc))
+    results.extend(run_declared_fba_scenarios(doc))
     return results
 
 

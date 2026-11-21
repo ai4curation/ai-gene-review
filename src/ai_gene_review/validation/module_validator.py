@@ -2361,7 +2361,8 @@ def validate_executable_models(
     states or cannot be checked, and a model file that does not exist under
     ``repo_root``. These are curator-authored claims, so a mismatch is an error,
     like a wrong term id. Warnings: scenarios on a model this check cannot run
-    (external or non-Boolean), which are recorded but never verified.
+    (external, or a module-derived type other than Boolean, agent-based or
+    constraint-based), which are recorded but never verified.
     """
     from ai_gene_review.module_boolean import activation_logic_findings
     from ai_gene_review.module_dynamics import (
@@ -2382,7 +2383,8 @@ def validate_executable_models(
                 )
     warnings = [
         f"Executable model {model_id}: its scenarios are not checked "
-        "(only module-derived Boolean and agent-based models are simulated)"
+        "(only module-derived Boolean, agent-based and constraint-based models "
+        "are simulated)"
         for model_id in unchecked_scenario_models(doc)
     ]
     logic_errors = [f"Activation logic: {p}" for p in activation_logic_findings(doc)]
