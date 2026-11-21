@@ -67,12 +67,22 @@ The schema is `src/ai_gene_review/schema/shadow_issue.yaml`.
    workflow does this daily on a different model (`claude-sonnet-5`) from the
    worker (`claude-opus-5`). Each rating records `rater_model`, `rater_run` and
    `independence`. `self_rating_seen` records whether the rater saw
-   `self-rating.yaml`, and when (it should be `NEVER`). Many threads end in "fixed, thanks", so
+   `self-rating.yaml`, and when (it should be `NEVER`); the rater workflow
+   removes every `self-rating.yaml` from its checkout before the rater starts.
+   Many threads end in "fixed, thanks", so
    the rater should check the released artifacts (GOA, interpro2go, ARBA and
-   PAINT releases, linked ontology PRs) rather than rely on the thread alone,
-   and date each check (`checked_at`). If upstream has acted but the change is
-   not yet released, score `downstream: PENDING_RELEASE` and re-rate after the
-   next release.
+   PAINT releases, linked ontology PRs) rather than rely on the thread alone.
+   Each downstream check (`GOA_DIFF`, `MAPPING_RELEASE`) records when it was
+   made (`checked_at`) and the release it saw (`source_release`,
+   `source_release_date`); validation fails without them. A fix made after
+   every release checked cannot be visible, so if upstream has acted but the
+   change is not yet released, score `downstream: PENDING_RELEASE` (a value
+   only that dimension takes). Such issues wait in the `pending_release`
+   queue, and after the next release the rater records the new downstream
+   score as an adjudication. For PAINT issues, `ai-gene-review shadow-issues
+   paint-diff OLD NEW` compares the node annotations (IBD, IRD, IKR) of two
+   `<FAMILY>-paint.tsv` slices, which shows the curator's change directly
+   rather than through propagated IBAs.
 5. **Report.** At the end, the rater writes `report.md` beside `rating.yaml`,
    describing the approach taken and how well it did. It is the committed,
    diffable record, and validation fails without it. In an interactive
@@ -82,12 +92,21 @@ The schema is `src/ai_gene_review/schema/shadow_issue.yaml`.
 
 A disputed score is not edited. The dispute is recorded as an `adjudications`
 entry on the rating (dimension, rater's value, adjudicated value, by whom,
-why), and `just shadow-ratings` shows it as `rater → adjudicated*`.
+why), and `just shadow-ratings` shows it as `rater → adjudicated*`. An
+adjudication that upholds the rater's value shows as `rater*`.
 
-`just outstanding-shadow-issues` lists the four queues (`untriaged`,
-`in_progress`, `needs_shadow`, `needs_rating`), prospective issues and newest
-issues first. `just shadow-ratings` prints the table of all ratings, generated
-from the `rating.yaml` files.
+`just outstanding-shadow-issues` lists the six queues (`untriaged`,
+`in_progress`, `needs_shadow`, `needs_rating`, `pending_release`,
+`needs_second_rating`), prospective issues and newest issues first.
+`just shadow-ratings` prints the table of all ratings, generated from the
+`rating.yaml` files. An issue rated once waits in `needs_second_rating`; the
+rater workflow takes it when the other queues are empty and writes
+`rating-second.yaml` without reading the first rating.
+`ai-gene-review shadow-issues agreement` reports raw inter-rater agreement per
+dimension over the issues rated more than once, on the scores as the raters
+wrote them. Raw agreement overstates reliability, because most scores are
+`AGREE` or `NONE`; once the sample is large enough, report Cohen's kappa (two
+raters) or Fleiss' kappa (more) alongside it.
 
 Throughput is one shadowed issue a day and one rating a day. Only issues that
 have been shadowed can be rated, so the 837 closed backfilled issues are rated
@@ -249,13 +268,36 @@ Enforcement, all built on `src/ai_gene_review/shadow_issues/guard.py`:
   The history records for those edits are kept, and a later record for each
   target says the edit was superseded at the merge.
 
+### 2026-11-17: release protocol and second ratings
+
+- Resolution evidence gains `source_release` and `source_release_date`,
+  required for downstream checks. 6596's QuickGO checks name the PAINT
+  2026-08-28 snapshot their IBA rows come from; a re-check on 2026-11-17 found
+  no newer PAINT snapshot or GO release and the pre-fix IBA unchanged on both
+  P53598 and O13750.
+- `PENDING_RELEASE` moves to its own `DownstreamAgreementEnum`, so only
+  `downstream` can take it. New queues `pending_release` (using the score after
+  adjudication, so 6596 is listed) and `needs_second_rating`; new commands
+  `agreement` and `paint-diff`.
+- The rater workflow removes the workers' `self-rating.yaml` files from its
+  checkout before the rater starts (skip-worktree, so the rater's commits cannot
+  delete them). The worker prompt now says to refer to curators by role.
+- Validation also checks that an adjudication's `rater_value` restates the
+  score and that both values belong to the dimension's enum, and that a work
+  product that landed exists. A preserved diff of a pure rename or mode change
+  now counts. Ratings tables link reports by URL (`--link-base` to override).
+- 6596's `report.md` gains a dated note on the two adjudications, and
+  `report-same-model.md`'s follow-up section is restored to its original text
+  with a dated addendum, rather than corrected in place.
+
 ## Next steps
 
 - Let the worker triage the backfill, starting with the 75 issues that have
   `prior_work` (confirmation batch) and the 272 open issues.
-- Re-rate PENDING_RELEASE issues after each PANTHER/GO release.
-- Rate a sample of shadowed issues with two raters on different models, and
-  report inter-rater agreement per dimension.
-- Record each downstream source's release date on resolution evidence, and
-  for PAINT issues compare IBD/IKR rows across PAINT releases rather than
-  propagated IBAs only.
+- Re-rate go-annotation 6596 downstream when a PAINT snapshot after
+  2026-10-02 appears: bump `PAINT_SNAPSHOT`, re-fetch the PTHR11117 slice and
+  run `paint-diff` against the 2026-08-28 one.
+- Shadow enough issues that a sample can be rated twice. Only 6596 has been
+  shadowed so far, so `agreement` has one issue to compare (two raters,
+  different models; they agree on triage, diagnosis, actions and harm,
+  and differ on outcome, downstream and added value).

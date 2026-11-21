@@ -385,11 +385,26 @@ def store_issue(
 
 
 def load_issue(folder: Path) -> tuple[dict[str, Any], dict[str, Any]]:
-    """(source.yaml, issue.yaml) for one issue folder."""
-    return (
-        yaml.safe_load((folder / "source.yaml").read_text()),
-        yaml.safe_load((folder / "issue.yaml").read_text()),
-    )
+    """(source.yaml, issue.yaml) for one issue folder.
+
+    source.yaml is machine-owned, so an empty one is a broken mirror; issue.yaml
+    is curated (sync only creates its stub), so an empty one is a half-written
+    edit. Either way, fail naming the file and leave the detail to ``validate``.
+    """
+    loaded = []
+    for name in ("source.yaml", "issue.yaml"):
+        path = folder / name
+        if not path.exists():
+            raise ValueError(f"{path} is missing; run validate")
+        try:
+            data = yaml.safe_load(path.read_text())
+        except yaml.YAMLError as exc:
+            # PyYAML's message says "<unicode string>", not which of many files.
+            raise ValueError(f"{path} is not valid YAML; run validate") from exc
+        if not isinstance(data, dict):
+            raise ValueError(f"{path} is empty or not a mapping; run validate")
+        loaded.append(data)
+    return loaded[0], loaded[1]
 
 
 def iter_issue_folders(tracker_dir: Path) -> list[Path]:
@@ -403,12 +418,20 @@ def iter_issue_folders(tracker_dir: Path) -> list[Path]:
 def report_for(rating_path: Path) -> Path:
     """The report that must accompany a rating file.
 
+    ``rating.yaml`` pairs with ``report.md`` and ``rating-<label>.yaml`` with
+    ``report-<label>.md``; only the leading role word changes, never the label.
+
     >>> report_for(Path("6596/rating.yaml")).name, report_for(Path("6596/rating-same-model.yaml")).name
     ('report.md', 'report-same-model.md')
+    >>> report_for(Path("6596/rating-rerating.yaml")).name
+    'report-rerating.md'
     """
-    return rating_path.with_name(
-        rating_path.name.replace("rating", "report", 1).replace(".yaml", ".md")
-    )
+    stem = rating_path.stem
+    if rating_path.suffix != ".yaml" or not (
+        stem == "rating" or stem.startswith("rating-")
+    ):
+        raise ValueError(f"{rating_path.name} is not a rating file")
+    return rating_path.with_name("report" + stem.removeprefix("rating") + ".md")
 
 
 def rating_files(folder: Path) -> list[Path]:
@@ -423,7 +446,30 @@ def rating_files(folder: Path) -> list[Path]:
     return ([primary] if primary.exists() else []) + others
 
 
-QUEUES = ("untriaged", "in_progress", "needs_shadow", "needs_rating")
+def effective_score(rating: dict[str, Any], dimension: str) -> str | None:
+    """A rating's score on one dimension, after any adjudication of it.
+
+    >>> effective_score({"downstream": "PARTIAL", "adjudications": [{"dimension": "downstream",
+    ...     "rater_value": "PARTIAL", "adjudicated_value": "PENDING_RELEASE"}]}, "downstream")
+    'PENDING_RELEASE'
+    >>> effective_score({"downstream": "AGREE"}, "downstream")
+    'AGREE'
+    """
+    score = rating.get(dimension)
+    for ruling in rating.get("adjudications") or []:
+        if ruling.get("dimension") == dimension:
+            score = ruling.get("adjudicated_value", score)
+    return score
+
+
+QUEUES = (
+    "untriaged",
+    "in_progress",
+    "needs_shadow",
+    "needs_rating",
+    "pending_release",
+    "needs_second_rating",
+)
 
 
 def queue_for(
@@ -435,7 +481,12 @@ def queue_for(
     - ``in_progress``: shadow work started but not finished; resume it.
     - ``needs_shadow``: in scope, and our work has not started.
     - ``needs_rating``: our work is done, upstream has closed the issue, and no
-      rating exists yet.
+      primary ``rating.yaml`` exists yet.
+    - ``pending_release``: the primary rating's downstream score, after any
+      adjudication, is ``PENDING_RELEASE``; re-rate once a release postdates
+      upstream's fix.
+    - ``needs_second_rating``: rated exactly once; a second, independent rating
+      would let the raters be compared (``shadow-issues agreement``).
     """
     triage, shadow = issue["triage"], issue["shadow"]
     if triage["status"] == "UNTRIAGED":
@@ -444,12 +495,18 @@ def queue_for(
         return "in_progress"
     if triage.get("in_scope") and shadow["status"] == "NOT_STARTED":
         return "needs_shadow"
-    if (
-        shadow["status"] == "DONE"
-        and source["state"] == "closed"
-        and not (folder / "rating.yaml").exists()
-    ):
+    if shadow["status"] != "DONE" or source["state"] != "closed":
+        return None
+    ratings = rating_files(folder)
+    if not ratings or ratings[0].name != "rating.yaml":
         return "needs_rating"
+    primary = (
+        yaml.safe_load(ratings[0].read_text()) or {}
+    )  # validate reports a bad file
+    if effective_score(primary, "downstream") == "PENDING_RELEASE":
+        return "pending_release"
+    if len(ratings) == 1:
+        return "needs_second_rating"
     return None
 
 
