@@ -256,6 +256,12 @@ def find_local_quote_failures(
 
 @lru_cache(maxsize=1)
 def _baseline(path: Path = BASELINE_PATH) -> Dict[str, Set[str]]:
+    return load_local_quote_baseline(path)
+
+
+def load_local_quote_baseline(path: Optional[Path] = None) -> Dict[str, Set[str]]:
+    """Read the gene-review local-source quote baseline."""
+    path = BASELINE_PATH if path is None else path
     if not path.exists():
         return {}
     loaded = yaml.safe_load(path.read_text()) or {}

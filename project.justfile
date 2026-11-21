@@ -1441,6 +1441,12 @@ validate-changed *files:
 validate-quotes *args:
     uv run python -m ai_gene_review.validation.quote_check {{args}}
 
+# Validate incoming supporting_text quotes affected by changed local source files.
+# Example: just validate-incoming-quotes HEAD^ HEAD
+[group('QC')]
+validate-incoming-quotes *args:
+    uv run python -m ai_gene_review.validation.incoming_quote_dependencies {{args}}
+
 # Example: just local-quote-baseline --prune
 #          just local-quote-baseline --report reports/local-quote-failures.yaml
 # Measure or shrink the baseline of known non-verbatim file:/Reactome: quotes
