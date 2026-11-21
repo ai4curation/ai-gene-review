@@ -191,3 +191,11 @@
   UPR (IGI).
 - REMOVE: nine bare protein binding IPI rows (Vps5, Vps17, Vps29 partners), per policy.
 - NEW: small GTPase binding (IPI, PMID:22593205).
+
+## Review follow-up (2026-11-21, PR 6587)
+
+The automated PR review found that the batch argued both sides of some cross-gene questions. These are the calls it now makes:
+
+- GO:0032456 (now labelled 'endosome to plasma membrane transport'; 'endocytic recycling' is a narrow synonym): MARK_AS_OVER_ANNOTATED on all five retromer subunits. Retromer is needed for Ftr1 and Chs3 to stay at the surface, but those cargoes return through the Golgi (PMID:17420293), so retromer's carriers go to the Golgi. Each subunit's row carries the same SUSPECTED WRONG_TERM query to ComplexPortal (CPX-1653).
+- CROP complex (GO:0170071): ACCEPT, with a CROP core function, on Vps35, Pep8 and Vps29. SGD's rows use is_active_in, but GORULE:0000061 allows only part_of for protein-containing complex terms; a CONFIRMED WRONG_QUALIFIER defect is filed on each.
+- The endosome MODIFY to endosome membrane was already this review's call and is now the batch reading.

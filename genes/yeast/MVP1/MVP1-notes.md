@@ -193,3 +193,9 @@
   variables. On the first Write of the review YAML it created a 1.4 GB `.venv` in this
   worktree and rewrote `uv.lock`; both were removed/restored, and later edits were made
   through the shell.
+
+## Review follow-up (2026-11-21, PR 6587)
+
+The automated PR review found that the batch argued both sides of some cross-gene questions. These are the calls it now makes:
+
+- Endosome rows: endosome is a series organelle, which the organelle policy does not yet cover, so the ordinary refinement rule applies. A row whose own evidence puts the protein on the endosomal membrane (a peripheral membrane-associated complex, immunogold at the endosome rims, PI3P-dependent puncta) is MODIFY to GO:0010008 endosome membrane. IBA and ARBA rows, whose evidence stops at the organelle, stay ACCEPT at endosome. The resulting inconsistent_review_actions warning for GO:0005768 is the same per-row pattern as the VPS1 GTPase activity rows.

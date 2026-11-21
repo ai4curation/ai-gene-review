@@ -139,3 +139,11 @@
 - VPS1 says Vps1 cuts retromer/Mvp1 SNX-BAR tubules [PMID:24567361]. Consistent: that paper
   shows Vps17-GFP coated tubules budding from endosomes, half of them also Mvp1-coated. No
   disagreement found.
+
+## Review follow-up (2026-11-21, PR 6587)
+
+The automated PR review found that the batch argued both sides of some cross-gene questions. These are the calls it now makes:
+
+- Endosome rows: endosome is a series organelle, which the organelle policy does not yet cover, so the ordinary refinement rule applies. A row whose own evidence puts the protein on the endosomal membrane (a peripheral membrane-associated complex, immunogold at the endosome rims, PI3P-dependent puncta) is MODIFY to GO:0010008 endosome membrane. IBA and ARBA rows, whose evidence stops at the organelle, stay ACCEPT at endosome. The resulting inconsistent_review_actions warning for GO:0005768 is the same per-row pattern as the VPS1 GTPase activity rows.
+- GO:0032456 (now labelled 'endosome to plasma membrane transport'; 'endocytic recycling' is a narrow synonym): MARK_AS_OVER_ANNOTATED on all five retromer subunits. Retromer is needed for Ftr1 and Chs3 to stay at the surface, but those cargoes return through the Golgi (PMID:17420293), so retromer's carriers go to the Golgi. Each subunit's row carries the same SUSPECTED WRONG_TERM query to ComplexPortal (CPX-1653).
+- Cytosol stays KEEP_AS_NON_CORE on direct fractionation of a 40-60% soluble Vps5 pool. The description no longer says the heterodimer comes from that pool, which has not been shown for Vps17.

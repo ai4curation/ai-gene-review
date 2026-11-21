@@ -156,3 +156,12 @@
   Atg18 [PMID:35466426, PMID:35574911]; Atg21-retromer [PMID:42135947]; Ypt7-GTP binding
   [PMID:21062894, PMID:22593205]. PROPPINs and SNX-BARs compete for the trimer
   [PMID:35466426, PMID:35574911].
+
+## Review follow-up (2026-11-21, PR 6587)
+
+The automated PR review found that the batch argued both sides of some cross-gene questions. These are the calls it now makes:
+
+- Endosome rows: endosome is a series organelle, which the organelle policy does not yet cover, so the ordinary refinement rule applies. A row whose own evidence puts the protein on the endosomal membrane (a peripheral membrane-associated complex, immunogold at the endosome rims, PI3P-dependent puncta) is MODIFY to GO:0010008 endosome membrane. IBA and ARBA rows, whose evidence stops at the organelle, stay ACCEPT at endosome. The resulting inconsistent_review_actions warning for GO:0005768 is the same per-row pattern as the VPS1 GTPase activity rows.
+- GO:0032456 (now labelled 'endosome to plasma membrane transport'; 'endocytic recycling' is a narrow synonym): MARK_AS_OVER_ANNOTATED on all five retromer subunits. Retromer is needed for Ftr1 and Chs3 to stay at the surface, but those cargoes return through the Golgi (PMID:17420293), so retromer's carriers go to the Golgi. Each subunit's row carries the same SUSPECTED WRONG_TERM query to ComplexPortal (CPX-1653).
+- CROP complex (GO:0170071): ACCEPT, with a CROP core function, on Vps35, Pep8 and Vps29. SGD's rows use is_active_in, but GORULE:0000061 allows only part_of for protein-containing complex terms; a CONFIRMED WRONG_QUALIFIER defect is filed on each.
+- The core function location moves from endosome to endosome membrane.
