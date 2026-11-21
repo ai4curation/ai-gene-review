@@ -6,6 +6,12 @@ This project is for managing AI reviews of gene annotations. The overall goal is
 review existing GO annotations using strict defined criteria, and to summarize the resulting
 high quality annotations.
 
+## Schema authoring
+
+Always author schemas in LinkML, including project-local pilot and sidecar formats.
+Do not author JSON Schema schemas. Define reusable classes so both complete records
+and individual snippets can be validated with LinkML tooling.
+
 ## Local parallel work and storage
 
 - Keep at most six unfinished workstreams, including the coordinator. An idle
@@ -185,6 +191,11 @@ just deep-research SPECIES GENE --provider perplexity
 This will create a file like `GENE-deep-research-perplexity.md`. You can also make your own notes in `genes/SPECIES/GENE/GENE-notes.md`.
 
 NEVER write your own content and name it `-deep-research-{provider}.md`. If deep research fails, document in `-notes.md` or `-deep-research-manual.md` instead.
+
+Preserve existing provider research and its artifacts verbatim. Do not manually edit
+them or rerun generation over them as part of routine curation. Generate missing
+research only; refresh existing output only when explicitly requested. Record
+corrections and disagreements in notes, `reference_review`, or `source_defects`.
 
 For worm, fly and yeast genes, also run `just mod-description-deep-research SPECIES GENE`. It writes the model organism database's hand-written gene description verbatim as `GENE-deep-research-<mod>.md` (`wormbase`, `flybase`, `sgd`). Other organisms are skipped: MGI's note summarises mutant phenotypes, and RGD, ZFIN and Xenbase have no hand-written text (see `projects/MOD_DESCRIPTIONS.md`). This is provider content, like an Affinage file, not your own. Treat it as an uncited, often out-of-date source: check its claims, record your verdict in that reference's `reference_review`, and record errors in its text as `source_defects` (see `docs/source_defects.md`).
 
