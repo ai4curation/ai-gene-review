@@ -2,7 +2,7 @@
 title: Human reviewed Swiss-Prot proteins without AI Gene Reviews
 description: Family-by-family campaign over reviewed human Swiss-Prot proteins that still lack AI Gene Reviews.
 species: [human]
-index_group: human
+index_group: MAMMAL
 ---
 
 # Human Unreviewed Families
