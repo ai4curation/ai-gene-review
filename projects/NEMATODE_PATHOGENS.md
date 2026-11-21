@@ -56,7 +56,7 @@ anchor, `BRUMA/dpy-31`, is in the same PANTHER subfamily as *C. elegans*
 - [x] `worm` `dpy-31` / P98060 - fetched and reviewed the C. elegans DPY-31 ortholog
 - [x] `HAECO` `dpy-31` / D5FM34 - fetched and reviewed the reviewed *H. contortus* DPY-31 ortholog
 - [x] `BRUMA` `bma-dpy-18.1` / Q68VC1 - fetched and reviewed the Bma-PHY-2 prolyl 4-hydroxylase alpha subunit
-- [ ] `BRUMA` `bma-dpy-18.2` / A0A1P6BZ71 - fetch and review the second prolyl 4-hydroxylase alpha candidate
+- [x] `BRUMA` `bma-dpy-18.2` / A0A1P6BZ71 - fetched and reviewed the Bma-PHY-1 prolyl 4-hydroxylase alpha subunit
 - [ ] `worm` `dpy-18` / Q10576 - fetch and review the C. elegans prolyl 4-hydroxylase alpha-1 ortholog
 - [ ] `worm` `phy-2` / Q20065 - fetch and review the C. elegans prolyl 4-hydroxylase alpha-2 ortholog
 - [ ] `worm` `pdi-2` / Q17770 - fetch and review the PDI/prolyl 4-hydroxylase beta subunit
@@ -68,36 +68,7 @@ STRER A0A0K0DV69 and A0A0K0E1H2, TOXCA dpy-31-like duplicates, and TRITR
 A0A077YYY8. Resolve duplicates by gene model, family/subfamily, sequence, and
 literature before choosing review folders.
 
-### 2. Secreted fatty-acid and retinol binding
-
-Potential module or family review target for FAR proteins, with the boundary
-still to be decided. If FAR-1 remains a single binding role rather than a
-multi-part process, keep it as gene/family curation until it can be joined to a
-broader host lipid-scavenging module.
-
-- [x] `BRUMA` `far-1` / Q93142 - cross-check existing review
-- [x] `worm` `far-1` / P34382 - fetch and review the same PANTHER subfamily exemplar
-- [ ] `worm` `far-2` / P34383 - fetch only if needed for paralog-specific comparison
-
-### 3. Secreted immune modulators and exsheathment enzymes
-
-These are strong parasite-interface genes but do not yet form one reusable
-module. Split them by mechanism unless literature supports a shared pathway.
-
-- [ ] `BRUMA` `cpi-2` / A0A0K0IP23 - existing cystatin review; C. elegans same-subfamily comparator is `worm` `cpi-2` / G5ECM9
-- [ ] `BRUMA` `mf1` / P29030 - existing GH18 endochitinase review; C. elegans same-subfamily comparator is `worm` `cht-1` / Q11174
-- [ ] `STECR` `nas-8` / D2KBH9 - existing secreted astacin review in the DPY-31/NAS PANTHER family but not the DPY-31 subfamily
-
-### 4. Surface antioxidant defense
-
-Start as a small extracellular glutathione peroxidase lane and merge only after
-the extracellular oxidant-detoxification boundary is clear.
-
-- [ ] `BRUMA` `gp29` / P67877 - existing cuticular glutathione peroxidase review
-- [ ] `worm` `gpx-3` / Q95003 - fetch and review the same PANTHER subfamily exemplar
-- [ ] `worm` `gpx-5` / Q93204 - cross-check existing review as a secreted-gpx comparator, not as an established one-to-one ortholog
-
-### 5. Anthelmintic drug target systems
+### 2. Anthelmintic drug target systems
 
 Treat target biology, not drug class, as the module boundary. Candidate modules
 are the levamisole-sensitive nicotinic acetylcholine receptor, avermectin-
@@ -110,6 +81,35 @@ Pathogen accessions need UniProt and literature resolution before fetching.
 - [ ] `worm` `unc-63` / Q9N587 - fetch if the nAChR module proceeds
 - [ ] `worm` `glc-1` / G5EBR3 - fetch if the GluCl module proceeds
 - [ ] `worm` `glc-2` / Q17328 - fetch if the GluCl module proceeds
+
+### 3. Secreted fatty-acid and retinol binding
+
+Potential module or family review target for FAR proteins, with the boundary
+still to be decided. If FAR-1 remains a single binding role rather than a
+multi-part process, keep it as gene/family curation until it can be joined to a
+broader host lipid-scavenging module.
+
+- [x] `BRUMA` `far-1` / Q93142 - cross-check existing review
+- [x] `worm` `far-1` / P34382 - fetch and review the same PANTHER subfamily exemplar
+- [ ] `worm` `far-2` / P34383 - fetch only if needed for paralog-specific comparison
+
+### 4. Secreted immune modulators and exsheathment enzymes
+
+These are strong parasite-interface genes but do not yet form one reusable
+module. Split them by mechanism unless literature supports a shared pathway.
+
+- [ ] `BRUMA` `cpi-2` / A0A0K0IP23 - existing cystatin review; C. elegans same-subfamily comparator is `worm` `cpi-2` / G5ECM9
+- [ ] `BRUMA` `mf1` / P29030 - existing GH18 endochitinase review; C. elegans same-subfamily comparator is `worm` `cht-1` / Q11174
+- [ ] `STECR` `nas-8` / D2KBH9 - existing secreted astacin review in the DPY-31/NAS PANTHER family but not the DPY-31 subfamily
+
+### 5. Surface antioxidant defense
+
+Start as a small extracellular glutathione peroxidase lane and merge only after
+the extracellular oxidant-detoxification boundary is clear.
+
+- [ ] `BRUMA` `gp29` / P67877 - existing cuticular glutathione peroxidase review
+- [ ] `worm` `gpx-3` / Q95003 - fetch and review the same PANTHER subfamily exemplar
+- [ ] `worm` `gpx-5` / Q93204 - cross-check existing review as a secreted-gpx comparator, not as an established one-to-one ortholog
 
 # STATUS
 
@@ -131,6 +131,11 @@ Pathogen accessions need UniProt and literature resolution before fetching.
 - [x] Fetch and review the `worm` `far-1` P34382 same-subfamily ortholog
 - [x] Fetch and review the `BRUMA` `bma-dpy-18.1` Q68VC1 prolyl
   4-hydroxylase alpha subunit
+- [x] Fetch and review the `BRUMA` `bma-dpy-18.2` A0A1P6BZ71 prolyl
+  4-hydroxylase alpha subunit
+- [x] Move anthelmintic drug target systems ahead of the FAR,
+  immune-modulator, and antioxidant lanes for the next module after cuticle
+  collagen maturation
 
 # NOTES
 
@@ -209,3 +214,18 @@ Pathogen accessions need UniProt and literature resolution before fetching.
   membership, and treats broad cofactor/oxygenase terms and generic embryonic
   or growth process transfers as accepted, refined, or over-annotated
   according to the Q68VC1 evidence.
+- Added `genes/BRUMA/bma-dpy-18.2` for A0A1P6BZ71, the Bm3843
+  procollagen-proline 4-dioxygenase that matches the cloned Bma-PHY-1
+  sequence. The review keeps the seeded core ER-lumen
+  procollagen-proline 4-dioxygenase activity and the direct larval-development
+  phenotype, refines broad oxygenase rows to collagen P4H activity, and adds
+  direct annotations to the native prolyl 4-hydroxylase complex and
+  collagenous-cuticle development from the Bma-PDI-2 co-IP and combined
+  Bma-phy-1/Bma-phy-2 RNAi evidence.
+- Ros-orchestrate reprioritized anthelmintic drug target systems as the next
+  module lane after cuticle collagen maturation. Keep the mechanism split:
+  scope levamisole-sensitive nicotinic acetylcholine receptors,
+  avermectin-sensitive glutamate-gated chloride channels, and
+  beta-tubulin/benzimidazole as separate candidate modules, resolving parasite
+  orthologs from UniProt/PANTHER before adding HAECO, BRUMA, ONCVO, ASCSU, or
+  other accessions.
