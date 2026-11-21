@@ -44,15 +44,16 @@ GEF-inhibitor activity [PMID:20797862; PMID:24413168; PMID:37463208].
   vacuole membrane child term, while `GO:0032585 multivesicular body membrane`,
   `GO:0005768 endosome`, and `GO:0005829 cytosol` are kept as plausible but
   non-core localization transfers.
-- `GO:0016192 vesicle-mediated transport` is modified to `GO:0032511 late
-  endosome to vacuole transport via multivesicular body sorting pathway`,
-  matching the conserved MVB/endosome-to-vacuole route more closely than the
-  generic longin-domain InterPro2GO parent.
+- `GO:0016192 vesicle-mediated transport` is marked too general because the
+  FUZ/MON1/HPS1 longin-domain InterPro2GO rule is broader than the conserved
+  Mon1-Ccz1/Ypt7 route; the direct `GO:0032511 late endosome to vacuole
+  transport via multivesicular body sorting pathway` row is accepted separately.
 - The autophagy, macroautophagy, Cvt, and protein targeting to vacuolar
   membrane rows are kept as route-specific conserved contexts that use
   Mon1-Ccz1/Ypt7, not as the core molecular activity itself.
-- The phosphatidylserine, phosphatidylinositol-5-phosphate, and
-  phosphatidylinositol-3-phosphate binding rows are kept as secondary
-  membrane-recruitment properties; `GO:1990624 guanyl nucleotide exchange factor
-  inhibitor activity` is marked over-annotated because the yeast source
-  describes intramolecular autoinhibition by Mon1's own N-terminus.
+- The phosphatidylserine and phosphatidylinositol-3-phosphate binding rows are
+  kept as secondary membrane-recruitment properties, while the lipid-strip-only
+  phosphatidylinositol-5-phosphate row is marked over-annotated; `GO:1990624
+  guanyl nucleotide exchange factor inhibitor activity` is marked
+  over-annotated because the yeast source describes intramolecular
+  autoinhibition by Mon1's own N-terminus.
