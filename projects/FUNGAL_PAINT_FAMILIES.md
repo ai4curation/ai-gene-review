@@ -2,7 +2,7 @@
 title: "Fungal PAINT Family Reviews"
 maturity: IN_PROGRESS
 collections: [HOMOLOGY_PROPAGATION]
-species: [yeast, SCHPO, CANAL, NEUCR, ASPFU, EMENI]
+species: [yeast, SCHPO, CANAL, CANGA, NEUCR, ASPFU, EMENI]
 autolink_exclude: [AIM6, Ser]
 index_group: YEAST
 ---
