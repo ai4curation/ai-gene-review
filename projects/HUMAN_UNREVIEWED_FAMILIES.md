@@ -69,7 +69,7 @@ PantherDB inventory gives usable subfamily assignments.
     core family work was self-contained in gene and PANTHER reviews.
 
 - [ ] **PTHR10030, alpha-L-fucosidase family**
-  - STATUS: in progress on FUCA2.
+  - STATUS: merged in PR #6567.
   - Seed: `FUCA2` / UniProtKB:Q9BTY2, reviewed Swiss-Prot, unreviewed locally,
     with 35 GOA rows and a compact PANTHER family containing one reviewed human
     paralog.
@@ -87,10 +87,27 @@ PantherDB inventory gives usable subfamily assignments.
     excludes upstream free-fucose release by FUCA1/FUCA2, and `gocams/index.tsv`
     has no FUCA2 production model.
 
+- [ ] **PTHR10204, NQO1/NQO2 quinone reductase family**
+  - STATUS: in review on PR #6570.
+  - Seed: `NQO1` / UniProtKB:P15559, reviewed Swiss-Prot, unreviewed locally,
+    with 44 GOA rows and a compact two-member human PANTHER family.
+  - Human family members in this checkout:
+    - [x] `NQO1` / UniProtKB:P15559: new COMPLETE review.
+    - [x] `NQO2` / UniProtKB:P16083: already IN_PROGRESS; cross-checked as a
+      diverged NRH-preferring quinone reductase that retains weak NADH turnover.
+  - PANTHER: `interpro/panther/PTHR10204/PTHR10204-review.yaml` records the two
+    sound root IBD gains and the NQO2 cofactor-preference shift; no NQO2 IRD is
+    needed because `GO:0003955` remains measurable but secondary in NQO2.
+  - Module/GO-CAM split: no new ModuleReview or GO-CAM review is needed. Human
+    NQO1 and NQO2 are alternative quinone reductases rather than parts of a
+    multi-protein mechanism, and `gocams/index.tsv` has no NQO1/NQO2 production
+    model.
+
 - [ ] Next human Swiss-Prot seed family
-  - STATUS: queued after the PTHR10030 branch validates and is ready for PR.
-  - NOTES: pick another small, biologically characterized, cached PANTHER family
-    from the missing-accession table while this family PR waits for review.
+  - STATUS: queued after PR #6570 is mergeable again.
+  - NOTES: keep selecting small, biologically characterized, cached PANTHER
+    families from the missing-accession table while the NQO branch waits for
+    review.
 
 # NOTES
 
@@ -100,9 +117,9 @@ PantherDB inventory gives usable subfamily assignments.
   `/srv/home/cmungall/orca/workspaces/ai-gene-review/*` directories occupied
   about 62 GB, and this checkout occupied about 7 GB. The worktree is a
   registered Orca worktree at
-  `/srv/home/cmungall/orca/workspaces/ai-gene-review/aigr-ros-human-families`,
+  `/srv/home/cmungall/orca/workspaces/ai-gene-review/aigr-ros-human-families-3`,
   with Git metadata in
-  `/srv/home/cmungall/repos/ai-gene-review/.git/worktrees/aigr-ros-human-families`.
+  `/srv/home/cmungall/repos/ai-gene-review/.git/worktrees/aigr-ros-human-families-3`.
 - The CCS/SOD3 seed exposed a QuickGO fetch regression: requesting
   `includeFields=taxonName` could return empty result sets or time out. The local
   fetcher now omits that display-only field and backfills `TAXON NAME` from the
@@ -118,3 +135,14 @@ PantherDB inventory gives usable subfamily assignments.
   disconnected nuclear ATOX1 regulatory branch called out, and a full
   `just validate-families` pass leaves `PTHR10003` conflict-free against the
   reviewed gene corpus.
+- `PTHR10210` split the PRPP synthase family into catalytic PRPS1/2/1L1
+  reviews and non-catalytic PRPSAP1/2 reviews, with the PANTHER review
+  documenting the PRPSAP activity losses. PR #6563 merged.
+- `PTHR10030` was selected next as a two-human-member alpha-L-fucosidase family:
+  FUCA1 is a lysosomal paralog with an existing local DRAFT, while FUCA2 lacked
+  a review and exercises the same root alpha-L-fucosidase PAINT gains without
+  requiring a family module or GO-CAM split. PR #6567 merged.
+- `PTHR10204` was selected as a second compact human family: NQO1 lacked a
+  review, NQO2 already documented the paralogous shift toward efficient
+  NRH-dependent quinone reduction, and the family PAINT assertions are two
+  simple root gains rather than an exception-heavy tree.
