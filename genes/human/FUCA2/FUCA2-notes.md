@@ -19,11 +19,12 @@
   one-protein clade with a conflicting FlyBase IDA row, so the family review
   treats the loss as contradicted and irrelevant to human FUCA1/FUCA2.
 - [PMID:19666478] is full text in the publication cache. It directly identified
-  secreted human FUCA2 from H. pylori/gastric-cell coculture medium by
-  fucosidase-inhibitor affinity chromatography and LC-MS/MS, explicitly
-  prepared and characterized human FUCA2, and showed by FUCA2 knockdown or
-  fucosidase inhibition that the enzyme promotes H. pylori adhesion and Lewis x
-  production in bacteria.
+  secreted human FUCA2 from H. pylori/Capan-1 coculture medium by
+  fucosidase-inhibitor affinity chromatography and LC-MS/MS, measured secreted
+  alpha-L-fucosidase activity, showed the same secretion in multiple gastric
+  cell lines, and showed by Capan-1 FUCA2 knockdown or fucosidase inhibition
+  that the enzyme promotes H. pylori adhesion and Lewis x production in
+  bacteria.
 - The H. pylori phenotypes are real but narrow: they justify a non-core
   `response to bacterium` row, while `regulation of entry of bacterium into host
   cell` overstates a system measuring extracellular H. pylori adhesion and CagA
