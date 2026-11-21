@@ -48,6 +48,29 @@ high quality annotations.
   new batch. File allocation and APFS physical free-space changes are different
   measurements; do not claim one proves the other.
 
+## Parallel PRs: avoid shared files
+
+Content PRs should touch only their owned slice: the gene folders, history
+records, publications, modules, GO-CAM reviews, rules, or family reviews that the
+PR is explicitly delivering. Branch each content PR from current `main`; do not
+stack it on another unmerged content branch.
+
+- Update top-level `projects/*.md` status pages in a separate status PR after
+  the content they summarize has merged. Until then, record progress in gene
+  notes, module notes, or append-only history records.
+- Do not commit rendered `pages/**` HTML from content PRs. The
+  `generate-pages` workflow renders `pages/` from `main` with `just render-all`
+  and `just render-projects`, then publishes those outputs.
+- Regenerate single-file shared caches, including committed `cache/**/terms.csv`
+  files and `interpro/panther/panther.obo`, in dedicated refresh PRs. If a merge
+  leaves a cache unsorted or duplicated, run the repair command such as
+  `just fix-caches` before staging the cache.
+- If you edit a local file other records may quote, such as a gene review, a
+  family review under `interpro/panther/`, or a bioinformatics `RESULTS.md`,
+  run `just validate-quotes` and fix any incoming `supporting_text` quotes in
+  the same PR. Prefer a primary publication, PAINT node, or stable database
+  record over quoting mutable review prose when it supports the same claim.
+
 ## Repository layout
 
 src/

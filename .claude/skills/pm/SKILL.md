@@ -22,7 +22,12 @@ least this provider(s), otherwise default to falcon.
 
 E.g. `just deep-research-falcon ORGANISM GENE_SYMBOL`
 
-You can edit the project doc, but try and make this incremental. After the main description have something like:
+You can edit sub-pages under `projects/PROJECT_NAME/` for analysis notes, but
+do not tick checkboxes or otherwise update the top-level `projects/PROJECT_NAME.md`
+status page as genes finish inside a content PR. Record in-progress status in
+gene notes and append-only history instead; update the top-level project page in
+a separate status PR once the corresponding content has merged. After the main
+description have something like:
 
 ---
 # STATUS
@@ -53,7 +58,7 @@ The general procedure is:
 3. commit genes related to project, plus all references
 4. `gh pr create`
 
-if the user asks, build the static site and stats (`just stats`, `just
-update-browser-data`). Note it can be hard to disentangle derived
-files, but you should be OK if there are no other local updates
-besides the one for this project.
+Do not commit rendered `pages/**` HTML in the content PR. The Pages workflow
+will render project pages from `main` after the PR lands. If the user asks,
+build the static site and stats (`just stats`, `just update-browser-data`), but
+stage only the source files owned by this project.
