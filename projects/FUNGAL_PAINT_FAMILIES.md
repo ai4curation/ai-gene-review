@@ -520,9 +520,35 @@ HMGCS2 clade, and places the fungal ergosterol-biosynthesis assertion on
 
 ---
 
+## Family 23: L-2-Aminoadipate Reductases
+
+`PTHR44845` contains the fungal `LYS2`/`lys1` L-2-aminoadipate reductase
+branch, plus more distant adenylation-PCP-reductase relatives. PAINT places the
+conserved L-aminoadipate-semialdehyde dehydrogenase activity and
+L-lysine-biosynthesis assertion on the fungal `PANTHER:PTN001186117` node for
+the `LYS2`/`lys1` branch.
+
+- [x] `yeast/LYS2` - *S. cerevisiae* L-2-aminoadipate reductase; existing
+  anchor aligned before this tranche
+- [x] `SCHPO/lys1` - fission-yeast L-2-aminoadipate reductase; existing anchor
+  aligned before this tranche
+- [x] `CANAL/LYS2` - CGD *Candida albicans* seed for the `PTN001186117`
+  activity and lysine-biosynthesis IBAs; merged in PR #6566
+- [x] `CANGA/LYS2` - CGD *Candida glabrata* ortholog with ISS/IEA support but
+  no current GO-Central IBA; merged in PR #6566
+
+---
+
 # NOTES
 
 ## 2026-11-21
+
+- Added the compact `PTHR44845` LYS2/Lys1 reductase family after reviewing
+  `CANAL/LYS2` and `CANGA/LYS2` against the existing *S. cerevisiae* and
+  *S. pombe* anchors. The fungal `PTN001186117` node cleanly carries the
+  conserved L-2-aminoadipate reductase activity and lysine-biosynthesis process
+  for *Candida albicans* `LYS2`, while *Candida glabrata* retains equivalent
+  ISS/IEA annotations without a current GO-Central IBA.
 
 - Closed the `PTHR43323` HMG-CoA synthase family by aligning the older
   `yeast/ERG13` and `SCHPO/hcs1` reviews with the completed Candida and
