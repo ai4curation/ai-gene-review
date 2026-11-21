@@ -135,8 +135,11 @@ MAPK placement `PANTHER:PTN001172087`.
   filamentous-growth and cell-wall evidence; revalidated in this branch
 - [x] `ASPFU/sakA` - *Aspergillus fumigatus* SakA/Hog1 stress MAPK;
   drafted in PR #5883
-- [ ] `ASPFU/mpkC` - *Aspergillus fumigatus* HOG1-subfamily MpkC MAPK;
+- [ ] `ASPFU/mpkC` - *Aspergillus fumigatus* HOG1-subfamily MAPK;
   drafted in this branch
+- [ ] `EMENI/mpkC` - *Aspergillus nidulans* SakA/HogA-like stress MAPK with
+  PbsB-dependent nuclear accumulation during development and osmotic or
+  oxidative stress; drafted in this branch
 
 ## Family 5: Fungal Glucanases
 
