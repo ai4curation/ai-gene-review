@@ -68,8 +68,8 @@ PantherDB inventory gives usable subfamily assignments.
   - Module/GO-CAM split: no module or GO-CAM change was needed for PRPS; the
     core family work was self-contained in gene and PANTHER reviews.
 
-- [ ] **PTHR10030, alpha-L-fucosidase family**
-  - STATUS: in progress on FUCA2.
+- [x] **PTHR10030, alpha-L-fucosidase family**
+  - STATUS: merged in PR #6567.
   - Seed: `FUCA2` / UniProtKB:Q9BTY2, reviewed Swiss-Prot, unreviewed locally,
     with 35 GOA rows and a compact PANTHER family containing one reviewed human
     paralog.
@@ -81,14 +81,30 @@ PantherDB inventory gives usable subfamily assignments.
     three sound root IBD gains for alpha-L-fucosidase activity, fucose
     metabolism and glycoside catabolism, plus the contradicted off-human
     Drosophila IRD.
-  - Module/GO-CAM split: no new ModuleReview or GO-CAM review is needed. The
+  - Module/GO-CAM split: no new ModuleReview or GO-CAM review was needed. The
     existing lysosomal glycoprotein-degradation module intentionally selects the
     FUCA1 subfamily, the mammalian L-fucose-degradation module explicitly
     excludes upstream free-fucose release by FUCA1/FUCA2, and `gocams/index.tsv`
     has no FUCA2 production model.
 
+- [ ] **PTHR12604, Ku autoantigen DNA helicase family**
+  - STATUS: in progress on XRCC5/XRCC6.
+  - Seed: `XRCC5` / UniProtKB:P13010, reviewed Swiss-Prot, unreviewed locally,
+    with 166 GOA rows in a compact two-member human PANTHER family.
+  - Human family members in this checkout:
+    - [x] `XRCC5` / UniProtKB:P13010: new DRAFT review.
+    - [x] `XRCC6` / UniProtKB:P12956: new DRAFT review.
+  - PANTHER: `interpro/panther/PTHR12604/PTHR12604-review.yaml` records five
+    sound root IBD gains for the Ku70:Ku80 complex, double-stranded DNA binding,
+    telomeric DNA binding, telomere maintenance and NHEJ, plus five contradictory
+    Drosophila IRDs with `REMOVE_LOSS` actions.
+  - Module/GO-CAM split: no new ModuleReview or GO-CAM review is needed. The
+    existing `modules/nonhomologous_end_joining.yaml` review already models
+    Ku70/Ku80 DNA-end binding as the first c-NHEJ step, and no human production
+    GO-CAM in `gocams/index.tsv` covers the core Ku/DNA-PK/XRCC4-LIG4 machinery.
+
 - [ ] Next human Swiss-Prot seed family
-  - STATUS: queued after the PTHR10030 branch validates and is ready for PR.
+  - STATUS: queued after the PTHR12604 branch validates and is ready for PR.
   - NOTES: pick another small, biologically characterized, cached PANTHER family
     from the missing-accession table while this family PR waits for review.
 
