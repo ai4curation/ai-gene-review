@@ -420,6 +420,15 @@ longer name SIRT2. The cell differentiation row, which had cited the paper for
 a role in muscle, now cites the Sirt2 knockout study. Two papers were added to
 `publications/` (PMID:35636510, PMID:41904135).
 
+**Update, 14 November 2026.** With the
+[mouse and rat pass](../MOUSE_GENES_RE_REVIEW/REMOVE_RE_REVIEW.md), three
+loose ends from the review of this follow-up were tied up. The cell
+differentiation row is `MODIFY` to negative regulation of fat cell
+differentiation, because its reason called the term very broad while keeping
+it. The quote about p300 on the protein binding row, which did not bear on
+that row, was dropped. The three transfers of the muscle term on mouse Sirt2
+are `UNDECIDED`, like their source row.
+
 ## Follow-ups
 
 - **UNDECIDED rows need full text.** Nineteen of the 34 rows moved to
@@ -440,5 +449,16 @@ a role in muscle, now cites the Sirt2 knockout study. Two papers were added to
   that row gives NAD binding and NADP binding from the same signature; NAD is
   right and NADP is wrong. A rule in `rules/curated/` would correct it for
   every member of the signature, not only human GAPDH.
-- **Other organisms.** The same patterns are likely in the mouse and model
-  organism reviews, which were not touched.
+- **Other organisms.** The mouse and rat reviews had the same pass on 14
+  November 2026: 108 of 469 substantive REMOVE rows changed. See
+  [Re-review of REMOVE actions in mouse and rat](../MOUSE_GENES_RE_REVIEW/REMOVE_RE_REVIEW.md).
+  The other model organism reviews were not touched.
+- **Human rows put in question by the mouse and rat pass.** In eleven places a
+  mouse or rat review and the human review treat the same claim differently,
+  often because the mouse or rat review holds an argument from the full text
+  of the donor paper (PAX6, GRIA1, SLC16A1, TARDBP, ITPR1, VEGFA, SOX2, TP53,
+  SERPINH1, NOTCH1, PTK7). They are listed with the argument under `followups`
+  in the mouse and rat
+  [row-level record](../MOUSE_GENES_RE_REVIEW/remove_rereview_changes.yaml).
+  The same record lists three genes (DNMT3L, ARSB, SLC10A1) whose human rows
+  are transfers of mouse or rat source rows that the pass changed.
