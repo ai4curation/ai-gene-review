@@ -60,9 +60,12 @@ import yaml
 from yaml import CSafeLoader as _Loader  # libyaml; ~10x faster over the gene corpus
 
 # Node verdicts that say the named subfamilies should NOT carry the term: a gain placed
-# too deep or needing pruning, or a loss (IRD/IKR) judged correct. LOSS_CONTRADICTED and
-# LOSS_TOO_BROAD are deliberately absent: they say members below the loss keep the term.
-PRUNING_VERDICTS = frozenset({"NEEDS_PRUNING", "TOO_DEEP", "WRONG_NODE", "LOSS_SUPPORTED"})
+# too deep, misplaced, needing pruning, or superseded at the same node by a correct term, or
+# a loss (IRD/IKR) judged correct. LOSS_CONTRADICTED and LOSS_TOO_BROAD are deliberately
+# absent: they say members below the loss keep the term.
+PRUNING_VERDICTS = frozenset(
+    {"NEEDS_PRUNING", "TOO_DEEP", "WRONG_NODE", "TERM_SUPERSEDED", "LOSS_SUPPORTED"}
+)
 
 PANTHER_SF_RE = re.compile(r"DR   PANTHER; (PTHR\d+:SF\d+);")
 PANTHER_FAM_RE = re.compile(r"DR   PANTHER; (PTHR\d+);")
