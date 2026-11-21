@@ -59,7 +59,7 @@ anchor, `BRUMA/dpy-31`, is in the same PANTHER subfamily as *C. elegans*
 - [x] `BRUMA` `bma-dpy-18.2` / A0A1P6BZ71 - fetched and reviewed the Bma-PHY-1 prolyl 4-hydroxylase alpha subunit
 - [x] `worm` `dpy-18` / Q10576 - fetched and reviewed the C. elegans prolyl 4-hydroxylase alpha-1 ortholog
 - [x] `worm` `phy-2` / Q20065 - fetched and reviewed the C. elegans prolyl 4-hydroxylase alpha-2 paralog
-- [ ] `worm` `pdi-2` / Q17770 - fetch and review the PDI/prolyl 4-hydroxylase beta subunit
+- [x] `worm` `pdi-2` / Q17770 - fetched and reviewed the PDI/prolyl 4-hydroxylase beta subunit
 - [ ] `worm` `bli-4` / P51559 - fetch and review the subtilisin-like convertase
 
 Secondary cuticle candidates to resolve before fetching: ONCVO Q2YFS7 and
@@ -137,6 +137,8 @@ the extracellular oxidant-detoxification boundary is clear.
   4-hydroxylase alpha-1 subunit
 - [x] Fetch and review the `worm` `phy-2` Q20065 prolyl
   4-hydroxylase alpha-2 subunit
+- [x] Fetch and review the `worm` `pdi-2` Q17770 PDI/prolyl
+  4-hydroxylase beta subunit
 - [x] Move anthelmintic drug target systems ahead of the FAR,
   immune-modulator, and antioxidant lanes for the next module after cuticle
   collagen maturation
@@ -241,6 +243,15 @@ the extracellular oxidant-detoxification boundary is clear.
   oxygenase activities to the collagen P4H reaction, and adds a conservative
   direct cuticle-development row without copying the downstream
   dpy-18-specific phenotype annotations onto buffered phy-2.
+- Added `genes/worm/pdi-2` for Q17770, the C. elegans PDI-2
+  protein-disulfide-isomerase and procollagen-proline 4-dioxygenase beta
+  subunit. The review accepts the ER-lumen PDI/P4H-beta role, adds direct
+  collagenous-cuticle development from the pdi-2 RNAi phenotype and the
+  PHY-1/PHY-2/PDI-2 complex literature, keeps the broad ER-stress response row
+  as non-core, marks the tunicamycin high-throughput expression row for
+  IRE1-mediated unfolded protein response as over-annotated, and leaves the
+  transglutaminase-like activity rows undecided pending full text of the
+  abstract-only PDI-3 paper.
 - Ros-orchestrate reprioritized anthelmintic drug target systems as the next
   module lane after cuticle collagen maturation. Keep the mechanism split:
   scope levamisole-sensitive nicotinic acetylcholine receptors,
