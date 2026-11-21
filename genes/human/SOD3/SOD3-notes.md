@@ -41,8 +41,10 @@ following LPS stimulation"].
 
 ## Annotation decisions
 
-- `GO:0004784` superoxide dismutase activity, `GO:0019430` removal of
-  superoxide radicals, and extracellular-region rows are accepted as core.
+- `GO:0004784` superoxide dismutase activity and `GO:0019430` removal of
+  superoxide radicals are accepted as core. The seeded extracellular-region rows
+  are refined to extracellular matrix or extracellular space, depending on the
+  specific evidence.
 - `GO:0005507` copper ion binding is accepted. Add `zinc ion binding`, because
   human SOD3 is a Cu/Zn enzyme and its crystal structure resolved the SOD1-like
   metal-binding sites [PMID:19289127].
@@ -52,9 +54,9 @@ following LPS stimulation"].
   extracellular SOD3 preserves NO bioavailability by removing superoxide, which
   prevents superoxide from inactivating NO, but SOD3 does not metabolize nitric
   oxide.
-- The `GO:0005737` cytoplasm ARBA call is removed. SOD3 has a signal peptide and
-  functions in the secretory pathway, extracellular region, and macrophage
-  storage vesicles, not as a soluble cytosolic enzyme.
+- The `GO:0005737` cytoplasm ARBA call is over-annotated. SOD3 has a signal
+  peptide and functions in the secretory pathway, extracellular region, and
+  macrophage storage vesicles, not as a soluble cytosolic enzyme.
 - Golgi and vesicle rows are kept non-core. They are biologically plausible
   maturation, trafficking, or storage compartments, but the enzyme's direct
   catalysis occurs extracellularly.

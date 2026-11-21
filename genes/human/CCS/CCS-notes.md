@@ -38,13 +38,13 @@ import that also depends on CCS1"].
   activity as copper transfer to a zinc-bound SOD1 monomer followed by SOD1
   disulfide formation and dimerization.
 - `GO:0005507` copper ion binding is accepted: CCS needs bound copper for its
-  delivery reaction, and human CCS also binds zinc in its SOD1-like domain III
-  [PMID:30735496 "the Animalia kingdom that bind zinc, have an internal
-  disulphide bond and relatively high dimer affinity"].
+  delivery reaction, and UniProt records zinc-liganding residues 147, 155, 164
+  and 167 in human CCS domain II.
 - The `GO:0015035` protein-disulfide reductase activity row from
-  PMID:24026195 should not be accepted. The paper's abstract supports
-  oxidation-dependent CCS import and disulfide formation during CCS/SOD1
-  maturation, not a standalone reductase activity of CCS.
+  PMID:24026195 should be corrected to `GO:0015036` disulfide oxidoreductase
+  activity. The paper supports oxidation-dependent CCS import and disulfide
+  formation during CCS/SOD1 maturation, not the reductase direction named by
+  `GO:0015035`.
 - The InterPro2GO `GO:0006801` superoxide metabolic process and the family-level
   `GO:0019430` removal of superoxide radicals rows describe the activity of
   mature SOD1-type enzymes. CCS indirectly supports those processes by maturing
