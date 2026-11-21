@@ -34,10 +34,10 @@ of the bridge**:
 
 ## What the decision rules produced
 
-54 annotations → ACCEPT 29, KEEP_AS_NON_CORE 17, MODIFY 2, REMOVE 2,
-MARK_AS_OVER_ANNOTATED 4.
+54 annotations → ACCEPT 29, KEEP_AS_NON_CORE 17, MODIFY 3, REMOVE 2,
+MARK_AS_OVER_ANNOTATED 2, TOO_GENERAL 1.
 
-This example adds two patterns the earlier three did not foreground:
+This example adds three patterns the earlier three did not foreground:
 
 1. **A mis-typed *structural* MF corrected to the adaptor term.** `GO:0005200`
    structural constituent of cytoskeleton (a 1997 TAS from the cloning paper) was
@@ -55,7 +55,18 @@ This example adds two patterns the earlier three did not foreground:
    vague Drosophila-era legacy), while `GO:0008298` intracellular mRNA
    localisation — a genuinely conserved BicD dynein-cargo function — was kept
    `KEEP_AS_NON_CORE`. Distinguishing "wrong" from "real but peripheral" within
-   one old reference is the work here.
+   one old reference is the work here. (Two other peripheral rows that *do* have
+   cached experimental support — `GO:0034063` stress granule assembly, PMID:19825938,
+   and `GO:0031871` PAR1 binding, PMID:20164183 — are kept `KEEP_AS_NON_CORE` with
+   quotes, not dismissed: an ISS/propagated row can still rest on real literature.)
+
+3. **General location terms refined or demoted, per the `MODIFY` vs `TOO_GENERAL`
+   rule.** `GO:0016020` membrane carries its own IDA evidence that BICD1 is on
+   *Golgi* membranes (PMID:12447383), so it is `MODIFY`'d to `GO:0000139` Golgi
+   membrane; `GO:0005856` cytoskeleton has no such specific evidence of its own but
+   is entailed by the asserted `GO:0005881` cytoplasmic microtubule, so it is
+   `TOO_GENERAL`. The two are not interchangeable — the deciding factor is whether
+   the row's own evidence reaches the specific term.
 
 The two `protein binding` rows split as before: GSK3B (a kinase) → `MODIFY` to
 `GO:0019901` protein kinase binding; a viral interactor and a STAT3 interactome
