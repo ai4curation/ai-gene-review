@@ -14,25 +14,25 @@ The other subfamily-specific PAINT rows on reviewed human paralogs are separated
 
 ### PMID:14986113
 
-Ren et al. tested human GATA5 in COS-7 and 293T cells and found that GATA5 increased endogenous MUC2, MUC3, MUC4 and PGA transcripts and activated MUC2, MUC4 and PGA promoter reporters. Deleting the GATA5 zinc-finger domain, or the zinc-finger plus adjacent basic domain, strongly reduced reporter activation. This supports DNA-binding Pol II transcription-factor activity and positive regulation of Pol II transcription for human GATA5.
+Ren et al. tested human GATA5 in COS-7 and 293T cells and found that GATA5 increased endogenous MUC2, MUC3, MUC4 and PGA transcripts and activated MUC2, MUC4 and PGA promoter reporters [PMID:14986113 "GATA-5 was found to activate the promoters of the human MUC2 and MUC4 genes"]. Deleting the GATA5 zinc-finger domain, or the zinc-finger plus adjacent basic domain, strongly reduced reporter activation [PMID:14986113 "GATA-5 lacking the zinc finger domain impaired these functions"]. This supports DNA-binding Pol II transcription-factor activity and positive regulation of Pol II transcription for human GATA5.
 
 ### PMID:9566909
 
-Gao et al. tested Xenopus GATA-4/5/6 on the Xenopus IFABP promoter and found that the factors activated a defined proximal IFABP promoter element. The same study mapped chick GATA4/5/6 expression along the villus axis and reported that human HT-29 cells induce hGATA5 transcript early after sodium butyrate-induced differentiation, before intestinal alkaline phosphatase rises. This supports a conserved intestinal epithelial differentiation role, but the human part is expression timing, not a human GATA5 promoter perturbation.
+Gao et al. tested Xenopus GATA-4/5/6 on the Xenopus IFABP promoter and found that the factors activated a defined proximal IFABP promoter element [PMID:9566909 "Transactivation by xGATA-4, -5, and -6 is mediated at least in part by a defined proximal IFABP promoter element"]. The same study mapped chick GATA4/5/6 expression along the villus axis and reported that human HT-29 cells induce hGATA5 transcript early after sodium butyrate-induced differentiation [PMID:9566909 "Upon stimulation to differentiate, the transcript levels for hGATA-5 increase"], before intestinal alkaline phosphatase rises. This supports a conserved intestinal epithelial differentiation role, but the human part is expression timing, not a human GATA5 promoter perturbation.
 
 ### PMID:22641149 and PMID:24638895
 
-Padang et al. is abstract-only locally. It reports rare nonsynonymous GATA5 variants in bicuspid aortic valve patients and identifies several variants in conserved activation-domain residues. The cached abstract does not describe a direct functional assay, so it is supportive genetic context rather than a mechanistic aortic-valve experiment.
+Padang et al. is abstract-only locally. It reports rare nonsynonymous GATA5 variants in bicuspid aortic valve patients and identifies several variants in conserved activation-domain residues [PMID:22641149 "Genetic analysis identified the presence of 4 rare non-synonymous variations within the GATA5 transcriptional activation domains"]. The cached abstract does not describe a direct functional assay, so it is supportive genetic context rather than a mechanistic aortic-valve experiment.
 
-Shi et al. is also abstract-only locally, but its abstract reports two heterozygous familial BAV mutations absent from control chromosomes and luciferase assays in which both GATA5 mutants had significantly reduced transcriptional activity. This supports a human loss-of-function valve-development context.
+Shi et al. is also abstract-only locally, but its abstract reports two heterozygous familial BAV mutations absent from control chromosomes and luciferase assays in which both GATA5 mutants had significantly reduced transcriptional activity [PMID:24638895 "Functional assays revealed that the two GATA5 mutants were associated with significantly reduced transcriptional activity"]. This supports a human loss-of-function valve-development context.
 
 ### PMID:28473536
 
-Yin et al. assayed human transcription factor DNA-binding specificities by HT-SELEX and methyl-SELEX at scale. This supports sequence-specific double-stranded DNA binding by assayed human GATA5, but not endogenous chromatin occupancy or a specific process.
+Yin et al. assayed human transcription factor DNA-binding specificities by HT-SELEX and methyl-SELEX at scale [PMID:28473536 "To globally characterize the effect of cytosine methylation on TF binding, we performed a HT-SELEX"]. This supports sequence-specific double-stranded DNA binding by assayed human GATA5, but not endogenous chromatin occupancy or a specific process.
 
 ### PMID:32296183
 
-Luck et al. generated the HuRI high-throughput binary protein-interaction map using repeated yeast two-hybrid screens and validation. The seven GATA5 IPI rows from this paper are retained as positive contact evidence but removed from GO because they assert only bare `GO:0005515` protein binding.
+Luck et al. generated the HuRI high-throughput binary protein-interaction map using repeated yeast two-hybrid screens and validation [PMID:32296183 "we performed nine screens of Space III, followed by pairwise verification by quadruplicate retesting and sequence confirmation"]. The seven GATA5 IPI rows from this paper are retained as positive contact evidence but removed from GO because they assert only bare `GO:0005515` protein binding.
 
 ### Reactome:R-HSA-996755
 
