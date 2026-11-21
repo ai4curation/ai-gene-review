@@ -8142,3 +8142,19 @@ The source-bound audit verified 115 quotations against 37 pinned inputs (the rev
 Only ACTC1 is newly checked. All 235 dated queue records, 183 prior completion updates, earlier journal bytes, original snapshot metadata and unrelated project frontmatter are preserved. Local acceptance receipt `ACTC1-root-delivery-acceptance-v1.json` (SHA256 `384d54721ddebacc33a561f9a0d44fd65b8b05637e51bc4769a7760a5a11083f`) identifies retained provenance; it is not a public download link.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-19T055618Z-codex-763ec1.yaml).
+
+## Completion checkpoint 765 (2026-11-21 23:52:05 UTC)
+
+765 complete; 2,111 of 2,876 remain. This publishes ROOT's prior acceptance of human ACTG1 (HGNC:144; P63261), with zero new acceptance credit.
+
+[PR #6544](https://github.com/ai4curation/ai-gene-review/pull/6544) merged as [86e952f8](https://github.com/ai4curation/ai-gene-review/commit/86e952f8dc15cf920d1d9731fd61487727b9ad7b); [merge-group run 44668894648](https://github.com/ai4curation/ai-gene-review/actions/runs/44668894648) passed. Approval of exact head e55d8d28, all 85 reviewed files, the 20-path actual change set, 65 identical inherited paths and fresh-main ancestry were verified.
+
+All 136 native GOA contexts retain their identities: 65 ACCEPT, 51 KEEP_AS_NON_CORE, 13 UNDECIDED, 6 TOO_GENERAL and 1 MARK_AS_OVER_ANNOTATED. No NEW, REMOVE or MODIFY actions were introduced. DRAFT status and unavailable original assay assignments remain explicit. Completion means delivery of a reviewed locus with documented limitations, not resolution of every uncertainty.
+
+Two core functions describe the structural actin cytoskeleton and intrinsic ATP hydrolysis. Supported generic binding remains non-core. Five duplicate binding claims use independent positive evidence without claiming access to the original supplements; HTT support is restricted to an N-terminal two-hybrid fragment. Similarity-based UniProt catalytic support is not an independent human experiment. No source defects or upstream reports were asserted.
+
+The source-bound audit verified 13 exact quote occurrences across 8 sources, with zero unchecked or baselined quotes; all 78 local reference inputs are pinned and match the actual merge. Integration executed ACTG1 validation (37 expected generic-binding warnings), all-gene schemas, history, modules and family checks. The main suite passed 6,942 tests with 203 deselected; 487 doctests passed and 37 were skipped. Default repository quote checking excludes ordinary gene reviews and retained 408 unreadable-source cases. Other unresolved corpus checks are recorded in the integration receipts, not treated as resolved by this delivery.
+
+Only ACTG1 is newly checked. All 235 dated queue records, 184 prior completion updates, earlier journal bytes and original snapshot metadata are preserved. Local acceptance receipt `ACTG1-root-delivery-acceptance-v1.json` (SHA256 `3f628e6dbf3e1bcd779fc621942e16c1b4adf4051bef68c17b60a73aa6952c7b`) identifies retained provenance; it is not a public download link.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-21T235117Z-codex-ae3a5c.yaml).
