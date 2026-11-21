@@ -20,3 +20,8 @@
 
 ## Expression / phenotype
 - Induced by low sterol and by cold; deletion/disruption gives cold and freeze sensitivity [UniProt:P41338 "Leads to cold and freeze sensitivity."].
+
+## Genome-scale metabolic models (2026-11-21)
+- iMM904 constrains both Erg10 reactions to the condensation direction (ACACT1r, ACACT1m; lower bound 0). yeast-GEM 9.1.1 keeps them reversible (r_0103, r_0104) [file:gocams/YeastPathways_PWY-5177/YeastPathways_PWY-5177-bioinformatics/gem_reactions.md].
+- Both models also place an Erg10 reaction in the mitochondrion. The reviewed evidence is cytosolic [PMID:7989303 "was demonstrated to encode cytoplasmic aceto-acetyl-CoA thiolase"]. The same paper found no other acetoacetyl-CoA thiolase activity [PMID:7989303 "null alleles of ERG10 produced no detectable acetoacetyl-CoA thiolase enzyme activity"], so a mitochondrial activity, if real, would also be Erg10. Whole-cell extracts cannot resolve location: the mitochondrial reaction is unsupported, not refuted.
+- The current UniProt record carries an IBA mitochondrion line (DR GO:0005739) that is not in this gene's GOA snapshot; worth checking at the next fetch-gene.
