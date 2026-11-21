@@ -99,6 +99,29 @@
         }
         [hidden] { display: none !important; }
 
+        .hierarchy-controls { display: flex; gap: 5px; margin: 8px 0; }
+        .hierarchy-controls button, .hierarchy-expand {
+            border: 1px solid #d1d5db; border-radius: 4px;
+            background: white; color: #374151; cursor: pointer; padding: 4px 7px;
+        }
+        .hierarchy-controls button[aria-pressed="true"] {
+            background: #ecfdf5; border-color: #059669; color: #065f46;
+        }
+        .hierarchy-search { width: 100%; padding: 7px; border: 1px solid #d1d5db; border-radius: 4px; }
+        .hierarchy-help { font-size: 12px; color: #6b7280; margin: 6px 0; line-height: 1.4; }
+        .hierarchy-body { max-height: 420px; overflow: auto; }
+        .hierarchy-list { list-style: none; padding-left: 12px; }
+        .hierarchy-body > .hierarchy-list { padding-left: 0; }
+        .hierarchy-row { display: flex; align-items: center; min-width: 0; }
+        .hierarchy-expand { flex: 0 0 24px; width: 24px; padding: 3px; }
+        .hierarchy-spacer { flex: 0 0 24px; }
+        .hierarchy-row .facet-item { flex: 1; min-width: 0; margin: 0; padding: 6px 3px; gap: 5px; }
+        .hierarchy-label { overflow-wrap: anywhere; min-width: 0; flex: 1; }
+        .hierarchy-row .facet-count { flex-shrink: 0; }
+        .hierarchy-row .facet-checkbox { flex-shrink: 0; }
+        .hierarchy-row:focus-within { outline: 2px solid #059669; outline-offset: -2px; }
+        [data-hierarchy] > .facet-content { max-height: none; overflow: visible; }
+
         .search-container {
             padding: 24px 30px;
             background: white;
@@ -856,6 +879,51 @@
                 this.facetItemsToShow = schema.facetItemsToShow || 10;
                 this.expandedFacets = new Set();
                 this.currentFacetCounts = null;
+                this.hierarchyExpanded = new Set();
+                this.hierarchyModes = new Map();
+                this.hierarchyQueries = new Map();
+                this.hierarchySources = {};
+                this.hierarchyChildren = {};
+                for (const facet of this.schema.facets.filter(f => f.type === 'hierarchy')) {
+                    // A separately refreshed data.js may contain values absent
+                    // from the generated mapping. Keep them browsable explicitly.
+                    const unmapped = facet.unmappedNode || 'unmapped';
+                    const unknown = new Set();
+                    for (const item of this.originalData) {
+                        const value = item[facet.sourceField || facet.field];
+                        if (value === undefined || value === null) continue;
+                        const source = String(value);
+                        if (!Object.hasOwn(facet.memberships, source) || !facet.memberships[source].length) unknown.add(source);
+                    }
+                    if (unknown.size) {
+                        facet.valueLabels ||= {};
+                        if (!Object.hasOwn(facet.nodes, unmapped)) facet.nodes[unmapped] = {
+                            label: facet.unmappedLabel || 'Unmapped values', parents: []
+                        };
+                        facet.valueLabels[unmapped] = facet.nodes[unmapped].label;
+                        for (const source of unknown) Object.defineProperty(facet.memberships, source, {
+                            value: [unmapped], enumerable: true, configurable: true, writable: true
+                        });
+                        console.warn(`${facet.label}: ${unknown.size} source values missing from hierarchy metadata; grouped as unmapped.`);
+                    }
+                    const sources = new Map();
+                    const children = new Map();
+                    for (const [id, node] of Object.entries(facet.nodes)) {
+                        for (const parent of node.parents.length ? node.parents : ['']) {
+                            if (!children.has(parent)) children.set(parent, []);
+                            children.get(parent).push(id);
+                        }
+                    }
+                    for (const ids of children.values()) ids.sort((a, b) => facet.nodes[a].label.localeCompare(facet.nodes[b].label));
+                    for (const [source, ids] of Object.entries(facet.memberships)) {
+                        for (const id of new Set(ids)) {
+                            if (!sources.has(id)) sources.set(id, []);
+                            sources.get(id).push(source);
+                        }
+                    }
+                    this.hierarchySources[facet.field] = sources;
+                    this.hierarchyChildren[facet.field] = children;
+                }
 
                 try {
                     console.log('📚 Building search index...');
@@ -931,7 +999,7 @@
                     console.log(`Processing facet: ${facet.field} (type: ${facet.type})`);
 
                     this.originalData.forEach((item, idx) => {
-                        const value = item[facet.field];
+                        const value = item[facet.sourceField || facet.field];
 
                         if (value === undefined || value === null) {
                             if (!this.schema.quietMissingFields) console.warn(`Missing facet field ${facet.field} in item ${idx}:`, item);
@@ -990,7 +1058,20 @@
                 });
 
                 document.addEventListener('click', (e) => {
-                    if (e.target.closest('.facet-item')) {
+                    const expand = e.target.closest('[data-hierarchy-expand]');
+                    const mode = e.target.closest('[data-hierarchy-mode]');
+                    if (expand) {
+                        const key = `${expand.dataset.field}:${expand.dataset.hierarchyExpand}`;
+                        if (this.hierarchyExpanded.has(key)) this.hierarchyExpanded.delete(key);
+                        else this.hierarchyExpanded.add(key);
+                        this.renderFacets(this.currentFacetCounts);
+                        const replacement = [...document.querySelectorAll('[data-hierarchy-expand]')]
+                            .find(button => button.dataset.field === expand.dataset.field && button.dataset.path === expand.dataset.path);
+                        if (replacement) replacement.focus();
+                    } else if (mode) {
+                        this.hierarchyModes.set(mode.dataset.field, mode.dataset.hierarchyMode);
+                        this.renderFacets(this.currentFacetCounts);
+                    } else if (e.target.closest('.facet-item')) {
                         this.handleFacetClick(e.target.closest('.facet-item'));
                     } else if (e.target.closest('.facet-header')) {
                         this.handleFacetToggle(e.target.closest('.facet-header'));
@@ -999,6 +1080,10 @@
 
                 // Add numeric input event listeners
                 document.addEventListener('input', (e) => {
+                    if (e.target.matches('.hierarchy-search')) {
+                        this.hierarchyQueries.set(e.target.dataset.field, e.target.value);
+                        this.renderFacets(this.currentFacetCounts);
+                    }
                     if (e.target.classList.contains('numeric-input')) {
                         this.handleNumericInputChange(e.target);
                     }
@@ -1103,6 +1188,17 @@
                     });
                 }
                 const view = params.get('view');
+                for (const facet of this.schema.facets.filter(f => f.type === 'hierarchy')) {
+                    const expandParents = id => {
+                        for (const parent of facet.nodes[id]?.parents || []) {
+                            const key = `${facet.field}:${parent}`;
+                            if (this.hierarchyExpanded.has(key)) continue;
+                            this.hierarchyExpanded.add(key);
+                            expandParents(parent);
+                        }
+                    };
+                    (this.currentFilters[facet.field] || []).forEach(expandParents);
+                }
                 this.currentView = ['table', 'card'].includes(view) ? view : (this.schema.defaultView || 'table');
                 document.getElementById('searchBox').value = this.currentQuery;
                 this.updateViewToggle();
@@ -1344,8 +1440,39 @@
                     resultIndices = new Set(Array.from({length: this.originalData.length}, (_, i) => i));
                 }
 
+                const queryIndices = resultIndices;
+                resultIndices = this.filterIndices(queryIndices);
+
+                // Get actual data objects
+                const filteredData = Array.from(resultIndices).map(idx => this.originalData[idx]);
+
+                // Store for pagination and reset displayed count on new search
+                this.currentFilteredData = filteredData;
+                this.displayedCount = this.itemsPerPage;
+
+                // Generate facet counts for current result set and cache them
+                this.currentFacetCounts = this.generateFacetCounts(resultIndices);
+                for (const facet of this.schema.facets.filter(f => f.type === 'hierarchy')) {
+                    this.currentFacetCounts[facet.field] = this.generateHierarchyCounts(
+                        facet, this.filterIndices(queryIndices, facet.field));
+                }
+                const facetCounts = this.currentFacetCounts;
+
+                const endTime = performance.now();
+                document.getElementById('performanceInfo').textContent =
+                    `Search: ${(endTime - startTime).toFixed(2)}ms`;
+
+                this.renderResults();
+                this.renderFacets(facetCounts);
+                if (updateUrl) this.writeUrlState();
+                this.renderNavigation();
+            }
+
+            // All selections within a hierarchy are OR; different facets are AND.
+            filterIndices(resultIndices, excludedField = null) {
                 // Apply facet filters using pre-computed index
                 for (const [filterKey, filterValues] of Object.entries(this.currentFilters)) {
+                    if (filterKey === excludedField) continue;
                     const facetConfig = this.schema.facets.find(f => f.field === filterKey);
 
                     if (facetConfig && facetConfig.type === 'integer') {
@@ -1359,7 +1486,15 @@
                             return !isNaN(value) && value >= range.min && value <= range.max;
                         }));
                     } else if (filterValues.length > 0) {
-                        if (facetConfig && facetConfig.type === 'array') {
+                        if (facetConfig && facetConfig.type === 'hierarchy') {
+                            const matches = new Set();
+                            for (const selected of filterValues) {
+                                for (const source of this.hierarchySources[filterKey].get(selected) || []) {
+                                    for (const idx of this.facetIndex[filterKey].get(source) || []) matches.add(idx);
+                                }
+                            }
+                            resultIndices = new Set([...resultIndices].filter(idx => matches.has(idx)));
+                        } else if (facetConfig && facetConfig.type === 'array') {
                             // Existing schemas require all values; a facet may opt into OR.
                             resultIndices = new Set([...resultIndices].filter(idx => {
                                 const item = this.originalData[idx];
@@ -1390,25 +1525,24 @@
                     }
                 }
 
-                // Get actual data objects
-                const filteredData = Array.from(resultIndices).map(idx => this.originalData[idx]);
+                return resultIndices;
+            }
 
-                // Store for pagination and reset displayed count on new search
-                this.currentFilteredData = filteredData;
-                this.displayedCount = this.itemsPerPage;
-
-                // Generate facet counts for current result set and cache them
-                this.currentFacetCounts = this.generateFacetCounts(resultIndices);
-                const facetCounts = this.currentFacetCounts;
-
-                const endTime = performance.now();
-                document.getElementById('performanceInfo').textContent =
-                    `Search: ${(endTime - startTime).toFixed(2)}ms`;
-
-                this.renderResults();
-                this.renderFacets(facetCounts);
-                if (updateUrl) this.writeUrlState();
-                this.renderNavigation();
+            generateHierarchyCounts(facet, indices) {
+                // Count raw terms first, then roll up unique memberships. No repeated
+                // row sets per ancestor, and a diamond never counts a row twice.
+                const rawCounts = new Map();
+                for (const idx of indices) {
+                    const value = this.originalData[idx][facet.sourceField || facet.field];
+                    rawCounts.set(String(value), (rawCounts.get(String(value)) || 0) + 1);
+                }
+                const counts = new Map();
+                for (const [source, count] of rawCounts) {
+                    for (const id of new Set(facet.memberships[source] || [])) {
+                        counts.set(id, (counts.get(id) || 0) + count);
+                    }
+                }
+                return counts;
             }
 
             loadMore() {
@@ -1421,6 +1555,7 @@
 
                 this.schema.facets.forEach(facet => {
                     counts[facet.field] = new Map();
+                    if (facet.type === 'hierarchy') return;
 
                     resultIndices.forEach(idx => {
                         const item = this.originalData[idx];
@@ -1761,11 +1896,74 @@
                 return html + this.renderLoadMore(totalCount);
             }
 
+            renderHierarchy(facet, counts) {
+                const escape = value => this.escapeHtml(String(value));
+                const field = escape(facet.field);
+                const mode = this.hierarchyModes.get(facet.field) || 'tree';
+                const query = this.hierarchyQueries.get(facet.field) || '';
+                const needle = query.trim().toLowerCase();
+                const selected = new Set(this.currentFilters[facet.field] || []);
+                const children = this.hierarchyChildren[facet.field];
+                const matches = id => !needle || `${id} ${facet.nodes[id].label}`.toLowerCase().includes(needle);
+                const subtreeCache = new Map();
+                const subtreeMatches = id => {
+                    if (!subtreeCache.has(id)) subtreeCache.set(id,
+                        matches(id) || (children.get(id) || []).some(subtreeMatches));
+                    return subtreeCache.get(id);
+                };
+                const row = (id, expandable, expanded, path) => {
+                    const node = facet.nodes[id];
+                    const label = escape(node.label);
+                    const value = escape(id);
+                    const pathKey = escape(JSON.stringify(path));
+                    const toggle = expandable && !needle
+                        ? `<button type="button" class="hierarchy-expand" data-field="${field}" data-hierarchy-expand="${value}" data-path="${pathKey}"
+                            aria-expanded="${expanded}" aria-label="${expanded ? 'Collapse' : 'Expand'} ${label}">${expanded ? '▾' : '▸'}</button>`
+                        : '<span class="hierarchy-spacer"></span>';
+                    return `<div class="hierarchy-row">${toggle}
+                        <div class="facet-item ${selected.has(id) ? 'active' : ''}" data-filter="${field}" data-value="${value}" data-path="${pathKey}" title="${value}">
+                            <input type="checkbox" class="facet-checkbox" aria-label="${escape(facet.label)}: ${label}" ${selected.has(id) ? 'checked' : ''}>
+                            <span class="hierarchy-label">${label}</span><span class="facet-count">${counts.get(id) || 0}</span>
+                        </div></div>`;
+                };
+                const branch = (id, path = new Set()) => {
+                    if (path.has(id) || !subtreeMatches(id)) return '';
+                    const next = new Set([...path, id]);
+                    const descendants = children.get(id) || [];
+                    const expanded = Boolean(needle) || this.hierarchyExpanded.has(`${facet.field}:${id}`);
+                    return `<li>${row(id, descendants.length > 0, expanded, [...next])}${expanded && descendants.length
+                        ? `<ul class="hierarchy-list">${descendants.map(child => branch(child, next)).join('')}</ul>` : ''}</li>`;
+                };
+                const body = mode === 'tree'
+                    ? (children.get('') || []).map(id => branch(id)).join('')
+                    : Object.keys(facet.nodes).filter(matches)
+                        .sort((a, b) => (counts.get(b) || 0) - (counts.get(a) || 0) || facet.nodes[a].label.localeCompare(facet.nodes[b].label))
+                        .map(id => `<li>${row(id, false, false, [id])}</li>`).join('');
+                const collapsed = this.collapsedFacets.has(facet.field);
+                return `<div class="facet-group" data-hierarchy="${field}">
+                    <div class="facet-header" data-field="${field}"><div class="facet-title">${escape(facet.label)}</div>
+                        <div class="facet-toggle ${collapsed ? 'collapsed' : ''}">▼</div></div>
+                    <div class="facet-content ${collapsed ? 'collapsed' : ''}">
+                        <div class="hierarchy-controls">${[['tree', 'Hierarchy'], ['flat', 'Most used']].map(([value, label]) =>
+                            `<button type="button" data-field="${field}" data-hierarchy-mode="${value}" aria-pressed="${mode === value}">${label}</button>`).join('')}</div>
+                        <input type="search" class="hierarchy-search" data-field="${field}" value="${escape(query)}"
+                            placeholder="Find a category…" aria-label="Search ${escape(facet.label)} categories">
+                        <p class="hierarchy-help">${escape(facet.description || 'Selecting a category includes its descendants.')} Counts reflect other active filters.</p>
+                        <div class="hierarchy-body">${body ? `<ul class="hierarchy-list">${body}</ul>` : '<p class="hierarchy-help">No matching categories</p>'}</div>
+                    </div></div>`;
+            }
+
             renderFacets(facetCounts) {
                 const sidebar = document.getElementById('facetsSidebar');
+                const focused = document.activeElement;
+                const searchField = focused && focused.matches('.hierarchy-search') ? focused.dataset.field : null;
+                const selection = searchField ? [focused.selectionStart, focused.selectionEnd] : null;
+                const focusedItem = focused?.matches('.facet-checkbox') ? focused.closest('.facet-item') : null;
+                const focusedMode = focused?.matches('[data-hierarchy-mode]') ? focused : null;
 
                 const facetsHtml = this.schema.facets.map(facetConfig => {
                     const counts = new Map(facetCounts[facetConfig.field] || []);
+                    if (facetConfig.type === 'hierarchy') return this.renderHierarchy(facetConfig, counts);
                     if (this.schema.keepFacetOptions && facetConfig.type !== 'integer') {
                         this.facetIndex[facetConfig.field].forEach((_, key) => {
                             if (!counts.has(key)) counts.set(key, 0);
@@ -1897,6 +2095,20 @@
                 }).join('');
 
                 sidebar.innerHTML = facetsHtml;
+                if (searchField) {
+                    const input = [...sidebar.querySelectorAll('.hierarchy-search')].find(el => el.dataset.field === searchField);
+                    if (input) {
+                        input.focus();
+                        input.setSelectionRange(...selection);
+                    }
+                } else if (focusedItem) {
+                    const item = [...sidebar.querySelectorAll('.facet-item')].find(el =>
+                        el.dataset.filter === focusedItem.dataset.filter && el.dataset.value === focusedItem.dataset.value && el.dataset.path === focusedItem.dataset.path);
+                    item?.querySelector('input')?.focus();
+                } else if (focusedMode) {
+                    [...sidebar.querySelectorAll('[data-hierarchy-mode]')].find(el =>
+                        el.dataset.field === focusedMode.dataset.field && el.dataset.hierarchyMode === focusedMode.dataset.hierarchyMode)?.focus();
+                }
             }
         }
 
@@ -1967,6 +2179,18 @@
 
             const data = window.searchData || sampleData;
             const schema = window.searchSchema || sampleSchema;
+            // Hierarchies are optional build metadata. Other browsers keep their
+            // existing flat facets when no hierarchy payload has been supplied.
+            for (const hierarchy of schema.hierarchies?.facets || []) {
+                const existing = schema.facets.findIndex(facet => facet.field === hierarchy.field);
+                const replaced = schema.facets.findIndex(facet => facet.field === hierarchy.replaces);
+                const before = schema.facets.findIndex(facet => facet.field === hierarchy.before);
+                const config = {...hierarchy, valueLabels: Object.fromEntries(
+                    Object.entries(hierarchy.nodes).map(([id, node]) => [id, node.label]))};
+                if (existing >= 0) schema.facets.splice(existing, 1, config);
+                else if (replaced >= 0) schema.facets.splice(replaced, 1, config);
+                else schema.facets.splice(before >= 0 ? before : schema.facets.length, 0, config);
+            }
 
             // Set title and description from schema
             if (schema.title) {
@@ -2049,7 +2273,7 @@
             }
 
             // Check if facet fields exist in data
-            const missingFacetFields = schema.facets.filter(facet => !(facet.field in firstItem));
+            const missingFacetFields = schema.facets.filter(facet => !((facet.sourceField || facet.field) in firstItem));
             if (missingFacetFields.length > 0) {
                 console.warn('⚠️ Missing facet fields:', missingFacetFields.map(f => f.field));
             }
