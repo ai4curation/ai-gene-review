@@ -103,30 +103,11 @@ PantherDB inventory gives usable subfamily assignments.
     multi-protein mechanism, and `gocams/index.tsv` has no NQO1/NQO2 production
     model.
 
-- [ ] **PTHR10073, MutL/MLH/PMS mismatch repair GHKL ATPase family**
-  - STATUS: in progress on MLH1, PMS2, PMS1 and MLH3.
-  - Seed: `MLH1` / UniProtKB:P40692, reviewed Swiss-Prot, unreviewed locally,
-    with an extensive human GOA surface and a cached PANTHER family whose PAINT
-    rows exercise conserved mismatch repair, MutLalpha and PMS1/PMS2 paralog
-    differences.
-  - Human family members in this checkout:
-    - [x] `MLH1` / UniProtKB:P40692: new COMPLETE review.
-    - [x] `PMS2` / UniProtKB:P54278: new COMPLETE review.
-    - [x] `PMS1` / UniProtKB:P54277: new COMPLETE review.
-    - [x] `MLH3` / UniProtKB:Q9UHC1: new COMPLETE review.
-  - PANTHER: `interpro/panther/PTHR10073/PTHR10073-review.yaml` now adds all
-    four reviewed human MutL homologs as representatives and requests a PAINT
-    IRD at the deuterostome PMS1 branch to stop the MLH1-PMS2 MutLalpha
-    endonuclease activity from propagating to PMS1.
-  - Module/GO-CAM split: the existing `modules/eukaryotic_mismatch_repair.yaml`
-    module already covers the human MutLalpha repair step and now links its
-    PMS1/MLH boundary notes back to the new gene reviews. No production GO-CAM
-    contains these PTHR10073 gene products.
-
 - [ ] Next human Swiss-Prot seed family
-  - STATUS: queued after the PTHR10073 branch validates and is ready for PR.
-  - NOTES: pick another small, biologically characterized, cached PANTHER family
-    from the missing-accession table while this family PR waits for review.
+  - STATUS: queued after PR #6570 is mergeable again.
+  - NOTES: keep selecting small, biologically characterized, cached PANTHER
+    families from the missing-accession table while the NQO branch waits for
+    review.
 
 # NOTES
 
