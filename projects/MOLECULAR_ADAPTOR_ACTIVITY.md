@@ -180,14 +180,14 @@ gene may be in more than one branch, so the counts sum above 666:
 | `scaffold` | 45 | `GO:0140693` molecular condensate scaffold activity (in-branch; see [CONDENSATES](CONDENSATES.md)) |
 | `tether_anchor` | 17 | organelle membrane tether / anchor / docking and chromatin-loop anchoring activities |
 
-178 of the 666 already have a `genes/human/<symbol>/` folder in the repo
+180 of the 666 already have a `genes/human/<symbol>/` folder in the repo
 (flagged `existing_folder: true` in the sidecar) — these are the natural
 starting points, though a folder does not mean the adaptor row was reviewed.
-Three genes in this worklist carry a COMPLETE review (flagged `reviewed: true`):
-GRB2 (reviewed independently, before this project), and LDLRAP1 and RPTOR
-(reviewed here). The `reviewed` flag — not `existing_folder` — is the filter for
-picking un-reviewed genes; its semantics are defined in the sidecar's `source`
-block.
+Five genes in this worklist carry a COMPLETE review (flagged `reviewed: true`):
+GRB2 (reviewed independently, before this project), and LDLRAP1, RPTOR, BICD1 and
+DCAF12 (reviewed here). The `reviewed` flag — not `existing_folder` — is the
+filter for picking un-reviewed genes; its semantics are defined in the sidecar's
+`source` block.
 
 **Proposed phase-1 cut:** the `core_adaptor` branch (516 genes). The `reader`
 branch is large and mechanistically distinct (recognising a modified residue to
@@ -251,8 +251,16 @@ is a candidate for its own phase. Because the branches cut across the ontology
   (mTORC1 substrate-presenting subunit; 170-annotation review now COMPLETE;
   61 `protein binding` rows split by partner into the MTOR kinase vs. TOS-motif
   substrates — the `provides input for` / enzyme-substrate case).
-- [ ] Add worked examples for the remaining common children (cytoskeletal,
-  ubiquitin-like ligase-substrate).
+- [x] Cytoskeletal adaptor child, new review:
+  [BICD1 / Bicaudal D1](MOLECULAR_ADAPTOR_ACTIVITY/worked-example-BICD1.md)
+  (dynein–dynactin / Rab6 cargo adaptor; 54-annotation review now COMPLETE;
+  a legacy `structural constituent of cytoskeleton` MF corrected to the adaptor
+  term, plus old cross-species process terms triaged).
+- [x] Ubiquitin-like ligase-substrate adaptor child, new review:
+  [DCAF12](MOLECULAR_ADAPTOR_ACTIVITY/worked-example-DCAF12.md)
+  (CRL4 substrate receptor; 29-annotation review now COMPLETE; `protein binding`
+  rows are all the DDB1 docking contact → REMOVE, with `in_complex` not
+  `has input` the modelling of a ligase-subunit adaptor).
 - [ ] Decide handling of the propagated bulk (IBA vs TreeGrafter/ARBA) for
   adaptor terms; cross-reference [IBA_REVIEW](IBA_REVIEW.md).
 - [ ] Set `index_group:` in the frontmatter when the project leaves SCOPING, so it
