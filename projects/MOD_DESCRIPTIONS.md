@@ -316,6 +316,14 @@ have a WormBase-written description.
   - a fission-yeast septum term for npp-20.
 
   No review needed an edit.
+- **Decision (2026-11-16): score only genes with a curated MOD text.** Scoring
+  sidecars whose only texts are the Alliance automated one and its RefSeq copy is not
+  worth the effort. Those texts are generated from the GO annotations under review, so
+  scoring them repeats the annotation review. They are also never written as
+  deep-research files. The nine automated-only sidecars in this round (abhd-11.1, for
+  example) produced no review edits; the curated ones (cki-1, for example) are where the
+  findings come from. From now on, an automated-only sidecar is fetched for the
+  comparison table and left unscored. Existing scores are kept.
 - **Choosing new genes.** Candidates were genes that the WormBase texts of reviewed
   genes name but that have no review of their own. They were ranked by how many texts
   name them ([worm_candidates.py](MOD_DESCRIPTIONS/worm_candidates.py)). For example, mes-1 is named in the texts for gpr-1, gpr-2, meg-1 and meg-2,
@@ -394,6 +402,24 @@ disagree about. The 41 findings (17 gaps, 15 discrepancies, 9 insights) are in
   differentiation (GO:0042490) is a direct child of neuron differentiation, which the gene
   already carries. It became a MODIFY of the two IMP rows whose papers are about touch
   receptors, and the family-level IBA and IEA rows stay `ACCEPT`.
+- **Module links (2026-11-18).** Each of the nine genes now appears in a module:
+  - yap-1 and egl-44 as the YAP/TAZ and TEAD representatives in `hippo_signaling`,
+    alongside the earlier wts-1 review in the LATS tier;
+  - cki-1 as a Cip/Kip CDK inhibitor in `g1_s_transition`. Worm CKI-1 is destroyed by
+    a CRL2 ligase rather than an SCF.
+  - lin-31 in a new optional worm-only part of `egfr_signaling`: the LIN-1/LIN-31
+    complex that MPK-1 phosphorylation disrupts;
+  - pie-1 and pos-1 in `primordial_germ_cell_specification`, as activators of
+    nos-2 translation and, for PIE-1, as the germline transcriptional silencer;
+  - mes-1 in a new module, `c_elegans_p2_ems_contact_signaling`: the MES-1/SRC-1 and
+    MOM-2/MOM-5 Wnt arms of the P2-to-EMS signal;
+  - mec-3, egl-44 and egl-46 in a new module,
+    `c_elegans_touch_receptor_neuron_terminal_selection`: the UNC-86/MEC-3
+    selector and the EGL-44/EGL-46 repressor that keeps the touch program off in
+    FLP.
+
+  No review needed a link back to a module, because none decomposes a precomposed
+  "X involved in Y" term.
 - **Lexical overlap.** The new descriptions recover a median 0.46 of their WormBase
   content words, against 0.37 for the worm corpus. That is expected when the text is an
   input. The corpus median is unchanged at 0.37 (452 genes; see
@@ -700,8 +726,8 @@ descriptions fetcher would have asked the Alliance API for `MGI:MGI:106913`.
 - [x] Record the contradicted MOD and UniProt statements as `source_defects`
 - [x] Worm: score the 11 reviews added after the run (all 452 worm sidecars `COMPLETE`)
 - [x] Worm: nine new reviews written with the WormBase text as input (26 text defects, 5 NEW rows)
-- [ ] Worm: more new reviews from the same ranking (next candidates: gex-3, ced-10, goa-1,
-  lin-5, npr-1, daf-1, cav-1, oma-1)
+- [ ] Worm: more new reviews from the same ranking, only for genes with a WormBase text
+  (next candidates: gex-3, ced-10, goa-1, lin-5, npr-1, daf-1, cav-1, oma-1)
 - [ ] File the WormBase, UniProt and Alliance reports (manual step) and set `report_status`
 - [x] Yeast: fetch descriptions and write SGD deep-research files (890 genes)
 - [x] Yeast: score descriptions (890 COMPLETE)

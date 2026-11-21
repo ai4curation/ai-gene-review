@@ -158,3 +158,17 @@
   WTS-1/YAP-1/EGL-44 Hippo-pathway roles (PMID:31358532, PMID:41746831) and
   the immune role (PMID:32857822). The thermal-stress sentence is an author
   statement (ECO:0000303) and the abstract does not show that egl-44 was tested.
+
+## 2026-11-18: summary wording after module linking
+
+While egl-44 was being linked into the `c_elegans_touch_receptor_neuron_terminal_selection`
+module, the description and the first core function were checked against what can be
+read. The cached abstract of PMID:30291162 supports only that the EGL-44/EGL-46 complex
+keeps touch-receptor genes off in FLP and inhibits ZAG-1 production. Two statements had
+rested on the model-written summary of that paper's full text, which is not open access
+and has not been read here. Both have been reworded:
+- "occupies sites" became "binds sites ... in vitro". The binding is an EMSA result,
+  backed by UniProt's curated motif note.
+- "also represses ... ALR-1" was dropped. The full-text summary reports alr-1
+  de-repression in egl-44 and egl-46 mutant FLP cells; restore the claim once the paper
+  is read.
