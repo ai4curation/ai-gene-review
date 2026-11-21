@@ -76,7 +76,7 @@ multi-part process, keep it as gene/family curation until it can be joined to a
 broader host lipid-scavenging module.
 
 - [x] `BRUMA` `far-1` / Q93142 - cross-check existing review
-- [ ] `worm` `far-1` / P34382 - fetch and review the same PANTHER subfamily exemplar
+- [x] `worm` `far-1` / P34382 - fetch and review the same PANTHER subfamily exemplar
 - [ ] `worm` `far-2` / P34383 - fetch only if needed for paralog-specific comparison
 
 ### 3. Secreted immune modulators and exsheathment enzymes
@@ -128,7 +128,7 @@ Pathogen accessions need UniProt and literature resolution before fetching.
 
 - [x] Cross-check the initialized `BRUMA` `far-1` review for the secreted
   filarial fatty-acid and retinol-binding protein Bm20
-- [ ] Fetch and review the `worm` `far-1` P34382 same-subfamily ortholog
+- [x] Fetch and review the `worm` `far-1` P34382 same-subfamily ortholog
 
 # NOTES
 
@@ -190,3 +190,11 @@ Pathogen accessions need UniProt and literature resolution before fetching.
   true-but-too-general row beside the direct ligand annotations, and the review
   records an explicit remaining gap around native in vivo cargoes and far-1
   loss-of-function phenotypes in *B. malayi*.
+- Added `genes/worm/far-1` for P34382, the same `PTHR31418:SF7` FAR-1
+  subfamily exemplar as B. malayi FAR-1. Direct QuickGO and UniProt
+  cross-checks found live InterPro lipid-binding and UniProtKB-SubCell
+  extracellular-region rows for P34382, and the review proposes more specific
+  fatty-acid and retinol-binding rows from the Ce-FAR recombinant ligand
+  assays in PMID:12502713. No C. elegans biological-process term was proposed:
+  native FAR-1 cargoes and far-1 loss-of-function phenotypes remain explicit
+  open questions.
