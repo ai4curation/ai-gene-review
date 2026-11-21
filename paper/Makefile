@@ -8,7 +8,10 @@ data/goa_meta.tsv:
 data/predictions.tsv:
 	$(PY) scripts/extract_structured.py
 data: data/annotations.tsv data/goa_meta.tsv data/predictions.tsv
-stats: data
+goa: release/goa_counts.yaml
+release/goa_counts.yaml:
+	$(PY) scripts/fetch_goa_counts.py
+stats: data release/goa_counts.yaml
 	$(PY) scripts/compute_stats.py
 	$(PY) scripts/figures.py
 	$(PY) scripts/figures_structured.py
