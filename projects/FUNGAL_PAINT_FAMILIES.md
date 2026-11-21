@@ -52,6 +52,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR44068` Erg6/SMT methyltransferase | eukaryotic sterol C-24 methyltransferase node and fungal ergosterol node | `ERG6`/`erg6`/`ERG6`/`ERG6`/`erg-4`/`erg6` |
 | `PTHR13314` Calcium-channel Flower homologs | opisthokont vesicle-mediated transport node, ascomycete Golgi-membrane node, and metazoan calcium-channel node | `TVP18`/`tvp18`/`TVP18`/`tvp-18` |
 | `PTHR24304` CYP51 sterol 14-demethylases | eukaryotic CYP51 sterol 14-demethylase node and fungal ergosterol node | `ERG11`/`erg11`/`ERG11`/`cyp51A`/`cyp51B` |
+| `PTHR10880` Eaf3/MRG chromatin subunits | eukaryotic NuA4/Pol-II nodes and fungal Rpd3S node | `EAF3`/`alp13`/`EAF3`/`eaf3` |
 
 ---
 
@@ -640,8 +641,6 @@ plus protein targeting to vacuole at fungal `PANTHER:PTN000989606`.
   ortholog with inferred GOA rows and current CGD no-direct-data placeholders;
   reviewed in this branch
 
----
-
 ## Family 28: CYP51 Sterol 14-Demethylases
 
 `PTHR24304` contains CYP51 sterol 14-demethylases along with CYP7A1,
@@ -663,11 +662,40 @@ sterol 14-demethylase activity on the eukaryotic CYP51 node
 - [x] `ASPFU/cyp51B` - *Aspergillus fumigatus* CYP51 paralog retaining the
   conserved fungal sterol 14-demethylase placement
 
+## Family 29: Eaf3/MRG Chromatin Subunits
+
+`PTHR10880` contains MRG-domain chromatin regulators. The fungal Eaf3/Alp13
+branch inherits the `PANTHER:PTN000853816` Rpd3S-complex assertion and the
+broader eukaryotic `PANTHER:PTN000093963` NuA4 and RNA-polymerase-II
+transcription-regulation assertions, while the metazoan MSL3 branch carries a
+separate MSL-complex placement and an IRD blocking NuA4 complex inheritance.
+
+- [x] `yeast/EAF3` - *S. cerevisiae* Eaf3 shared NuA4, Rpd3S, and TINTIN
+  subunit; aligned before this family review
+- [x] `SCHPO/alp13` - fission-yeast Alp13/Eaf3 subunit of Clr6S/Rpd3S and NuA4;
+  aligned before this family review
+- [x] `CANAL/EAF3` - *Candida albicans* Eaf3 with NuA4 evidence and conserved
+  fungal Rpd3S placement; aligned before this family review
+- [x] `CANGA/EAF3` - *Candida glabrata* Eaf3 with PTHR10880 PAINT rows;
+  aligned before this family review
+- [x] `ASPFU/eaf3` - *Aspergillus fumigatus* Eaf3-family chromatin subunit;
+  aligned before this family review
+- [x] `EMENI/eaf3` - *Aspergillus nidulans* Eaf3-family chromatin subunit;
+  aligned before this family review
+
 ---
 
 # NOTES
 
 ## 2026-11-21
+
+- Added the compact `PTHR10880` Eaf3/MRG chromatin-subunit family after
+  checking the existing *S. cerevisiae*, *S. pombe*, *Candida*, and
+  *Aspergillus* Eaf3/Alp13 reviews. The eukaryotic NuA4 and broad Pol-II
+  regulation placements and the fungal Rpd3S-complex placement are sound for
+  fungal Eaf3 proteins; the Arabidopsis-seeded promoter-specific
+  chromatin-binding row is too deep at the eukaryotic MRG root and should move
+  to the plant MRG branch.
 
 - Added the compact `PTHR24304` CYP51 family after reviewing the existing
   *S. cerevisiae* and *S. pombe* `ERG11` anchors and drafting *C. albicans*,
