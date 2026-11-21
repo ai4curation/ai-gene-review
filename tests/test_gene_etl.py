@@ -440,17 +440,20 @@ def _include_fields(call):
     return [v for (k, v) in call.kwargs["params"] if k == "includeFields"]
 
 
-def test_goa_fetch_retries_without_taxonname_on_500():
-    """A 500 while taxonName is requested drops that field and retries the page;
-    TAXON NAME is then backfilled from taxonId."""
+def test_goa_fetch_omits_unreliable_taxonname_field():
+    """Do not request QuickGO's unreliable taxonName display field.
+
+    TAXON NAME is backfilled from taxonId instead.
+    """
     row = {"geneProductId": "UniProtKB:P1", "goId": "GO:1", "taxonId": 9606}
     with patch(
         "ai_gene_review.etl.gene.requests.get",
-        side_effect=[_error_response(500), _ok_response([row])],
+        return_value=_ok_response([row]),
     ) as mget:
         tsv = fetch_goa_data("P1")
-    assert "taxonName" in _include_fields(mget.call_args_list[0])  # first try
-    assert "taxonName" not in _include_fields(mget.call_args_list[1])  # retry
+    assert "goName" in _include_fields(mget.call_args)
+    assert "name" in _include_fields(mget.call_args)
+    assert "taxonName" not in _include_fields(mget.call_args)
     assert tsv.splitlines()[1].split("\t")[12] == "Homo sapiens"  # backfilled
 
 
@@ -486,10 +489,8 @@ def test_goa_fetch_raises_on_short_read():
 
 
 # ---------------------------------------------------------------------------
-# Fail loudly on a persistent QuickGO outage (from #6488), reconciled with the
-# retry-on-500 behaviour above: a single recoverable page is retried (see
-# test_goa_fetch_retries_without_taxonname_on_500), but a persistent outage must
-# still raise rather than write an empty or truncated GOA file.
+# Fail loudly on a persistent QuickGO outage (from #6488). A persistent outage
+# must raise rather than write an empty or truncated GOA file.
 # ---------------------------------------------------------------------------
 
 
