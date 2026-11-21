@@ -31,8 +31,10 @@ outer-membrane insertion), `GO:7770060` (TIM23-SORT), `GO:7770061` (TIM22) and
 `GO:7770063` (β-barrel insertion), and reworded `GO:0030150` and `GO:0160203`
 to name their routes. Among the 23 priority genes only MTCH2 carries one of the
 new terms in its review; outside that set, human MTCH1 has an accepted IMP
-annotation to `GO:7770059` and yeast MIM1 is reviewed onto it. The grouping terms proposed for obsoletion, such as `GO:0070585`, are
-still live.
+annotation to `GO:7770059` and yeast MIM1 is reviewed onto it. The grouping terms proposed for obsoletion have started to
+go: QuickGO reports `GO:0070585` and `GO:0072655` obsolete as of
+2026-11-05, and Arabidopsis MIA40's review modifies its `GO:0070585` row to
+`GO:0160203`.
 
 ## Overview
 

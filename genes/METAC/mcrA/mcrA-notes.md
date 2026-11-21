@@ -100,3 +100,14 @@ with `retired: true` (a source change, not a biological REMOVE), with corrected 
   with generic methanogenesis as the process.
 - Removed a non-verbatim core_functions quote attributed to PMID:11932238
   ("MCR catalyzes the final step in methanogenesis" is not in the cached abstract).
+
+## Cross-clade harmonization (2026-11-13)
+
+Reviewed together with seven other MCR/ACR alpha subunits
+(`projects/ARCHAEA/mcrA-across-clades.md`). GOA unchanged.
+- Methanogenesis rows (current GO_REF:0000002 and retired GO_REF:0000120) changed from
+  ACCEPT to MODIFY -> GO:0019385 (acetate) + GO:0019387 (methanol), applying the
+  "list all supported descendants" rule; the methylamine route has no GO term but the
+  generic term remains entailed. Same rule as the M. barkeri review.
+- Corrected the F430-binding proposal: the axial ligand is Met, not Gln, in the
+  ethane-specific ECR, so "every MCR alpha binds F430 through glutamine" was wrong.

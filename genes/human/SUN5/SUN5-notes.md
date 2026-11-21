@@ -28,3 +28,15 @@ Sources: UniProt Q8TC36, GOA (17 rows), cached publications, Falcon deep researc
 
 ### Deep research (Falcon)
 - Consistent with the above; highlights Nesprin3/ODF1 and 2024 lamin B1/SEPTIN12 work [file:human/SUN5/SUN5-deep-research-falcon.md "Its core role is structural attachment of the sperm HTCA/neck to the nuclear envelope."]. DR-only (not verified here): ARRDC5/SEC22A trafficking of SUN5 (Liu 2023), SPAG4Lbeta isoform lacking TM.
+
+## 2026-11-19 ORGANELLES Golgi batch 4 (Golgi apparatus rows)
+
+- Two GO:0005794 rows (IEA GO_REF:0000044 from the UniProt location item, and ISS GO_REF:0000024 from
+  mouse Sun5 Q9DA32). Both rest on the UniProt item "Golgi apparatus {ECO:0000250|UniProtKB:Q9DA32}".
+- Donor paper PMID:25775128 (mouse, full text in cache) co-stained endogenous Sun5 with the cis-Golgi
+  marker GM130 in round spermatids [PMID:25775128 "We observed a strong co-localization of GM130 and the
+  NE-unbound Sun5 staining, demonstrating that Sun5 is targeted to the Cis-Golgi"]; the pool leaves
+  GM130 by the elongating stage, and a 55 kDa form is lost on deglycosylation.
+- Verdict: biosynthetic transit pool with direct, marker-confirmed evidence on the endogenous protein in
+  its native cell, so both rows stay KEEP_AS_NON_CORE (reasons updated with the check). No NEW
+  sub-compartment row: one line (GM130), and transit is not residence.

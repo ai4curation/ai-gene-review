@@ -28,3 +28,5 @@
 - Rat-specific core evidence: p27 bound to cyclin E-CDK2 in regenerating rat liver when CDK2 activity is low
   [PMID:10952244]; shRNA knockdown in rat cochlea induces proliferation [PMID:23612739]; MENX rats carry a
   Cdkn1b frameshift [PMID:17030811].
+
+Round 7 of projects/INVOLVED_IN_PRECOMPOSITION.md (2026-11-18): the GO:0060770 ISO row is KEEP_AS_NON_CORE on its own term instead of MODIFY to GO:0050680, which this review already keeps as non-core; a MODIFY's replacement must be a claim the review would accept.

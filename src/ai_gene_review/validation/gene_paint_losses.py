@@ -7,8 +7,9 @@ PAINT loss whose node lies on the path from the PANTHER family root to the gene'
 and lists the review's own rows on each blocked term, so the review can agree with the
 loss or argue against it explicitly.
 
-Data: PAINT ``IBD.gaf`` (cached under ``.cache/paint/``) and the family tree from the
-PANTHER API (cached under ``.cache/panther_trees/``). Terms are matched exactly; a
+Data: PAINT ``IBD.gaf`` from the pinned snapshot (cached under
+``.cache/paint/paint-<release>-<snapshot>/``) and the family tree from the PANTHER API
+(cached under ``.cache/panther_trees/<release>/``). Terms are matched exactly; a
 review row on a descendant of the blocked term is not reported.
 
 Usage:
@@ -25,6 +26,7 @@ from typing import Any, Iterable
 
 import yaml
 
+from ai_gene_review.etl.panther_families import paint_cache_dir
 from ai_gene_review.etl.panther_paint import (
     IBD_GAF_URL,
     IBDRecord,
@@ -141,7 +143,7 @@ def report(organism: str, gene: str, root: Path = Path(".")) -> tuple[str, list[
     accession = str(review.get("id", ""))
     uniprot = folder / f"{gene}-uniprot.txt"
     families = panther_families(uniprot.read_text()) if uniprot.exists() else []
-    with open_text(download_cached(IBD_GAF_URL, root / ".cache" / "paint")) as fh:
+    with open_text(download_cached(IBD_GAF_URL, paint_cache_dir(root / ".cache" / "paint"))) as fh:
         ibd_index = parse_ibd_gaf(fh)
 
     lines = [f"# PAINT losses on the {gene} ({accession}) lineage", ""]

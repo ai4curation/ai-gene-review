@@ -40,3 +40,16 @@ Decisions summary
   core function, for its caveat "many pharmacologic studies inhibit all NMII isoforms, whereas MYH9-specific knockout,
   knockdown or mutation gives stronger isoform-level evidence". This matches the nucleokinesis paralog question.
 - No action changes: nothing in the report contradicts a decision or adds new primary evidence for any row.
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- One Golgi row: IEA GO_REF:0000107, projected from mouse Myh9 (Q8VDD5). QuickGO (2026-11-18) shows
+  the donor is an MGI IDA from PMID:14617807 (Togo and Steinhardt 2004), abstract-only here; PMC
+  (PMC329289) and Europe PMC both refused the full text. The abstract says myosin IIA "was
+  concentrated at the trans-Golgi network"; the marker and cells cannot be read.
+- Independent readable support: PMID:22525330 (Petrosyan et al. 2012, full text cached): endogenous
+  NMIIA stains the cytoplasmic boundary of giantin-marked Golgi stacks in Panc1 cells; NMIIA siRNA or
+  blebbistatin blocks brefeldin A-driven Golgi-to-ER return of C2GnT-M and giantin.
+- Action kept KEEP_AS_NON_CORE (recruited motor; core is actin-based contraction elsewhere), reason
+  rewritten. No sub-compartment row: one unreadable TGN line versus a stack-boundary line.
+- Neither new reference is cited for any other row.

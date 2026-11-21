@@ -3,6 +3,8 @@ title: "No Data (ND): what an ND annotation is telling us"
 maturity: SCOPING
 tags: [PIPELINE]
 species: [yeast, SCHPO, DROME, CANAL, worm, DANRE, ARATH, human, mouse]
+index_group: CROSS_CUTTING
+description: Partitions ND annotations into stale, inferable, existence, true-gap, ontology-blocked, negative and bookkeeping cases, and couples true gaps to knowledge_gaps
 ---
 
 # No Data (ND): what an ND annotation is telling us
@@ -380,11 +382,42 @@ no longer restore them.
   MYCTU/Rv0898c, human/P3R3URF), which need knowledge gaps written by
   reading before the row can go.
 
-**Not yet swept (as of `04e2ffa3e`).** Reviews merged from main after the last
-pass carry 42 ND rows that `nd_policy` flags: 37 `MODIFY` rows in 13 mouse
-keratin-associated protein reviews (Krtap3-2 to Krtap29-1), whose reasons rest
-on family-level literature; human/CDKAL1 BP; ARATH/PGR3; and rat Actl7a, Aph1a
-and Pik3c2a. They are waiting for a decision.
+**Mouse keratin-associated proteins (2026-11-06).** The 37 `MODIFY` ND rows in
+13 mouse Krtap reviews (Krtap3-2 to Krtap29-1) came from main after the pass. Each
+review's notes record the literature on the gene: sequencing, gene-cluster
+descriptions, RNA expression, misattributed GOA rows (Krtap21-1) or a binding
+study of unstated species (Krtap8-1). None identifies a function for the mouse
+gene, so all 37 became `ACCEPT`. On 2026-11-14 each gene was searched in PubMed
+(E-utilities, the symbol and its earlier names in All Fields). The queries and
+hits are appended to each notes file and listed in its review's `references`.
+Each accepted row quotes the line in the notes that records the negative result
+(decision field `searched`). Apart from that line, the mouse hits are only
+sequencing, cluster descriptions, RNA expression and one plasma biomarker list;
+the rest are on sheep, goat, cattle or human. The 33 replacement terms the
+reviews did not carry elsewhere became `ISS` `NEW` rows. Applied with
+`apply_acceptance_rule.py mouse/Krtap`.
+
+**Rows merged after the pass (2026-11-15).** Five `REMOVE` or `MODIFY` ND
+rows from reviews merged after the pass had no `nd_case`. Each gene was searched
+in PubMed on 2026-11-15, and the queries and hits are appended to its notes file.
+
+- **Stale (2).** human/CDKAL1 BP: the human protein converts t6A to ms2t6A in
+  tRNA in vivo (PMID:20584901), so the `MODIFY` to tRNA methylthiolation stands.
+  rat/Pik3c2a BP: knockdown in rat INS1 cells impairs insulin secretion
+  (PMID:21127054), so the `REMOVE` stands.
+- **Accepted (3).** rat/Actl7a BP: the only rat paper is a Tes co-IP from rat
+  testis (PMID:21278383). rat/Aph1a BP: the rat papers show complex membership
+  (co-IP from rat brain), Jagged-1 binding and localization of the complex and its
+  activity; none identifies a process (the abstract of PMID:12297508 does not
+  name the cells used for its siRNA experiments). In both, the process rows
+  rest on mouse or human work and are carried by ISO rows. ARATH/PGR3 CC: no paper localizes the Arabidopsis protein (the one
+  that did, PMID:33431870, is retracted); the chloroplast location is inferred
+  from the transit peptide and the protein's action on plastid RNAs, and is
+  carried by the chloroplast IEA row and the chloroplast stroma IC row. All
+  three are `ACCEPT` with `nd_case: INFERABLE`.
+
+**Not yet swept.** Four `UNDECIDED` ND rows have no `nd_case`:
+ARATH/CASPL4C1 CC, SCHPO/cbh1 BP, SCHPO/mug151 BP and yeast/DCV1 BP.
 
 ## Plan
 
@@ -392,7 +425,9 @@ and Pik3c2a. They are waiting for a decision.
 - [x] Agree on the action per case: guideline-conformant ND is `ACCEPT`
 - [x] Add `nd_case` to the schema, `nd_policy` warnings, ND compliance rules
 - [x] Re-action pass (above)
-- [ ] Decide the 42 unswept rows from main (above)
+- [x] Mouse Krtap rows from main (above)
+- [x] Decide the 5 rows merged after the pass (above)
+- [ ] Decide the 4 `UNDECIDED` ND rows (above)
 - [ ] Classify the 217 `ACCEPT` rows with no `nd_case` by reading (counted in
       the inventory's `nd_case` table); gap-less `aspect_empty` rows are
       expected to be N4 and gain `BIOLOGY` gaps

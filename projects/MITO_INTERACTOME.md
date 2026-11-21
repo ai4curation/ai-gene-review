@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/L7PBduAAKoptsd5k3tyCsi
       title: Project brief
+index_group: MAMMAL
 ---
 
 # MitoMatch: The AlphaFold-Multimer Interactome of the Human Mitochondrial Proteome

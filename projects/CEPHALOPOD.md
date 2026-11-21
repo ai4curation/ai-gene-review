@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/28zEmyjHveReX4PwN5NiNo
       title: Project brief
+index_group: OTHER_ORGANISM
 ---
 # Project CEPHALOPOD: AI Gene Review for Cephalopod Genes
 

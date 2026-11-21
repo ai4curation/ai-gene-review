@@ -15,7 +15,9 @@ places:
   the source's record of an isoform (e.g. a literature isoform missing from the
   reviewed UniProt entry); the row's ``term_id`` carries the functional isoform id;
 * ``activity_reviews[].source_defects`` in GO-CAM reviews
-  (``gocams/*/*-review.yaml``), where it is the GO-CAM activity.
+  (``gocams/*/*-review.yaml``), where it is the GO-CAM activity;
+* ``source_defects`` at the top level of rule reviews (``rules/**/*-review.yaml``),
+  for a defect in an annotation record the rule review cites as a receipt.
 
 This module flattens them all into one row per defect and renders a Markdown report
 per responsible resource (the thing that is actually sent upstream).
@@ -42,6 +44,9 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from ruamel.yaml import YAML
+
+#: Report states that need no further action; other rows are open.
+CLOSED_DEFECTS = ("FIXED", "DECLINED")
 
 COLUMNS = [
     "resource",
@@ -80,19 +85,32 @@ def _load(path: Path) -> Any:
     return YAML(typ="safe").load(text)
 
 
-def _row(source_path: str, context: dict[str, Any], defect: dict[str, Any]) -> dict[str, str]:
+def _row(
+    source_path: str, context: dict[str, Any], defect: dict[str, Any]
+) -> dict[str, str]:
     """Flatten one defect plus its record context into a TSV row."""
     row = {c: "" for c in COLUMNS}
     row.update({k: "" if v is None else str(v) for k, v in context.items()})
     for key in (
-        "defect_type", "resource", "record", "slot", "requested_change",
-        "asserted_value", "corrected_value",
-        "corrected_label", "cause", "confidence", "explanation", "report_url",
+        "defect_type",
+        "resource",
+        "record",
+        "slot",
+        "requested_change",
+        "asserted_value",
+        "corrected_value",
+        "corrected_label",
+        "cause",
+        "confidence",
+        "explanation",
+        "report_url",
     ):
         if defect.get(key) is not None:
             row[key] = " ".join(str(defect[key]).split())
     row["report_status"] = str(defect.get("report_status") or "NOT_REPORTED")
-    row["supported_by"] = json.dumps(defect.get("supported_by") or [], ensure_ascii=False)
+    row["supported_by"] = json.dumps(
+        defect.get("supported_by") or [], ensure_ascii=False
+    )
     row["source_path"] = source_path
     return row
 
@@ -153,6 +171,15 @@ def gocam_review_rows(path: Path, root: Path) -> Iterator[dict[str, str]]:
             yield row
 
 
+def rule_review_rows(path: Path, root: Path) -> Iterator[dict[str, str]]:
+    """Yield defect rows from a rule review: defects in annotation records it cites."""
+    data = _load(path)
+    if not data:
+        return
+    for defect in data.get("source_defects") or []:
+        yield _row(str(path.relative_to(root)), {}, defect)
+
+
 def collect(root: Path) -> list[dict[str, str]]:
     """Collect every source defect under ``root``, sorted for stable output."""
     rows: list[dict[str, str]] = []
@@ -160,7 +187,16 @@ def collect(root: Path) -> list[dict[str, str]]:
         rows.extend(gene_review_rows(path, root))
     for path in sorted(root.glob("gocams/*/*-review.yaml")):
         rows.extend(gocam_review_rows(path, root))
-    rows.sort(key=lambda r: (r["resource"], r["source_path"], r["term_id"], r["asserted_value"]))
+    for path in sorted(root.glob("rules/**/*-review.yaml")):
+        rows.extend(rule_review_rows(path, root))
+    rows.sort(
+        key=lambda r: (
+            r["resource"],
+            r["source_path"],
+            r["term_id"],
+            r["asserted_value"],
+        )
+    )
     return rows
 
 
@@ -213,17 +249,20 @@ def render_report(resource: str, rows: list[dict[str, str]]) -> str:
     >>> "AGI_LocusCode:AT1G1" in md and "→ AGI_LocusCode:AT1G2" in md
     True
     """
-    open_rows = [r for r in rows if r["report_status"] not in ("FIXED", "DECLINED")]
+    open_rows = [r for r in rows if r["report_status"] not in CLOSED_DEFECTS]
     lines = [f"# Source-record defects for {resource}", ""]
     lines.append(
         f"{len(open_rows)} open defect(s), generated from `source_defects` blocks "
         "in this repository's reviews. Do not edit by hand."
     )
     for i, r in enumerate(open_rows, 1):
-        target = r["record"] or (
-            f"{r['subject_id']} {r['qualifier']} {r['term_id']} {r['term_label']} "
-            f"({r['evidence_type']}, {r['original_reference_id']})"
-        ).strip()
+        target = (
+            r["record"]
+            or (
+                f"{r['subject_id']} {r['qualifier']} {r['term_id']} {r['term_label']} "
+                f"({r['evidence_type']}, {r['original_reference_id']})"
+            ).strip()
+        )
         lines += [
             "",
             f"## {i}. {r['defect_type']} ({r['confidence']}, {r['report_status']})",
@@ -253,13 +292,17 @@ def write_outputs(root: Path, tsv: Path, report_dir: Path) -> list[dict[str, str
     rows = collect(root)
     tsv.parent.mkdir(parents=True, exist_ok=True)
     with tsv.open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=COLUMNS, delimiter="\t", lineterminator="\n")
+        writer = csv.DictWriter(
+            fh, fieldnames=COLUMNS, delimiter="\t", lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(rows)
     report_dir.mkdir(parents=True, exist_ok=True)
     for resource in sorted({r["resource"] for r in rows}):
         subset = [r for r in rows if r["resource"] == resource]
-        (report_dir / f"{resource}.md").write_text(render_report(resource, subset), encoding="utf-8")
+        (report_dir / f"{resource}.md").write_text(
+            render_report(resource, subset), encoding="utf-8"
+        )
     return rows
 
 
@@ -274,7 +317,9 @@ def main() -> None:
     by_res: dict[str, int] = {}
     for r in rows:
         by_res[r["resource"]] = by_res.get(r["resource"], 0) + 1
-    print(f"{len(rows)} source defect(s) -> {args.tsv}; reports in {args.report_dir}: {by_res}")
+    print(
+        f"{len(rows)} source defect(s) -> {args.tsv}; reports in {args.report_dir}: {by_res}"
+    )
 
 
 if __name__ == "__main__":

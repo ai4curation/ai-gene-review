@@ -10,6 +10,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/MvFbo2qfKDeCNMKTyZ5bBd
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Mechanobiology Gene Review Project
