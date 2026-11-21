@@ -60,7 +60,7 @@ anchor, `BRUMA/dpy-31`, is in the same PANTHER subfamily as *C. elegans*
 - [x] `worm` `dpy-18` / Q10576 - fetched and reviewed the C. elegans prolyl 4-hydroxylase alpha-1 ortholog
 - [x] `worm` `phy-2` / Q20065 - fetched and reviewed the C. elegans prolyl 4-hydroxylase alpha-2 paralog
 - [x] `worm` `pdi-2` / Q17770 - fetched and reviewed the PDI/prolyl 4-hydroxylase beta subunit
-- [ ] `worm` `bli-4` / P51559 - fetch and review the subtilisin-like convertase
+- [x] `worm` `bli-4` / P51559 - fetched and reviewed the subtilisin-like convertase
 
 Secondary cuticle candidates to resolve before fetching: ONCVO Q2YFS7 and
 A0A8R1U276, ASCSU F1LHZ4/F1L4T8 and transcript duplicates, STRRB A0A090LLW4,
@@ -122,7 +122,7 @@ the extracellular oxidant-detoxification boundary is clear.
 - [x] Add `modules/nematode_cuticle_collagen_maturation.yaml`
 - [x] Create the `worm` `dpy-31` review for the C. elegans DPY-31 ortholog
 - [x] Create the `HAECO` `dpy-31` review for the H. contortus DPY-31 ortholog
-- [ ] Add or cross-check the remaining first-wave cuticle member gene reviews
+- [x] Add or cross-check the remaining first-wave cuticle member gene reviews
 
 ## 2026-11-21
 
@@ -139,6 +139,8 @@ the extracellular oxidant-detoxification boundary is clear.
   4-hydroxylase alpha-2 subunit
 - [x] Fetch and review the `worm` `pdi-2` Q17770 PDI/prolyl
   4-hydroxylase beta subunit
+- [x] Fetch and review the `worm` `bli-4` P51559 subtilisin-like
+  proprotein convertase
 - [x] Move anthelmintic drug target systems ahead of the FAR,
   immune-modulator, and antioxidant lanes for the next module after cuticle
   collagen maturation
@@ -252,6 +254,15 @@ the extracellular oxidant-detoxification boundary is clear.
   IRE1-mediated unfolded protein response as over-annotated, and leaves the
   transglutaminase-like activity rows undecided pending full text of the
   abstract-only PDI-3 paper.
+- Added `genes/worm/bli-4` for P51559, the C. elegans furin/Kex2-like
+  proprotein convertase that anchors the N-terminal cuticle-collagen
+  processing step. The review accepts the core serine endopeptidase and
+  collagenous-cuticle process rows, proposes a direct non-core peptide hormone
+  processing row for the ASEL INS-6 high-salt circuit, treats root proteolysis
+  and membrane rows as too general beside protein processing and Golgi/TGN
+  location, and leaves the old nucleus row plus neuromuscular-junction
+  synaptic-assembly rows undecided because the relevant 1995 and 2013 papers
+  are abstract-only locally.
 - Ros-orchestrate reprioritized anthelmintic drug target systems as the next
   module lane after cuticle collagen maturation. Keep the mechanism split:
   scope levamisole-sensitive nicotinic acetylcholine receptors,
