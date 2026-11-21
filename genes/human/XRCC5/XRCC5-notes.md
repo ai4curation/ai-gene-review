@@ -20,18 +20,18 @@ so no module edit is needed in this family PR.
 PAINT places five positive PTHR12604 assertions at PTN000288287: Ku70:Ku80
 complex, double-stranded DNA binding, telomeric repeat DNA binding, telomere
 maintenance, and NHEJ. A Drosophila node, PTN000288402, carries IRDs for the same
-terms. `just paint-losses human XRCC5` reported no IRD/IKR loss on the human XRCC5
-lineage, so the human IBA rows are retained.
+terms; those are internally contradicted by Drosophila root seeds and are recorded
+as PAINT losses to remove. `just paint-losses human XRCC5` reported no IRD/IKR
+loss on the human XRCC5 lineage, so the human IBA rows are retained.
 
 Review calls:
 
 - Retain the Ku heterodimer, DNA end-binding, telomeric-repeat binding, NHEJ, and
   nuclear/site-of-damage rows as the central DNA-repair and telomere-protection
   biology of XRCC5.
-- Keep direct ATPase, AP lyase, and DNA helicase rows as non-core biochemical
-  activities. They are experimentally observed for Ku preparations or individual
-  subunits but are subordinate to the heterodimer's evolved DNA-end recognition
-  role.
+- Keep the direct ATPase and AP lyase rows as non-core biochemical activities, but
+  remove DNA helicase activity from XRCC5/Ku80 because the separate-subunit study
+  assigned DNA unwinding to Ku70.
 - Keep the rRNA/U3 snoRNA/small-subunit processome rows from PMID:32103174 as
   non-core. They report a Ku-dependent, c-NHEJ-independent DNA-PKcs function in
   rRNA processing, but the Ku family review should not move that side context
