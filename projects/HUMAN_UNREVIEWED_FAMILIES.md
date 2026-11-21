@@ -18,9 +18,9 @@ and existing human review files:
 | Count | Meaning |
 |---:|---|
 | 20,429 | reviewed human Swiss-Prot proteins in the current UniProt stream |
-| 3,790 | `genes/human/*/*-ai-review.yaml` files already present |
-| 3,789 | existing human review accessions parsed from `id:` lines |
-| 16,661 | reviewed human Swiss-Prot accessions with no matching review |
+| 3,796 | `genes/human/*/*-ai-review.yaml` files already present |
+| 3,795 | existing human review accessions parsed from `id:` lines |
+| 16,656 | reviewed human Swiss-Prot accessions with no matching review |
 | 14,920 | missing accessions with a primary gene symbol, PANTHER family, GO xrefs, and no ORF-style seed symbol |
 
 The seed triage prefers reviewed Swiss-Prot proteins that already have GOA rows
@@ -31,7 +31,7 @@ PantherDB inventory gives usable subfamily assignments.
 # STATUS
 
 - [x] **PTHR10003, Cu/Zn superoxide dismutase / CCS family**
-  - STATUS: validated; ready for the first family PR.
+  - STATUS: merged in PR #6562.
   - Seed: `CCS` / UniProtKB:O14618, reviewed Swiss-Prot, unreviewed locally,
     with 36 GOA rows and an existing PANTHER review.
   - Human family members in this checkout:
@@ -39,7 +39,7 @@ PantherDB inventory gives usable subfamily assignments.
       family catalytic Cu/Zn SOD exemplar.
     - [x] `CCS` / UniProtKB:O14618: new COMPLETE review.
     - [x] `SOD3` / UniProtKB:P08294: new COMPLETE review.
-  - PANTHER: `interpro/panther/PTHR10003/PTHR10003-review.yaml` now records the
+  - PANTHER: `interpro/panther/PTHR10003/PTHR10003-review.yaml` records the
     CCS-specific PAINT `GO:0016532` node gain, anchors CCS exceptions to the
     existing `GO:0004784` superoxide dismutase activity IRD, and requests an
     ADD_IRD at the same CCS clade for `GO:0019430` removal of superoxide
@@ -51,11 +51,46 @@ PantherDB inventory gives usable subfamily assignments.
     GO-CAM `gomodel:69ea894900001492` now has a COMPLETE review and can ship
     with this family PR.
 
+- [x] **PTHR10210, PRPP synthase / PRPS-associated protein family**
+  - STATUS: merged in PR #6563.
+  - Seed: `PRPSAP1` / UniProtKB:Q14558, reviewed Swiss-Prot, unreviewed
+    locally, with GOA rows spanning the catalytic PRPP synthases and the
+    non-catalytic PRPSAP paralogs.
+  - Human family members reviewed in the family PR:
+    - [x] `PRPS1` / UniProtKB:P60891: new COMPLETE review.
+    - [x] `PRPS2` / UniProtKB:P11908: new COMPLETE review.
+    - [x] `PRPS1L1` / UniProtKB:P21108: new COMPLETE review.
+    - [x] `PRPSAP1` / UniProtKB:Q14558: new COMPLETE review.
+    - [x] `PRPSAP2` / UniProtKB:O60256: new COMPLETE review.
+  - PANTHER: `interpro/panther/PTHR10210/PTHR10210-review.yaml` records the
+    catalytic root gains, the PRS2/PRPS2 complex-location loss, and the
+    PRPSAP1/2 non-catalytic clade split.
+  - Module/GO-CAM split: no module or GO-CAM change was needed for PRPS; the
+    core family work was self-contained in gene and PANTHER reviews.
+
+- [ ] **PTHR10030, alpha-L-fucosidase family**
+  - STATUS: in progress on FUCA2.
+  - Seed: `FUCA2` / UniProtKB:Q9BTY2, reviewed Swiss-Prot, unreviewed locally,
+    with 35 GOA rows and a compact PANTHER family containing one reviewed human
+    paralog.
+  - Human family members in this checkout:
+    - [x] `FUCA1` / UniProtKB:P04066: already DRAFT; cross-checked as the
+      lysosomal/tissue alpha-L-fucosidase exemplar.
+    - [x] `FUCA2` / UniProtKB:Q9BTY2: new COMPLETE review.
+  - PANTHER: `interpro/panther/PTHR10030/PTHR10030-review.yaml` now records the
+    three sound root IBD gains for alpha-L-fucosidase activity, fucose
+    metabolism and glycoside catabolism, plus the contradicted off-human
+    Drosophila IRD.
+  - Module/GO-CAM split: no new ModuleReview or GO-CAM review is needed. The
+    existing lysosomal glycoprotein-degradation module intentionally selects the
+    FUCA1 subfamily, the mammalian L-fucose-degradation module explicitly
+    excludes upstream free-fucose release by FUCA1/FUCA2, and `gocams/index.tsv`
+    has no FUCA2 production model.
+
 - [ ] Next human Swiss-Prot seed family
-  - STATUS: queued after the PTHR10003 branch validates and is ready for PR.
+  - STATUS: queued after the PTHR10030 branch validates and is ready for PR.
   - NOTES: pick another small, biologically characterized, cached PANTHER family
-    from the missing-accession table rather than opening a second branch before
-    the first has a clean validation baseline.
+    from the missing-accession table while this family PR waits for review.
 
 # NOTES
 
