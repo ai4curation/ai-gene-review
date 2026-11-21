@@ -19,9 +19,10 @@ Reviewed the newly seeded *Candida glabrata* `ATG8` rows for the fungal
   and transfers the canonical Atg8 precursor/PE-conjugation and
   autophagosome/vacuole-membrane statements from budding yeast.
 - PMID:27347716 is cached with full text. It shows that iron depletion induces
-  C. glabrata mitophagy, that `CgATG8` and `CgATG32` RNA both drop at 8 h and
-  increase again by 24 h after transfer to SD-Fe medium, and that `CgATG1` and
-  `CgATG11` are required for mtDHFR-GFP processing in iron-depleted medium.
+  C. glabrata mitophagy, that `CgATG8` and `CgATG32` RNA rise at 4 h, drop at
+  8 h and increase again during 24-48 h after transfer to SD-Fe medium, and
+  that `CgATG1` and `CgATG11` are required for mtDHFR-GFP processing in
+  iron-depleted medium.
 - PMID:29385574 is abstract-only in the cache. The abstract reports ATG8-PE and
   increased `ATG8` expression in nutrient-stress conditions, supporting Atg8
   lipidation during C. glabrata autophagy-like stress.
