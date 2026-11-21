@@ -102,3 +102,19 @@ separate MOCS-gene disorder, NOT XDH.)
   MARK_AS_OVER_ANNOTATED per curation policy (do not REMOVE experimental IPI).
 - GO:0042803 protein homodimerization activity IPI (17301077) — XDH is a genuine
   homodimer; ACCEPT (informative and structurally supported).
+
+## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
+
+- One GO:0005777 row (IEA SL-0204). Stays MARK_AS_OVER_ANNOTATED; reason extended and a
+  UniProt CHECK source defect added.
+- Tracing: human P47989 "Peroxisome {ECO:0000250}" names no donor; mouse Q00519 is also
+  ECO:0000250; rat P22985 has "Peroxisome {ECO:0000269|PubMed:11993848}" (UniProt REST,
+  2026-11-21). PMID:11993848 (Frederiks & Vreeling-Sindelarova 2002, fetched, abstract
+  only): cerium/ferricyanide activity histochemistry, XOR and XO activity "in matrix and
+  core of peroxisomes" of rat hepatocytes.
+- Against: PMID:1619276 (Ichikawa et al. 1992, abstract): immunogold EM with antibody to
+  purified rat liver XO; label over cytosol, not over peroxisomes "including their
+  crystalloid core", consistent with biochemistry. A protein-specific readable negative
+  outweighs an activity stain. Alternative KEEP_AS_NON_CORE.
+- Pattern: the same Amsterdam enzyme-histochemistry lab supplies the rat peroxisome lines
+  for TKT (PMID:16116031) and XDH (PMID:11993848).

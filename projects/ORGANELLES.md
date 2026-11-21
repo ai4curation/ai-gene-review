@@ -270,7 +270,7 @@ plastids come later.
      with direct evidence on the gene or the endogenous protein in its native
      cell (SUN5); a soluble cytosolic protein has no transit pool, so marker
      data must decide (SYN1). Acting on a Golgi substrate is not a Golgi
-     location (MAPK1, ERK2, acting on GORASP2, GRASP55).
+     location (MAPK1/ERK2 acting on GORASP2/GRASP55).
    - **Recruited Golgi proteins** (golgins, coats, adaptors, ARF and RAB
      regulators, motors) stay at the root, core only when the activity is
      shown at the Golgi (BICD2, TBC1D14). Markers that span cis, medial and
@@ -460,9 +460,109 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
   - [x] Golgi rule written as rule 8, and the evidence-depth ladder as rule 9
         (2026-11-21), including "curator deference stops at a readable paper"
         and the TCP1 tier
+  - [x] Peroxisome and lysosome batch 1 (2026-11-21): all 9 human genes on the
+        root-only peroxisome list with a synthesis row, and 12 of the 25 on the
+        lysosome list (survey regenerated 2026-11-21); 13 lysosome genes remain
+        (PLD4 RAB7B RAB8A RAB9A RAB9B RTL9 RUBCN SLCO2A1 SORL1 TNFAIP3 TRIM17
+        UNC93B1 UVRAG)
+  - [ ] Write peroxisome and lysosome rules once the lysosome list is done
+        (lessons so far in the 2026-11-21 NOTES entry); the degradation rule must
+        say how over-annotating a direct-evidence row sits beside rule 3: a pool
+        seen only under perturbation is a claim that the location is not real,
+        not about granularity (as rule 8's perturbation-only evidence)
+  - [ ] GRIN2B and BACE1 keep late-endosome (GO:0005770) rows resting on the same
+        figures that sank their lysosome rows (GRIN2B's SEP-NR2B; BACE1's LAMP2
+        imaging, which cannot separate late endosome from lysosome); revisit in the
+        endosome series
+  - [ ] MFF's two mitochondrion rows are MODIFY to GO:0005741 from an earlier
+        non-ORGANELLES pass, against rule 1; fix in a mitochondrion follow-up
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-21 (peroxisome and lysosome batch 1: 20 human genes)
+
+The first batch for both organelles, from a survey regenerated on 2026-11-21: all 9
+human genes whose peroxisome (GO:0005777) rows are root-only with a synthesis row, and
+the first 12 of 25 such genes for the lysosome (GO:0005764), alphabetically, with SOD1
+on both lists. No gene gained a sub-compartment row. Peroxisome rows changed action on
+6 genes, lysosome rows on 6 (BACE1's moved again after review).
+
+Peroxisome:
+
+| gene | outcome | evidence |
+|---|---|---|
+| CD33 | root; EXP and IEA stay KEEP_AS_NON_CORE; isoform source defect | endogenous CD33m in neutrophils, monocytes and microglia with a CD33m-specific antibody (PMID:28747436, abstract-only); UniProt restricts the item to CD33m; its C-terminus is not a canonical PTS1 |
+| IDI1 | root; five rows ACCEPT to KEEP_AS_NON_CORE; peroxisome out of core_functions; WRONG_QUALIFIER CHECK on the IBA (after review) | three abstract-only papers place it in peroxisomes (PTS1-dependent, PMID:17202134); the C-terminus YRM is a non-canonical PTS1; enzyme fully active and cholesterol synthesis normal in PEX-deficient fibroblasts (PMID:14680974); ISS donor is hamster, not rat |
+| IDI2 | root; three rows ACCEPT to KEEP_AS_NON_CORE; peroxisome out of core_functions; WRONG_QUALIFIER CHECK on the IBA (after review) | one abstract-only localization paper (PMID:17202134); C-terminus HRV; same counter-evidence as IDI1 |
+| MFF | root; four rows stay ACCEPT (core) | endogenous MFF knockdown elongates catalase- or PMP70-stained peroxisomes (PMID:18353969, PMID:21149567); the peroxisomal pool itself is shown only for tagged overexpressed Mff, so no GO:0005778 row despite the tail anchor |
+| PIK3C3 | root; IBA UNDECIDED to KEEP_AS_NON_CORE | the single PAINT seed, yeast Vps34, has a readable positive abstract (PtdIns3P synthesis at peroxisomes, PMID:21121900); no human loss and no readable negative |
+| SOD1 | root; four rows MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE; WRONG_QUALIFIER CHECK on the IBA | the earlier call misread PMID:1332049, whose immuno-EM shows peroxisome labelling "slightly less than that of cytoplasm"; rat liver peroxisome proteomics and piggyback import on PTS1-bearing CCS (PMID:19686298); no matrix row, the import assay is co-overexpression |
+| STING1 | root; IEA MARK_AS_OVER_ANNOTATED to UNDECIDED | Ensembl projection of a mouse IDA from PMID:22745163, abstract-only, which states the location only in a clause |
+| TKT | root; ISS MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE | the donor is rat (not yeast, as the review said): an RGD IDA from enzyme histochemistry in rat liver (PMID:16116031, readable positive abstract); C-terminus TKA, a PTS2-like match without import data; MARK_AS_OVER_ANNOTATED is the close alternative |
+| XDH | root; IEA stays MARK_AS_OVER_ANNOTATED; UniProt CHECK defect | the rat line rests on an activity stain (PMID:11993848); immunogold with anti-XO found no label over peroxisomes (PMID:1619276) |
+
+Lysosome:
+
+| gene | outcome | evidence |
+|---|---|---|
+| ADA | root; IDA and IEA stay KEEP_AS_NON_CORE | ADA activity measured in Percoll-purified lysosomes with ADA1 properties, and a function proposed (PMID:8452534); no lumen row: no signal peptide or M6P route |
+| ANK2 | root; IEA and ISS stay ACCEPT | mouse full texts: AnkB with LAMP1 lysosomes and needed for their axonal retrograde transport (PMID:27718357, PMID:25533844); PI3P binding, no integral partner, so no GO:0098574 |
+| ARRDC3 | root; two EXP and IEA stay KEEP_AS_NON_CORE; UniProt CHECK defect | both sources abstract-only; "lysosome-associated" rests on LDL colocalization, a cargo marker; the readable full text places ARRDC3 in endosomes only (PMID:26490116) |
+| BACE1 | root; IEA and four IDA ACCEPT to MARK_AS_OVER_ANNOTATED; lysosome out of core_functions | turnover studies: the lysosome is where BACE1 is degraded, not where it cleaves APP; the endogenous LAMP2 signal appears only when lysosomal hydrolases are inhibited (PMID:16033761), the rest with mutants or USP8 depletion |
+| CRYAB | root; IEA ACCEPT to KEEP_AS_NON_CORE | mouse abstract: "localizes partially in the lysosome" by fractionation (PMID:31786107); bound to the peripheral V1 subunit ATP6V1A and released by rapamycin, so not tethering |
+| CXCR4 | root; two IDA and IEA stay KEEP_AS_NON_CORE | degradation cargo, but the endogenous receptor colocalizes with LAMP2 after its own agonist in unperturbed HeLa cells (PMID:24790097; HA-CXCR4 in HEK293, PMID:21540189): a ligand-driven pool |
+| GABARAP | root; IEA stays KEEP_AS_NON_CORE | the mouse donor is abstract-only with no lysosome; readable human CASM data (PMID:34597140) show ATG8 conjugation to LAMP1-positive lysosomes and GABARAP holding FLCN-FNIP there, a regulated pool with a function |
+| GRIN2B | root; IEA and ISS KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED; UniProt CHECK defect | the mouse donor (PMID:31424425, full text read in PMC) shows only overexpressed SEP-NR2B with LAMP2 in HEK293 cells, as the place NR2B is degraded |
+| HCK | root; IDA and IEA stay KEEP_AS_NON_CORE; isoform CHECK defect | abstracts: p61Hck at lysosomes drives podosome rosettes (PMID:15998323); UniProt's p59Hck lysosome item cites a paper placing p59Hck at the plasma membrane |
+| IL4I1 | root; IEA ACCEPT to UNDECIDED | by similarity to mouse, from an abstract-only RFP-fusion study (PMID:15383589); a later paper reports IL4I1 secreted with a physiological pH optimum (PMID:17356132) |
+| NBR1 | root; EXP and IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | UniProt's curated note on the same paper: "Is targeted to lysosomes for degradation"; an autophagy receptor consumed with its cargo |
+| SOD1 | root; IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | the rat donor (PMID:7096343) derives the lysosomal pool from cytosolic SOD1 by autophagy, 2% fed and 8% fasted |
+
+Lessons (first batch for both organelles; to become rules once the lysosome list is done):
+
+- **Degradation is not a lysosome location unless the pool exists in an unperturbed
+  cell** (restated after review; the first wording tracked source readability, not
+  biology). A pool present without blocking the protein's own destruction, reached under
+  its physiological trigger (the endogenous receptor after its own agonist), is the
+  ligand-driven pool of rule 8: real and non-core (CXCR4, like TLR1, TLR6 and ADRB2). A
+  pool seen only when lysosomal degradation is inhibited, with a mutant, after depleting a
+  deubiquitinase, with overexpression in a foreign cell, or that the source itself frames
+  as the place of degradation, is MARK_AS_OVER_ANNOTATED on every row of the term,
+  direct-evidence rows included (BACE1, GRIN2B, NBR1, SOD1). Either way the lysosome
+  stays out of core_functions, and degradation cargo gets no sub-compartment row even with
+  its own TM. GO's `located_in` does not require a function, so a function is not part of
+  the test; it decides only whether a kept pool could be core.
+- **A function at the lysosome makes a pool more than cargo**: an activity measured in
+  purified lysosomes (ADA), FLCN sequestration on CASM-conjugated lysosomes (GABARAP),
+  organelle transport (ANK2), podosome rosettes (HCK).
+- **Weak lysosome lines**: LAMP2 and LysoTracker do not separate late endosome from
+  lysosome; colocalization with an endocytosed cargo (LDL, transferrin) traces the cargo,
+  not the organelle (ARRDC3). A lysosome item can record a partner's destination (ARRDC3).
+- **Not tethering**: PI3P lipid binding (ANK2), a peripheral V-ATPase V1 subunit or
+  mTORC1-regulated binding (CRYAB), regulated ATG8 conjugation (GABARAP).
+- **Read the PTS1 off the sequence.** UniProt labels IDI1's YRM and IDI2's HRV
+  "Microbody targeting signal", but both are non-canonical; a MOTIF feature is one line at
+  most, and a regex PTS2 match without import data is weak (TKT).
+- **Necessity versus presence.** A readable result that the activity works without
+  functional peroxisomes (PEX-deficient cells) makes an accepted peroxisomal pool non-core
+  (IDI1, IDI2).
+- **Enzyme activity histochemistry is not a protein-specific line.** A protein-specific
+  readable negative wins (XDH, immunogold); without one, a positive donor abstract gets
+  deference (TKT).
+- **Piggyback import** (SOD1 on CCS) supports the root as non-core with endogenous
+  peroxisome data; a co-overexpression import assay is perturbed and licenses no matrix row.
+- **Tail-anchored dual-targeted fission proteins** (MFF): the root is core when fission
+  is a core process, but GO:0005778 needs the endogenous protein at the peroxisome, not
+  only a tagged pool.
+- **A single seed at a deep PAINT node** with a readable positive seed and no target loss
+  keeps the IBA (PIK3C3), and a misread "near background" claim can flip several rows
+  (SOD1): re-read the abstract.
+- **Trace by-similarity donors to the right species** with a UniProt lookup of the donor
+  accession: two reviews named the wrong species (IDI1 hamster, TKT rat).
+- **Gene review summaries are quoted by family reviews.** Changing SOD1's and PIK3C3's
+  summaries broke two `PTHR*-review.yaml` quotes; run `just validate-quotes` after any
+  summary edit and update the node assessment reasons too.
 
 ## 2026-11-19 (Golgi batch 4: the last 13 human genes)
 

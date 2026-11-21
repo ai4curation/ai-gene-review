@@ -66,3 +66,14 @@ to REMOVE, and the SynGO query became a confirmed wrong-gene-product source defe
 - The SynGO source defects now request REPOINT to GRIN2A (UniProtKB:Q12879) rather than CHECK, since the full text was read.
 - PDZ-scaffold IPI rows from PMID:11937501 are MODIFY to GO:0030165 PDZ domain binding; CaMKII alpha rows (PMID:19453375, PMID:28130356) are MODIFY to GO:0019901 protein kinase binding. A third core function records the C-tail scaffolding role.
 - Location rows now quote the UniProt SUBCELLULAR LOCATION lines rather than the complex-membership sentence.
+
+## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
+
+- Lysosome (GO:0005764) IEA (SL-0158) and ISS rows both rest on mouse Q01097's curated Lysosome item
+  from PMID:31424425 (TMEM25/NR2B). Full text read via PMC6715386 (DOI 10.1172/JCI122599; PMC HTML,
+  not cached; no quotes taken from it). NR2B lysosome evidence there: overexpressed SEP-NR2B with
+  mCherry-TMEM25 colocalising with LAMP2 in HEK293 cells (Supplemental Figure 4C), presented as the
+  late endosome/lysosome compartment "where NR2B is degraded"; CHX-chase degradation assays.
+  Degradative cargo, not residence: both rows changed KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED,
+  with a CHECK source defect against UniProt on the mouse item. This supersedes the earlier note that
+  the lysosome rows are KEEP_AS_NON_CORE. Late endosome rows (same donor) left for the endosome series.
