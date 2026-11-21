@@ -228,6 +228,19 @@ contradictions left standing covered only readings the verifier accepted whole, 
 15 whose draft it faulted are now counted apart (`contradiction_disputed`), and the
 PTHR16675 seeds list agrees with its PAINT row.
 
+**Fifth merge with main (2026-11-21, the same day).** Five conflicts, all in family
+reviews and all of one kind: both sides had added entries at the same place (the
+references list; in PTHR23024 also a new node assessment next to quotes added here). Both
+kept; no applied row had changed on main. Three more genes and 19 more families from main
+got an extract or a listing. Outside either plan there are now 293 overruled rows in 213
+genes and 254 disputed node assessments: 238 in 138 families the plan does not cover and
+16 new ones in 10 families it had read. The figure given at the fourth merge counted only
+the first kind and so left 8 assessments out. The residue backlog grew to 105 rows in 65
+reviews with main's new reviews. From the review of the previous push: a row not
+re-applied after a merge is marked `needs_new_reading` in the work list (29), since its
+entry describes the review as it was read; and `finish` prints how many disputed
+contradictions a batch leaves.
+
 ---
 
 ## 2026-11-16 — Re-read with the tree: candidate genes and families

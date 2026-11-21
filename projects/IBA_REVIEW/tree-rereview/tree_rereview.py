@@ -1259,13 +1259,23 @@ WORKLIST_FIELDS = (
 NOT_REAPPLIED = "not re-applied when main was merged"
 
 
+def needs_new_reading(row: dict[str, Any]) -> bool:
+    """True for a row whose review changed on main after it was read, so that its edit was not carried over.
+
+    What the record holds for such a row (action, reading, sentence, note) describes the
+    review as it was read and may no longer describe the committed one.
+
+    >>> needs_new_reading({"outcome": "adjudicate", "outcome_detail": NOT_REAPPLIED + ": the review changed on main after the reading"})
+    True
+    >>> needs_new_reading({"outcome": "adjudicate", "outcome_detail": "the verifier disagrees with the reading"})
+    False
+    """
+    return row.get("outcome") == "adjudicate" and str(row.get("outcome_detail", "")).startswith(NOT_REAPPLIED)
+
+
 def _contradiction_left(row: dict[str, Any]) -> bool:
     """A contradiction was read, nothing was edited, and the review is still the one that was read."""
-    return (
-        row.get("tree_reading") == "REASON_CONTRADICTED"
-        and row.get("outcome") == "adjudicate"
-        and not str(row.get("outcome_detail", "")).startswith(NOT_REAPPLIED)
-    )
+    return row.get("tree_reading") == "REASON_CONTRADICTED" and row.get("outcome") == "adjudicate" and not needs_new_reading(row)
 
 
 def standing_contradictions(rows: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1314,7 +1324,7 @@ def worklist(runs: Path = RUNS) -> dict[str, Any]:
     hears of it.
     """
     groups: dict[str, list[dict[str, Any]]] = {"adjudicate": [], "not_read": [], "applied_with_note": []}
-    standing = disputed = 0
+    standing = disputed = moved = 0
     for path in sorted(runs.glob("*.yaml")):
         record = load(path)
         left = {id(row) for row in standing_contradictions(record["rows"])}
@@ -1336,6 +1346,9 @@ def worklist(runs: Path = RUNS) -> dict[str, Any]:
                 entry["contradicted_and_left"] = True
             if id(row) in faulted:
                 entry["contradiction_disputed"] = True
+            if needs_new_reading(row):
+                entry["needs_new_reading"] = True
+                moved += 1
             for field in WORKLIST_FIELDS:
                 if row.get(field) not in (None, "", []):
                     entry[field] = row[field]
@@ -1356,15 +1369,19 @@ def worklist(runs: Path = RUNS) -> dict[str, Any]:
             "the verifier accepted whole, drafted correction included, and on which nothing was edited; such "
             "a row is corrected by hand before its batch is pushed, so the count is normally 0. "
             "contradiction_disputed marks an adjudicate row on which a contradiction was read and the "
-            "verifier faulted the reading or its drafted correction. In many of these the verifier accepted "
-            "the finding itself (verifier_problem says which), so the review may still state something the "
-            "tree contradicts; no agreed correction exists, and the row needs a new reading. A row whose "
-            "review changed on main after the reading is in neither count."
+            "verifier faulted the reading or its drafted correction, or never saw the row. In many of these "
+            "the verifier accepted the finding itself (verifier_problem says which), so the review may still "
+            "state something the tree contradicts; no agreed correction exists, and the row needs a new "
+            "reading. needs_new_reading marks an adjudicate row whose review changed on main after it was "
+            "read, so that its edit was not carried over: its action, tree_reading and note describe the "
+            "review as it was read and may no longer describe the committed one. Such a row is in neither "
+            "of the two contradiction counts."
         ),
         "counts": {
             **{group: len(rows) for group, rows in groups.items()},
             "contradicted_and_left": standing,
             "contradiction_disputed": disputed,
+            "needs_new_reading": moved,
         },
         **groups,
     }
@@ -1471,6 +1488,34 @@ def collect(journal: Path) -> dict[str, dict[str, Any]]:
     return results
 
 
+def batch_notes(record: dict[str, Any]) -> list[str]:
+    """What the operator should see about an applied batch beyond its outcome counts, one line each.
+
+    A review whose tree file could not be listed under ``references``; every row that both
+    agents found contradicted and that was left, which is corrected by hand before the
+    batch is pushed; and how many rows have a contradiction read but no agreed correction,
+    which need a new reading.
+    """
+    lines = [
+        f"  {unit}: tree file not listed under references: {why}"
+        for unit, why in sorted(mapping(record.get(NOT_LISTED)).items())
+    ]
+    for row in standing_contradictions(record["rows"]):
+        lines.append(
+            f"  {unit_of(row)} {row.get('node', '')} {row['term']}: the review states something the tree "
+            f"contradicts and was left as it is ({row.get('outcome_detail', '')}); correct it by hand before "
+            "the batch is pushed"
+        )
+    disputed = len(disputed_contradictions(record["rows"]))
+    if disputed:
+        lines.append(
+            f"  {disputed} row{'s' if disputed != 1 else ''} where a contradiction was read and the verifier faulted "
+            "the reading or its draft, or never saw the row: no agreed correction, a new reading is needed "
+            "(contradiction_disputed in needs-curator.yaml)"
+        )
+    return lines
+
+
 def finish(journal: Path, date: str, jobs: int = 4, pr: str = "") -> list[str]:
     """Record and apply every batch of a finished workflow run; returns one line per batch."""
     RUNS.mkdir(exist_ok=True)
@@ -1491,15 +1536,7 @@ def finish(journal: Path, date: str, jobs: int = 4, pr: str = "") -> list[str]:
             f"{batch}: {len(record['rows'])} rows; readings {dict(readings)}; verifier checked {len(checked)}, "
             f"disagreed on {checked.count(False)}; outcomes {dict(outcomes)}"
         )
-        applied = load(run_path(batch))
-        for unit, why in sorted(mapping(applied.get(NOT_LISTED)).items()):
-            lines.append(f"  {unit}: tree file not listed under references: {why}")
-        for row in standing_contradictions(applied["rows"]):
-            lines.append(
-                f"  {unit_of(row)} {row.get('node', '')} {row['term']}: the review states something the tree "
-                f"contradicts and was left as it is ({row.get('outcome_detail', '')}); correct it by hand before "
-                "the batch is pushed"
-            )
+        lines += batch_notes(load(run_path(batch)))
     WORKLIST.write_text(dump(worklist()), encoding="utf-8")
     return lines
 

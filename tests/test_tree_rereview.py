@@ -341,12 +341,16 @@ def test_the_worklist_marks_and_counts_both_kinds_of_contradiction(tmp_path: Pat
 
     assert worklist["counts"] == {
         "adjudicate": 3, "not_read": 0, "applied_with_note": 1, "contradicted_and_left": 1, "contradiction_disputed": 1,
+        "needs_new_reading": 1,
     }
     by_term = {entry["term"]: entry for entry in worklist["adjudicate"]}
     assert by_term["GO:0000398"]["contradicted_and_left"] is True and "contradiction_disputed" not in by_term["GO:0000398"]
     assert by_term["GO:0005681"]["contradiction_disputed"] is True and "contradicted_and_left" not in by_term["GO:0005681"]
     assert by_term["GO:0005681"]["verifier_problem"] == "The finding holds; the drafted reason overstates."
     assert not {"contradicted_and_left", "contradiction_disputed"} & set(by_term["GO:0005682"])
+    # the review changed on main after the reading: what the entry says describes the review as it was read
+    assert by_term["GO:0005682"]["needs_new_reading"] is True
+    assert not any(entry.get("needs_new_reading") for term, entry in by_term.items() if term != "GO:0005682")
     assert [entry["term"] for entry in worklist["applied_with_note"]] == ["GO:0005683"]
 
 
@@ -357,3 +361,42 @@ def test_the_committed_worklist_agrees_with_its_own_counts() -> None:
         assert worklist["counts"][key] == len(marked)
         assert all(entry["tree_reading"] == "REASON_CONTRADICTED" for entry in marked)
         assert key in worklist["about"]
+    moved = [entry for entry in worklist["adjudicate"] if entry.get("needs_new_reading")]
+    assert worklist["counts"]["needs_new_reading"] == len(moved) > 0
+    assert all(entry["outcome_detail"].startswith(tr.NOT_REAPPLIED) for entry in moved)
+    assert not any(entry.get("contradicted_and_left") or entry.get("contradiction_disputed") for entry in moved)
+
+
+def test_the_worklist_says_what_its_markers_cover() -> None:
+    about = tr.worklist()["about"]
+    # a contradiction the verifier never saw is disputed too, and the gloss has to say so
+    assert "or never saw the row" in about
+    # a row not re-applied keeps its fields as read
+    assert "needs_new_reading" in about and "as it was read" in about
+
+
+def test_a_row_whose_review_changed_on_main_needs_a_new_reading() -> None:
+    moved = row(outcome="adjudicate", outcome_detail=tr.NOT_REAPPLIED + ": the review changed on main after the reading")
+    assert tr.needs_new_reading(moved)
+    assert not tr.needs_new_reading(row(outcome="adjudicate", outcome_detail="the verifier disagrees with the reading"))
+    assert not tr.needs_new_reading(row(outcome="applied"))
+
+
+def test_what_finish_reports_about_a_batch_beyond_its_outcomes() -> None:
+    left = row(
+        tree_reading="REASON_CONTRADICTED", outcome="adjudicate", verifier=AGREED,
+        outcome_detail="the contradicted claim is in summary, which the script does not rewrite",
+    )
+    faulted = [
+        row(term=term, tree_reading="REASON_CONTRADICTED", outcome="adjudicate", verifier={"agrees": False, "problem": "x"})
+        for term in ("GO:0005681", "GO:0005682")
+    ]
+    record = {"batch": "g900", "rows": [left, *faulted, row(term="GO:0005683", outcome="applied")], tr.NOT_LISTED: {"human/OTHER": "no references list"}}
+
+    lines = tr.batch_notes(record)
+
+    assert lines[0] == "  human/OTHER: tree file not listed under references: no references list"
+    assert "human/TEST" in lines[1] and "GO:0000398" in lines[1] and "correct it by hand" in lines[1]
+    assert lines[2].startswith("  2 rows where a contradiction was read") and "new reading" in lines[2]
+    assert len(lines) == 3
+    assert tr.batch_notes({"batch": "g901", "rows": [row(outcome="applied")]}) == []

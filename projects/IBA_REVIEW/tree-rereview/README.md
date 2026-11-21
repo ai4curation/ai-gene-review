@@ -42,9 +42,10 @@ each subfamily the review names as affected lie below the node.
 [`needs-curator.yaml`](needs-curator.yaml).
 
 The 59 unread gene batches hold 1,370 overruled rows in 934 genes. Since the plans were
-made, reviews merged on main have added 288 overruled IBA rows in 210 genes and 216
-disputed node assessments in 119 families (as of the fourth merge, 2026-11-21). Those
-have extracts and listings, and are not
+made, reviews merged on main have added 293 overruled IBA rows in 213 genes and 254
+disputed node assessments: 238 in 138 families the plan does not cover, and 16 new ones
+in 10 families it had read (as of the fifth merge, 2026-11-21). Those have extracts and
+listings, and are not
 in either plan; `plan` makes a plan once and does not extend it, so they need batches of
 their own.
 
@@ -123,7 +124,12 @@ is left for a curator, with the reason in the run record:
   accepted the finding and faulted only the drafted text, and then the review may still
   state something the tree contradicts. `needs-curator.yaml` marks these rows
   `contradiction_disputed` and counts them apart (15 today), with the verifier's objection;
-  they need a new reading.
+  they need a new reading, and `finish` prints how many a batch leaves. A contradiction
+  the verifier never saw would be counted here too; there is none today.
+- **A row whose review changed on main after it was read is not re-applied.** The row is
+  taken as on main, and the work list marks it `needs_new_reading` (29 today): its
+  `action`, `tree_reading` and `note` describe the review as it was read and may no longer
+  describe the committed one.
 - **Quoting around an adverse fact.** A reading must quote more than the sentence that
   names the term, and must quote every sentence that stands against the verdict: that the
   gene is itself a seed, that it is inside the clade the seeds span, that seeds share its
@@ -167,7 +173,8 @@ horizontal-transfer node between it and the gene is never a one-to-one ortholog.
   warnings; the note, often about a verdict or failure mode that no longer fits, would
   otherwise be lost in a run record. `contradicted_and_left` and `contradiction_disputed`
   mark the two kinds of row left for adjudication after a contradiction was read (see
-  above); a row whose review changed on main after the reading is in neither.
+  above); a row whose review changed on main after the reading is in neither and is marked
+  `needs_new_reading`.
 - `workflows/`: the instructions the reading and verifying agents work from, as workflow
   scripts. They define the readings.
 - `tree_rereview.py`: `plan`, `dossier`, `inputs`, `record`, `apply`, `finish`, `status`,

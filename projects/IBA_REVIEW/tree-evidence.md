@@ -63,13 +63,13 @@ at a tree and left only prose was not counted.
   is inside the seed clade, shares its branch with seeds, or every seed is an ortholog
   under a paralog claim), when a row is kept although PAINT has removed the term on the
   path to the gene (`kept_under_paint_loss`), and when a propagated row is overruled for
-  residue loss without a checkable residue claim (`missing_residue_evidence`; 97 rows in 63
-  reviews on 2026-11-18, [below](#residue-arguments-without-a-residue-claim)).
+  residue loss without a checkable residue claim (`missing_residue_evidence`; 105 rows in
+  65 reviews on 2026-11-21, [below](#residue-arguments-without-a-residue-claim)).
   `just validate-families` reports a node assessment that disputes a placement without
   quoting a tree listing (`NODE_TREE_EVIDENCE`).
-- **Backfill.** Extracts are committed for 1,398 genes: every gene whose review overrules
+- **Backfill.** Extracts are committed for 1,401 genes: every gene whose review overrules
   an IBA row that is still in its GOA file, and the genes with a kept row under a PAINT
-  loss. Node listings are committed for 338 families: those whose family review disputes a
+  loss. Node listings are committed for 357 families: those whose family review disputes a
   node placement, and PTHR48034 (the CIRBP family below). A review row whose IBA has since
   been withdrawn from GOA has no tree row to quote and is not asked for one.
 
@@ -383,7 +383,9 @@ verifier did not accept the reading or its correction (among them 2 verdicts the
 found unsupported and 2 kept rows under a PAINT loss), 26 family rows whose node or term
 is not in the listing, 29 rows that changed on main after they were read, 11 kept rows
 under a PAINT loss, and 5 verdicts or assessments the tree does not support. Two gene
-rows were not read: the reader returned no entry for them.
+rows were not read: the reader returned no entry for them. The 29 rows that changed on
+main are marked `needs_new_reading` in `needs-curator.yaml`: what their entries say
+describes the review as it was read.
 
 Fifteen of the 42 are readings of a contradiction (11 gene rows, 4 family rows). In most
 of them the verifier accepted that the review states something the tree contradicts and
@@ -395,10 +397,11 @@ the corrected rules, and are the first rows a curator should look at. `needs-cur
 marks them `contradiction_disputed`.
 
 Not yet read: 59 gene batches with no candidate row, 1,370 overruled rows in 934 genes.
-They still raise `missing_tree_evidence`. So do 288 overruled rows in 210 genes that
-reviews merged on main have added since the plan was made, and 216 disputed node
-assessments in 119 families are in the same position (as of the fourth merge,
-2026-11-21); these have extracts and listings but are in neither plan.
+They still raise `missing_tree_evidence`. So do 293 overruled rows in 213 genes that
+reviews merged on main have added since the plan was made. 254 disputed node assessments
+are in the same position: 238 in 138 families the plan does not cover, and 16 new ones in
+10 families it had read (as of the fifth merge, 2026-11-21). These have extracts and
+listings but are in neither plan.
 
 The readers of the candidate gene batches and of the first four family batches ran on the
 session's model; the remaining family batches and the pilot ran on Opus. A trial of a smaller model as reader on
@@ -409,11 +412,12 @@ the review contradicts the tree, so it is not used.
 
 The pilot met four rows overruled as `PSEUDO_OR_SUBACTIVITY_LOSS` with nothing in
 `residue_claims` (ARATH CRY1 `GO:0003904`, and GID1A, GID1B and GID1C `GO:0016787`).
-Counted over every gene review on 2026-11-18, with or without an extract: 167 rows in 94
+Counted over every gene review on 2026-11-21, with or without an extract: 175 rows in 96
 reviews use the failure mode; 46 state residue claims, 16 say why the argument is not a
-point-residue question, 8 are not overruled and so are not asked, and **97 rows in 63
-reviews** raise `missing_residue_evidence` (76 `REMOVE`, 21 `MARK_AS_OVER_ANNOTATED`; 68
-of them IBA rows). They are listed in
+point-residue question, 8 are not overruled and so are not asked, and **105 rows in 65
+reviews** raise `missing_residue_evidence` (84 `REMOVE`, 21 `MARK_AS_OVER_ANNOTATED`; 72
+of them IBA rows). On 2026-11-18 it was 97 rows in 63 reviews; the eight more came with
+reviews merged on main. They are listed in
 [`residue-evidence-backlog.yaml`](residue-evidence-backlog.yaml). For 5 of them the
 gene's extract already reads the family's curated sites off the alignment. These are
 rows as their reviews wrote them; the re-read notes them and changes none.
