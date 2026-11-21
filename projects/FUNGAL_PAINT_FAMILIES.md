@@ -2,8 +2,8 @@
 title: "Fungal PAINT Family Reviews"
 maturity: IN_PROGRESS
 collections: [HOMOLOGY_PROPAGATION]
-species: [yeast, SCHPO, CANAL, NEUCR, ASPFU, EMENI]
-autolink_exclude: [Ser]
+species: [yeast, SCHPO, CANAL, CANGA, NEUCR, ASPFU, EMENI]
+autolink_exclude: [AIM6, LYS2, PPN1, Ppn1, Ser, TVP18, tvp18]
 index_group: YEAST
 ---
 
@@ -49,6 +49,8 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR32379` GUANIDINOACETATE N-METHYLTRANSFERASE | fungal Rmt2 N5-arginine methyltransferase node and vertebrate GAMT node in the same family | `RMT2`/`rmt2`/`ant-1`/`rmt2` |
 | `PTHR10340` SPHINGOMYELIN PHOSPHODIESTERASE | fungal Ppn1 polyphosphatase node with SMPD/SMPDL3 IRD pruning | `PPN1`/`PPN1`/`PPN1`/`ppn1`/`epp-1` |
 | `PTHR14430` RABIN3-RELATED | Opisthokonta Rab GEF node and fungal cell-tip Sec2 node | `SEC2`/`sec2`/`spo13`/`SEC2`/`sec2` |
+| `PTHR44068` Erg6/SMT methyltransferase | eukaryotic sterol C-24 methyltransferase node and fungal ergosterol node | `ERG6`/`erg6`/`ERG6`/`ERG6`/`erg-4`/`erg6` |
+| `PTHR13314` Calcium-channel Flower homologs | opisthokont vesicle-mediated transport node, ascomycete Golgi-membrane node, and metazoan calcium-channel node | `TVP18`/`tvp18`/`TVP18`/`tvp-18` |
 
 ---
 
@@ -127,7 +129,7 @@ MAPK placement `PANTHER:PTN001172087`.
 - [x] `CANAL/MKC1` - *Candida albicans* Slt2/Spm1-family cell-wall-integrity
   MAPK; merged in PR #5868
 - [x] `yeast/FUS3` - budding-yeast pheromone MAPK; merged in PR #5872
-- [ ] `SCHPO/spk1` - fission yeast Spk1 pheromone-response MAPK; drafted in
+- [x] `SCHPO/spk1` - fission yeast Spk1 pheromone-response MAPK; merged in
   PR #5886
 - [x] `NEUCR/mak-1` - *Neurospora crassa* cell-wall-integrity MAPK;
   merged in PR #5885
@@ -135,8 +137,11 @@ MAPK placement `PANTHER:PTN001172087`.
   filamentous-growth and cell-wall evidence; revalidated in this branch
 - [x] `ASPFU/sakA` - *Aspergillus fumigatus* SakA/Hog1 stress MAPK;
   drafted in PR #5883
-- [ ] `ASPFU/mpkC` - *Aspergillus fumigatus* HOG1-subfamily MpkC MAPK;
-  drafted in this branch
+- [x] `ASPFU/mpkC` - *Aspergillus fumigatus* HOG1-subfamily MpkC MAPK;
+  merged in PR #5889
+- [x] `EMENI/mpkC` - *Aspergillus nidulans* SakA/HogA-like stress MAPK with
+  PbsB-dependent nuclear accumulation during development and osmotic or
+  oxidative stress; merged in PR #5891
 
 ## Family 5: Fungal Glucanases
 
@@ -496,7 +501,194 @@ vegetative `sec2` and sporulation-specific `spo13`.
 
 ---
 
+## Family 22: HMG-CoA Synthases
+
+`PTHR43323` contains fungal ERG13/hcs1 proteins and animal cytosolic and
+mitochondrial HMG-CoA synthases. PAINT places the conserved HMG-CoA synthase
+activity and broad acetyl-CoA-process assertion at the root
+`PANTHER:PTN000222418`, confines the mitochondrial-location node to the animal
+HMGCS2 clade, and places the fungal ergosterol-biosynthesis assertion on
+`PANTHER:PTN000933803`.
+
+- [x] `yeast/ERG13` - *S. cerevisiae* HMG-CoA synthase; aligned in this branch
+- [x] `SCHPO/hcs1` - fission-yeast single-copy HMG-CoA synthase; aligned in
+  this branch
+- [x] `CANAL/ERG13` - CGD *Candida albicans* ERG13 ortholog; merged in
+  PR #6059
+- [x] `ASPFU/erg13A` - duplicated *Aspergillus fumigatus* HMG-CoA synthase;
+  merged in PR #6058
+- [x] `ASPFU/erg13B` - duplicated *Aspergillus fumigatus* HMG-CoA synthase;
+  merged in PR #6057
+
+---
+
+## Family 23: L-2-Aminoadipate Reductases
+
+`PTHR44845` contains the fungal `LYS2`/`lys1` L-2-aminoadipate reductase
+branch, plus more distant adenylation-PCP-reductase relatives. PAINT places the
+conserved L-aminoadipate-semialdehyde dehydrogenase activity and
+L-lysine-biosynthesis assertion on the fungal `PANTHER:PTN001186117` node for
+the `LYS2`/`lys1` branch.
+
+- [x] `yeast/LYS2` - *S. cerevisiae* L-2-aminoadipate reductase; existing
+  anchor aligned before this tranche
+- [x] `SCHPO/lys1` - fission-yeast L-2-aminoadipate reductase; existing anchor
+  aligned before this tranche
+- [x] `CANAL/LYS2` - CGD *Candida albicans* seed for the `PTN001186117`
+  activity and lysine-biosynthesis IBAs; merged in PR #6566
+- [x] `CANGA/LYS2` - CGD *Candida glabrata* ortholog with ISS/IEA support but
+  no current GO-Central IBA; merged in PR #6566
+
+---
+
+## Family 24: Rtt109 Histone Acetyltransferases
+
+`PTHR31571` splits into the active fungal `PTHR31571:SF2` Rtt109/KAT11
+histone acetyltransferase branch and a separate `PTHR31571:SF1` branch whose
+PLC-like phosphodiesterase activity is still only predicted. PAINT places the
+nucleus, histone H3K56 acetyltransferase activity, and DNA-damage-response
+assertions together on the fungal `PANTHER:PTN001586545` node for the active
+Rtt109 branch.
+
+- [x] `yeast/RTT109` - *S. cerevisiae* Rtt109/KAT11 anchor; aligned before
+  this tranche
+- [x] `yeast/AIM6` - non-HAT AIM6-family member; existing review backfilled
+  with InterPro supporting entities in this branch
+- [x] `SCHPO/rtt109` - fission-yeast Rtt109-family member; aligned in this
+  branch
+- [x] `CANAL/RTT109` - CGD *Candida albicans* Rtt109 ortholog; aligned in this
+  branch
+- [x] `NEUCR/NCU09825` - *Neurospora crassa* Rtt109 ortholog; aligned in this
+  branch
+- [x] `CANGA/AIM6` - *Candida glabrata* SF1 member outside the active Rtt109
+  PAINT node; reviewed in this branch
+
+---
+
+## Family 25: Sterol 24-C-Methyltransferases
+
+`PTHR44068` contains the fungal Erg6/SMT sterol C-24 methyltransferases, plant
+sterol SMTs, and specialized-metabolism methyltransferases in other branches.
+The family-root `PANTHER:PTN000010968` node carries generic
+`GO:0008168 methyltransferase activity`, `PANTHER:PTN002226525` carries
+eukaryotic sterol C-24 methyltransferase activity, ER localization, and broad
+sterol biosynthesis, and the fungal `PANTHER:PTN000802684` node carries
+ergosterol biosynthesis. Fungal reviews should refine the broad
+InterPro-derived methyltransferase and steroid-biosynthesis rows to the exact
+Erg6 activity and pathway, and should treat lipid-droplet transfer as
+lineage-specific unless directly observed.
+
+- [x] `yeast/ERG6` - *S. cerevisiae* zymosterol C-24 methyltransferase; aligned
+  before this tranche
+- [x] `SCHPO/erg6` - fission-yeast sterol C-24 methyltransferase with PomBase
+  Erg6 GO-CAM context; aligned before this tranche
+- [x] `CANAL/ERG6` - CGD-seeded *Candida albicans* Erg6 with purified
+  zymosterol-to-fecosterol activity; aligned before this tranche
+- [x] `CANGA/ERG6` - CGD *Candida glabrata* Erg6 with clinical
+  loss-of-function and erg6 deletion membrane-sterol evidence; drafted in this
+  branch
+- [x] `NEUCR/erg-4` - *Neurospora crassa* sterol C-24 methyltransferase with
+  lanosterol-to-eburicol inference; aligned before this tranche
+- [x] `ASPFU/erg6` - *Aspergillus fumigatus* Erg6 sterol C-24
+  methyltransferase with direct erg6 repression, lanosterol-accumulation, and
+  lipid-droplet evidence; aligned before this tranche
+
+---
+
+## Family 26: `TVP18`/Calcium-Channel Flower Homologs
+
+`PTHR13314` contains one PANTHER subfamily, `PTHR13314:SF2`, that mixes fungal
+`TVP18` Golgi proteins and metazoan Flower/CACFD1 calcium-channel homologs.
+PAINT places conserved vesicle-mediated transport at the opisthokont
+`PANTHER:PTN001779219` node and Golgi membrane at the ascomycete
+`PANTHER:PTN001779222` node, but the `GO:0005262` calcium-channel activity IBD
+on `PTN001779219` appears too deep because its seed is Drosophila `fwe` alone
+and the narrower calcium-transport, plasma-membrane, endosome, and synaptic
+terms already sit at the eumetazoan `PANTHER:PTN000999743` node.
+
+- [x] `yeast/TVP18` - *S. cerevisiae* Golgi/endosomal `TVP18` anchor; aligned
+  before this tranche
+- [x] `SCHPO/tvp18` - fission-yeast `TVP18` member; aligned before this tranche
+- [x] `CANAL/TVP18` - *Candida albicans* `TVP18` member; aligned before this
+  tranche
+- [x] `NEUCR/tvp-18` - *Neurospora crassa* `TVP18` member; aligned before this
+  tranche
+- [x] `CANGA/TVP18` - *Candida glabrata* `TVP18` member; reviewed in this branch
+
+---
+
+## Family 27: MON1/SAND Ypt7 GEF Subunits
+
+`PTHR13027` contains MON1/SAND-family subunits of the `MON1-CCZ1` Ypt7
+guanine-nucleotide exchange factor. PAINT places the contributed GEF activity
+at the eukaryotic `PANTHER:PTN000315021` node, `MON1-CCZ1` complex membership at
+the opisthokont `PANTHER:PTN000315023` node, and fungal-type vacuole membrane
+plus protein targeting to vacuole at fungal `PANTHER:PTN000989606`.
+
+- [x] `yeast/MON1` - *S. cerevisiae* <gene species="yeast" symbol="MON1">Mon1</gene>
+  subunit and seed for the fungal vacuolar rows; aligned before this tranche
+- [x] `SCHPO/mon1` - fission-yeast <gene species="SCHPO" symbol="mon1">Mon1</gene>
+  ortholog with PomBase
+  orthology-supported complex membership
+- [x] `CANAL/MON1` - CGD *Candida albicans* <gene species="CANAL" symbol="MON1">MON1</gene>
+  ortholog
+- [x] `NEUCR/apg-13` - *Neurospora crassa* PTHR13027 ortholog
+- [x] `ASPFU/mon1` - *Aspergillus fumigatus* <gene species="ASPFU" symbol="mon1">mon1</gene>
+  ortholog
+- [x] `CANGA/MON1` - CGD *Candida glabrata* <gene species="CANGA" symbol="MON1">MON1</gene>
+  ortholog with inferred GOA rows and current CGD no-direct-data placeholders;
+  reviewed in this branch
+
+---
+
 # NOTES
+
+## 2026-11-21
+
+- Added the compact `PTHR13314` `TVP18`/calcium-channel Flower family after
+  reviewing `CANGA/TVP18` against the existing *S. cerevisiae*, *S. pombe*,
+  *C. albicans*, and *N. crassa* `TVP18` anchors. The fungal Golgi membrane and
+  broad vesicle-mediated-transport calls are retained, while the opisthokont
+  calcium-channel-activity node should be moved down to the metazoan branch
+  before it propagates to fungal `TVP18` proteins.
+
+- Added the compact `PTHR13027` MON1/SAND family after filling the missing
+  `CANGA/MON1` review and writing the family sidecar. The eukaryotic GEF,
+  opisthokont `MON1-CCZ1` complex, and fungal vacuole-delivery PAINT nodes match
+  the reviewed fungal genes; the current S. pombe IRD blocks `MON1-CCZ1` complex
+  membership even though the same PAINT slice still propagates eukaryotic
+  GO:0005085 GEF activity to S. pombe <gene species="SCHPO" symbol="mon1">mon1</gene>,
+  leaving an internally inconsistent loss call recorded for removal.
+
+- Added the compact `PTHR44068` Erg6/SMT family after checking the existing
+  *S. cerevisiae*, *S. pombe*, *C. albicans*, *N. crassa*, and
+  *A. fumigatus* reviews and drafting `CANGA/ERG6`. The PTHR44068 PAINT
+  review cleanly separates the generic methyltransferase family root from the
+  sterol-SMT and fungal Erg6 branches, and the new *C. glabrata* review accepts
+  exact C-24 methyltransferase and ergosterol-biosynthesis support while
+  keeping lipid droplets and Erg6 self-association unresolved for this species.
+
+- Added the compact `PTHR31571` Rtt109/AIM6 family after reviewing the
+  `CANAL/RTT109`, `SCHPO/rtt109`, and `NEUCR/NCU09825` active Rtt109
+  descendants of fungal `PTN001586545`, and the `CANGA/AIM6` member of the
+  sister AIM6 branch. The active Rtt109 node cleanly carries the fungal H3K56
+  acetyltransferase, nuclear, and DNA-damage-response PAINT assertions; AIM6
+  remains outside that inheritance and should be treated as an uncharacterized
+  PLC-like phosphodiesterase candidate.
+
+- Added the compact `PTHR44845` LYS2/Lys1 reductase family after reviewing
+  `CANAL/LYS2` and `CANGA/LYS2` against the existing *S. cerevisiae* and
+  *S. pombe* anchors. The fungal `PTN001186117` node cleanly carries the
+  conserved L-2-aminoadipate reductase activity and lysine-biosynthesis process
+  for *Candida albicans* `LYS2`, while *Candida glabrata* retains equivalent
+  ISS/IEA annotations without a current GO-Central IBA.
+
+- Closed the `PTHR43323` HMG-CoA synthase family by aligning the older
+  `yeast/ERG13` and `SCHPO/hcs1` reviews with the completed Candida and
+  Aspergillus reviews. The root `PTN000222418` HMG-CoA synthase activity IBA is
+  accepted as core across the fungal SF2 branch, the accompanying acetyl-CoA
+  metabolic process is valid but non-core, and the fungal `PTN000933803`
+  ergosterol IBA is accepted for all reviewed ERG13/hcs1 descendants.
 
 ## 2026-11-20
 
