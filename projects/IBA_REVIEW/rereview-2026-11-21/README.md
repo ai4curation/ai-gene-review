@@ -74,3 +74,80 @@ genes:
 
 `paint_action` uses the `family_review.yaml` vocabulary. `target_node_id` is read
 from `treeview.py` output, never composed.
+
+## Results
+
+`summarize.py` checks the batch records against the inventory and the gene reviews and
+writes `results.tsv`, one line per row. Every one of the 788 rows has a verdict, and
+every recorded action matches the gene review as it stands.
+
+| | Rows |
+|---|---:|
+| Live rows re-judged against the tree | 735 |
+| REMOVE upheld | 658 |
+| Action changed | 77 |
+| Withdrawn upstream (PAINT no longer propagates the term) | 53 |
+
+Of the 221 live human rows, 184 are upheld and 37 changed.
+
+Upheld rows by ground: loss or divergence in the target clade 359, misplaced IBD 188,
+bad seed 73, lineage-inappropriate term 38. Each names a PAINT change and a node.
+
+Changed rows by new action: `MARK_AS_OVER_ANNOTATED` 50, `MODIFY` 12,
+`KEEP_AS_NON_CORE` 10, `UNDECIDED` 5. They are in 72 gene reviews. A further 83 rows
+kept REMOVE but had the written reason corrected, because it rested on a non-ground or
+misstated the tree.
+
+### What the spurious removals had in common
+
+`reason_scan.py` flags reasons by phrase and by where the seeds sit; `reason_scan.tsv`
+holds the flags for every live row. Calibrated on the first 252 rows re-judged, against
+each row's original text:
+
+| Signal in the original reason | Rows | Changed |
+|---|---:|---:|
+| Argues absence of evidence and cites no PAINT node | 20 | 50% |
+| Short reason (under 45 words) | 19 | 37% |
+| Argues absence of evidence | 44 | 27% |
+| Cites no PAINT node | 110 | 24% |
+| Cites a PAINT node | 142 | 6% |
+
+Seed position alone predicted little (a seed in the target's own child clade: 17%
+changed, against 14% overall), because a close seed is often a diverged paralog. The
+reverse held: with no seed in the target's child clade, 45 of 47 removals stood.
+
+Three recurring errors, none visible without the tree:
+
+- The gene is itself a seed of the node, through its own experimental row, and that
+  row is kept. The inventory's `target_is_seed` column matches UniProt accessions
+  only; seeds listed by model-organism id were checked by hand.
+- The reason says the seeds are elsewhere in the family and a seed sits in the
+  target's own clade.
+- The term is true and general, and a descendant of it is accepted on another row.
+
+### Open items
+
+Not resolved by this pass:
+
+- **Judgement calls left as recorded.** Six CAP-family molecular adaptor rows and five
+  secreted FGF cytoplasm rows are `MARK_AS_OVER_ANNOTATED` where a misplaced-IBD
+  reading would keep REMOVE. Mouse Krit1 keeps REMOVE on its own knockout while human
+  and horse KRIT1 are `MARK_AS_OVER_ANNOTATED` on the same node. AGK ceramide kinase,
+  PUS3, AN1593, `ccr1`/NCP1 cytosol and CYP2R1 are upheld on thin evidence.
+- **Seed papers read as abstracts only.** Bad-seed verdicts that rest on an abstract
+  say so in the batch record and should not go upstream as confirmed defects.
+- **Family reviews now out of date or in disagreement** (not edited): PTHR10529,
+  PTHR10553, PTHR10880, PTHR11022, PTHR11606, PTHR11670, PTHR15186, PTHR21601,
+  PTHR22802, PTHR30417, PTHR30627, PTHR42760, PTHR43406, PTHR43418, PTHR43507,
+  PTHR43876, PTHR48083. The batch `notes` say what each one misses.
+- **Tree placement artefacts.** NTN1 and NTN3 sit in the POU family tree, yeast CDC4
+  in the Utp13 family, worm `ccep-290` beside SMC2, and poplar `atpB` on a V-ATPase
+  leaf. These need a leaf reassignment, which the PAINT change vocabulary cannot
+  express.
+- **Rows outside the scope that should follow.** GRB2 and Grb2 COP9 signalosome,
+  PSEAE `rpoS` cis-regulatory region binding, fly CG14717 carboxylesterase ISS,
+  `stlB` fatty acid biosynthesis IEA, and `atpB` rows from the same mis-mapped leaf.
+- **Papers cited in prose only** because they are not in `publications/`:
+  PMID:15340082 (SWI2), PMID:12950171 and PMID:17240044 (PCSK1), PMID:7867932 (tub),
+  and the three SLC26A3 sulfate transport papers.
+- `genes/SCHPO/mid1` fails validation on a quote that predates this work.
