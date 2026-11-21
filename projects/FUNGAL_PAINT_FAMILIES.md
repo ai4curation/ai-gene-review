@@ -239,7 +239,8 @@ seeded by budding- and fission-yeast Atg8 annotations.
 - [x] `CANAL/ATG8` - CGD-seeded *Candida albicans* Atg8 ortholog with
   autophagy and ER-stress genetic-interaction evidence; opened in PR #5257
 - [x] `CANGA/ATG8` - CGD *Candida glabrata* Atg8 ortholog with direct
-  Atg8-PE and iron-depletion mitophagy literature; drafted in this branch
+  Atg8-PE evidence and C. glabrata iron-depletion mitophagy context; opened
+  in PR #6590
 - [x] `NEUCR/apg-6` - *Neurospora crassa* ATG8-family member; opened in PR
   #5255
 - [x] `ASPFU/atg8` - *Aspergillus fumigatus* ATG8-family member with direct

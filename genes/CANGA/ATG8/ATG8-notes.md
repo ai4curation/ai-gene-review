@@ -19,9 +19,9 @@ Reviewed the newly seeded *Candida glabrata* `ATG8` rows for the fungal
   and transfers the canonical Atg8 precursor/PE-conjugation and
   autophagosome/vacuole-membrane statements from budding yeast.
 - PMID:27347716 is cached with full text. It shows that iron depletion induces
-  C. glabrata mitophagy, that `CgATG8` expression rises with `CgATG32` before
-  strong mitochondrial degradation, and that `CgATG1` and `CgATG11` are
-  required for mtDHFR-GFP processing in iron-depleted medium.
+  C. glabrata mitophagy, that `CgATG8` and `CgATG32` RNA both drop at 8 h and
+  increase again by 24 h after transfer to SD-Fe medium, and that `CgATG1` and
+  `CgATG11` are required for mtDHFR-GFP processing in iron-depleted medium.
 - PMID:29385574 is abstract-only in the cache. The abstract reports ATG8-PE and
   increased `ATG8` expression in nutrient-stress conditions, supporting Atg8
   lipidation during C. glabrata autophagy-like stress.
@@ -53,15 +53,15 @@ localization, lipid-droplet formation, or heat-induced vacuolar invagination.
   non-core mitophagy-contextual location. C. glabrata iron-depletion mitophagy
   is directly demonstrated, but Atg8's central activity remains on autophagic
   membranes.
-- Accepted the CGD `GO:0003674 molecular_function` ND row under the
-  `INFERABLE` no-data rule because the more specific molecular functions in
-  this review are all inferred from PAINT, budding-yeast transfer or conserved
-  Atg8 sequence features.
-- Modified generic `cytoplasm`, `vacuolar membrane`, `autophagy`, and
-  `regulation of macroautophagy` to more informative descendants.
-- Marked S. cerevisiae-only EnsemblFungi transfers as over-annotated when the
-  C. glabrata evidence does not establish the exact pathway or secondary
-  location: ER-to-Golgi transport, Cvt delivery, piecemeal microautophagy of
-  the nucleus/nucleophagy, ER-phagy, VICS localization, lipid-droplet
-  localization/formation and heat-induced regulation of vacuolar membrane
-  invagination.
+- Removed the CGD `GO:0003674 molecular_function` ND row as stale because
+  C. glabrata Atg8-PE has been observed and more specific Atg8 molecular
+  functions are supported.
+- Modified generic `vacuolar membrane` and `autophagy` to more informative
+  descendants, and kept generic `cytoplasm` plus `regulation of macroautophagy`
+  as non-core.
+- Kept budding-yeast-derived secondary EnsemblFungi transfers as non-core when
+  they describe imported ortholog biology outside the central C. glabrata Atg8
+  PE-lipidation cycle: ER-to-Golgi transport, Cvt delivery, piecemeal
+  microautophagy of the nucleus/nucleophagy, ER-phagy, VICS localization,
+  lipid-droplet localization/formation and heat-induced regulation of vacuolar
+  membrane invagination.
