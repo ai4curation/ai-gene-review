@@ -694,7 +694,9 @@ phosphoinositide-binding family. The compact fungal Atg18 tranche keeps
 the root PI3P, PI(3,5)P2, and adaptor calls, retains the fungal-type
 vacuole membrane node, and marks root-level pexophagy, mitophagy,
 nucleophagy, and glycophagy rows as too broad for every Atg18/Atg21/WIPI
-paralog.
+paralog. The Saccharomycotina Atg21/Hsv2 sibling branch is reviewed
+separately because its Cvt, Atg8-lipidation, Hsv2 microautophagy and
+retromer-vacuole-fission roles diverged from the Atg18 branch.
 
 - [x] `yeast/ATG18` - budding-yeast Atg18 anchor with direct Cvt,
   PAS, lipid-binding, vacuole, Atg2, CROP and 2026 Atg8-AIM evidence
@@ -706,9 +708,20 @@ paralog.
   transfers pruned to conserved PROPPIN activities and locations
 - [x] `NEUCR/apg-10` - N. crassa Atg18-family ortholog
 - [x] `ASPFU/atg18` - A. fumigatus Atg18-family ortholog
-- [ ] Review the sibling fungal `ATG21` and `HSV2` PROPPIN branches
-  separately; their Cvt/Atg8-recruitment roles should not be collapsed
-  into the Atg18 branch.
+- [x] `yeast/ATG21` - budding-yeast Atg21 sibling PROPPIN with direct
+  PI3P/PI(3,5)P2, Cvt, Atg8-lipidation, PMN, mitophagy and 2026
+  Atg21-retromer evidence
+- [x] `yeast/HSV2` - budding-yeast Hsv2 sibling PROPPIN with direct
+  PI3P/PI(3,5)P2, phagophore, microautophagy, large-cargo autophagy
+  and 2026 Atg18-retromer vacuole-fission evidence
+- [x] `CANAL/ATG21` - C. albicans ATG21 with PTHR11227 root PAINT
+  rows pruned to conserved PROPPIN activities and locations
+- [x] `CANAL/HSV2` - C. albicans HSV2 with PTHR11227 root PAINT rows
+  pruned to conserved PROPPIN activities and locations
+- [x] `CANGA/ATG21` - C. glabrata ATG21 with SGD orthology transfers
+  limited to the Atg21 lipid-binding, PAS and Cvt profile
+- [x] `CANGA/HSV2` - C. glabrata HSV2 with SGD orthology transfers
+  limited to the Hsv2 lipid-binding and phagophore/endosome profile
 
 ---
 
