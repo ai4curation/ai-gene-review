@@ -1371,8 +1371,7 @@ is from mouse.
   the HDAC5 review and `histone_deacetylation` treat as over-annotation.
 - Add the obligatory PMCA subunits NPTN and BSG to
   `plasma_membrane_calcium_extrusion`.
-- Factor a human DNA gap-filling module (PCNA, RFC, Pol delta, LIG1) out of the
-  NER and mismatch repair modules, and point
+- Point
   `retinoic_acid_receptor_signaling`'s production step at
   `retinoic_acid_metabolism`.
 - Fix the triage's prose scraping of GO and UniProt ids
