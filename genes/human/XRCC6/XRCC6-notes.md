@@ -19,8 +19,9 @@ RNA-processing roles.
 PAINT places five positive assertions at the PTHR12604 root node PTN000288287:
 Ku70:Ku80 complex, double-stranded DNA binding, telomeric repeat DNA binding,
 telomere maintenance, and NHEJ. The only loss rows in the fetched PAINT slice
-sit on Drosophila node PTN000288402. `just paint-losses human XRCC6` reported
-no IRD/IKR loss on the human XRCC6 lineage, so the human IBA rows are retained.
+sit on Drosophila node PTN000288402 and contradict Drosophila root seeds, so the
+family review requests their removal. `just paint-losses human XRCC6` reported no
+IRD/IKR loss on the human XRCC6 lineage, so the human IBA rows are retained.
 
 Review calls:
 

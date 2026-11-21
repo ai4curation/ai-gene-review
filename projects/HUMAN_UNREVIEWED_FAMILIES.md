@@ -112,8 +112,8 @@ PantherDB inventory gives usable subfamily assignments.
     - [x] `XRCC6` / UniProtKB:P12956: new DRAFT review.
   - PANTHER: `interpro/panther/PTHR12604/PTHR12604-review.yaml` records five
     sound root IBD gains for the Ku70:Ku80 complex, double-stranded DNA binding,
-    telomeric DNA binding, telomere maintenance and NHEJ, plus the off-human
-    Drosophila IRDs that do not affect the reviewed human Ku70/Ku80 lineages.
+    telomeric DNA binding, telomere maintenance and NHEJ, plus five contradictory
+    Drosophila IRDs with `REMOVE_LOSS` actions.
   - Module/GO-CAM split: no new ModuleReview or GO-CAM review is needed. The
     existing `modules/nonhomologous_end_joining.yaml` review already models
     Ku70/Ku80 DNA-end binding as the first c-NHEJ step, and no human production
