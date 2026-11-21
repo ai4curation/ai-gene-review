@@ -4,7 +4,7 @@ maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP, PIPELINE, EVALUATION]
 species: [yeast]
 genes: [PDC1, ADH1, ADH2, GPD1, GPD2, HXK1, HXK2, GLK1, PFK1, PFK2, PYC1, PYC2, TDH1, TDH2, TDH3, ZWF1, BNA3, BNA7, DAL3, "DUR1,2", ERG26]
-last_reviewed: '2026-11-19'
+last_reviewed: '2026-11-21'
 autolink_gene_symbols: false
 manifest:
   slides:
@@ -101,7 +101,7 @@ Full quantitative tables, simulation provenance, and reproducibility checklists 
 
 # STATUS
 
-Last updated: 2026-11-04
+Last updated: 2026-11-21
 
 ## Reviewed Central-Carbon Target & Paralog Genes
 
@@ -137,6 +137,11 @@ Last updated: 2026-11-04
 ---
 
 # NOTES
+
+## 2026-11-21
+
+- QA pass on the 10 remaining `DRAFT` target, paralog and repair genes (`HXK1`, `HXK2`, `PFK1`, `PFK2`, `TDH1`, `TDH2`, `TDH3`, `BNA3`, `DAL3`, `DUR1,2`); all are now `COMPLETE`. `ZWF1` was promoted on main by the pentose phosphate pathway module pass. Per-gene changes are in each gene's history record.
+- Re-ran `run_yeast_gem_audit.py`; the standard-FBA glycerol/DHA cycle magnitude is an alternative optimum and moved between COBRApy/GLPK versions (see `RESULTS.md`).
 
 ## 2026-11-04
 
