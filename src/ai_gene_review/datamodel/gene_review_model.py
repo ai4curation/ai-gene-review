@@ -3318,7 +3318,8 @@ class FunctionalIsoform(ConfiguredBaseModel):
     source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in UniProt's (or another source's) record of this isoform, for example an isoform established in the literature that the reviewed UniProt entry does not list (defect_type MISSING_ISOFORM). See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform',
                        'ReferenceReview',
                        'GoCamActivityReview',
-                       'Review']} })
+                       'Review',
+                       'RuleReview']} })
 
 
 class FunctionalIsoformMapping(ConfiguredBaseModel):
@@ -3469,7 +3470,8 @@ class ReferenceReview(ConfiguredBaseModel):
     source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Errors in the cited source's own curated text (a MOD gene description cited as its -deep-research-<mod>.md file, or a UniProt FUNCTION or other comment cited as the -uniprot.txt file), in reportable form. Use WRONG_STATEMENT, OUTDATED_STATEMENT or MISSING_STATEMENT. See docs/source_defects.md, \"Cited source text\".""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform',
                        'ReferenceReview',
                        'GoCamActivityReview',
-                       'Review']} })
+                       'Review',
+                       'RuleReview']} })
 
 
 class ReferenceReplacement(ConfiguredBaseModel):
@@ -6254,7 +6256,8 @@ class GoCamActivityReview(ConfiguredBaseModel):
     source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the cached GO-CAM model itself (e.g. the activity is enabled_by the wrong gene product), in reportable structured form. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform',
                        'ReferenceReview',
                        'GoCamActivityReview',
-                       'Review']} })
+                       'Review',
+                       'RuleReview']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['EvidenceItem',
                        'Descriptor',
                        'ComplexUnit',
@@ -6613,7 +6616,8 @@ class Review(ConfiguredBaseModel):
     source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects in the source database's record that this review has identified, recorded in structured form so they can be reported upstream (to TAIR, GOA, UniProt, GO-CAM and so on). Use it when the error lives in the source record rather than in this review, e.g. an annotation or GO-CAM activity attached to the wrong gene product (\"that gene, not this gene\") or keyed to the wrong reference. The review's own action still says what this repository does with the claim. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform',
                        'ReferenceReview',
                        'GoCamActivityReview',
-                       'Review']} })
+                       'Review',
+                       'RuleReview']} })
     nd_case: Optional[NoDataCaseEnum] = Field(default=None, description="""For an ND (No biological Data available) row only: why there is no data for this gene product in this aspect. It records which case of the ND taxonomy applies (projects/NO_DATA.md) and determines the expected action. An ND row that follows the evidence-code guideline (no literature on this gene product, in this species, identifies a function in that aspect) is ACCEPT; STALE and ONTOLOGY_BLOCKED are the cases where it is not. TRUE_GAP and EXISTENCE rows should be paired with a BIOLOGY knowledge gap whose dark_aspect matches the ND aspect.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
 
 
@@ -7088,6 +7092,11 @@ class RuleReview(ConfiguredBaseModel):
     biological_meaning: Optional[BiologicalMeaningAssessment] = Field(default=None, description="""Whether the rule is a sensible biological statement: do its condition sets pick out recognisable biological units, and is the consequent the most informative true statement about them? This is judged separately from accuracy (annotation_assessments): a rule can be true for every protein it matches and still say almost nothing.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReview']} })
     biological_units: Optional[list[BiologicalUnit]] = Field(default=None, description="""The biological units (families, complexes, pathway steps) the condition sets resolve into, each with the most informative term that is true of it. This is the evidence for biological_meaning, and the plan for a SPLIT.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReview']} })
     corrections: Optional[list[RuleReviewCorrection]] = Field(default=None, description="""Claims an earlier version of this review made that a later check showed to be wrong, each with the evidence that refuted it. The wrong claim is removed from the review's prose and recorded here, so that review errors stay countable and can become test cases.""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReview']} })
+    source_defects: Optional[list[SourceDefect]] = Field(default=None, description="""Defects found, while reviewing the rule, in an annotation record the review cites as a receipt (for example a curated GOA row whose reference looks mis-keyed), in reportable structured form. Set `record` to the row (subject, term, evidence code, reference). A defect of the rule itself is the review's verdict, not a source defect. See docs/source_defects.md.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FunctionalIsoform',
+                       'ReferenceReview',
+                       'GoCamActivityReview',
+                       'Review',
+                       'RuleReview']} })
 
 
 class BiologicalMeaningAssessment(ConfiguredBaseModel):
