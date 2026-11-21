@@ -4,7 +4,7 @@ description: "Modules and gene reviews for parasitic nematode cuticle, host-inte
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [BRUMA, HAECO, ONCVO, ASCSU, STRRB, STRER, TOXCA, TRITR, STECR, 9BILA, worm]
-genes: [dpy-31, bma-dpy-18.1, bma-dpy-18.2, far-1, lev-1, unc-38, unc-63, lev-8, cpi-2, gp29, mf1]
+genes: [dpy-31, bma-dpy-18.1, bma-dpy-18.2, far-1, lev-1, unc-38, unc-63, lev-8, ric-3, cpi-2, gp29, mf1]
 index_group: OTHER_ORGANISM
 ---
 
@@ -84,7 +84,7 @@ Levamisole-sensitive nicotinic acetylcholine receptor:
 - [x] `worm` `unc-38` / Q23022 - fetched and reviewed as an alpha L-AChR pore subunit
 - [x] `worm` `unc-63` / Q9N587 - fetched and reviewed as an alpha L-AChR/ACR-2R pore subunit
 - [x] `worm` `lev-8` / Q93329 - fetched and reviewed as the fifth C. elegans L-AChR pore subunit
-- [ ] `worm` `ric-3` / Q22472 - fetch and review as a receptor maturation/assembly ancillary factor
+- [x] `worm` `ric-3` / Q22472 - fetched and reviewed as an ER-membrane nAChR maturation factor
 - [ ] `worm` `unc-50` / Q10045 - fetch and review as an L-AChR trafficking ancillary factor
 - [ ] `worm` `unc-74` / Q9N4L6 - fetch and review as the thioredoxin-domain L-AChR ancillary factor
 
@@ -185,6 +185,8 @@ the extracellular oxidant-detoxification boundary is clear.
   pore subunit shared by the L-AChR and ACR-2R
 - [x] Fetch and review the `worm` `lev-8` Q93329 fifth C. elegans
   L-AChR pore subunit
+- [x] Fetch and review the `worm` `ric-3` Q22472 RIC-3-family
+  nAChR maturation factor
 
 # NOTES
 
@@ -360,3 +362,13 @@ the extracellular oxidant-detoxification boundary is clear.
   reconstitution, refines broad Cys-loop receptor, channel, transport and
   membrane-potential rows to the L-AChR functions, and records that LEV-8 is
   L-AChR-specific rather than an ACR-2R shared subunit like UNC-38 and UNC-63.
+- Added `genes/worm/ric-3` for Q22472, the C. elegans RIC-3-family
+  ER-membrane chaperone and assembly factor in the L-AChR expression-factor
+  lane. The review keeps RIC-3's ER-membrane protein-folding chaperone
+  activity, nAChR surface-localization, and positive cholinergic-transmission
+  regulation as core; treats muscle contraction and cell-body localization as
+  non-core; refines the 1995 WormBase cholinergic-transmission row to positive
+  regulation using later direct RIC-3 evidence; keeps direct weak
+  neuron-process localization as non-core; and marks the PAINT
+  neuron-projection active-in row plus the synapse IEA as over-propagated from
+  receptor output rather than RIC-3's ER-membrane activity.
