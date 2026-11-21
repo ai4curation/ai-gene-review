@@ -27,12 +27,15 @@ ELECTRONIC = {"IEA", "IBA"}
 
 
 def enzyme_rows(review_path: Path) -> list[dict]:
-    """Electronic MF rows whose term maps to a complete EC number, de-duplicated by term."""
+    """Live (not retired) electronic MF rows mapping to a complete EC number, de-duplicated by term."""
     review = yaml.safe_load(review_path.read_text())
     rows: dict[str, dict] = {}
     for ann in review.get("existing_annotations") or []:
         term = ann["term"]
-        if ann.get("evidence_type") not in ELECTRONIC or term["id"] in rows:
+        # A retired row is no longer in GOA, so there is no live annotation to check.
+        if ann.get("retired") or ann.get("evidence_type") not in ELECTRONIC:
+            continue
+        if term["id"] in rows:
             continue
         ecs = [ec for ec in go_ec_xrefs(term["id"]) if is_complete_ec(ec)]
         if not ecs:

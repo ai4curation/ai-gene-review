@@ -58,6 +58,7 @@ import csv
 import json
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 from dataclasses import asdict, dataclass, field
@@ -286,6 +287,30 @@ class NCBIfam:
         )
 
 
+RATE_LIMIT_RETRIES = 5
+
+
+def _read_with_retry(req: urllib.request.Request) -> bytes:
+    """Read a URL, waiting and retrying when the server answers 429 Too Many Requests.
+
+    InterPro rate-limits clients; a batch run of the check makes dozens of calls. The
+    wait follows the server's Retry-After header, else doubles from 2 s, and gives up
+    after ``RATE_LIMIT_RETRIES`` attempts by re-raising the last 429.
+    """
+    for attempt in range(RATE_LIMIT_RETRIES):
+        try:
+            with urllib.request.urlopen(req, timeout=60) as fh:
+                return fh.read()
+        except urllib.error.HTTPError as exc:
+            if exc.code != 429 or attempt == RATE_LIMIT_RETRIES - 1:
+                raise
+            retry_after = exc.headers.get("Retry-After", "")
+            time.sleep(
+                float(retry_after) if retry_after.isdigit() else 2.0 * 2**attempt
+            )
+    raise AssertionError("unreachable")
+
+
 def interpro_ncbifam_matches(accession: str) -> list[str]:
     """NCBIfam ids InterPro reports for a UniProt protein (empty if none), across pages."""
     url: str | None = INTERPRO_NCBIFAM.format(acc=accession)
@@ -293,8 +318,7 @@ def interpro_ncbifam_matches(accession: str) -> list[str]:
     while url:
         req = urllib.request.Request(url, headers={"Accept": "application/json"})
         try:
-            with urllib.request.urlopen(req, timeout=60) as fh:
-                body = fh.read()
+            body = _read_with_retry(req)
         except urllib.error.HTTPError as exc:
             if exc.code == 404:
                 return matches

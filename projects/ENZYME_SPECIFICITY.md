@@ -323,9 +323,23 @@ Worked pair (both from the same ML-prediction paper, PMID:37963869):
 ## Pending Reviews
 - (none)
 
-Last updated: 2026-11-11
+Last updated: 2026-11-21
 
 # NOTES
+
+## 2026-11-21
+
+**Followed up the UNDECIDED rows the cutoff check placed below cutoff; none is decided by it.**
+
+The 2026-11-18 re-run listed four UNDECIDED rows as reviews to revisit. A follow-up
+([followup_scan.py](ENZYME_SPECIFICITY/cutoff-check/followup_scan.py)) found that each
+flag said less than claimed. ptxD was scored only against GhrA, but it resembles GhrB;
+against NCBIfam's GhrB model, which carries no EC number and so was never a target, it
+scores 418.1 / 492, and no KT2440 protein passes that model, so its substrate stays open.
+PP_4638 fails the canonical MetF models that KT2440's own MetF passes, which the review
+already records; its open question, noncanonical folate chemistry, is outside what those
+models test. PP_0556's NAD+ kinase row is retired from GOA, and the runner now skips retired
+rows. No review action changes. RESULTS.md now states the sister-family limitation.
 
 ## 2026-11-11
 
@@ -362,9 +376,9 @@ models for an annotated EC/GO activity and compares each score with the model's
 trusted and noise cutoffs (Schnoes steps 2 and 4). It also reports function-level
 families for other reactions that the protein passes. On 38 electronic enzyme rows
 from 20 *P. putida* reviews plus human HADH, 11 of 12 ACCEPT rows with a model passed
-and 10 of 13 REMOVE rows with a model failed (counts as of the 2026-11-18 re-run, after
-PP_0556's NAD+ kinase row was changed to UNDECIDED; four UNDECIDED rows fall well below
-their cutoff and are worth revisiting). The three passing REMOVE rows were a
+and 10 of 13 REMOVE rows with a model failed (counts as of the 2026-11-21 re-run, which
+skips retired rows; see the 2026-11-21 note on the UNDECIDED rows). The three passing
+REMOVE rows were a
 pseudoenzyme (pyrC′, which needs a residue check), overlapping MetX donor families
 (metXS) and a paralog with ortholog biochemistry (PP_2325). The failing ACCEPT row was
 human HADH, below prokaryote-calibrated cutoffs. Details:
