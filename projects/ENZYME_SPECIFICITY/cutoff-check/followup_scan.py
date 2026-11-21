@@ -113,6 +113,7 @@ def main() -> None:
                 hmm = fh.read()
             tc = round(hmm.cutoffs.trusted[0], 1)
             in_proteome = search(hmm, proteome)
+            control_scores = search(hmm, control_block)
             ranked = sorted(in_proteome.items(), key=lambda kv: -kv[1])
             models.append(
                 {
@@ -124,7 +125,7 @@ def main() -> None:
                         {"accession": a, "score": s} for a, s in ranked[:3]
                     ],
                     "controls": {
-                        f"{acc} {label}": search(hmm, control_block).get(acc)
+                        f"{acc} {label}": control_scores.get(acc)
                         for acc, label in case["controls"].items()
                     },
                 }

@@ -288,13 +288,15 @@ class NCBIfam:
 
 
 RATE_LIMIT_RETRIES = 5
+MAX_RETRY_WAIT = 60.0  # seconds; a server-supplied Retry-After is capped at this
 
 
 def _read_with_retry(req: urllib.request.Request) -> bytes:
     """Read a URL, waiting and retrying when the server answers 429 Too Many Requests.
 
     InterPro rate-limits clients; a batch run of the check makes dozens of calls. The
-    wait follows the server's Retry-After header, else doubles from 2 s, and gives up
+    wait follows the server's Retry-After header (capped at ``MAX_RETRY_WAIT``), else
+    doubles from 2 s, and gives up
     after ``RATE_LIMIT_RETRIES`` attempts by re-raising the last 429.
     """
     for attempt in range(RATE_LIMIT_RETRIES):
@@ -306,7 +308,9 @@ def _read_with_retry(req: urllib.request.Request) -> bytes:
                 raise
             retry_after = exc.headers.get("Retry-After", "")
             time.sleep(
-                float(retry_after) if retry_after.isdigit() else 2.0 * 2**attempt
+                min(float(retry_after), MAX_RETRY_WAIT)
+                if retry_after.isdigit()
+                else 2.0 * 2**attempt
             )
     raise AssertionError("unreachable")
 

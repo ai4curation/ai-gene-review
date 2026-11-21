@@ -374,11 +374,11 @@ yjdM stays MARK_AS_OVER_ANNOTATED, as in the worked pair above.
 `ai_gene_review.validation.enzyme_family_cutoff` scores a protein against the NCBIfam
 models for an annotated EC/GO activity and compares each score with the model's
 trusted and noise cutoffs (Schnoes steps 2 and 4). It also reports function-level
-families for other reactions that the protein passes. On 38 electronic enzyme rows
-from 20 *P. putida* reviews plus human HADH, 11 of 12 ACCEPT rows with a model passed
-and 10 of 13 REMOVE rows with a model failed (counts as of the 2026-11-21 re-run, which
-skips retired rows; see the 2026-11-21 note on the UNDECIDED rows). The three passing
-REMOVE rows were a
+families for other reactions that the protein passes. On 37 live electronic enzyme
+rows from 20 *P. putida* reviews plus human HADH, 11 of 12 ACCEPT rows with a model
+passed and 10 of 13 REMOVE rows with a model failed (counts as of the 2026-11-21
+re-run, which skips retired rows; see the 2026-11-21 note on the UNDECIDED rows). The
+three passing REMOVE rows were a
 pseudoenzyme (pyrC′, which needs a residue check), overlapping MetX donor families
 (metXS) and a paralog with ortholog biochemistry (PP_2325). The failing ACCEPT row was
 human HADH, below prokaryote-calibrated cutoffs. Details:

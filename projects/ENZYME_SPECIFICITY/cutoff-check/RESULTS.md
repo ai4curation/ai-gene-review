@@ -62,8 +62,9 @@ HADH. The ACCEPT rows on the same genes serve as controls. The set is **enriched
 REMOVE rows by construction**, so the counts below show agreement on this set, not a
 general error rate. The runner reads every live IEA/IBA molecular-function row that maps
 to a complete EC number (37 rows; PHYKPL has none, as its transaminase term carries no
-complete EC). Rows marked `retired` are skipped, since they are no longer in GOA. The reviewer's action is never an input to the check, and actions are read from the
-reviews at run time. Raw output: [results.yaml](results.yaml), which lists every target
+complete EC). Rows marked `retired` (retired or replaced in GOA) are skipped, since they
+are not live annotations. The reviewer's action is never an input to the check, and
+actions are read from the reviews at run time. Raw output: [results.yaml](results.yaml), which lists every target
 family's score for each row; NCBIfam release `hmm_PGAP/20.0`. Where a row has several
 target families, the scores quoted below are for the best one, the highest score as a
 fraction of its trusted cutoff.
@@ -120,6 +121,7 @@ and scanned the whole KT2440 proteome. Neither verdict decides its row:
 
 A third row, PP_0556 NAD+ kinase, was flagged in the earlier run only because the runner
 read a retired row. It no longer runs on retired rows.
+
 ### Where they disagree, and why
 
 - **pyrC′ dihydroorotase: ABOVE_TC (864.7 / 644), but REMOVE.** PyrC′ is a pseudoenzyme
@@ -152,9 +154,13 @@ read a retired row. It no longer runs on retired rows.
   crotonase, VOC and SDR/MDR.
 - `BTC` or `SFA` together with a competing family that passes is strong support for
   replacing the term (`MODIFY` to the competing activity, or `REMOVE`). Record the scores
-  in `review.reason`. A `BTC` with no competitor points to `MODIFY` toward a more general
-  activity, which is the paper's own remedy: annotate only "at the level of function for
-  which there is strong evidence".
+  in `review.reason`. A `BTC` with no competitor says only that the protein is not in the
+  family that carries the term. Before acting on it, score the protein against the sister
+  families it most resembles (as `followup_scan.py` does for ptxD; see Limitations): if it
+  sits just outside a sister family, the BTC says nothing about its activity. Only when no
+  related family fits either does it point to `MODIFY` toward a more general activity, the
+  paper's own remedy: annotate only "at the level of function for which there is strong
+  evidence".
 - `ABOVE_TC` does not establish activity: check catalytic residues (pseudoenzymes), and
   check whether the family is broader than the specificity in question.
 - `NO_MODEL` is expected for most eukaryote-specific enzymes and says nothing either way.
@@ -183,7 +189,10 @@ its full fingerprint in *P. putida* PP_5147.
 - Target families are those whose EC numbers or GO terms include the annotated activity.
   A closely related model that carries only a general term (NCBIfam's GhrB model, for
   ptxD) is not scored as a target, so a BTC can mean only "not this sister family".
-  Before acting on a BTC, check which NCBIfam model the protein matches best.
+  The check cannot find that sister family by itself: besides target families it scores
+  only the families InterPro reports, and InterPro reports none for ptxD because its
+  scores fall below each model's reporting threshold. Name the candidate sister families
+  and score them, as `followup_scan.py` does, or scan the whole NCBIfam library.
 - A BTC with no competing family says the annotation lacks family support. It cannot
   rule out an activity carried by a divergent family that no model covers.
 - The NCBIfam release and the InterPro and QuickGO responses can change. Results are tied
