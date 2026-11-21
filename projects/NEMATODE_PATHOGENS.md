@@ -4,7 +4,7 @@ description: "Modules and gene reviews for parasitic nematode cuticle, host-inte
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [BRUMA, HAECO, ONCVO, ASCSU, STRRB, STRER, TOXCA, TRITR, STECR, 9BILA, worm]
-genes: [dpy-31, bma-dpy-18.1, bma-dpy-18.2, far-1, lev-1, cpi-2, gp29, mf1]
+genes: [dpy-31, bma-dpy-18.1, bma-dpy-18.2, far-1, lev-1, unc-38, cpi-2, gp29, mf1]
 index_group: OTHER_ORGANISM
 ---
 
@@ -81,7 +81,7 @@ Levamisole-sensitive nicotinic acetylcholine receptor:
 
 - [x] `worm` `unc-29` / P48181 - existing nAChR beta-type receptor subunit review reused and cross-checked as the non-alpha anchor for the new L-AChR module
 - [x] `worm` `lev-1` / Q27218 - fetched and reviewed as the second non-alpha L-AChR pore subunit
-- [ ] `worm` `unc-38` / Q23022 - fetch and review as an alpha L-AChR pore subunit
+- [x] `worm` `unc-38` / Q23022 - fetched and reviewed as an alpha L-AChR pore subunit
 - [ ] `worm` `unc-63` / Q9N587 - fetch and review as an alpha L-AChR pore subunit
 - [ ] `worm` `lev-8` / Q93329 - fetch and review as the fifth C. elegans L-AChR pore subunit
 - [ ] `worm` `ric-3` / Q22472 - fetch and review as a receptor maturation/assembly ancillary factor
@@ -179,6 +179,8 @@ the extracellular oxidant-detoxification boundary is clear.
   a one-to-one LEV-8 projection
 - [x] Fetch and review the `worm` `lev-1` Q27218 non-alpha L-AChR
   pore subunit
+- [x] Fetch and review the `worm` `unc-38` Q23022 alpha nAChR
+  pore subunit shared by the L-AChR and ACR-2R
 
 # NOTES
 
@@ -335,3 +337,11 @@ the extracellular oxidant-detoxification boundary is clear.
   ASCSU are listed as candidates to resolve rather than as asserted
   one-to-one orthologs, because UniProt/PTHR18945 currently mixes L-AChR,
   GluCl, GABA/glycine, MOD-1-like, ACR-16-like and monepantel-channel records.
+- Added `genes/worm/unc-38` for Q23022, the first alpha nAChR pore-subunit
+  review in the L-AChR lane. The review distinguishes the module-relevant
+  body-wall muscle L-AChR from the neuronal ACR-2R that reuses UNC-38 and
+  UNC-63 with ACR-2/ACR-3/ACR-12, refines generic receptor and transport rows
+  to acetylcholine-gated cation-channel activity and cation transmembrane
+  transport, keeps locomotion and egg laying as non-core outputs, and records
+  WormBase follow-up queries for the calcium-import row and stale ACR-2R
+  composition text.
