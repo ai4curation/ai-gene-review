@@ -88,7 +88,7 @@ PantherDB inventory gives usable subfamily assignments.
     has no FUCA2 production model.
 
 - [ ] **PTHR10204, NQO1/NQO2 quinone reductase family**
-  - STATUS: in progress on NQO1.
+  - STATUS: in review on PR #6570.
   - Seed: `NQO1` / UniProtKB:P15559, reviewed Swiss-Prot, unreviewed locally,
     with 44 GOA rows and a compact two-member human PANTHER family.
   - Human family members in this checkout:
