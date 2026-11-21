@@ -29,9 +29,12 @@
 - `GO:0016020` membrane: marked too general because InterPro's
   TVP18/calcium-channel Flower mapping is true but less informative than Golgi
   membrane.
-- `GO:0003674` molecular_function and `GO:0008150` biological_process:
-  accepted as CGD ND placeholders. The review cites homology, PAINT, and
-  other-species evidence, but no paper assaying the C. glabrata gene product.
+- `GO:0003674` molecular_function: accepted as a CGD ND placeholder and
+  recorded as a true MF dark gap because no fungal TVP18 protein has an
+  established molecular activity.
+- `GO:0008150` biological_process: accepted as an inferable CGD ND placeholder;
+  the broad vesicle-mediated transport role is supported by PAINT, UniProt,
+  and other-species evidence, but no paper assays the C. glabrata gene product.
 - PTHR13314 also places `GO:0005262` calcium channel activity on
   `PTN001779219`, the same opisthokont node used for the accepted
   `GO:0016192` assertion. I did not add that molecular function because the
