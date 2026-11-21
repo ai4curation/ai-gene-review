@@ -104,10 +104,10 @@ PantherDB inventory gives usable subfamily assignments.
     model.
 
 - [ ] Next human Swiss-Prot seed family
-  - STATUS: queued after one of the two open family PRs is green.
+  - STATUS: queued after PR #6570 is mergeable again.
   - NOTES: keep selecting small, biologically characterized, cached PANTHER
-    families from the missing-accession table while the FUCA and NQO branches
-    wait for review.
+    families from the missing-accession table while the NQO branch waits for
+    review.
 
 # NOTES
 
@@ -141,7 +141,7 @@ PantherDB inventory gives usable subfamily assignments.
 - `PTHR10030` was selected next as a two-human-member alpha-L-fucosidase family:
   FUCA1 is a lysosomal paralog with an existing local DRAFT, while FUCA2 lacked
   a review and exercises the same root alpha-L-fucosidase PAINT gains without
-  requiring a family module or GO-CAM split. PR #6567 is open for review.
+  requiring a family module or GO-CAM split. PR #6567 merged.
 - `PTHR10204` was selected as a second compact human family: NQO1 lacked a
   review, NQO2 already documented the paralogous shift toward efficient
   NRH-dependent quinone reduction, and the family PAINT assertions are two
