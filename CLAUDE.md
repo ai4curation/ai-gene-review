@@ -207,6 +207,8 @@ A deep research file should already be present in the gene folder, e.g. `genes/S
 just deep-research SPECIES GENE --provider perplexity
 ```
 
+The Falcon (FutureHouse/Edison) stack is not in the default install; recipes that run Falcon through the repo environment (e.g. `just deep-research-interpro-family`, `just rules-deep-research-falcon`, `just fetch-research-artifacts`) need `uv sync --extra edison` first.
+
 This will create a file like `GENE-deep-research-perplexity.md`. You can also make your own notes in `genes/SPECIES/GENE/GENE-notes.md`.
 
 NEVER write your own content and name it `-deep-research-{provider}.md`. If deep research fails, document in `-notes.md` or `-deep-research-manual.md` instead.
