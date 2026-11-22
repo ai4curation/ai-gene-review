@@ -42,9 +42,9 @@ each subfamily the review names as affected lie below the node.
 [`needs-curator.yaml`](needs-curator.yaml).
 
 The 59 unread gene batches hold 1,370 overruled rows in 934 genes. Since the plans were
-made, reviews merged on main have added 333 overruled IBA rows in 226 genes and 272
-disputed node assessments: 256 in 142 families the plan does not cover, and 16 new ones
-in 10 families it had read (as of the sixth merge, 2026-11-22). Those have extracts and
+made, reviews merged on main have added 337 overruled IBA rows in 230 genes and 276
+disputed node assessments: 260 in 145 families the plan does not cover, and 16 new ones
+in 10 families it had read (as of the seventh merge, 2026-11-22). Those have extracts and
 listings, and are not
 in either plan; `plan` makes a plan once and does not extend it, so they need batches of
 their own.

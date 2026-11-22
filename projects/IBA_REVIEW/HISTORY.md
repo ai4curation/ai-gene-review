@@ -249,7 +249,24 @@ re-applied: 30 such rows over six merges, and 595 rows applied. Thirteen more ge
 four more families from main got an extract or a listing; not read by the re-read there
 are now 333 overruled rows in 226 genes and 272 disputed node assessments.
 
-- **A long-lived branch pays for every day it stays open.** Six merges in eleven days,
+**Seventh merge with main (2026-11-22).** No conflict. The validation job had failed on
+the sixth merge's head for a reason that lay on main: a content PR had rewritten cached
+publications, and 395 quotes in 242 human gene reviews, nearly all of them a paper's
+title, no longer matched. This PR saw it because it changes validators, which makes its
+CI validate every gene review; main's own runs validate only the reviews a push changes.
+The diagnosis, the count of title quotes still exposed to the next rewrite (about 19,600
+in 1,534 reviews) and the repairs are on the repository's issue 6604; main restored ten
+publication files and re-quoted two reviews. After the merge every quote of the rewritten
+publications matches again (4,434), each of the 595 applied rows keeps the verdict that
+was read, and four more genes and three more families from main got an extract or a
+listing. Not read by the re-read there are now 337 overruled rows in 230 genes and 276
+disputed node assessments. The extract of human ADAT3 records that PANTHER's sequence
+for it (351 residues) is not the one in its UniProt file (367).
+
+- **A check that runs on part of the corpus says nothing about the rest.** The break
+  above merged green and stayed invisible until a PR that validates everything met it.
+  A source that other records quote needs its incoming quotes checked when it changes.
+- **A long-lived branch pays for every day it stays open.** Seven merges in eleven days,
   each one a re-check of every applied row against a moving base. Where a re-read can
   land in small pieces, it should.
 

@@ -64,14 +64,18 @@ at a tree and left only prose was not counted.
   under a paralog claim), when a row is kept although PAINT has removed the term on the
   path to the gene (`kept_under_paint_loss`), and when a propagated row is overruled for
   residue loss without a checkable residue claim (`missing_residue_evidence`; 105 rows in
-  65 reviews on 2026-11-21, [below](#residue-arguments-without-a-residue-claim)).
+  65 reviews on 2026-11-22, [below](#residue-arguments-without-a-residue-claim)).
   `just validate-families` reports a node assessment that disputes a placement without
   quoting a tree listing (`NODE_TREE_EVIDENCE`).
-- **Backfill.** Extracts are committed for 1,414 genes: every gene whose review overrules
+- **Backfill.** Extracts are committed for 1,418 genes: every gene whose review overrules
   an IBA row that is still in its GOA file, and the genes with a kept row under a PAINT
-  loss. Node listings are committed for 361 families: those whose family review disputes a
+  loss. Node listings are committed for 364 families: those whose family review disputes a
   node placement, and PTHR48034 (the CIRBP family below). A review row whose IBA has since
-  been withdrawn from GOA has no tree row to quote and is not asked for one.
+  been withdrawn from GOA has no tree row to quote and is not asked for one. The committed
+  set is what was written when the tooling landed and at each merge with main since. It
+  can therefore hold a gene whose review has stopped overruling its IBA row in the
+  meantime (human SOD1, since 2026-11-22). Such an extract is still correct; the set is
+  rebuilt as a whole with the regeneration for PANTHER 20.0.
 
 The file format, the numbering rules and the limits are in
 [docs/phylo.md](https://github.com/ai4curation/ai-gene-review/blob/main/docs/phylo.md).
@@ -245,7 +249,10 @@ Review of this work then found three more, in the work itself.
 the verdict is wrong; each is a row where the verdict and the tree pull apart and someone
 should look. The file is regenerated from the current reviews, so it grows as reviews are
 merged and rows leave it as they are corrected. It held 233 rows when it was first built,
-and the first twelve batches of the re-read below were planned from that list.
+and the first twelve batches of the re-read below were planned from that list. The
+committed list is of 2026-11-17, the second merge with main, and has not been rebuilt at
+the later merges. It still names human SOD1 `GO:0005777`, whose verdict main changed on
+2026-11-22.
 
 | Group | Rows | Why it is listed |
 |---|---:|---|
@@ -399,10 +406,10 @@ the corrected rules, and are the first rows a curator should look at. `needs-cur
 marks them `contradiction_disputed`.
 
 Not yet read: 59 gene batches with no candidate row, 1,370 overruled rows in 934 genes.
-They still raise `missing_tree_evidence`. So do 333 overruled rows in 226 genes that
-reviews merged on main have added since the plan was made. 272 disputed node assessments
-are in the same position: 256 in 142 families the plan does not cover, and 16 new ones in
-10 families it had read (as of the sixth merge, 2026-11-22). These have extracts and
+They still raise `missing_tree_evidence`. So do 337 overruled rows in 230 genes that
+reviews merged on main have added since the plan was made. 276 disputed node assessments
+are in the same position: 260 in 145 families the plan does not cover, and 16 new ones in
+10 families it had read (as of the seventh merge, 2026-11-22). These have extracts and
 listings but are in neither plan.
 
 The readers of the candidate gene batches and of the first four family batches ran on the
@@ -414,7 +421,7 @@ the review contradicts the tree, so it is not used.
 
 The pilot met four rows overruled as `PSEUDO_OR_SUBACTIVITY_LOSS` with nothing in
 `residue_claims` (ARATH CRY1 `GO:0003904`, and GID1A, GID1B and GID1C `GO:0016787`).
-Counted over every gene review on 2026-11-21, with or without an extract: 175 rows in 96
+Counted over every gene review on 2026-11-22, with or without an extract: 175 rows in 96
 reviews use the failure mode; 46 state residue claims, 16 say why the argument is not a
 point-residue question, 8 are not overruled and so are not asked, and **105 rows in 65
 reviews** raise `missing_residue_evidence` (84 `REMOVE`, 21 `MARK_AS_OVER_ANNOTATED`; 72
