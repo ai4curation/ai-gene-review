@@ -118,6 +118,8 @@ class OakGoProcessGraph:
     )
     _PARENTS = f"SELECT object FROM edge WHERE subject = :term AND predicate = '{IS_A}'"
 
+    _LABEL = "SELECT value FROM rdfs_label_statement WHERE subject = :term"
+
     def __init__(self, adapter_string: str | None):
         self.adapter_string = adapter_string
         self.failure: str | None = None
@@ -163,6 +165,20 @@ class OakGoProcessGraph:
     def parents(self, curie: str) -> frozenset[str]:
         """Direct is-a parents."""
         return self._objects(self._PARENTS, curie)
+
+    @lru_cache(maxsize=65536)
+    def label(self, curie: str) -> str | None:
+        """The term's label, or None when it is unknown or the lookup failed."""
+        if self.failure or self.session is None:
+            return None
+        from sqlalchemy import text
+
+        try:
+            row = self.session.execute(text(self._LABEL), {"term": curie}).first()
+        except Exception as error:  # External ontology queries can also fail.
+            self.failure = f"GO lookup failed ({type(error).__name__})."
+            return None
+        return row[0] if row else None
 
     @cached_property
     def graph(self) -> GoProcessGraph:
@@ -378,6 +394,13 @@ def module_process_conformance(
             continue
         seen: set[str] = set()
         pathway_defining = _is_pathway_defining(annoton, graph)
+        # Whether the annoton names the process itself or inherits a node concept.
+        process_source = "annoton" if _go_ids(annoton.get("processes")) else "node"
+        evidence_ids = [
+            str(item["source_id"])
+            for item in as_list(annoton.get("evidence"))
+            if isinstance(item, dict) and item.get("source_id")
+        ]
         for exemplar, scope in _exemplars(annoton.get("participant")):
             term = exemplar.get("term")
             curie = term.get("id") if isinstance(term, dict) else None
@@ -421,6 +444,10 @@ def module_process_conformance(
                     "participant_id": curie,
                     "participant_label": exemplar.get("preferred_term"),
                     "scope": scope,
+                    "pathway_defining": pathway_defining,
+                    "process_source": process_source,
+                    "evidence_ids": evidence_ids,
+                    "review_path": review_path.as_posix() if review_path else None,
                     "expected_process_ids": expected,
                     "sibling_process_ids": siblings,
                     "status": status,

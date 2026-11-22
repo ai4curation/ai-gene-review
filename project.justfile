@@ -1456,6 +1456,13 @@ local-quote-baseline *args:
 ec-class-audit *files:
     uv run python -m ai_gene_review.validation.ec_class_consistency {{files}}
 
+# List processes that modules assert for a gene and that neither GOA nor the
+# gene's review carries: leads for NEW annotations, not annotations. Writes
+# reports/module-annotation-leads.tsv (git-ignored). See modules/README.md.
+[group('QC')]
+module-annotation-leads *args:
+    uv run python -m ai_gene_review.module_annotation_leads {{args}}
+
 # Validate all gene review files (schema + references + best practices).
 # Uses batch mode for schema and advisory term validation, then the CLI for
 # per-file reference and best-practices checks.

@@ -181,6 +181,22 @@ local gene folder is not checked at all. Resolve it by choosing an exemplar that
 fits, by stating the annoton's real process in `processes`, or by leaving it when
 the literature supports the choice.
 
+The same comparison, read the other way, gives leads for gene annotation. A
+module that places a protein in a process neither GOA nor the protein's review
+carries is a candidate `NEW` annotation for that review:
+
+```bash
+just module-annotation-leads   # writes reports/module-annotation-leads.tsv
+```
+
+Each row is a lead, not an annotation. The module's placement is this project's
+own claim and cannot be cited as the evidence, so a row still needs a
+publication and the participation test in the curation guidelines; a component
+shared by many pathways (an adaptor, a JAK) is usually not annotated to each
+one. Rows are sorted with the most direct claims first: the annoton names the
+process itself, then receptor and ligand annotons, then proteins GOA already
+places in a sibling process.
+
 Design notes:
 
 - Use `parts` for required or optional submodules.
