@@ -47,6 +47,21 @@ existing_annotations:
       action: MODIFY
       proposed_replacement_terms:
         - {id: GO:0004674, label: protein serine/threonine kinase activity}
+  - term: {id: GO:0004553, label: hydrolase activity, hydrolyzing O-glycosyl compounds}
+    qualifier: enables
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      action: MODIFY
+      proposed_replacement_terms:
+        - {id: GO:0106407, label: Glc2Man9GlcNAc2 oligosaccharide glucosidase activity}
+        - {id: NTR, label: proposed second-step glucosidase activity}
+        - {id: NTR, label: another proposed activity}
+  - term: {id: NTR, label: proposed process}
+    qualifier: involved_in
+    evidence_type: NEW
+    original_reference_id: PMID:2
+    review: {action: NEW}
   - term: {id: GO:0004674, label: protein serine/threonine kinase activity}
     qualifier: enables
     evidence_type: NEW
@@ -86,6 +101,10 @@ def test_rows_carry_qualifier_retired_and_ntr(tmp_path):
     assert rows["GO:0004672"]["replacement_is_proposed_term"] == ""
     assert rows["GO:0004672"]["negated"] == "true"
     assert rows["GO:0004672"]["isoform"] == "P00001-2"
+    assert rows["GO:0004553"]["replacement_term_ids"] == "GO:0106407|NTR"
+    assert rows["GO:0004553"]["replacement_is_proposed_term"] == ""
+    assert rows["NTR"]["term_is_proposed_term"] == "true"
+    assert rows["GO:0004674"]["term_is_proposed_term"] == ""
     assert rows["GO:0004674"]["action"] == "NEW"
     assert rows["GO:0004674"]["qualifier"] == "enables"
     assert out.read_text().startswith("# ai-gene-review commit: ")
@@ -97,6 +116,9 @@ def test_unreadable_file_fails_and_leaves_no_output(tmp_path):
     out = tmp_path / "out.tsv"
     assert mod.main(["--genes-dir", str(tmp_path / "genes"), "-o", str(out)]) == 1
     assert not out.exists()
+    out.write_text("previous good export\n")
+    assert mod.main(["--genes-dir", str(tmp_path / "genes"), "-o", str(out)]) == 1
+    assert out.read_text() == "previous good export\n"
     assert not list(tmp_path.glob(".out.tsv.*.tmp"))
 
 

@@ -15,10 +15,15 @@ Output contract:
   start with `#`; the third line is the TSV header.
 - `retired` is `true` for annotations the review marks as no longer in GOA, so a
   consumer can tell an expected non-match from a key mismatch.
-- `replacement_term_ids` lists MODIFY replacements; a replacement that is a
-  proposed new term (no GO id yet) is written as `NTR`, and
-  `replacement_is_proposed_term` is `true` on that row. A consumer applying
-  MODIFY should skip such rows rather than drop the original term.
+- `replacement_term_ids` lists MODIFY replacements. A replacement that is a
+  proposed new term (no GO id yet) appears once as the placeholder `NTR`;
+  ignore it. `replacement_is_proposed_term` is `true` only when no GO
+  replacement remains, i.e. every replacement is proposed: a consumer applying
+  MODIFY should skip those rows rather than drop the original term, and use
+  the GO ids on every other row.
+- `term_is_proposed_term` is `true` when the row's own term has no GO id yet
+  (`term_id` is `NTR`, e.g. a NEW annotation to a term GO does not have).
+  Such rows cannot be added to a GAF.
 - `is_core_function_term` is an exact-id match against the review's
   `core_functions` GO terms (MF, BP and CC pooled). It is not ancestor-aware.
 - The key (accession, term, qualifier, evidence, reference) is not guaranteed
@@ -28,6 +33,10 @@ Output contract:
 - `action` is empty when the annotation has no `review` block; `PENDING`
   appears only where a review says so explicitly. Boolean columns are `true`
   or empty (not `false`).
+- The commit in the header describes the exporter's own repository, which is
+  the data's repository only when `--genes-dir` is left at its default.
+- Rows are written with `csv` (tab delimiter, minimal quoting): a field
+  containing a tab, newline or double quote would be quoted.
 - The run exits non-zero if any review file could not be read, or if there are
   none; the output is written (UTF-8, mode 0644) to a temporary file and only
   moved into place on success, so a failed run never replaces a previous export.
@@ -70,6 +79,7 @@ COLUMNS = [
     "action",
     "replacement_term_ids",
     "replacement_is_proposed_term",
+    "term_is_proposed_term",
     "is_core_function_term",
 ]
 
@@ -111,17 +121,16 @@ def rows_for(path: Path) -> list[dict]:
             raise ReviewFileError(f"existing_annotations[{index}] is not a mapping")
         term = ann.get("term") or {}
         review = ann.get("review") or {}
-        replacements = []
-        proposed = False
+        replacements: list[str] = []
         for t in review.get("proposed_replacement_terms") or []:
             if not isinstance(t, dict):
                 continue
             term_id = str(t.get("id", ""))
-            if term_id.startswith("GO:"):
-                replacements.append(term_id)
-            elif term_id:
-                replacements.append("NTR")
-                proposed = True
+            entry = term_id if term_id.startswith("GO:") else ("NTR" if term_id else "")
+            if entry and entry not in replacements:
+                replacements.append(entry)
+        only_proposed = bool(replacements) and not any(r.startswith("GO:") for r in replacements)
+        own_id = str(term.get("id", ""))
         rows.append(
             {
                 "uniprot_id": uniprot,
@@ -136,7 +145,8 @@ def rows_for(path: Path) -> list[dict]:
                 "retired": "true" if ann.get("retired") else "",
                 "action": review.get("action") or "",
                 "replacement_term_ids": "|".join(replacements),
-                "replacement_is_proposed_term": "true" if proposed else "",
+                "replacement_is_proposed_term": "true" if only_proposed else "",
+                "term_is_proposed_term": "true" if own_id and not own_id.startswith("GO:") else "",
                 "is_core_function_term": "true" if term.get("id") in core else "",
             }
         )
