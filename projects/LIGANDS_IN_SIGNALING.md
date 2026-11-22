@@ -39,7 +39,7 @@ genes:
 manifest:
   artifacts:
     - href: https://claude.ai/artifact/J3MezLgjhawKdowHbNDKRJ
-      title: Ligand gap report
+      title: Ligand gap check
       description: AI generated
 index_group: CROSS_CUTTING
 ---
@@ -650,8 +650,15 @@ validators.
   PTHR11471, PTHR12015, PTHR11412, PTHR11515, PTHR11509, PTHR16866, PTHR24023, PTHR13874,
   PTHR16839, PTHR20950, PTHR11438.
 - Report page: [report/ligand-gap-report.html](LIGANDS_IN_SIGNALING/report/ligand-gap-report.html)
-  (human, fly and fission yeast snapshot; also published as the Ligand gap report artifact).
-  It predates the GPCR scope and the other species, so its counts are lower than section 3.
+  (human, fly and fission yeast snapshot). It predates the GPCR scope and the other species, so
+  its counts are lower than section 3.
+- Interactive version: the [Ligand gap check](https://claude.ai/artifact/J3MezLgjhawKdowHbNDKRJ)
+  artifact (AI generated, updated 2026-11-22). It covers ten organisms (section 3's seven plus
+  worm, Arabidopsis and Dictyostelium) with the GPCR scope, and its per-organism totals match
+  section 3. Its failure categories come from a separate triage pass, not from
+  `scripts/triage.py`, so its A/B/C split differs from the table in section 3. It also notes
+  that Dictyostelium's GPCR pathways pass only because the cAMP receptor carA-1 carries a
+  ligand-activity MF.
 
 ### Next steps
 
