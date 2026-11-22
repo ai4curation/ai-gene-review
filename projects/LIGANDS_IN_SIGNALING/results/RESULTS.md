@@ -32,10 +32,10 @@ GO version: releases/2026-07-26. GAFs: current.geneontology.org at run time.
 | C: ligand counterpart on the pathway but lacks a ligand-activity MF | 4 | 4 | 4 | 8 | 2 | 3 | 0 | 0 | 0 | 0 |
 | N: no same-symbol ligand counterpart annotated | 0 | 4 | 0 | 7 | 0 | 0 | 0 | 0 | 0 | 0 |
 | U: no donor ligand available | 3 | 7 | 7 | 1 | 3 | 9 | 0 | 0 | 0 | 0 |
-| X: no protein ligand expected (small molecule, light, microbial) | 37 | 41 | 35 | 31 | 18 | 17 | 3 | 2 | 5 | 4 |
+| X: no protein ligand expected (small molecule, light, microbial) | 37 | 41 | 35 | 31 | 18 | 17 | 2 | 2 | 4 | 3 |
 | Y: antigen, contact or ligand-independent | 11 | 11 | 11 | 10 | 4 | 4 | 0 | 0 | 0 | 0 |
-| O: suspect over-annotation | 0 | 1 | 1 | 0 | 6 | 5 | 1 | 0 | 4 | 3 |
-| G: misapplied or generic term | 4 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 0 | 0 |
+| O: suspect over-annotation | 0 | 1 | 1 | 0 | 6 | 5 | 1 | 0 | 3 | 3 |
+| G: misapplied or generic term | 4 | 0 | 0 | 0 | 0 | 0 | 2 | 1 | 2 | 1 |
 
 ## Curation candidates (categories A, B, C)
 
@@ -113,25 +113,25 @@ GO version: releases/2026-07-26. GAFs: current.geneontology.org at run time.
 | rat | urokinase plasminogen activator signaling pathway (GO:0038195) | C | Plau: A (ligand MF); Slurp1: C |
 | zebrafish | phospholipase C-activating G protein-coupled receptor signaling pathway (GO:0007200) | A | agt: A; calca: A (ligand MF); ccka: A (ligand MF); cckb: A (ligand MF); edn2: A (ligand MF); hcrt: A (ligand MF); il2: A; kiss1: A; nmu: A; tac1: A |
 | zebrafish | G protein-coupled receptor signaling pathway, coupled to cyclic nucleotide second messenger (GO:0007187) | A | agt: A; npy: A (ligand MF) |
-| zebrafish | insulin receptor signaling pathway (GO:0008286) | A | igf1: A (ligand MF); igf2b: A (ligand MF); igf2a: A (ligand MF); insb: A (ligand MF); ins: A (ligand MF) |
+| zebrafish | insulin receptor signaling pathway (GO:0008286) | A | igf1: A (ligand MF); igf2a: A (ligand MF); igf2b: A (ligand MF); ins: A (ligand MF); insb: A (ligand MF) |
 | zebrafish | tumor necrosis factor-mediated signaling pathway (GO:0033209) | A | tnfa: A (ligand MF); tnfb: A (ligand MF); tnfsf11: A (ligand MF); tnfsf13b: A (ligand MF) |
-| zebrafish | G protein-coupled opioid receptor signaling pathway (GO:0038003) | A | penkb: A (ligand MF); penka: A (ligand MF) |
-| zebrafish | netrin-activated signaling pathway (GO:0038007) | A | ntn1b: A; ntn1a: A |
+| zebrafish | G protein-coupled opioid receptor signaling pathway (GO:0038003) | A | penka: A (ligand MF); penkb: A (ligand MF) |
+| zebrafish | netrin-activated signaling pathway (GO:0038007) | A | ntn1a: A; ntn1b: A |
 | zebrafish | endothelin receptor signaling pathway (GO:0086100) | A | edn1: A (ligand MF); edn2: A (ligand MF) |
 | zebrafish | interleukin-15-mediated signaling pathway (GO:0035723) | A | il15: A (ligand MF) |
-| zebrafish | collagen-activated tyrosine kinase receptor signaling pathway (GO:0038063) | A | col1a1b: A; col1a1a: A; col1a2: A; col2a1b: A; col2a1a: A; col4a2: A |
+| zebrafish | collagen-activated tyrosine kinase receptor signaling pathway (GO:0038063) | A | col1a1a: A; col1a1b: A; col1a2: A; col2a1a: A; col2a1b: A; col4a2: A |
 | zebrafish | Roundabout signaling pathway (GO:0035385) | A | slit2: A |
 | zebrafish | TRAIL-activated apoptotic signaling pathway (GO:0036462) | A | tnfsf10: A (ligand MF) |
 | zebrafish | reelin-mediated signaling pathway (GO:0038026) | A | reln: A |
 | zebrafish | Kit signaling pathway (GO:0038109) | A | kitlga: A; kitlgb: A |
-| zebrafish | macrophage colony-stimulating factor signaling pathway (GO:0038145) | A | csf1b: A (ligand MF); csf1a: A (ligand MF) |
+| zebrafish | macrophage colony-stimulating factor signaling pathway (GO:0038145) | A | csf1a: A (ligand MF); csf1b: A (ligand MF) |
 | zebrafish | CXCL12-activated CXCR4 signaling pathway (GO:0038160) | A | cxcl12a: A (ligand MF); cxcl12b: A (ligand MF) |
 | zebrafish | gastric inhibitory peptide signaling pathway (GO:0038192) | A | gip: A |
 | zebrafish | thyroid-stimulating hormone signaling pathway (GO:0038194) | A | cga: A (ligand MF); tshba: A (ligand MF); tshbb: A (ligand MF) |
 | zebrafish | interleukin-1-mediated signaling pathway (GO:0070498) | A | il1b: A (ligand MF) |
 | zebrafish | brain-derived neurotrophic factor receptor signaling pathway (GO:0031547) | A | bdnf: A (ligand MF) |
 | zebrafish | Fas signaling pathway (GO:0036337) | A | faslg: A (ligand MF) |
-| zebrafish | apolipoprotein A-I-mediated signaling pathway (GO:0038027) | A | apoa1b: A; apoa1a: A |
+| zebrafish | apolipoprotein A-I-mediated signaling pathway (GO:0038027) | A | apoa1a: A; apoa1b: A |
 | zebrafish | chemokine (C-C motif) ligand 19 signaling pathway (GO:0038115) | A | ccl19b: A (ligand MF) |
 | zebrafish | thrombopoietin-mediated signaling pathway (GO:0038163) | A | thpo: A (ligand MF) |
 | zebrafish | complement component C5a signaling pathway (GO:0038178) | A | c5: A |
@@ -139,19 +139,19 @@ GO version: releases/2026-07-26. GAFs: current.geneontology.org at run time.
 | zebrafish | follicle-stimulating hormone signaling pathway (GO:0042699) | A | cga: A (ligand MF); fshb: A (ligand MF); slit2: A |
 | zebrafish | luteinizing hormone signaling pathway (GO:0042700) | A | lhb: A (ligand MF) |
 | zebrafish | growth hormone receptor signaling pathway via JAK-STAT (GO:0060397) | B | gh1: B (ligand MF) on growth hormone receptor signaling pathway |
-| zebrafish | platelet-derived growth factor receptor-beta signaling pathway (GO:0035791) | B | pdgfaa: B (ligand MF) on platelet-derived growth factor receptor signaling pathway; pdgfab: B (ligand MF) on platelet-derived growth factor receptor signaling pathway; pdgfbb: B (ligand MF) on platelet-derived growth factor receptor signaling pathway; pdgfba: B on platelet-derived growth factor receptor signaling pathway |
-| zebrafish | neurotrophin TRK receptor signaling pathway (GO:0048011) | B | ngfb: B (ligand MF) on nerve growth factor signaling pathway; ngfa: B (ligand MF) on nerve growth factor signaling pathway |
+| zebrafish | platelet-derived growth factor receptor-beta signaling pathway (GO:0035791) | B | pdgfaa: B (ligand MF) on platelet-derived growth factor receptor signaling pathway; pdgfab: B (ligand MF) on platelet-derived growth factor receptor signaling pathway; pdgfba: B on platelet-derived growth factor receptor signaling pathway; pdgfbb: B (ligand MF) on platelet-derived growth factor receptor signaling pathway |
+| zebrafish | neurotrophin TRK receptor signaling pathway (GO:0048011) | B | ngfa: B (ligand MF) on nerve growth factor signaling pathway; ngfb: B (ligand MF) on nerve growth factor signaling pathway |
 | zebrafish | smoothened signaling pathway involved in ventral spinal cord patterning (GO:0021910) | B | shha: B on smoothened signaling pathway; shhb: B on smoothened signaling pathway |
 | zebrafish | platelet-derived growth factor receptor-alpha signaling pathway (GO:0035790) | B | pdgfaa: B (ligand MF) on platelet-derived growth factor receptor signaling pathway; pdgfab: B (ligand MF) on platelet-derived growth factor receptor signaling pathway |
 | zebrafish | Notch signaling involved in heart development (GO:0061314) | B | dll4: B on Notch signaling pathway; jag1a: B (ligand MF) on Notch signaling pathway; jag1b: B on Notch signaling pathway |
 | zebrafish | galanin-activated signaling pathway (GO:0090663) | B | gal: B (ligand MF) on neuropeptide signaling pathway |
-| zebrafish | ephrin receptor signaling pathway (GO:0048013) | C | efna1a: C; efna1b: C; efna5a: C; efna5b: C; efnb2b: C; efnb2a: C; epha7: C |
-| zebrafish | non-canonical Wnt signaling pathway (GO:0035567) | C | sfrp2: C; wnt11: B on Wnt signaling pathway; wnt3a: B (ligand MF) on Wnt signaling pathway; wnt4b: B (ligand MF) on Wnt signaling pathway; wnt4: B (ligand MF) on Wnt signaling pathway; wnt5a: B (ligand MF) on Wnt signaling pathway; wnt7aa: B (ligand MF) on Wnt signaling pathway; wnt7ab: B (ligand MF) on Wnt signaling pathway; wnt7ba: B (ligand MF) on Wnt signaling pathway; wnt7bb: B (ligand MF) on Wnt signaling pathway; wnt9b: B (ligand MF) on Wnt signaling pathway |
+| zebrafish | ephrin receptor signaling pathway (GO:0048013) | C | efna1a: C; efna1b: C; efna5a: C; efna5b: C; efnb2a: C; efnb2b: C; epha7: C |
+| zebrafish | non-canonical Wnt signaling pathway (GO:0035567) | C | sfrp2: C; wnt11: B on Wnt signaling pathway; wnt3a: B (ligand MF) on Wnt signaling pathway; wnt4: B (ligand MF) on Wnt signaling pathway; wnt4b: B (ligand MF) on Wnt signaling pathway; wnt5a: B (ligand MF) on Wnt signaling pathway; wnt7aa: B (ligand MF) on Wnt signaling pathway; wnt7ab: B (ligand MF) on Wnt signaling pathway; wnt7ba: B (ligand MF) on Wnt signaling pathway; wnt7bb: B (ligand MF) on Wnt signaling pathway; wnt9b: B (ligand MF) on Wnt signaling pathway |
 | zebrafish | tachykinin receptor signaling pathway (GO:0007217) | C | tac1: C; tac3a: C; tac3b: C; tac4: A |
 | zebrafish | thrombin-activated receptor signaling pathway (GO:0070493) | C | f2: A; f2rl2: C |
 | zebrafish | angiotensin-activated signaling pathway (GO:0038166) | C | agt: C |
 | zebrafish | hepatocyte growth factor receptor signaling pathway (GO:0048012) | C | hgfa: C |
-| zebrafish | Tie signaling pathway (GO:0048014) | C | angpt1: C; angpt2b: A; angpt2a: C; angpt4: A |
+| zebrafish | Tie signaling pathway (GO:0048014) | C | angpt1: C; angpt2a: C; angpt2b: A; angpt4: A |
 | zebrafish | interleukin-11-mediated signaling pathway (GO:0038154) | C | cntfr: C; il11a: A (ligand MF); il11b: A (ligand MF); il6st: A |
 | fly | neurotrophin signaling pathway (GO:0038179) | A | NT1: A (ligand MF); spz: A (ligand MF); spz5: A (ligand MF) |
 | fly | extrinsic apoptotic signaling pathway (GO:0097191) | A | egr: A (ligand MF) |

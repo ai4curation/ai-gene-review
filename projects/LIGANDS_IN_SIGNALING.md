@@ -182,9 +182,9 @@ Both curated inputs are explicit files, so the prior knowledge is visible and re
 | A: ligand counterpart not on the pathway | 11 | 9 | 12 | 27 | 5 | 5 | 1 | 1 | 1 | 0 |
 | B: ligand only on a related pathway term | 8 | 9 | 9 | 7 | 1 | 3 | 0 | 0 | 0 | 0 |
 | C: ligand on the pathway but no ligand-activity MF | 4 | 4 | 4 | 8 | 2 | 3 | 0 | 0 | 0 | 0 |
-| X/Y: no host protein ligand expected | 48 | 52 | 46 | 41 | 22 | 21 | 3 | 2 | 5 | 4 |
-| O: suspect over-annotation | 0 | 1 | 1 | 0 | 6 | 5 | 1 | 0 | 4 | 3 |
-| Other (N, U, G) | 7 | 11 | 7 | 8 | 3 | 9 | 1 | 1 | 0 | 0 |
+| X/Y: no host protein ligand expected | 48 | 52 | 46 | 41 | 22 | 21 | 2 | 2 | 4 | 3 |
+| O: suspect over-annotation | 0 | 1 | 1 | 0 | 6 | 5 | 1 | 0 | 3 | 3 |
+| Other (N, U, G) | 7 | 11 | 7 | 8 | 3 | 9 | 2 | 1 | 2 | 1 |
 
 Examples (human unless noted). A: KITLG, IL21, IL22, CXCL8, C5, MIF, FASLG and the netrins are
 not on their pathways. B: VEGFA/VEGFB/PGF are on VEGF receptor signaling but not the VEGFR-1
@@ -234,9 +234,14 @@ almost all falsely: G-protein alphas, LYN and IRAK4 qualify through exosome or e
 annotations, and netrin signaling "passes" on DSCAM and tubulin. Only IL34 (human) and sli
 (fly) are real. The ligand step has to come from curated modules.
 
-Caveats: symbol matching stands in for orthology; worm, the yeasts, Arabidopsis and
-Dictyostelium have no same-lineage donor (each is its own lineage), so their lookups rest on
-curated/expected_ligands.yaml and unlisted terms fall into U;
+Caveats: symbol matching stands in for orthology, so a ligand named differently in another
+species is missed (mouse Fasl, Kitl and Hc for human FASLG, KITLG and C5 make mouse Fas, Kit
+and C5a signaling N rather than A); a passing species offers at most eight ligand symbols per
+term as donors, so the cap can change a category (complexes and proteoform symbols are left out
+of the donor list); fly, worm, the yeasts, Arabidopsis and Dictyostelium have no same-lineage
+donor (each is its own lineage), so their lookups rest on curated/expected_ligands.yaml and
+unlisted terms fall into U; gene counts are of GAF object ids, so a gene listed under two ids
+(CERK1 in Arabidopsis, carA-1 in Dictyostelium) counts twice;
 go-basic omits MF-to-BP part_of links, which is harmless here because only BP annotations
 place genes in pathways.
 

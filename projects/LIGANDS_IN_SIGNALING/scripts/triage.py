@@ -74,7 +74,7 @@ def gene_index(go: GO, gaf: Path) -> dict:
 def counterparts(org: str, donor: str, idx: dict) -> list[str]:
     key = donor.lower()
     out = []
-    for sym in idx:
+    for sym in sorted(idx):
         s = sym.lower()
         if s == key or (org == "zebrafish" and s in (key + "a", key + "b", key + ".1", key + ".2")):
             out.append(sym)
@@ -123,9 +123,10 @@ def main() -> None:
                        binding_only_genes=r["binding_only_genes"], passes_in=sorted(passing), lookups=[])
             flag = flags.get(org, {}).get(term)
             if flag:
-                rec.update(category=flag["category"], note=flag.get("note", ""))
+                rec.update(category=flag["category"], note=flag.get("note", ""), source="organism_flag")
             elif term in labels:
-                rec.update(category=labels[term]["category"], note=labels[term].get("reason", ""))
+                rec.update(category=labels[term]["category"], note=labels[term].get("reason", ""),
+                           source="term_label")
             else:
                 lineage = LINEAGE[org]
                 donors = collections.defaultdict(list)
@@ -155,7 +156,7 @@ def main() -> None:
                                                     if SIGNAL_TRANSDUCTION in go.ancestors(t, True)})[:3]))
                         if best is None or priority[result] < priority[best]:
                             best = result
-                rec.update(category=best or "U", note="")
+                rec.update(category=best or "U", note="", source="lookup")
             triaged.append(rec)
 
     triaged.sort(key=lambda r: (args.orgs.index(r["org"]), ORDER.index(r["category"]), -r["n_genes"], r["term"]))

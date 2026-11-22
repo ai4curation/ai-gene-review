@@ -8,8 +8,8 @@ curated files, and writes one JSON object that the artifact page loads as data.j
   orphans  ligand-activity genes in no signaling term, per organism
   survey   textbook ligands and their involved_in annotations to their own pathway
 
-Category source ("src") says where a category came from: "manual" (organism_flags.yaml),
-"term" (term_labels.yaml) or "lookup" (the cross-species or expected-ligand symbol lookup).
+Category source ("src") comes from triage.json: "manual" (organism_flags.yaml), "term"
+(term_labels.yaml) or "lookup" (the cross-species or expected-ligand symbol lookup).
 
 Usage:
   uv run python projects/LIGANDS_IN_SIGNALING/scripts/export_artifact_data.py --out data.json
@@ -18,23 +18,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
-import yaml
+sys.path.insert(0, str(Path(__file__).parent))
+from ligand_gap_check import ORGANISMS  # noqa: E402
 
 HERE = Path(__file__).resolve().parent.parent
-RESULTS, CURATED = HERE / "results", HERE / "curated"
-ORDER = ["human", "mouse", "rat", "zebrafish", "fly", "worm", "yeast", "pombe", "arabidopsis", "dicty"]
+RESULTS = HERE / "results"
+SRC = {"organism_flag": "manual", "term_label": "term", "lookup": "lookup"}
 SURVEY_ORG = {"9606": "human", "7227": "fly", "284812": "pombe", "4896": "pombe"}
-
-
-def category_source(rec: dict, flags: dict, labels: set) -> str:
-    """Return where a failing row's category came from."""
-    if rec["term"] in flags.get(rec["org"], set()):
-        return "manual"
-    if rec["term"] in labels:
-        return "term"
-    return "lookup"
 
 
 def check_entry(lookup: dict) -> dict:
@@ -59,16 +52,13 @@ def check_entry(lookup: dict) -> dict:
 
 def build() -> dict:
     """Assemble the artifact data object from the committed results."""
-    flags = {o: {r["term"] for r in rows}
-             for o, rows in yaml.safe_load((CURATED / "organism_flags.yaml").read_text())["organism_flags"].items()}
-    labels = {r["term"] for r in yaml.safe_load((CURATED / "term_labels.yaml").read_text())["term_labels"]}
     triage = json.loads((RESULTS / "triage.json").read_text())
     by_key = {(r["org"], r["term"]): r for r in triage}
     out: dict = {"orgs": [], "orphans": {}, "survey": []}
     names: dict[str, str] = {}
-    for org in ORDER:
+    for org in ORGANISMS:
         path = RESULTS / f"gapcheck-{org}.json"
-        if not path.exists():
+        if not path.exists() or not any(k[0] == org for k in by_key):
             continue
         res = json.loads(path.read_text())
         miss, ok = [], []
@@ -83,7 +73,7 @@ def build() -> dict:
                          "genes": row["genes"], "bind": row["binding_only_genes"], "ev": row["evidence"],
                          "cat": t["category"], "note": t.get("note", ""),
                          "check": [check_entry(x) for x in t["lookups"]],
-                         "src": category_source(t, flags, labels)})
+                         "src": SRC[t["source"]]})
         out["orgs"].append({"org": org, "total": len(res["rows"]), "miss": miss, "ok": ok,
                             "nlig": res["n_ligand_activity_genes"]})
         out["orphans"][org] = {"n": res["n_ligand_activity_genes"],
