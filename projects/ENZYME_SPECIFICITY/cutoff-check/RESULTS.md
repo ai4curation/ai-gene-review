@@ -165,7 +165,7 @@ read a retired row. It no longer runs on retired rows.
 - `ABOVE_TC` does not establish activity: check catalytic residues (pseudoenzymes), and
   check whether the family is broader than the specificity in question. Subunit models
   carry the whole complex's EC number, and a family that became a target only through its
-  GO metadata can carry the sister reaction's term (four such families are listed in the
+  GO metadata can carry the sister reaction's term (six such models are listed in the
   [best-family sweep](sweep/RESULTS.md)).
 - `NO_MODEL` is expected for most eukaryote-specific enzymes and says nothing either way.
 - Never use the check alone to remove an experimental annotation.

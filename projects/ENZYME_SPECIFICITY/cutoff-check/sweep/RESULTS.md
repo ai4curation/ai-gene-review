@@ -8,9 +8,11 @@ function-level NCBIfam library, so its closest families are always reported.
 
 This sweep runs that check over every live (not retired) IEA or IBA row in the
 P. putida KT2440 (`PSEPK`) and E. coli (`ECOLI`) reviews whose GO term maps to a
-complete EC number: 1308 rows on 1044 proteins, NCBIfam release 20.0. The reviewer's
-action is read afterwards and is never an input to the verdict. **No review is changed
-here.**
+complete EC number: 1306 rows on 1043 proteins, NCBIfam release 20.0. The reviewer's
+action is read afterwards and is never an input to the verdict. Proposed (`NEW`) rows
+are skipped. **No review is changed here.** Two pairs of electronic rows on one term
+(pedI, `GO:0004029` and `GO:0004030`) carry different actions; the generated list
+reports them for the review's action-consistency check.
 
 - Runner: [`run_sweep.py`](run_sweep.py), about 6 minutes once sequences and the pressed
   library are cached. `--rerender` re-derives the lists from saved scores.
@@ -31,44 +33,61 @@ Excluding rows where no family carries the activity, the pass rates are 87% (827
 for kept rows and 53% (80 of 150) for removed rows.
 
 Kept rows also include 10 BETWEEN_NC_TC verdicts and removed rows include 3; the other
-125 rows carry another action, such as MODIFY or UNDECIDED. Most kept rows pass a family that carries the
+123 rows carry another action, such as MODIFY or UNDECIDED. Most kept rows pass a family that carries the
 activity. But nearly half of the removed rows pass one too, so passing a family is weak
 evidence that a removal was wrong. The reasons are below.
 
 ## What the disagreement lists contain
 
-### Kept rows that fit another reaction's family (35)
+The kept rows that fail their target families but pass another function-level family
+are split three ways. The split depends on how each passing family relates to the
+protein, which the lists tag:
+- `[named]`: the family is named for the protein (its gene symbol, the best target's
+  product name, or a protein name on its UniProt record);
+- `[record_ec]`: the family carries an EC number the record states;
+- `[other]`: neither.
 
-In these rows the protein fails every family carrying the term and passes a function-level
-family for a different reaction, and its own UniProt record does not state the annotated
-EC. Read case by case, most rows follow one of three patterns, and none is decided by the
-scores alone:
+### Kept rows whose protein passes a family for another activity (41)
+
+In these rows, some passing family is `[other]`, or the protein passes its own family
+(`[record_ec]`) while its UniProt record does not state the annotated EC. Read case by
+case, most rows follow one of three patterns, and none is decided by the scores alone:
 
 - **A partial reaction of a multi-step enzyme.** Glutaminase (`GO:0004359`) on the
-  amidotransferase subunits gatA, pyrG and carA, and phosphoprotein phosphatase on the
-  bifunctional kinase/phosphatase aceK. The passing family is the protein's own
-  amidotransferase or bifunctional family.
+  amidotransferases pyrG and carA, and phosphoprotein phosphatase on the bifunctional
+  kinase/phosphatase aceK. The passing family is the protein's own amidotransferase or
+  bifunctional family.
 - **A cofactor or donor variant of the protein's own reaction.** NAD+ versus NADP+ terms
-  on puuC, sad, gdhA, gpsA and aldB-II; GDP-forming succinate-CoA ligase on sucC, which
-  passes the ADP-forming subunit beta families. Also alcohol dehydrogenase (NAD+) on the
+  on sad, gdhA, gpsA and aldB-II; GDP-forming succinate-CoA ligase on sucC, which passes
+  the ADP-forming subunit beta families. Also alcohol dehydrogenase (NAD+) on the
   homoserine dehydrogenases thrA and metL, which the thrA review accepts because the
   mapped Rhea reaction is the NAD-linked homoserine reaction. HMM families rarely
   separate cofactors, so these rows are about which term is right, not which family.
-- **A complex's activity on one subunit.** NADH dehydrogenase (ubiquinone) on nuoC and
-  nuoG, which pass their own subunit families.
+- **A complex's activity on one subunit.** NADH dehydrogenase (ubiquinone) on nuoC.
 
-For ECOLI paaH, the target model passes on whole-sequence score (681.0 / 508.0) but fails
-on best-domain score (495.3 / 508.0). HMMER's `--cut_tc` requires both, and the table shows the domain
-score wherever it is the one that fails. The remaining rows are single cases.
+The rest are single cases. Some are a related activity of the protein's own family: alr
+is a broad-specificity racemase (EC 5.1.1.10) that passes the alanine racemase families.
 
-### Kept rows the protein's own record supports (38)
+### Kept rows where another model of the protein's own family passes (14)
 
-Here the gene's UniProt record does state the annotated EC, and the passing family is
-the protein's own family, whose EC list in the NCBIfam release table is narrower than
-the protein's activities. Examples are helicase activity on recB, recD, recG and uvrD,
-whose families are named for the exonuclease or the complex. These rows are
-expected, not conflicts. They are separated out only because the scores cannot tell them
-from the list above.
+Every passing family is `[named]`: another NCBIfam model of the protein's own family,
+which the term is not mapped to. These rows are nuoG, gatA, gatB, paaH, fadB, paaF, puuC,
+acs, cheZ, dsbA and appA. They usually show a gap in the release table's EC and GO
+mapping, not a doubt about the row. For ECOLI paaH, the target model passes on
+whole-sequence score (681.0 / 508.0) but fails on best-domain score (495.3 / 508.0).
+HMMER's `--cut_tc` requires both, and the lists show the domain score wherever it is the
+one that fails.
+
+### Kept rows whose annotated EC the protein's UniProt record states (18)
+
+Every passing family is `[named]` or `[record_ec]`, and the record also states the
+annotated EC. Examples are helicase activity on recB, recG and uvrD, whose families are
+named for the exonuclease or the complex, and glutaminase on the amidotransferase hisH.
+These are mostly secondary or partial reactions that the family's EC list leaves out.
+The record's support for the annotated EC can still be the weak point. In yihU the
+4-hydroxybutyrate dehydrogenase EC (1.1.1.61) is on the record with experimental
+evidence (PMID:19372223), but the protein's own family is named for its
+sulfolactaldehyde reductase activity, and the review keeps the row as non-core.
 
 ### Kept rows below cutoff with no competing family (45)
 

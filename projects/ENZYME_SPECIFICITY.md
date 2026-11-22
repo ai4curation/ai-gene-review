@@ -334,12 +334,12 @@ Last updated: 2026-11-22
 
 The check now scans each protein against every function-level NCBIfam model, so a
 below-cutoff verdict comes with the families the protein does fit. The
-[sweep](ENZYME_SPECIFICITY/cutoff-check/sweep/RESULTS.md) covers 1308 live electronic
-enzyme rows on 1044 proteins. 82% of the 1014 kept rows pass a family carrying the
+[sweep](ENZYME_SPECIFICITY/cutoff-check/sweep/RESULTS.md) covers 1306 live electronic
+enzyme rows on 1043 proteins. 82% of the 1014 kept rows pass a family carrying the
 activity, but so do 47% of the 169 removed rows. The removed rows that pass are subunit
 models carrying the complex's EC number, pseudoenzymes and paralogs the reviews identified,
-broader substrate terms, and four NCBIfam families whose GO metadata names the sister
-reaction (PurT, ADP-glucose glycogen synthase, PS synthase, NrdG). The kept rows that fit
+broader substrate terms, and six NCBIfam models whose GO metadata names the sister
+reaction (models for PurT, ADP-glucose glycogen synthase, PS synthase and NrdG). The kept rows that fit
 another family are mostly partial reactions, cofactor variants and complex activities on a
 subunit. The ranked lists are in
 [DISAGREEMENTS.md](ENZYME_SPECIFICITY/cutoff-check/sweep/DISAGREEMENTS.md). No review
