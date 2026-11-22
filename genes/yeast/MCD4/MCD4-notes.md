@@ -3,6 +3,7 @@
 ## Evidence
 
 - MCD4 encodes the S. cerevisiae GPI ethanolamine phosphate transferase 1. Gaynor et al. showed that Mcd4p is an ER multipass membrane protein and that the mcd4-174 mutant is defective in GPI anchor synthesis [PMID:10069808, "Together, these studies demonstrate that MCD4 encodes a new, conserved component"].
+- Gaynor et al. excluded a stable vacuolar or Golgi localization for Mcd4p by showing that it fractionated with ER resident PDI rather than the vacuolar marker Vam3p, and by showing that Mcd4p did not acquire post-ER outer-chain mannose [PMID:10069808, "In contrast, the vacuolar membrane protein Vam3p"; PMID:10069808, "Mcd4p does not traffic or cycle through the Och1p compartment"].
 - Toulmay et al. provided a direct modern citation for the exact activity by placing Mcd4 in the ER and describing it as the enzyme that adds phosphoethanolamine to nascent GPI anchors [PMID:35015055, "enzyme that adds P-Etn to nascent GPI anchors"].
 - Zhu et al. showed that the Mcd4p-dependent ethanolamine phosphate side chain on the alpha-1,4-linked mannose is needed for ceramide remodeling and forward transport of GPI proteins [PMID:16704983, "In yeast, the ethanolaminephosphate on the alpha1-4-linked mannose is added"].
 - Wiedman et al. localized the in vivo block: mcd4-174 accumulates Man(2)-GlcN-(acyl-Ins)PI, consistent with loss of phosphoethanolamine addition to the first mannose [PMID:17311586, "accumulates in mcd4-174 in vivo is Man(2)-GlcN-(acyl-Ins)PI"].
