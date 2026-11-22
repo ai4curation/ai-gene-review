@@ -12,8 +12,8 @@ otherwise donor ligands are collected from (a) species of the same lineage where
   A  donor's counterpart is annotated in the GAF but not to P or a related term
   N  no same-symbol gene is annotated in the GAF (absent, unannotated, or a naming mismatch)
   U  no donor available
-Lineages: vertebrate (human, mouse, rat, zebrafish) vs non-vertebrate (fly, yeast, pombe);
-symbols are not matched across lineages.
+Lineages: vertebrate (human, mouse, rat, zebrafish); every other organism is its own lineage
+(fly, worm, yeast, pombe, arabidopsis, dicty). Symbols are not matched across lineages.
 
 Writes results/triage.json and results/RESULTS.md.
 
@@ -43,6 +43,7 @@ from ligand_gap_check import (  # noqa: E402
 )
 
 VERTEBRATE = {"human", "mouse", "rat", "zebrafish"}
+LINEAGE = {o: ("vertebrate" if o in VERTEBRATE else o) for o in ORGANISMS}
 CURATED = Path(__file__).resolve().parent.parent / "curated"
 CATEGORY_LABELS = {
     "A": "ligand counterpart not on the pathway",
@@ -73,7 +74,7 @@ def gene_index(go: GO, gaf: Path) -> dict:
 def counterparts(org: str, donor: str, idx: dict) -> list[str]:
     key = donor.lower()
     out = []
-    for sym in idx:
+    for sym in sorted(idx):
         s = sym.lower()
         if s == key or (org == "zebrafish" and s in (key + "a", key + "b", key + ".1", key + ".2")):
             out.append(sym)
@@ -122,14 +123,15 @@ def main() -> None:
                        binding_only_genes=r["binding_only_genes"], passes_in=sorted(passing), lookups=[])
             flag = flags.get(org, {}).get(term)
             if flag:
-                rec.update(category=flag["category"], note=flag.get("note", ""))
+                rec.update(category=flag["category"], note=flag.get("note", ""), source="organism_flag")
             elif term in labels:
-                rec.update(category=labels[term]["category"], note=labels[term].get("reason", ""))
+                rec.update(category=labels[term]["category"], note=labels[term].get("reason", ""),
+                           source="term_label")
             else:
-                lineage = "vertebrate" if org in VERTEBRATE else ("fly" if org == "fly" else None)
+                lineage = LINEAGE[org]
                 donors = collections.defaultdict(list)
                 for porg, pr in passing.items():
-                    if (org in VERTEBRATE) == (porg in VERTEBRATE):
+                    if LINEAGE[porg] == lineage:
                         for s in pr["ligand_genes"]:
                             donors[s.upper()].append(porg)
                 for s in expected.get(lineage, {}).get(term, []):
@@ -154,10 +156,10 @@ def main() -> None:
                                                     if SIGNAL_TRANSDUCTION in go.ancestors(t, True)})[:3]))
                         if best is None or priority[result] < priority[best]:
                             best = result
-                rec.update(category=best or "U", note="")
+                rec.update(category=best or "U", note="", source="lookup")
             triaged.append(rec)
 
-    triaged.sort(key=lambda r: (args.orgs.index(r["org"]), ORDER.index(r["category"]), -r["n_genes"]))
+    triaged.sort(key=lambda r: (args.orgs.index(r["org"]), ORDER.index(r["category"]), -r["n_genes"], r["term"]))
     (args.results / "triage.json").write_text(json.dumps(triaged, indent=1))
 
     counts = collections.Counter((r["org"], r["category"]) for r in triaged)
