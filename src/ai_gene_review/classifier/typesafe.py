@@ -1,0 +1,363 @@
+"""TypeSafe API adapter for closed-set AIGR classification tasks."""
+
+from __future__ import annotations
+
+from collections.abc import Callable, Mapping
+import json
+import math
+import os
+import re
+import time
+from typing import Any
+
+import httpx
+
+from ai_gene_review.classifier.base import (
+    ClassificationResult,
+    ClassificationTask,
+    ProbabilitySource,
+)
+
+DEFAULT_BASE_URL = "https://api.typesafe.ai/v1/systemone"
+DEFAULT_MODEL = "jev-1.13.0"
+
+
+def render_prompt(task: ClassificationTask) -> str:
+    """Format a classification task for a JSON-constrained TypeSafe request.
+
+    >>> from ai_gene_review.classifier.base import Choice, ClassificationTask
+    >>> t = ClassificationTask(
+    ...     instruction="Classify.",
+    ...     context="Gene X.",
+    ...     choices=(Choice("YES", "supported"), Choice("NO", "unsupported")),
+    ...     question="Verdict?",
+    ... )
+    >>> "Options:" in render_prompt(t) and "- YES: supported" in render_prompt(t)
+    True
+    """
+    options = "\n".join(
+        f"- {choice.value}: {choice.description}" for choice in task.choices
+    )
+    sections = [task.instruction.strip()]
+    if options:
+        sections.extend(["Options:", options])
+    sections.extend([task.context.strip(), task.question.strip()])
+    return "\n\n".join(sections)
+
+
+def response_schema(task: ClassificationTask) -> dict[str, Any]:
+    """Build the JSON schema enforcing the task's allowed choice values."""
+    if task.output_schema is not None:
+        return dict(task.output_schema)
+    return {
+        "type": "object",
+        "properties": {
+            "label": {
+                "type": "string",
+                "enum": [choice.value for choice in task.choices],
+                "description": (
+                    " Return ".join(
+                        f"{choice.value} if {choice.description}"
+                        for choice in task.choices
+                    )
+                    + "."
+                ),
+            }
+        },
+        "required": ["label"],
+        "additionalProperties": False,
+    }
+
+
+def _match_choice(token_text: str, allowed: set[str]) -> str | None:
+    """Match a token string to an allowed enum choice by exact or unique-prefix match.
+
+    Under JSON-schema enum-constrained decoding, multi-token enum labels such as
+    ``KEEP_AS_NON_CORE`` or ``MARK_AS_OVER_ANNOTATED`` emit an unambiguous first
+    value token (``KEEP``, ``MARK``). Exact matches always win; otherwise a
+    prefix of length >= 2 that uniquely identifies one allowed choice is matched.
+    """
+    text = token_text.strip()
+    if not text:
+        return None
+    if text in allowed:
+        return text
+    if len(text) < 2:
+        return None
+    matches = [choice for choice in allowed if choice.startswith(text)]
+    if len(matches) == 1:
+        return matches[0]
+    return None
+
+
+def _find_value_token(
+    tokens: list[dict[str, Any]],
+    allowed: set[str],
+    start: int = 0,
+    end: int | None = None,
+) -> tuple[dict[str, Any], int] | None:
+    """Locate the constrained enum token within ``tokens[start:end]``."""
+    stop = len(tokens) if end is None else min(end, len(tokens))
+    candidates: list[tuple[dict[str, Any], int]] = []
+    for index in range(start, stop):
+        token = tokens[index]
+        text_match = _match_choice(str(token.get("token", "")), allowed)
+        alt_matches = {
+            m
+            for alt in token.get("top_logprobs", [])
+            if (m := _match_choice(str(alt.get("token", "")), allowed)) is not None
+        }
+        if text_match is not None or alt_matches:
+            candidates.append((token, index + 1))
+    if not candidates:
+        return None
+    for token, next_index in candidates:
+        alt_matches = {
+            m
+            for alt in token.get("top_logprobs", [])
+            if (m := _match_choice(str(alt.get("token", "")), allowed)) is not None
+        }
+        if len(alt_matches) >= 2:
+            return token, next_index
+    return candidates[0]
+
+
+def _property_value_windows(
+    tokens: list[dict[str, Any]],
+    property_names: list[str],
+) -> dict[str, tuple[int, int]]:
+    """Anchor each JSON property to its ``(val_start, val_end)`` token index window.
+
+    Reconstructs the raw token text and locates each ``"<name>":`` key regardless
+    of emission order, preventing multi-token enum values (e.g. ``KEEP`` +
+    ``_AS`` + ``_NON`` + ``_CORE``) from bleeding into subsequent properties.
+    """
+    spans: list[tuple[int, int]] = []
+    pieces: list[str] = []
+    pos = 0
+    for token in tokens:
+        text = str(token.get("token", ""))
+        pieces.append(text)
+        spans.append((pos, pos + len(text)))
+        pos += len(text)
+    full_text = "".join(pieces)
+
+    key_matches: list[tuple[str, int, int]] = []
+    for name in property_names:
+        pattern = re.compile(re.escape(json.dumps(name)) + r"\s*:")
+        match = pattern.search(full_text)
+        if match is None:
+            continue
+        key_matches.append((name, match.start(), match.end()))
+
+    if not key_matches:
+        return {}
+
+    key_matches.sort(key=lambda item: item[1])
+
+    def _first_token_at_or_after(char_offset: int) -> int:
+        for idx, (_start, tok_end) in enumerate(spans):
+            if tok_end > char_offset:
+                return idx
+        return len(tokens)
+
+    windows: dict[str, tuple[int, int]] = {}
+    for i, (name, _key_start, val_char_start) in enumerate(key_matches):
+        val_start = _first_token_at_or_after(val_char_start)
+        if i + 1 < len(key_matches):
+            next_key_char_start = key_matches[i + 1][1]
+            val_end = _first_token_at_or_after(next_key_char_start)
+        else:
+            val_end = len(tokens)
+        windows[name] = (val_start, val_end)
+    return windows
+
+
+def _one_hot(choices: list[str], selected: str) -> dict[str, float]:
+    return {choice: (1.0 if choice == selected else 0.0) for choice in choices}
+
+
+def _probabilities(
+    token: dict[str, Any], choices: list[str], selected: str
+) -> tuple[dict[str, float], ProbabilitySource]:
+    """Extract raw ``exp(logprob)`` probabilities without inflating partial mass.
+
+    ``exp(logprob)`` is already a calibrated token probability in ``(0, 1]``
+    whose values across ``top_logprobs`` sum to at most ``1.0`` (modulo
+    floating-point rounding). Leaving partial mass unnormalized prevents a
+    single attributed choice from being inflated to a fabricated ``1.0``.
+    If the selected choice itself receives no attributed mass, falls back to a
+    synthesized one-hot distribution.
+    """
+    allowed = set(choices)
+    probs = {choice: 0.0 for choice in choices}
+    for alt in token.get("top_logprobs", []):
+        label = _match_choice(str(alt.get("token", "")), allowed)
+        if label is not None and "logprob" in alt:
+            probs[label] += math.exp(float(alt["logprob"]))
+    tok_text = str(token.get("token", "")).strip()
+    if (
+        selected in allowed
+        and probs[selected] == 0.0
+        and "logprob" in token
+        and (
+            _match_choice(tok_text, allowed) == selected
+            or (len(tok_text) >= 2 and selected.startswith(tok_text))
+        )
+    ):
+        probs[selected] = math.exp(float(token["logprob"]))
+    if probs.get(selected, 0.0) <= 0.0:
+        return _one_hot(choices, selected), "synthesized"
+    total = sum(probs.values())
+    if total > 1.0:
+        probs = {label: value / total for label, value in probs.items()}
+    return probs, "measured"
+
+
+def extract_probabilities_with_source(
+    response: Mapping[str, Any], task: ClassificationTask, selected: str
+) -> tuple[dict[str, float], ProbabilitySource]:
+    """Convert TypeSafe token logprobs into ``(probabilities, source)``."""
+    choices = [choice.value for choice in task.choices]
+    tokens = response.get("logprobs")
+    if not isinstance(tokens, list):
+        return _one_hot(choices, selected), "synthesized"
+    windows = _property_value_windows(tokens, ["label"])
+    if "label" in windows:
+        win_start, win_end = windows["label"]
+        found = _find_value_token(tokens, set(choices), win_start, win_end)
+    else:
+        found = _find_value_token(tokens, set(choices))
+    if found is None:
+        return _one_hot(choices, selected), "synthesized"
+    return _probabilities(found[0], choices, selected)
+
+
+def extract_probabilities(
+    response: Mapping[str, Any], task: ClassificationTask, selected: str
+) -> dict[str, float]:
+    """Convert TypeSafe token logprobs into a distribution over task choices."""
+    probs, _source = extract_probabilities_with_source(response, task, selected)
+    return probs
+
+
+def extract_schema_answers(
+    response: Mapping[str, Any],
+    schema: Mapping[str, Any],
+    parsed: Mapping[str, Any],
+) -> dict[str, dict[str, Any]]:
+    """Extract labels, distributions, and provenance for an object schema of enum fields."""
+    tokens = (
+        response.get("logprobs") if isinstance(response.get("logprobs"), list) else []
+    )
+    prop_names = list(schema["properties"].keys())
+    windows = _property_value_windows(tokens, prop_names) if tokens else {}
+    cursor = 0
+    answers: dict[str, dict[str, Any]] = {}
+    for name, prop in schema["properties"].items():
+        if name not in parsed:
+            raise ValueError(f"TypeSafe output did not include {name!r}: {parsed}")
+        choices = list(prop["enum"])
+        selected = str(parsed[name])
+        if selected not in choices:
+            raise ValueError(
+                f"TypeSafe label {selected!r} for {name!r} is not in {choices}"
+            )
+        if tokens and name in windows:
+            win_start, win_end = windows[name]
+            found = _find_value_token(tokens, set(choices), win_start, win_end)
+        elif tokens:
+            found = _find_value_token(tokens, set(choices), cursor)
+            if found is not None:
+                cursor = found[1]
+        else:
+            found = None
+        if found is None:
+            probs = _one_hot(choices, selected)
+            source: ProbabilitySource = "synthesized"
+        else:
+            probs, source = _probabilities(found[0], choices, selected)
+        answers[name] = {
+            "label": selected,
+            "probabilities": probs,
+            "probabilities_source": source,
+        }
+    return answers
+
+
+class TypeSafeClassifier:
+    """HTTP client for TypeSafe JSON-schema classification."""
+
+    def __init__(
+        self,
+        *,
+        api_key: str | None = None,
+        base_url: str = DEFAULT_BASE_URL,
+        model: str = DEFAULT_MODEL,
+        timeout: float = 90.0,
+        top_logprobs: int = 10,
+        post: Callable[..., httpx.Response] = httpx.post,
+    ) -> None:
+        self.api_key = api_key or os.environ.get("TYPESAFE_API_KEY", "")
+        if not self.api_key:
+            raise ValueError("TypeSafeClassifier requires api_key or TYPESAFE_API_KEY")
+        self.base_url = base_url
+        self.model = model
+        self.timeout = timeout
+        self.top_logprobs = top_logprobs
+        self._post = post
+
+    def classify(self, task: ClassificationTask) -> ClassificationResult:
+        payload = {
+            "model": self.model,
+            "prompt": render_prompt(task),
+            "output_schema": json.dumps(response_schema(task)),
+            "logprobs": True,
+            "top_logprobs": self.top_logprobs,
+        }
+        started = time.perf_counter()
+        response = self._post(
+            self.base_url,
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=self.timeout,
+        )
+        elapsed = time.perf_counter() - started
+        response.raise_for_status()
+        body = response.json()
+        parsed = json.loads(body["output"])
+        usage = {
+            key: int(value)
+            for key, value in (body.get("usage") or {}).items()
+            if isinstance(value, int)
+        }
+        if task.output_schema is not None:
+            answers = extract_schema_answers(body, task.output_schema, parsed)
+            root = answers.get("/", {})
+            return ClassificationResult(
+                label=root.get("label"),
+                probabilities=root.get("probabilities", {}),
+                probabilities_source=root.get("probabilities_source"),
+                answers=answers,
+                model=body.get("model", self.model),
+                elapsed_seconds=elapsed,
+                usage=usage,
+                raw_response=body,
+            )
+        label = parsed["label"]
+        allowed = {choice.value for choice in task.choices}
+        if label not in allowed:
+            raise ValueError(f"TypeSafe label {label!r} is not in {sorted(allowed)}")
+        probs, probs_source = extract_probabilities_with_source(body, task, label)
+        return ClassificationResult(
+            label=label,
+            probabilities=probs,
+            probabilities_source=probs_source,
+            model=body.get("model", self.model),
+            elapsed_seconds=elapsed,
+            usage=usage,
+            raw_response=body,
+        )
