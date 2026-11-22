@@ -7,6 +7,13 @@ accession is the C. elegans `avr-14`/`B0207.12` record and is unreviewed in
 UniProtKB/TrEMBL, so the review uses it for the identifier and Cys-loop domain
 context rather than for curated channel function.
 
+Reviewer follow-up showed that Q8IFY7 itself is a 239-aa partial protein model:
+the record has a signal peptide and Cys-loop ligand-binding domain, but lacks
+the four transmembrane helices expected for a full-length Cys-loop channel.
+The channel, chloride-transport and plasma-membrane calls in the review
+therefore describe the full-length AVR-14B splice form cloned and expressed by
+Dent et al., not the truncated sequence on the seeded TrEMBL record.
+
 Follow-on fetches:
 
 - `just fetch-gene-pmids worm avr-14` found PMID:10716995, PMID:12750328 and
