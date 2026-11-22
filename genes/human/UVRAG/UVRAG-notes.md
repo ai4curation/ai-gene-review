@@ -35,3 +35,10 @@ Falcon deep research was started for UVRAG on 2026-06-02. The run timed out afte
 - UVRAG has no TM or signal peptide (C2 domain, coiled coil), so this is a recruited peripheral pool. It stays at the root, with no ER membrane row.
 - The part_of qualifier on the IDA reads as membership of the ER-bound RINT-1 tether and is left unchanged.
 - The GO:0005783 that appears as a proposed replacement on the Reactome ERGIC-membrane row was not touched.
+
+## 2026-11-22 ORGANELLES lysosome batch 2
+
+- GOA has two GO:0005764 rows (IEA GO_REF:0000044; IDA PMID:19270696). The review mentions GO:0005764 five times: the two rows, one proposed replacement on the out-of-scope GO:0000323 lytic vacuole IBA row (MODIFY to lysosome, late endosome, autophagosome), and two core_functions locations. No NEW rows and no drift.
+- PMID:18843052 (Itakura et al. 2008; PMC2592660): PMC and Europe PMC returned no full text. Abstract: [PMID:18843052 "UVRAG primarily associates with Rab9-positive endosomes"]. PMID:19270696 (Matsunaga et al. 2009): abstract-only, no PMC copy; its abstract places GFP-Rubicon, not UVRAG, at the endosome/lysosome.
+- Call: both rows ACCEPT -> KEEP_AS_NON_CORE on curator deference (rule 9); lysosome removed from both core_functions.locations. UNDECIDED is the close alternative if the unread figures rest only on LysoTracker or LAMP2. Recruited cytosolic subunit, mTORC1-regulated, so no tethering route.
+- The lytic vacuole row's proposed replacement still lists lysosome; left for the vacuole series.

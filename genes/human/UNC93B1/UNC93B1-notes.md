@@ -94,3 +94,12 @@ data, retained here as non-core.
 ER and ER membrane (core, IDA), Golgi membrane (transits), endosome and lysosome (relocalizes with
 CpG stimulation), early phagosome / phagocytic vesicle (ortholog/subcell mapping, non-core). All
 ACCEPT; consistent with the ER-to-endolysosome trafficking route.
+
+## 2026-11-22 ORGANELLES lysosome batch 2
+
+- Three GO:0005764 rows: IBA is_active_in (PTN002928790, seed MGI:1859307), IEA GO_REF:0000120 (Ensembl projection from mouse Q8VCW4 plus SubCell), ISS (Q8VCW4). Review and GOA agree; no sub-compartment rows.
+- Donor trace: the human UniProt lysosome item is ECO:0000250 to mouse Q8VCW4; the mouse entry's lysosome item is untagged and its relocalization note is itself ECO:0000250 (looked up at rest.uniprot.org, 2026-11-22). The only experimental mouse lysosome row in QuickGO is a UniProt IDA from PMID:18305481 (Kim et al. 2008), abstract-only here with no PMC copy.
+- PMID:31546247 (Majer et al. 2019, Nature; PMC6856438, DOI 10.1038/s41586-019-1611-7): full text read in PMC and fetched into the cache. Tagged Unc93b1 retrovirally expressed in mouse macrophages is quantified within Lamp1-positive endosomes (Extended Data Fig. 1a), co-purifies with TLR9 from bead phagosomes, and TLR9 is released from it only within endosomes [PMID:31546247 "The plot shows quantification of the percentage of total Unc93b1 within Lamp1+ endosomes."].
+- Call: all three rows ACCEPT -> KEEP_AS_NON_CORE. Real functional pool (TLR9 release), not cargo; non-core because LAMP1 alone does not separate late endosome/endolysosome from lysosome and the core chaperone activity is at the ER. ACCEPT is the close alternative. is_active_in kept without a WRONG_QUALIFIER defect (release activity shown in Lamp1-positive endosomes). No GO:0005765 row: only one weak line.
+- Endosome rows (GO:0005768 IBA, IEA, ISS) rest on the same mouse donor chain; out of scope, not changed.
+- Description sentence on relocalization to "endosomes and lysosomes" (uncited UniProt note) reworded to the LAMP1-positive endolysosome pool.
