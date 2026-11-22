@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import re
 import xml.etree.ElementTree as ET
-from collections import Counter, defaultdict
+from collections import defaultdict
 from pathlib import Path
 
 import pandas as pd
@@ -59,6 +59,10 @@ ORGANISMAL_BP = {
     "GO:0048856",  # anatomical structure development
 }
 CELLULAR_BP = "GO:0009987"  # cellular process
+# Process roots too general to place a phenotype at the cellular level. GO files
+# GO:0008152 metabolic process under cellular process, but an MP term defined on
+# it ("abnormal metabolism") describes the whole animal.
+GENERIC_BP = {"GO:0008150", "GO:0009987", "GO:0008152"}
 
 # Finest level first; a call takes the finest level its MP term supports.
 LEVELS = [
@@ -176,7 +180,7 @@ def level_of(fill: set[str], go_ns: dict[str, str], go_anc: dict[str, set[str]])
                     flags.add("CELLULAR")
             elif n == "BP":
                 a = go_anc.get(c, set()) | {c}
-                if a & ORGANISMAL_BP:
+                if c in GENERIC_BP or a & ORGANISMAL_BP:
                     flags.add("ORGAN_PROCESS")
                 elif CELLULAR_BP in a:
                     flags.add("CELLULAR")
@@ -272,7 +276,37 @@ def main() -> None:
     top_cell = (
         terms[terms.level == "CELLULAR"].sort_values("n_genes", ascending=False).head(15)
     )
-    gp_bp = terms[terms.level_flags.str.contains("ORGAN_PROCESS|CELLULAR", na=False)]
+    # MP terms whose own definition names a GO term, by GO namespace.
+    def go_ids(bearers: str) -> list[str]:
+        return [b.split(" ")[0] for b in str(bearers).split("|") if b.startswith("GO:")]
+
+    go_named = {"BP": 0, "CC": 0, "MF": 0, "unresolved": 0}
+    for b in terms.bearers:
+        ids = go_ids(b)
+        for nsk in {go_ns.get(i, "unresolved") or "unresolved" for i in ids}:
+            go_named[nsk] += 1
+    go_named_terms = int(sum(1 for b in terms.bearers if go_ids(b)))
+
+    # Positive control for the zero-MF result: the same classifier over every MP
+    # term with a logical definition, not only those IMPC uses. A GO id that is
+    # not in go-basic would be silently dropped by level_of, so count those too.
+    all_go = [c for f in fillers.values() for c in f if c.startswith("GO:")]
+    mp_all = {
+        "mp_terms_with_logical_definition": len(fillers),
+        "mp_terms_naming_go_bp": sum(1 for f in fillers.values() if any(go_ns.get(c) == "BP" for c in f)),
+        "mp_terms_naming_go_cc": sum(1 for f in fillers.values() if any(go_ns.get(c) == "CC" for c in f)),
+        "mp_terms_naming_go_mf": sum(1 for f in fillers.values() if any(go_ns.get(c) == "MF" for c in f)),
+        "go_ids_in_mp_definitions": len(set(all_go)),
+        "go_ids_unresolved_in_go_basic": len({c for c in all_go if c not in go_ns}),
+    }
+    mp_all["mf_terms"] = sorted(
+        f"{k} {labels.get(k, '')}" for k, f in fillers.items() if any(go_ns.get(c) == "MF" for c in f)
+    )
+    summary["mp_terms_naming_go"] = {"terms": go_named_terms, **go_named}
+    summary["all_mp_positive_control"] = {k: v for k, v in mp_all.items() if k != "mf_terms"}
+    summary["all_mp_positive_control"]["mf_terms"] = mp_all["mf_terms"]
+    (RESULTS / "level_summary.yaml").write_text(yaml.safe_dump(summary, sort_keys=False))
+    no_mp = int(gp.mp_term_id.isna().sum())
     lines = [
         "# IMPC phenotype calls by biological level (generated)",
         "",
@@ -282,6 +316,8 @@ def main() -> None:
         f"- Genes with at least one call: {summary['inputs']['genes_with_significant_call']:,}",
         f"- Distinct MP terms used: {summary['inputs']['distinct_mp_terms']:,}"
         f" ({summary['inputs']['mp_terms_with_logical_definition']:,} with an OWL logical definition)",
+        f"- Calls with no MP term (left out of the level table, so it sums to"
+        f" {summary['inputs']['significant_calls'] - no_mp:,}): {no_mp}",
         "",
         "## Calls by finest level of the MP term's logical definition",
         "",
@@ -313,9 +349,28 @@ def main() -> None:
             lines.append(f"- {r['mp_term_id']} {r['mp_term_name']} ({r['n_calls']} calls)")
     else:
         lines.append("None.")
+    pc = summary["all_mp_positive_control"]
     lines += [
         "",
-        "## Most widely called CELLULAR-level MP terms",
+        "Positive control: the same classifier run over every MP term with a logical definition",
+        f" ({pc['mp_terms_with_logical_definition']:,}), not only those IMPC uses, finds"
+        f" {pc['mp_terms_naming_go_bp']:,} naming a GO biological process,"
+        f" {pc['mp_terms_naming_go_cc']:,} a GO cellular component and"
+        f" {pc['mp_terms_naming_go_mf']:,} a GO molecular function."
+        f" Of the {pc['go_ids_in_mp_definitions']:,} distinct GO ids in MP definitions,"
+        f" {pc['go_ids_unresolved_in_go_basic']} are not in go-basic.",
+    ]
+    if pc["mf_terms"]:
+        lines += [
+            "",
+            f"MP terms defined on a GO molecular function, first 10 of {len(pc['mf_terms'])}"
+            " (full list in `level_summary.yaml`). None is used by an IMPC call:",
+            "",
+        ]
+        lines += [f"- {t}" for t in pc["mf_terms"][:10]]
+    lines += [
+        "",
+        "## CELLULAR-level MP terms called on the most genes",
         "",
         "| MP term | Bearer(s) | Genes |",
         "|---|---|---:|",
@@ -324,8 +379,10 @@ def main() -> None:
         lines.append(f"| {r.mp_term_id} {r.mp_term_name} | {r.bearers} | {r.n_genes} |")
     lines += [
         "",
-        f"MP terms whose definition names a GO process or component: {len(gp_bp)}"
-        " (see `mp_term_levels.tsv`, column `bearers`).",
+        f"MP terms used by IMPC whose definition names a GO term: {go_named_terms}"
+        f" ({go_named['BP']} a biological process, {go_named['CC']} a cellular component,"
+        f" {go_named['MF']} a molecular function, {go_named['unresolved']} not in go-basic;"
+        " see `mp_term_levels.tsv`, column `bearers`).",
         "",
     ]
     (RESULTS / "RESOLUTION.md").write_text("\n".join(lines))

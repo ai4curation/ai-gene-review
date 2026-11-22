@@ -259,7 +259,10 @@ experimental annotations whose full text you have not read.
      organism-level phenotypes.** Such a result supports at most an organism-level
      process row, usually `KEEP_AS_NON_CORE`, and never a molecular-function or
      `core_functions` claim without a separate assay of the product. Lethality alone
-     says the gene is required, not what it does. See `projects/IMPC.md`.
+     says the gene is required, not what it does. The converse also holds: a screen
+     with no significant call across many tests is a tested absence of phenotype
+     for those systems, usable when downgrading process rows (as `human/ARHGAP4`
+     does), but not evidence against a molecular function. See `projects/IMPC.md`.
    - Consider specificity - terms that are too general should be modified to more specific functions
    - Watch for overly specific or contorted terms that might need generalization
    - Evaluate whether annotations truly represent core vs. peripheral functions

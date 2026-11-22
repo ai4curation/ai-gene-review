@@ -181,7 +181,7 @@ def main() -> None:
         f"- DepMap portal download API ({time.strftime('%Y-%m-%d')}): {portal_status}.",
         f"- Essential-gene lists used: {source}. CRISPRInferredCommonEssentials: {len(common):,} genes;"
         f" AchillesCommonEssentialControls: {len(controls):,}.",
-        f"- IMPC genes phenotyped: {len(universe):,}. Lethal = at least one significant call to an MP term matching"
+        f"- IMPC genes phenotyped or with a significant call: {len(universe):,} ({len(universe) - len(phenotyped):,} more than the {len(phenotyped):,} IMPC flags as phenotyped, because a gene can carry a call without the flag). Lethal = at least one significant call to an MP term matching"
         f" `{LETHAL.pattern}`. Mouse to human through IMPC's `human_gene_symbol`.",
         "",
         "| IMPC call | Genes | With human symbol | DepMap common essential | Not common essential |",
