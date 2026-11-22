@@ -42,6 +42,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
 | `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | Ascomycota WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
 | `PTHR10969` MICROTUBULE-ASSOCIATED PROTEINS 1A/1B LIGHT CHAIN 3-RELATED | eukaryotic ATG8 node and fungal vacuole-membrane node | `ATG8`/`atg8`/`apg-6` |
+| `PTHR11227` WIPI/PROPPIN phosphoinositide adaptors | root lipid-binding/adaptor nodes and fungal vacuole-membrane node | `ATG18`/`atg18`/`apg-10` |
 | `PTHR10806` SIGNAL PEPTIDASE COMPLEX CATALYTIC SUBUNIT SEC11 | PTHR10806 root peptidase node and eukaryotic Sec11/SPC node | `SEC11`/`sec11`/`SEC11`/`sec11` |
 | `PTHR11671` V-TYPE ATP SYNTHASE SUBUNIT D | fungal V-ATPase subunit D node | `VMA8`/`vma8`/`VMA8`/`vma-8` |
 | `PTHR43607` V-TYPE PROTON ATPASE CATALYTIC SUBUNIT A | conserved A-subunit and fungal vacuole-membrane nodes | `VMA1`/`vma1`/`TFP1`/`vma-1` |
@@ -51,12 +52,14 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR14430` RABIN3-RELATED | Opisthokonta Rab GEF node and fungal cell-tip Sec2 node | `SEC2`/`sec2`/`spo13`/`SEC2`/`sec2` |
 | `PTHR44068` Erg6/SMT methyltransferase | eukaryotic sterol C-24 methyltransferase node and fungal ergosterol node | `ERG6`/`erg6`/`ERG6`/`ERG6`/`erg-4`/`erg6` |
 | `PTHR13314` Calcium-channel Flower homologs | opisthokont vesicle-mediated transport node, ascomycete Golgi-membrane node, and metazoan calcium-channel node | `TVP18`/`tvp18`/`TVP18`/`tvp-18` |
+| `PTHR24304` CYP51 sterol 14-demethylases | eukaryotic CYP51 sterol 14-demethylase node and fungal ergosterol node | `ERG11`/`erg11`/`ERG11`/`cyp51A`/`cyp51B` |
+| `PTHR10880` Eaf3/MRG chromatin subunits | eukaryotic NuA4/Pol-II nodes and fungal Rpd3S node | `EAF3`/`alp13`/`EAF3`/`eaf3` |
 
 ---
 
 # STATUS
 
-Last updated: 2026-11-20
+Last updated: 2026-11-21
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -236,6 +239,9 @@ seeded by budding- and fission-yeast Atg8 annotations.
   Atg38, mitophagy, ER-phagy, and nucleophagy evidence; opened in PR #5256
 - [x] `CANAL/ATG8` - CGD-seeded *Candida albicans* Atg8 ortholog with
   autophagy and ER-stress genetic-interaction evidence; opened in PR #5257
+- [x] `CANGA/ATG8` - CGD *Candida glabrata* Atg8 ortholog with direct
+  Atg8-PE evidence and C. glabrata iron-depletion mitophagy context; opened
+  in PR #6590
 - [x] `NEUCR/apg-6` - *Neurospora crassa* ATG8-family member; opened in PR
   #5255
 - [x] `ASPFU/atg8` - *Aspergillus fumigatus* ATG8-family member with direct
@@ -639,11 +645,115 @@ plus protein targeting to vacuole at fungal `PANTHER:PTN000989606`.
   ortholog with inferred GOA rows and current CGD no-direct-data placeholders;
   reviewed in this branch
 
+## Family 28: CYP51 Sterol 14-Demethylases
+
+`PTHR24304` contains CYP51 sterol 14-demethylases along with CYP7A1,
+CYP7B1, and CYP39A1 sterol hydroxylases. PAINT places
+sterol 14-demethylase activity on the eukaryotic CYP51 node
+`PANTHER:PTN008399779`, ergosterol biosynthesis on the fungal CYP51 node
+`PANTHER:PTN001209323`, and a broad oxidoreductase parent on a deep P450 node.
+
+- [x] `yeast/ERG11` - *S. cerevisiae* lanosterol 14-alpha-demethylase anchor;
+  aligned before this tranche
+- [x] `SCHPO/erg11` - fission-yeast CYP51 with PomBase activity and ER
+  localization support; aligned before this tranche
+- [x] `CANAL/ERG11` - CGD *Candida albicans* CYP51 seed for the fungal
+  ergosterol-biosynthesis IBA
+- [x] `CANGA/ERG11` - *Candida glabrata* CYP51 with sterol-depletion evidence
+  from ERG11 promoter shutoff and erg11 deletion
+- [x] `ASPFU/cyp51A` - *Aspergillus fumigatus* CYP51 paralog and major triazole
+  resistance locus
+- [x] `ASPFU/cyp51B` - *Aspergillus fumigatus* CYP51 paralog retaining the
+  conserved fungal sterol 14-demethylase placement
+
+## Family 29: Eaf3/MRG Chromatin Subunits
+
+`PTHR10880` contains MRG-domain chromatin regulators. The fungal Eaf3/Alp13
+branch inherits the `PANTHER:PTN000853816` Rpd3S-complex assertion and the
+broader eukaryotic `PANTHER:PTN000093963` NuA4 and RNA-polymerase-II
+transcription-regulation assertions, while the metazoan MSL3 branch carries a
+separate MSL-complex placement and an IRD blocking NuA4 complex inheritance.
+
+- [x] `yeast/EAF3` - *S. cerevisiae* Eaf3 shared NuA4, Rpd3S, and TINTIN
+  subunit; aligned before this family review
+- [x] `SCHPO/alp13` - fission-yeast Alp13/Eaf3 subunit of Clr6S/Rpd3S and NuA4;
+  aligned before this family review
+- [x] `CANAL/EAF3` - *Candida albicans* Eaf3 with NuA4 evidence and conserved
+  fungal Rpd3S placement; aligned before this family review
+- [x] `CANGA/EAF3` - *Candida glabrata* Eaf3 with PTHR10880 PAINT rows;
+  aligned before this family review
+- [x] `ASPFU/eaf3` - *Aspergillus fumigatus* Eaf3-family chromatin subunit;
+  aligned before this family review
+- [x] `EMENI/eaf3` - *Aspergillus nidulans* Eaf3-family chromatin subunit;
+  aligned before this family review
+
+## Family 30: WIPI/PROPPIN Atg18 Phosphoinositide Adaptors
+
+`PTHR11227` contains the eukaryotic WIPI/PROPPIN beta-propeller
+phosphoinositide-binding family. The compact fungal Atg18 tranche keeps
+the root PI3P, PI(3,5)P2, and adaptor calls, retains the fungal-type
+vacuole membrane node, and marks root-level pexophagy, mitophagy,
+nucleophagy, and glycophagy rows as too broad for every Atg18/Atg21/WIPI
+paralog. The Saccharomycotina Atg21/Hsv2 sibling branch is reviewed
+separately because its Cvt, Atg8-lipidation, Hsv2 microautophagy and
+retromer-vacuole-fission roles diverged from the Atg18 branch.
+
+- [x] `yeast/ATG18` - budding-yeast Atg18 anchor with direct Cvt,
+  PAS, lipid-binding, vacuole, Atg2, CROP and 2026 Atg8-AIM evidence
+- [x] `SCHPO/atg18` - fission-yeast Atg18 seed with PomBase PAS,
+  endosome and vacuole evidence
+- [x] `CANAL/ATG18` - C. albicans ATG18 with direct DNA damage-induced
+  autophagy and macroautophagy evidence
+- [x] `CANGA/ATG18` - C. glabrata Atg18 ortholog with CGD electronic
+  transfers pruned to conserved PROPPIN activities and locations
+- [x] `NEUCR/apg-10` - N. crassa Atg18-family ortholog
+- [x] `ASPFU/atg18` - A. fumigatus Atg18-family ortholog
+- [x] `yeast/ATG21` - budding-yeast Atg21 sibling PROPPIN with direct
+  PI3P/PI(3,5)P2, Cvt, Atg8-lipidation, PMN, mitophagy and 2026
+  Atg21-retromer evidence
+- [x] `yeast/HSV2` - budding-yeast Hsv2 sibling PROPPIN with direct
+  PI3P/PI(3,5)P2, phagophore, microautophagy, large-cargo autophagy
+  and 2026 Atg18-retromer vacuole-fission evidence
+- [x] `CANAL/ATG21` - C. albicans ATG21 with PTHR11227 root PAINT
+  rows pruned to conserved PROPPIN activities and locations
+- [x] `CANAL/HSV2` - C. albicans HSV2 with PTHR11227 root PAINT rows
+  pruned to conserved PROPPIN activities and locations
+- [x] `CANGA/ATG21` - C. glabrata ATG21 with SGD orthology transfers
+  limited to the Atg21 lipid-binding, PAS and Cvt profile
+- [x] `CANGA/HSV2` - C. glabrata HSV2 with SGD orthology transfers
+  limited to the Hsv2 lipid-binding and phagophore/endosome profile
+
 ---
 
 # NOTES
 
 ## 2026-11-21
+
+- Extended `PTHR10969` with `CANGA/ATG8` and a family sidecar spanning the
+  existing yeast, fission-yeast, *Candida*, *Neurospora*, and *Aspergillus*
+  Atg8 reviews. The shared ATG8/LC3/GABARAP PE-binding and autophagic-membrane
+  PAINT rows are sound for the compact fungal branch; precise budding-yeast
+  transfers such as Cvt, nucleophagy, ER-phagy, VICS, lipid-droplet, and
+  heat-induced vacuole-invagination annotations remain over-specific for
+  *Candida glabrata* until directly assayed there.
+
+- Added the `PTHR11227` WIPI/PROPPIN Atg18 tranche across `yeast/ATG18`, `SCHPO/atg18`, `CANAL/ATG18`, `CANGA/ATG18`, `NEUCR/apg-10`, and `ASPFU/atg18`. The family review accepts the root lipid-binding/adaptor PAINT rows and fungal vacuole-membrane node while flagging root-level cargo-selective autophagy terms as too broad for every Atg18/Atg21/WIPI paralog.
+
+- Added the compact `PTHR10880` Eaf3/MRG chromatin-subunit family after
+  checking the existing *S. cerevisiae*, *S. pombe*, *Candida*, and
+  *Aspergillus* Eaf3/Alp13 reviews. The eukaryotic NuA4 and broad Pol-II
+  regulation placements and the fungal Rpd3S-complex placement are sound for
+  fungal Eaf3 proteins; the Arabidopsis-seeded promoter-specific
+  chromatin-binding row is too deep at the eukaryotic MRG root and should move
+  to the plant MRG branch.
+
+- Added the compact `PTHR24304` CYP51 family after reviewing the existing
+  *S. cerevisiae* and *S. pombe* `ERG11` anchors and drafting *C. albicans*,
+  *C. glabrata*, and *A. fumigatus* `ERG11`/`cyp51` recipients. The eukaryotic
+  `GO:0008398` sterol 14-demethylase node and fungal `GO:0006696`
+  ergosterol-biosynthesis node both align with the reviewed fungal genes; the
+  very broad `GO:0016491` oxidoreductase row is true for P450s but less
+  informative than the CYP51 activity.
 
 - Added the compact `PTHR13314` `TVP18`/calcium-channel Flower family after
   reviewing `CANGA/TVP18` against the existing *S. cerevisiae*, *S. pombe*,

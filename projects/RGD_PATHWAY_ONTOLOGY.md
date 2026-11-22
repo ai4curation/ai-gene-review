@@ -1169,6 +1169,170 @@ Possible upstream errors found in this set:
   the 60S by GOA and Complex Portal; the module follows UniProt and records the
   conflict.
 
+### Eleventh set: the spliceosome
+
+The eleventh set carries out the spliceosome plan in
+[broad_pathway_split_plans.md](RGD_PATHWAY_ONTOLOGY/broad_pathway_split_plans.md).
+Every module cites PW:0001073 (spliceosome), which moves from
+`related_module_only` to `has_module`. The snRNAs are not gene products in these
+models, and the Sm and snRNP units are modelled once, in the cycle module.
+
+- [`modules/major_spliceosome_cycle.yaml`](../modules/major_spliceosome_cycle.yaml):
+  the snRNPs (Sm and LSm rings, U1, 17S U2 with SF3a and SF3b, U4/U6, U5 and the
+  tri-snRNP), then the assembly states E/A, B, Bact/B*, C, C*/P and ILS, with each
+  DEAD/DEAH-box ATPase at the transition it drives, the two transesterifications
+  on the C and C* complexes (RNA catalysis, so no protein carries them), the
+  NineTeen complex, and the EJC by reference to `nonsense_mediated_mrna_decay`.
+  90 of RGD's 153 human genes are participants. RGD lists no U12-specific
+  protein, so there is no minor spliceosome module.
+- [`modules/spliceosomal_snrnp_biogenesis.yaml`](../modules/spliceosomal_snrnp_biogenesis.yaml):
+  Sm protein symmetric dimethylation by the PRMT5-WDR77-CLNS1A methylosome, Sm
+  ring assembly by the SMN complex, TGS1 cap hypermethylation, snurportin-importin
+  beta nuclear import, and optional Cajal body maturation. RGD's list has only the
+  Sm and LSm substrates, so every assembly factor was added with human evidence.
+- [`modules/splice_site_selection_regulators.yaml`](../modules/splice_site_selection_regulators.yaml):
+  SR and TRA2 activators, silencer-binding hnRNP and SR-like repressors, and the
+  cell-type-specific regulators RGD names (PTBP2, MBNL1, QKI, TIAL1, SRRM4), acting
+  on the E/A state of the cycle module. 26 proteins, all on RGD's list.
+- **Ontology requests**: two `proposed_new_terms` (Sm protein complex chaperone
+  activity, for pICln; pre-mRNA exonic splicing enhancer binding) and one
+  `proposed_ontology_changes` (a RHEA cross-reference for GO:0035243).
+
+### Twelfth set: histone modification
+
+PW:0001338 names a class of reactions, not a pathway, and has no specific GO
+process. The plan's six writer and eraser modules all cite it, and a seventh fills
+a gap the plan left. GO has made the histone modification process terms obsolete
+as molecular functions, so each module carries the closest live process
+(facultative heterochromatin formation, transcription initiation-coupled chromatin
+remodeling, chromatin remodeling, peptidyl-lysine or peptidyl-arginine
+methylation) and puts the site-specific activities on the enzymes. None asks GO
+for new histone process terms. Histones are substrates, not units, and readers
+appear only as units of the complexes that recruit them. PW:0001338 moves from
+`no_specific_go_term` to `has_module`.
+
+- [`modules/polycomb_repressive_complexes.yaml`](../modules/polycomb_repressive_complexes.yaml):
+  PRC2 (EZH1/2, EED, SUZ12, RBBP4/7, with PRC2.1 and PRC2.2 accessory variants)
+  and canonical and variant PRC1, linked by the H3K27me3 and H2AK119ub1 reader
+  steps.
+- [`modules/compass_family_h3k4_methylation.yaml`](../modules/compass_family_h3k4_methylation.yaml):
+  the WRAD core stimulating the SET1A/B, MLL1/2 and MLL3/4 branches; the MLL3/4
+  enzymes are the enhancer H3K4 monomethylases.
+- [`modules/histone_acetyltransferase_complexes.yaml`](../modules/histone_acetyltransferase_complexes.yaml):
+  the SAGA HAT module and ATAC, MOZ/MORF, the two HBO1 complexes, NSL and MSL, and
+  CBP/p300; TIP60-p400 by reference.
+- [`modules/histone_deacetylation.yaml`](../modules/histone_deacetylation.yaml):
+  HDAC1/2 in SIN3A and CoREST, HDAC3 in NCoR/SMRT, the class IIa HDACs as adaptors
+  without deacetylase activity, NuRD by reference, and SIRT1, SIRT6 and SIRT7.
+- [`modules/histone_lysine_demethylation.yaml`](../modules/histone_lysine_demethylation.yaml):
+  the FAD-dependent KDM1A/B and the Fe(II)/2-oxoglutarate JmjC families KDM2 to
+  KDM7 and PHF2. JMJD1C and KDM8 are left out as not genuine histone demethylases.
+- [`modules/histone_arginine_methylation.yaml`](../modules/histone_arginine_methylation.yaml):
+  type I PRMT1, CARM1, PRMT6 (and the weak PRMT2), histone-context PRMT5-WDR77,
+  and PRMT7.
+- [`modules/histone_lysine_methylation_h3k9_h3k36_h3k79_h4k20.yaml`](../modules/histone_lysine_methylation_h3k9_h3k36_h3k79_h4k20.yaml):
+  not in the plan. SUV39H1/2, G9a/GLP and SETDB1-ATF7IP (H3K9), NSD1-3 and ASH1L
+  then SETD2 (H3K36), DOT1L-AF10 (H3K79) and KMT5A then KMT5B/C (H4K20). SETD7,
+  the SMYDs and the PRDMs are left out with reasons.
+- **Ontology requests**: two `proposed_new_terms` (CoREST complex; NCoR-HDAC3
+  complex) and three `proposed_ontology_changes` (the label of GO:0140682 says
+  H3K4me3 where its definition says mono- and dimethyl; the definition of
+  GO:0141052 names only the Fe(II)/2-oxoglutarate mechanism although it has
+  FAD-dependent children; the EC:1.14.11.65 mapping on the FAD-dependent
+  GO:0140685).
+- USP22, the SAGA deubiquitinase, is the one RGD histone gene left without a
+  module; BAP1 and USP16 (H2A deubiquitination) are named as a candidate module.
+
+### Thirteenth set: ribosome biogenesis
+
+- [`modules/ribosome_biogenesis.yaml`](../modules/ribosome_biogenesis.yaml)
+  completes the translation plan. It cites PW:0001066, which was already
+  `has_module` through `cytoplasmic_ribosome`. Pol I transcription by reference,
+  box C/D and H/ACA snoRNP modification, the SSU processome, XRN2 and the nuclear
+  exosome, ITS1 cleavage, nuclear pre-60S and pre-40S maturation, export, and
+  cytoplasmic 40S and 60S maturation. The ribosomal proteins stay in the ribosome
+  module. 50 gene products, so the 40S and 60S branches did not need sub-modules.
+  Two BIOLOGY knowledge gaps: the human 5' ETS endonucleases and the ITS1 site 2
+  endonuclease are unidentified.
+
+### Fourteenth set: the calcium-mediated signaling leftovers and the last seed
+
+- [`modules/small_conductance_calcium_activated_potassium_channels.yaml`](../modules/small_conductance_calcium_activated_potassium_channels.yaml):
+  calmodulin bound to SK1-3 (KCNN1-3, which co-assemble) and IK (KCNN4) channels,
+  the one coherent group among the 30 PW:0001140 genes no module covered. As the
+  plan says, the EF-hand sensors and buffers, synaptotagmins and the rest get no
+  catch-all module; each belongs in the process it serves.
+- **PW:0001437 (titanium dioxide nanoparticle response)** gets no module. Its six
+  genes (BAX, CASP3, CASP8, FAS, TLR4, TP53) are all in pathways that have modules,
+  and RGD's diagram links out to them (intrinsic apoptosis, FasL, p53, Toll-like
+  receptor signaling). It describes a response to a xenobiotic, not a reusable
+  mechanism, and it stays the one `no_specific_go_term` pathway.
+
+Tiers are now 136 `has_module`, 1 `no_specific_go_term`, 7 `thin` and 56
+`out_of_scope`, with `modules_compared` at 868. Every in-scope pathway with enough
+genes has a module.
+
+Possible upstream errors found in sets 11 to 14 (queries; full texts not read
+unless stated):
+
+- **GOA.**
+  - SLU7 has an IDA row for second spliceosomal transesterification activity; the
+    paper shows a structural requirement, and the reaction is RNA-catalysed.
+  - DDX23 has a NOT helicase IDA row beside TAS helicase rows; USP39 has a NOT
+    deubiquitinase IDA row beside positive rows from non-splicing papers.
+  - SIRT1 and SIRT6 carry "hydrolytic mechanism" histone deacetylase rows;
+    sirtuins are NAD-dependent.
+  - KDM1A carries EXP rows for GO:0140683, the Fe/2-oxoglutarate H3K9
+    demethylase; the FAD-dependent GO:0140685 fits LSD1.
+  - PRMT7 carries symmetric dimethylation rows that later biochemistry
+    contradicts; ASH1L carries an H3K36 trimethylation row that later work
+    contradicts.
+  - MSL3 carries H4K16ac reader activity where the paper reports H4K20me1
+    binding; JADE2 carries "enables" HAT rows where its co-subunits carry
+    "contributes_to".
+  - KCNN1 and KCNN4 are part_of the voltage-gated potassium channel complex,
+    though SK and IK channels are voltage-independent.
+- **GO-CAM.** Five adipocyte models give EHMT1 H3K9 trimethyltransferase
+  activity, where G9a/GLP make mono- and dimethyl H3K9.
+- **RGD.** PALS2 on PW:0001066 looks meant for MPHOSPH6, the exosome cofactor
+  RGD's text calls Mpp6.
+
+### Fifteenth set: candidate modules from the earlier sets
+
+With every RGD seed modelled or decided, the fifteenth set takes candidates the
+earlier sets split out.
+
+- [`modules/ribosome_quality_control_and_stalled_ribosome_rescue.yaml`](../modules/ribosome_quality_control_and_stalled_ribosome_rescue.yaml)
+  (PW:0001671 no-go and PW:0000549 nonstop mRNA decay; RGD annotates no genes to
+  either): ZNF598 collision sensing, splitting by ASC-1 or by PELO-HBS1L then
+  ABCE1, RQC on the 60S (NEMF, LTN1, ANKZF1, optional VCP), and optional
+  GIGYF2-4EHP repression. The no-go/nonstop endonuclease is a knowledge gap.
+- [`modules/histone_deubiquitination.yaml`](../modules/histone_deubiquitination.yaml)
+  (PW:0001338): the ATXN7L3-ENY2 modules with USP22 (SAGA), USP27X or USP51, PR-DUB
+  (BAP1 with ASXL1-3), USP16, and optional MYSM1 and USP3. USP22, the last RGD
+  histone gene without a module, is now covered.
+- [`modules/epithelial_apical_basal_polarity_complexes.yaml`](../modules/epithelial_apical_basal_polarity_complexes.yaml):
+  the PAR, Crumbs and Scribble complexes with the aPKC-LGL antagonism. PW has no
+  apical-basal polarity pathway.
+- [`modules/dna_repair_gap_filling_synthesis_and_ligation.yaml`](../modules/dna_repair_gap_filling_synthesis_and_ligation.yaml):
+  RFC or CTF18-RFC, PCNA, Pol delta, epsilon or kappa, and LIG1 or LIG3-XRCC1, the
+  late steps shared by NER and mismatch repair.
+- [`modules/hair_cell_stereocilium_bundle_organization.yaml`](../modules/hair_cell_stereocilium_bundle_organization.yaml)
+  (PW:0001503): the twelve bundle genes left out of hair-cell mechanotransduction,
+  as actin core, cross-linkers, MYO15A tip complex, myosin III length tuning, the
+  USH2 ankle links and base anchoring.
+- **Ontology requests**: two `proposed_new_terms` (histone H2AK119 deubiquitinase
+  activity; Crumbs complex) and two `proposed_ontology_changes` (the definition of
+  GO:0000731 describes only recombination; an edge GO:0060122 part_of GO:0160194).
+- **Follow-ups from the set 11-14 review**: G9a/GLP carries histone H3K9
+  dimethyltransferase activity; the branching annoton is the catalytic step 1
+  spliceosome; four papers cited only in prose are cached. The NER module no longer
+  says LIG3-XRCC1 is the main NER ligase in quiescent cells: that rested on
+  PMID:17643379, retracted in 2021.
+
+The Reelin synapse candidate is not modelled: its NMDA and AMPA receptor evidence
+is from mouse.
+
 ## Next steps
 
 - Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
@@ -1197,13 +1361,17 @@ Possible upstream errors found in this set:
   polymerase transcription and calcium-mediated signaling, which match only by
   gene overlap) now have split plans in
   [broad_pathway_split_plans.md](RGD_PATHWAY_ONTOLOGY/broad_pathway_split_plans.md),
-  with a suggested order. The RNA polymerase II plan (ninth set) and translation
-  (tenth set) are done; next are the spliceosome, Polycomb and COMPASS, then
-  ribosome biogenesis.
+  with a suggested order. All of them are now carried out (ninth to fourteenth
+  sets), and the candidates they split out are modelled in the fifteenth set.
+- Point the `repair_synthesis` and `ligation` parts of `nucleotide_excision_repair`
+  and the `pold_resynthesis` and `lig1_ligation` parts of `eukaryotic_mismatch_repair`
+  at `dna_repair_gap_filling_synthesis_and_ligation` (MMR's `pcna_loading` stays, as it
+  also activates MutLalpha).
+- Revisit the HDAC4 gene review: it accepts HDAC4's histone deacetylase rows, which
+  the HDAC5 review and `histone_deacetylation` treat as over-annotation.
 - Add the obligatory PMCA subunits NPTN and BSG to
   `plasma_membrane_calcium_extrusion`.
-- Factor a human DNA gap-filling module (PCNA, RFC, Pol delta, LIG1) out of the
-  NER and mismatch repair modules, and point
+- Point
   `retinoic_acid_receptor_signaling`'s production step at
   `retinoic_acid_metabolism`.
 - Fix the triage's prose scraping of GO and UniProt ids
@@ -1236,6 +1404,11 @@ Possible upstream errors found in this set:
 - [x] Model the remaining calcium transport families (6 modules, eighth set)
 - [x] Split RNA polymerase II transcription into five modules (ninth set)
 - [x] Split translation into four modules (tenth set)
+- [x] Split the spliceosome into three modules (eleventh set)
+- [x] Split histone modification into seven modules (twelfth set)
+- [x] Model ribosome biogenesis (thirteenth set)
+- [x] Model the SK channels from the calcium-mediated signaling leftovers and decide PW:0001437 (fourteenth set)
+- [x] Model the candidate modules split out of earlier sets (fifteenth set)
 
 ## Notes
 
@@ -1317,3 +1490,16 @@ and termination, nonsense-mediated decay), plus three follow-ups from the
 ninth-set review. PW:0000101 and PW:0001066 move to `has_module`: 134
 `has_module`, 1 `related_module_only` and 2 `no_specific_go_term`, with
 `modules_compared` at 851.
+
+### 2026-11-21
+
+Sets eleven to fourteen: three spliceosome modules, seven histone modification
+modules, ribosome biogenesis, and the SK/IK channels. PW:0001073 and PW:0001338
+move to `has_module`, and PW:0001437 is left without a module by decision: 136
+`has_module` and 1 `no_specific_go_term`, with `modules_compared` at 868.
+
+Fifteenth set: ribosome quality control, histone deubiquitination, apical-basal
+polarity, DNA repair gap filling and stereocilium bundle organization, plus the
+follow-ups from the review of sets 11-14 and the removal of a claim resting on a
+retracted paper from `nucleotide_excision_repair`. Tiers are unchanged (136
+`has_module`); `modules_compared` is 873.

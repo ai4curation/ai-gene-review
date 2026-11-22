@@ -72,3 +72,14 @@ created.
   process (GO:0008299)
 - CC: peroxisome (GO:0005777); cytosol (GO:0005829)
 - Substrates: isopentenyl diphosphate (CHEBI:128769); prenyl diphosphate (CHEBI:57623)
+
+## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
+
+- Three GO:0005777 rows in the review (IBA is_active_in, IEA ARBA00028589/SL-0204, IDA
+  PMID:17202134; GOA carries the IDA twice, from MGI and UniProt). No sub-compartment rows.
+  All moved ACCEPT -> KEEP_AS_NON_CORE; peroxisome removed from core_functions.locations.
+- UniProt Peroxisome line is ECO:0000269|PubMed:17202134 (Clizbe 2007, abstract only;
+  JBC full text not reachable). C-terminus HRV (motif 225-227), a non-canonical PTS1-like
+  tripeptide: one line. PAINT IBD PTN000854000 seeded by rat Idi1, IDI1 and IDI2.
+- Same reasoning and counter-evidence as IDI1 (PMID:14680974; Reactome R-HSA-191382 "its
+  function there is not clear"). Close alternative ACCEPT. No matrix row.

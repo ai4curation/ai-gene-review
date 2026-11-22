@@ -4,7 +4,7 @@ description: "Modules and gene reviews for parasitic nematode cuticle, host-inte
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [BRUMA, HAECO, ONCVO, ASCSU, STRRB, STRER, TOXCA, TRITR, STECR, 9BILA, worm]
-genes: [dpy-31, bma-dpy-18.1, bma-dpy-18.2, far-1, cpi-2, gp29, mf1]
+genes: [dpy-31, bma-dpy-18.1, bma-dpy-18.2, far-1, lev-1, unc-38, unc-63, lev-8, ric-3, cpi-2, gp29, mf1]
 index_group: OTHER_ORGANISM
 ---
 
@@ -62,7 +62,7 @@ anchor, `BRUMA/dpy-31`, is in the same PANTHER subfamily as *C. elegans*
 - [x] `worm` `pdi-2` / Q17770 - fetched and reviewed the PDI/prolyl 4-hydroxylase beta subunit
 - [x] `worm` `bli-4` / P51559 - fetched and reviewed the subtilisin-like convertase
 
-Secondary cuticle candidates to resolve before fetching: ONCVO Q2YFS7 and
+Deferred secondary cuticle candidates for a later DPY-31-family lane: ONCVO Q2YFS7 and
 A0A8R1U276, ASCSU F1LHZ4/F1L4T8 and transcript duplicates, STRRB A0A090LLW4,
 STRER A0A0K0DV69 and A0A0K0E1H2, TOXCA dpy-31-like duplicates, and TRITR
 A0A077YYY8. Resolve duplicates by gene model, family/subfamily, sequence, and
@@ -80,11 +80,11 @@ five-subunit L-AChR and the RIC-3/UNC-50/UNC-74 expression factors.
 Levamisole-sensitive nicotinic acetylcholine receptor:
 
 - [x] `worm` `unc-29` / P48181 - existing nAChR beta-type receptor subunit review reused and cross-checked as the non-alpha anchor for the new L-AChR module
-- [ ] `worm` `lev-1` / Q27218 - fetch and review as the second non-alpha L-AChR pore subunit
-- [ ] `worm` `unc-38` / Q23022 - fetch and review as an alpha L-AChR pore subunit
-- [ ] `worm` `unc-63` / Q9N587 - fetch and review as an alpha L-AChR pore subunit
-- [ ] `worm` `lev-8` / Q93329 - fetch and review as the fifth C. elegans L-AChR pore subunit
-- [ ] `worm` `ric-3` / Q22472 - fetch and review as a receptor maturation/assembly ancillary factor
+- [x] `worm` `lev-1` / Q27218 - fetched and reviewed as the second non-alpha L-AChR pore subunit
+- [x] `worm` `unc-38` / Q23022 - fetched and reviewed as an alpha L-AChR pore subunit
+- [x] `worm` `unc-63` / Q9N587 - fetched and reviewed as an alpha L-AChR/ACR-2R pore subunit
+- [x] `worm` `lev-8` / Q93329 - fetched and reviewed as the fifth C. elegans L-AChR pore subunit
+- [x] `worm` `ric-3` / Q22472 - fetched and reviewed as an ER-membrane nAChR maturation factor
 - [ ] `worm` `unc-50` / Q10045 - fetch and review as an L-AChR trafficking ancillary factor
 - [ ] `worm` `unc-74` / Q9N4L6 - fetch and review as the thioredoxin-domain L-AChR ancillary factor
 
@@ -177,6 +177,16 @@ the extracellular oxidant-detoxification boundary is clear.
 - [x] Expand the L-AChR parasite queue with ACR-8 candidates after HAECO
   reconstitution and resistance evidence showed parasite pore composition is not
   a one-to-one LEV-8 projection
+- [x] Fetch and review the `worm` `lev-1` Q27218 non-alpha L-AChR
+  pore subunit
+- [x] Fetch and review the `worm` `unc-38` Q23022 alpha nAChR
+  pore subunit shared by the L-AChR and ACR-2R
+- [x] Fetch and review the `worm` `unc-63` Q9N587 alpha nAChR
+  pore subunit shared by the L-AChR and ACR-2R
+- [x] Fetch and review the `worm` `lev-8` Q93329 fifth C. elegans
+  L-AChR pore subunit
+- [x] Fetch and review the `worm` `ric-3` Q22472 RIC-3-family
+  nAChR maturation factor
 
 # NOTES
 
@@ -222,6 +232,12 @@ the extracellular oxidant-detoxification boundary is clear.
   A0ACT4VCM6 and A0ACT4VCM7 (all "Nicotinic acetylcholine receptor alpha
   subunit 8", no gene name in UniProt). The ONCVO ACR-8 member remains to be
   placed among anonymous PTHR18945 A0A8R1* records.
+- Added `genes/worm/lev-1` and curated LEV-1 as the second non-alpha pore
+  subunit of the five-subunit C. elegans L-AChR. The review adds the missing
+  neuromuscular synaptic transmission row, refines generic Cys-loop receptor,
+  channel, transport, membrane, and membrane-potential rows in parallel with
+  `unc-29`, and keeps calcium flux, neuronal localization, locomotion, and
+  egg-laying behavior as non-core contexts.
 - Added the first draft of `modules/nematode_cuticle_collagen_maturation.yaml`
   with three ordered processing steps: ER procollagen prolyl 4-hydroxylation,
   BLI-4-dependent N-terminal cleavage before secretion, and DPY-31-dependent
@@ -327,3 +343,32 @@ the extracellular oxidant-detoxification boundary is clear.
   ASCSU are listed as candidates to resolve rather than as asserted
   one-to-one orthologs, because UniProt/PTHR18945 currently mixes L-AChR,
   GluCl, GABA/glycine, MOD-1-like, ACR-16-like and monepantel-channel records.
+- Added `genes/worm/unc-38` for Q23022, the first alpha nAChR pore-subunit
+  review in the L-AChR lane. The review distinguishes the module-relevant
+  body-wall muscle L-AChR from the neuronal ACR-2R that reuses UNC-38 and
+  UNC-63 with ACR-2/ACR-3/ACR-12, refines generic receptor and transport rows
+  to acetylcholine-gated cation-channel activity and cation transmembrane
+  transport, keeps locomotion and egg laying as non-core outputs, and records
+  WormBase follow-up queries for the calcium-import row and stale ACR-2R
+  composition text.
+- Ros-orchestrate confirmed the initial cuticle-collagen maturation lane is
+  complete for the scoped DPY-31, Bma-DPY-18.1/.2, DPY-18, PHY-2, PDI-2 and
+  BLI-4 set. Keep the ONCVO, ASCSU, STRRB, STRER, TOXCA and TRITR DPY-31-like
+  candidates deferred as a later duplicate-resolution pass while this lane
+  continues through anthelmintic drug targets.
+- Added `genes/worm/lev-8` for Q93329, the fifth C. elegans L-AChR pore
+  subunit. The review anchors LEV-8 to the native UNC-29/UNC-38/UNC-63/LEV-8/LEV-1
+  receptor purified by Gottschalk et al. and the Boulin et al. five-subunit oocyte
+  reconstitution, refines broad Cys-loop receptor, channel, transport and
+  membrane-potential rows to the L-AChR functions, and records that LEV-8 is
+  L-AChR-specific rather than an ACR-2R shared subunit like UNC-38 and UNC-63.
+- Added `genes/worm/ric-3` for Q22472, the C. elegans RIC-3-family
+  ER-membrane chaperone and assembly factor in the L-AChR expression-factor
+  lane. The review keeps RIC-3's ER-membrane protein-folding chaperone
+  activity, nAChR surface-localization, and positive cholinergic-transmission
+  regulation as core; treats muscle contraction and cell-body localization as
+  non-core; refines the 1995 WormBase cholinergic-transmission row to positive
+  regulation using later direct RIC-3 evidence; keeps direct weak
+  neuron-process localization as non-core; and marks the PAINT
+  neuron-projection active-in row plus the synapse IEA as over-propagated from
+  receptor output rather than RIC-3's ER-membrane activity.
