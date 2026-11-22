@@ -102,6 +102,19 @@ step. The claim should be restated as "the curated module grounds the terminal s
 which is what prevents the paralog trap" — an argument for curation, which is a perfectly good
 claim, rather than for the engine.
 
+> **Partly withdrawn on revisit (2026-11-22).** The first half stands: the exclusion is a
+> curator decision, not an engine result. The implication that GOA is therefore *wrong* does
+> not, and the "credits intracellular glucose production" clause is now simply stale — `main`'s
+> G6PC3 `core_functions` are 1,5-anhydroglucitol 6-phosphate clearance and G6P
+> hydrolysis-as-activity, with in-vivo flux explicitly left unresolved. On the substance,
+> demoting `GO:0006094` on G6PC3 — which is what this finding gestured at — would have been an
+> over-correction: there is experimental support for astrocytic G6PC3/G6PT glucose production
+> (PMID:15661744) and Reactome names G6PC3 the catalyst of a gluconeogenesis event
+> (R-HSA-3262512), so retention as non-core is correct. The real point is **scope**:
+> "participates in gluconeogenesis" is true of G6PC3, "can supply blood glucose" is not. The
+> module adds precision to the question rather than correcting the annotation, and the module
+> note and prose have been reworded accordingly. No change to the G6PC3 review.
+
 ### 2. The zonation result is reported as single-gate but is multi-cause, and is partly carried by the muscle isozyme
 
 Two problems, both verifiable from `cache/halpern_zonation.tsv`.
@@ -275,6 +288,10 @@ rows, and SLC37A4 justifies retaining PMID:21949678 in `reference_review`.
    cached UniProt record, and the SCN4 mechanism is given in the older ER-stress/apoptosis
    form, omitting the 1,5-AG6P accumulation mechanism (Veiga-da-Cunha 2019) which is in fact
    the strongest available argument for the project's own paralog-trap claim.
+   **Resolved on `main` (verified 2026-11-22).** The description now leads with 1,5-AG6P
+   clearance as the established physiological role, cites it (PMID:30626647, Veiga-da-Cunha;
+   PMID:39548727), notes that SLC37A4 supplies the substrate, and derives SCN4 from that
+   mechanism rather than from ER stress. Nothing left to apply.
 6. **LDHA mitochondrion IBA self-contradicts.** Marked `MARK_AS_OVER_ANNOTATED` with
    `propagation_review: PROPAGATION_BAD / COMPARTMENT_OR_COMPLEX_MISMATCH`, while its own
    `supporting_text` affirms mitochondrial LDH — and LDHB keeps the same family-level IBA as
@@ -295,6 +312,10 @@ rows, and SLC37A4 justifies retaining PMID:21949678 in `reference_review`.
 **Consistency and hygiene:**
 
 - `GO:0005783` is `ACCEPT` in G6PC3 but `KEEP_AS_NON_CORE` in G6PC1 for the same situation.
+  (Revisited 2026-11-22: `main`'s G6PC3 now justifies the `ACCEPT` explicitly — the ER IBD sits
+  on the verified ancestry path, target-in-`WITH/FROM` is legitimate descendant grounding per
+  `CLAUDE.md`, and the organelle term is kept as informative localisation alongside the narrower
+  membrane term. That is a reasoned position rather than an inconsistency, so it stands.)
 - Redundant parent MF terms are `MARK_AS_OVER_ANNOTATED` in OXCT1/BDH1 but `KEEP_AS_NON_CORE`
   in ACAT1; "identical protein binding" diverges between OXCT1 and ACAT1.
 - Eight of ten files are still `status: INITIALIZED` with zero PENDING actions (only G6PC3 and
@@ -379,6 +400,8 @@ Each finding was checked against `main` at rebase time. The outcome, per gene:
 | OXCT1 — degenerate `supporting_text` fragments | **gone from `main`.** |
 | ACAT1 — reversed thiolysis/CoA chemistry | **gone from `main`.** |
 | LDHB — over-general parents as `MARK_AS_OVER_ANNOTATED` rather than `MODIFY` + replacement | still as-is on `main`. Left alone: it is a convention call, and `main`'s curators have continued to curate this file since, so their choice stands. |
+| G6PC3 — uncited 1,5-AG6P claim, outdated SCN4 mechanism | **fixed independently**: the description now leads with 1,5-AG6P clearance, cited to PMID:30626647/39548727, and derives SCN4 from it. |
+| G6PC3 — retains `GO:0006094`, so the paralog trap is not GOA-derivable | **finding partly withdrawn**, not applied. Retention is correct (astrocytic G6PC3/G6PT glucose production, PMID:15661744; Reactome R-HSA-3262512), and `main`'s reasoning is better than what this review implied. The module note and prose were reworded to state the exclusion as a *scope* distinction instead. See the note under Finding 1. |
 | LDHA mitochondrion IBA; GPD1 direction; `NEW`-entry provenance; convention harmonisation; notes-file artifacts | subsumed by `main`'s own much larger revisions of these files (ACAT1 +496 lines, G6PC3 +209, LDHA +53, BDH1 +40 since this review's base). |
 
 Re-applying any of these would have regressed three months of curation, so the rebase drops them.

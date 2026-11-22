@@ -64,22 +64,31 @@ the result must not be sold as circuit evaluation recovering textbook biology. I
 circuit genuinely does the work, see the substrate-resolved module below, where adding
 the glycerol branch changes the AND-core.
 
-### It resists the paralog trap — because a curator said so
+### It resists the paralog trap — because a curator drew a narrower question
 
 `G6PC3` ("G6Pase-β") is expressed in essentially every tissue (10–40 TPM). A naive
 "is *some* glucose-6-phosphatase paralog expressed?" rule would wrongly call most
 tissues gluconeogenic. The module grounds the gluconeogenic terminal step specifically
-to **G6PC1**, with `G6PC2`/`G6PC3` recorded as a *paralog trap* in the module notes, so
-they cannot satisfy the gate. This is the eukaryotic form of the "permissibility ≠
-presence" / paralog-overannotation caution.
+to **G6PC1**, so the paralogs cannot satisfy the gate. This is the eukaryotic form of
+the "permissibility ≠ presence" / paralog-overannotation caution.
 
-Worth being precise about where that exclusion comes from: it is a **hand-written
-curator judgement in the module YAML**, not something the engine or the expression data
-derives — and it is not derivable from GOA either, since the curated `G6PC3` review
-retains `GO:0006094` gluconeogenesis (as `KEEP_AS_NON_CORE`) and credits intracellular
-glucose production. A module auto-built from GOA would admit `G6PC3` for the terminal
-step and call most tissues gluconeogenic. The paralog trap is therefore a genuine
-argument *for curated modules*, which is a stronger claim than an engine result.
+Worth being precise about where that exclusion comes from, and about what it does *not*
+claim. It is a **hand-written curator judgement in the module YAML**, not something the
+engine or the expression data derives, and it is not derivable from GOA. But GOA is not
+making a mistake here. `G6PC3` genuinely catalyses the terminal glucose-6-phosphate
+dephosphorylation: there is experimental support for astrocytic `G6PC3`/`G6PT` glucose
+production (PMID:15661744), and Reactome names `G6PC3` as the catalyst of a
+gluconeogenesis event (R-HSA-3262512). The curated `G6PC3` review accordingly retains
+`GO:0006094` as `KEEP_AS_NON_CORE`, with its core functions being 1,5-anhydroglucitol
+6-phosphate clearance and G6P hydrolysis-as-activity — and that is the right call.
+
+The distinction is **scope**. "Participates in gluconeogenesis" is true of `G6PC3`;
+"can supply blood glucose" is not, because it lacks the tissue-restricted expression
+that turns the reaction into systemic free-glucose export. The GO process term is
+coarser than the question this module asks, so a module auto-built from GOA would
+conflate the two, admit `G6PC3` for the terminal step, and call most tissues
+gluconeogenic. That is a genuine argument *for curated modules* — and a reminder that
+the curation adds precision to the question rather than correcting the annotation.
 
 ### The gate is graded (and that matches physiology)
 

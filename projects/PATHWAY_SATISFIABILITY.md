@@ -155,11 +155,19 @@ their known quantitative contribution.
 > module: at the 1 TPM bar `SLC37A4`, `PCK2` and `G6PC3` pass in all 54 tissues, `PC` in 53 and
 > `FBP1` in 42, while `G6PC1` passes in 3. A one-line single-gene filter reproduces Figure 1.
 > The claim worth making is therefore about **curation, not computation**: the module grounds
-> the terminal step to `G6PC1` alone, recording `G6PC2`/`G6PC3` as a *paralog trap*, so the
-> near-ubiquitous `G6PC3` cannot satisfy the gate. That exclusion is a curator's judgement
-> written into the module — it is not derivable from GOA, which still carries `GO:0006094`
-> gluconeogenesis on `G6PC3`. Circuit evaluation earns its keep where the ORs actually
-> discriminate, as in the substrate-resolved module below.
+> the terminal step to `G6PC1` alone, so the near-ubiquitous `G6PC3` cannot satisfy the gate.
+> That exclusion is a curator's judgement written into the module, and it is not derivable from
+> GOA — but the reason is *scope*, not error. `G6PC3` really does catalyse the terminal
+> glucose-6-phosphate dephosphorylation, with experimental support (astrocytic `G6PC3`/`G6PT`
+> glucose production, PMID:15661744) and Reactome naming it the catalyst of a gluconeogenesis
+> event, so its `GO:0006094` annotation is correct and the curated
+> [G6PC3 review](../genes/human/G6PC3/G6PC3-ai-review.yaml) rightly keeps it as non-core. What
+> `G6PC3` lacks is the tissue-restricted expression that turns that reaction into *systemic
+> free-glucose export*. The GO process term is coarser than the question this module asks:
+> "participates in gluconeogenesis" is true of `G6PC3`; "can supply blood glucose" is not. A
+> module auto-built from GOA would conflate the two and call most tissues gluconeogenic.
+> Circuit evaluation earns its keep where the ORs actually discriminate, as in the
+> substrate-resolved module below.
 
 ![Across 54 GTEx tissues, G6PC1 expression with the three satisfiable tissues highlighted](PATHWAY_SATISFIABILITY/fig-tissues.svg)
 
