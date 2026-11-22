@@ -12,8 +12,8 @@ Re-review notes:
 
 - Accepted the PTN000221246 C-4 methylsterol oxidase and ER membrane IBAs.
 - Accepted the PTN000933387 ergosterol biosynthesis IBA.
-- Kept sterol biosynthetic process as a correct non-core parent and iron ion
-  binding as cofactor-level evidence.
-- Marked lipid biosynthetic process too general.
+- Marked the sterol biosynthetic process and lipid biosynthetic process parent
+  rows too general.
+- Kept iron ion binding as cofactor-level evidence.
 - The phenotypic distinction from erg25A is captured in the review summary, not
   by adding stress-response process annotations.

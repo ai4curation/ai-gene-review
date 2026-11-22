@@ -21,7 +21,8 @@ Re-review notes:
 
 - Accepted PTN000221246 and PTN000933387 for SMO activity, ER membrane and
   ergosterol biosynthesis.
-- Treated the plasma-membrane IDA as a non-core high-throughput proteomic hit.
+- Marked the plasma-membrane IDA over-annotated because it rests on a broad
+  high-throughput membrane fraction, while Erg251-GFP colocalizes with ER.
 - Kept cellular response to xenobiotic stimulus as a non-core sterol phenotype
   under azole stress.
 - Marked calcineurin-mediated signaling as over-annotated because the cached

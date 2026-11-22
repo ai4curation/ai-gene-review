@@ -13,11 +13,19 @@ Candida species and reinforces C. glabrata ERG25 as an antifungal target
 [PMID:40451886, "This study demonstrated deletion of the ERG25 homolog in C.
 glabrata and C. auris using an RNP-based CRISPR-Cas9 system."].
 
+Targeted searches of the cached C. glabrata ERG25 literature found no direct
+Erg25 localization assay. Queries covered Erg25-GFP, ERG25 microscopy, ERG25
+localization and ERG25 fractionation in the full-text 2022 cholesterol-uptake
+paper and the abstract-only 2025 CRISPR-deletion paper; PMID:35399500 localizes
+Aus1p-GFP, Pma1p-mCherry, Hxt1p-mCherry and Pil1p-mCherry but not Erg25, and
+PMID:40451886 has no localization evidence.
+
 Re-review notes:
 
 - Accepted Ensembl Compara transfers for C-4 methylsterol oxidase activity, ER
   location, ER membrane and ergosterol biosynthesis.
-- Removed the root CC ND placeholder as stale.
+- Accepted the root CC ND placeholder as a true gap because no C. glabrata
+  paper directly localizes Erg25.
 - Marked the plasma-membrane transfer over-annotated because the yeast donor
   row itself is a weak non-core antibody observation.
 - Kept catalytic-complex membership as a non-core orthology inference until a

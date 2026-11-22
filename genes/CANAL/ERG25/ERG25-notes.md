@@ -8,6 +8,13 @@ noted the expected non-heme iron histidine clusters plus an ER retrieval signal
 oxidase was cloned and sequenced by complementing a Saccharomyces cerevisiae
 erg25 mutant with a C. albicans genomic library."].
 
+Todd et al. 2024 established that ERG25 is the lower-expressed paralog relative
+to ERG251 and that the two SMOs can partly compensate for each other: the
+ERG25/ERG251 double homozygous deletion was unobtainable, while a heterozygous
+ERG25 deletion in either the wild-type or erg251-null background had no effect
+on drug susceptibility [PMID:39078851, "a double homozygous deletion of ERG251
+and ERG25 was not possible after multiple attempts"].
+
 Re-review notes:
 
 - Accepted PTN000221246 for C-4 methylsterol oxidase activity and ER membrane

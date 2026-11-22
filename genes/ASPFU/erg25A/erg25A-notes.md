@@ -11,8 +11,8 @@ Re-review notes:
 
 - Accepted the PTN000221246 C-4 methylsterol oxidase and ER membrane IBAs.
 - Accepted the PTN000933387 ergosterol biosynthesis IBA.
-- Kept sterol biosynthetic process as a correct non-core parent and iron ion
-  binding as cofactor-level evidence.
-- Marked lipid biosynthetic process too general.
+- Marked the sterol biosynthetic process and lipid biosynthetic process parent
+  rows too general.
+- Kept iron ion binding as cofactor-level evidence.
 - The hypoxia/DTT phenotypes in the paper were treated as downstream stress
   adaptation effects, not as new core GO process annotations.
