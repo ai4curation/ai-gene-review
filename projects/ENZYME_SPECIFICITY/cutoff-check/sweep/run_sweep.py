@@ -10,11 +10,14 @@ verdict.
 Rows are then sorted into the disagreements worth a curator's time:
 
 * ``kept_but_fits_other``: the row is kept (ACCEPT or KEEP_AS_NON_CORE), the protein
-  fails its target families, it passes a function-level family for another reaction,
-  and its UniProt record does not state the annotated EC.
-* ``kept_family_lacks_ec``: as above, but the gene's own UniProt record states the
-  annotated EC, so the passing family is usually the protein's own family and its
-  release-table EC list is narrower than the protein (a secondary or partial reaction).
+  fails its target families, and it passes a function-level family that is neither
+  named for it nor carries an EC its UniProt record states, or one that carries a record
+  EC while the record does not state the annotated EC.
+* ``kept_other_model``: as above, but every passing family is named for the protein:
+  another NCBIfam model of its own family, which the term is not mapped to.
+* ``kept_record_states_ec``: every passing family is named for the protein or carries
+  an EC its UniProt record states, and the record states the annotated EC too (often
+  a secondary or partial reaction).
 * ``kept_below_cutoff``: kept, fails its target families, no competing family passes.
   The closest family is listed, since this is often a sister family (ptxD's case).
 * ``removed_but_passes``: the row was removed or marked over-annotated, yet a
@@ -39,6 +42,7 @@ from pathlib import Path
 import yaml
 
 from ai_gene_review.validation.enzyme_family_cutoff import (
+    Family,
     FamilyScore,
     NCBIfam,
     _read_with_retry,
@@ -57,6 +61,10 @@ ORGANISMS = ["PSEPK", "ECOLI"]
 ELECTRONIC = {"IEA", "IBA"}
 KEPT = {"ACCEPT", "KEEP_AS_NON_CORE"}
 REMOVED = {"REMOVE", "MARK_AS_OVER_ANNOTATED"}
+NAME_RE = re.compile(
+    r"^DE\s+(?:RecName|AltName|SubName|Contains|Includes)?:?\s*Full=([^{;]+?)\s*[{;]",
+    re.M,
+)
 EC_RE = re.compile(r"EC=(\d+\.\d+\.\d+\.n?\d+)")
 QUICKGO = "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{ids}/xrefs"
 
@@ -85,8 +93,13 @@ def ec_xrefs(go_ids: set[str]) -> dict[str, list[str]]:
     return cache
 
 
-def collect_rows() -> list[dict]:
-    """Live electronic MF rows that map to a complete EC number, one per protein and term."""
+def collect_rows() -> tuple[list[dict], list[dict]]:
+    """Live electronic rows that map to a complete EC number, one per protein and term.
+
+    Proposed (``NEW``) rows are not GOA rows and are skipped. Where two electronic rows
+    on one term carry different actions, the first is kept and the pair is returned as
+    a conflict, since the review's actions on one term should agree.
+    """
     raw = []
     for org in ORGANISMS:
         for path in sorted((REPO / "genes" / org).glob("*/*-ai-review.yaml")):
@@ -95,6 +108,8 @@ def collect_rows() -> list[dict]:
                 if ann.get("retired") or ann.get("evidence_type") not in ELECTRONIC:
                     continue
                 review_block = ann.get("review") or {}
+                if review_block.get("action") == "NEW":
+                    continue
                 raw.append(
                     {
                         "organism": org,
@@ -106,13 +121,23 @@ def collect_rows() -> list[dict]:
                     }
                 )
     xrefs = ec_xrefs({r["go"] for r in raw})
-    rows, seen = [], set()
+    rows: list[dict] = []
+    first: dict[tuple[str, str], dict] = {}
+    conflicts = []
     for r in raw:
+        if not xrefs.get(r["go"]):
+            continue
         key = (r["accession"], r["go"])
-        if xrefs.get(r["go"]) and key not in seen:
-            seen.add(key)
-            rows.append(r | {"ec": xrefs[r["go"]]})
-    return rows
+        if key in first:
+            if r["action"] != first[key]["action"]:
+                conflicts.append(
+                    {k: r[k] for k in ("organism", "gene", "go", "label")}
+                    | {"actions": [first[key]["action"], r["action"]]}
+                )
+            continue
+        first[key] = r
+        rows.append(r | {"ec": xrefs[r["go"]]})
+    return rows, conflicts
 
 
 def review_paths() -> dict[str, Path]:
@@ -124,19 +149,57 @@ def review_paths() -> dict[str, Path]:
     return paths
 
 
-def uniprot_ecs(review: Path) -> set[str]:
-    """EC numbers the gene's own UniProt record states (names and catalytic activities)."""
+def uniprot_record(review: Path) -> tuple[set[str], set[str]]:
+    """EC numbers and protein names the gene's own UniProt record states."""
     record = review.parent / f"{review.parent.name}-uniprot.txt"
-    return set(EC_RE.findall(record.read_text())) if record.exists() else set()
+    if not record.exists():
+        return set(), set()
+    text = record.read_text()
+    names = {n.lower() for n in NAME_RE.findall(text)}
+    return set(EC_RE.findall(text)), names
+
+
+def gene_token(gene: str) -> str:
+    """The gene symbol as it appears in a family name: ``puuA-II`` -> ``puua``.
+
+    >>> gene_token("puuA-II"), gene_token("pyrC'"), gene_token("nuoG")
+    ('puua', 'pyrc', 'nuog')
+    """
+    return re.sub(r"(-[IVX]+|')$", "", gene).lower()
+
+
+def relation(
+    family: Family, gene: str, target_name: str | None, names: set[str], ecs: set[str]
+) -> str:
+    """How a passing non-target family relates to the protein.
+
+    ``named``: the family is named for the protein (its gene symbol, the best target's
+    product name, or a protein name on the UniProt record), so it is another model of
+    the protein's own family. ``record_ec``: it carries an EC the record states.
+    ``other``: neither.
+    """
+    product = family.product_name.lower()
+    if (
+        re.search(rf"\b{re.escape(gene_token(gene))}\b", product)
+        or product == (target_name or "").lower()
+        or product in names
+    ):
+        return "named"
+    if set(family.ec_numbers) & ecs:
+        return "record_ec"
+    return "other"
 
 
 def classify(row: dict) -> str | None:
     """Which disagreement list a row belongs to, if any."""
     if row["action"] in KEPT and row["verdict"] in {"BTC", "SFA", "NO_TARGET_HIT"}:
-        if not row["better_fitting_families"]:
+        relations = set(row["better_fitting_relations"].values())
+        if not relations:
             return "kept_below_cutoff"
-        if row["ec_on_uniprot_record"]:
-            return "kept_family_lacks_ec"
+        if row["ec_on_uniprot_record"] and "other" not in relations:
+            return "kept_record_states_ec"
+        if relations == {"named"}:
+            return "kept_other_model"
         return "kept_but_fits_other"
     if (
         row["action"] in REMOVED
@@ -147,13 +210,21 @@ def classify(row: dict) -> str | None:
     return None
 
 
-def annotate(results: list[dict]) -> None:
-    """Add the UniProt-record EC check and the disagreement list to each result."""
-    paths = review_paths()
-    ecs = {acc: uniprot_ecs(path) for acc, path in paths.items()}
+def annotate(results: list[dict], db: NCBIfam) -> None:
+    """Add the UniProt-record checks, competitor relations and disagreement list."""
+    records = {acc: uniprot_record(path) for acc, path in review_paths().items()}
+    by_accession = {f.accession: f for f in db.families}
     for r in results:
-        r["ec_on_uniprot_record"] = bool(set(r["ec"]) & ecs.get(r["accession"], set()))
+        ecs, names = records.get(r["accession"], (set(), set()))
+        r["ec_on_uniprot_record"] = bool(set(r["ec"]) & ecs)
         b = r["best_target"]
+        target_name = b["family"].split(" ", 1)[1] if b else None
+        r["better_fitting_relations"] = {
+            entry: relation(
+                by_accession[entry.split()[0]], r["gene"], target_name, names, ecs
+            )
+            for entry in r["better_fitting_families"]
+        }
         r["target_matched_by"] = (
             None
             if not b
@@ -183,7 +254,7 @@ def main(limit: int | None = None) -> None:
     """Run the sweep and write the results; ``limit`` caps proteins for a timing run
     (its output overwrites the full results, so rerun without it before committing)."""
     db = NCBIfam(CACHE / "ncbifam")
-    rows = collect_rows()
+    rows, conflicts = collect_rows()
     if limit:
         keep = sorted({r["accession"] for r in rows})[:limit]
         rows = [r for r in rows if r["accession"] in keep]
@@ -224,11 +295,12 @@ def main(limit: int | None = None) -> None:
         if i % 100 == 0:
             print(f"{i}/{len(rows)}", file=sys.stderr)
 
-    annotate(results)
+    annotate(results, db)
     meta = {
         "ncbifam_release": db.release(),
         "organisms": ORGANISMS,
         "rows": len(results),
+        "conflicting_actions": conflicts,
     }
     (HERE / "sweep_results.yaml").write_text(
         yaml.safe_dump({"meta": meta, "rows": results}, sort_keys=False, width=120)
@@ -262,6 +334,20 @@ def render(meta: dict, results: list[dict]) -> str:
         for v in verdicts
     ]
 
+    conflicts = meta.get("conflicting_actions") or []
+    lines += [
+        "",
+        f"## Electronic rows on one term with different actions ({len(conflicts)})",
+        "",
+        "The sweep keeps one row per protein and term. These pairs disagree, which the "
+        "action-consistency rules say should not happen.",
+        "",
+    ]
+    lines += [
+        f"- {c['organism']} {c['gene']} {c['go']} {c['label']}: {' vs '.join(map(str, c['actions']))}"
+        for c in conflicts
+    ]
+
     def cell(s: dict) -> str:
         """Family, score and cutoff; the best-domain score too when it is what fails."""
         text = f"{s['family']} ({s['score']} / {s['trusted_cutoff']}"
@@ -292,26 +378,38 @@ def render(meta: dict, results: list[dict]) -> str:
         for r in rows:
             b = r["best_target"]
             target = cell(b) if b else "no hit"
-            other = "; ".join(r["better_fitting_families"]) or "; ".join(
-                cell(c) for c in r["closest_families"][:1]
-            )
+            other = "; ".join(
+                f"{f} [{rel}]" for f, rel in r["better_fitting_relations"].items()
+            ) or "; ".join(cell(c) for c in r["closest_families"][:1])
             lines.append(
                 f"| {r['organism']} | {r['gene']} | {r['go']} {r['label']} | {r['action']} | {target} | {r['target_matched_by'] or ''} | {other} |"
             )
 
     section(
         "kept_but_fits_other",
-        "Kept rows whose protein fits another reaction's family",
-        "The strongest leads: the protein fails every family carrying the term, passes a "
-        "function-level family for a different reaction, and its own UniProt record does "
-        "not state the annotated EC.",
+        "Kept rows whose protein passes a family for another activity",
+        "The strongest leads. The protein fails every family mapped to the term. It passes "
+        "a function-level family that is neither named for it nor carries an EC its UniProt "
+        "record states, or one carrying a record EC while the record does not state the "
+        "annotated EC. Each passing family is tagged: `[named]` is named for the protein, "
+        "`[record_ec]` carries an EC its UniProt record states (often the protein's own "
+        "reaction), `[other]` is neither.",
     )
     section(
-        "kept_family_lacks_ec",
-        "Kept rows the protein's own record supports, though its family lacks the EC",
-        "Usually not a conflict: the gene's UniProt record states the annotated EC, and the "
-        "passing family is the protein's own, whose release-table EC list is narrower "
-        "(a secondary or partial reaction). Worth a look only where that activity is doubtful.",
+        "kept_other_model",
+        "Kept rows where another model of the protein's own family passes",
+        "Every passing family is named for the protein (its gene symbol, the best target's "
+        "product name, or a name on its UniProt record), but NCBIfam maps the term to a "
+        "different model. Usually a gap in the release table's EC/GO mapping, not a doubt "
+        "about the row.",
+    )
+    section(
+        "kept_record_states_ec",
+        "Kept rows whose annotated EC the protein's UniProt record states",
+        "Every passing family is named for the protein or carries an EC its UniProt record "
+        "states, and the record also states the annotated EC. Often a secondary or partial "
+        "reaction the family's EC list leaves out. Check where the record's support for "
+        "the annotated EC is weak.",
     )
     section(
         "kept_below_cutoff",
@@ -335,7 +433,7 @@ def render(meta: dict, results: list[dict]) -> str:
 def rerender() -> None:
     """Re-derive the lists and DISAGREEMENTS.md from saved scores, without rescanning."""
     saved = yaml.safe_load((HERE / "sweep_results.yaml").read_text())
-    annotate(saved["rows"])
+    annotate(saved["rows"], NCBIfam(CACHE / "ncbifam"))
     (HERE / "sweep_results.yaml").write_text(
         yaml.safe_dump(saved, sort_keys=False, width=120)
     )

@@ -608,7 +608,8 @@ def check(
     closest: list[FamilyScore] = []
     if library:
         closest = scan_library({accession: sequence}, db)[accession]
-        observed = [db.by_source[s.accession.split(".")[0]] for s in closest]
+        by_accession = {f.accession: f for f in db.families}
+        observed = [by_accession[s.accession] for s in closest]
     else:
         observed = [
             db.by_source[i]

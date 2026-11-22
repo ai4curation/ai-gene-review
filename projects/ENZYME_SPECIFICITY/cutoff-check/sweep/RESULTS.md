@@ -27,6 +27,9 @@ here.**
 | kept (ACCEPT, KEEP_AS_NON_CORE) | 1014 | 827 (82%) | 118 | 59 |
 | removed (REMOVE, MARK_AS_OVER_ANNOTATED) | 169 | 80 (47%) | 67 | 19 |
 
+Excluding rows where no family carries the activity, the pass rates are 87% (827 of 955)
+for kept rows and 53% (80 of 150) for removed rows.
+
 Kept rows also include 10 BETWEEN_NC_TC verdicts and removed rows include 3; the other
 125 rows carry another action, such as MODIFY or UNDECIDED. Most kept rows pass a family that carries the
 activity. But nearly half of the removed rows pass one too, so passing a family is weak
@@ -101,20 +104,29 @@ groups.
   This is the limitation Schnoes et al. describe for superfamily-level transfer.
 - **Correct but broader substrate terms**, marked over-annotated: murF and PP_4545.
 - **NCBIfam GO metadata naming a sister reaction (rows matched `go_only`).** The family
-  became a target only because the release table lists the row's GO term. In four
-  families that term contradicts the family's own product name. GO definitions were
-  checked in QuickGO:
+  became a target only because the release table lists the row's GO term. In six
+  models, covering four reactions, that term contradicts the model's own product name or
+  EC number. GO definitions were checked in QuickGO:
 
   | family | product name | GO term in the release table | the term for the named reaction |
   |---|---|---|---|
-  | NF006766.0 | formate-dependent phosphoribosylglycinamide formyltransferase | GO:0004644 (10-formyltetrahydrofolate donor) | GO:0043815 phosphoribosylglycinamide formyltransferase 2 activity (ATP + formate) |
+  | NF006766.0 | formate-dependent phosphoribosylglycinamide formyltransferase (EC 2.1.2.-) | GO:0004644 (10-formyltetrahydrofolate donor) | GO:0043815 phosphoribosylglycinamide formyltransferase 2 activity (ATP + formate) |
+  | TIGR01142.1 | phosphoribosylglycinamide formyltransferase 2 | GO:0004644 | GO:0043815 |
   | TIGR02095.1 | glycogen/starch synthase, ADP-glucose type | GO:0004373 (UDP-glucose donor) | GO:0009011 (ADP-glucose donor) |
-  | NF006946.0 | CDP-diacylglycerol--serine O-phosphatidyltransferase | GO:0008444 (glycerol-3-phosphate acceptor) | GO:0003882 (L-serine acceptor) |
-  | TIGR02491.1 | anaerobic ribonucleoside-triphosphate reductase activating protein | GO:0043365 ([formate-C-acetyltransferase]-activating enzyme) | the PFL activase term names a different glycyl-radical enzyme |
+  | NF001899.0 | glycogen synthase GlgA (EC 2.4.1.21, the ADP-glucose reaction) | GO:0004373 | GO:0009011 |
+  | NF006946.0 | CDP-diacylglycerol--serine O-phosphatidyltransferase (EC 2.7.8.8) | GO:0008444 (glycerol-3-phosphate acceptor) | GO:0003882 (L-serine acceptor) |
+  | TIGR02491.1 | anaerobic ribonucleoside-triphosphate reductase activating protein | GO:0043365 ([formate-C-acetyltransferase]-activating enzyme) | GO:0043364 glycyl-radical enzyme activating activity, which the sibling model TIGR02826.1 (same product name) carries and E. coli NrdG has by EXP (PMID:9305874) |
 
   The reviews removed the matching rows on purT, glgA, pssA and nrdG for the same
-  reason. These four are candidates for feedback to NCBI's PGAP curators. They are
-  recorded here and nowhere else yet. For catB, PP_2528 and pycB, the family's GO
+  reason. Because both PurT models carry the folate-dependent term rather than
+  GO:0043815, purT's GO:0043815 row gets `NO_MODEL`. These six models are candidates for
+  feedback to NCBI's PGAP curators. They are release-table errors, not defects behind a
+  particular GOA row, so they do not fit a review's `source_defects`. They are recorded
+  here until a route for NCBIfam feedback exists. The GOA rows on glgA and nrdG came from
+  InterPro2GO, which the reviews already flag, so a fix at NCBIfam alone would not reach
+  them. A pass comparing each model's EC numbers with the EC cross-references of its GO
+  terms over the whole release table would find the rest of this class; this sweep only
+  finds models that a swept row lands on. For catB, PP_2528 and pycB, the family's GO
   terms span related reactions its members share, and the reviews judged the protein's
   own specificity. NF011685.0 is named "peptidoglycan glycosyltransferase FtsI", so for
   ftsI it is the review, which treats FtsI as the cross-linking partner of FtsW, that
