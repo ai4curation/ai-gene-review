@@ -50,3 +50,9 @@ Tried to generate a fast provider deep-research file with
 feedback, but the installed deep-research-client only exposed the `claude_code`
 provider and `agentapi` was not available for that path. The Dent and Ghosh
 primary papers were resolved through PubMed and added manually above.
+
+Cross-checked the completed GluCl module after
+`modules/nematode_glutamate_gated_chloride_channels.yaml` merged. The review's
+core function and `GO:0008068` source-defect block already model GLC-1 as the
+alpha subunit of a heteromeric GLC-1/GLC-2 extracellularly glutamate-gated
+chloride channel, matching the module's `glc1_glc2_receptor` activity.
