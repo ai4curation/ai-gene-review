@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from typing import Any
 
 import httpx
@@ -491,7 +492,7 @@ def test_typesafe_probabilities_missing_logprob_falls_back_to_one_hot() -> None:
     assert source == "synthesized"
 
     # Unanchored synthetic stream: single-alternative fallback must pick the FIRST match,
-    # not candidates[-1], so later fields are not starved.
+    # not candidates[-1], and preserve raw exp(logprob) rather than inflating to 1.0.
     schema = {
         "type": "object",
         "properties": {
@@ -509,7 +510,24 @@ def test_typesafe_probabilities_missing_logprob_falls_back_to_one_hot() -> None:
         schema,
         {"/": "MATCH", "/about/gene": "MISMATCH"},
     )
-    assert answers["/"]["probabilities"] == {"MATCH": 1.0, "MISMATCH": 0.0}
+    assert math.isclose(answers["/"]["probabilities"]["MATCH"], math.exp(-0.1))
+    assert answers["/"]["probabilities"]["MISMATCH"] == 0.0
     assert answers["/"]["probabilities_source"] == "measured"
-    assert answers["/about/gene"]["probabilities"] == {"MATCH": 0.0, "MISMATCH": 1.0}
+    assert math.isclose(
+        answers["/about/gene"]["probabilities"]["MISMATCH"], math.exp(-0.2)
+    )
+    assert answers["/about/gene"]["probabilities"]["MATCH"] == 0.0
     assert answers["/about/gene"]["probabilities_source"] == "measured"
+
+    # A wrong-token match where selected receives zero mass must fall back to synthesized
+    wrong_probs, wrong_source = _probabilities(
+        {
+            "token": "REMOVE",
+            "logprob": -0.1,
+            "top_logprobs": [{"token": "REMOVE", "logprob": -0.1}],
+        },
+        ["ACCEPT", "REMOVE"],
+        "ACCEPT",
+    )
+    assert wrong_probs == {"ACCEPT": 1.0, "REMOVE": 0.0}
+    assert wrong_source == "synthesized"

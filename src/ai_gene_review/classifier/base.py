@@ -59,13 +59,16 @@ class ClassificationTask:
             raise ValueError("Choice values must be unique")
 
 
-@dataclass(frozen=True)
+ProbabilitySource = Literal["measured", "synthesized"]
+
+
+@dataclass(frozen=True, kw_only=True)
 class ClassificationResult:
     """Calibrated or scored closed-set classification result."""
 
     label: str | None = None
     probabilities: Mapping[str, float] = field(default_factory=dict)
-    probabilities_source: Literal["measured", "synthesized"] | None = None
+    probabilities_source: ProbabilitySource | None = None
     answers: Mapping[str, Any] = field(default_factory=dict)
     model: str | None = None
     elapsed_seconds: float | None = None

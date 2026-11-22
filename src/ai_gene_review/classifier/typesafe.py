@@ -8,11 +8,15 @@ import math
 import os
 import re
 import time
-from typing import Any, Literal
+from typing import Any
 
 import httpx
 
-from ai_gene_review.classifier.base import ClassificationResult, ClassificationTask
+from ai_gene_review.classifier.base import (
+    ClassificationResult,
+    ClassificationTask,
+    ProbabilitySource,
+)
 
 DEFAULT_BASE_URL = "https://api.typesafe.ai/v1/systemone"
 DEFAULT_MODEL = "jev-1.13.0"
@@ -63,9 +67,6 @@ def response_schema(task: ClassificationTask) -> dict[str, Any]:
         "required": ["label"],
         "additionalProperties": False,
     }
-
-
-ProbabilitySource = Literal["measured", "synthesized"]
 
 
 def _match_choice(token_text: str, allowed: set[str]) -> str | None:
@@ -179,6 +180,15 @@ def _one_hot(choices: list[str], selected: str) -> dict[str, float]:
 def _probabilities(
     token: dict[str, Any], choices: list[str], selected: str
 ) -> tuple[dict[str, float], ProbabilitySource]:
+    """Extract raw ``exp(logprob)`` probabilities without inflating partial mass.
+
+    ``exp(logprob)`` is already a calibrated token probability in ``(0, 1]``
+    whose values across ``top_logprobs`` sum to at most ``1.0`` (modulo
+    floating-point rounding). Leaving partial mass unnormalized prevents a
+    single attributed choice from being inflated to a fabricated ``1.0``.
+    If the selected choice itself receives no attributed mass, falls back to a
+    synthesized one-hot distribution.
+    """
     allowed = set(choices)
     probs = {choice: 0.0 for choice in choices}
     for alt in token.get("top_logprobs", []):
@@ -196,10 +206,12 @@ def _probabilities(
         )
     ):
         probs[selected] = math.exp(float(token["logprob"]))
+    if probs.get(selected, 0.0) <= 0.0:
+        return _one_hot(choices, selected), "synthesized"
     total = sum(probs.values())
-    if total > 0:
-        return {label: value / total for label, value in probs.items()}, "measured"
-    return _one_hot(choices, selected), "synthesized"
+    if total > 1.0:
+        probs = {label: value / total for label, value in probs.items()}
+    return probs, "measured"
 
 
 def extract_probabilities_with_source(
@@ -254,7 +266,6 @@ def extract_schema_answers(
         if tokens and name in windows:
             win_start, win_end = windows[name]
             found = _find_value_token(tokens, set(choices), win_start, win_end)
-            cursor = max(cursor, win_end)
         elif tokens:
             found = _find_value_token(tokens, set(choices), cursor)
             if found is not None:
