@@ -58,7 +58,7 @@ def build() -> dict:
     names: dict[str, str] = {}
     for org in ORGANISMS:
         path = RESULTS / f"gapcheck-{org}.json"
-        if not path.exists() or not any(k[0] == org for k in by_key):
+        if not path.exists():
             continue
         res = json.loads(path.read_text())
         miss, ok = [], []
@@ -68,7 +68,11 @@ def build() -> dict:
                 ok.append({"id": row["term"], "name": row["name"], "n": row["n_genes"],
                            "nlig": row["n_ligand_genes"], "ligs": row["ligand_genes"][:6]})
                 continue
-            t = by_key[(org, row["term"])]
+            t = by_key.get((org, row["term"]))
+            if t is None or "source" not in t:
+                raise SystemExit(
+                    f"results/triage.json has no current row for {org} {row['term']}: rerun "
+                    "scripts/triage.py for every organism with a gapcheck file, then export again.")
             miss.append({"id": row["term"], "name": row["name"], "n": row["n_genes"],
                          "genes": row["genes"], "bind": row["binding_only_genes"], "ev": row["evidence"],
                          "cat": t["category"], "note": t.get("note", ""),

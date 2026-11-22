@@ -68,16 +68,18 @@ def read_gaf(path: Path):
 
 
 def check_organism(go: GO, gaf: Path, pathways: set[str], or_receptor_binding: bool) -> dict:
-    symbol: dict[str, str] = {}
+    # A gene id can carry more than one symbol: MGI files proteoform rows (mVEGFA/iso:4) under
+    # the gene's own id. Name each id by its most frequent symbol, which is the gene symbol.
+    symbols: dict[str, collections.Counter] = collections.defaultdict(collections.Counter)
     ligand, binding, extracellular, in_signal = set(), set(), set(), set()
-    not_donor = set()  # complexes and proteoform symbols: never matchable in another species
+    complexes = set()  # Complex Portal entries: never matchable as a gene in another species
     genes_in = collections.defaultdict(set)
     direct = collections.defaultdict(set)
     for c in read_gaf(gaf):
         gene, sym, qual, term, aspect = c[1], c[2], c[3], c[4], c[8]
-        symbol[gene] = sym
-        if "complex" in c[11] or "/" in sym:
-            not_donor.add(gene)
+        symbols[gene][sym] += 1
+        if "complex" in c[11]:
+            complexes.add(gene)
         if aspect == "F" and qual == "enables":
             anc = go.ancestors(term)
             if LIGAND_ACTIVITY in anc:
@@ -93,6 +95,7 @@ def check_organism(go: GO, gaf: Path, pathways: set[str], or_receptor_binding: b
                 in_signal.add(gene)
             for a in anc & pathways:
                 genes_in[a].add(gene)
+    symbol = {g: max(c.items(), key=lambda kv: (kv[1], kv[0]))[0] for g, c in symbols.items()}
     counted = ligand | (binding & extracellular) if or_receptor_binding else ligand
     rows = []
     for p in pathways:
@@ -106,11 +109,12 @@ def check_organism(go: GO, gaf: Path, pathways: set[str], or_receptor_binding: b
                 name=go.name[p],
                 n_genes=len(genes),
                 n_ligand_genes=len(lig),
-                # Symbol lists are capped (8/6/12) to keep gapcheck-*.json compact. Note that
-                # scripts/triage.py reads ligand_genes as the cross-species donor pool, so the
-                # cap can change a category; complexes and proteoform symbols are left out of
-                # it because they can never match a gene symbol in another species.
-                ligand_genes=sorted(symbol[g] for g in lig - not_donor)[:8],
+                # Symbol lists are capped (8/6/12) to keep gapcheck-*.json compact.
+                ligand_genes=sorted(symbol[g] for g in lig)[:8],
+                # scripts/triage.py reads donor_genes as the cross-species donor pool, so the cap
+                # can change a category. Complex Portal entries are left out because they can
+                # never match a gene symbol in another species.
+                donor_genes=sorted(symbol[g] for g in lig - complexes)[:8],
                 binding_only_genes=sorted(symbol[g] for g in (genes & binding) - ligand)[:6],
                 genes=sorted(symbol[g] for g in genes)[:12],
                 evidence=sorted({e for _, e in direct[p]}),
