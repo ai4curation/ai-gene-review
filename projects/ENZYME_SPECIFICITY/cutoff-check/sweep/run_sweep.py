@@ -10,13 +10,18 @@ verdict.
 Rows are then sorted into the disagreements worth a curator's time:
 
 * ``kept_but_fits_other``: the row is kept (ACCEPT or KEEP_AS_NON_CORE), the protein
-  fails its target families, and it passes a function-level family for another reaction.
+  fails its target families, it passes a function-level family for another reaction,
+  and its UniProt record does not state the annotated EC.
+* ``kept_family_lacks_ec``: as above, but the gene's own UniProt record states the
+  annotated EC, so the passing family is usually the protein's own family and its
+  release-table EC list is narrower than the protein (a secondary or partial reaction).
 * ``kept_below_cutoff``: kept, fails its target families, no competing family passes.
   The closest family is listed, since this is often a sister family (ptxD's case).
 * ``removed_but_passes``: the row was removed or marked over-annotated, yet a
   function-level target family passes its trusted cutoff with no competitor.
 
     uv run python projects/ENZYME_SPECIFICITY/cutoff-check/sweep/run_sweep.py
+    uv run python projects/ENZYME_SPECIFICITY/cutoff-check/sweep/run_sweep.py --rerender
 
 Writes sweep_results.yaml and DISAGREEMENTS.md next to this script. Network access to
 QuickGO, UniProt and the NCBI HMM site is needed on first run; everything is cached.
@@ -25,6 +30,7 @@ QuickGO, UniProt and the NCBI HMM site is needed on first run; everything is cac
 from __future__ import annotations
 
 import json
+import re
 import sys
 import urllib.request
 from collections import Counter
@@ -51,6 +57,7 @@ ORGANISMS = ["PSEPK", "ECOLI"]
 ELECTRONIC = {"IEA", "IBA"}
 KEPT = {"ACCEPT", "KEEP_AS_NON_CORE"}
 REMOVED = {"REMOVE", "MARK_AS_OVER_ANNOTATED"}
+EC_RE = re.compile(r"EC=(\d+\.\d+\.\d+\.n?\d+)")
 QUICKGO = "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{ids}/xrefs"
 
 
@@ -108,14 +115,29 @@ def collect_rows() -> list[dict]:
     return rows
 
 
+def review_paths() -> dict[str, Path]:
+    """Review file for each UniProt accession in the swept organisms."""
+    paths = {}
+    for org in ORGANISMS:
+        for path in sorted((REPO / "genes" / org).glob("*/*-ai-review.yaml")):
+            paths[yaml.safe_load(path.read_text())["id"]] = path
+    return paths
+
+
+def uniprot_ecs(review: Path) -> set[str]:
+    """EC numbers the gene's own UniProt record states (names and catalytic activities)."""
+    record = review.parent / f"{review.parent.name}-uniprot.txt"
+    return set(EC_RE.findall(record.read_text())) if record.exists() else set()
+
+
 def classify(row: dict) -> str | None:
     """Which disagreement list a row belongs to, if any."""
     if row["action"] in KEPT and row["verdict"] in {"BTC", "SFA", "NO_TARGET_HIT"}:
-        return (
-            "kept_but_fits_other"
-            if row["better_fitting_families"]
-            else "kept_below_cutoff"
-        )
+        if not row["better_fitting_families"]:
+            return "kept_below_cutoff"
+        if row["ec_on_uniprot_record"]:
+            return "kept_family_lacks_ec"
+        return "kept_but_fits_other"
     if (
         row["action"] in REMOVED
         and row["verdict"] == "ABOVE_TC"
@@ -125,14 +147,34 @@ def classify(row: dict) -> str | None:
     return None
 
 
+def annotate(results: list[dict]) -> None:
+    """Add the UniProt-record EC check and the disagreement list to each result."""
+    paths = review_paths()
+    ecs = {acc: uniprot_ecs(path) for acc, path in paths.items()}
+    for r in results:
+        r["ec_on_uniprot_record"] = bool(set(r["ec"]) & ecs.get(r["accession"], set()))
+        b = r["best_target"]
+        r["target_matched_by"] = (
+            None
+            if not b
+            else "ec"
+            if set(r["ec"]) & set(b["ec_numbers"])
+            else "go_only"
+        )
+        r["disagreement"] = classify(r)
+
+
 def summary(score: FamilyScore) -> dict:
     """The fields of a family score worth recording, with the model's metadata."""
     return {
         "family": f"{score.accession} {score.product_name}",
         "family_type": score.family_type,
         "ec_numbers": score.ec_numbers,
+        "go_terms": score.go_terms,
         "score": score.seq_score,
+        "domain_score": score.dom_score,
         "trusted_cutoff": score.tc[0],
+        "domain_trusted_cutoff": score.tc[1],
         "status": score.status,
     }
 
@@ -178,11 +220,11 @@ def main(limit: int | None = None) -> None:
             "better_fitting_families": better,
             "closest_families": [summary(s) for s in others[:3]],
         }
-        result["disagreement"] = classify(result)
         results.append(result)
         if i % 100 == 0:
             print(f"{i}/{len(rows)}", file=sys.stderr)
 
+    annotate(results)
     meta = {
         "ncbifam_release": db.release(),
         "organisms": ORGANISMS,
@@ -220,6 +262,13 @@ def render(meta: dict, results: list[dict]) -> str:
         for v in verdicts
     ]
 
+    def cell(s: dict) -> str:
+        """Family, score and cutoff; the best-domain score too when it is what fails."""
+        text = f"{s['family']} ({s['score']} / {s['trusted_cutoff']}"
+        if s["score"] is not None and s["score"] >= s["trusted_cutoff"]:
+            text += f"; best domain {s['domain_score']} / {s['domain_trusted_cutoff']}"
+        return text + ")"
+
     def section(kind: str, title: str, explain: str) -> None:
         rows = [r for r in results if r["disagreement"] == kind]
 
@@ -232,29 +281,33 @@ def render(meta: dict, results: list[dict]) -> str:
         if not rows:
             return
         lines.append(
-            "| organism | gene | term | action | best target (score / TC) | other families |"
+            "| organism | gene | term | action | best target (score / TC) | matched by "
+            "| other families |"
         )
-        lines.append("|---|---|---|---|---|---|")
+        lines.append("|---|---|---|---|---|---|---|")
         for r in rows:
             b = r["best_target"]
-            target = (
-                f"{b['family']} ({b['score']} / {b['trusted_cutoff']})"
-                if b
-                else "no hit"
-            )
+            target = cell(b) if b else "no hit"
             other = "; ".join(r["better_fitting_families"]) or "; ".join(
-                f"{c['family']} ({c['score']} / {c['trusted_cutoff']})"
-                for c in r["closest_families"][:1]
+                cell(c) for c in r["closest_families"][:1]
             )
             lines.append(
-                f"| {r['organism']} | {r['gene']} | {r['go']} {r['label']} | {r['action']} | {target} | {other} |"
+                f"| {r['organism']} | {r['gene']} | {r['go']} {r['label']} | {r['action']} | {target} | {r['target_matched_by'] or ''} | {other} |"
             )
 
     section(
         "kept_but_fits_other",
         "Kept rows whose protein fits another reaction's family",
-        "The strongest leads: the protein fails every family carrying the term and passes a "
-        "function-level family for a different reaction.",
+        "The strongest leads: the protein fails every family carrying the term, passes a "
+        "function-level family for a different reaction, and its own UniProt record does "
+        "not state the annotated EC.",
+    )
+    section(
+        "kept_family_lacks_ec",
+        "Kept rows the protein's own record supports, though its family lacks the EC",
+        "Usually not a conflict: the gene's UniProt record states the annotated EC, and the "
+        "passing family is the protein's own, whose release-table EC list is narrower "
+        "(a secondary or partial reaction). Worth a look only where that activity is doubtful.",
     )
     section(
         "kept_below_cutoff",
@@ -266,10 +319,27 @@ def render(meta: dict, results: list[dict]) -> str:
         "removed_but_passes",
         "Removed rows whose protein passes the family",
         "The family supports the activity. Check the review's reason: a pseudoenzyme, an "
-        "overlapping family or experimental evidence can still justify the removal.",
+        "overlapping family or experimental evidence can still justify the removal. "
+        "Where the family qualified as a target only through its GO metadata (`go_only`), "
+        "check that metadata against the family's name: it is sometimes the sister reaction's term. "
+        "Subunit models of a complex carry the complex's EC number, so a passing subunit model "
+        "does not show the subunit catalyses the reaction.",
     )
     return "\n".join(lines) + "\n"
 
 
+def rerender() -> None:
+    """Re-derive the lists and DISAGREEMENTS.md from saved scores, without rescanning."""
+    saved = yaml.safe_load((HERE / "sweep_results.yaml").read_text())
+    annotate(saved["rows"])
+    (HERE / "sweep_results.yaml").write_text(
+        yaml.safe_dump(saved, sort_keys=False, width=120)
+    )
+    (HERE / "DISAGREEMENTS.md").write_text(render(saved["meta"], saved["rows"]))
+
+
 if __name__ == "__main__":
-    main(int(sys.argv[1]) if len(sys.argv) > 1 else None)
+    if sys.argv[1:] == ["--rerender"]:
+        rerender()
+    else:
+        main(int(sys.argv[1]) if len(sys.argv) > 1 else None)

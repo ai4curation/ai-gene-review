@@ -272,7 +272,8 @@ would only duplicate it. See `genes/SACEN/eryCIII/`.
    score the protein against the NCBIfam family models for the annotated reaction
    (`just enzyme-cutoff-check ACC --go GO:...`). A score below the trusted cutoff,
    especially when a family for a different reaction passes, is the overprediction
-   pattern of Schnoes et al. 2009 [PMID:20011109]. See the
+   pattern of Schnoes et al. 2009 [PMID:20011109]. Add `--library` to see the protein's
+   closest families from the whole NCBIfam library. See the
    [trusted-cutoff check](ENZYME_SPECIFICITY/cutoff-check/RESULTS.md).
 6. **Check a specificity fingerprint where one is curated**: In superfamilies where
    close paralogs catalyse different reactions, family membership does not fix the
@@ -323,9 +324,26 @@ Worked pair (both from the same ML-prediction paper, PMID:37963869):
 ## Pending Reviews
 - (none)
 
-Last updated: 2026-11-21
+Last updated: 2026-11-22
 
 # NOTES
+
+## 2026-11-22
+
+**Swept the cutoff check, with a whole-library scan, over the KT2440 and E. coli reviews.**
+
+The check now scans each protein against every function-level NCBIfam model, so a
+below-cutoff verdict comes with the families the protein does fit. The
+[sweep](ENZYME_SPECIFICITY/cutoff-check/sweep/RESULTS.md) covers 1308 live electronic
+enzyme rows on 1044 proteins. 82% of the 1014 kept rows pass a family carrying the
+activity, but so do 47% of the 169 removed rows. The removed rows that pass are subunit
+models carrying the complex's EC number, pseudoenzymes and paralogs the reviews identified,
+broader substrate terms, and four NCBIfam families whose GO metadata names the sister
+reaction (PurT, ADP-glucose glycogen synthase, PS synthase, NrdG). The kept rows that fit
+another family are mostly partial reactions, cofactor variants and complex activities on a
+subunit. The ranked lists are in
+[DISAGREEMENTS.md](ENZYME_SPECIFICITY/cutoff-check/sweep/DISAGREEMENTS.md). No review
+action changes.
 
 ## 2026-11-21
 

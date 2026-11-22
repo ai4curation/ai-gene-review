@@ -155,14 +155,18 @@ read a retired row. It no longer runs on retired rows.
 - `BTC` or `SFA` together with a competing family that passes is strong support for
   replacing the term (`MODIFY` to the competing activity, or `REMOVE`). Record the scores
   in `review.reason`. A `BTC` with no competitor says only that the protein is not in the
-  family that carries the term. Before acting on it, score the protein against the sister
-  families it most resembles (as `followup_scan.py` does for ptxD; see Limitations): if it
-  sits just outside a sister family, the BTC says nothing about its activity. Only when no
+  family that carries the term. Before acting on it, run the check with `--library`, which
+  reports the protein's closest function-level families from the whole NCBIfam library
+  (see the [best-family sweep](sweep/RESULTS.md)): if it sits just outside a sister
+  family, the BTC says nothing about its activity. Only when no
   related family fits either does it point to `MODIFY` toward a more general activity, the
   paper's own remedy: annotate only "at the level of function for which there is strong
   evidence".
 - `ABOVE_TC` does not establish activity: check catalytic residues (pseudoenzymes), and
-  check whether the family is broader than the specificity in question.
+  check whether the family is broader than the specificity in question. Subunit models
+  carry the whole complex's EC number, and a family that became a target only through its
+  GO metadata can carry the sister reaction's term (four such families are listed in the
+  [best-family sweep](sweep/RESULTS.md)).
 - `NO_MODEL` is expected for most eukaryote-specific enzymes and says nothing either way.
 - Never use the check alone to remove an experimental annotation.
 
@@ -182,17 +186,18 @@ its full fingerprint in *P. putida* PP_5147.
 
 ## Limitations
 
-- Only target families and the families InterPro already reports are scored, not the
-  whole library. A lack of hits therefore does not establish that the protein lacks the
-  superfamily (Schnoes step 1).
+- By default only target families and the families InterPro already reports are scored.
+  With `--library` the protein is also scanned against every function-level model (with
+  HMMER's default filters), and its closest families are reported. Without it, a lack of
+  hits does not establish that the protein lacks the superfamily (Schnoes step 1).
 - Coverage depends on NCBIfam's EC/GO mappings and is mainly prokaryotic.
 - Target families are those whose EC numbers or GO terms include the annotated activity.
   A closely related model that carries only a general term (NCBIfam's GhrB model, for
   ptxD) is not scored as a target, so a BTC can mean only "not this sister family".
   The check cannot find that sister family by itself: besides target families it scores
   only the families InterPro reports, and InterPro reports none for ptxD because its
-  scores fall below each model's reporting threshold. Name the candidate sister families
-  and score them, as `followup_scan.py` does, or scan the whole NCBIfam library.
+  scores fall below each model's reporting threshold. Run with `--library`, which finds
+  GhrB as ptxD's closest family, or score named candidates as `followup_scan.py` does.
 - A BTC with no competing family says the annotation lacks family support. It cannot
   rule out an activity carried by a divergent family that no model covers.
 - The NCBIfam release and the InterPro and QuickGO responses can change. Results are tied
