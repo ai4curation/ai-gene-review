@@ -38,3 +38,17 @@ reductase vs KguD). GO:0030267 and GO:0016618 stay UNDECIDED; the GO:0050609
 REMOVE is reinforced. No new MF term is needed: GO:0008114 already covers the
 KguD reaction (EC 1.1.1.43, synonym "2-keto-6-phosphogluconate reductase
 activity").
+
+## 2026-11-21: trusted-cutoff follow-up (no action change)
+
+The Enzyme Specificity cutoff check placed the hydroxypyruvate and glyoxylate reductase
+rows below cutoff, but it scored only NCBIfam's GhrA model (80.8 / 403), and Q88HI1
+resembles GhrB, not GhrA (53.1% identity to E. coli GhrB P37666 and PANTHER subfamily
+PTHR10996:SF283, both recorded above). A follow-up scored the GhrB model NF011938.0, which carries no
+EC number and so was never a target: Q88HI1 scores 418.1 against a trusted cutoff of 492,
+E. coli GhrB passes at 690.3, and no KT2440 protein passes it, with Q88HI1 the closest
+[file:projects/ENZYME_SPECIFICITY/cutoff-check/followup.yaml "flagged_protein_score: 418.1"].
+So Q88HI1 is GhrB-related but outside the GhrB equivalog, and there is no other KT2440
+GhrB that would make it a paralog. The scores do not decide between the KguD role and a
+GhrB-type glyoxylate or hydroxypyruvate side activity; both rows stay UNDECIDED pending
+the substrate panel already proposed.

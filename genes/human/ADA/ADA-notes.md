@@ -206,3 +206,7 @@ machine files and published histories are preserved. Nine cache gates are
 closed; the separate scaffolded history and exact manifest record validation
 and rendering. DRAFT remains appropriate while the established action/core
 advisories persist; cache recovery alone does not resolve those advisory scopes.
+
+## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
+
+- Lysosome (IDA PMID:8452534, IEA SL-0158 from the same UniProt line): KEEP_AS_NON_CORE kept, reasons extended. The activity itself is measured in Percoll-purified fibroblast lysosomes and is ADA1-like (deoxycoformycin- and EHNA-sensitive, neutral pH optimum) [PMID:8452534 "Human fibroblast lysosomes, purified on Percoll density gradients, contain an adenosine deaminase (ADA) activity that accounts for approximately 10% of the total ADA activity"]. The authors propose a function for the lysosomal pool rather than autophagic turnover, unlike the SOD1 rat study. PMC1132295 returned no full text (2026-11-21), so marker controls and latency were not read. No lumen row (no signal peptide or M6P route; one line). Open question: cargo versus resident, testable by blocking autophagy.

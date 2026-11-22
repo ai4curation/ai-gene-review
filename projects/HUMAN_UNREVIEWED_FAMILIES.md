@@ -103,10 +103,32 @@ PantherDB inventory gives usable subfamily assignments.
     multi-protein mechanism, and `gocams/index.tsv` has no NQO1/NQO2 production
     model.
 
+- [ ] **PTHR24348, Atg1/ULK kinase family**
+  - STATUS: ready to open as the next family PR.
+  - Seed: `ULK2` / UniProtKB:Q8IYT8, reviewed Swiss-Prot, unreviewed locally,
+    with a compact ULK1/ULK2/ULK3 human family that exposes canonical Atg1
+    autophagy propagation onto the divergent ULK3 Hedgehog branch.
+  - Human family members in this checkout:
+    - [x] `ULK1` / UniProtKB:O75385: already COMPLETE; cross-checked as the
+      canonical ULK1/Atg1 autophagy-initiation kinase.
+    - [x] `ULK2` / UniProtKB:Q8IYT8: new review with conserved Atg1/ULK
+      autophagy initiation retained.
+    - [x] `ULK3` / UniProtKB:Q6PHR2: new review with direct Hedgehog/GLI
+      kinase evidence retained and canonical ULK1/ULK2 autophagy rows pruned.
+  - PANTHER: `interpro/panther/PTHR24348/PTHR24348-review.yaml` records the
+    family-wide serine/threonine kinase and cytoplasm gains, the Atg1/ULK
+    autophagy PAINT rows that should be pruned away from human ULK3, and the
+    ULK3-specific Hedgehog signaling branch.
+  - Module/GO-CAM split: the existing
+    `modules/autophagosome_core_biogenesis.yaml` module now lists ULK2 beside
+    ULK1 as a human Atg1/ULK representative, and the production Smoothened/ULK3
+    GO-CAM `gomodel:696022cd00001523` has a COMPLETE review that flags the
+    unsupported CDK1 edge in the ULK3-to-GLI2 branch.
+
 - [ ] Next human Swiss-Prot seed family
-  - STATUS: queued after PR #6570 is mergeable again.
+  - STATUS: queued after the PTHR24348 branch opens for review.
   - NOTES: keep selecting small, biologically characterized, cached PANTHER
-    families from the missing-accession table while the NQO branch waits for
+    families from the missing-accession table while the ULK branch waits for
     review.
 
 # NOTES
@@ -146,3 +168,7 @@ PantherDB inventory gives usable subfamily assignments.
   review, NQO2 already documented the paralogous shift toward efficient
   NRH-dependent quinone reduction, and the family PAINT assertions are two
   simple root gains rather than an exception-heavy tree.
+- `PTHR24348` was selected as a three-human-member Atg1/ULK kinase family:
+  ULK2 lacked a local review, while ULK1 already anchored the canonical
+  autophagy-initiation branch and ULK3 gave the family a useful PAINT pruning
+  case for divergent Hedgehog-pathway Fused-family kinases.

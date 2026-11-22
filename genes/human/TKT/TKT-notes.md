@@ -43,10 +43,10 @@ NADPH regeneration by feeding excess pentoses back into glycolytic intermediates
 
 TKT is a cytosolic enzyme (IBA cytosol; multiple Reactome TAS cytosol). It is not a
 peroxisomal or nuclear enzyme in any established sense:
-- Peroxisome (ISS from S. cerevisiae P50137 ortholog, GO_REF:0000024): questionable
-  transfer; human/mammalian TKT is cytosolic. Yeast TKL1 peroxisomal targeting does not
-  clearly transfer to human TKT (no PTS1/PTS2 in the human protein per UniProt). Mark as
-  over-annotation.
+- Peroxisome (ISS from rat TKT P50137, GO_REF:0000024; corrected 2026-11-21, this line
+  earlier misnamed P50137 as the S. cerevisiae ortholog): the donor annotation is RGD's IDA
+  on rat Tkt from liver enzyme histochemistry (PMID:16116031). Kept as non-core; see the
+  2026-11-21 ORGANELLES entry below.
 - Nuclear (nucleoplasm/nuclear body/nuclear speck, HPA IDA GO_REF:0000052): high-throughput
   immunofluorescence localization; a glycolytic/PPP enzyme detected in the nucleoplasm is
   common in HPA data and likely reflects moonlighting/diffuse distribution rather than a
@@ -76,7 +76,25 @@ peroxisomal or nuclear enzyme in any established sense:
   (GO:0000287), non-oxidative PPP branch (GO:0009052), cytosol (GO:0005829).
 - Non-core: nuclear localizations; pentose-phosphate shunt (parent BP); G3P biosynthetic/
   metabolic processes; xylulose-5-P biosynthetic process.
-- Over-annotation: peroxisome (ISS), exosome/vesicle (HDA), calcium ion binding (structural
+- Over-annotation (peroxisome ISS re-judged non-core on 2026-11-21, see below): exosome/vesicle (HDA), calcium ion binding (structural
   surrogate metal), transketolase-or-transaldolase (ARBA grouping term), bare protein binding.
-</content>
-</invoke>
+
+## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
+
+- One peroxisome row: ISS (GO_REF:0000024) from UniProtKB:P50137. P50137 is TKT_RAT, not a
+  yeast protein as the earlier review text said. The rat entry has no SUBCELLULAR LOCATION
+  line; the transferred annotation is RGD's IDA to PMID:16116031 (QuickGO, 2026-11-21:
+  P50137 GO:0005777 IDA PMID:16116031 RGD; the same query returns the human ISS and the
+  mouse ISO, so it is not a malformed empty query).
+- PMID:16116031 (Boren et al. 2006, abstract only, fetched to the cache): enzyme
+  histochemistry in rat liver; "It was shown that transketolase activity was present in
+  peroxisomes and at membranes of granular endoplasmic reticulum." Readable and positive,
+  but an activity stain, not a protein-specific assay.
+- Sequence: C-terminus TKA (no PTS1). Residues 21-29 RLRISSIQA match the PTS2 consensus
+  (R/K)(L/V/I/Q)x5(H/Q)(L/A/F) by regex; no import or PEX7 data seen. One weak line at most.
+- Decision: MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE (curator deference to a readable
+  positive donor abstract; core activity cytosolic). Close alternative stays
+  MARK_AS_OVER_ANNOTATED. No sub-compartment row.
+- Same Amsterdam enzyme-histochemistry lab (Frederiks) is behind the rat XDH peroxisome line
+  (PMID:11993848); there immunogold EM (PMID:1619276) contradicts it. No such contradiction
+  is in hand for TKT.

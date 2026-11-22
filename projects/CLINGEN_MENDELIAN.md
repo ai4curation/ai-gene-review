@@ -2993,9 +2993,9 @@ records that review’s scoped use of supported, non-core interaction annotation
 and its evidence limits. It is a gene-specific exception to the general
 generic-binding guidance.
 
-**764 of 2,876 genes are complete; 2,112 remain.**
-This checkpoint records the accepted human ACTC1 actual merge and merge-group checks.
-[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-764-2026-11-19-055955-utc) records the evidence and retained uncertainties.
+**765 of 2,876 genes are complete; 2,111 remain.**
+This checkpoint records the accepted human ACTG1 actual merge and merge-group checks.
+[Review progress](CLINGEN_MENDELIAN/review-progress.md#completion-checkpoint-765-2026-11-21-235205-utc) records the evidence and retained uncertainties.
 
 Completion records accepted merged work; it does not resolve every biological
 uncertainty or change the reviews' computed statuses. Catalogue identities,
@@ -3112,7 +3112,7 @@ MONDO ID, inheritance mode, and association-specific evidence classification.
 - [x] **ACTA2** — HGNC:130; [multisystemic smooth muscle dysfunction syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2f4fb1fe-4b82-481d-a81d-398eea46acc5-2025-01-24T170000.000Z) (MONDO:0013452; AD; Definitive).
 - [x] **ACTB** — HGNC:132; [ACTB-associated syndromic thrombocytopenia](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9cee7fd2-09f7-41dc-9742-542917d856b0-2024-06-03T160000.000Z) (MONDO:0100433; AD; Moderate); [Baraitser-Winter cerebrofrontofacial syndrome](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_fa13dfad-ab93-4521-874a-5ede8f608fe4-2021-10-26T165835.977Z) (MONDO:0017579; AD; Definitive).
 - [x] **ACTC1** — HGNC:143; [dilated cardiomyopathy 1R](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_3e9b4048-3003-4180-b891-fcf10d25a814-2026-03-04T170000.000Z) (MONDO:0013261; AD; Moderate); [hypertrophic cardiomyopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_2f62793b-0015-46eb-bb51-bddbae25ba0d-2021-06-23T201616.296Z) (MONDO:0005045; AD; Definitive).
-- [ ] **ACTG1** — HGNC:144; [Baraitser-winter syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9969a221-1ce9-44c6-8ab7-2ad5f7ccd5ab-2019-01-07T170000.000Z) (MONDO:0013812; AD; Definitive); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_db9f5d19-5ebc-4a1a-a4c3-79ff27f69a0e-2019-01-07T170000.000Z) (MONDO:0019497; AD; Definitive).
+- [x] **ACTG1** — HGNC:144; [Baraitser-winter syndrome 2](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_9969a221-1ce9-44c6-8ab7-2ad5f7ccd5ab-2019-01-07T170000.000Z) (MONDO:0013812; AD; Definitive); [nonsyndromic genetic hearing loss](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_db9f5d19-5ebc-4a1a-a4c3-79ff27f69a0e-2019-01-07T170000.000Z) (MONDO:0019497; AD; Definitive).
 - [ ] **ACTN1** — HGNC:163; [platelet-type bleeding disorder 15](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_215f3113-cfb6-44cc-a68b-1eb6539c9fa0-2020-11-25T170000.000Z) (MONDO:0014078; AD; Definitive).
 - [ ] **ACTN2** — HGNC:164; [ACTN2-related cardiac and skeletal myopathy](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_6710e329-d391-4355-85a5-02d03f8791a3-2025-07-23T040000.000Z) (MONDO:0700349; AD; Definitive).
 - [ ] **ACVR1** — HGNC:171; [congenital heart disease](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_a34f19aa-a12e-483c-ae09-a0fce770647b-2023-08-14T160000.000Z) (MONDO:0005453; AD; Limited); [fibrodysplasia ossificans progressiva](https://search.clinicalgenome.org/kb/gene-validity/CGGV:assertion_0439e75f-fc1b-4841-8c9a-17f3568ce8a4-2023-03-01T170000.000Z) (MONDO:0007606; AD; Definitive).
