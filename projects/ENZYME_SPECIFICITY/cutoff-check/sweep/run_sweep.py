@@ -265,7 +265,11 @@ def render(meta: dict, results: list[dict]) -> str:
     def cell(s: dict) -> str:
         """Family, score and cutoff; the best-domain score too when it is what fails."""
         text = f"{s['family']} ({s['score']} / {s['trusted_cutoff']}"
-        if s["score"] is not None and s["score"] >= s["trusted_cutoff"]:
+        if (
+            s["status"] != "ABOVE_TC"
+            and s["score"] is not None
+            and s["score"] >= s["trusted_cutoff"]
+        ):
             text += f"; best domain {s['domain_score']} / {s['domain_trusted_cutoff']}"
         return text + ")"
 

@@ -55,7 +55,7 @@ scores alone:
   nuoG, which pass their own subunit families.
 
 For ECOLI paaH, the target model passes on whole-sequence score (681.0 / 508.0) but fails
-on best-domain score. HMMER's `--cut_tc` requires both, and the table shows the domain
+on best-domain score (495.3 / 508.0). HMMER's `--cut_tc` requires both, and the table shows the domain
 score wherever it is the one that fails. The remaining rows are single cases.
 
 ### Kept rows the protein's own record supports (38)
