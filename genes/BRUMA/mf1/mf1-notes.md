@@ -20,7 +20,10 @@
   Wu et al. used immuno-electron microscopy to place B. malayi MF1/chitinase in
   the microfilarial inner body and pharyngeal thread, showed inner-body
   chitinase only in sheathed microfilarial species, and found that the chitinase
-  inhibitor allosamidin reduced in vitro exsheathment.
+  inhibitor allosamidin reduced in vitro exsheathment. Because allosamidin is a
+  broad chitinase inhibitor rather than a P29030-specific perturbation, this
+  supports chitin catabolism but not a new P29030-specific exsheathment process
+  annotation.
 - `interpro/panther/PTHR11177/PTHR11177-entries.csv` places BRUMA P29030 and
   worm Q11174/cht-1 in the same reviewed PTHR11177:SF400 subfamily. `just
   paint-losses BRUMA mf1` reported no IRD or IKR loss on this gene's lineage,
