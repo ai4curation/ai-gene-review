@@ -77,3 +77,10 @@ When you see both "positive regulation of apoptosis" AND "negative regulation of
 1. Are there any papers that specifically tested Bcl-X(S)?
 2. Should the IBA annotation to GO:0043065 be REMOVED since it may not apply to the canonical isoform?
 3. Which isoform was used in each IDA experiment?
+
+## 2026-11-04 ORGANELLES ER batch 1 (endoplasmic reticulum rows)
+
+- Rows: one GO:0005783 row, IEA GO_REF:0000107 (Ensembl projection from mouse Bcl-xL Q64373). No ER sub-compartment row before this batch.
+- Source check (QuickGO): Q64373 GO:0005783 IDA PMID:26582200 (MGI) [PMID:26582200 "this interaction likely occurs in the endoplasmic reticulum"]. The human UniProt entry does not list the ER (earlier summary said it did; corrected).
+- Human data: [PMID:17428862 "fractionation experiments showed that 7a colocalized with Bcl-XL at the endoplasmic reticulum as well as the mitochondria"]; [PMID:11126360 "RTN-XS interacted with both Bcl-XL and Bcl-2, increased the localization of Bcl-XL and Bcl-2 on the ER"] (gain-of-function).
+- Outcome: action changed ACCEPT -> KEEP_AS_NON_CORE (the existing reason already called the ER a secondary site; core activity is at the mitochondrial outer membrane). NEW IC GO:0005789 ER membrane added (TM 210-226; UniProt "Single-pass membrane protein; Cytoplasmic side" by similarity; ER-membrane reticulon partners; BAX/BCL2 comparators). core_functions unchanged.

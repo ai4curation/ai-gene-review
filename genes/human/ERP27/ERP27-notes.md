@@ -22,3 +22,7 @@ UniProt Q96DN0. ER-lumenal, non-catalytic PDI-family member. 273 aa, ER-retentio
 - ER lumen (GO:0005788) IEA + EXP - ACCEPT.
 - protein binding (many IPI) - the FUNCTIONAL one (substrate/unfolded-protein binding, PDIA3 recruitment) is core but these GOA protein binding entries are mostly HT interactome (SGTA/EEF1D/UBQLN/HTT etc), not PDIA3. KEEP_AS_NON_CORE. Note PDIA3 interaction itself is NOT in GOA protein-binding rows (those are HT partners). Core MF captured as unfolded protein binding (GO:0051082) and protein-folding chaperone binding.
 - Core MF proposals: unfolded protein binding (GO:0051082); chaperone role presenting substrates to ERp57.
+
+## GO:0051082 migration (2026-09-27)
+
+The substrate-recognition core function now uses GO:0051787 misfolded protein binding (definition: "Binding to a misfolded protein"), replacing obsolete GO:0051082. Support: ITC shows ERp27 binds unfolded but not folded substrates and it is up-regulated in ER stress to bind accumulating misfolded proteins [PMID:23192347 "ERp27 is able to distinguish between folded and unfolded substrates, only interacting with the latter"]. Carrier-specific GO:0140309 is not used because hand-off to PDIA3 is proposed rather than demonstrated, and no anti-aggregation (holdase) activity has been shown.

@@ -2,15 +2,22 @@
 """Custom HTML renderer for gene review YAML files using Jinja2."""
 
 import argparse
+from html import escape, unescape
 import os
+import posixpath
 import re
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import unquote, urlsplit
 
 import markdown
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+from ai_gene_review.mod_providers import MOD_PROVIDER
+from ai_gene_review.publication_links import protect_scientific_notation, rewrite_publication_links
+from ai_gene_review.validation.local_source_text import resolve_local_source
 
 
 _RELATIVE_URL_ATTR_PATTERN = re.compile(
@@ -209,6 +216,7 @@ def humanize_provider(value: Optional[str]) -> Optional[str]:
         "bioreason": "BioReason",
         "bioreason-rl": "BioReason RL",
         "bioreason-sft": "BioReason SFT",
+        "claude-code": "Claude Code",
         "codex": "Codex",
         "cyberian": "Cyberian",
         "falcon": "Falcon",
@@ -218,6 +226,7 @@ def humanize_provider(value: Optional[str]) -> Optional[str]:
         "perplexity": "Perplexity",
         "perplexity-lite": "Perplexity Lite",
     }
+    special_cases.update({slug: name for slug, name in MOD_PROVIDER.values()})
     normalized = str(value).strip().lower()
     if normalized in special_cases:
         return special_cases[normalized]
@@ -234,7 +243,11 @@ def rebase_relative_url(url: str, base_prefix: str) -> str:
     """Prefix relative URLs so report assets resolve from the rendered page."""
     if not url or base_prefix in {"", "."} or not _is_relative_url(url):
         return url
-    return f"{base_prefix.rstrip('/')}/{url.lstrip('./')}"
+    parsed = urlsplit(url)
+    path = posixpath.normpath(posixpath.join(base_prefix, parsed.path))
+    if parsed.path.endswith('/'):
+        path += '/'
+    return parsed._replace(path=path).geturl()
 
 
 def rebase_relative_html_urls(html: str, base_prefix: str) -> str:
@@ -283,6 +296,57 @@ def normalize_artifact_metadata(
             }
         )
     return normalized
+
+
+def resolve_research_artifacts(
+    artifacts: List[Dict[str, Any]], content: str, report: Path, output_dir: Path,
+) -> str:
+    """Link archived artifacts; retain explicit notices for absent provider files."""
+    for artifact in artifacts:
+        href = artifact.get('href')
+        raw_path = artifact.get('path')
+        if not href or not raw_path or not _is_relative_url(str(raw_path)):
+            continue
+        path = report.parent / unquote(urlsplit(str(raw_path)).path)
+        if not path.is_file() and path.parent.name.endswith('_artifacts'):
+            # A renamed report may retain the previous basename in frontmatter.
+            renamed = report.with_name(report.stem + '_artifacts') / path.name
+            if renamed.is_file():
+                path = renamed
+        if path.is_file():
+            resolved = Path(os.path.relpath(path, output_dir)).as_posix()
+            def replace_artifact_url(match: re.Match[str]) -> str:
+                if unescape(match['url']) != href:
+                    return match[0]
+                return f'{match["attr"]}={match["quote"]}{escape(resolved, quote=True)}{match["quote"]}'
+
+            content = re.sub(
+                r'<(?:a|img)\b[^>]*>',
+                lambda tag: _RELATIVE_URL_ATTR_PATTERN.sub(replace_artifact_url, tag[0]),
+                content,
+            )
+            artifact['href'] = resolved
+            continue
+        artifact['href'] = None
+        artifact['unavailable'] = True
+        artifact['unavailable_href'] = href
+        escaped_href = escape(href, quote=True)
+        notice = f'class="unavailable-artifact" data-unavailable-artifact="{escaped_href}"'
+        content = re.sub(
+            r'<a\b(?=[^>]*\bhref="' + re.escape(escaped_href) + r'")[^>]*>(.*?)</a>',
+            lambda m: f'<span {notice}>{m[1]} (not archived)</span>', content, flags=re.DOTALL,
+        )
+
+        def missing_image(match: re.Match[str]) -> str:
+            image = match[0]
+            if f'src="{escaped_href}"' not in image:
+                return image
+            alt = re.search(r'\balt="([^"]*)"', image)
+            label = escape(unescape(alt[1])) if alt else escape(path.name)
+            return f'<span {notice}>Image not archived: {label}</span>'
+
+        content = re.sub(r'<img\b[^>]*>', missing_image, content)
+    return content
 
 
 def enrich_gene_data(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -461,6 +525,7 @@ def process_markdown_content(content: str, base_prefix: str = "") -> str:
         Processed HTML content
     """
 
+    content = protect_scientific_notation(content)
     # Convert PMID citations to links if they're in [PMID:12345 "text"] format
     def replace_pmid(match):
         pmid = match.group(1)
@@ -554,6 +619,7 @@ def collect_deep_research_sections(
                 citations_href = citations_file.name
 
         artifacts = normalize_artifact_metadata(metadata, base_prefix=base_prefix)
+        html_content = resolve_research_artifacts(artifacts, html_content, md_path, output_dir or md_path.parent)
         sections.append(
             {
                 "title": title,
@@ -585,6 +651,7 @@ def collect_prediction_reviews(
     Filenames may use the main review's accession or its biological symbol.
     Keep each document separate to preserve source provenance and avoid adding
     external predictions to the GOA annotation review or its statistics.
+    Completed summaries with an explicit empty list document reviewed absence.
     """
     prefixes = {yaml_path.stem.removesuffix("-ai-review")}
     if data.get("gene_symbol"):
@@ -602,17 +669,36 @@ def collect_prediction_reviews(
                 f"Prediction review ID mismatch in {path}: "
                 f"{review['id']} != {data['id']}"
             )
-        if not review.get("predictions"):
+        reviewed_absence = (
+            review.get("predictions") == []
+            and review.get("status") == "COMPLETE"
+            and bool(review.get("id"))
+            and bool((review.get("description") or "").strip())
+        )
+        if not review.get("predictions") and not reviewed_absence:
             continue
         methods = sorted({
             pred.get("source_method") or "Unknown method"
             for pred in review["predictions"]
         })
+        # Empty records have no per-prediction source_method; the established
+        # suffix identifies the method family, without implying a model version.
+        if not methods and any(stem == f"{prefix}-protnlm" for prefix in prefixes):
+            methods = ["ProtNLM"]
         genes_dir = next(
             (parent for parent in yaml_path.resolve().parents if parent.name == "genes"),
             None,
         )
         reference_hrefs = {}
+        source_documents = []
+        source_root = genes_dir.parent if genes_dir is not None else path.parent
+        for document in review.get("source_documents") or []:
+            source_path = source_root / document
+            if source_path.is_file():
+                source_documents.append({
+                    "label": document,
+                    "href": os.path.relpath(source_path.resolve(), output_dir.resolve()),
+                })
         if genes_dir is not None:
             for pred in review["predictions"]:
                 for support in (pred.get("review") or {}).get("supported_by") or []:
@@ -624,11 +710,12 @@ def collect_prediction_reviews(
                                 source_path.resolve(), output_dir.resolve()
                             )
         sections.append({
-            "title": ", ".join(methods),
+            "title": ", ".join(methods) or "Prediction coverage review",
             "filename": path.name,
             "href": os.path.relpath(path.resolve(), output_dir.resolve()),
             "review": review,
             "reference_hrefs": reference_hrefs,
+            "source_documents": source_documents,
         })
     return sections
 
@@ -749,6 +836,20 @@ def render_gene_review(
         else:
             output_path = yaml_path.with_suffix(".html")
 
+    # Link cited record snapshots relative to the rendered page, including when
+    # rendering outside the source tree. Use the same resolution as quote checks.
+    data["alternative_reference_hrefs"] = {}
+    project_root = gene_dir.parent.parent.parent
+    for record in (data.get("alternative_records") or []) + (data.get("reference_proteome_assessments") or []):
+        for evidence in record.get("evidence") or []:
+            for support in evidence.get("supported_by") or []:
+                reference_id = support["reference_id"]
+                source = resolve_local_source(reference_id, project_root)
+                if source is not None:
+                    data["alternative_reference_hrefs"][reference_id] = os.path.relpath(
+                        source.resolve(), output_path.parent.resolve()
+                    )
+
     # Find and process markdown files
     markdown_files = find_markdown_files(gene_dir)
     markdown_sections = []
@@ -758,7 +859,9 @@ def render_gene_review(
             with open(md_path, "r", encoding="utf-8") as f:
                 content = f.read()
             if content.strip():  # Only include non-empty files
-                html_content = process_markdown_content(content)
+                html_content = process_markdown_content(
+                    content, base_prefix=os.path.relpath(md_path.parent.resolve(), output_path.parent.resolve())
+                )
                 markdown_sections.append(
                     {
                         "title": display_name,
@@ -797,6 +900,8 @@ def render_gene_review(
 
     # Render HTML
     html = render_html(data, template_path, yaml_content)
+    if gene_dir.parent.parent.name == 'genes':
+        html = rewrite_publication_links(html, yaml_path, output_path, gene_dir.parent.parent.parent)
 
     # Write output
     with open(output_path, "w", encoding="utf-8") as f:

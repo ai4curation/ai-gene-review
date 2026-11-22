@@ -63,6 +63,11 @@ missing file references, GOA sources, notes, rendered pages and history records.
 These artifact checks are reported separately from annotation-action coverage.
 The summary also totals authored GO assessment categories and new annotation
 proposals; mixed function paragraphs are kept separate from the GO counts.
+Every selected target requires a prediction-review YAML, including the eight
+records with no emitted GO terms. Those have explicit `predictions: []` and a
+completed summary evaluation of the absence. The audit reports these separately
+from the 33 records with GO output and their 50 scored claims; a missing sidecar
+cannot satisfy the coverage check for a zero-output record.
 The [coverage checker](review_inventory.py) does not assign biological verdicts or
 replace manual review and schema/evidence validation. Main YAML workflow status
 is reported separately from whether annotation actions have been recorded.

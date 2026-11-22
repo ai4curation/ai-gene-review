@@ -172,3 +172,35 @@ Findings NOT used / treated with caution:
   complex (GO:1905370) driving the lectin pathway (GO:0001867) and innate defense (GO:0045087, GO:0042742).
 - 1 proposed new term: "collectin oligomer carbohydrate-pattern recognition" (multivalent oligomer-dependent
   macropattern discrimination).
+
+## Finishing pass (2026-09-04, PAINT no-IBA project)
+
+Quality pass over all 79 existing_annotations entries; two remaining validation
+warnings cleared; status DRAFT -> COMPLETE (validation clean, no warnings).
+
+- Added a structured `propagation_review` to the GO:0005771 multivesicular body
+  IBA REMOVE (root cause PROPAGATION_BAD; WRONG_ORTHOLOG_OR_PARALOG +
+  COMPARTMENT_OR_COMPLEX_MISMATCH). The IBA WITH sources (PANTHER:PTN002771384,
+  RGD:3665, RGD:3667 — the surfactant-collectin branch) reflect real
+  lamellar/multivesicular-body trafficking of pulmonary surfactant collectins in
+  type II pneumocytes, but that compartment biology does not transfer to
+  liver-secreted serum MBL. This parallels the GO:0043129 surfactant-homeostasis
+  removal already adjudicated with OpenScientist support.
+- Harmonized the five GO:0009986 cell surface annotations (IEA + 3x EXP + TAS)
+  to a consistent KEEP_AS_NON_CORE. Rationale: the location is genuine, but the
+  functionally meaningful surface in the EXP evidence is the microbial surface,
+  which the same papers (PMID:2573758, PMID:8082295, PMID:22966085) already
+  support as core via IDA is_active_in GO:0106139 symbiont cell surface; host
+  cell surface is retained as a real but non-core location. Previously the
+  set mixed ACCEPT and KEEP_AS_NON_CORE.
+- Final action distribution across 79 annotations: ACCEPT 30;
+  KEEP_AS_NON_CORE 20; MARK_AS_OVER_ANNOTATED 24; REMOVE 4; MODIFY 1
+  (REMOVE also includes the GO:0006508 proteolysis IDA — MBL is not a
+  protease; the earlier 2026-06-21 tally counted slightly differently).
+- No changes to description, core_functions, references, or the earlier
+  adjudications (all spot-checked against cached publications; e.g. the
+  PMID:2477488 LBP miscitation analysis and the PMID:23544079 SAP-paper
+  comparative-MBL reading both hold up).
+- Family review written: interpro/panther/PTHR24024/PTHR24024-review.yaml
+  (C-type lectin domain family; see that file for why MBL2 receives no IBA
+  and which of its experimental terms would be safe to propagate).

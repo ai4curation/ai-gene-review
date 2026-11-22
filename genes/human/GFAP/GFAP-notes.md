@@ -1,0 +1,25 @@
+# GFAP biological notes
+
+GFAP supplies structural subunits of intermediate filaments. Human sequence architecture and cellular assembly support a single structural core, with self-association and other filament-protein interactions as facets of that role ([PMID2740350](https://pubmed.ncbi.nlm.nih.gov/2740350/); [PMID12058025](https://pubmed.ncbi.nlm.nih.gov/12058025/)). Clinical GFAP variants connect astrocytic protein inclusions to Alexander disease; clinical associations alone do not define a new biochemical activity ([PMID11138011](https://pubmed.ncbi.nlm.nih.gov/11138011/)).
+
+The alpha, epsilon and kappa products have distinct carboxyl termini. Epsilon corresponds to P14136-3 and kappa to P14136-2 despite opposite numeric display names. Their functional differences are retained without assigning every historical assay to a natural product or treating engineered fragments as additional isoforms ([PMID12058025](https://pubmed.ncbi.nlm.nih.gov/12058025/); [PMID17203480](https://pubmed.ncbi.nlm.nih.gov/17203480/)).
+
+Lysosomal regulation remains a specialized context, with distinct GFAP pools and explicit species limits ([PMID20797626](https://pubmed.ncbi.nlm.nih.gov/20797626/)). The source guide records the mechanistic evidence.
+
+Most binding annotations arise from interaction screens. The named partner's independently supported class can make a binding annotation informative without assigning that partner's enzymatic activity or pathway to GFAP. Generic removals preserve the positive experimental relationships. Four accession/product conflicts remain undecided; the two PMID26571399 GFAP experiment links are also unresolved. These are specific evidential limits, not inferred errors from paper titles.
+
+The [source guide](GFAP-source-guide.md) centralizes experimental scope, construct limits and access. The [evidence archive](GFAP-evidence.yaml) preserves all 279 original contexts, three conjunctive extension atoms, exact product/ancestry mappings, independent partner provenance and source offsets. No older GFAP review, notes or history existed at the qualified namespace snapshot. This first journal entry is preserved for an append-only native history transition.
+
+### Human disease and protein modification
+
+Newly available clinical text supplies mutation and phenotype context without changing the structural core. Human-brain citrullination evidence distinguishes endogenous peptides from PAD2-treated GFAP; it does not assign the modifying enzyme's activity to GFAP ([PMID23828821](https://pubmed.ncbi.nlm.nih.gov/23828821/)). The reference assessments and source guide retain the precise access scope.
+
+### Structural assembly, disease and interpretation of interactions
+
+Purified human wild-type GFAP forms filaments in a direct reconstitution experiment. Disease-associated substitutions have different effects on assembly and network organization, so Alexander disease should not be reduced to one universal loss-of-assembly mechanism. Human GFAP transduction into rat astrocytes is distinct from the purified-protein assay ([PMID35511821](https://pubmed.ncbi.nlm.nih.gov/35511821/)).
+
+Human glioma cells provide independent evidence that GFAP and vimentin occupy the same individual filaments. This connects their interaction to a structural role, although it does not establish a particular heterodimer geometry ([PMID6371809](https://pubmed.ncbi.nlm.nih.gov/6371809/)). Alpha/epsilon incorporation into cellular networks does not by itself prove autonomous epsilon homomer formation; kappa's reported assembly defect remains product-specific ([PMID12058025](https://pubmed.ncbi.nlm.nih.gov/12058025/); [PMID17203480](https://pubmed.ncbi.nlm.nih.gov/17203480/)).
+
+Clinical sequencing and experimentally perturbed assembly answer different questions. The infantile cohort supports variant–disease association, but unavailable parental samples prevent treating every detected variant as proven de novo ([PMID11567214](https://pubmed.ncbi.nlm.nih.gov/11567214/)). Injury-associated expression, structural function and disease mechanism should likewise remain distinct. Rat GFAP/vimentin knockdown results do not isolate a universal human reactive-astrogliosis mechanism ([PMID21250919](https://pubmed.ncbi.nlm.nih.gov/21250919/)). The assembly studies do not assess the diagnostic performance of serum or CSF GFAP, so no biomarker activity is inferred from them.
+
+The earlier journal statement that an independently documented partner class can make a screen interaction informative is refined here. The interaction may be real while its functional role for GFAP remains unestablished. Accordingly, generic removals preserve positive pairs and valid partner classifications; four vimentin refinements remain linked to structural evidence. This does not dismiss controlled Y2H results as artifacts or require GFAP to activate, phosphorylate or transcriptionally regulate its partners. The four unresolved identity/product contexts and two unresolved developmental experiment links remain undecided.

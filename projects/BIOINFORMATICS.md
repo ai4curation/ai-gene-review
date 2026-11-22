@@ -1,10 +1,40 @@
 ---
 title: "BIOINFORMATICS Case Studies"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [PIPELINE]
+species: [SCHPO]
+genes: [pmp20, Epe1, tpx1]
+manifest:
+  slides:
+    - href: BIOINFORMATICS/slides/BIOINFORMATICS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/L3hzbPCFcEKXqgeSBKoLZz
+      title: Project brief
 ---
 
 # BIOINFORMATICS Case Studies
+
+**Bottom line:** when a GO function rests on family membership, a reproducible
+sequence and structure analysis can say whether the target still has the
+parts the function needs. This page records two such cases in *S. pombe* and
+the workflow that grew out of them. For pmp20, a scripted comparison against
+three active peroxiredoxins, a 27-protein Prx5 panel and AlphaFold models found
+a single cysteine (C43) and no resolving cysteine; the review removes the IBA
+`thioredoxin peroxidase activity` row and keeps the curated NOT `peroxidase
+activity`. For Epe1, the review removes all seven JmjC catalytic and
+metal-binding rows. Both genes were then re-tested as blinded OpenScientist
+hypotheses (July 2026), which the page below still describes as a planned run:
+the Epe1 run pinned the defect to Tyr370 at the third Fe(II) ligand, and one
+of the two pmp20 runs cautioned that a missing resolving cysteine is normal
+for 1-Cys peroxiredoxins, so the pmp20 case rests mainly on the negative assay
+(PMID:20356456). The same hypothesis workflow now has 264 `-hypotheses/`
+folders across `genes/`.
+
+We did this because an analysis that runs once on one gene is weak evidence;
+`pmp20-bioinformatics` is built to be rerun (`just all`), uses active
+controls, and was tested on a second target (tpx1), so it serves as the
+template for new cases.
 
 ## Purpose
 

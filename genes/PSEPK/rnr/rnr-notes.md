@@ -16,3 +16,13 @@ or one endoribonuclease (RNase E, RNase III, RNase G)."]. Same-genus biochemical
 work found RNase R co-purifying with RNase E [PMID:15705581 "Most surprisingly,
 the hydrolytic exoribonuclease RNase R was found to co-purify with RNase E."].
 The latter grounds a reusable RNase R variant but not a KT2440 complex claim.
+
+## 2026-11-10 module-completion pass
+
+Harmonised with the new E. coli K-12 exemplar review (`genes/ECOLI/` same
+symbol) for the RNase E degradation module: every row now carries a vetted
+quote (HAMAP-derived UniProt text, or the E. coli experimental literature
+for homology support); broad parent terms entailed by an accepted specific term
+in this review are TOO_GENERAL rather than KEEP_AS_NON_CORE; ancillary binding
+and cofactor rows are KEEP_AS_NON_CORE. No new provider deep research was run
+(no API keys available in this session).

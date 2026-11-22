@@ -1,11 +1,159 @@
 ---
 title: "Amino Acid Activation Terms — Obsoletion of 43 Substrate-Specific tRNA Aminoacylation BPs"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [OBSOLETION]
-species: [human, PSEPK, POPTR, DANRE, METTP]
+species: [human, PSEPK, POPTR, DANRE, METTP, DROME]
+manifest:
+  slides:
+    - href: AMINO_ACID_ACTIVATION_OBSOLETION/slides/AMINO_ACID_ACTIVATION_OBSOLETION-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/JaNKtV5ieHC144LALVXD27
+      title: Project brief
+proposed_ontology_changes:
+- change_type: NODE_OBSOLETION_WITH_DIRECT_REPLACEMENT
+  ontology: GO
+  about_node:
+    id: GO:0006419
+    label: alanyl-tRNA aminoacylation
+  has_direct_replacement:
+    id: GO:0006418
+    label: tRNA aminoacylation for protein translation
+  has_nondirect_replacement:
+  - id: GO:0004813
+    label: alanine-tRNA ligase activity
+  change_dsl: obsolete GO:0006419 with replacement GO:0006418
+  justification: >-
+    The term restates an existing molecular function and adds nothing beyond it, so it
+    was obsoleted in favour of the generic cytosolic process. Note the shape: the direct
+    replacement is a biological process (GO:0006418), which a biological process can be
+    replaced by outright, while the 1:1 molecular function GO:0004813 is advice a curator
+    applies per annotation and so is recorded as a non-direct replacement. GO's own
+    obsoletion comment names both.
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: '2026-11-01'
+  adoption_status: COMPLETE
+  affected_annotations:
+  - genes/POPTR/ALARS/ALARS-ai-review.yaml
+  - genes/PSEPK/alaS/alaS-ai-review.yaml
+  - genes/human/AARS1/AARS1-ai-review.yaml
+  - genes/human/AARS2/AARS2-ai-review.yaml
+  - genes/human/AARSD1/AARSD1-ai-review.yaml
+  upstream_tracker_issue: https://github.com/geneontology/go-ontology/issues/15375
+  see_also:
+  - https://github.com/geneontology/go-annotation/issues/6525
+- change_type: NODE_OBSOLETION_WITH_DIRECT_REPLACEMENT
+  ontology: GO
+  about_node:
+    id: GO:0006420
+    label: arginyl-tRNA aminoacylation
+  has_direct_replacement:
+    id: GO:0006418
+    label: tRNA aminoacylation for protein translation
+  has_nondirect_replacement:
+  - id: GO:0004814
+    label: arginine-tRNA ligase activity
+  change_dsl: obsolete GO:0006420 with replacement GO:0006418
+  justification: >-
+    The term restates an existing molecular function and adds nothing beyond it, so it
+    was obsoleted in favour of the generic cytosolic process. Note the shape: the direct
+    replacement is a biological process (GO:0006418), which a biological process can be
+    replaced by outright, while the 1:1 molecular function GO:0004814 is advice a curator
+    applies per annotation and so is recorded as a non-direct replacement. GO's own
+    obsoletion comment names both.
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: '2026-11-01'
+  adoption_status: COMPLETE
+  affected_annotations:
+  - genes/PSEPK/argS/argS-ai-review.yaml
+  - genes/PSEPK/glyS/glyS-ai-review.yaml
+  upstream_tracker_issue: https://github.com/geneontology/go-ontology/issues/15375
+  see_also:
+  - https://github.com/geneontology/go-annotation/issues/6525
+- change_type: NODE_OBSOLETION_WITH_DIRECT_REPLACEMENT
+  ontology: GO
+  about_node:
+    id: GO:0070143
+    label: mitochondrial alanyl-tRNA aminoacylation
+  has_direct_replacement:
+    id: GO:0070127
+    label: tRNA aminoacylation for mitochondrial protein translation
+  has_nondirect_replacement:
+  - id: GO:0004813
+    label: alanine-tRNA ligase activity
+  change_dsl: obsolete GO:0070143 with replacement GO:0070127
+  justification: >-
+    The term restates an existing molecular function and adds nothing beyond it, so it
+    was obsoleted in favour of the generic mitochondrial process. Note the shape: the direct
+    replacement is a biological process (GO:0070127), which a biological process can be
+    replaced by outright, while the 1:1 molecular function GO:0004813 is advice a curator
+    applies per annotation and so is recorded as a non-direct replacement. GO's own
+    obsoletion comment names both.
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: '2026-11-01'
+  adoption_status: IN_PROGRESS
+  affected_annotations:
+  - genes/DANRE/gtpbp3/gtpbp3-ai-review.yaml
+  - genes/human/AARS2/AARS2-ai-review.yaml
+  - modules/mitochondrial_trna_charging_and_initiator_formylation.yaml
+  upstream_tracker_issue: https://github.com/geneontology/go-ontology/issues/15375
+  see_also:
+  - https://github.com/geneontology/go-annotation/issues/6525
+- change_type: NODE_OBSOLETION_WITH_DIRECT_REPLACEMENT
+  ontology: GO
+  about_node:
+    id: GO:0070147
+    label: mitochondrial cysteinyl-tRNA aminoacylation
+  has_direct_replacement:
+    id: GO:0070127
+    label: tRNA aminoacylation for mitochondrial protein translation
+  has_nondirect_replacement:
+  - id: GO:0004817
+    label: cysteine-tRNA ligase activity
+  change_dsl: obsolete GO:0070147 with replacement GO:0070127
+  justification: >-
+    The term restates an existing molecular function and adds nothing beyond it, so it
+    was obsoleted in favour of the generic mitochondrial process. Note the shape: the direct
+    replacement is a biological process (GO:0070127), which a biological process can be
+    replaced by outright, while the 1:1 molecular function GO:0004817 is advice a curator
+    applies per annotation and so is recorded as a non-direct replacement. GO's own
+    obsoletion comment names both.
+  origin: UPSTREAM_COMPLETED
+  stance: AGREE
+  ontology_state_verified: '2026-11-01'
+  adoption_status: NOT_APPLICABLE
+  upstream_tracker_issue: https://github.com/geneontology/go-ontology/issues/15375
+  see_also:
+  - https://github.com/geneontology/go-annotation/issues/6525
+index_group: CROSS_CUTTING
 ---
 
 # Amino Acid Activation Terms — Obsoletion of 43 Substrate-Specific tRNA Aminoacylation BPs
+
+**Bottom line:** GO is obsoleting 43 biological-process terms that name the
+amino acid charged onto a tRNA (alanyl-tRNA aminoacylation and so on, plus
+their mitochondrial twins) and merging them into two parents, GO:0006418 and
+GO:0070127, because amino-acid identity is already captured by the 1:1
+`<aa>-tRNA ligase activity` MF terms. We checked every affected term in
+QuickGO, counted its annotations (six mitochondrial terms have none), and
+enumerated the reviews in this repo that use them. The obsoletion matters here
+because it reverses a judgment our reviews make: they mark GO:0006418 as
+over-annotated because the amino-acid-specific child "already captures" the
+process. The impact tables below were written on 2026-08-29, before the PSEPK
+aminoacyl-tRNA batch (#2899) merged; the repo now has 33 reviews touching the
+obsoleted terms, 26 of them in strictly validated `core_functions`, and 16
+reviews that mark GO:0006418 over-annotated or modify it away (15 PSEPK
+synthetases plus human AARS1). No review has been edited for the obsoletion
+yet, and the module text records that QuickGO's 2026-09-22 snapshot already
+obsoletes GO:0006421, GO:0006425 and GO:0070681.
+
+It also surfaced an upstream problem worth reporting: zebrafish *gtpbp3*, a
+tRNA-modifying GTPase rather than a synthetase, is the only gene annotated to
+two of the mitochondrial terms, and a bulk migration would carry those six
+over-annotations into GO:0070127.
 
 ## Overview
 
@@ -80,8 +228,25 @@ term for a `concepts` node in `modules/bacterial_aminoacyl_trna_charging.yaml`.
 
 ## Obsoletion plan (per upstream)
 
-All 43 terms confirmed **live** (non-obsolete) in QuickGO on 2026-08-29, as were
-both replacements and a sampled MF counterpart (`GO:0004813`, `GO:0050567`).
+All 43 terms were confirmed **live** (non-obsolete) in QuickGO on 2026-08-29, as
+were both replacements and a sampled MF counterpart (`GO:0004813`, `GO:0050567`).
+
+**That is now out of date: the batch has landed.** A QuickGO recheck on
+2026-11-01 found `GO:0006419`, `GO:0006420`, `GO:0070143` and `GO:0070147`
+obsolete, with `GO:0006418` and `GO:0070127` still live. Each obsoleted term
+carries a formal `replaced_by` pointing at its block's generic process, and GO's
+obsoletion comment separately names the 1:1 molecular function to annotate
+instead — so the direct replacement is the **BP**, and the MF is per-annotation
+advice. The remaining 39 terms were not individually rechecked.
+
+This page's `maturity` is still `SCOPING` and the 15 affected reviews in this
+repo therefore now cite obsolete terms. Four representative entries (two
+cytosolic, two mitochondrial) are recorded structurally in this page's
+`proposed_ontology_changes` frontmatter, which is what
+`just export-ontology-changes` reports; the other 39 are deliberately left in
+the tables below rather than transcribed, since they are mechanically derivable
+from those tables and the per-term work in this repo has not started. See
+[Ontology Changes](../docs/ontology_changes.md).
 
 Annotation counts below are from the QuickGO annotation API on 2026-08-29,
 exact-term. `exp` counts `ECO:0000269` and descendants; `all` is all evidence.

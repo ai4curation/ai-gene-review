@@ -1,9 +1,12 @@
 """Tests for the render_projects module."""
 
 import pytest
+from pathlib import Path
+
 
 from ai_gene_review.render_projects import (
     build_symbol_to_species_index,
+    copy_referenced_assets,
     is_slides_markdown,
     link_uniprot_code_spans,
     parse_frontmatter,
@@ -14,9 +17,30 @@ from ai_gene_review.render_projects import (
     replace_species_qualified_symbols,
     render_project,
     render_project_bundle,
+    render_all_projects,
+    render_projects_index,
+    render_projects_table,
     resolve_frontmatter_gene_links,
     should_autolink_gene_symbols,
 )
+
+
+def _review_directory(path: Path) -> None:
+    """Create a real review target for positive auto-linking fixtures."""
+    path.mkdir(parents=True)
+    (path / f"{path.name}-ai-review.yaml").write_text(f"gene_symbol: {path.name}\n")
+
+
+def test_explicit_gene_links_require_a_review(tmp_path):
+    genes = tmp_path / 'genes'
+    (genes / 'human/NOTES_ONLY').mkdir(parents=True)
+    assert build_symbol_to_species_index(genes) == {}
+    tagged, warnings = replace_gene_tags('<gene species="human" symbol="NOTES_ONLY">Notes</gene>', genes)
+    assert tagged == 'Notes' and warnings
+    qualified, warnings = replace_species_qualified_symbols('human/NOTES_ONLY', genes)
+    assert qualified == 'human/NOTES_ONLY' and warnings
+    links, warnings = resolve_frontmatter_gene_links(['human/NOTES_ONLY'], {}, genes_dir=genes)
+    assert all(not link.get('url') for link in links) and warnings
 
 
 class TestSlidesExclusion:
@@ -70,6 +94,13 @@ class TestSlidesExclusion:
 class TestBuildSymbolToSpeciesIndex:
     """Tests for build_symbol_to_species_index function."""
 
+    def test_directories_without_reviews_are_not_gene_links(self, tmp_path):
+        genes = tmp_path / 'genes'
+        (genes / 'human/publications').mkdir(parents=True)
+        (genes / 'human/LIPT1').mkdir()
+        (genes / 'human/LIPT1/LIPT1-notes.md').write_text('Research in progress')
+        assert build_symbol_to_species_index(genes) == {}
+
     def test_empty_directory(self, tmp_path):
         """Empty genes directory returns empty index."""
         genes_dir = tmp_path / "genes"
@@ -86,7 +117,7 @@ class TestBuildSymbolToSpeciesIndex:
     def test_single_species_single_gene(self, tmp_path):
         """Single species with single gene."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "TP53").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "TP53")
 
         index = build_symbol_to_species_index(genes_dir)
         assert index == {"TP53": ["human"]}
@@ -94,10 +125,10 @@ class TestBuildSymbolToSpeciesIndex:
     def test_multiple_species_multiple_genes(self, tmp_path):
         """Multiple species with multiple genes."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "TP53").mkdir(parents=True)
-        (genes_dir / "human" / "GPX4").mkdir(parents=True)
-        (genes_dir / "mouse" / "Trp53").mkdir(parents=True)
-        (genes_dir / "mouse" / "Gpx4").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "TP53")
+        _review_directory(genes_dir / "human" / "GPX4")
+        _review_directory(genes_dir / "mouse" / "Trp53")
+        _review_directory(genes_dir / "mouse" / "Gpx4")
 
         index = build_symbol_to_species_index(genes_dir)
         assert "TP53" in index
@@ -110,8 +141,8 @@ class TestBuildSymbolToSpeciesIndex:
     def test_same_symbol_multiple_species(self, tmp_path):
         """Same symbol appears in multiple species."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "ATG7").mkdir(parents=True)
-        (genes_dir / "yeast" / "ATG7").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "ATG7")
+        _review_directory(genes_dir / "yeast" / "ATG7")
 
         index = build_symbol_to_species_index(genes_dir)
         assert "ATG7" in index
@@ -120,8 +151,8 @@ class TestBuildSymbolToSpeciesIndex:
     def test_case_sensitivity(self, tmp_path):
         """Symbols are case-sensitive."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "GPX4").mkdir(parents=True)
-        (genes_dir / "mouse" / "Gpx4").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "GPX4")
+        _review_directory(genes_dir / "mouse" / "Gpx4")
 
         index = build_symbol_to_species_index(genes_dir)
         assert "GPX4" in index
@@ -397,6 +428,18 @@ class TestReplaceGeneSymbols:
         assert "[DAF-16](../../genes/worm/daf-16/daf-16-ai-review.html)" in result
         assert warnings == []
 
+    def test_numeric_symbols_do_not_link_scores(self):
+        """Purely numeric gene names (phage genes such as BPT7 ``4.2``) never link.
+
+        Project pages quote scores like 4.2 and 4.5, which must stay plain text.
+        """
+        index = {"4.2": ["BPT7"], "4.5": ["BPT7"], "gp4.5": ["BPT7"]}
+        result, warnings = replace_gene_symbols("Correctness 4.2 (UniProt 4.5); gp4.5", index)
+
+        assert "Correctness 4.2 (UniProt 4.5)" in result
+        assert "[gp4.5](../../genes/BPT7/gp4.5/gp4.5-ai-review.html)" in result
+        assert warnings == []
+
     def test_case_variants_do_not_link_common_words(self):
         """Words that share a symbol's letters must not be auto-linked.
 
@@ -426,8 +469,8 @@ class TestFrontmatterGeneLinks:
 
     def test_priority_ordered_species_hints(self, tmp_path):
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "CRYAA").mkdir(parents=True)
-        (genes_dir / "BOVIN" / "CRYAA").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "CRYAA")
+        _review_directory(genes_dir / "BOVIN" / "CRYAA")
 
         index = build_symbol_to_species_index(genes_dir)
         links, warnings = resolve_frontmatter_gene_links(
@@ -450,8 +493,8 @@ class TestFrontmatterGeneLinks:
 
     def test_species_qualified_entry(self, tmp_path):
         genes_dir = tmp_path / "genes"
-        (genes_dir / "MYCTU" / "cds1").mkdir(parents=True)
-        (genes_dir / "VIBCH" / "cds1").mkdir(parents=True)
+        _review_directory(genes_dir / "MYCTU" / "cds1")
+        _review_directory(genes_dir / "VIBCH" / "cds1")
 
         index = build_symbol_to_species_index(genes_dir)
         links, warnings = resolve_frontmatter_gene_links(
@@ -473,7 +516,7 @@ class TestReplaceGeneTags:
     def test_gene_tag_links_full_visible_label(self, tmp_path):
         """Explicit gene tags link slash-delimited display text."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "BPT4" / "E").mkdir(parents=True)
+        _review_directory(genes_dir / "BPT4" / "E")
 
         content = '<gene species="BPT4" symbol="E">E/P00720</gene>'
         result, warnings = replace_gene_tags(content, genes_dir)
@@ -484,7 +527,7 @@ class TestReplaceGeneTags:
     def test_gene_tag_defaults_empty_label_to_symbol(self, tmp_path):
         """Empty tags can still link by using the symbol as display text."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "9INFA" / "M2").mkdir(parents=True)
+        _review_directory(genes_dir / "9INFA" / "M2")
 
         content = '<gene species="9INFA" symbol="M2"></gene>'
         result, warnings = replace_gene_tags(content, genes_dir)
@@ -523,8 +566,8 @@ class TestReplaceSpeciesQualifiedSymbols:
     def test_links_uppercase_mnemonic(self, tmp_path):
         """A 5-char uppercase species code links to that species' review."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "POPTR" / "CASPL4C1").mkdir(parents=True)
-        (genes_dir / "ARATH" / "CASPL4C1").mkdir(parents=True)
+        _review_directory(genes_dir / "POPTR" / "CASPL4C1")
+        _review_directory(genes_dir / "ARATH" / "CASPL4C1")
 
         content = "Compare POPTR/CASPL4C1 and ARATH/CASPL4C1."
         result, warnings = replace_species_qualified_symbols(content, genes_dir)
@@ -542,7 +585,7 @@ class TestReplaceSpeciesQualifiedSymbols:
     def test_links_lowercase_exception_code(self, tmp_path):
         """Allowlisted lowercase model-organism codes also link."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "TP53").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "TP53")
 
         result, warnings = replace_species_qualified_symbols(
             "See human/TP53.", genes_dir
@@ -554,7 +597,7 @@ class TestReplaceSpeciesQualifiedSymbols:
     def test_unknown_lowercase_token_is_not_a_code(self, tmp_path):
         """Arbitrary lowercase words are not treated as species codes."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "and" / "or").mkdir(parents=True)  # contrived; must not link
+        _review_directory(genes_dir / "and" / "or")  # contrived; must not link
 
         result, warnings = replace_species_qualified_symbols(
             "read and/or skim", genes_dir
@@ -592,7 +635,7 @@ class TestReplaceSpeciesQualifiedSymbols:
     def test_path_like_text_is_not_linked(self, tmp_path):
         """A code preceded by '/' (a path) does not match."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "POPTR" / "CASPL4C1").mkdir(parents=True)
+        _review_directory(genes_dir / "POPTR" / "CASPL4C1")
 
         content = "see `genes/POPTR/CASPL4C1`"
         result, warnings = replace_species_qualified_symbols(content, genes_dir)
@@ -604,7 +647,7 @@ class TestReplaceSpeciesQualifiedSymbols:
     def test_existing_link_is_preserved(self, tmp_path):
         """References already inside a markdown link are not re-linked."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "POPTR" / "CASPL4C1").mkdir(parents=True)
+        _review_directory(genes_dir / "POPTR" / "CASPL4C1")
 
         content = "[POPTR/CASPL4C1](http://example.com)"
         result, warnings = replace_species_qualified_symbols(content, genes_dir)
@@ -665,7 +708,7 @@ class TestRenderProject:
         """Render a simple markdown project file."""
         # Create genes directory
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "GPX4").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "GPX4")
 
         # Create project markdown
         projects_dir = tmp_path / "projects"
@@ -706,7 +749,7 @@ class TestRenderProject:
     def test_render_subfolder_project_mirrors_structure(self, tmp_path):
         """A FOO/bar.md supporting page renders to FOO/bar.html with deeper genes path."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "GPX4").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "GPX4")
 
         projects_dir = tmp_path / "projects"
         (projects_dir / "FOO").mkdir(parents=True)
@@ -741,8 +784,8 @@ class TestRenderProject:
     def test_render_can_disable_gene_symbol_autolinks(self, tmp_path):
         """Frontmatter can suppress automatic gene-symbol links for prose pages."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "GPX4").mkdir(parents=True)
-        (genes_dir / "human" / "TP53").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "GPX4")
+        _review_directory(genes_dir / "human" / "TP53")
 
         projects_dir = tmp_path / "projects"
         projects_dir.mkdir()
@@ -779,10 +822,50 @@ is an explicit link."""
         assert 'href="../../genes/human/TP53/TP53-ai-review.html"' in html_content
         assert warnings == []
 
+    def test_render_can_exclude_specific_symbols_from_autolinks(self, tmp_path):
+        """autolink_exclude keeps listed symbols as plain text; others still link."""
+        genes_dir = tmp_path / "genes"
+        _review_directory(genes_dir / "ARATH" / "RCA")
+        _review_directory(genes_dir / "human" / "GPX4")
+
+        projects_dir = tmp_path / "projects"
+        projects_dir.mkdir()
+        md_file = projects_dir / "EVIDENCE.md"
+        md_file.write_text(
+            """---
+title: Evidence
+autolink_exclude: [RCA]
+---
+# Evidence
+
+The RCA evidence code is used for GPX4 here."""
+        )
+
+        templates_dir = tmp_path / "templates"
+        templates_dir.mkdir()
+        template_file = templates_dir / "project.html.j2"
+        template_file.write_text(
+            "<!DOCTYPE html><html><head><title>{{ title }}</title></head>"
+            "<body>{{ content | safe }}</body></html>"
+        )
+
+        output_path, warnings = render_project(
+            md_file,
+            output_dir=tmp_path / "pages" / "projects",
+            genes_dir=genes_dir,
+            template_path=template_file,
+        )
+
+        html_content = output_path.read_text()
+        assert "ARATH/RCA" not in html_content
+        assert "The RCA evidence code" in html_content
+        assert 'href="../../genes/human/GPX4/GPX4-ai-review.html"' in html_content
+        assert warnings == []
+
     def test_render_project_bundle_includes_support_pages_and_assets(self, tmp_path):
         """Rendering FOO.md also renders FOO/**/*.md and copies referenced assets."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "GPX4").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "GPX4")
 
         projects_dir = tmp_path / "projects"
         (projects_dir / "FOO" / "figures").mkdir(parents=True)
@@ -868,8 +951,8 @@ is an explicit link."""
         """Render project with frontmatter species hints."""
         # Create genes directory with ambiguous symbol
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "ATG7").mkdir(parents=True)
-        (genes_dir / "yeast" / "ATG7").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "ATG7")
+        _review_directory(genes_dir / "yeast" / "ATG7")
 
         # Create project markdown with frontmatter
         projects_dir = tmp_path / "projects"
@@ -922,7 +1005,7 @@ ATG7 is involved in autophagy."""
     def test_render_project_with_gene_tag(self, tmp_path):
         """Render project with explicit gene tag labels."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "BPT4" / "E").mkdir(parents=True)
+        _review_directory(genes_dir / "BPT4" / "E")
 
         projects_dir = tmp_path / "projects"
         projects_dir.mkdir()
@@ -1085,9 +1168,9 @@ class TestIntegration:
         """Test a project file similar to FERROPTOSIS.md."""
         # Create genes directory
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "GPX4").mkdir(parents=True)
-        (genes_dir / "human" / "SLC7A11").mkdir(parents=True)
-        (genes_dir / "human" / "ACSL4").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "GPX4")
+        _review_directory(genes_dir / "human" / "SLC7A11")
+        _review_directory(genes_dir / "human" / "ACSL4")
 
         # Create project markdown (simplified FERROPTOSIS.md style)
         projects_dir = tmp_path / "projects"
@@ -1145,3 +1228,393 @@ Ferroptosis is an iron-dependent form of cell death.
         assert "human/SLC7A11" in html_content
         assert "human/ACSL4" in html_content
         assert warnings == []
+
+
+def _collection_fixture(tmp_path: Path) -> Path:
+    """Projects dir with one collection, its index page, and two members."""
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    (projects / "collections.yaml").write_text(
+        "HOMOLOGY:\n  title: Propagation by homology\n  index: HUB\n")
+    (projects / "HUB.md").write_text("---\ntitle: Hub\ncollections: [HOMOLOGY]\n---\n# Hub\n")
+    (projects / "ISO.md").write_text(
+        "---\ntitle: ISO review\nmaturity: IN_PROGRESS\ncollections: [HOMOLOGY]\n---\n# ISO\n")
+    (projects / "OTHER.md").write_text("---\ntitle: Unrelated\n---\n# Other\n")
+    (tmp_path / "genes").mkdir()
+    return projects
+
+
+def test_collection_index_lists_members(tmp_path):
+    projects = _collection_fixture(tmp_path)
+    out, _ = render_project(projects / "HUB.md", tmp_path / "pages" / "projects",
+                            tmp_path / "genes", projects_dir=projects)
+    html = out.read_text()
+    assert "All projects in this collection" in html
+    assert 'href="ISO.html">ISO review</a>' in html
+    assert "Unrelated" not in html
+    # The index page does not list or badge itself.
+    assert 'href="HUB.html"' not in html
+
+
+def test_collection_member_links_to_index(tmp_path):
+    projects = _collection_fixture(tmp_path)
+    out, _ = render_project(projects / "ISO.md", tmp_path / "pages" / "projects",
+                            tmp_path / "genes", projects_dir=projects)
+    html = out.read_text()
+    assert '<a href="HUB.html">Propagation by homology</a>' in html
+    assert "All projects in this collection" not in html
+
+
+def test_projects_table_has_collection_filter(tmp_path):
+    from ai_gene_review.render_projects import render_projects_table
+
+    projects = _collection_fixture(tmp_path)
+    html = render_projects_table(projects_dir=projects, output_dir=tmp_path / "out").read_text()
+    assert 'data-filter="collection"' in html
+    assert 'data-collections="HOMOLOGY"' in html
+
+
+@pytest.mark.parametrize(
+    "tag",
+    ["FLAGSHIP", "BIOLOGY_DOMAIN", "PIPELINE", "EVALUATION", "ML_PREDICTIONS", "OBSOLETION"],
+)
+def test_projects_table_offers_every_tag_as_filter_chip(tmp_path, tag):
+    """Each controlled-vocabulary tag in use becomes a Tags filter chip."""
+    from ai_gene_review.render_projects import render_projects_table
+
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    (projects / "FOO.md").write_text(f"---\ntitle: Foo\ntags: [{tag}]\n---\n# Foo\n")
+    html = render_projects_table(projects_dir=projects, output_dir=tmp_path / "out").read_text()
+    assert f'<span class="chip" data-value="{tag}">{tag}</span>' in html
+
+
+def test_linked_deck_pulls_in_its_images(tmp_path):
+    """A deck linked from a project page deploys with the figures it references.
+
+    The page links only the deck HTML; the deck's own <img> references (and
+    nothing outside projects/) must be copied alongside it.
+    """
+    projects_dir = tmp_path / "projects"
+    slides = projects_dir / "FOO" / "slides"
+    slides.mkdir(parents=True)
+    (projects_dir / "FOO.md").write_text(
+        "# Foo\n\n- [Slides](FOO/slides/FOO-slides.html)\n"
+    )
+    (slides / "FOO-slides.html").write_text(
+        '<img src="diagram.svg"><img src="shots/review.jpg">'
+        '<img src="https://cdn.example.org/emoji.svg">'
+        '<img src="../../../outside.png">'
+    )
+    (slides / "diagram.svg").write_text("<svg/>")
+    (slides / "shots").mkdir()
+    (slides / "shots" / "review.jpg").write_bytes(b"jpg")
+    (tmp_path / "outside.png").write_bytes(b"png")
+
+    output_dir = tmp_path / "pages" / "projects"
+    copied = copy_referenced_assets([projects_dir / "FOO.md"], output_dir, projects_dir)
+
+    out = output_dir / "FOO" / "slides"
+    assert sorted(p.relative_to(output_dir).as_posix() for p in copied) == [
+        "FOO/slides/FOO-slides.html",
+        "FOO/slides/diagram.svg",
+        "FOO/slides/shots/review.jpg",
+    ]
+    assert (out / "diagram.svg").read_text() == "<svg/>"
+    assert not (tmp_path / "pages" / "outside.png").exists()
+
+
+MANIFEST_PAGE = """---
+title: Foo project
+manifest:
+  slides:
+    - href: FOO/slides/FOO-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/abc123
+      title: Project brief
+---
+# Foo project
+
+**Bottom line:** foo.
+"""
+
+
+@pytest.fixture
+def manifest_projects(tmp_path: Path) -> Path:
+    """projects/FOO.md whose deck is linked only from ``manifest`` frontmatter."""
+    projects_dir = tmp_path / "projects"
+    slides = projects_dir / "FOO" / "slides"
+    slides.mkdir(parents=True)
+    (projects_dir / "FOO.md").write_text(MANIFEST_PAGE)
+    (slides / "FOO-slides.md").write_text("---\nmarp: true\n---\n")
+    (slides / "FOO-slides.html").write_text('<img src="diagram.svg">')
+    (slides / "diagram.svg").write_text("<svg/>")
+    (tmp_path / "genes").mkdir()
+    return projects_dir
+
+
+def test_manifest_linked_deck_is_copied_with_its_images(manifest_projects):
+    """A deck named only in ``manifest.slides`` deploys, figures included."""
+    output_dir = manifest_projects.parent / "pages" / "projects"
+    copied = copy_referenced_assets(
+        [manifest_projects / "FOO.md"], output_dir, manifest_projects
+    )
+    assert sorted(p.relative_to(output_dir).as_posix() for p in copied) == [
+        "FOO/slides/FOO-slides.html",
+        "FOO/slides/diagram.svg",
+    ]
+
+
+def test_manifest_renders_resource_bar_under_title(manifest_projects):
+    """Manifest entries render as pills right after the page H1.
+
+    The slide href must resolve from pages/projects/FOO.html to the mirrored
+    deck; the artifact opens externally and uses its title.
+    """
+    root = manifest_projects.parent
+    output_dir = root / "pages" / "projects"
+    outputs, _ = render_project_bundle(
+        manifest_projects / "FOO.md",
+        output_dir=output_dir,
+        genes_dir=root / "genes",
+        projects_dir=manifest_projects,
+    )
+    html = (output_dir / "FOO.html").read_text()
+    h1 = html.index("<h1>Foo project</h1>")
+    bar = html.index('class="resource-bar"')
+    assert h1 < bar < html.index("Bottom line")
+    assert '<a class="rk-slides" href="FOO/slides/FOO-slides.html"' in html
+    assert (output_dir / "FOO" / "slides" / "FOO-slides.html").is_file()
+    assert (
+        '<a class="rk-artifacts" href="https://claude.ai/artifact/abc123" '
+        'target="_blank" rel="noopener"'
+    ) in html
+    assert '>Slides <span class="note">AI generated</span></a>' in html
+    assert 'title="Slides (AI generated)"' in html
+    assert "Project brief <span class=\"ext\"" in html
+
+
+def test_malformed_manifest_warns_and_does_not_block_other_pages(manifest_projects):
+    """A bad manifest entry is reported as a page warning and skipped.
+
+    The whole-site render must still finish: the bad page renders (keeping its
+    valid entries), the sibling page's deck is copied, and the table is written.
+    """
+    (manifest_projects / "BAD.md").write_text(
+        "---\ntitle: Bad\nmanifest:\n  slides:\n    - title: no href\n"
+        "    - href: BAD/slides/missing.html\n  artifacts:\n"
+        "    - href: https://claude.ai/artifact/ok\n  decks: []\n---\n# Bad\n"
+    )
+    root = manifest_projects.parent
+    output_dir = root / "pages" / "projects"
+    _, warnings = render_all_projects(
+        projects_dir=manifest_projects, output_dir=output_dir, genes_dir=root / "genes"
+    )
+    bad = [w for w in warnings if "Invalid manifest in BAD.md" in w]
+    assert any("manifest.slides[0] needs a non-empty string 'href'" in w for w in bad)
+    assert any("manifest.slides[1] href 'BAD/slides/missing.html' does not exist" in w for w in bad)
+    assert any("unknown key(s) ['decks']" in w for w in bad)
+    assert len(bad) == 3
+
+    html = (output_dir / "BAD.html").read_text()
+    assert "Invalid manifest in BAD.md" in html
+    assert 'class="rk-slides"' not in html
+    assert 'href="https://claude.ai/artifact/ok"' in html
+
+    assert (output_dir / "FOO" / "slides" / "FOO-slides.html").is_file()
+    assert (output_dir / "FOO" / "slides" / "diagram.svg").is_file()
+    assert (output_dir / "all-projects.html").is_file()
+
+
+def test_page_without_manifest_has_no_resource_bar(tmp_path):
+    projects_dir = tmp_path / "projects"
+    projects_dir.mkdir()
+    (projects_dir / "BAR.md").write_text("---\ntitle: Bar\n---\n# Bar\n")
+    (tmp_path / "genes").mkdir()
+    out, _ = render_project(
+        projects_dir / "BAR.md",
+        output_dir=tmp_path / "pages" / "projects",
+        genes_dir=tmp_path / "genes",
+        projects_dir=projects_dir,
+    )
+    assert 'class="resource-bar"' not in out.read_text()
+
+
+def test_projects_table_links_slides_and_brief(manifest_projects):
+    (manifest_projects / "BAR.md").write_text("---\ntitle: Bar\n---\n# Bar\n")
+    html = render_projects_table(
+        projects_dir=manifest_projects,
+        output_dir=manifest_projects.parent / "out",
+    ).read_text()
+    assert "<th>Slides</th><th>Brief</th>" in html
+    foo_row = html[html.index('data-slug="foo"'):].split("</tr>")[0]
+    assert (
+        '<a href="FOO/slides/FOO-slides.html" title="Slides (AI generated)">slides</a>'
+    ) in foo_row
+    assert 'href="https://claude.ai/artifact/abc123" target="_blank"' in foo_row
+    bar_row = html[html.index('data-slug="bar"'):].split("</tr>")[0]
+    assert bar_row.count('class="res"><span class="muted">') == 2
+
+
+def test_project_provider_artifacts_distinguish_unarchived_from_broken_links(tmp_path):
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    report = projects / "report.md"
+    report.write_text("""---
+title: Provider report
+artifacts:
+- path: final_report.pdf
+  media_type: application/pdf
+- path: archived.pdf
+  media_type: application/pdf
+---
+[Missing provider export](final_report.pdf)
+[Archived export](archived.pdf)
+[Ordinary broken link](typo.pdf)
+""")
+    (projects / "archived.pdf").write_bytes(b"archived report")
+    output, _ = render_project(report, tmp_path / "pages/projects",
+                               genes_dir=tmp_path / "genes", projects_dir=projects)
+    text = output.read_text()
+    assert 'Missing provider export (not archived)' in text
+    assert 'data-unavailable-artifact="final_report.pdf"' in text
+    assert 'href="final_report.pdf"' not in text
+    assert 'href="archived.pdf"' in text
+    assert 'href="typo.pdf"' in text
+
+
+def test_batch_symbol_index_preserves_individual_page_output(tmp_path):
+    """Sharing the index must preserve links and species disambiguation per page."""
+    from ai_gene_review.render_projects import render_all_projects, render_project
+
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    genes = tmp_path / "genes"
+    for species in ("human", "mouse"):
+        gene = genes / species / "TP53"
+        gene.mkdir(parents=True)
+        (gene / "TP53-ai-review.yaml").write_text("gene_symbol: TP53\n")
+        (projects / f"{species}.md").write_text(
+            f"---\nspecies: [{species}]\n---\n# {species}\n\nTP53 activity.\n"
+        )
+    render_all_projects(projects, tmp_path / "batch", genes)
+    for source in projects.glob("*.md"):
+        individual, _ = render_project(
+            source, tmp_path / "individual", genes_dir=genes, projects_dir=projects,
+        )
+        batch = (tmp_path / "batch" / individual.name).read_text()
+        assert batch == individual.read_text()
+        assert f"genes/{source.stem}/TP53/TP53-ai-review.html" in batch
+
+
+def test_proposed_ontology_changes_render_the_slots_the_schema_actually_has(tmp_path):
+    """The ontology-change table must read live slot names, not renamed ones.
+
+    This exists because a rename reached the schema, the policy module and the
+    exporter but not `project.html.j2`, which kept reading `report_status` and
+    `term_tracker_issue`. Every page therefore showed a Status of `NOT_REPORTED`
+    -- a value in no current enum -- and a blank Tracker for records linking a
+    real ticket. The three existing tests over `proposed_ontology_changes` all
+    assert at the `project_ontology_changes()` data level and passed throughout,
+    because the bug was in Jinja. Asserting on the rendered HTML is what catches
+    the next rename.
+    """
+    from ai_gene_review.render_projects import render_project
+
+    source = tmp_path / "projects/OC.md"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "---\n"
+        "title: Ontology changes\n"
+        "proposed_ontology_changes:\n"
+        "- change_type: NODE_OBSOLETION_WITH_DIRECT_REPLACEMENT\n"
+        "  ontology: GO\n"
+        "  about_node:\n"
+        "    id: GO:0006419\n"
+        "    label: alanyl-tRNA aminoacylation\n"
+        "  has_direct_replacement:\n"
+        "    id: GO:0006418\n"
+        "    label: tRNA aminoacylation for protein translation\n"
+        "  justification: Restates an existing molecular function.\n"
+        "  origin: UPSTREAM_COMPLETED\n"
+        "  stance: AGREE\n"
+        "  ontology_state_verified: '2026-11-01'\n"
+        "  adoption_status: IN_PROGRESS\n"
+        "  upstream_tracker_issue: https://example.invalid/go/15375\n"
+        "---\n\n# Body\n"
+    )
+    output, _ = render_project(source, tmp_path / "pages/projects", tmp_path / "genes")
+    html = output.read_text()
+
+    # the renamed slots are read
+    assert "https://example.invalid/go/15375" in html
+    assert "IN_PROGRESS" in html
+    # origin and stance are surfaced, since they decide how to read the status
+    assert "UPSTREAM_COMPLETED" in html
+    assert "AGREE" in html
+    # and the value that only the stale template could produce is gone
+    assert "NOT_REPORTED" not in html
+
+
+def test_a_self_proposed_change_renders_its_request_status_not_its_adoption(tmp_path):
+    """Status is keyed on direction: an outbound request has no adoption status."""
+    from ai_gene_review.render_projects import render_project
+
+    source = tmp_path / "projects/OC2.md"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "---\n"
+        "title: Ontology changes\n"
+        "proposed_ontology_changes:\n"
+        "- change_type: NODE_RENAME\n"
+        "  ontology: GO\n"
+        "  about_node:\n"
+        "    id: GO:0000001\n"
+        "    label: old label\n"
+        "  old_value: old label\n"
+        "  new_value: new label\n"
+        "  justification: The label is miscased.\n"
+        "  origin: SELF_PROPOSED\n"
+        "  confidence: PROBABLE\n"
+        "  request_status: FILED\n"
+        "  upstream_tracker_issue: https://example.invalid/go/2\n"
+        "---\n\n# Body\n"
+    )
+    output, _ = render_project(source, tmp_path / "pages/projects", tmp_path / "genes")
+    html = output.read_text()
+    assert "SELF_PROPOSED" in html
+    assert "FILED" in html
+    assert "NOT_REPORTED" not in html
+
+
+def test_render_projects_index_groups_from_frontmatter(tmp_path: Path) -> None:
+    """The index is grouped by ``index_group``; ungrouped projects are listed last."""
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    (projects / "WORM_A.md").write_text(
+        '---\ntitle: "Worm A"\nindex_group: WORM\nmaturity: IN_PROGRESS\n'
+        "description: Worm things\n---\n# Worm A\n"
+    )
+    (projects / "WORM_A").mkdir()
+    (projects / "WORM_A" / "WORM_A-pathway.md").write_text("# Pathway\n")
+    (projects / "CROSS.md").write_text(
+        '---\ntitle: "Cross"\nindex_group: CROSS_CUTTING\n---\n# Cross\n'
+    )
+    (projects / "NEW.md").write_text('---\ntitle: "Brand New"\n---\n# New\n')
+    (projects / "README.md").write_text("# Projects\n")
+
+    html = render_projects_index(projects, tmp_path / "out").read_text()
+
+    headings = [line.strip() for line in html.splitlines() if "<h2>" in line]
+    assert headings == [
+        "<h2>C. elegans Projects</h2>",
+        "<h2>Cross-Cutting &amp; Methodology</h2>",
+        "<h2>Not yet grouped</h2>",
+    ]
+    assert html.index("Worm A") < html.index("Cross") < html.index("Brand New")
+    assert "<p>Worm things</p>" in html
+    assert 'href="WORM_A/WORM_A-pathway.html" class="pathway-link"' in html
+    assert html.count('class="pathway-link"') == 1
+    assert "3 curated gene annotation review projects" in html
+    assert "README" not in html

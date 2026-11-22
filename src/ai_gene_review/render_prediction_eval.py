@@ -8,13 +8,13 @@ Usage::
 
     # Render all ProtNLM prediction reviews
     python -m ai_gene_review.render_prediction_eval \\
-        'genes/*/*-protnlm-predictions-review.yaml' \\
+        'genes/*/*/*-protnlm-predictions-review.yaml' \\
         -o pages/protnlm-eval.html \\
-        --title 'ARGO-ProtNLM-50 Prediction Evaluation'
+        --title 'ProtNLM Prediction Evaluation'
 
     # Render DeepECTF reviews from a specific project
     python -m ai_gene_review.render_prediction_eval \\
-        'projects/BIOREASON_COMPARISON/**/genes/*/*-det-predictions-review.yaml' \\
+        'projects/BIOREASON_COMPARISON/**/genes/*/*/*-det-predictions-review.yaml' \\
         -o pages/deepectf-eval.html
 
     # Default: all *-predictions-review.yaml under genes/
@@ -31,6 +31,7 @@ from typing import Any
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
+from ai_gene_review.export.prediction_export import is_data_error
 from ai_gene_review.render_modules import clean_rendered_html
 
 CS_MAP = {"COR": 2, "CNN": 2, "LSP": 2, "UNC": 1, "PLI": 0, "NPI": 0, "REP": 0}
@@ -112,15 +113,26 @@ def compute_stats(proteins: list[dict[str, Any]]) -> dict[str, Any]:
     (2, 1, 1)
     >>> stats['mean_cs']
     1.0
+
+    Data-pipeline errors (``WRONG_INPUT_SEQUENCE``) are counted apart, not scored:
+
+    >>> compute_stats([{'predictions': [
+    ...     {'review': {'assessment': 'NPI', 'error_type': 'WRONG_INPUT_SEQUENCE'}},
+    ... ]}])['excluded_data_errors']
+    1
     """
     counts: dict[str, int] = {code: 0 for code in ASSESSMENT_ORDER}
     total = 0
+    excluded = 0
     cs_sum = 0.0
     term_types: set[str] = set()
 
     for protein in proteins:
         for pred in protein.get("predictions", []):
             review = pred.get("review", {})
+            if is_data_error(review):
+                excluded += 1
+                continue
             assessment = review.get("assessment", "UNC")
             counts[assessment] = counts.get(assessment, 0) + 1
             cs_sum += CS_MAP.get(assessment, 0)
@@ -133,6 +145,7 @@ def compute_stats(proteins: list[dict[str, Any]]) -> dict[str, Any]:
         "total_predictions": total,
         "counts": counts,
         "mean_cs": cs_sum / total if total else 0.0,
+        "excluded_data_errors": excluded,
         "term_types": sorted(term_types),
     }
 
@@ -176,8 +189,8 @@ def main() -> None:
     parser.add_argument(
         "pattern",
         nargs="?",
-        default="genes/*/*-predictions-review.yaml",
-        help="Glob pattern for prediction review YAMLs (default: genes/*/*-predictions-review.yaml)",
+        default="genes/*/*/*-predictions-review.yaml",
+        help="Glob pattern for prediction review YAMLs (default: genes/*/*/*-predictions-review.yaml)",
     )
     parser.add_argument(
         "-o", "--output",

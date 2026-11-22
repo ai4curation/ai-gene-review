@@ -67,17 +67,17 @@ The yeast BAP31 family has three paralogs. Attribution matters: most mechanistic
 2. **Wilson JD, Barlowe C (2010)**, "Yet1p and Yet3p, the yeast homologs of BAP29 and BAP31,
    interact with the endoplasmic reticulum translocation apparatus and are required for
    inositol prototrophy", *J Biol Chem* 285:18252-61. **PMID:20378542** (cached
-   abstract-only; PMCID PMC2881749). This is the key mechanistic paper but it is about the
+   with PMC2881749 full text). This is the key mechanistic paper but it is about the
    **Yet1p–Yet3p (BAP29/BAP31) complex**: Yet1p forms a complex with Yet3p; the Yet complex
    is NOT efficiently packaged into COPII vesicles (so does not act as an ER export receptor);
    a fraction associates with the Sec translocation complex; associations increase under ER
    stress; yet1Δ and yet3Δ show inositol-starvation growth defects. YET2-specific findings
-   (from the full text, seen via PMC/WebFetch but NOT in the cached abstract — so NOT
-   quotable as verbatim supporting_text): **Yet2p is DTT/UPR-inducible** ("undetectable in the
-   absence of DTT but clearly present after DTT exposure"), Yet2p shows **minimal association**
-   with the Yet1p–Yet3p complex and the translocation machinery, and **yet2Δ cells do NOT show
-   the inositol prototrophy defect** seen for yet1Δ/yet3Δ. → Yet2p is the outlier: not part of
-   the characterized Yet1p–Yet3p complex, stress-inducible, function unknown.
+   from the full text show that **Yet2p is DTT/UPR-inducible** ("undetectable in the
+   absence of DTT but clearly present after DTT exposure"), Yet2p shows only minor association
+   with the Yet1p–Yet3p complex and the translocation machinery, and deleting YET2
+   does not perturb Yet3p-HA co-immunoprecipitation of Yet1p or the Sec complex.
+   → Yet2p is the outlier: not part of the characterized Yet1p–Yet3p complex,
+   stress-inducible, function unknown.
 
 3. **Wilson JD, Barlowe C (2011)** (follow-up), "Yet1p–Yet3p interacts with Scs2p–Opi1p to
    regulate ER localization of the Opi1p repressor", *Mol Biol Cell* (DOI 10.1091/mbc.e10-07-0559).
@@ -135,10 +135,10 @@ UPDATE: A genuine falcon deep-research file *did* eventually land
 failure, but the underlying job completed and wrote the file after disk space was
 freed). It is retained and cited. Its most valuable YET2-specific content comes from
 **Zung et al. 2024** (bioRxiv 10.1101/2024.05.09.593285, "The molecular mechanism of
-on-demand sterol biosynthesis at organelle contact sites"): Yet2 is the
-**lowest-abundance** yeast BAP31 paralog and, unlike Yet1/Yet3, is **not
-constitutively expressed** — the authors argue this means Yet2 is "likely not simply
-redundant with the Yet1-Yet3 branch" and "may ... fulfill a different function." This
+on-demand sterol biosynthesis at organelle contact sites"): Yet2 is **low-abundance**
+relative to Yet3 and, unlike Yet1/Yet3, is **not constitutively expressed** — the
+authors argue this means Yet2 is "likely not simply redundant with the Yet1-Yet3
+branch" and "may ... fulfill a different function." This
 directly corroborates the paralog-distinction and functional-role knowledge gaps. The
 report otherwise documents the well-studied Yet3 (ergosterol/ERGosome scaffold at ER
 contact sites) and Yet1-Yet3 (Opi1/inositol regulation) functions — paralog context,
@@ -176,7 +176,9 @@ BP (all IBA from mammalian BAP31, or IEA InterPro — family inferences, no YET2
 MF/BP root:
 - GO:0003674 molecular_function ND (SGD, GO_REF:0000015) → this is the honest "MF unknown"
   placeholder. Keep as the dark-gene signal; action ACCEPT (it correctly records ignorance).
-- GO:0008150 biological_process ND (SGD) → likewise ACCEPT (records that BP is uncurated/unknown).
+- GO:0008150 biological_process ND (SGD) → REMOVE. The 2013 root BP placeholder is
+  now stale because GOA carries specific family-level BP rows; the primary-data
+  BP gap is recorded in `knowledge_gaps` instead.
 
 I will NOT REMOVE any experimental annotation on paralog grounds. The IBA BP terms are
 family-level inferences from BAP31; I mark them KEEP_AS_NON_CORE rather than REMOVE because they
@@ -190,8 +192,77 @@ Only two things are defensible as YET2 core:
    di-lysine ER-retrieval motif. This is a `locations` fact, not an MF.
 2. A *putative* BAP31-family scaffold/adapter mode of action in ER membrane-protein
    homeostasis/transport — but this is inference, not demonstrated, so `core_functions` must
-   flag it as such (and the MF is genuinely unknown → knowledge_gaps).
+   flag it as such (and the PAINT protein-translocation-chaperone MF is not demonstrated in
+   yeast → knowledge_gaps).
 
 I will keep `core_functions` minimal and honest: one entry anchoring the ER-membrane
 localization and the family-inferred (but unproven) role in ER membrane-protein
 transport/homeostasis, with explicit deferral of the specific MF to knowledge_gaps.
+
+## 2026-09-29 IBA re-review
+
+Re-checked the three YET2 GOA IBA rows against `projects/IBA_REVIEW.md` and the
+current PANTHER PAINT cache. All three rows trace to `PANTHER:PTN000294723` in
+`interpro/panther/PTHR12701/PTHR12701-paint.tsv`; the ancestral PTN node is
+therefore the required source entity, and the curated human `UniProtKB:P51572`
+and rat `RGD:1302944` WITH/FROM seeds can be recorded alongside it to make the
+extant descendant support explicit. The `GO:0005789` ER-membrane IBA is a clean
+`NO_FAILURE_CORE` transfer because Yet2p itself has the conserved BAP29/BAP31
+triple-pass ER membrane architecture and the C-terminal di-lysine motif.
+
+The two ERAD/process IBAs, `GO:0030970` and `GO:2000060`, remain
+`KEEP_AS_NON_CORE` with `NO_FAILURE_NON_CORE`: the 2008 human BCAP31 paper
+directly supports the source-side ERAD biology [PMID:18555783 "promotes its
+retrotranslocation from the ER and degradation by the cytoplasmic 26S proteasome
+system"], the 2010 yeast Yet1/Yet3 paper places the related yeast complex at the
+Sec translocon [PMID:20378542 "association with the ER translocation apparatus"],
+and no YET2-specific loss evidence argues that the broad BAP29/BAP31-family
+placement must be moved above Yet2p. These rows should stay non-core until a
+physiological Yet2p client or pathway is experimentally established.
+
+The same PAINT node now carries a fourth IBD, `GO:0140388 protein translocation
+chaperone activity`, dated 2026-06-03 and seeded by human `UniProtKB:P51572`.
+That matches the 2026 GO curator re-annotation already recorded in
+`genes/human/BCAP31/BCAP31-notes.md`; the molecular-function gap for YET2 is
+therefore no longer "no family-level MF has been articulated" but "the explicit
+family-level translocation-chaperone MF has not been demonstrated in yeast".
+
+The newer-paper search did not find a peer-reviewed YET2 paper superseding the
+2024 Zung et al. bioRxiv preprint (`10.1101/2024.05.09.593285`). The most
+notable YET2-specific item outside PubMed remains Sarah Renee Grubb's 2013
+University of Pittsburgh dissertation
+(`https://d-scholarship.pitt.edu/17303`), whose public abstract states that two
+conserved ER-membrane Sec61-regulator candidates, Yet2 and Yet3, facilitate ApoB
+ERAD in yeast. Because that result is a dissertation-only ApoB expression-system
+claim and is not cached as a primary publication, it was treated only as a
+reason not to overcall the BCAP31 ERAD IBAs as false for Yet2p.
+
+## 2026-10-01 refresh
+
+Rebased to `origin/main` on a fresh `codex/review-yeast-yet2` branch and
+re-ran `just fetch-gene yeast YET2 --force`. Current GOA still has the same 10
+live rows reviewed above: three `IBA` rows from GO_Central, three
+InterPro/UniProt family/location `IEA` rows, one SGD high-throughput
+localization row from PMID:26928762, and the two SGD `ND` root rows. The only
+current GOA delta was deterministic date churn on the InterPro/UniProt electronic
+rows, from 2026-06-16 to 2026-07-27.
+
+Refetched `PTHR12701`. The PAINT cache still exposes a single
+`PANTHER:PTN000294723` node with four node-level IBDs:
+`GO:0005789`, `GO:0030970`, `GO:2000060`, and the extra PAINT-only
+`GO:0140388` molecular-function hypothesis. The three live GOA IBA rows still
+trace to the exact `WITH/FROM` sets already recorded in the YAML, so no IBA
+action change was needed: ER membrane remains `NO_FAILURE_CORE`, while the two
+ERAD/process inferences remain non-core BAP29/BAP31 family calls for Yet2p.
+During PR review, the full Wilson & Barlowe text was also cited for negative
+yeast tests: the yet1/yet2/yet3 triple mutant was competent for CPY and
+alpha-factor translocation and had no obvious CPY*/Ste6* ERAD turnover defect.
+
+Searched again for newer YET2 literature. I did not find a peer-reviewed paper
+that supersedes the 2024 Zung et al. ERGosome/contact-site preprint, but the
+preprint is now PubMed/PMC-indexed as PMID:38766039. Cached that paper and
+promoted its direct Yet2 expression statements into the reference list so the
+review no longer has to cite the Falcon synthesis for the key
+non-constitutive-expression claim. I also force-refetched PMID:20378542 so the
+Wilson and Barlowe PMC full text is now cached and can support the Yet2p-specific
+paralog-separation evidence directly.

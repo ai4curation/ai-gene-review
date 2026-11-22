@@ -10,3 +10,8 @@
 The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
 
 - Moved out of the YAML description: current project framing treats PMT3 as a follow-up paralog behind the better established PMT1.1 and PMT1.2 pair.
+
+
+## 2026-09-20 TreeGrafter re-review
+
+Reviewed all seven rows. ACCEPT now reflects catalytic activity, cytosol and nicotine biosynthesis as broad or conserved aspects of the same PMT function. Comparative uncertainty over how much PMT3 contributes relative to PMT1.1/PMT1.2 is retained as a research question, not used to downgrade the pathway to non-core. The PMT-specific IPR025803 signature, PROSITE rule, reaction annotation and root expression support divergence from spermidine synthase. Existing OpenScientist/Falcon reports were read; their reaction-level findings were integrated. The reported NaPMT1 identity was not recomputed, and Falcon's erroneous GO:0030760 is not adopted. Jasmonate response remains non-core regulatory context. No duplicate adjudication was launched.

@@ -121,17 +121,17 @@ unknown.
 7. GO:0008150 biological_process — ND (GO_REF:0000015, SGD) — REMOVE (superseded by the
    generic transmembrane transport BP term already present).
 
-Note on the UniProt DR block: GO:0015293 symporter activity (IEA, UniProtKB-KW) appears in
-the UniProt cross-references but is NOT in the QuickGO GOA TSV pulled here, so it is not one
-of the seven review rows. The "Symport" keyword is a family-level inference; there is no
-MCH2 symport assay.
+Note on the UniProt keyword block: the refreshed flatfile still carries the "Symport"
+keyword, but no GO:0015293 DR line and no current QuickGO GOA row for GO:0015293 are
+present. The "Symport" keyword is a family-level inference; there is no MCH2 symport
+assay.
 
 ## Sources consulted
 - PMID:11536335 (Makuc et al. 2001, Yeast) — the functional/negative study. Abstract-only.
 - PMID:16204239 (Reihl & Stolz 2005, JBC) — Mch5p riboflavin; family "unrelated functions".
   Abstract-only.
 - PMID:16847258 (Kim et al. 2006, PNAS) — global topology map; MCH2 topology constrained.
-  Full text (HTML).
+  Abstract-only in the cache; PMCID present.
 - PMID:8091865 (Alexandraki & Tzermia 1994, Yeast) — original chromosome-XI sequencing;
   ORF has "structure of membrane transporters". Abstract-only.
 - UniProt:P36032 — record with negative FUNCTION statement, MFS/MCT similarity, 12 TM.
@@ -144,7 +144,7 @@ the two transporter-activity rows are already generic GO:0022857, which is the d
 
 1. GO:0005886 plasma membrane (IBA) — KEEP_AS_NON_CORE (phylogenetic inference; PM not directly
    demonstrated for MCH2; family study places some Mch proteins in intracellular membranes;
-   propagation_review: NO_FAILURE_NON_CORE / COMPARTMENT_OR_COMPLEX_MISMATCH).
+   propagation_review: NO_FAILURE_NON_CORE, traced to PAINT node PTN002260587).
 2. GO:0022857 transmembrane transporter activity (IBA) — ACCEPT (generic MF; the only defensible
    MF given no substrate; explicitly NOT specialized to a monocarboxylate term — no TM1 Lys, no
    motif A, experimental negative).
@@ -159,3 +159,35 @@ substrate deliberately left open. knowledge_gaps: unknown substrate/direction/me
 role (WHOLLY_DARK), substrate-level BP_DARK on the core function, and paralog-redundancy residual
 sub-gap (mch1-5 quintuple-only phenotype). Validation clean: schema, references, terms all pass.
 
+## 2026-09-28 spot re-review
+
+Searched for newer MCH2/Mch2/YKL221W publications and did not find a 2024-2026 paper
+that directly identifies MCH2's substrate, localization, or biological role. Re-checked the
+two IBA rows against PANTHER PTHR11360: both GO:0022857 and GO:0005886 are placed at
+PTN002260587, while the monocarboxylate, riboflavin, thyroid-hormone, lactate, creatine,
+carboxylic-acid, and basolateral-plasma-membrane assertions sit on narrower descendant
+nodes and do not propagate to MCH2.
+The generic transporter IBA is still supported; the plasma-membrane IBA remains a plausible
+but not directly demonstrated localization and was aligned with the IBA project by tracing
+`propagation_review.source_entities` to the PAINT ancestral node rather than to the extant
+MCH5 donor list.
+
+## 2026-10-01 current-GOA refresh
+
+Forced a current GOA/UniProt refresh and re-fetched the four cached PMIDs. Current GOA
+still has the same seven exact rows and no retired assertions are needed: the two live
+IBA rows, three live IEA rows, and two SGD ND placeholders all remain represented in
+the review. The refresh backfilled current `supporting_entities` for the two
+PTN002260587 IBA rows plus the SubCell and InterPro IEA rows; those source sets match
+the current GOA `WITH/FROM` values.
+
+Re-checked PANTHER PTHR11360 after the refresh. PTN002260587 still carries only the
+broad `GO:0022857` transmembrane transporter activity and `GO:0005886` plasma membrane
+IBDs inherited by MCH2, while the substrate-specific riboflavin (`GO:0032218` on
+`PTN000888807`), thyroid-hormone (`GO:0015349`/`GO:0070327` on `PTN002603511`), lactate
+(`GO:0015129`/`GO:0035879` on `PTN002603597` and `GO:0015650`/`GO:0035879` on
+`PTN002603626`), and creatine (`GO:0015881` on `PTN008516712`) transport functions are
+assigned on narrower descendant nodes outside the MCH2 branch. No new literature from
+the MCH2/Mch2/YKL221W search identified a substrate, localization, or single-mutant
+process for MCH2, so the action set remains unchanged: generic transport ACCEPT,
+plasma membrane KEEP_AS_NON_CORE, and ND roots REMOVE.

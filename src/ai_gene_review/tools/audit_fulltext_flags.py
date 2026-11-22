@@ -32,6 +32,8 @@ from pathlib import Path
 import typer
 import yaml
 
+from ai_gene_review.validation.supporting_text import NO_FULL_TEXT_CONTENT_TYPES
+
 app = typer.Typer(help=__doc__)
 
 
@@ -52,22 +54,40 @@ class StaleFlag:
 def cached_full_text_availability(publications_dir: Path) -> dict[str, bool]:
     """Map PMID -> whether its cached record reports full text.
 
-    PMIDs whose cache omits ``full_text_available`` are absent from the result, so callers
-    cannot mistake "not recorded" for "not available".
+    Only PMIDs whose cache records **neither** ``full_text_available`` nor ``content_type``
+    are absent from the result, so a caller still cannot mistake "not recorded" for "not
+    available". This sentence used to promise that omitting ``full_text_available`` alone was
+    enough to be excluded; widening the function below removed that property, and the
+    docstring kept promising it fifteen lines above the code that contradicts it.
 
     The key is read from the ``---``-delimited frontmatter block only, because full text can
     quote the string in prose. An earlier version guarded against that by truncating the read at
     a fixed byte count, which would silently miss the key in any record whose frontmatter grew
     past it; parsing the actual block has no such cliff.
+
+    When ``full_text_available`` is absent, ``content_type`` is consulted through the same
+    ``NO_FULL_TEXT_CONTENT_TYPES`` negative list the validator uses. Skipping those records
+    was right while ``content_type`` was unreadable here, but of the 905 ``PMID_*.md``
+    records omitting the key, 903 name a ``content_type`` and **242** of those are a
+    full-text one (661 resolve False, 2 have neither key) -- so the audit and the validator
+    disagreed by construction, and the audit's half of the disagreement is the one that
+    hides false flags. The live case that forced this: ``PMID:38296963`` is
+    ``content_type: full_text_pdf`` with a gold-OA local PDF, and carried the identical
+    reference-level flag on both ARL8A and ARL8B. The ARL8B one was removed by hand as "the
+    one genuinely false declaration"; the ARL8A one was invisible to this function.
     """
     availability: dict[str, bool] = {}
     for path in publications_dir.glob("PMID_*.md"):
         frontmatter = _frontmatter(path)
-        if frontmatter is None or "full_text_available" not in frontmatter:
+        if frontmatter is None:
             continue
-        availability[path.stem.split("_", 1)[1]] = bool(
-            frontmatter["full_text_available"]
-        )
+        pmid = path.stem.split("_", 1)[1]
+        if "full_text_available" in frontmatter:
+            availability[pmid] = bool(frontmatter["full_text_available"])
+            continue
+        content_type = frontmatter.get("content_type")
+        if isinstance(content_type, str):
+            availability[pmid] = content_type.lower() not in NO_FULL_TEXT_CONTENT_TYPES
     return availability
 
 
@@ -108,6 +128,141 @@ def find_stale_flags(
                     )
                 )
     return stale
+
+
+@dataclass(frozen=True)
+class UnauditedFlag:
+    """A ``full_text_unavailable`` flag that :func:`find_stale_flags` cannot see.
+
+    Two kinds, both observed live:
+
+    * **finding-level** -- the flag sits on a ``findings[]`` entry rather than on the
+      reference. ``find_stale_flags`` only reads reference-level keys, so these were
+      invisible to every audit.
+    * **``file:`` reference** -- the flag claims the source text is not cached, about a file
+      that is checked into this repository. ``cached_full_text_availability`` is keyed on
+      PMIDs, and ``cached_full_text_available`` returns ``None`` (not ``False``) for a
+      non-literature prefix, so such a flag scored as "not recorded" and passed.
+
+    Found on ``genes/yeast/ESL1``: two finding-level flags under
+    ``file:yeast/ESL1/ESL1-uniprot.txt``, both quotes verbatim in that very file.
+    """
+
+    review_path: Path
+    reference_id: str
+    finding_index: int | None
+    reason: str
+
+
+def _repo_file_for(reference_id: str, repo_root: Path) -> Path | None:
+    """Resolve a ``file:`` reference to a path in the repo, or None."""
+    if not reference_id.startswith("file:"):
+        return None
+    rel = reference_id.split(":", 1)[1]
+    for candidate in (repo_root / rel, repo_root / "genes" / rel):
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _iter_flagged(node: object, path: str, inherited: str | None):
+    """Yield ``(path, reference_id)`` for every mapping carrying the flag, anywhere.
+
+    ``full_text_unavailable`` is a slot on ``SupportingTextInReference``, so the schema
+    allows it wherever that class appears: ``core_functions[].supported_by[]``,
+    ``existing_annotations[].review.supported_by[]``, ``finding_review.supported_by[]``,
+    ``proposed_new_terms[].supported_by[]`` -- not only on a reference or its findings.
+
+    Both earlier detectors were positional: one read the reference's own key, the other
+    added ``references[].findings[]`` and stopped. Three flags invalidated by this PR's own
+    re-fetch sat in ``core_functions[].supported_by[]`` and were invisible to both. Walking
+    the document is what makes "a re-fetch is a cross-file edit" checkable rather than
+    something a reviewer has to remember.
+
+    An entry's own ``reference_id`` wins; otherwise the nearest enclosing ``id``/
+    ``reference_id`` is inherited, which is how a finding resolves to its parent reference.
+    """
+    if isinstance(node, dict):
+        own = node.get("reference_id") or node.get("id")
+        current = own if isinstance(own, str) else inherited
+        if node.get("full_text_unavailable") is True:
+            yield path, current
+        for key, value in node.items():
+            yield from _iter_flagged(value, f"{path}.{key}", current)
+    elif isinstance(node, list):
+        for i, value in enumerate(node):
+            yield from _iter_flagged(value, f"{path}[{i}]", inherited)
+
+
+def find_unaudited_flags(
+    review_paths: list[Path], availability: dict[str, bool], repo_root: Path
+) -> list[UnauditedFlag]:
+    """Collect ``full_text_unavailable`` flags the reference-level PMID audit cannot reach.
+
+    Reported separately from :func:`find_stale_flags` rather than merged into it, because
+    ``--fix`` removes only reference-level PMID flags and :func:`audit` asserts that the
+    detector and the mutator agree on scope. Folding these in would trip that guard on every
+    run; the point of the guard is that a flag must not be stripped without being reported.
+    """
+    out: list[UnauditedFlag] = []
+    for review_path in review_paths:
+        doc = yaml.safe_load(review_path.read_text())
+        if not isinstance(doc, dict):
+            continue
+        for reference in doc.get("references") or []:
+            if not isinstance(reference, dict):
+                continue
+            identifier = str(reference.get("id") or "")
+            source = _repo_file_for(identifier, repo_root)
+            has_text = bool(source and source.read_text().strip())
+            pmid = identifier.split(":", 1)[1] if identifier.startswith("PMID:") else None
+            cached = availability.get(pmid) if pmid else None
+
+            if reference.get("full_text_unavailable") is True and has_text:
+                out.append(UnauditedFlag(review_path, identifier, None,
+                                         f"source file is in the repo: {source}"))
+            for index, finding in enumerate(reference.get("findings") or []):
+                if not isinstance(finding, dict):
+                    continue
+                if finding.get("full_text_unavailable") is not True:
+                    continue
+                # Only demonstrably FALSE flags are reported. A finding-level flag on a
+                # genuinely abstract-only record is accurate and common -- 30 of them in one
+                # PR's changed files -- and reporting those as suspect would make the audit
+                # noise, which is how a check stops being read.
+                if has_text:
+                    out.append(UnauditedFlag(review_path, identifier, index,
+                                             f"source file is in the repo: {source}"))
+                elif cached:
+                    out.append(UnauditedFlag(review_path, identifier, index,
+                                             "cached publication reports full text"))
+
+        # Everything the reference-scoped pass above cannot reach. Deduplicated against it
+        # by (reference, level), since a reference-level or findings[] flag is reported
+        # there with a more precise index.
+        seen = {(f.reference_id, f.finding_index) for f in out if f.review_path == review_path}
+        for location, reference_id in _iter_flagged(doc, "", None):
+            if not isinstance(reference_id, str):
+                continue
+            if re.fullmatch(r"\.references\[\d+\](\.findings\[\d+\])?", location):
+                continue  # already covered, and covered more precisely
+            pmid = (
+                reference_id.split(":", 1)[1]
+                if reference_id.startswith("PMID:")
+                else None
+            )
+            source = _repo_file_for(reference_id, repo_root)
+            if source and source.read_text().strip():
+                reason = f"source file is in the repo: {source}"
+            elif pmid and availability.get(pmid):
+                reason = "cached publication reports full text"
+            else:
+                continue
+            if (reference_id, None) in seen:
+                continue
+            out.append(UnauditedFlag(review_path, reference_id, None,
+                                     f"{reason} [at {location}]"))
+    return out
 
 
 def remove_stale_flags(review_path: Path, pmids: set[str]) -> int:
@@ -177,12 +332,37 @@ def audit(
         review_paths = sorted((repo_root / "genes").glob("*/*/*-ai-review.yaml"))
 
     stale = find_stale_flags(review_paths, availability)
+    unaudited = find_unaudited_flags(review_paths, availability, repo_root)
     echo(
         f"scanned {len(review_paths)} reviews against {len(availability)} cached publications"
     )
+    if unaudited:
+        # Reported whether or not there are stale reference-level flags: these are the ones
+        # no previous audit could see, so "no stale flags" was never the same as "no false
+        # flags". --fix does not touch them; the scope guard below depends on that.
+        by_path: dict[Path, list[UnauditedFlag]] = {}
+        for unaudited_flag in unaudited:
+            by_path.setdefault(unaudited_flag.review_path, []).append(unaudited_flag)
+        echo(
+            f"{len(unaudited)} flag(s) outside the reference-level PMID audit, in "
+            f"{len(by_path)} review(s) - remove by hand, --fix does not touch these:"
+        )
+        for unaudited_path, unaudited_flags in sorted(by_path.items()):
+            for unaudited_flag in unaudited_flags:
+                where = (
+                    "reference"
+                    if unaudited_flag.finding_index is None
+                    else f"findings[{unaudited_flag.finding_index}]"
+                )
+                echo(
+                    f"       {unaudited_path}: {unaudited_flag.reference_id} "
+                    f"({where}) - {unaudited_flag.reason}"
+                )
     if not stale:
-        echo("no stale full_text_unavailable flags")
-        return 0
+        if not unaudited:
+            echo("no stale full_text_unavailable flags")
+            return 0
+        return 1
 
     by_review: dict[Path, list[StaleFlag]] = {}
     for flag in stale:
@@ -207,6 +387,12 @@ def audit(
         for rp, fl in sorted(by_review.items())
     )
     echo(f"removed {total} flag(s)")
+    # Every check runs and reports before anything returns. A first version returned as soon
+    # as `unaudited` was non-empty -- which is the normal state, and the reason the detector
+    # exists -- so a --fix run that over- or under-removed exited 1 with the right code and
+    # *no ERROR line*, short-circuiting the very guard whose comment below explains why
+    # silent stripping must never happen.
+    failed = False
     if total != len(stale):
         # The mutator and the detector must agree on scope; a mismatch means one of them is
         # looking at flags the other cannot see, which is how a nested Finding-level flag was
@@ -214,9 +400,19 @@ def audit(
         echo(
             f"ERROR: detected {len(stale)} flag(s) but removed {total} - scope mismatch"
         )
-        return 1
+        failed = True
     if find_stale_flags(sorted(by_review), availability):
         echo("ERROR: stale flags survived the fix")
+        failed = True
+    if unaudited:
+        # --fix does not touch these, so a run that removed everything it could must still
+        # fail: reporting flags by hand and then exiting 0 tells CI everything is clean
+        # while naming the flags that are not.
+        echo(
+            f"{len(unaudited)} flag(s) outside --fix's scope remain; remove them by hand"
+        )
+        failed = True
+    if failed:
         return 1
     echo("verified: no stale flags remain in the edited reviews")
     return 0

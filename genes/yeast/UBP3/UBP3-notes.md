@@ -91,3 +91,28 @@ two are curation judgment calls beyond the requested fixes, and the third
 deletes files outside this PR's diff.
 
 `just validate yeast UBP3` passes after the edit.
+
+## 2026-09-29 IBA project alignment
+
+All four IBA annotations are still present in the current local
+`PTHR24006-paint.tsv` export at `PTN002541993`: `GO:0004843`
+cysteine-type deubiquitinase activity, `GO:0005634` nucleus, `GO:0005829`
+cytosol, and `GO:0031647` regulation of protein stability. The catalytic,
+nuclear, and cytosolic transfers remain well supported for UBP3; the protein
+stability transfer is broad but consistent with Ubp3's substrate-specific
+reversal of degradative ubiquitination, so it remains non-core.
+
+During this pass the remaining legacy `GO:0005515` rows were migrated from
+`MARK_AS_OVER_ANNOTATED` to `REMOVE` to match the current project policy for
+generic protein-binding annotations. This does not dispute the curated physical
+interactions; the point is that the rows are uninformative next to UBP3's
+specific deubiquitinase activity, Ubp3-Bre5 complex membership, and
+substrate/process annotations.
+
+The 2025 Nature Communications version of the Grr1/eS7A/HAC1 work
+(PMID:40038285) identifies SCF-Grr1-dependent proteasomal degradation of Ubp3
+as the route that maintains eS7A monoubiquitination for HAC1i translation
+during UPR. This reinforces the eS7A ribosome-substrate context for Ubp3 but
+does not justify a new unfolded-protein-response annotation on Ubp3 itself:
+Ubp3 counteracts the relevant ubiquitin signal and is downregulated when the
+UPR needs that signal to rise.

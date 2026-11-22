@@ -97,7 +97,7 @@ flowchart TD
 ## Priority 1: Core Mitophagy Machinery
 
 ### PINK-1 - The Damage Sensor
-**Gene file:** [genes/worm/pink-1/pink-1-ai-review.yaml](../genes/worm/pink-1/pink-1-ai-review.yaml)
+**Gene file:** [genes/worm/pink-1/pink-1-ai-review.yaml](../../genes/worm/pink-1/pink-1-ai-review.yaml)
 
 PINK-1 (Q09298) is the C. elegans ortholog of mammalian PINK1, functioning as a mitochondrial serine/threonine kinase that senses mitochondrial damage and initiates the mitophagy cascade [PMID:19251702, PMID:25896323]. The protein contains:
 - N-terminal mitochondrial targeting sequence (residues 1-74)
@@ -112,7 +112,7 @@ Under normal conditions, PINK-1 is imported into mitochondria and degraded. Upon
 Loss of *pink-1* causes reduced mitochondrial cristae length, increased paraquat sensitivity, and defective mitophagy [PMID:19251702, PMID:26469957].
 
 ### PDR-1 - The Ubiquitin Ligase
-**Gene file:** [genes/worm/pdr-1/pdr-1-ai-review.yaml](../genes/worm/pdr-1/pdr-1-ai-review.yaml)
+**Gene file:** [genes/worm/pdr-1/pdr-1-ai-review.yaml](../../genes/worm/pdr-1/pdr-1-ai-review.yaml)
 
 PDR-1 (Q9XUS3) is the C. elegans Parkin ortholog, an RBR-family E3 ubiquitin-protein ligase containing Ubl-RING0-RING1-IBR-RING2 domains [PMID:16204351]. PDR-1 is:
 - Primarily cytosolic under basal conditions
@@ -122,7 +122,7 @@ PDR-1 (Q9XUS3) is the C. elegans Parkin ortholog, an RBR-family E3 ubiquitin-pro
 The PDR-1-mediated ubiquitination creates a feed-forward loop that amplifies the mitophagy signal and recruits autophagy receptors. Loss of *pdr-1* increases vulnerability to mitochondrial complex I inhibitors (rotenone, fenperoximate) but not to paraquat or sodium azide, suggesting specific sensitivity to ETC dysfunction [PMID:16239214].
 
 ### DCT-1 - The Mitophagy Receptor
-**Gene file:** [genes/worm/dct-1/dct-1-ai-review.yaml](../genes/worm/dct-1/dct-1-ai-review.yaml)
+**Gene file:** [genes/worm/dct-1/dct-1-ai-review.yaml](../../genes/worm/dct-1/dct-1-ai-review.yaml)
 
 DCT-1 (Q09969) is the C. elegans ortholog of mammalian BNIP3/NIX, serving as the key mitophagy receptor [PMID:25896323]. DCT-1 contains:
 - C-terminal transmembrane domain for OMM localization
@@ -142,7 +142,7 @@ Loss of *dct-1* leads to:
 ## Mitochondrial Dynamics: Fission vs Fusion
 
 ### DRP-1 - The Fission GTPase
-**Gene file:** [genes/worm/drp-1/drp-1-ai-review.yaml](../genes/worm/drp-1/drp-1-ai-review.yaml)
+**Gene file:** [genes/worm/drp-1/drp-1-ai-review.yaml](../../genes/worm/drp-1/drp-1-ai-review.yaml)
 
 DRP-1 (Q8WQC9) is a dynamin-related GTPase that mediates mitochondrial outer membrane fission [PMID:10619028]. Key features:
 - Recruited from cytosol to OMM at constriction sites
@@ -155,7 +155,7 @@ The relationship between fission and mitophagy is critical: mitochondrial fragme
 - Altered mitophagy kinetics
 
 ### FZO-1 and EAT-3 - The Fusion Machinery
-**Gene files:** [genes/worm/fzo-1/fzo-1-ai-review.yaml](../genes/worm/fzo-1/fzo-1-ai-review.yaml), [genes/worm/eat-3/eat-3-ai-review.yaml](../genes/worm/eat-3/eat-3-ai-review.yaml)
+**Gene files:** [genes/worm/fzo-1/fzo-1-ai-review.yaml](../../genes/worm/fzo-1/fzo-1-ai-review.yaml), [genes/worm/eat-3/eat-3-ai-review.yaml](../../genes/worm/eat-3/eat-3-ai-review.yaml)
 
 FZO-1 (C. elegans Mitofusin) and EAT-3 (C. elegans OPA1) mediate outer and inner mitochondrial membrane fusion, respectively. They oppose DRP-1-mediated fission:
 - CED-9 overexpression causes interconnected mitochondria (pro-fusion)
@@ -163,7 +163,7 @@ FZO-1 (C. elegans Mitofusin) and EAT-3 (C. elegans OPA1) mediate outer and inner
 - The balance between fission and fusion determines mitochondrial fate
 
 ### MIRO-1 - The Transport Adaptor
-**Gene file:** [genes/worm/miro-1/miro-1-ai-review.yaml](../genes/worm/miro-1/miro-1-ai-review.yaml)
+**Gene file:** [genes/worm/miro-1/miro-1-ai-review.yaml](../../genes/worm/miro-1/miro-1-ai-review.yaml)
 
 MIRO-1 (Q94263) is an outer mitochondrial membrane GTPase that couples mitochondria to motor proteins for transport along microtubules. Upon mitochondrial damage:
 - MIRO-1 is degraded by Parkin/PDR-1
@@ -177,7 +177,7 @@ MIRO-1 also maintains mitochondrial membrane potential via interaction with VDAC
 ## Priority 2: Autophagy Machinery
 
 ### LGG-1 and LGG-2 - The ATG8 Paralogs
-**Gene files:** [genes/worm/lgg-1/lgg-1-ai-review.yaml](../genes/worm/lgg-1/lgg-1-ai-review.yaml), [genes/worm/lgg-2/lgg-2-ai-review.yaml](../genes/worm/lgg-2/lgg-2-ai-review.yaml)
+**Gene files:** [genes/worm/lgg-1/lgg-1-ai-review.yaml](../../genes/worm/lgg-1/lgg-1-ai-review.yaml), [genes/worm/lgg-2/lgg-2-ai-review.yaml](../../genes/worm/lgg-2/lgg-2-ai-review.yaml)
 
 A unique feature of C. elegans autophagy is the hierarchical relationship between LGG-1 (GABARAP family) and LGG-2 (LC3 family) [PMID:24374177]:
 
@@ -195,22 +195,22 @@ A unique feature of C. elegans autophagy is the hierarchical relationship betwee
 During mitophagy, LGG-1-positive autophagosomes enclose DCT-1-marked mitochondria, with LGG-2 subsequently recruited for fusion with lysosomes.
 
 ### BEC-1 - The PI3K Complex Core
-**Gene file:** [genes/worm/bec-1/bec-1-ai-review.yaml](../genes/worm/bec-1/bec-1-ai-review.yaml)
+**Gene file:** [genes/worm/bec-1/bec-1-ai-review.yaml](../../genes/worm/bec-1/bec-1-ai-review.yaml)
 
 BEC-1 is the C. elegans Beclin1 ortholog, a core component of the VPS34 PI3K complex that generates PI3P for autophagosome nucleation. Required for all autophagy including mitophagy.
 
 ### SQST-1 - The p62 Receptor
-**Gene file:** [genes/worm/sqst-1/sqst-1-ai-review.yaml](../genes/worm/sqst-1/sqst-1-ai-review.yaml)
+**Gene file:** [genes/worm/sqst-1/sqst-1-ai-review.yaml](../../genes/worm/sqst-1/sqst-1-ai-review.yaml)
 
 SQST-1 is the C. elegans p62/SQSTM1 ortholog that links ubiquitinated substrates (including PDR-1-ubiquitinated mitochondrial proteins) to the autophagy machinery via LGG-1 binding.
 
 ### ATG-18 - The PI3P Effector
-**Gene file:** [genes/worm/atg-18/atg-18-ai-review.yaml](../genes/worm/atg-18/atg-18-ai-review.yaml)
+**Gene file:** [genes/worm/atg-18/atg-18-ai-review.yaml](../../genes/worm/atg-18/atg-18-ai-review.yaml)
 
 ATG-18 (WIPI1/2 ortholog) binds PI3P generated by VPS34/BEC-1 and recruits downstream autophagy machinery to the phagophore.
 
 ### EPG-5 - The Fusion Factor
-**Gene file:** [genes/worm/epg-5/epg-5-ai-review.yaml](../genes/worm/epg-5/epg-5-ai-review.yaml)
+**Gene file:** [genes/worm/epg-5/epg-5-ai-review.yaml](../../genes/worm/epg-5/epg-5-ai-review.yaml)
 
 EPG-5 is required for autophagosome-lysosome fusion, the terminal step that enables degradation of engulfed mitochondria.
 
@@ -219,7 +219,7 @@ EPG-5 is required for autophagosome-lysosome fusion, the terminal step that enab
 ## Priority 3: Transcriptional Regulation and Longevity Integration
 
 ### ATFS-1 - The UPRmt Master Regulator
-**Gene file:** [genes/worm/atfs-1/atfs-1-ai-review.yaml](../genes/worm/atfs-1/atfs-1-ai-review.yaml)
+**Gene file:** [genes/worm/atfs-1/atfs-1-ai-review.yaml](../../genes/worm/atfs-1/atfs-1-ai-review.yaml)
 
 ATFS-1 (Q23272) represents a critical decision point between mitophagy and mitochondrial repair [PMID:22700657, PMID:25773600]. The protein contains dual targeting signals:
 - N-terminal mitochondrial targeting sequence (MTS, residues 1-23)
@@ -238,7 +238,7 @@ ATFS-1 uniquely regulates both nuclear and mitochondrial transcription by bindin
 The balance between ATFS-1-mediated repair (UPRmt) and PINK-1/PDR-1-mediated clearance (mitophagy) depends on stress severity and duration. Mild/transient stress favors repair; severe/chronic stress favors clearance.
 
 ### HLH-30 - The TFEB Ortholog
-**Gene file:** [genes/worm/hlh-30/hlh-30-ai-review.yaml](../genes/worm/hlh-30/hlh-30-ai-review.yaml)
+**Gene file:** [genes/worm/hlh-30/hlh-30-ai-review.yaml](../../genes/worm/hlh-30/hlh-30-ai-review.yaml)
 
 HLH-30 (H2KZZ2) is the C. elegans TFEB ortholog, a master transcriptional regulator of autophagy, lysosomal biogenesis, and lipid metabolism [PMID:23925298, PMID:23604316]. Key features:
 - bHLH transcription factor binding E-box motifs (CACGTG)
@@ -260,7 +260,7 @@ HLH-30 overexpression extends lifespan by 15-20%. Nuclear localization is enhanc
 HLH-30 is rapidly activated upon bacterial infection and drives approximately 80% of the host defense transcriptional response [PMID:24882217]. Required for survival during S. aureus infection.
 
 ### SKN-1 - The Nrf2 Ortholog
-**Gene file:** [genes/worm/skn-1/skn-1-ai-review.yaml](../genes/worm/skn-1/skn-1-ai-review.yaml)
+**Gene file:** [genes/worm/skn-1/skn-1-ai-review.yaml](../../genes/worm/skn-1/skn-1-ai-review.yaml)
 
 SKN-1 (P34707) is the C. elegans Nrf2 ortholog, a master regulator of oxidative stress responses and Phase II detoxification. Multiple isoforms (SKN-1A/B/C) function in different tissues:
 - Regulates gst-4, gst-1, gcs-1, and other detoxification genes
@@ -269,7 +269,7 @@ SKN-1 (P34707) is the C. elegans Nrf2 ortholog, a master regulator of oxidative 
 - Activated by mitophagy impairment as part of retrograde signaling [PMID:25896323]
 
 ### SPG-7 - The m-AAA Protease
-**Gene file:** [genes/worm/spg-7/spg-7-ai-review.yaml](../genes/worm/spg-7/spg-7-ai-review.yaml)
+**Gene file:** [genes/worm/spg-7/spg-7-ai-review.yaml](../../genes/worm/spg-7/spg-7-ai-review.yaml)
 
 SPG-7 (Q9N3T5) is the C. elegans ortholog of AFG3L2, a mitochondrial inner membrane m-AAA metalloprotease. SPG-7 functions in:
 - Processing of imported mitochondrial proteins
@@ -329,23 +329,23 @@ The UPRmt provides protection against mitochondrial dysfunction:
 
 | Gene | UniProt ID | Priority | Primary Function | Gene Review |
 |------|------------|----------|------------------|-------------|
-| pink-1 | Q09298 | 1 | Kinase/Damage Sensor | [Link](../genes/worm/pink-1/pink-1-ai-review.yaml) |
-| pdr-1 | Q9XUS3 | 1 | E3 Ubiquitin Ligase | [Link](../genes/worm/pdr-1/pdr-1-ai-review.yaml) |
-| dct-1 | Q09969 | 1 | Mitophagy Receptor | [Link](../genes/worm/dct-1/dct-1-ai-review.yaml) |
-| drp-1 | Q8WQC9 | 1 | Fission GTPase | [Link](../genes/worm/drp-1/drp-1-ai-review.yaml) |
-| fzo-1 | - | 1 | OMM Fusion | [Link](../genes/worm/fzo-1/fzo-1-ai-review.yaml) |
-| eat-3 | - | 1 | IMM Fusion | [Link](../genes/worm/eat-3/eat-3-ai-review.yaml) |
-| bec-1 | - | 2 | PI3K Complex | [Link](../genes/worm/bec-1/bec-1-ai-review.yaml) |
-| lgg-1 | Q09490 | 2 | GABARAP/Autophagy | [Link](../genes/worm/lgg-1/lgg-1-ai-review.yaml) |
-| lgg-2 | - | 2 | LC3/Autophagy | [Link](../genes/worm/lgg-2/lgg-2-ai-review.yaml) |
-| sqst-1 | - | 2 | p62 Receptor | [Link](../genes/worm/sqst-1/sqst-1-ai-review.yaml) |
-| atg-18 | - | 2 | PI3P Effector | [Link](../genes/worm/atg-18/atg-18-ai-review.yaml) |
-| epg-5 | - | 2 | Fusion Factor | [Link](../genes/worm/epg-5/epg-5-ai-review.yaml) |
-| atfs-1 | Q23272 | 3 | UPRmt Master TF | [Link](../genes/worm/atfs-1/atfs-1-ai-review.yaml) |
-| hlh-30 | H2KZZ2 | 3 | TFEB/Autophagy TF | [Link](../genes/worm/hlh-30/hlh-30-ai-review.yaml) |
-| skn-1 | P34707 | 3 | Nrf2/Oxidative Stress | [Link](../genes/worm/skn-1/skn-1-ai-review.yaml) |
-| miro-1 | Q94263 | 3 | Transport Adaptor | [Link](../genes/worm/miro-1/miro-1-ai-review.yaml) |
-| spg-7 | Q9N3T5 | 3 | m-AAA Protease | [Link](../genes/worm/spg-7/spg-7-ai-review.yaml) |
+| pink-1 | Q09298 | 1 | Kinase/Damage Sensor | [Link](../../genes/worm/pink-1/pink-1-ai-review.yaml) |
+| pdr-1 | Q9XUS3 | 1 | E3 Ubiquitin Ligase | [Link](../../genes/worm/pdr-1/pdr-1-ai-review.yaml) |
+| dct-1 | Q09969 | 1 | Mitophagy Receptor | [Link](../../genes/worm/dct-1/dct-1-ai-review.yaml) |
+| drp-1 | Q8WQC9 | 1 | Fission GTPase | [Link](../../genes/worm/drp-1/drp-1-ai-review.yaml) |
+| fzo-1 | - | 1 | OMM Fusion | [Link](../../genes/worm/fzo-1/fzo-1-ai-review.yaml) |
+| eat-3 | - | 1 | IMM Fusion | [Link](../../genes/worm/eat-3/eat-3-ai-review.yaml) |
+| bec-1 | - | 2 | PI3K Complex | [Link](../../genes/worm/bec-1/bec-1-ai-review.yaml) |
+| lgg-1 | Q09490 | 2 | GABARAP/Autophagy | [Link](../../genes/worm/lgg-1/lgg-1-ai-review.yaml) |
+| lgg-2 | - | 2 | LC3/Autophagy | [Link](../../genes/worm/lgg-2/lgg-2-ai-review.yaml) |
+| sqst-1 | - | 2 | p62 Receptor | [Link](../../genes/worm/sqst-1/sqst-1-ai-review.yaml) |
+| atg-18 | - | 2 | PI3P Effector | [Link](../../genes/worm/atg-18/atg-18-ai-review.yaml) |
+| epg-5 | - | 2 | Fusion Factor | [Link](../../genes/worm/epg-5/epg-5-ai-review.yaml) |
+| atfs-1 | Q23272 | 3 | UPRmt Master TF | [Link](../../genes/worm/atfs-1/atfs-1-ai-review.yaml) |
+| hlh-30 | H2KZZ2 | 3 | TFEB/Autophagy TF | [Link](../../genes/worm/hlh-30/hlh-30-ai-review.yaml) |
+| skn-1 | P34707 | 3 | Nrf2/Oxidative Stress | [Link](../../genes/worm/skn-1/skn-1-ai-review.yaml) |
+| miro-1 | Q94263 | 3 | Transport Adaptor | [Link](../../genes/worm/miro-1/miro-1-ai-review.yaml) |
+| spg-7 | Q9N3T5 | 3 | m-AAA Protease | [Link](../../genes/worm/spg-7/spg-7-ai-review.yaml) |
 
 ---
 

@@ -38,3 +38,36 @@ vesicles from their tips is impaired.”
 Provenance: live API snapshot 2026-09-09T03:00:51.831347+00:00. Complete API prediction JSON and all emitted claim IDs, text, and original evidence are preserved in the source and provenance JSON files. Current sequence/annotation data are separate comparison snapshots. Annotation overlap records known biology, not demonstrated training membership. All seven gene-focused Falcon jobs completed; the provider reports were inspected and useful primary leads checked. Publication retrieval used Europe PMC metadata/XML when the canonical PubMed fetch returned HTTP 429.
 
 The Falcon report missed PMID:26453652 target microscopy and reverses the yeast structural stoichiometry in one passage; neither statement is adopted. PDB/primary experiments support the biological conclusions used here.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Identity: Q7SCX0 is the full-length canonical product of NCU08110 (771 aa, sequence version 3; SPX 1-151,
+VTC catalytic domain, three C-terminal TM helices 672-763). Not a fragment, isoform or alternative gene
+model. No N. crassa functional assay of polyP synthesis exists; the only target experiment is
+localization [PMID:26453652 "Vacuolar membrane proteins, such as the vacuolar ATPase (VMA-1) and the
+polyphosphate polymerase (VTC-4), were observed in the PVCs."].
+
+Evolutionary grounding (new analysis, vtc-4-bioinformatics/RESULTS-rereview.md, script
+vtc_placement_rereview.py): MAFFT + NJ tree of SPX-VTC proteins puts VTC-4 with C. thermophilum Vtc4
+(80.5% id), then S. cerevisiae Vtc4 / S. pombe vtc4 (~57%), separate from the Vtc2/Vtc3 clade (PANTHER
+PTHR46140:SF2), which contains the N. crassa paralog NCU01745 (Q1K5R9). VTC-4 retains all eight yeast
+Vtc4 catalytic/ATP-binding positions (UniProt P47075 FT from PMID:19390046), including active-site K462
+(= yeast K458), which yeast Vtc2 (I) and Vtc3 (L) have lost. SPX InsP-binding motif conserved.
+
+Correction to the earlier review: the earlier text called PTHR46140:SF1 a "Vtc4 catalytic subfamily
+distinct from Vtc2/Vtc3"; SF1 also contains short Vtc1 and Vtc5 entries (see the PANTHER family review
+interpro/panther/PTHR46140/PTHR46140-review.yaml), so SF1 membership alone does not justify the catalytic
+transfer. The transfer now rests on the tree and the conserved active site. No disagreement on VTC-4's
+subfamily placement; I agree with the family review that SF1 is not a sufficient boundary for
+polyphosphate kinase activity.
+
+Action changes: inositol hexakisphosphate binding ACCEPT -> KEEP_AS_NON_CORE (regulatory SPX ligand
+binding; inositol pyrophosphates are the stronger physiological activators [PMID:27080106]). Vacuolar
+transport kept ACCEPT and now justified by synthesis-coupled polyP import [PMID:25315834 "the VTC complex
+obligatorily couples synthesis of polyP to its import in order to avoid toxic intermediates in the
+cytosol"]; added to core function. All other actions unchanged; reasons added to every row.
+PMID:25315834 and PMID:27080106 newly cited.
+
+Relative to review next: S. cerevisiae VTC4 (P47075), same Vtc4 clade (PTHR46140:SF1, NJ tree), the
+experimentally characterized catalytic subunit; no review in the repo (genes/yeast/VTC4 absent).
+Modules: none in modules/ cover VTC/polyphosphate storage.

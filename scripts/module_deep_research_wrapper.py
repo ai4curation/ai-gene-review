@@ -32,8 +32,9 @@ PROVIDERS = (
     "codex",
     "asta",
     "openscientist",
+    "claude-code",
 )
-DEFAULT_DRC_PACKAGE = "deep-research-client[cyberian]==0.2.7rc1"
+DEFAULT_DRC_PACKAGE = "deep-research-client[cyberian]==0.2.12"
 DEFAULT_OPENSCIENTIST_TIMEOUT = 7200
 UNRESOLVED_PLACEHOLDER_PATTERNS = (
     "{module_title}",
@@ -48,12 +49,18 @@ UNRESOLVED_PLACEHOLDER_PATTERNS = (
 
 
 def deep_research_client_command() -> list[str]:
-    """Return the command prefix for invoking deep-research-client."""
+    """Return the client command with an explicit Python >=3.12,<4.0 request.
+
+    This takes precedence over the ambient/UV_PYTHON default. Override the
+    package with DEEP_RESEARCH_CLIENT_UVX_FROM, or replace the whole command
+    (including interpreter selection) with DEEP_RESEARCH_CLIENT_CMD.
+    """
     override = os.environ.get("DEEP_RESEARCH_CLIENT_CMD")
     if override:
         return shlex.split(override)
     package = os.environ.get("DEEP_RESEARCH_CLIENT_UVX_FROM", DEFAULT_DRC_PACKAGE)
-    return ["uvx", "--from", package, "deep-research-client"]
+    # The client requires Python >=3.12; do not use an older ambient interpreter.
+    return ["uvx", "--python", ">=3.12,<4.0", "--from", package, "deep-research-client"]
 
 
 def as_list(value: Any) -> list[Any]:
@@ -374,6 +381,8 @@ def build_deep_research_command(
         actual_provider = "perplexity"
     elif provider == "codex":
         actual_provider = "cyberian"
+    elif provider == "claude-code":
+        actual_provider = "claude_code"
     else:
         actual_provider = provider
     module = data.get("module") if isinstance(data.get("module"), dict) else {}

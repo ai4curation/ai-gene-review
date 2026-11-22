@@ -52,13 +52,11 @@ entries after folding duplicate `protein binding` WITH-entries into
 - **MODIFY (2)**: `GO:0016787` hydrolase activity → `GO:0003924` GTPase activity;
   `GO:0046872` metal ion binding → `GO:0008270` zinc ion binding. Both are
   IEA-level generalisations that the experimental evidence lets us make specific.
-- **MARK_AS_OVER_ANNOTATED (3)**: both `GO:0005515` protein binding IPIs (per the
-  project rule against uninformative `protein binding`) and `GO:0000166`
-  nucleotide binding.
+- **MARK_AS_OVER_ANNOTATED (1)**: `GO:0000166` nucleotide binding.
 - **KEEP_AS_NON_CORE (2)**: `GO:0034224` cellular response to zinc ion starvation
   (IMP, IGI) — a real phenotype, but downstream of the molecular function.
-- **REMOVE: none.** No transcription-factor or DNA-binding term appears anywhere in
-  `ZNG1-goa.tsv`, so there was nothing of that kind to remove.
+- **REMOVE (2)**: both `GO:0005515` protein binding IPIs under the current
+  policy against uninformative generic protein-binding annotations.
 - **Proposed new terms: none.** `GO:0140827` was already present in GOA (IBA and
   IDA) and was accepted, not added; `proposed_new_terms` is empty.
 - Single `core_functions` molecular function: `GO:0140827` zinc chaperone activity.
@@ -144,11 +142,10 @@ of which are fixed here:
 1. **`## GO Annotation Review` described work that was never done.** It claimed
    *"Removed: All transcription factor annotations"* and *"Added: GO:0140827"*.
    Neither is true: `ZNG1-goa.tsv` contains no transcription-factor or DNA-binding
-   term, `ZNG1-ai-review.yaml` contains zero `REMOVE` actions (18 entries: 11
-   ACCEPT, 3 MARK_AS_OVER_ANNOTATED, 2 MODIFY, 2 KEEP_AS_NON_CORE), `GO:0140827`
-   is already in GOA twice (IBA + IDA) and was accepted rather than added, and
-   `proposed_new_terms` is empty. The section now enumerates the actions the YAML
-   actually records.
+   term, `GO:0140827` is already in GOA twice (IBA + IDA) and was accepted
+   rather than added, and `proposed_new_terms` is empty. The section now
+   enumerates the 18 entries the YAML actually records: 11 ACCEPT, 1
+   MARK_AS_OVER_ANNOTATED, 2 MODIFY, 2 KEEP_AS_NON_CORE, and 2 REMOVE.
 
 2. **`## Bioinformatics Analysis` asserted a result that does not exist.** The
    claim *"BLAST revealed >1000 misannotated COG0523 proteins"* had no
@@ -172,3 +169,25 @@ UniProt P53729 annotates (`ZNG1-uniprot.txt:71,160`).
 the regenerated `ZNG1-ai-review.html`, which had been publishing the four
 fabricated PMIDs as live PubMed links because `generate-pages.yaml` triggers only
 on `genes/**/*.yaml` and so never re-renders on a notes-only change.
+
+## Update 2026-09-29
+
+Re-checked the four ZNG1 IBA rows against `projects/IBA_REVIEW.md` and the
+current `interpro/panther/PTHR13748/PTHR13748-paint.tsv` cache. All four
+transfers, `GO:0005737` cytoplasm, `GO:0008270` zinc ion binding,
+`GO:0051604` protein maturation, and `GO:0140827` zinc chaperone activity,
+trace to `PANTHER:PTN000348904`. That broad CobW/ZNG1-family ancestor is the
+correct IBA source entity for the propagation review; the extant seed list is
+not a pairwise donor set.
+
+All four IBA rows remain sound and were marked `NO_FAILURE_CORE` /
+`SUPPORTS_TRANSFER`. The zinc chaperone and protein maturation transfers are
+grounded by direct eukaryotic ZNG1 evidence that includes S. cerevisiae ZNG1
+itself; the target appearing among descendant evidence for the ancestral IBD is
+expected PAINT behavior rather than circular support.
+
+This pass also migrated the two `GO:0005515` protein binding rows from
+`MARK_AS_OVER_ANNOTATED` to `REMOVE`: the high-throughput interaction rows are
+not false, but neither provides an evidence-backed, specific molecular-function
+replacement. Searches for newer ZNG1/Zng1/COG0523 papers found no newer
+yeast-focused primary study that changes the 2022 Map1 zinc-chaperone model.

@@ -100,3 +100,10 @@ process (the IEA one); the NAS one likewise MODIFY.
 Non-core / signaling: apoptotic process, positive regulation of NAD(P)H oxidase
 activity (both IMP, KEEP_AS_NON_CORE — real moonlighting downstream of catalytic
 function).
+
+## 2026-10-20 ORGANELLES batch 1 (mitochondrion rows)
+
+- Rows: GO:0005739 IBA (PTN000507879) and HTP (PMID:34800366, MitoCoP); both kept KEEP_AS_NON_CORE, reasons added.
+- IBA seed: PTN000507879 (PTHR22749-paint.tsv) is seeded only by yeast FMN1 (SGD:S000002644), an inner-membrane protein in yeast [PMID:10887197 "Analysis of submitochondrial fractions revealed that the mitochondrial form of Fmn1p is an integral protein of the inner membrane exposing its COOH-terminal domain to the matrix space."]
+- That sub-compartment does not transfer: yeast Fmn1 begins with a hydrophobic segment (MFTWTIYVSLLLVLAGTFLM, UniProt Q03778), while human RFK (155 aa) has no transit peptide or TM feature and is curated as cytoplasmic [file:human/RFK/RFK-uniprot.txt "SUBCELLULAR LOCATION: Cytoplasm"].
+- Organelle claim for the human protein rests on the MitoCoP proteome HTP row. One ortholog line against the human sequence: stays at the root; core_functions locations (cytosol) unchanged.

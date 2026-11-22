@@ -15,9 +15,14 @@ Example:
           CFAP300-goa.csv
 """
 
+from io import StringIO
 from pathlib import Path
+from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedMap
+from ruamel.yaml.tokens import ScalarToken
 from typing import Tuple, Optional, List, Dict, Any
 import requests
+import time
 import yaml
 import re
 
@@ -108,54 +113,154 @@ def _extract_alternative_products(uniprot_data: str, uniprot_id: str) -> List[Di
     if not alt_products_lines:
         return []
 
-    # Parse the isoforms
-    current_isoform: Dict[str, str] = {}
+    # CC lines wrap fields at arbitrary positions. Parse complete semicolon-delimited
+    # records after joining their physical lines, so Sequence and Synonyms survive
+    # continuation lines and IsoId/Sequence may be on separate lines.
+    content = " ".join(line[2:].strip() for line in alt_products_lines)
+    count = re.search(r"(?:^|;)\s*Named isoforms=(\d+)", content)
+    if count and int(count.group(1)) <= 1:
+        return []
 
-    for line in alt_products_lines:
-        # Remove CC prefix and clean up
-        content = line[2:].strip() if line.startswith("CC") else line.strip()
-
-        # Check for Named isoforms count
-        if "Named isoforms=" in content:
-            match = re.search(r'Named isoforms=(\d+)', content)
-            if match:
-                num_isoforms = int(match.group(1))
-                if num_isoforms <= 1:
-                    return []  # Don't return data for single isoform genes
-
-        # Match Name line: "Name=Bcl-X(L); Synonyms=Bcl-xL;"
-        name_match = re.match(r'Name=([^;]+)(?:;\s*Synonyms=([^;]+))?', content)
-        if name_match:
-            # Save previous isoform if exists
-            if current_isoform and 'id' in current_isoform:
-                isoforms.append(current_isoform)
-
-            current_isoform = {'name': name_match.group(1).strip()}
-            # Add synonym as alternate name if present
-            if name_match.group(2):
-                synonyms = name_match.group(2).strip()
-                # Use first synonym if multiple, append others to name
-                current_isoform['name'] = f"{current_isoform['name']} ({synonyms})"
+    for record in re.split(r"(?:^|;)\s*Name=", content)[1:]:
+        name = re.match(r"([^;]+);", record)
+        isoid = re.search(r"(?:^|;)\s*IsoId=([^;]+);", record)
+        sequence = re.search(r"(?:^|;)\s*Sequence=([^;]+)", record)
+        if not (name and isoid and sequence):
             continue
-
-        # Match IsoId line: "IsoId=Q07817-1; Sequence=Displayed;"
-        isoid_match = re.match(r'IsoId=([^;]+);\s*Sequence=([^;]+)', content)
-        if isoid_match and current_isoform:
-            current_isoform['id'] = isoid_match.group(1).strip()
-            seq_info = isoid_match.group(2).strip()
-            if seq_info != "Displayed":
-                current_isoform['sequence_note'] = seq_info
-            continue
-
-    # Don't forget the last isoform
-    if current_isoform and 'id' in current_isoform:
-        isoforms.append(current_isoform)
+        # Evidence belongs to the source record, not the common isoform name.
+        clean_name = re.sub(r"\s*\{ECO:[^}]*\}", "", name.group(1)).strip()
+        isoform = {"name": clean_name, "id": isoid.group(1).strip()}
+        synonyms = re.search(r"(?:^|;)\s*Synonyms=([^;]+);", record)
+        if synonyms:
+            clean_synonyms = re.sub(r"\s*\{ECO:[^}]*\}", "", synonyms.group(1)).strip()
+            if clean_synonyms:
+                isoform["name"] += f" ({clean_synonyms})"
+        seq_info = sequence.group(1).strip()
+        if seq_info != "Displayed":
+            isoform["sequence_note"] = seq_info
+        isoforms.append(isoform)
 
     # Only return if there are multiple isoforms
     if len(isoforms) <= 1:
         return []
 
     return isoforms
+
+
+def _repair_truncated_product_sequences(
+    existing_products: Any, fresh_products: List[Dict[str, str]]
+) -> int:
+    """Repair only legacy VSP-only notes ending in a dangling comma.
+
+    Require a unique matching isoform ID and a complete fresh VSP list that
+    strictly extends the old list in the same order. Names, descriptions,
+    arbitrary prose, product order and all other fields remain untouched.
+
+    Examples:
+        >>> old = [{"id": "P46379-4", "name": "curated", "sequence_note": "VSP_015695,"}]
+        >>> fresh = [{"id": "P46379-4", "sequence_note": "VSP_015695, VSP_045913"}]
+        >>> _repair_truncated_product_sequences(old, fresh)
+        1
+        >>> old[0]["name"]
+        'curated'
+        >>> _repair_truncated_product_sequences(old, fresh)
+        0
+    """
+    if not isinstance(existing_products, list):
+        return 0
+
+    def unique_by_id(products: List[Any]) -> Dict[str, Dict[str, Any]]:
+        by_id: Dict[str, Dict[str, Any]] = {}
+        duplicates = set()
+        for product in products:
+            if not isinstance(product, dict):
+                continue
+            product_id = product.get("id")
+            if not isinstance(product_id, str) or not re.fullmatch(
+                r"[A-Z0-9]+-[1-9][0-9]*", product_id
+            ):
+                continue
+            if product_id in by_id:
+                duplicates.add(product_id)
+            by_id[product_id] = product
+        return {key: value for key, value in by_id.items() if key not in duplicates}
+
+    existing_by_id = unique_by_id(existing_products)
+    fresh_by_id = unique_by_id(fresh_products)
+    repaired = 0
+    for product in existing_products:
+        if not isinstance(product, dict):
+            continue
+        old_note = product.get("sequence_note")
+        # A bare trailing comma is the old physical-line parser's signature.
+        if not isinstance(old_note, str) or not re.fullmatch(
+            r"VSP_[0-9]{6}(?:,\s*VSP_[0-9]{6})*,\s*", old_note
+        ):
+            continue
+        product_id = product.get("id")
+        if not isinstance(product_id, str) or product_id not in existing_by_id:
+            print(f"  ⚠ Left truncated sequence note unchanged for {product_id!r}: "
+                  "unsupported or ambiguous existing isoform ID")
+            continue
+        if product_id not in fresh_by_id:
+            print(f"  ⚠ Left truncated sequence note unchanged for {product_id!r}: "
+                  "isoform ID is absent or ambiguous in the current UniProt record")
+            continue
+        new_note = fresh_by_id[product_id].get("sequence_note")
+        if isinstance(new_note, str) and re.fullmatch(
+            r"VSP_[0-9]{6}(?:,\s*VSP_[0-9]{6})*", new_note
+        ):
+            old_ids = re.findall(r"VSP_[0-9]{6}", old_note)
+            new_ids = re.findall(r"VSP_[0-9]{6}", new_note)
+            if len(new_ids) > len(old_ids) and new_ids[:len(old_ids)] == old_ids:
+                product["sequence_note"] = new_note
+                repaired += 1
+                continue
+        print(f"  ⚠ Left truncated sequence note unchanged for {product_id!r}: "
+              "the current sequence is not a complete ordered extension")
+    return repaired
+
+
+def _replace_repaired_sequence_scalars(
+    original: str, products: List[Any], old_notes: List[Any], round_trip: YAML
+) -> str:
+    """Emit repaired scalars with ruamel, retaining all other source bytes.
+
+    A whole-document round trip retains block styles but can still rewrap plain
+    strings and normalize indentation. Use ruamel's source marks to splice only
+    changed sequence-note tokens, leaving comments and unrelated formatting intact.
+    """
+    tokens = {
+        (token.start_mark.line, token.start_mark.column): token
+        for token in round_trip.scan(original)
+        if isinstance(token, ScalarToken)
+    }
+    replacements = []
+    for product, old_note in zip(products, old_notes):
+        if not isinstance(product, CommentedMap) or product.get("sequence_note") == old_note:
+            continue
+        position = product.lc.value("sequence_note")
+        token = tokens.get(position)
+        if token is None:
+            # Aliases do not have independent scalar spans; do not rewrite one.
+            raise ValueError("Cannot surgically replace an aliased sequence_note")
+        stream = StringIO()
+        fragment_data = CommentedMap(sequence_note=product["sequence_note"])
+        if "sequence_note" in product.ca.items:
+            fragment_data.ca.items["sequence_note"] = product.ca.items["sequence_note"]
+        round_trip.dump(fragment_data, stream)
+        fragment = stream.getvalue()
+        value_token = [t for t in round_trip.scan(fragment) if isinstance(t, ScalarToken)][1]
+        replacement = fragment[value_token.start_mark.index:value_token.end_mark.index]
+        key_column = product.lc.key("sequence_note")[1]
+        replacement = "".join(
+            (" " * key_column if index else "") + line
+            for index, line in enumerate(replacement.splitlines(keepends=True))
+        )
+        replacements.append((token.start_mark.index, token.end_mark.index, replacement))
+    for start, end, replacement in sorted(replacements, reverse=True):
+        original = original[:start] + replacement + original[end:]
+    return original
 
 
 def _extract_panther_family_id(uniprot_data: str) -> Optional[str]:
@@ -268,6 +373,41 @@ def _report_seed_updates(
         )
 
 
+def _primary_gene_name(uniprot_data: str) -> Optional[str]:
+    r"""Return the primary gene name from a UniProt flat-file record, if any.
+
+    Used when ``fetch-gene`` is given an accession rather than a symbol, so the
+    stub's ``gene_symbol`` records the UniProt gene name (for an alternative-ORF
+    peptide, its host gene) instead of the accession.
+
+    >>> _primary_gene_name("ID   X\nGN   Name=MIEF1 {ECO:0000312|HGNC:HGNC:25979};\n")
+    'MIEF1'
+    >>> _primary_gene_name("GN   Name=hglS; OrderedLocusNames=PP_1234;\n")
+    'hglS'
+    >>> _primary_gene_name("ID   X\nDE   RecName: Full=Protein SHMOOSE;\n") is None
+    True
+
+    Many bacterial entries carry no ``Name=`` at all, only an ordered locus tag.
+    The locus tag is the identifier of record for those genes -- it is what the
+    review folder is named after -- so prefer it over falling back to the
+    accession:
+
+    >>> _primary_gene_name("GN   OrderedLocusNames=PA1107 {ECO:0000313};\n")
+    'PA1107'
+    >>> _primary_gene_name("GN   OrderedLocusNames=At5g03810;\n")
+    'At5g03810'
+    """
+    match = re.search(r"^GN   Name=([^;{]+)", uniprot_data, re.MULTILINE)
+    if match and match.group(1).strip():
+        return match.group(1).strip()
+    locus = re.search(
+        r"^GN   .*?OrderedLocusNames=([^;{,]+)", uniprot_data, re.MULTILINE
+    )
+    if locus and locus.group(1).strip():
+        return locus.group(1).strip()
+    return None
+
+
 def fetch_gene_data(
     gene_info: Tuple[str, str],
     uniprot_id: Optional[str] = None,
@@ -301,6 +441,8 @@ def fetch_gene_data(
             - qualifiers_backfilled: int - Number of existing annotations enriched
             - supporting_entities_backfilled: int - Number of existing annotations
               enriched with WITH/FROM entities
+            - alternative_product_sequences_repaired: int - Number of legacy truncated
+                VSP-only sequence notes extended from the current UniProt record
             - uniprot_updated: bool - True if UniProt file was updated
             - goa_updated: bool - True if GOA file was updated
             - uniprot_differences: bool - True if UniProt content differs from existing
@@ -402,6 +544,7 @@ def fetch_gene_data(
         "references_added": 0,
         "qualifiers_backfilled": 0,
         "supporting_entities_backfilled": 0,
+        "alternative_product_sequences_repaired": 0,
         "uniprot_updated": False,
         "goa_updated": False,
         "uniprot_differences": uniprot_differs,
@@ -449,44 +592,25 @@ def fetch_gene_data(
         yaml_existed = yaml_file.exists()
         result["yaml_existed"] = yaml_existed
 
-        # Get taxon ID and proper label from organism
-        organism_to_taxon = {
-            "human": ("NCBITaxon:9606", "Homo sapiens"),
-            "mouse": ("NCBITaxon:10090", "Mus musculus"),
-            "rat": ("NCBITaxon:10116", "Rattus norvegicus"),
-            "yeast": ("NCBITaxon:559292", "Saccharomyces cerevisiae"),
-            "fly": ("NCBITaxon:7227", "Drosophila melanogaster"),
-            "worm": ("NCBITaxon:6239", "Caenorhabditis elegans"),
-            "zebrafish": ("NCBITaxon:7955", "Danio rerio"),
-        }
-
-        # Check if we have a predefined mapping
-        if organism.lower() in organism_to_taxon:
-            taxon_info = organism_to_taxon[organism.lower()]
-        # Check if it's a UniProt organism code
-        elif organism.isupper() and len(organism) <= 5:
-            taxon_id = resolve_organism_code_to_taxon(organism)
-            if taxon_id:
-                # Get organism name from UniProt data if available
-                organism_name = get_organism_name_from_uniprot(uniprot_id) or organism
-                taxon_info = (f"NCBITaxon:{taxon_id}", organism_name)
-            else:
-                # Default fallback
-                taxon_info = (f"NCBITaxon:{organism}", organism.capitalize())
-        else:
-            # Default for unknown organisms
-            taxon_info = (f"NCBITaxon:{organism}", organism.capitalize())
-        taxon_id, taxon_label = taxon_info
+        # Taxon from the UniProt record's OX line, labelled from NCBITaxon. The
+        # taxon slot is bound to NCBITaxonEnum, so a placeholder is never written.
+        taxon_term = resolve_taxon_term(organism, uniprot_data)
+        taxon_id, taxon_label = taxon_term["id"], taxon_term["label"]
 
         # Create minimal YAML structure if file doesn't exist
         if not yaml_existed:
+            # Given an accession (e.g. an alternative-ORF peptide fetched with
+            # --alias HOST__ACC), record UniProt's gene name, not the accession.
+            gene_symbol = gene_name
+            if gene_name.upper() == str(uniprot_id).upper():
+                gene_symbol = _primary_gene_name(uniprot_data) or gene_name
             yaml_data: Dict[str, Any] = {
                 "id": uniprot_id,
-                "gene_symbol": gene_name,
+                "gene_symbol": gene_symbol,
                 "product_type": "PROTEIN",
                 "status": "INITIALIZED",
                 "taxon": {"id": taxon_id, "label": taxon_label},
-                "description": f"TODO: Add description for {gene_name}",
+                "description": f"TODO: Add description for {gene_symbol}",
             }
 
             # Extract alternative products (isoforms) if present
@@ -515,7 +639,11 @@ def fetch_gene_data(
             supporting_entities_backfilled,
         ) = (
             validator.seed_missing_annotations(
-                yaml_file, goa_file, fetch_titles=fetch_titles
+                yaml_file,
+                goa_file,
+                fetch_titles=fetch_titles,
+                publications_dir=base_path / "publications",
+                reactome_dir=base_path / "reactome",
             )
         )
         result["annotations_added"] = added_count
@@ -532,25 +660,38 @@ def fetch_gene_data(
             yaml_existed,
         )
 
-        # Add alternative_products to existing files if missing
+        # Fill missing products, or narrowly repair legacy truncated VSP lists.
         if yaml_existed:
-            with open(yaml_file, "r") as f:
-                existing_data = yaml.safe_load(f)
+            round_trip = YAML()
+            round_trip.preserve_quotes = True
+            round_trip.width = 1000
+            original_text = yaml_file.read_bytes().decode("utf-8")
+            if "\r\n" in original_text:
+                round_trip.line_break = "\r\n"  # type: ignore[assignment]  # ruamel infers None
+            existing_data = round_trip.load(original_text)
 
-            if existing_data and "alternative_products" not in existing_data:
+            if isinstance(existing_data, dict) and existing_data:
                 alt_products = _extract_alternative_products(uniprot_data, uniprot_id)
-                if alt_products:
+                if "alternative_products" not in existing_data and alt_products:
                     existing_data["alternative_products"] = alt_products
-                    with open(yaml_file, "w") as f:
-                        yaml.dump(
-                            existing_data,
-                            f,
-                            default_flow_style=False,
-                            sort_keys=False,
-                            allow_unicode=True,
-                        )
+                    with open(yaml_file, "w", encoding="utf-8") as f:
+                        round_trip.dump(existing_data, f)
                     print(f"  ✓ Added {len(alt_products)} isoforms to alternative_products")
                     result["alternative_products_added"] = len(alt_products)
+                elif "alternative_products" in existing_data:
+                    products = existing_data["alternative_products"]
+                    old_notes = [
+                        p.get("sequence_note") if isinstance(p, dict) else None
+                        for p in products
+                    ] if isinstance(products, list) else []
+                    repaired = _repair_truncated_product_sequences(products, alt_products)
+                    if repaired:
+                        updated_text = _replace_repaired_sequence_scalars(
+                            original_text, products, old_notes, round_trip
+                        )
+                        yaml_file.write_bytes(updated_text.encode("utf-8"))
+                        print(f"  ✓ Repaired {repaired} truncated isoform sequence notes")
+                    result["alternative_product_sequences_repaired"] = repaired
 
     # Auto-fetch PANTHER family data if found in UniProt data
     panther_family_id = _extract_panther_family_id(uniprot_data)
@@ -705,6 +846,147 @@ def get_organism_name_from_uniprot(uniprot_id: str) -> Optional[str]:
         return data.get("organism", {}).get("scientificName")
     except Exception:
         return None
+
+
+# Model-organism directories and their NCBITaxon terms (labels verbatim from NCBITaxon).
+MODEL_ORGANISM_TAXA: Dict[str, Tuple[str, str]] = {
+    "human": ("NCBITaxon:9606", "Homo sapiens"),
+    "mouse": ("NCBITaxon:10090", "Mus musculus"),
+    "rat": ("NCBITaxon:10116", "Rattus norvegicus"),
+    "yeast": ("NCBITaxon:559292", "Saccharomyces cerevisiae S288C"),
+    "fly": ("NCBITaxon:7227", "Drosophila melanogaster"),
+    "worm": ("NCBITaxon:6239", "Caenorhabditis elegans"),
+    "zebrafish": ("NCBITaxon:7955", "Danio rerio"),
+}
+
+
+# QuickGO's GOA ``TAXON NAME`` column is the UniProt-style organism scientific
+# name (which carries strain qualifiers), NOT the NCBITaxon label -- the two
+# differ for every strain-level taxon (e.g. 559292 is
+# "Saccharomyces cerevisiae (strain ATCC 204508 / S288c)" in QuickGO but
+# "Saccharomyces cerevisiae S288C" in NCBITaxon). These strings are verified
+# against the UniProt taxonomy API (what QuickGO mirrors) and kept here so the
+# common taxa resolve offline and stay byte-faithful to QuickGO. Distinct from
+# MODEL_ORGANISM_TAXA, whose NCBITaxon labels are the right source for the review
+# YAML's ``taxon`` slot but the wrong source for this column.
+_TAXON_ID_TO_UNIPROT_NAME: Dict[str, str] = {
+    "9606": "Homo sapiens",
+    "10090": "Mus musculus",
+    "10116": "Rattus norvegicus",
+    "559292": "Saccharomyces cerevisiae (strain ATCC 204508 / S288c)",
+    "7227": "Drosophila melanogaster",
+    "6239": "Caenorhabditis elegans",
+    "7955": "Danio rerio",
+}
+
+
+# Successful UniProt-taxonomy resolutions, memoized for the process. Only
+# successes are cached: a transient lookup blip must not blank a taxon for the
+# rest of a batch fetch.
+_TAXON_NAME_CACHE: Dict[str, str] = {}
+_TAXON_NAME_WARNED: set[str] = set()
+
+
+def _resolve_taxon_name(taxon_id: str) -> str:
+    """Resolve a numeric NCBI taxon id to QuickGO's ``TAXON NAME`` string.
+
+    Used to backfill the GOA ``TAXON NAME`` column when QuickGO does not supply a
+    ``taxonName`` (its ``includeFields=taxonName`` path returns HTTP 500 while
+    ``goName`` and ``name`` still work). QuickGO's ``taxonName`` is the
+    UniProt-style organism scientific name (carrying strain qualifiers), so this
+    resolves against the UniProt taxonomy API -- what QuickGO mirrors -- rather
+    than the NCBITaxon label, keeping the column byte-faithful for every species.
+    Common taxa resolve offline from a verified table. A lookup failure yields an
+    empty string (warned once, not cached) rather than aborting the whole fetch
+    over one cosmetic label.
+
+    >>> _resolve_taxon_name("9606")
+    'Homo sapiens'
+    >>> _resolve_taxon_name("559292")
+    'Saccharomyces cerevisiae (strain ATCC 204508 / S288c)'
+    >>> _resolve_taxon_name("")
+    ''
+    """
+    taxon_id = (taxon_id or "").strip()
+    if not taxon_id.isdigit():
+        return ""
+    if taxon_id in _TAXON_ID_TO_UNIPROT_NAME:
+        return _TAXON_ID_TO_UNIPROT_NAME[taxon_id]
+    if taxon_id in _TAXON_NAME_CACHE:
+        return _TAXON_NAME_CACHE[taxon_id]
+    try:
+        # UniProt taxonomy API scientificName -- the string QuickGO mirrors.
+        url = "https://rest.uniprot.org/taxonomy/stream"
+        params = {"query": f"id:{taxon_id}", "format": "json", "size": "1"}
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        results = response.json().get("results", [])
+        name = ""
+        if results:
+            record = results[0]
+            # Only trust the name if the record is for the taxon we asked for
+            # (guard against a merged/secondary id resolving to a different taxon).
+            returned_id = str(record.get("taxonId", taxon_id))
+            if returned_id == taxon_id:
+                name = record.get("scientificName") or ""
+        if name:
+            _TAXON_NAME_CACHE[taxon_id] = name  # cache successes only
+            return name
+    except Exception:
+        pass
+    if taxon_id not in _TAXON_NAME_WARNED:
+        _TAXON_NAME_WARNED.add(taxon_id)
+        print(
+            f"Warning: could not resolve a taxon name for NCBITaxon:{taxon_id}; "
+            "leaving its TAXON NAME column empty"
+        )
+    return ""
+
+
+def taxon_curie_from_uniprot_record(uniprot_data: str) -> Optional[str]:
+    r"""Return the NCBITaxon CURIE from a UniProt flat-file ``OX`` line.
+
+    >>> taxon_curie_from_uniprot_record("ID   X\nOX   NCBI_TaxID=3055;\n//")
+    'NCBITaxon:3055'
+    >>> taxon_curie_from_uniprot_record("OX   NCBI_TaxID=882 {ECO:0000313|EMBL:AAS96764.1};")
+    'NCBITaxon:882'
+    >>> taxon_curie_from_uniprot_record("ID   X\n//") is None
+    True
+    """
+    match = re.search(r"^OX   NCBI_TaxID=(\d+)", uniprot_data, re.MULTILINE)
+    return f"NCBITaxon:{match.group(1)}" if match else None
+
+
+def resolve_taxon_term(organism: str, uniprot_data: Optional[str] = None) -> Dict[str, str]:
+    """Return the ``{"id", "label"}`` NCBITaxon term for a new review.
+
+    The id comes from the UniProt record's ``OX`` line when one is given, then
+    from the model-organism table, then from the UniProt organism code. The
+    label is the NCBITaxon label. Raises instead of writing a placeholder.
+
+    >>> resolve_taxon_term("human", "OX   NCBI_TaxID=9606;")
+    {'id': 'NCBITaxon:9606', 'label': 'Homo sapiens'}
+    >>> resolve_taxon_term("yeast")
+    {'id': 'NCBITaxon:559292', 'label': 'Saccharomyces cerevisiae S288C'}
+
+    Raises:
+        ValueError: if no NCBITaxon id can be determined or its label resolved.
+    """
+    from ai_gene_review.taxon import ncbitaxon_label
+
+    known_labels = dict(MODEL_ORGANISM_TAXA.values())
+    curie = taxon_curie_from_uniprot_record(uniprot_data) if uniprot_data else None
+    if curie is None and organism.lower() in MODEL_ORGANISM_TAXA:
+        curie = MODEL_ORGANISM_TAXA[organism.lower()][0]
+    if curie is None and organism.isupper() and len(organism) <= 5:
+        taxon_id = resolve_organism_code_to_taxon(organism)
+        curie = f"NCBITaxon:{taxon_id}" if taxon_id else None
+    if curie is None:
+        raise ValueError(
+            f"Could not determine an NCBITaxon id for organism {organism!r}; "
+            "refusing to write a placeholder taxon"
+        )
+    return {"id": curie, "label": known_labels.get(curie) or ncbitaxon_label(curie)}
 
 
 def resolve_organism_code_to_taxon(organism_code: str) -> Optional[str]:
@@ -979,93 +1261,39 @@ def fetch_uniprot_data(uniprot_id: str) -> str:
     return response.text
 
 
-def fetch_goa_data(uniprot_id: str) -> str:
-    """Fetch Gene Ontology Annotation (GOA) data from QuickGO API.
+GOA_TSV_HEADER = (
+    "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\t"
+    "GO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\t"
+    "TAXON NAME\tASSIGNED BY\tGENE NAME\tDATE"
+)
 
-    Fetches ALL annotations using pagination if necessary. Byte-identical TSV rows
-    are deduplicated after projection, so annotations that differ only in fields the
-    TSV does not represent (such as annotation extensions) collapse to one row.
 
-    Args:
-        uniprot_id: UniProt accession ID
+def _goa_results_to_tsv(results: List[Dict[str, Any]]) -> str:
+    r"""Convert QuickGO annotation-search JSON results to the GOA TSV.
 
-    Returns:
-        GOA data in TSV format
+    Sorts (IBA first, then newest date, then GO id), projects each result to the
+    16 TSV columns, deduplicates byte-identical rows, and backfills the
+    ``TAXON NAME`` column from ``taxonId`` when QuickGO did not supply a
+    ``taxonName`` (QuickGO's ``includeFields=taxonName`` path has returned HTTP
+    500s, read timeouts, and empty result sets while ``goName`` and ``name`` still
+    work). The projection is deterministic given the results; its only external
+    touchpoint is the ``_resolve_taxon_name`` taxonomy lookup, used solely to
+    backfill ``TAXON NAME`` when ``taxonName`` is absent (and offline for the
+    common taxa), so the function is straightforward to test with synthetic
+    results.
 
-    Raises:
-        ValueError: If GOA data cannot be fetched
+    >>> rows = _goa_results_to_tsv([
+    ...     {"geneProductId": "UniProtKB:O43511", "goId": "GO:0005886",
+    ...      "goName": "plasma membrane", "goEvidence": "IDA",
+    ...      "taxonId": 9606, "symbol": "SLC26A4"},
+    ... ]).splitlines()
+    >>> rows[0].split("\t")[12]
+    'TAXON NAME'
+    >>> rows[1].split("\t")[12]
+    'Homo sapiens'
     """
-    # Use QuickGO search endpoint with JSON format
-    url = "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
-
-    all_results = []
-    page = 1
-    limit = 200  # QuickGO's actual max limit per page (not 400!)
-
-    while True:
-        # Build URL with properly formatted parameters
-        # QuickGO expects multiple includeFields parameters, not an array
-        params = [
-            ("geneProductId", uniprot_id),
-            ("includeFields", "goName"),
-            ("includeFields", "taxonName"),
-            ("includeFields", "name"),
-            ("limit", str(limit)),
-        ]
-
-        # Only add page parameter if page > 1 (API doesn't like page=1)
-        if page > 1:
-            params.append(("page", str(page)))
-
-        # Request JSON format
-        headers = {"Accept": "application/json"}
-
-        try:
-            response = requests.get(url, params=params, headers=headers, timeout=30)
-            response.raise_for_status()
-
-            # Parse JSON response
-            data = response.json()
-            results = data.get("results", [])
-
-            if not results:
-                # No more results, stop pagination
-                break
-
-            all_results.extend(results)
-
-            # Check if we've fetched all results
-            # Note: pageInfo.total is unreliable, use numberOfHits instead
-            total_annotations = data.get("numberOfHits", 0)
-
-            # Debug output
-            print(f"  Page {page}: fetched {len(results)} annotations (total so far: {len(all_results)})")
-
-            # Stop if:
-            # 1. We got fewer results than requested (last page)
-            # 2. We have fetched all known annotations
-            if len(results) < limit or len(all_results) >= total_annotations:
-                # We have all results
-                print(f"  Total annotations fetched: {len(all_results)} out of {total_annotations}")
-                break
-
-            page += 1
-
-        except requests.exceptions.RequestException as e:
-            if page == 1:
-                # First page failed, return empty result
-                return "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
-            else:
-                # Subsequent page failed, use what we have
-                print(f"Warning: Pagination stopped at page {page} due to error: {e}")
-                break
-
-    # Process all collected results
-    results = all_results
-
     if not results:
-        # Return header only if no data
-        return "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
+        return GOA_TSV_HEADER + "\n"
 
     # Sort results: IBA first, then by most recent date (descending), then by GO ID
     sorted_results = sorted(
@@ -1073,16 +1301,13 @@ def fetch_goa_data(uniprot_id: str) -> str:
         key=lambda x: (
             0 if x.get("goEvidence", "") == "IBA" else 1,  # IBA annotations first
             -(
-                int(x.get("date", "0")) if x.get("date", "").isdigit() else 0
+                int(x.get("date") or "0") if (x.get("date") or "").isdigit() else 0
             ),  # Negative for descending date
-            x.get("goId", ""),  # Then by GO ID
+            x.get("goId") or "",  # Then by GO ID
         ),
     )
 
-    # Convert JSON to TSV format
-    tsv_lines = [
-        "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE"
-    ]
+    tsv_lines = [GOA_TSV_HEADER]
     # Extensions are not represented in the TSV; collapse rows that become identical
     # after projection while retaining annotations that differ in any exported field.
     seen_tsv_rows: set[str] = set()
@@ -1106,6 +1331,15 @@ def fetch_goa_data(uniprot_id: str) -> str:
                     )
         with_from = "|".join(with_from_list) if with_from_list else ""
 
+        # QuickGO can send an explicit null taxonId (as it does for taxonName/
+        # name/date in the CACAO fixture); keep the column empty rather than the
+        # literal string "None".
+        taxon_id = result.get("taxonId")
+        taxon_id_str = "" if taxon_id is None else str(taxon_id)
+        # QuickGO supplies taxonName via includeFields; backfill from taxonId when
+        # that field is unavailable (its endpoint currently 500s for taxonName).
+        taxon_name = result.get("taxonName") or _resolve_taxon_name(taxon_id_str)
+
         # Build TSV row
         row = [
             db,  # GENE PRODUCT DB
@@ -1119,20 +1353,131 @@ def fetch_goa_data(uniprot_id: str) -> str:
             result.get("goEvidence", ""),  # GO EVIDENCE CODE
             result.get("reference", ""),  # REFERENCE
             with_from,  # WITH/FROM
-            str(result.get("taxonId", "")),  # TAXON ID
-            result.get("taxonName", ""),  # TAXON NAME
+            taxon_id_str,  # TAXON ID
+            taxon_name,  # TAXON NAME
             result.get("assignedBy", ""),  # ASSIGNED BY
             result.get("name", ""),  # GENE NAME
             result.get("date", ""),  # DATE
         ]
 
-        tsv_row = "\t".join(row)
+        # QuickGO can supply an ECO term without a legacy GO evidence code
+        # (for example CACAO's ECO:0007744). Keep that column empty, rather
+        # than inventing a GO code or failing on the JSON null. Other optional
+        # display fields can also be null.
+        tsv_row = "\t".join("" if value is None else str(value) for value in row)
         if tsv_row in seen_tsv_rows:
             continue
         seen_tsv_rows.add(tsv_row)
         tsv_lines.append(tsv_row)
 
     return "\n".join(tsv_lines) + "\n"
+
+
+def fetch_goa_data(uniprot_id: str) -> str:
+    """Fetch Gene Ontology Annotation (GOA) data from QuickGO API.
+
+    Fetches ALL annotations using pagination if necessary. Byte-identical TSV rows
+    are deduplicated after projection, so annotations that differ only in fields the
+    TSV does not represent (such as annotation extensions) collapse to one row.
+
+    QuickGO's ``includeFields=taxonName`` path has returned HTTP 500s, read
+    timeouts, and empty result sets while ``goName`` and ``name`` still work, so
+    only the stable display fields are requested and ``TAXON NAME`` is backfilled
+    from ``taxonId``.
+
+    Args:
+        uniprot_id: UniProt accession ID
+
+    Returns:
+        GOA data in TSV format
+
+    Raises:
+        ValueError: If GOA data cannot be fetched, or if pagination fails partway
+            (an incomplete fetch is raised rather than written as a truncated
+            GOA file).
+    """
+    # Use QuickGO search endpoint with JSON format
+    url = "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
+
+    all_results: List[Dict[str, Any]] = []
+    page = 1
+    limit = 200  # QuickGO's actual max limit per page (not 400!)
+    expected_total = 0
+    max_transient_retries = 3  # per page, for errors unrelated to taxonName
+    transient_retries = 0
+
+    while True:
+        # Build URL with properly formatted parameters
+        # QuickGO expects multiple includeFields parameters, not an array
+        params = [("geneProductId", uniprot_id), ("includeFields", "goName")]
+        params.append(("includeFields", "name"))
+        params.append(("limit", str(limit)))
+
+        # Only add page parameter if page > 1 (API doesn't like page=1)
+        if page > 1:
+            params.append(("page", str(page)))
+
+        # Request JSON format
+        headers = {"Accept": "application/json"}
+
+        try:
+            response = requests.get(url, params=params, headers=headers, timeout=30)
+            response.raise_for_status()
+            transient_retries = 0  # this page fetched OK; reset the per-page budget
+
+            # Parse JSON response
+            data = response.json()
+            results = data.get("results", [])
+            # Note: pageInfo.total is unreliable, use numberOfHits instead. Take
+            # the max across pages so a trailing out-of-range page reporting 0
+            # cannot disarm the shortfall guard below.
+            expected_total = max(expected_total, data.get("numberOfHits", 0) or 0)
+
+            if not results:
+                # No more results, stop pagination
+                break
+
+            all_results.extend(results)
+
+            # Debug output
+            print(f"  Page {page}: fetched {len(results)} annotations (total so far: {len(all_results)})")
+
+            # Stop if:
+            # 1. We got fewer results than requested (last page)
+            # 2. We have fetched all known annotations
+            if len(results) < limit or len(all_results) >= expected_total:
+                # We have all results
+                print(f"  Total annotations fetched: {len(all_results)} out of {expected_total}")
+                break
+
+            page += 1
+
+        except requests.exceptions.RequestException as e:
+            if transient_retries < max_transient_retries:
+                # A genuine transient error (timeout, 5xx, connection reset):
+                # back off and retry the same page rather than aborting a
+                # multi-page fetch on one blip.
+                transient_retries += 1
+                time.sleep(min(2**transient_retries, 8))
+                continue
+            # Out of retries: fail loudly rather than silently writing a header-only
+            # (page 1) or truncated (page >= 2) GOA file, which would corrupt the
+            # review input.
+            raise ValueError(
+                f"Could not fetch GOA data for {uniprot_id} from QuickGO "
+                f"(page {page}): {e}"
+            ) from e
+
+    # A short read with no error is also a corrupt fetch; refuse to write it.
+    if expected_total and len(all_results) < expected_total:
+        raise ValueError(
+            f"Incomplete GOA fetch for {uniprot_id}: got {len(all_results)} of "
+            f"{expected_total} annotations; refusing to write a truncated file"
+        )
+
+    # Convert all collected results to TSV (empty results -> header only, which is
+    # the correct output for an accession QuickGO knows but has no annotations for).
+    return _goa_results_to_tsv(all_results)
 
 
 def fetch_rnacentral_data_by_id(rnacentral_id: str) -> str:
@@ -1589,29 +1934,8 @@ def fetch_gene_data_ncRNA(
         yaml_existed = yaml_file.exists()
         result["yaml_existed"] = yaml_existed
 
-        # Get taxon information
-        organism_to_taxon = {
-            "human": ("NCBITaxon:9606", "Homo sapiens"),
-            "mouse": ("NCBITaxon:10090", "Mus musculus"),
-            "rat": ("NCBITaxon:10116", "Rattus norvegicus"),
-            "yeast": ("NCBITaxon:559292", "Saccharomyces cerevisiae"),
-            "fly": ("NCBITaxon:7227", "Drosophila melanogaster"),
-            "worm": ("NCBITaxon:6239", "Caenorhabditis elegans"),
-            "zebrafish": ("NCBITaxon:7955", "Danio rerio"),
-        }
-
-        if organism.lower() in organism_to_taxon:
-            taxon_info = organism_to_taxon[organism.lower()]
-        else:
-            # Try to resolve organism code to taxon
-            taxon_id = resolve_organism_code_to_taxon(organism)
-            if taxon_id:
-                organism_name = organism  # Use organism code as name for now
-                taxon_info = (f"NCBITaxon:{taxon_id}", organism_name)
-            else:
-                taxon_info = (f"NCBITaxon:{organism}", organism.capitalize())
-
-        taxon_id, taxon_label = taxon_info
+        taxon_term = resolve_taxon_term(organism)
+        taxon_id, taxon_label = taxon_term["id"], taxon_term["label"]
 
         # Create minimal YAML structure for ncRNA if file doesn't exist
         if not yaml_existed:
@@ -1649,7 +1973,11 @@ def fetch_gene_data_ncRNA(
             supporting_entities_backfilled,
         ) = (
             validator.seed_missing_annotations(
-                yaml_file, goa_file, fetch_titles=True
+                yaml_file,
+                goa_file,
+                fetch_titles=True,
+                publications_dir=base_path / "publications",
+                reactome_dir=base_path / "reactome",
             )
         )
         result["annotations_added"] = added_count

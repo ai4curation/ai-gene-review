@@ -485,3 +485,13 @@ This SNARE regulatory function, not vesicle tethering, is the essential cellular
 - Cancer cell line dependency on USO1
 - Knockout/knockdown in organoid models
 - Patient-derived mutations functional analysis
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+- Row: GO:0005783 endoplasmic reticulum, IBA (GO_REF:0000033), `is_active_in`. Kept KEEP_AS_NON_CORE; summary rewritten, reason and quotes added.
+- PAINT check: `interpro/panther/PTHR10013/PTHR10013-paint.tsv` has the ER IBD at PTN000000707 with one seed, FB:FBgn0040087 (fly p115, UniProt Q9W3N6). QuickGO shows that gene's ER rows are IDA/EXP from PMID:11514618, PMID:12876273 and PMID:37683644.
+- Fly source read in full (PMC): [PMID:12876273 "dp115 was localized on dSec23p-positive pleiomorphic membrane structures representing tERs, on the Golgi area, and on the ER cisternae."]; depletion disorganised tER sites [PMID:12876273 "depletion of dp115 leads to a concomitant loss of Golgi stacks and tER organization"].
+- Human USO1 has no TM segment or signal peptide; UniProt: "Golgi apparatus membrane ... Peripheral membrane protein" (ECO:0000269, PMID:19454686, PMID:9478999). It is a recruited peripheral pool, so it stays at the root, with no ER membrane or lumen row.
+- GO:0070971 ER exit site considered and not added: the evidence is from the fly ortholog, plus a human Sec16A-binding preprint known only from the falcon deep-research file.
+- is_active_in is soft: human tethering/SNARE-assembly activity is shown at the ERGIC/cis-Golgi.
+- Dropped the old claim "not to bulk ER" (the fly immuno-EM labels ER cisternae).

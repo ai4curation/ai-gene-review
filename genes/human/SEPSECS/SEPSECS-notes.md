@@ -56,3 +56,7 @@
 Core molecular function = **GO:0098621** O-phosphoseryl-tRNA(Sec) selenium transferase activity (IDA, PMID:17142313) + **GO:0030170** pyridoxal phosphate binding (cofactor). Core BP = **GO:0001717** conversion of seryl-tRNAsec to selenocys-tRNAsec (IDA) and the broader **GO:0016260** L-selenocysteine biosynthetic process. tRNA binding (GO:0000049) is a genuine, well-supported MF (structural + TAS). Cytoplasm/cytosol (GO:0005737/GO:0005829) accepted. Nucleus (GO:0005634, ISS/IEA from mouse) = over-annotation. Generic GO:0016740 transferase activity (IEA) is a redundant parent of GO:0098621. GO:0005515 protein binding (IPI, HIV gag) kept as non-core (uninformative; not a native functional partner). GO:1990234 transferase complex (part_of, ComplexPortal) accepted as non-core CC (the SepSecS tetramer / Sec machinery complex).
 
 Note: GO:0097056 "selenocysteinyl-tRNA(Sec) biosynthetic process" is now **obsolete**, replaced by GO:0001717 — do not introduce it.
+
+## 2026-10-09 review completion (claude-code)
+
+Re-reviewed the INITIALIZED review against the disease literature (see history/genes/human/SEPSECS/). Status set COMPLETE; changes are summarized in the history record.

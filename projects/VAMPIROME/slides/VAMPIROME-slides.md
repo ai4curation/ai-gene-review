@@ -20,14 +20,14 @@ style: |
 
 Chris Mungall | AI-Assisted Gene Review
 
-2026-06-22
+2026-10-04
 
 ---
 
 ## Why this is interesting
 
 - *Desmodus rotundus* (vampire bat; UniProt code **DESRO**) feeds exclusively on blood.
-- To keep host blood flowing, its salivary glands secrete a cocktail of proteins that **block coagulation, dissolve clots, dilate vessels, and dampen innate immunity**.
+- Its salivary glands express proteins that can **block coagulation, dissolve clots, dilate vessels, or dampen innate immunity**.
 - These host-manipulating proteins are a rich source of **anticoagulant and antithrombotic drug leads** (e.g. the bat-derived plasminogen activator concept).
 - Yet most of the underlying gene products are **poorly annotated** in public databases.
 
@@ -76,7 +76,7 @@ Focused on hemostasis and immune modulation:
 - **Hemostasis:** t-plasminogen activator (K9IJK6), Kunitz-type protease inhibitor 2 (K9IZA2), plasma protease C1 inhibitor (K9IYM3), ADAMTS-1 (K9IUF6)
 - **Innate immune / neutrophil:** Deoxyribonuclease-1-like 1 (K9J287), C-C motif chemokine (K9IFY6), Lymphotoxin-alpha (K9IWR0), TNF-inducible gene 6 / TSG-6 (K9IIP0)
 - **Antimicrobial:** Beta-defensin 1 (K9IFT7), lysozyme / LYZ (K9IWH5)
-- **Vascular / other:** Natriuretic peptides B (K9IWC0), SCP/CRISP (K9IWX5), Dipeptidyl peptidase 4 (K9J2R0)
+- **Vascular / other:** C-type natriuretic peptide / NPPC (K9IWC0), SCP/CRISP (K9IWX5), Dipeptidyl peptidase 4 (K9J2R0)
 
 ---
 
@@ -104,14 +104,14 @@ A small number of families, repeatedly expanded, do the host-manipulation work.
 ## Highlight: fibrinolytics & vasodilators
 
 - **t-plasminogen activator (K9IJK6)** — fibrinolytic; the family behind bat-derived plasminogen-activator therapeutics; keeps the wound site clot-free.
-- **Natriuretic peptides B / CNP (K9IWC0)** and **PACAP (K9IGD6)** — vasodilatory peptides that promote local blood flow.
+- **C-type natriuretic peptide / NPPC (K9IWC0)** and **PACAP (K9IGD6)** — candidate vasodilatory peptides that may promote local blood flow.
 - **vCGRP** — a calcitonin gene-related peptide-like vasodilatory peptide reported in the literature (Toxins 2019, Kakumanu et al.); DESRO transcript/UniProt mapping still **pending**.
 
 ---
 
 ## Challenges of curating these proteins
 
-- **No Swiss-Prot entries** for DESRO in this candidate set — every mapped entry is **UniProtKB unreviewed (TrEMBL)**.
+- **No Swiss-Prot entries** in the mapped Table 4 candidate set — every mapped entry is **UniProtKB unreviewed (TrEMBL)**.
 - Names are frequently **"Putative ..."** and based on homology, not direct functional evidence.
 - Some Vampirome transcripts have **no TSA/UniProt hit yet** (e.g. several BatTrinityAbyss-* and DrSigp-SigP-* IDs; vCGRP unmapped).
 - Original condensed Table 4 / supplemental spreadsheets are on a **moved NIAID portal** and not yet re-accessible.
@@ -124,12 +124,12 @@ A small number of families, repeatedly expanded, do the host-manipulation work.
 **Done:**
 - Project structure, Table 4 extract, UniProt mapping, candidate list (Swiss-Prot prioritized — none found).
 - 13-candidate priority shortlist; UniProt/GOA fetched; falcon deep-research for all 13.
-- Annotation reviews + notes for Draculin and the full shortlist; core_functions for Draculin, K9IZA2, K9IYM3, K9J287.
+- Annotation reviews + notes for Draculin and the full shortlist; descriptions and core_functions for 12/14 reviews.
 
 **Next:**
-- Synthesize core functions across remaining candidates.
+- Synthesize K9IUF6 and K9J2R0 descriptions/core functions.
 - Map unmapped transcripts (incl. vCGRP/CALCA) and recover full supplemental tables.
-- Expand cross-links with PARASITE_IMMUNE_MODULATORS.
+- Review the remaining mapped lipocalin, serpin, cystatin, TIMP and salivary candidates.
 
 ---
 

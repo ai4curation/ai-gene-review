@@ -34,6 +34,7 @@ from scripts.hf_to_sft_predictions import (
     ontology_label_note,
 )
 from scripts.gogpt_predict import deterministic_assessment, load_review_decisions
+from ai_gene_review.source_tree import review_snapshot_tree
 from ai_gene_review.sft_prediction_evidence import (
     NEGATED_ACTION_PREFIX,
     PROVENANCE_LIMITED_NEGATIVE,
@@ -520,8 +521,16 @@ def test_committed_argo95_has_no_deterministic_category_conflicts():
     assert conflicts == []
 
 
-def test_ontology_pair_adjudications_are_applied_to_committed_reviews():
+def test_ontology_pair_adjudications_are_applied_at_review_snapshot(
+    forbid_working_tree_genes,
+):
+    """The 65 adjudications behind the published ontology-pair counts, at the snapshot.
+
+    Frozen: recoding one of these predictions in the working tree is a curation
+    edit that reaches the benchmark only via ``just refresh-benchmark-snapshot``.
+    """
     root = Path(__file__).resolve().parents[1]
+    tree = review_snapshot_tree(root)
     audit_path = (
         root
         / "projects"
@@ -532,8 +541,8 @@ def test_ontology_pair_adjudications_are_applied_to_committed_reviews():
     assert len(decisions) == 65
 
     for (species, gene, go_id, raw_label), decision in decisions.items():
-        path = root / "genes" / species / gene / f"{gene}-sft-predictions.yaml"
-        document = yaml.safe_load(path.read_text())
+        path = f"genes/{species}/{gene}/{gene}-sft-predictions.yaml"
+        document = yaml.safe_load(tree.read_text(path))
         matches = [
             prediction["review"]
             for prediction in document["predictions"]
@@ -547,8 +556,16 @@ def test_ontology_pair_adjudications_are_applied_to_committed_reviews():
         assert f"classified {decision.assessment}" in matches[0]["summary"]
 
 
-def test_ontology_pair_audit_covers_every_current_nonnegative_mismatch():
+def test_ontology_pair_audit_covers_every_snapshot_nonnegative_mismatch(
+    forbid_working_tree_genes,
+):
+    """Every nonnegative label-audited ARGO95 pair at the review snapshot is adjudicated.
+
+    Frozen with the benchmark: a live recode to a nonnegative category joins the
+    audit when the snapshot is refreshed, and this test then demands the row.
+    """
     root = Path(__file__).resolve().parents[1]
+    tree = review_snapshot_tree(root)
     audit_path = (
         root
         / "projects"
@@ -564,10 +581,10 @@ def test_ontology_pair_audit_covers_every_current_nonnegative_mismatch():
     cohort = load_cohort(root / "projects/BIOREASON_COMPARISON/genes.csv")
     uncovered = []
     for species, gene in sorted(cohort):
-        path = root / "genes" / species / gene / f"{gene}-sft-predictions.yaml"
-        if not path.exists():
+        path = f"genes/{species}/{gene}/{gene}-sft-predictions.yaml"
+        if not tree.is_file(path):
             continue
-        document = yaml.safe_load(path.read_text())
+        document = yaml.safe_load(tree.read_text(path))
         for prediction in document.get("predictions", []):
             if prediction.get("source_version") != "wanglab/protein_catalogue":
                 continue
@@ -694,3 +711,39 @@ def test_repair_does_not_write_an_out_of_scope_manual_override(actions):
 def test_scoped_registry_entries_require_category_and_rationale(fields):
     with pytest.raises(ValueError, match='assessment and rationale'):
         ManualOverride(annotation_action_exceptions=frozenset({'MARK_AS_OVER_ANNOTATED'}), **fields)
+
+
+@pytest.mark.parametrize('actions,species,gene,term,expected', [
+    ({'MARK_AS_OVER_ANNOTATED'}, 'human', 'FXN', 'GO:0004322', None),
+    ({'REMOVE'}, 'human', 'FXN', 'GO:0004322', 'nonnegative_assessment_vs_negative_AIGR'),
+    ({'MARK_AS_OVER_ANNOTATED', 'REMOVE'}, 'human', 'FXN', 'GO:0004322', 'nonnegative_assessment_vs_negative_AIGR'),
+    ({f'{NEGATED_ACTION_PREFIX}ACCEPT'}, 'human', 'FXN', 'GO:0004322', 'nonnegative_assessment_vs_negated_AIGR'),
+    ({'MARK_AS_OVER_ANNOTATED', f'{NEGATED_ACTION_PREFIX}ACCEPT'}, 'human', 'FXN', 'GO:0004322', 'nonnegative_assessment_vs_negative_AIGR'),
+    ({'MARK_AS_OVER_ANNOTATED'}, 'mouse', 'FXN', 'GO:0004322', 'nonnegative_assessment_vs_negative_AIGR'),
+    ({'MARK_AS_OVER_ANNOTATED'}, 'human', 'OTHER', 'GO:0004322', 'nonnegative_assessment_vs_negative_AIGR'),
+    ({'MARK_AS_OVER_ANNOTATED'}, 'human', 'FXN', 'GO:0008198', 'nonnegative_assessment_vs_negative_AIGR'),
+])
+def test_fxn_measured_activity_adjudication_has_exact_scope(actions, species, gene, term, expected):
+    """Measured activity does not bypass contrary evidence or another identity."""
+    override = MANUAL_OVERRIDES[('human', 'FXN', 'GO:0004322')]
+    review = {'assessment': 'CNN', 'confidence_score': 2, 'summary': override.summary}
+    conflicts = set(remaining_conflicts(term, review, {term}, actions, species=species, gene=gene))
+    if expected is None:
+        assert conflicts == set()
+    else:
+        assert expected in conflicts
+
+
+@pytest.mark.parametrize('change,expected', [
+    ({'assessment': 'NPI'}, 'manual_adjudication_category'),
+    ({'summary': 'Unreviewed physiological claim'}, 'manual_adjudication_rationale'),
+    ({'confidence_score': 1}, 'assessment_confidence'),
+])
+def test_fxn_measured_activity_adjudication_requires_reviewed_rationale(change, expected):
+    override = MANUAL_OVERRIDES[('human', 'FXN', 'GO:0004322')]
+    review = {'assessment': 'CNN', 'confidence_score': 2, 'summary': override.summary}
+    review.update(change)
+    assert expected in set(remaining_conflicts(
+        'GO:0004322', review, {'GO:0004322'}, {'MARK_AS_OVER_ANNOTATED'},
+        species='human', gene='FXN',
+    ))

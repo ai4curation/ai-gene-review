@@ -4,6 +4,8 @@ species: [HORSE, human]
 
 # Paired reviews 01–10
 
+> **Working notes from the initial pass.** ProtNLM2 verdicts here predate the 2026-10-23 gene re-review and the 2026-10-24 rescoring; the current calls are in each gene's `*-protnlm-predictions-review.yaml` and are summarised in [horse40-review-findings.md](../horse40-review-findings.md).
+
 The initial pass assesses all 688 existing GOA rows across these ten human–horse pairs, with no PENDING actions. All ten human genes have completed Falcon research reports; GHSR also has a horse-specific report because direct horse literature warranted it. Primary sources are cached separately, and each horse target has a reproducible alignment with mapped human sequence features. Gene reviews remain IN_PROGRESS where assay, phylogenetic or protein-model questions are unresolved.
 
 | Gene | Human / horse GOA rows | External prediction assessment | Main finding |

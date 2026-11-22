@@ -38,8 +38,12 @@ is additionally `SOURCE_STALE_OR_MISSING`. PTN labels are kept as bare
 The current node also has positive IBD assertions for GO:0000978
 `RNA polymerase II cis-regulatory region sequence-specific DNA binding` and
 GO:0000082 `G1/S transition of mitotic cell cycle`, both dated 2026-02-24. These
-are absent from the pinned YAR1 GOA snapshot but can propagate on refresh, so the
-review raises the broad node placement itself for PAINT-curator reconsideration.
+are absent from the pinned YAR1 GOA snapshot but can propagate on refresh. The
+DNA-binding assertion would fail for the same APSES-domain reason as GO:0001228;
+the G1/S assertion would be inherited from Swi4/Mbp1/Swi6-like cell-cycle
+regulators, while the slow-growth phenotype of `yar1Δ` was later placed in the
+Rps3/40S-biogenesis pathway. The review therefore raises the broad node
+placement itself for PAINT-curator reconsideration.
 
 ## Experimental biology
 
@@ -106,3 +110,70 @@ biogenesis.
 The 19 physical rows have 9 ACCEPT, 4 REMOVE, 2 MODIFY, 2
 MARK_AS_OVER_ANNOTATED, and 2 KEEP_AS_NON_CORE decisions. There are no PENDING,
 UNDECIDED, or NEW rows, and COMPLETE status remains justified.
+
+## Full-gene specificity re-review, 2026-09-20
+
+All 19 source rows were re-reviewed with the existing focused report, primary Rps3-chaperone evidence (PMID:22570489) and stress/ribosome-biogenesis evidence (PMID:15611164). The specific DNA-binding activator MF remains REMOVE because the small ankyrin-repeat target lacks the APSES DNA-binding architecture of the DNA-binding source activators. This does not establish loss of all transcription regulation or complex membership: Swi6/Cdc10-like regulatory subunits need not carry the DNA-binding domain. The report explicitly leaves open "Whether YAR1 interacts with SWI4/SWI6/MBP1" and did not reconstruct actual PAINT topology. Regulation, MBF and SBF are therefore separately UNDECIDED. PTN000917496 is recovered in current PTHR24198 for the transcription/MBF assertions; older SBF and the provider's family-version differences are recorded without inferring false biology. General acidity is not a universal DNA-binding exclusion test. Dedicated Rps3 carrier activity, ribosome biogenesis and associated stress/export contexts remain supported. Generic protein binding was removed as uninformative without denying the observed interactions.
+
+
+## Recovery PR follow-up (2026-09-22)
+
+Restored readable GO/PMID/PTN identifiers in curation prose. For DCV1, core
+localization cites the recorded UniProt topology and SGD-attributed observation;
+the unrelated Rim101 report sentence no longer supports plasma-membrane location.
+For YAR1, unanswered report questions are not positive evidence. For SSQ1, the
+located Nop1 association remains recorded while its generic binding label is removed.
+The annotation changes apply only to the relevant gene; no inherited location is
+rejected solely from its best-characterized compartment.
+
+## Focused transcription/MBF/SBF IBA follow-up, 2026-09-29
+
+Re-reviewed the three transcription-related IBA rows that were left
+UNDECIDED on 2026-09-20 against a newer focused local report,
+`YAR1-hypotheses/transcriptional-regulation-and-mbf-sbf-membership/openscientist.md`,
+the current cached PTHR24198 PAINT table, Complex Portal CPX-946/CPX-950, the
+IntAct P46683 interactome, and a fresh PubMed/web search for newer YAR1 primary
+literature. No newer YAR1 molecular-function paper displaced the established
+Rps3-chaperone model.
+
+The MBF/SBF uncertainty is now resolved against YAR1. Complex Portal still
+defines SBF as Swi4-Swi6 and MBF as Mbp1-Swi6, with no Yar1 subunit. IntAct
+currently lists 15 Yar1/P46683 rows involving Rps3, Ltv1, Sfm1, Ess1, and
+Hsp70/Hsp40 chaperone-network proteins, but no Swi4, Swi6, or Mbp1. The
+structural paper PMID:24021814 and the direct Rps3 chaperone paper
+PMID:22570489 place Yar1's ankyrin repeats on Rps3 binding and solubility, not
+on Pol II promoter regulation. GO:0045944 and GO:0030907 remain present on
+PTN000917496 in the cached PAINT table but are bad transfers to YAR1; the older
+GO:0033309 SBF row is also stale because that term is now absent from
+PTHR24198. The review therefore resolves the GO:0045944 and GO:0030907 rows to
+REMOVE with `PROPAGATION_BAD`, and the stale GO:0033309 row to REMOVE with
+`SOURCE_STALE_OR_MISSING`, all anchored on `PANTHER:PTN000917496`.
+
+## Current GOA refresh and 2026 PAINT additions (2026-10-01)
+
+Re-fetched YAR1 with `--force` to update the local GOA from the older 19-row
+snapshot to the current 22-row QuickGO snapshot. The review now carries those
+22 current GOA assertions; the obsolete/stale rows that were explicitly reviewed
+earlier (`GO:0033309` SBF and the two pre-obsoletion `GO:0051082` rows) are
+absent from the live GOA and were dropped from `existing_annotations` after the
+current refresh.
+
+The three newly visible IBA rows are all from `PANTHER:PTN000917496`, matching
+the 2026 additions already seen in the cached PTHR24198 PAINT table. The
+sequence-specific Pol II cis-regulatory DNA-binding row (`GO:0000978`) and the
+G1/S transition row (`GO:0000082`) are removed for the same
+`PROPAGATION_BAD` reason as the older transcription/MBF rows: the assertions
+fit Swi4/Mbp1/Swi6-like cell-cycle transcription regulators, not the small
+Yar1/Rps3 holdase branch. The new cytoplasm IBA is accepted because the
+compartment itself is inherited plausibly and agrees with direct cytoplasmic
+Yar1 evidence.
+
+The forced refresh also added SGD's replacements for obsolete unfolded-protein
+binding: `GO:0044183` from PMID:22570489 and `GO:0140309` from PMID:26112308.
+The live `GO:0140309` definition now exactly captures Yar1's activity as an
+unfolded Rps3 carrier that prevents aggregation during delivery. The core
+function was tightened from the broader GO:0140597 parent to `GO:0140309`.
+The broad `GO:0044183` direct row is
+modified to `GO:0140309`, and the dependent GO_REF:0000108 `GO:0006457`
+logical inference is removed because Yar1's process context is Rps3 delivery
+for 40S biogenesis rather than generic client folding.

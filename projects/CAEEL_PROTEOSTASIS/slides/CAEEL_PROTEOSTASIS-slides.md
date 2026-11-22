@@ -1,0 +1,91 @@
+---
+title: "C. elegans proteostasis: reviewing 17 network genes"
+marp: true
+theme: default
+paginate: true
+size: 16:9
+style: |
+  section { font-family: "Source Sans 3", "Helvetica Neue", Arial, sans-serif; font-size: 26px; color: #15201e; background: #f4f7f6; padding: 56px 64px; }
+  h1, h2 { font-family: "Literata", Georgia, serif; color: #0e6b66; font-weight: 600; }
+  h1 { font-size: 46px; } h2 { font-size: 34px; margin-bottom: 18px; }
+  strong { color: #0e6b66; }
+  code { font-family: "IBM Plex Mono", Menlo, monospace; font-size: .85em; background: #e3ece9; padding: 0 .25em; border-radius: 3px; }
+  table { font-size: 19px; border-collapse: collapse; } th { background: #dcefec; } td, th { padding: 4px 10px; }
+  img { border-radius: 4px; }
+  section.lead { justify-content: center; }
+  section.lead h1 { font-size: 54px; }
+  section.bluf { background: #0e6b66; color: #f4f7f6; }
+  section.bluf h2, section.bluf strong { color: #ffffff; }
+  section.bluf code { background: rgba(255,255,255,.18); color: #ffffff; }
+  footer, header { color: #56655f; font-size: 14px; }
+  .small { font-size: 18px; color: #56655f; }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: start; }
+---
+
+<!-- _class: lead -->
+
+# The *C. elegans* proteostasis network
+
+Reviewing GO annotations for chaperones, degradation machinery and longevity regulators
+
+<span class="small">AI Gene Review · projects/CAEEL_PROTEOSTASIS · 2026</span>
+
+---
+
+<!-- _class: bluf -->
+
+## Bottom line
+
+- The network **folds, holds and clears** proteins; in worms its capacity declines with age under insulin/FOXO control.
+- We reviewed **every GO annotation on 17 genes**: **773 rows**, 597 ACCEPT, 56 MODIFY, 4 REMOVE, 10 NEW.
+- Most changes replace `protein binding` with more specific terms. The worm has **one HSP90, HSP-90** (Q18688); daf-21 is its old mutant name, and PR #3225 retires the duplicate review under that name.
+
+---
+
+## Why proteostasis in the worm
+
+- Short lifespan and a transparent body: aggregation can be watched in live animals.
+- Worm models of polyQ, amyloid-beta, alpha-synuclein and SOD1 aggregation.
+- HSF-1 activity drops at reproductive maturity; DAF-16 (FOXO) extends capacity.
+- Test: do chaperone annotations keep **mechanism** (foldase vs holdase) and not just "binds unfolded protein"?
+
+---
+
+## The network and the 17 genes
+
+![h:500](proteostasis-network.svg)
+
+---
+
+## Actions per gene
+
+![h:500](proteostasis-actions.svg)
+
+---
+
+## Holdase is not foldase
+
+![h:420](hsp-16.2-review-table.jpg)
+
+<span class="small">hsp-16.2 review page. The small HSP holds substrates without ATP, so <em>protein refolding</em> (IBA) is removed. The obsolete <em>unfolded protein binding</em> is kept until GO has a holdase term.</span>
+
+---
+
+## Findings
+
+1. **`protein binding` → specific binding terms**: HSP-1 partners → protein-folding chaperone binding. ⚠️ The 9 hsp-90 IPI rows propose *Hsp90 protein binding* (GO:0051879), which means binding *to* Hsp90 and belongs on partners (STI-1, UNC-45); to be corrected.
+2. **Holdase vs foldase**: HSP-16.2 *protein refolding* removed.
+3. **Artefacts removed**: LGG-1 *GABA receptor binding* (IBA), AAK-2 *positive regulation of protein secretion*, SKN-1 *regulation of translation*.
+4. **One HSP90, not two**: daf-21 is a synonym of hsp-90 (Q18688), not a paralog; the accession P41887 once given for it is fission-yeast Swo1.
+
+---
+
+## Status and next steps
+
+- ✅ 17 gene reviews and the pathway summary complete.
+- ⬜ Duplicate daf-21 review retired in PR #3225 (approved, pending merge); hsp-90 is the single HSP90 review.
+- ⬜ Re-target the 9 hsp-90 GO:0051879 MODIFY rows (GO:0051087 for co-chaperones; chaperone activity for clients).
+- ⬜ The status section on the project page (868 rows, 626 ACCEPT) predates later edits.
+- ⬜ Only cct-1, cct-8 and rpn-10 of the chaperonin and proteasome subunits on the page have reviews; the rest are not yet reviewed.
+
+**Read more:** `projects/CAEEL_PROTEOSTASIS.md` · `projects/CAEEL_PROTEOSTASIS/` · `genes/worm/<gene>/`

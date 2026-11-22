@@ -1,7 +1,8 @@
 # AGFG2 (O95081) — computed analyses supporting the GO annotation review
 
-All numbers below are produced by the scripts in this directory and written to the
-adjacent JSON files. Nothing is hand-entered. Re-run with the repo virtualenv:
+Numeric tables below are historical outputs of the adjacent scripts/JSON snapshots.
+Interpretation was revised on 2026-09-20 after reading the actual PAINT tree and the
+GIT biochemical counterexample. Re-run the measurements with the repo virtualenv:
 
 ```
 python resolve_withfrom.py     # withfrom.json      — WITH/FROM provenance + donor evidence
@@ -12,7 +13,7 @@ python term_checks.py          # term_checks.json   — every term-level fact th
 python distribution.py         # distribution.json  — clade distribution + node taxon breadth
 python litsearch.py            # litsearch.json     — recorded PubMed queries + retraction checks
 python intact.py               # intact.json        — interaction records, partners, methods
-python audit_claims.py         # gates every claim in this file against the review YAML
+python audit_claims.py         # legacy narrative guard; H requires counts removed from the revised YAML
 ```
 
 `mafft` (v7, `--localpair --maxiterate 1000`) is the only external binary.
@@ -26,11 +27,10 @@ The `fetch-gene` stub seeded **7** `existing_annotations` entries. The counts
 reconcile exactly; no `GO:0005515` or same-term/different-assigner collapse occurred
 on this gene, so no rows had to be restored.
 
-## 2. The catalytic question: two residues, opposite answers
+## 2. The catalytic question: two residue observations, unresolved activity
 
-The gene name asserts an "Arf-GAP domain". Testing only the catalytic arginine gives
-the opposite conclusion from testing both residues that the field identifies as
-required, so both are measured.
+Both the catalytic-arginine position and the ASAP3 Arf-contacting Asp position are
+mapped. Neither residue observation alone resolves the activity of AGFG2.
 
 **The two positions are located by two different methods, and only one is a
 derivation.** Both are gated by a literature anchor, but the gates are not equivalent
@@ -63,9 +63,10 @@ Result over the annotated Arf-GAP domains (all Swiss-Prot except drongo):
 Every derived arginine falls in the same alignment column, so the comparison is
 reciprocally anchored rather than resting on residue identity alone.
 
-**The panel discriminates perfectly on the aspartate: 5/5 AGFG proteins lack it, 4/4
-non-AGFG ArfGAPs have it.** SMAP1 is the strongest internal control — it is the *other*
-hit from the same siRNA screen in PMID:34369554, and it keeps the aspartate.
+The selected panel has 5/5 AGFG proteins lacking Asp and 4/4 non-AGFG ArfGAPs retaining
+it. This is a panel result, not a universal biochemical diagnostic. GIT proteins are
+not included in the panel: PMID:23433073 reports that all 18 GIT sequences also lack
+the homologous Asp, while PMID:10788515 directly measures GIT1/GIT2 ARF GAP activity.
 
 This reproduces, by an independent method and for human AGFG2 specifically, what
 PMID:23433073 reports for the subfamily: only two of forty AGFG sequences retain that
@@ -80,9 +81,11 @@ cysteine and the arginine). Its own control refused that: ASAP3 gave position 46
 it between subfamilies, so alignment transfer is the only sound method. `probe_asap3.py`
 records the measurement that settled it.
 
-**What is NOT shown here.** No GAP activity measurement exists for any AGFG protein
-(section 6). An intact arginine licenses "untested", not "active"; a missing aspartate
-licenses "predicted to have lost", not "measured inactive".
+**What is not shown here.** No direct AGFG GAP assay was recovered by the recorded
+searches; that is a search/access boundary. Arg75 retention and Thr89 substitution
+are verified coordinates, but ASAP3 mutational requirements need not generalize to
+every ArfGAP mechanism. The R75Q secretion phenotype is not a GAP assay. The
+GO:0005096 inference remains UNDECIDED pending focused biochemical adjudication.
 
 ## 3. Paralogy, orthology, and which one PAINT used
 
@@ -101,11 +104,10 @@ is the claim their shared name only implies. PMID:23433073 reaches the same conc
 phylogenetically: AGFG is one of four subfamilies that "*have each undergone a single
 duplication resulting in two paralogs*".
 
-**The negative control is the finding.** Mouse *Agfg2* exists, is Swiss-Prot reviewed,
-sits in the same PANTHER subfamily as human AGFG2, and is **36 percentage points closer
-to it than mouse Agfg1 is** — and it appears in *none* of AGFG2's WITH/FROM fields. Every
-IBA row on AGFG2 is seeded from the paralogue's mouse orthologue while the gene's own
-mouse orthologue is unused.
+The closer mouse Agfg2 ortholog is unused as an experimental descendant source. That
+is not a negative biological control: PAINT infers function at ancestral nodes from
+experimental descendants, then propagates it to descendants without evidence of loss.
+Pairwise similarity to the source is not the criterion for accepting the assertion.
 
 ## 4. WITH/FROM provenance and each donor's own evidence
 
@@ -130,8 +132,8 @@ Resolver notes reported rather than hidden:
   entry's *name* carries no Swiss-Prot authority.
 - `MGI:MGI:1333754` resolves to 5 mouse *Agfg1* entries, 1 reviewed (`Q8K2K6`). All
   candidates were queried, not one picked by `size=1`.
-- `PANTHER:PTN…` tokens are tree nodes, not proteins — unresolvable and not-a-protein are
-  different facts.
+- `PANTHER:PTN…` tokens identify the actual ancestral assertion. They are relevant
+  evidence of phylogenetic transfer, not irrelevant tokens because they are not proteins.
 
 ## 5. Which node reaches which genes, and what it gives them
 
@@ -140,22 +142,14 @@ Resolver notes reported rather than hidden:
 | `PTN002353603` | 87 | 66 | AGFG1, AGFG2 (only) | GO:0005737 (66), GO:0016020 (21, no human) |
 | `PTN002919572` | 336 | 68 | AGFG1, AGFG2 (only) | GO:0001675, GO:0007289, GO:0031410, GO:0045109 (68 each); GO:0005737, GO:0016020 (32 each, no human) |
 
-Asking the reciprocal question — *which node's human reach is exactly my gene set, and
-what did it give them?* — `PTN002919572`'s human reach is exactly {AGFG1, AGFG2}, and what
-it gave them is the mouse *Agfg1* knockout phenotype set.
-
-Its 68 gene products span, with names resolved rather than left as taxon ids,
-**sea lamprey and hagfish (*Petromyzon marinus*, *Eptatretus burgeri*)** through
-cartilaginous fish, ray-finned fish, coelacanth, amphibians, reptiles, birds, monotremes,
-marsupials and placental mammals — plus one non-vertebrate outlier, the tardigrade
-*Hypsibius exemplaris*. So a single mouse knockout is the sole experimental basis for
-acrosome-assembly and spermatid-differentiation annotations across the whole vertebrate
-range.
-
-**Human AGFG1's five IBA rows are the same five terms as AGFG2's** (GO:0001675, GO:0005737,
-GO:0007289, GO:0031410, GO:0045109). AGFG2's entire IBA record is its better-studied
-paralogue's IBA record. The difference is evidential, not textual: on AGFG1 those rows are
-an **orthologue** transfer from mouse Agfg1; on AGFG2 they are a **paralogue** transfer.
+The recipient counts above describe a frozen query and do not themselves recover
+topology. The actual current PTHR46134 tree was subsequently read: target O95081 leaf
+PTN002509056 descends from PTN002353603 and PTN002919572. The exact path, current IBDs
+and full-response hash are in ../AGFG2-O95081-paint-lineage.json. No target-path loss
+was established. All five inherited annotations are retained. Mouse Agfg1
+experiments provide descendant grounding, and a short source list is not an objection
+to the curator's ancestral placement. The shared AGFG1/AGFG2 assertions are consistent
+with inheritance of capacity across their duplication, not evidence of a mistaken copy.
 
 Record counts: AGFG2 has **7** annotations, **1** experimental (the bulk-proteomics HDA);
 AGFG1 has **35**, **7** experimental.
@@ -165,12 +159,13 @@ AGFG1 has **35**, **7** experimental.
 **`GO:0016020` membrane, HDA, `PMID:19946888`.** Fully paginated, the reference carries
 **1142 annotations over 1142 distinct gene products, every one `GO:0016020`, every one
 HDA, every one assigned by UniProt**. One NK-cell membrane-proteome survey giving 1142
-proteins one identical term is a bulk import, not 1142 localisation determinations.
+proteins one identical term is a high-throughput experiment. Its abstract explicitly
+includes transient membrane association; scale does not make each observation false.
 Entity counts are derived as a distinct set of gene-product ids — an annotation count is
 not an entity count. Positive control on the same endpoint and call pattern:
 `GO_REF:0000033` restricted to human GO:0005096 descendants returns 188 annotations over
 188 entities. AGFG2's own feature table has no transmembrane segment, no signal peptide
-and no lipid-anchor site.
+and no lipid-anchor site; peripheral association does not require any of these features.
 
 **`GO:0005096` GTPase activator activity, IEA, `InterPro:IPR001164`.** AGFG2 matches four
 InterPro entries; each one's interpro2go mapping was looked up separately.
@@ -182,12 +177,10 @@ InterPro entries; each one's interpro2go mapping was looked up separately.
 | IPR038508 ArfGAP domain superfamily | homologous superfamily | 61 770 | **nothing** |
 | **IPR001164 Arf GTPase activating protein** | domain | 60 678 | **GO:0005096 (F)** |
 
-The three entries that map to nothing are the control: InterPro2GO is capable of restraint
-here. The activity claim comes from the pan-ArfGAP catalytic-domain entry, which spans
-60 678 proteins across all ArfGAP subfamilies and by construction cannot discriminate the
-AGFG subfamily's loss of the Arf-contacting aspartate. The AGFG-specific entry
-(`IPR052248`), which *could* encode the subfamily's distinct properties, carries no GO
-terms at all.
+Only IPR001164 supplies the electronic activity assertion. Empty mappings on the
+other entries do not constitute negative evidence. The broad domain model does not
+resolve the biochemical significance of AGFG-specific divergence, and GIT GAP activity
+limits generalization from the Asp substitution. Keep the target activity unresolved.
 
 **Family census.** All 6 reviewed (Swiss-Prot) members of `PTHR46134` — human and
 mouse AGFG2, human/mouse/rat/bovine AGFG1 — carry `GO:0005096` by `IEA GO_REF:0000002`,
@@ -209,11 +202,12 @@ statement about the family.
   has been curated: `GO:0045055 regulated exocytosis` has verified `is_a` children
   including `GO:0002576` platelet degranulation, `GO:0043299` leukocyte degranulation,
   `GO:0016079` synaptic vesicle exocytosis and `GO:0060471` cortical granule exocytosis.
-  This is an inconsistency in coverage, not a missing modelling pattern.
+  A more specific term is an ontology discussion; the broad term with cargo extension already represents the demonstrated process.
 - `GO:0046784 viral mRNA export from host cell nucleus` was **rejected** for the Rev-export
   result on two counts: its definition specifies "*intronless viral mRNA*" whereas the
-  Rev/RRE pathway exports intron-containing transcripts, and it carries **0** human
-  annotations, so using it here would make AGFG2 its sole human holder.
+  Rev/RRE pathway exports intron-containing transcripts, and the historical query returned **0** human
+  annotations. The definition mismatch is the substantive issue; an empty query alone
+  does not establish biological exclusion.
 - `GO:0044794 host-mediated activation of viral process` carries **58** human annotations
   over 53 entities including IMP, so it is an actively used host-factor term rather than an
   unused corner of the ontology. The declined alternative `GO:1903077` carries 37 over 31.
@@ -259,9 +253,10 @@ count as `n_cited_checked: 12` so the number here cannot drift from the sweep.
   non-human filter in the script is a no-op here and is reported as one rather than
   credited with the exclusion. **None of the five appears in GOA: AGFG2 has zero
   `GO:0005515` rows**, so no per-partner verdicts were needed — but the absence is itself
-  an under-curation datum.
-- **Self-referential IBA.** No WITH/FROM token on any row is AGFG2's own accession, so no
-  row records a PAINT curator judging the function core to this gene.
+  a possible interaction-curation lead, not a requirement to add generic protein binding.
+- **Target in WITH/FROM.** No token is AGFG2's own accession. This only describes
+  which descendants supplied experiments; the positive ancestral placement itself
+  supports inheritance by AGFG2. Target self-inclusion would be legitimate, not circular.
 
 ## 10. A discrepancy between two cited papers, settled
 

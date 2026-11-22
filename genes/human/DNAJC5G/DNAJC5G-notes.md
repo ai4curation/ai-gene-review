@@ -12,3 +12,7 @@
 ## Curation judgment
 - Core MF: predicted HSP70 co-chaperone (unfolded protein binding / Hsp70 protein binding) via J domain, but NOT experimentally verified -> assign family-level MF cautiously (unfolded protein binding).
 - cytoplasm (IEA ARBA) and membrane (IEA SubCell) localizations: ACCEPT/KEEP_AS_NON_CORE; membrane is the lipid-anchor compartment.
+
+## GO:0051082 migration (2026-09-27)
+
+The predicted co-chaperone core function carries no molecular-function term. GO:0051082 is obsolete and was not a J-domain co-chaperone activity; with no experimental data for CSP-gamma, a family-level co-chaperone MF is left until evidence exists.

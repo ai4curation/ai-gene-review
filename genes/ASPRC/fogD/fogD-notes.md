@@ -94,3 +94,36 @@ All six TreeGrafter annotations derive from PANTHER:PTN001211783 via GO_REF:0000
 1. What is the exact catalytic mechanism of fogD? The reductive release hypothesis lacks in vitro confirmation.
 2. Does fogD interact directly with the fogA PKS? Protein-protein interaction not demonstrated.
 3. Why are three SDR enzymes in the cluster when fogG appears dispensable?
+
+
+## 2026-09-20 re-review: corrections to the original categorical assessment
+
+The six TreeGrafter rejections above are superseded by UNDECIDED pending a focused OpenScientist investigation. Secondary-metabolite participation does not prove exclusive function. Ayr1 is a direct counterexample to the original claim that no SDR can be a triglyceride lipase ([PMID:24187129](https://pubmed.ncbi.nlm.nih.gov/24187129/)); its primary study establishes source activity, not FogD activity. Lack of transmembrane or secretion features cannot exclude peripheral ER or lipid-droplet association.
+
+The current PAINT slice records experimentally grounded Ayr1-seeded IBDs, but does not contain historical node PTN001211783. The ER assertion is at PTN001213826; the other five claims are at PTN001963740, each seeded by SGD:S000001386. Historical graft reconstruction is unresolved. A single well-characterized source is valid ancestral evidence, not intrinsically weak support.
+
+The main PMID:32134669 cache is abstract-only and the publisher main article returned 403. Its open supplement was independently downloaded from the ACS Figshare API (article 11944365, file 21927279; DOI:10.1021/acs.orglett.0c00440.s001; MD5 a4e37dcbc2f110a230a24b385e1cfba6). Methods S5-S6 identify A. ruber QEN-0407-G2 as the DNA/RNA source and CBS135680 as the reference genome. Table S1 maps FogD to EYE95338/EURHEDRAFT_455854. The supplement identifies JN009 as the fogD deletion strain in the reconstructed A. nidulans JN004 cluster background. Table S2 and Figure S8 (S18/S30) were visually inspected: the latter contains a small 2d peak in the deletion strain. This corrects any implication of a native CBS135680 deletion or purified FogD catalytic assay.
+
+Retain broad secondary-metabolite participation and a conservative SDR-derived oxidoreductase proposal. The specific CH-OH/NAD(P) reaction assignment was withdrawn pending direct reaction/cofactor evidence; this caution was superseded on 2026-09-27 by provisional adoption of GO:0016616 from UniProt's EC=1.1.1.- placement. Remove the redundant NEW polyketide-process row because it descends from the existing secondary-metabolite process; keep the specific pathway in the core summary. The former flavoglaucin-term proposal is moved to an ontology question. Unverified supporting_text_fulltext paraphrases are removed, and UniProt-derived statements are explicitly attributed to UniProt rather than invented primary quotations.
+
+
+## OpenScientist Ayr1-propagation follow-up (2026-09-27)
+
+Assessed `fogD-hypotheses/sdr-lipid-functions-and-polyketide-release/openscientist.md`.
+The report validated the concern that GO:0000140, GO:0004806, GO:0005783,
+GO:0005811, GO:0006654 and GO:0019433 are Ayr1-seeded TreeGrafter transfers
+without FogD-specific evidence. Updated the acyl-DHAP reductase row to `MODIFY`
+toward `GO:0016616`, because UniProt's `EC=1.1.1.-` placement supports CH-OH
+donor/NAD(P) acceptor oxidoreductase chemistry but not the Ayr1-specific
+acyl-DHAP substrate. The other Ayr1 lipid activity, location and process rows
+remain non-core or over-annotated rather than reverting to the earlier REMOVE
+decisions because the source Ayr1 annotations are experimentally supported.
+
+## Re-review 2026-10-01 (GOA refresh)
+
+- GO:0044550 secondary metabolite biosynthetic process (IEA, GO_REF:0000117 ARBA) is no
+  longer present in the current GOA snapshot and is marked `retired: true`; its ACCEPT
+  review is kept as a historical judgment (the biology still holds; core_functions uses
+  the more specific GO:0030639 polyketide biosynthetic process).
+- The six TreeGrafter (GO_REF:0000118, PTN001211783) rows are unchanged in GOA; prior
+  judgments re-audited and left as is. No PENDING rows.

@@ -104,7 +104,7 @@ These represent HSP90's essential chaperone functions and are strongly supported
 #### HSP90-Specific Client Interactions (1 annotation)
 - **GO:0035259 (nuclear glucocorticoid receptor binding)** - IPI (PMID:26593036)
   - Evidence: Direct physical interaction characterized
-  - Status: Well-characterized steroid hormone receptor client
+  - Status: KEEP_AS_NON_CORE; heterologous (human GR-LBD) in-vitro client
 
 ### Category 2: Localization Annotations (ACCEPT - 12 annotations)
 
@@ -126,11 +126,11 @@ All localization annotations are well-supported by experimental evidence:
 #### Membrane-Associated Localizations (2 annotations)
 - **GO:0005886 (plasma membrane)** - IBA (GO_REF:0000033)
   - Evidence: Phylogenetic inference from mammalian HSP90
-  - Status: Minor localization site; supported by lipid raft data
+  - Status: KEEP_AS_NON_CORE; C. elegans evidence shows cytoplasmic/perinuclear localization
 
 - **GO:0045121 (membrane raft)** - HDA (PMID:21070894)
-  - Evidence: Lipid raft proteomics identified 44 proteins including HSP90
-  - Status: Minor location; consistent with plasma membrane annotation
+  - Evidence: Lipid raft proteomics identified 44 proteins (abstract does not name HSP90; HDA curation of full text)
+  - Status: KEEP_AS_NON_CORE; minor location
 
 ### Category 3: Protein-Protein Interactions - MAJOR RECOMMENDATION: MODIFY (12 annotations)
 

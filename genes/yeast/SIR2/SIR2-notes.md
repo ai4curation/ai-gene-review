@@ -225,3 +225,27 @@ GO:0016740 and GO:0006303, and `CURATION-REVIEW-FINAL.md:352` still lists the
 now-deleted generator. These are historical curation artifacts, not curation
 records the schema validates, so whether to delete them or keep them as a
 dated historical record is a maintainer call, not an automated one.
+
+## 2026-09-29 Update: IBA re-review
+
+The seven SIR2 IBA rows were traced against the current local PAINT cache:
+
+- `GO:0005634` nucleus now points through the broad sirtuin nuclear IBD at
+  `PANTHER:PTN008492176`.
+- `GO:0003714`, `GO:0006974`, `GO:0031509`, `GO:0032041`, `GO:0046969`, and
+  `GO:0046970` all point through the eukaryotic Sir2/SIRT1-family node
+  `PANTHER:PTN000872222`.
+
+No IBA failure was found. The molecular-function and subtelomeric-silencing
+transfers are core, while the broad `DNA damage response` transfer is defensible
+but non-core because the direct SIR2 phenotypes sit downstream of chromatin
+silencing. In-target SGD evidence appears among the PAINT seeds for the H3K14,
+nuclear-localization, H3K9, H4K16, DNA-damage-response, and
+subtelomeric-heterochromatin nodes; direct SIR2 literature also supports the
+transcriptional corepressor assignment.
+
+The 2026 search also recovered the 2024 Cucinotta/Tsukiyama full-text preprint
+on quiescent rDNA architecture, cached as PMID:39713455. It strengthens the
+picture of Sir2 as an rDNA chromatin organizer in quiescence but does not imply
+a new GO process assertion beyond the existing rDNA heterochromatin and
+chromatin-organization rows.
