@@ -190,7 +190,7 @@ The requests that reach the most reviewed genes:
 | Family | Node | Term | Request |
 |---|---|---|---|
 | PTHR10572 | PTN000060347 | peroxisomal membrane (HMG-CoA reductases) | move to the animal clade PTN000832033 |
-| PTHR10921 | PTN000100519 | kinesin complex (NudE family) | retire: the seed paper describes Ndel1 as kinesin cargo |
+| PTHR10921 | PTN000100519 | kinesin complex (NDE1 and NDEL1 family) | retire: the seed paper describes Ndel1 as kinesin cargo |
 | PTHR24119 | PTN001191022 | endoplasmic reticulum and plasma membrane (ACBD6) | move to PTN001152722 |
 | PTHR10676 | PTN000743491 | dynein light intermediate chain binding | move to the cytoplasmic dynein 1 clade PTN000072732 |
 | PTHR13964 | PTN000359478 | transcription cis-regulatory region binding (ARID4) | move to PTN009015189 |
@@ -1364,7 +1364,7 @@ the signature.
 - **COP9 signalosome on GRB2 (reaching fly `drk` and worm `sem-5`)**: the seed paper is about
   the T-cell receptor signalosome, and the same paper gives the COP9 term to TESPA1, LAT,
   PLCG1, GRB2 and THEMIS alike. Abstract only; recorded as a query.
-- **Kinesin complex on the NudE family**: the rat Ndel1 seed paper describes Ndel1 as cargo
+- **Kinesin complex on the NDE1 and NDEL1 family**: the rat Ndel1 seed paper describes Ndel1 as cargo
   of kinesin-1, not a subunit. Read in full.
 - **Cytoplasm on zebrafish collagen**: the seed paper uses `col1a1` only as an in situ
   probe. Read in full.
