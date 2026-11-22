@@ -135,6 +135,70 @@ evidence**. Flagging a curated IBA as wrong is a strong claim; treat it like one
 
 ---
 
+## 2026-11-21 — Every IBA removal re-judged against the PAINT tree
+
+In November 2026 every IBA row a gene review marked `REMOVE` (788 rows in 561 reviews)
+was re-judged against its PANTHER family tree and the PAINT node annotations. The
+protocol, scripts and per-row records are in
+[IBA_REVIEW/rereview-2026-11-21](rereview-2026-11-21/README.md).
+
+| | Rows |
+|---|---:|
+| Live rows re-judged against the tree | 735 |
+| REMOVE upheld | 658 |
+| Action changed | 77 |
+| PAINT no longer propagates the term | 53 |
+
+A removal was upheld only on a ground that can be stated against the tree: loss or
+divergence in the target's clade (359 rows), an IBD placed above the clade that holds
+the experimental seeds (188), a seed annotation that is itself wrong (73), or a term
+that does not exist in the target's lineage (38). Each upheld row names the PAINT
+change it asks for and the node.
+
+The 77 changed rows had been removed for reasons that are not grounds: no experimental
+data on the gene, a short donor list, redundancy with another row, an obsolete term, or
+a claim about where the seeds sit that the tree contradicts. Fifty became
+`MARK_AS_OVER_ANNOTATED`, twelve `MODIFY`, ten `KEEP_AS_NON_CORE` and five `UNDECIDED`.
+A reason that argued absence of evidence and cited no PAINT node changed action half
+the time; a reason that cited a node, 6 percent of the time.
+
+### Scoring removals against later PAINT snapshots
+
+A reviewed removal is a prediction about PAINT, and it can be scored. A script replays
+each row's propagation through every dated PAINT snapshot of the pinned PANTHER release
+(11 snapshots, September 2024 to August 2026) and dates the review's first `REMOVE`
+from git history.
+
+| Outcome | Rows |
+|---|---:|
+| Predicted: the review said REMOVE while PAINT still carried the term | 5 |
+| Order undetermined: the review fell between two snapshots | 8 |
+| Agreed after: PAINT had already dropped the term, and the review worked from a GOA file that still listed the row | 30 |
+| Not replayable: the gene is not a leaf of a readable tree | 8 |
+| Still propagated | 737 |
+
+The five predictions:
+
+| Gene | Term | What PAINT did |
+|---|---|---|
+| SCHPO/cts2 | chitinase activity | added a loss |
+| human/CASP14 | positive regulation of neuron apoptotic process | added a loss |
+| yeast/ACL4 | mitochondrion targeting sequence binding | withdrew the IBD |
+| yeast/SIR3 | mitotic DNA replication checkpoint signaling | withdrew the IBD |
+| yeast/LPL1 | monoacylglycerol lipase activity | moved the IBD off the lineage |
+
+The 30 rows in the third line are independent agreement and not prediction: the
+reviewer could not see PAINT's change, but PAINT made it first. Snapshots are months
+apart, so only a loss record, which carries its own date, fixes the order to the day.
+
+The 658 upheld removals are open predictions. Re-running
+`upstream_outcomes.py` after each new snapshot scores them. It checks whether PAINT
+dropped the term, and does not yet check whether PAINT's change is the one the row
+asked for.
+
+What this pass changed in how removals are reviewed, and the patterns it added to the
+findings page (18 to 22), are on the [main page](../IBA_REVIEW.md#what-needs-action-now).
+
 ## 2026-11-11 — High-distance & shallow-parent IBA curation batches (Batches A–D: PRs #6213, #6236, #6271, and #6289)
 
 Continued systematic triage of candidates surfaced by

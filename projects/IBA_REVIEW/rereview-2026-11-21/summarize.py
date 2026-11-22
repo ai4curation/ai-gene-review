@@ -1,4 +1,4 @@
-"""Check the batch records against inventory.tsv and the gene reviews, print tallies, write results.tsv.
+"""Check the batch records against inventory.tsv and the gene reviews, print tallies, write results.tsv and paint_requests.tsv.
 
 Reports rows of inventory.tsv with no verdict, verdicts for rows not in the inventory,
 verdicts whose recorded action disagrees with the gene review as it now stands, and
@@ -52,6 +52,24 @@ def main() -> None:
                 "paint_action": fix.get("paint_action"), "target_node_id": fix.get("target_node_id") or "",
                 "review_edited": row.get("review_edited"),
             })
+
+    # One line per PAINT change asked for: the unit a PAINT curator acts on.
+    asks: dict[tuple, list[str]] = collections.defaultdict(list)
+    for (gene_file, go), row in sorted(seen.items()):
+        i = inv.get((gene_file, go), {})
+        fix = row.get("paint_fix") or {}
+        if row["verdict"] != "REMOVE_UPHELD" or fix.get("paint_action") in (None, "NONE"):
+            continue
+        key = (i.get("family"), i.get("ibd_node"), go, i.get("go_label"), row.get("ground"),
+               fix["paint_action"], fix.get("target_node_id") or "")
+        asks[key].append("/".join(gene_file.split("/")[1:3]))
+    with open(HERE / "paint_requests.tsv", "w", newline="") as fh:
+        w = csv.writer(fh, delimiter="\t", lineterminator="\n")
+        w.writerow(["family", "ibd_node", "go_id", "go_label", "ground", "paint_action", "target_node_id",
+                    "reviewed_genes", "genes"])
+        for key, genes in sorted(asks.items(), key=lambda kv: (kv[0][0] or "", kv[0][1] or "", kv[0][2])):
+            w.writerow([*key, len(genes), "; ".join(sorted(genes))])
+    print("PAINT change requests:", len(asks), "over", len({k[:3] for k in asks}), "node-term pairs")
 
     docs: dict[str, dict] = {}
     for (gene_file, go), row in sorted(seen.items()):

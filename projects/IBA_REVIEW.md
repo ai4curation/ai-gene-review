@@ -163,10 +163,58 @@ While IBA is a powerful curation tool, it can produce problematic annotations wh
 4. **Over-generalization** - Broad terms transferred when specific functions differ
 
 This project covers **both directions** of IBA quality: most of the page catalogs
-where IBA is *wrong* (over-annotation, patterns 1–16), while
+where IBA is *wrong* (over-annotation, patterns 1–21) and where removing one is
+wrong (pattern 22), while
 [IBA Incompleteness](#iba-incompleteness-core-function-that-iba-fails-to-propagate)
 quantifies where IBA *under-calls* established biology — 511 curated human core
 molecular functions that IBA alone would miss.
+
+## What needs action now
+
+The open work on IBAs, as of the November 2026 re-review of every removal
+([how it was done](IBA_REVIEW/HISTORY.md)).
+
+**For PAINT curators: 517 change requests in 304 families.** One line each in
+[paint_requests.tsv](IBA_REVIEW/rereview-2026-11-21/paint_requests.tsv), with the node, the
+term, the change and the reviewed genes it affects.
+
+| Request | Count | When it is asked for |
+|---|---:|---|
+| Add a loss (IRD) at a named clade | 325 | The function is lost or replaced in the target's clade |
+| Move the IBD down to the seeded clade | 132 | Every seed sits in one child of the node and the target in another |
+| Retire the IBD | 45 | The seed annotation the node rests on is itself wrong |
+| Add a loss from key residues (IKR) | 14 | Catalytic or binding residues are gone |
+
+The requests that reach the most reviewed genes:
+
+| Family | Node | Term | Request |
+|---|---|---|---|
+| PTHR10572 | PTN000060347 | peroxisomal membrane (HMG-CoA reductases) | move to the animal clade PTN000832033 |
+| PTHR10921 | PTN000100519 | kinesin complex (NudE family) | retire: the seed paper describes Ndel1 as kinesin cargo |
+| PTHR24119 | PTN001191022 | endoplasmic reticulum and plasma membrane (ACBD6) | move to PTN001152722 |
+| PTHR10676 | PTN000743491 | dynein light intermediate chain binding | move to the cytoplasmic dynein 1 clade PTN000072732 |
+| PTHR13964 | PTN000359478 | transcription cis-regulatory region binding (ARID4) | move to PTN009015189 |
+
+**For the annotating groups: 46 node and term pairs rest on a seed that looks wrong.** They
+are the `BAD_SEED` lines of the same file. Where the seed paper was read only as an
+abstract, the batch record says so, and those are queries, not confirmed errors.
+
+**For PANTHER: four leaves sit in the wrong family tree**, which no PAINT change can fix:
+human NTN1 and NTN3 in the POU family, yeast CDC4 in the Utp13 family, worm `ccep-290`
+beside the SMC2 condensin subunit, and poplar chloroplast `atpB` on a V-ATPase leaf. Each
+inherits a whole family's terms.
+
+**For reviewers here:**
+
+- A `REMOVE` on an IBA must name a ground that can be checked on the tree: loss in the
+  target's clade, a misplaced IBD, a bad seed, or a term foreign to the lineage. Print the
+  tree first: `uv run python projects/IBA_REVIEW/rereview-2026-11-21/treeview.py <organism> <gene> <GO id>`.
+- Seventeen family reviews now disagree with a gene-level verdict or are out of date. They
+  are listed, with what each misses, in the
+  [re-review record](IBA_REVIEW/rereview-2026-11-21/README.md#open-items).
+- 658 removals are open predictions about PAINT. Re-run
+  `projects/IBA_REVIEW/rereview-2026-11-21/upstream_outcomes.py` after each PAINT snapshot
+  to see which ones PAINT has made.
 
 ## Propagation Taxonomy and Checklist
 
@@ -1255,6 +1303,115 @@ does it, or because the gene is needed upstream (cofactor supply, export,
 regulation). Record a wrong seed twice, as a `source_defects` item for the
 seed's own resource and one for `GO_CENTRAL` naming the PTN node.
 
+### 18. An IBD Placed One Node Above Its Seeds
+
+**The Problem**: the commonest placement error is small and regular. All the experimental
+seeds sit in one child clade of the annotated node, and the term is asserted at the parent,
+so it reaches a sister clade that has no evidence and often a different biology. It accounts
+for 188 of the 658 removals that held when every removal was re-judged against the tree.
+
+**The diagnostic**: list the children of the IBD node and count the seeds in each. If the
+target's child clade holds none, the removal almost always stands (45 of 47 in the first
+batches). If it holds one, look closer before removing anything: the seed may be the
+target's own ortholog.
+
+**Examples (verified against the tree):**
+- **Axonemal dynein heavy chains (PTHR10676)**: `GO:0051959` dynein light intermediate
+  chain binding is seeded only in the cytoplasmic dynein 1 clade and asserted above the
+  split, so DNAH5, DNAH8, DNAH9, DNAH11 and DNAH17 inherit it.
+- **HMG-CoA reductases (PTHR10572)**: peroxisomal membrane is seeded by the animal enzyme and
+  reaches seven fungal reductases.
+- **RSAD1 and HemW (PTHR13932)**: porphyrin biosynthesis is asserted at the family root. The
+  only placement that takes it off both the animal RSAD1 clade and the bacterial HemW clade
+  is the HemN node, two levels down.
+
+**Lesson**: the fix is to move the IBD, not to add a loss. A loss says the function was
+there and went; here it was never shown in that clade.
+
+### 19. A Loss That Stops One Term and Lets Its Relatives Through
+
+**The Problem**: PAINT prunes per term. A curator who records that a clade lost an activity
+has blocked that one term, and the family's related terms, a child of the activity, the
+process it drives, the complex it belongs to, still flow into the same clade.
+
+**Examples (verified against the tree):**
+- **CPT1C (PTHR22589)**: PAINT records the loss of carnitine palmitoyltransferase activity
+  on the CPT1C clade. Fatty acid metabolic process and carnitine metabolic process still
+  reach it.
+- **UQCRC1 (PTHR11851)**: the loss of metalloendopeptidase activity is recorded on the
+  UQCRC1 clade, and mitochondrial processing peptidase complex still propagates.
+- **CRMP and DPYSL (PTHR11647)**: an IKR blocks dihydropyrimidinase activity at each clade,
+  and the parent hydrolase term gets through.
+- **RPE65 (PTHR10543)**: a loss of carotenoid dioxygenase activity is recorded, and the more
+  specific beta-carotene dioxygenase term, which is not its is_a descendant, still reaches
+  zebrafish `rpe65a`.
+
+**Lesson**: when a loss is recorded or asked for, ask for it on every term the lost
+function implies. An existing loss on a sibling clade or a related term is also the best
+precedent for the request: it shows a curator has already judged the divergence real.
+
+### 20. A Seed Annotated to the Wrong Term
+
+**The Problem**: patterns 16 and 17 cover seeds that over-read a phenotype. A plainer
+failure is a seed whose term does not match its paper at all. The IBD then carries a
+confident experimental code for something nobody showed.
+
+**The diagnostic**: look up every annotation made from the seed's paper. One term applied
+to every protein in the paper, or a term that shares a word with the paper's subject, is
+the signature.
+
+**Examples:**
+- **COP9 signalosome on GRB2 (reaching fly `drk` and worm `sem-5`)**: the seed paper is about
+  the T-cell receptor signalosome, and the same paper gives the COP9 term to TESPA1, LAT,
+  PLCG1, GRB2 and THEMIS alike. Abstract only; recorded as a query.
+- **Kinesin complex on the NudE family**: the rat Ndel1 seed paper describes Ndel1 as cargo
+  of kinesin-1, not a subunit. Read in full.
+- **Cytoplasm on zebrafish collagen**: the seed paper uses `col1a1` only as an in situ
+  probe. Read in full.
+- **Transepithelial chloride transport on CLCN7**: the word appears once in the seed paper,
+  in a sentence about the family.
+
+**Lesson**: a bad seed is fixed at the seed. The gene review removes the IBA, and the
+source row goes to the annotating group as a source defect, graded by how much of the
+paper was read.
+
+### 21. Places a Protein Passes Through, Used as Seeds
+
+**The Problem**: a location annotation records that a protein was seen somewhere. PAINT
+propagates it with `is_active_in`, which says the protein works there. For secreted and
+circulating proteins the two come apart.
+
+**Examples (verified against the tree):**
+- **Secreted FGFs (PTHR11486)**: six of the thirteen seeds for cytoplasm are located_in rows
+  on secreted FGFs, Golgi for mouse Fgf7 and Fgf22, lysosome for zebrafish fgf8a. The term
+  is true as secretory transit and wrong as a site of action.
+- **Creatine kinases**: extracellular region is seeded by plasma creatine kinase, a real
+  observation of an enzyme that has leaked from muscle.
+
+**Lesson**: these are not removals. The term is true of the protein, so the row is
+over-annotated or non-core, and the question for PAINT is whether a transit location should
+seed an `is_active_in` IBD at all.
+
+### 22. When Removing an IBA Is the Wrong Call
+
+Seventy-seven of 735 removals did not survive a reading of the tree. Three situations
+account for most of them, and none is visible from the gene review alone.
+
+- **The gene is itself a seed.** Its own experimental row is one of the annotations the
+  IBD rests on, and the review keeps that row. Removing the IBA then contradicts the
+  review's own verdict (yeast DUG2 peptidase activity, *S. pombe* `pom1` cytoskeleton,
+  worm `ced-3` enzyme activator activity). Seeds are often listed by a model-organism
+  identifier, so the gene's accession will not appear in the list.
+- **The reason says the seeds are elsewhere, and one is next door.** CCND1's removal said
+  the centrosome term arose in another clade; cyclin F and rat cyclin E1 are seeds in
+  CCND1's own child clade.
+- **The term is true and general.** *S. pombe* SPBC3H7.04 was removed from cytoplasm because
+  it is a mitoribosomal protein; mitochondrion is part of cytoplasm in GO, and three of the
+  five seeds are mitoribosomal proteins in its own clade. That is a `MODIFY`.
+
+The written reason predicts the error. A removal that argued from missing evidence and
+named no node changed action half the time; one that named a node, one time in sixteen.
+
 ## Featured Examples
 
 ### Epe1 - Pseudo-Demethylase
@@ -1768,6 +1925,9 @@ should not.
 13. **Check the GO term's definition, not just its label, before calling an IBA directionally wrong**: e.g. "copper ion import" (GO:0015677) covers movement into a cell *or organelle*, so a Golgi-loading copper exporter can still satisfy it — a label that *looks* opposite may not be
 14. **Read the WITH/FROM column first**: it names the exact source proteins. If they are the wrong family (NTN1←POU TFs; NOTCH1←SLITs) or a single wrong paralog (ABRAXAS1←ABRAXAS2; HINT2←HINT1), that is near-mechanical evidence of error. If they are a broad, coherent set of true orthologs, the transfer is probably defensible — slow down before flagging
 15. **Check the seeds, not only the node**: an IBD is only as good as the experimental rows it rests on. When one seed carries a node, especially an IMP row for a molecular function, confirm the paper shows the gene's own activity rather than a downstream mutant phenotype (PSEAE/ccmC catalase; see patterns 16 and 17 and [PSEUDOCAP](PSEUDOCAP.md))
+16. **Count the seeds in each child of the IBD node before judging it**: seeds confined to one child, with the target in another, is a misplaced IBD and the request is to move it (pattern 18). A seed in the target's own child clade means the removal needs target-specific evidence of loss
+17. **Ask for a loss on every term the lost function implies**: PAINT prunes per term, so a loss of an activity leaves its process, complex and child terms flowing (pattern 19)
+18. **Check whether the gene is its own seed, by every identifier it has**: if the review keeps the gene's experimental row, the IBA that rests on it cannot be removed (pattern 22)
 
 ## Quality Indicators
 
@@ -1964,67 +2124,6 @@ reason class this project dismantled (Casp3, Ghr) failed the same way: the limb 
 the text defensible was the limb arguing against the action it sat on.
 
 ---
-
-## Removals re-judged against the PAINT tree, and what PAINT has done since
-
-In November 2026 every IBA row a gene review marked `REMOVE` (788 rows in 561 reviews)
-was re-judged against its PANTHER family tree and the PAINT node annotations. The
-protocol, scripts and per-row records are in
-[IBA_REVIEW/rereview-2026-11-21](IBA_REVIEW/rereview-2026-11-21/README.md).
-
-| | Rows |
-|---|---:|
-| Live rows re-judged against the tree | 735 |
-| REMOVE upheld | 658 |
-| Action changed | 77 |
-| PAINT no longer propagates the term | 53 |
-
-A removal was upheld only on a ground that can be stated against the tree: loss or
-divergence in the target's clade (359 rows), an IBD placed above the clade that holds
-the experimental seeds (188), a seed annotation that is itself wrong (73), or a term
-that does not exist in the target's lineage (38). Each upheld row names the PAINT
-change it asks for and the node.
-
-The 77 changed rows had been removed for reasons that are not grounds: no experimental
-data on the gene, a short donor list, redundancy with another row, an obsolete term, or
-a claim about where the seeds sit that the tree contradicts. Fifty became
-`MARK_AS_OVER_ANNOTATED`, twelve `MODIFY`, ten `KEEP_AS_NON_CORE` and five `UNDECIDED`.
-A reason that argued absence of evidence and cited no PAINT node changed action half
-the time; a reason that cited a node, 6 percent of the time.
-
-### Scoring removals against later PAINT snapshots
-
-A reviewed removal is a prediction about PAINT, and it can be scored. A script replays
-each row's propagation through every dated PAINT snapshot of the pinned PANTHER release
-(11 snapshots, September 2024 to August 2026) and dates the review's first `REMOVE`
-from git history.
-
-| Outcome | Rows |
-|---|---:|
-| Predicted: the review said REMOVE while PAINT still carried the term | 5 |
-| Order undetermined: the review fell between two snapshots | 8 |
-| Agreed after: PAINT had already dropped the term, and the review worked from a GOA file that still listed the row | 30 |
-| Not replayable: the gene is not a leaf of a readable tree | 8 |
-| Still propagated | 737 |
-
-The five predictions:
-
-| Gene | Term | What PAINT did |
-|---|---|---|
-| SCHPO/cts2 | chitinase activity | added a loss |
-| human/CASP14 | positive regulation of neuron apoptotic process | added a loss |
-| yeast/ACL4 | mitochondrion targeting sequence binding | withdrew the IBD |
-| yeast/SIR3 | mitotic DNA replication checkpoint signaling | withdrew the IBD |
-| yeast/LPL1 | monoacylglycerol lipase activity | moved the IBD off the lineage |
-
-The 30 rows in the third line are independent agreement and not prediction: the
-reviewer could not see PAINT's change, but PAINT made it first. Snapshots are months
-apart, so only a loss record, which carries its own date, fixes the order to the day.
-
-The 658 upheld removals are open predictions. Re-running
-`upstream_outcomes.py` after each new snapshot scores them. It checks whether PAINT
-dropped the term, and does not yet check whether PAINT's change is the one the row
-asked for.
 
 ## Single-organism IBA phylogenetic distance analysis
 
