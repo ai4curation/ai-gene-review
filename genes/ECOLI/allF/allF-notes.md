@@ -120,3 +120,44 @@ Reading: Salmonella Q8ZR75 is the close counterpart of AllF (83% identity) and Y
 5. How a truncated FdrA fragment suppresses dominant-negative FtsH.
 
 Not knowledge gaps, recorded here as curation notes: the subcellular location has not been measured (a fractionation would settle it); YahF and Salmonella Q8ZR75 have no review; the family review's UNRESOLVED verdict for the cytosol IBD at PTN001671414 can now cite this review.
+
+## 2026-11-22: what informatics does and does not settle about the catalytic histidine
+
+Two OpenScientist reports were run on the open questions (provider output, not edited, not literature):
+`allF-hypotheses/carbamoyltransferase-site-not-in-allf/openscientist.md` (run 1) and
+`allF-hypotheses/sca-alpha-phosphohistidine-retained/openscientist.md` (run 2). They disagree on which AllF
+residue stands at the SucD catalytic histidine (His247 in UniProt P0AGE9 numbering, His246 in the crystal
+structures): run 1 says Val293, run 2 says Gln467. Three independent checks (sequence, structure, family) were
+made of their claims, and the reproducible parts are now a committed analysis,
+`allF-bioinformatics/catalytic_his_mapping.py` with `results.yaml` and `RESULTS.md`, which I re-ran twice on
+2026-11-22 with identical output. This supersedes the 2026-11-18 statement above that "Whether AllF keeps an
+equivalent histidine is unresolved".
+
+Established (file:ECOLI/allF/allF-bioinformatics/RESULTS.md):
+
+- AllF has no histidine at the catalytic position. [file:ECOLI/allF/allF-bioinformatics/RESULTS.md "AllF has no histidine at the position of the SucD catalytic histidine."]
+- Run 1's Val293 is wrong. Residue 293 is valine, but it lies outside the PF00549 domain and 26 A from the superposed histidine.
+- Run 2's Gln467 is what the Pfam PF00549 profile gives (column 102; Gln466 in Salmonella FdrA, Gln483 in YahF), but it is not the structural equivalent. On PDB 3DMY the SucD segment 242-251 has no AllF counterpart; AllF 462-476 pairs with SucD 257-271, and Gln467 superposes on SucD Lys262, 18 A from the histidine. The loop is absent, not substituted GHAGA to QQIAT.
+- The checks did not agree with each other at first: the sequence and family checks confirmed Gln467 from the profile and said they had not looked at a structure; the structure check refuted it. Both are reproduced in the script. I follow the structure for the question "which residue is there", and report the profile column as a profile column. One of several unstable pairwise alignments in the sequence check paired SucD ALEAAGV with AllF LEDAGI, which is the register the superposition gives for that segment; that alignment put His247 on Tyr449 and is not evidence for either mapping. The superposition uses one program (tmtools TM-align) and one AllF structure.
+- AllF has two SucD-like lobes (174-299, 300-502). The histidine loop is missing from both. Met391 fills the place of the histidine side chain in lobe 2; His389, in an insert that SucD lacks, is the nearest histidine (closest atom 4.5-5.0 A, CA 9.0-9.4 A, in the frame where the SucD C-terminal domain is superposed on lobe 2; 9.5-9.8 A and 15.1-15.4 A in the dimer frame, where lobe 1 of the other chain takes the alpha role). Within a chain its side chain is 3.2-3.4 A from the Thr338 carbonyl oxygen and 5.3-6.2 A from the Gly339 and Gly340 backbone nitrogens, the N-terminus of the lobe 2 phosphate-binding helix.
+- The N-terminus of the phosphate-binding helix is kept in both lobes (Ser202-Gly203-Thr204; Gly339-Gly340-Thr341).
+- In the 3DMY dimer, lobe 1 of one chain with lobe 2 of the other resembles the alpha-C plus beta-C pair of succinyl-CoA synthetase; the two lobes of one chain do not.
+- All 53 reviewed succinyl-CoA synthetase alpha entries (IPR005810) have histidine at the profile column. Of 951 AllF-family entries (IPR061301), 764 have glutamine and 7 have histidine (not in a GHAGA context; not examined further). The G[KR]PHPM motif of His389 is in 884 of 951 and in none of the 53.
+- 150 UniProtKB entries carry the AllG domain with the AllF CoA-ligase domain in one chain (848-1039 residues); one carries AllG with AllH. Run 1's counts reproduce exactly.
+
+Established with a limit: CoA carried rigidly from SucD into 3DMY clashes (14-16 of 48 atoms within 2.2 A), and the Rossmann-like domain of AllF has a permuted chain order. That is a blocked pose in a ligand-free crystal, not proof that CoA cannot bind.
+
+Not established by any of this, and still for the bench: whether any phosphoenzyme or carbamoyl-enzyme forms; which subunit binds carbamoyl phosphate, oxamate and magnesium; whether His389 or the helix N-termini do anything; where AllG and AllH sit; the stoichiometry. Nothing here bears on the FtsH-suppression question.
+
+Leads from the reports that were not checked and are not in the review:
+
+- Run 1: Foldseek finds no carbamoyltransferase or carbamate kinase fold in AllG or AllH; an invariant D170-D171 loop in AllH as a metal or anion site; STRING fusion score 0.899 for AllF-AllG; "PF02629 phosphate loop intact" in AllF.
+- Run 2: individual CoA-contact substitutions in AllF; conservation percentages of the helix residues (from 125 sequences); Gln467 as a substrate contact. Run 2 itself labels the His389 model a lead.
+
+Decisions:
+
+- The four REMOVE rows keep their action and gain the residue-level reason, two quotes from the analysis and a `residue_claims` entry (LOST, anchor SucD His247, no target because nothing in AllF corresponds). The four GO_CENTRAL defects mention it, with YahF and Q8ZR75 glutamine at the profile column as clade-level support.
+- Knowledge gaps narrowed, none closed. The phosphohistidine question is now "is there any covalent intermediate, and does the inherited scaffold bind a ligand".
+- Suggested experiments: His389 and Thr341 variants (with Ser202 and Thr204), and assay of a natural AllG-AllF fusion. I did not add Gln467 mutagenesis: by superposition it is 16-18 A from the site, and its conservation at a profile column whose register is off in this family is not a reason to mutate it. I did not add AllH loop mutagenesis: that lead was not checked.
+- The wrong statements in the reports are recorded as `finding_review` on the reference entries (OVERTURNED for Val293, DISPUTED for the GHAGA to QQIAT reading) and in `review_notes`. `source_defects` was not used: there is no upstream record of a one-off run to correct.
+- PTHR11117 family review: the SF24 sentence "Whether the phosphohistidine chemistry ... is not known" was replaced by the residue-level result.
