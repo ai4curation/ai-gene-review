@@ -13,5 +13,9 @@
   site.
 - Modified the `GO:0031211 endoplasmic reticulum palmitoyltransferase complex`
   IBA to generic `GO:0002178 palmitoyltransferase complex`. The IBD is seeded
-  by ER-localized S. cerevisiae Shr5, but direct fission-yeast imaging saw
-  Erf2-Erf4 at Golgi and cell-periphery sites.
+  by ER-localized S. cerevisiae Shr5; the 2006 ORFeome also reported direct
+  S. pombe ER signal, but a later focused fission-yeast study imaged
+  nmt1-driven Erf2-Erf4 at Golgi and cell-periphery sites.
+- Added the curated primary fission-yeast references PMID:16303567 and
+  PMID:23843742, using the 2013 work to ground protein-palmitoylation evidence
+  and the S. pombe functional-orthology bridge to S. cerevisiae Erf4.
