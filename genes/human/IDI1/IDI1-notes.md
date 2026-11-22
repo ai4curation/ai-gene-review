@@ -83,3 +83,29 @@ independently (possibly via PPARalpha). IDI1 is the broadly-expressed housekeepi
 All non-obsolete: GO:0004452 (F, def "isopentenyl diphosphate = dimethylallyl diphosphate"),
 GO:0050992 (P), GO:0016860 (F, isomerase branch — ancestor of GO:0004452), GO:0009240 (P),
 GO:0008299 (P), GO:0006695 (P), GO:0005777 (C), GO:0005829 (C), GO:0035634 (P).
+
+## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
+
+- Five GO:0005777 rows (IBA is_active_in, IEA ARBA00028589/SL-0204, ISS from O35586, IDA
+  PMID:17180682, IDA PMID:17202134); no sub-compartment rows. All five moved ACCEPT ->
+  KEEP_AS_NON_CORE; peroxisome removed from core_functions.locations (cytosol kept).
+- Source tracing: the ISS donor O35586 is hamster IDI1 (IDI1_MESAU; the review earlier said
+  rat). Its Peroxisome line is ECO:0000269|PubMed:9228075 (Paton et al. 1997, fetched,
+  abstract only: "we have cloned the rat and hamster homologues of IPP isomerase and
+  identified the signal that targets this enzyme to peroxisomes."). The human UniProt line
+  is by similarity to O35586. The PAINT IBD (PTN000854000) is seeded by RGD:621835, Q13907
+  and Q9BXS1, i.e. the same Krisans-lab work.
+- Sequence: C-terminus YRM (UniProt motif 225-227, "Microbody targeting signal"); a
+  non-canonical PTS1-like tripeptide. One line. PTS1-dependent targeting is stated in the
+  PMID:17202134 abstract (full text at JBC, not reachable: Cloudflare 403, 2026-11-21).
+- Counter-evidence, readable abstract: PMID:14680974 (Hogenboom, Wanders, Waterham 2003):
+  IPP isomerase "at least as active" in PEX1/PEX5/PEX16/PEX19 Zellweger fibroblasts and
+  cholesterol synthesis normal; "Our results imply that functional peroxisomes are not a
+  prerequisite for the functioning of enzymes involved in cholesterol/isoprenoid
+  biosynthesis". Reactome R-HSA-191382: "IPP isomerase may also be located in human
+  peroxisomes but its function there is not clear."
+- Call: peroxisomal pool real on curator deference (positive curated abstracts), non-core
+  because the activity does not need peroxisomes. Close alternative ACCEPT. No matrix
+  (GO:0005782) row: non-canonical motif, no readable import/protease-protection assay.
+- is_active_in IBA: peroxisomal activity asserted in readable abstracts (Kovacs 2007, Paton
+  1997) but contested; no WRONG_QUALIFIER defect raised.
