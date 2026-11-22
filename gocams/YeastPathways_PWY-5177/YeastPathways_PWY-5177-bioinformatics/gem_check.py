@@ -43,6 +43,22 @@ def is_glut(name: str) -> bool:
     return any(x in n for x in GLUT)
 
 
+def glut_control(mets: dict[str, str]) -> str:
+    """Positive control for the glutaryl/glutaconyl matcher.
+
+    Counts metabolites (id or name) containing bare "glutaryl" or "glutaconyl"
+    BEFORE the methylglutaryl exclusion, so a rerun shows the matcher can hit
+    something (HMG-CoA), and how many hits survive is_glut().
+    """
+    raw = sorted(k for k, n in mets.items()
+                 if any(x in f"{k} {n}".lower() for x in ("glutaryl", "glutaconyl", "glutcoa")))
+    kept = [k for k in raw if is_glut(k) or is_glut(mets[k])]
+    shown = ", ".join(f"{k} ({mets[k].strip()})" for k in raw)
+    return (f"Matcher positive control: {len(raw)} metabolites contain 'glutaryl'/'glutaconyl' "
+            f"before the methylglutaryl exclusion [{shown or 'none'}]; "
+            f"{len(kept)} remain after it.")
+
+
 def fetch(url: str, dest: Path) -> str:
     if not dest.exists():
         urllib.request.urlretrieve(url, dest)
@@ -85,7 +101,8 @@ def main() -> None:
     # iMM904
     sha = fetch(IMM904_URL, cache / "iMM904.json")
     m = json.loads((cache / "iMM904.json").read_text())
-    out += [f"## iMM904 ({IMM904_URL}, sha256 {sha[:16]})", ""]
+    mnames = {x["id"]: x["name"] for x in m["metabolites"]}
+    out += [f"## iMM904 ({IMM904_URL}, sha256 {sha[:16]})", "", glut_control(mnames), ""]
     other = Counter()
     present = set()
     for r in m["reactions"]:
@@ -93,7 +110,7 @@ def main() -> None:
         base = {k.rsplit("_", 1)[0] for k in mets}
         g = genes_in(r.get("gene_reaction_rule", ""))
         present.update(g)
-        glut = any(is_glut(k) for k in mets)
+        glut = any(is_glut(k) or is_glut(mnames[k]) for k in mets)
         if glut or (g and base & C4_BIGG):
             eq = f"{side(mets, -1, str)} -> {side(mets, 1, str)}"
             out.append(f"- {r['id']} ({r['name'].strip()}): {eq}; "
@@ -110,7 +127,8 @@ def main() -> None:
     sha = fetch(YEASTGEM_URL, cache / f"yeast-GEM-{YEASTGEM_TAG}.yml")
     y = yaml.load((cache / f"yeast-GEM-{YEASTGEM_TAG}.yml").read_text(), Loader=omap_loader())
     names = {x["id"]: (x["name"], x["compartment"]) for x in y["metabolites"]}
-    out += [f"## yeast-GEM {y['metaData']['version']} ({YEASTGEM_URL}, sha256 {sha[:16]})", ""]
+    out += [f"## yeast-GEM {y['metaData']['version']} ({YEASTGEM_URL}, sha256 {sha[:16]})", "",
+            glut_control({k: n for k, (n, _) in names.items()}), ""]
     other = Counter()
 
     def lab(k):

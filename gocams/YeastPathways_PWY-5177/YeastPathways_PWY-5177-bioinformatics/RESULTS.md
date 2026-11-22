@@ -14,8 +14,12 @@ represent these steps, and with which genes, compartments and directions?
 ## Findings (from gem_reactions.md)
 
 1. **No glutaryl-CoA degradation in either model.** No reaction in iMM904 or
-   yeast-GEM 9.1.1 involves glutaryl-CoA or glutaconyl-CoA (the only "glutaryl"
-   metabolite is 3-hydroxy-3-methylglutaryl-CoA of the mevalonate pathway).
+   yeast-GEM 9.1.1 involves glutaryl-CoA or glutaconyl-CoA. The matcher's
+   positive control, reported per model in gem_reactions.md, shows it does hit
+   "glutaryl" metabolites: in each model the only ones are the two
+   compartmental copies of 3-hydroxy-3-methylglutaryl-CoA (mevalonate pathway),
+   and none remain after excluding them. For iMM904 both metabolite ids and
+   names are tested.
 2. **ERG10 direction.** iMM904 encodes the Erg10 reactions in the condensation
    direction only (cytosolic ACACT1r and mitochondrial ACACT1m, "forward only":
    2 acetyl-CoA -> acetoacetyl-CoA + CoA). yeast-GEM keeps them reversible
@@ -44,8 +48,9 @@ POT1 performs this C4 step in vivo, and it does not by itself show that Erg10
 never cleaves acetoacetyl-CoA.
 
 Limitations: the script matches genes by GPR string and C4 metabolites by name
-(yeast-GEM) or BiGG id (iMM904); a reaction annotated with an unexpected
-metabolite name would be missed. iMM904 is fetched unversioned from BiGG, so its
+(yeast-GEM) or BiGG id (iMM904); a C4 metabolite with an unexpected name or id
+would be missed. The glutaryl/glutaconyl search tests names in both models (and
+ids in iMM904) and carries a positive control. iMM904 is fetched unversioned from BiGG, so its
 sha256 is recorded in the output.
 
 ## Follow-up: stereochemistry and compartments of the gene products in the GEMs
@@ -61,7 +66,10 @@ compartments of those reactions. FOX2 (MFE-2) and PHS1 both act on
    3-hydroxyacyl-CoA participants of the FOX2 hydratase (ECOAH4p-ECOAH11p) and
    dehydrogenase (HACD4p-HACD10p) reactions are (S), and the reactions carry
    the (S)-specific ECs 4.2.1.17 (enoyl-CoA hydratase) and 1.1.1.35
-   ((S)-3-hydroxyacyl-CoA dehydrogenase), not EC 4.2.1.119. This is the same
+   ((S)-3-hydroxyacyl-CoA dehydrogenase), not EC 4.2.1.119. One row is
+   internally inconsistent as well: ECOAH8p carries EC 4.2.1.134 (the
+   (3R)-specific very-long-chain dehydratase) together with EC 4.2.1.17, on an
+   (S) metabolite. This is the same
    error as the GO-CAM's FOX2 activities. Because the (S) intermediates are
    produced and consumed only by FOX2 in the peroxisome, the network still
    balances: the error affects annotation and cross-referencing, not flux.

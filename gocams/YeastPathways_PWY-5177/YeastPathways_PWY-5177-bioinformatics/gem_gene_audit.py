@@ -9,6 +9,7 @@ tallies them per gene and model. Both FOX2 (MFE-2) and PHS1 act on
 checking. Writes gem_gene_audit.md beside this script.
 
 Usage: uv run python gem_gene_audit.py [CACHE_DIR]   (same cache as gem_check.py)
+Run from this directory: the script imports gem_check.py from beside it.
 """
 
 import json
