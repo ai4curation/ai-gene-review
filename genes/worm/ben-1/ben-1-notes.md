@@ -33,6 +33,10 @@
   missense variants in `ben-1` do not predict albendazole resistance equally
   well in every species.
 - The GOA chemosensory and egg-laying behavior rows are phenotype-level IMPs.
-  They identify tissues and assays in which disrupting beta-tubulin changes an
-  organismal output, but BEN-1 performs the structural microtubule work rather
-  than the behavioral process itself.
+  The Driscoll abstract does not mention chemosensation, so the exact basis of
+  the chemosensory row remains unresolved. Lacroix et al. used the old TBB-5
+  name for the tubulin isoform that WormBase maps to ben-1; current C. elegans
+  beta-tubulin literature lists no separate tbb-5 gene. Their TBB-5
+  uterine-muscle RNAi experiment supports a ben-1 egg-laying phenotype, but
+  BEN-1 performs the structural microtubule work rather than the behavioral
+  process itself.
