@@ -10,12 +10,19 @@ Writes ``upstream_outcomes.tsv``. ``outcome`` is computed, never judged:
 
   STILL_PROPAGATED    the newest snapshot still carries the term to the gene
   PREDICTED           the review said REMOVE while PAINT still carried the term: on or before the last
-                      snapshot that propagated it, or before the date on the loss record
+                      snapshot that propagated it, or before a loss record dated inside the window
   ORDER_UNDETERMINED  the review said REMOVE between the last snapshot that carried the term and the
                       first that did not, so which came first cannot be told from the snapshots
   AGREED_AFTER        PAINT had already dropped the term when the review first said REMOVE; the review
                       worked from a GOA file that still listed the row, so this is independent agreement
-  NOT_REPLAYABLE      the gene is not a leaf of a tree we can read, so the history is unknown
+  UNDATED             PAINT dropped the term and git history holds no REMOVE to date (a shallow clone
+                      does this); the order is unknown, not assumed
+  NEVER_PROPAGATED    the gene is on the tree but no snapshot of this release carries the term to it
+  NOT_A_LEAF          the gene is not a leaf of a tree we can read, so nothing can be replayed
+
+A loss blocks a term when it sits on the lineage at or below the IBD. Depth is read from clade
+size, so a loss on a single-child node directly above the IBD, which has the same clade, would
+be read as blocking; the cached tree does not record the order of such nodes.
 
 ``upstream_change`` says what PAINT did: LOSS_ADDED (an IRD or IKR on the lineage),
 IBD_WITHDRAWN (no IBD for the term left in the family), or IBD_MOVED (an IBD for the
@@ -45,7 +52,7 @@ CACHE = Path(".cache") / "paint_history"
 FIELDS = [
     "gene_file", "accession", "go_id", "go_label", "family", "outcome", "upstream_change",
     "first_snapshot_propagated", "last_snapshot_propagated", "first_snapshot_dropped", "loss_node",
-    "loss_evidence", "loss_date", "review_first_remove_date", "review_first_remove_commit",
+    "loss_evidence", "loss_date", "loss_date_after_drop", "review_first_remove_date", "review_first_remove_commit",
 ]
 
 
@@ -124,7 +131,7 @@ def main() -> None:
                 tree, leaf, row["family"] = t, lv[0], fam
                 break
         if tree is None:
-            row["outcome"] = "NOT_REPLAYABLE"
+            row["outcome"] = "NOT_A_LEAF"
             out.append(row)
             continue
         hist = {s: state(tree, leaf, ibds[s], r["go_id"]) for s in snaps}
@@ -146,16 +153,22 @@ def main() -> None:
         date, commit = first_remove(r["gene_file"], r["go_id"])
         row["review_first_remove_date"], row["review_first_remove_commit"] = date, commit
         if not on:
-            row["outcome"] = "NOT_REPLAYABLE"  # never propagated in any snapshot of this release
+            row["outcome"] = "NEVER_PROPAGATED"  # the GOA row predates every snapshot of this release
         else:
             # The change happened after the last snapshot that carried the term and by the first that
-            # did not; a loss record carries its own date, which narrows that window to a day.
+            # did not. A loss record carries its own date, which can narrow that window, but a loss dated
+            # after the first snapshot that dropped the term cannot be what dropped it, so the earlier of
+            # the two is used and the disagreement is recorded.
             changed_by = dropped
             if block and block[2]:
-                changed_by = f"{block[2][:4]}-{block[2][4:6]}-{block[2][6:]}"
-            if not date or date >= changed_by:
+                loss_day = f"{block[2][:4]}-{block[2][4:6]}-{block[2][6:]}"
+                row["loss_date_after_drop"] = loss_day > dropped
+                changed_by = min(dropped, loss_day)
+            if not date:
+                row["outcome"] = "UNDATED"  # no REMOVE found in git history (for example a shallow clone)
+            elif date >= changed_by:
                 row["outcome"] = "AGREED_AFTER"
-            elif block or date <= on[-1]:
+            elif (block and changed_by < dropped) or date <= on[-1]:
                 row["outcome"] = "PREDICTED"
             else:
                 row["outcome"] = "ORDER_UNDETERMINED"

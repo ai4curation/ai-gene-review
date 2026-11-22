@@ -157,10 +157,10 @@ change it asks for and the node.
 
 The 77 changed rows had been removed for reasons that are not grounds: no experimental
 data on the gene, a short donor list, redundancy with another row, an obsolete term, or
-a claim about where the seeds sit that the tree contradicts. Fifty became
-`MARK_AS_OVER_ANNOTATED`, twelve `MODIFY`, ten `KEEP_AS_NON_CORE` and five `UNDECIDED`.
-A reason that argued absence of evidence and cited no PAINT node changed action half
-the time; a reason that cited a node, 6 percent of the time.
+a claim about where the seeds sit that the tree contradicts. Fifty-one became
+`MARK_AS_OVER_ANNOTATED`, twelve `MODIFY`, nine `KEEP_AS_NON_CORE` and five `UNDECIDED`.
+A reason that argued absence of evidence and cited no PAINT node changed action 31 percent
+of the time (18 of 58 rows); a reason that cited a node, 7 percent (30 of 416).
 
 ### Scoring removals against later PAINT snapshots
 
@@ -171,23 +171,22 @@ from git history.
 
 | Outcome | Rows |
 |---|---:|
-| Predicted: the review said REMOVE while PAINT still carried the term | 5 |
+| Predicted: the review said REMOVE while PAINT still carried the term | 4 |
 | Order undetermined: the review fell between two snapshots | 8 |
-| Agreed after: PAINT had already dropped the term, and the review worked from a GOA file that still listed the row | 30 |
-| Not replayable: the gene is not a leaf of a readable tree | 8 |
+| Agreed after: PAINT had already dropped the term, and the review worked from a GOA file that still listed the row | 31 |
+| Not a leaf: the gene is not on a readable tree | 8 |
 | Still propagated | 737 |
 
-The five predictions:
+The four predictions:
 
 | Gene | Term | What PAINT did |
 |---|---|---|
-| SCHPO/cts2 | chitinase activity | added a loss |
 | human/CASP14 | positive regulation of neuron apoptotic process | added a loss |
 | yeast/ACL4 | mitochondrion targeting sequence binding | withdrew the IBD |
 | yeast/SIR3 | mitotic DNA replication checkpoint signaling | withdrew the IBD |
 | yeast/LPL1 | monoacylglycerol lipase activity | moved the IBD off the lineage |
 
-The 30 rows in the third line are independent agreement and not prediction: the
+The 31 rows in the third line are independent agreement and not prediction: the
 reviewer could not see PAINT's change, but PAINT made it first. Snapshots are months
 apart, so only a loss record, which carries its own date, fixes the order to the day.
 

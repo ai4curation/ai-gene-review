@@ -93,8 +93,8 @@ Of the 221 live human rows, 184 are upheld and 37 changed.
 Upheld rows by ground: loss or divergence in the target clade 359, misplaced IBD 188,
 bad seed 73, lineage-inappropriate term 38. Each names a PAINT change and a node.
 
-Changed rows by new action: `MARK_AS_OVER_ANNOTATED` 50, `MODIFY` 12,
-`KEEP_AS_NON_CORE` 10, `UNDECIDED` 5. They are in 72 gene reviews. A further 78 rows
+Changed rows by new action: `MARK_AS_OVER_ANNOTATED` 51, `MODIFY` 12,
+`KEEP_AS_NON_CORE` 9, `UNDECIDED` 5. They are in 72 gene reviews. A further 78 rows
 kept REMOVE but had the written reason corrected, because it rested on a non-ground or
 misstated the tree.
 
@@ -108,17 +108,19 @@ outstanding, so the 658 upheld removals are open predictions against future rele
 
 | Outcome | Rows |
 |---|---:|
-| `PREDICTED`: the review said REMOVE while PAINT still carried the term | 5 |
+| `PREDICTED`: the review said REMOVE while PAINT still carried the term | 4 |
 | `ORDER_UNDETERMINED`: the review fell between two snapshots | 8 |
-| `AGREED_AFTER`: PAINT had already dropped it; the review used a GOA file that still listed the row | 30 |
-| `NOT_REPLAYABLE`: the gene is not a leaf of a readable tree | 8 |
+| `AGREED_AFTER`: PAINT had already dropped it; the review used a GOA file that still listed the row | 31 |
+| `NOT_A_LEAF`: the gene is not a leaf of a readable tree | 8 |
 | `STILL_PROPAGATED` | 737 |
 
-The five predictions are SCHPO `cts2` chitinase activity and human CASP14 positive
-regulation of neuron apoptotic process (PAINT added a loss), yeast ACL4 mitochondrion
-targeting sequence binding and SIR3 mitotic DNA replication checkpoint signaling
-(PAINT withdrew the IBD), and yeast LPL1 monoacylglycerol lipase activity (PAINT moved
-the IBD off the lineage). `AGREED_AFTER` rows are independent agreement, not
+The four predictions are human CASP14 positive regulation of neuron apoptotic process
+(PAINT added a loss), yeast ACL4 mitochondrion targeting sequence binding and SIR3
+mitotic DNA replication checkpoint signaling (PAINT withdrew the IBD), and yeast LPL1
+monoacylglycerol lipase activity (PAINT moved the IBD off the lineage). SCHPO `cts2`
+chitinase activity is not one of them: its loss record is dated after the first snapshot
+that had already dropped the term, and that snapshot predates the review, so the earlier
+date is used and the row is `AGREED_AFTER` (the `loss_date_after_drop` column marks it). `AGREED_AFTER` rows are independent agreement, not
 prediction: the reviewer could not see PAINT's change. Three GID1 rows are absent from
 the snapshot's leaf file although the replay still propagates them; they are counted as
 `STILL_PROPAGATED` here and as withdrawn in the batch record, and need a look.
@@ -129,20 +131,26 @@ order to the day.
 ### What the spurious removals had in common
 
 `reason_scan.py` flags reasons by phrase and by where the seeds sit; `reason_scan.tsv`
-holds the flags for every live row. Calibrated on the first 252 rows re-judged, against
-each row's original text:
+holds the flags for every live row. Measured over all 735 live rows, against each row's
+text before the re-review. "Changed" is a new action; "edited" also counts a reason
+rewritten under the same action.
 
-| Signal in the original reason | Rows | Changed |
-|---|---:|---:|
-| Argues absence of evidence and cites no PAINT node | 20 | 50% |
-| Short reason (under 45 words) | 19 | 37% |
-| Argues absence of evidence | 44 | 27% |
-| Cites no PAINT node | 110 | 24% |
-| Cites a PAINT node | 142 | 6% |
+| Signal in the original reason | Rows | Changed | Edited |
+|---|---:|---:|---:|
+| Argues absence of evidence and cites no PAINT node | 58 | 31% | 52% |
+| Argues absence of evidence | 117 | 19% | 39% |
+| Short reason (under 45 words) | 63 | 16% | 27% |
+| Cites no PAINT node | 319 | 15% | 26% |
+| Cites a PAINT node | 416 | 7% | 18% |
+| All rows | 735 | 10% | 21% |
+
+The first 252 rows gave a sharper picture (50% changed for the first line, on 20 rows);
+the signal held on the full pass and weakened.
 
 Seed position alone predicted little (a seed in the target's own child clade: 17%
-changed, against 14% overall), because a close seed is often a diverged paralog. The
-reverse held: with no seed in the target's child clade, 45 of 47 removals stood.
+changed, against 14% overall, on the first 252 rows), because a close seed is often a
+diverged paralog. The reverse held on those rows: with no seed in the target's child
+clade, 45 of 47 removals stood.
 
 Three recurring errors, none visible without the tree:
 
@@ -178,4 +186,3 @@ Not resolved by this pass:
 - **Papers cited in prose only** because they are not in `publications/`:
   PMID:15340082 (SWI2), PMID:12950171 and PMID:17240044 (PCSK1), PMID:7867932 (tub),
   and the three SLC26A3 sulfate transport papers.
-- `genes/SCHPO/mid1` fails validation on a quote that predates this work.

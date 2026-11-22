@@ -55,20 +55,22 @@ def main() -> None:
 
     # One line per PAINT change asked for: the unit a PAINT curator acts on.
     asks: dict[tuple, list[str]] = collections.defaultdict(list)
+    grounds: dict[tuple, set[str]] = collections.defaultdict(set)
     for (gene_file, go), row in sorted(seen.items()):
         i = inv.get((gene_file, go), {})
         fix = row.get("paint_fix") or {}
         if row["verdict"] != "REMOVE_UPHELD" or fix.get("paint_action") in (None, "NONE"):
             continue
-        key = (i.get("family"), i.get("ibd_node"), go, i.get("go_label"), row.get("ground"),
+        key = (i.get("family"), i.get("ibd_node"), go, i.get("go_label"),
                fix["paint_action"], fix.get("target_node_id") or "")
         asks[key].append("/".join(gene_file.split("/")[1:3]))
+        grounds[key].add(str(row.get("ground")))
     with open(HERE / "paint_requests.tsv", "w", newline="") as fh:
         w = csv.writer(fh, delimiter="\t", lineterminator="\n")
-        w.writerow(["family", "ibd_node", "go_id", "go_label", "ground", "paint_action", "target_node_id",
+        w.writerow(["family", "ibd_node", "go_id", "go_label", "paint_action", "target_node_id", "grounds",
                     "reviewed_genes", "genes"])
         for key, genes in sorted(asks.items(), key=lambda kv: (kv[0][0] or "", kv[0][1] or "", kv[0][2])):
-            w.writerow([*key, len(genes), "; ".join(sorted(genes))])
+            w.writerow([*key, "; ".join(sorted(grounds[key])), len(genes), "; ".join(sorted(genes))])
     print("PAINT change requests:", len(asks), "over", len({k[:3] for k in asks}), "node-term pairs")
 
     docs: dict[str, dict] = {}

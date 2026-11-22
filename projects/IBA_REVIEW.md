@@ -174,16 +174,17 @@ molecular functions that IBA alone would miss.
 The open work on IBAs, as of the November 2026 re-review of every removal
 ([how it was done](IBA_REVIEW/HISTORY.md)).
 
-**For PAINT curators: 517 change requests in 304 families.** One line each in
+**For PAINT curators: 515 change requests in 304 families.** One line each in
 [paint_requests.tsv](IBA_REVIEW/rereview-2026-11-21/paint_requests.tsv), with the node, the
 term, the change and the reviewed genes it affects.
 
 | Request | Count | When it is asked for |
 |---|---:|---|
 | Add a loss (IRD) at a named clade | 325 | The function is lost or replaced in the target's clade |
-| Move the IBD down to the seeded clade | 132 | Every seed sits in one child of the node and the target in another |
-| Retire the IBD | 45 | The seed annotation the node rests on is itself wrong |
+| Move the IBD down to the seeded clade | 131 | Every seed sits in one child of the node and the target in another |
+| Retire the IBD | 44 | The seed annotation the node rests on is itself wrong |
 | Add a loss from key residues (IKR) | 14 | Catalytic or binding residues are gone |
+| Move an existing loss | 1 | A recorded loss covers more of the clade than the evidence does |
 
 The requests that reach the most reviewed genes:
 
@@ -195,11 +196,11 @@ The requests that reach the most reviewed genes:
 | PTHR10676 | PTN000743491 | dynein light intermediate chain binding | move to the cytoplasmic dynein 1 clade PTN000072732 |
 | PTHR13964 | PTN000359478 | transcription cis-regulatory region binding (ARID4) | move to PTN009015189 |
 
-**For the annotating groups: 46 node and term pairs rest on a seed that looks wrong.** They
-are the `BAD_SEED` lines of the same file. Where the seed paper was read only as an
+**For the annotating groups: 46 requests rest on a seed that looks wrong.** They are the
+lines of the same file with `BAD_SEED` among their grounds. Where the seed paper was read only as an
 abstract, the batch record says so, and those are queries, not confirmed errors.
 
-**For PANTHER: four leaves sit in the wrong family tree**, which no PAINT change can fix:
+**For PANTHER: five leaves in four families sit in the wrong tree**, which no PAINT change can fix:
 human NTN1 and NTN3 in the POU family, yeast CDC4 in the Utp13 family, worm `ccep-290`
 beside the SMC2 condensin subunit, and poplar chloroplast `atpB` on a V-ATPase leaf. Each
 inherits a whole family's terms.
@@ -1410,7 +1411,8 @@ account for most of them, and none is visible from the gene review alone.
   five seeds are mitoribosomal proteins in its own clade. That is a `MODIFY`.
 
 The written reason predicts the error. A removal that argued from missing evidence and
-named no node changed action half the time; one that named a node, one time in sixteen.
+named no node changed action about one time in three (18 of 58); one that named a node,
+one time in fourteen (30 of 416).
 
 ## Featured Examples
 
