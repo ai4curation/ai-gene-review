@@ -103,3 +103,7 @@ ACCEPT; consistent with the ER-to-endolysosome trafficking route.
 - Call: all three rows ACCEPT -> KEEP_AS_NON_CORE. Real functional pool (TLR9 release), not cargo; non-core because LAMP1 alone does not separate late endosome/endolysosome from lysosome and the core chaperone activity is at the ER. ACCEPT is the close alternative. is_active_in kept without a WRONG_QUALIFIER defect (release activity shown in Lamp1-positive endosomes). No GO:0005765 row: only one weak line.
 - Endosome rows (GO:0005768 IBA, IEA, ISS) rest on the same mouse donor chain; out of scope, not changed.
 - Description sentence on relocalization to "endosomes and lysosomes" (uncited UniProt note) reworded to the LAMP1-positive endolysosome pool.
+
+### Review follow-up (2026-11-22)
+
+- The IBA reason now contrasts the kept is_active_in qualifier with the queried RAB rows.

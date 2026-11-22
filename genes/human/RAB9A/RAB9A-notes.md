@@ -17,3 +17,7 @@
 - The activity (MPR retrieval late endosome -> TGN) acts at late endosomes, so non-core;
   WRONG_QUALIFIER CHECK on the IBA. Same IBD (PTN000635769) and same call as RAB9B.
 - Cycling recruitment of a prenylated RAB is not tethering: no GO:0098574 row.
+
+### Review follow-up (2026-11-22)
+
+- The lysosome reason now says why GO:0005765 is declined: compartment identity (LAMP1 does not separate late endosome from lysosome), not membrane versus lumen, is the weak link.

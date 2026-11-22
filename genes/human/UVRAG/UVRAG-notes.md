@@ -42,3 +42,7 @@ Falcon deep research was started for UVRAG on 2026-06-02. The run timed out afte
 - PMID:18843052 (Itakura et al. 2008; PMC2592660): PMC and Europe PMC returned no full text. Abstract: [PMID:18843052 "UVRAG primarily associates with Rab9-positive endosomes"]. PMID:19270696 (Matsunaga et al. 2009): abstract-only, no PMC copy; its abstract places GFP-Rubicon, not UVRAG, at the endosome/lysosome.
 - Call: both rows ACCEPT -> KEEP_AS_NON_CORE on curator deference (rule 9); lysosome removed from both core_functions.locations. UNDECIDED is the close alternative if the unread figures rest only on LysoTracker or LAMP2. Recruited cytosolic subunit, mTORC1-regulated, so no tethering route.
 - The lytic vacuole row's proposed replacement still lists lysosome; left for the vacuole series.
+
+### Review follow-up (2026-11-22)
+
+- The GO:0000323 lytic vacuole MODIFY row now carries a re-reading note: the lysosome replacement is retained as a non-core location only; action left for the vacuole series.
