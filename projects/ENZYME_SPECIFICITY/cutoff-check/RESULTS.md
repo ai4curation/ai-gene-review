@@ -4,7 +4,7 @@ Back to [Enzyme Specificity Project](../ENZYME_SPECIFICITY.md).
 
 **Bottom line:** most enzyme misannotations in automatically annotated databases are
 overpredictions: the sequence resembles a family but does not belong to it. A family HMM
-scored against its curated trusted cutoff catches many of them. On 38 reviewed electronic
+scored against its curated trusted cutoff catches many of them. On 37 reviewed electronic
 enzyme rows, 11 of 12 accepted rows that had a family model passed the cutoff, and 10 of
 13 removed rows that had one failed it. This check reproduces steps 2 and 4 of Schnoes et
 al. 2009. It can tell an annotation lacks family support. It cannot show that a protein
@@ -60,10 +60,11 @@ uv run python projects/ENZYME_SPECIFICITY/cutoff-check/page/build_page.py OUT.ht
 an electronic enzyme row for a paralog or wrong-reaction reason, plus human PHYKPL and
 HADH. The ACCEPT rows on the same genes serve as controls. The set is **enriched for
 REMOVE rows by construction**, so the counts below show agreement on this set, not a
-general error rate. The runner reads every IEA/IBA molecular-function row that maps to a
-complete EC number (38 rows; PHYKPL has none, as its transaminase term carries no complete
-EC). The reviewer's action is never an input to the check, and actions are read from the
-reviews at run time. Raw output: [results.yaml](results.yaml), which lists every target
+general error rate. The runner reads every live IEA/IBA molecular-function row that maps
+to a complete EC number (37 rows; PHYKPL has none, as its transaminase term carries no
+complete EC). Rows marked `retired` (retired or replaced in GOA) are skipped, since they
+are not live annotations. The reviewer's action is never an input to the check, and
+actions are read from the reviews at run time. Raw output: [results.yaml](results.yaml), which lists every target
 family's score for each row; NCBIfam release `hmm_PGAP/20.0`. Where a row has several
 target families, the scores quoted below are for the best one, the highest score as a
 fraction of its trusted cutoff.
@@ -71,7 +72,7 @@ fraction of its trusted cutoff.
 | Verdict | ACCEPT | MARK_AS_OVER_ANNOTATED | REMOVE | UNDECIDED |
 |---|---|---|---|---|
 | ABOVE_TC | 11 | 0 | 3 | 0 |
-| BTC | 1 | 0 | 8 | 4 |
+| BTC | 1 | 0 | 8 | 3 |
 | NO_MODEL | 0 | 2 | 7 | 0 |
 | SFA | 0 | 0 | 2 | 0 |
 
@@ -96,14 +97,30 @@ Even a `NO_MODEL` verdict carries information through the competing-family list:
 mqo3 ((S)-2-hydroxyglutarate dehydrogenase) pass malate:quinone oxidoreductase; serA
 passes phosphoglycerate dehydrogenase.
 
-### Undecided rows the check speaks to
+### Undecided rows below the cutoff: what the follow-up found
 
-Four rows the reviewers left UNDECIDED fall far below their target family's cutoff, with
-no competing family above its own: ptxD hydroxypyruvate reductase and glyoxylate reductase
-(80.8 / 403, NF012013.0), PP_4638 methylenetetrahydrofolate reductase [NAD(P)H]
-(26.3 / 293.7, TIGR00676.1) and PP_0556 NAD+ kinase (13.7 / 299, NF002892.0). These are
-the reviews to revisit with the check's output in hand. A BTC with no competitor points
-toward a more general term, not a removal on its own.
+Three rows the reviewers left UNDECIDED fall below their target family's cutoff with no
+competing family above its own: ptxD hydroxypyruvate reductase and glyoxylate reductase
+(80.8 / 403, NF012013.0) and PP_4638 methylenetetrahydrofolate reductase [NAD(P)H]
+(26.3 / 293.7, TIGR00676.1). An earlier version of this page called these reviews to
+revisit. A follow-up ([followup_scan.py](followup_scan.py), output
+[followup.yaml](followup.yaml)) scored each protein against the sister model that matters
+and scanned the whole KT2440 proteome. Neither verdict decides its row:
+
+- **ptxD.** The only target model was GhrA, and ptxD resembles GhrB, so a low GhrA score
+  was expected. NCBIfam has a GhrB model, NF011938.0, but it carries no EC number and only
+  a general GO term, so the check never scored it as a target. Against it ptxD scores
+  418.1 / 492, below the cutoff that E. coli GhrB passes at 690.3. No KT2440 protein passes
+  that model, and ptxD is the closest, so the scan finds no other GhrB that would make
+  ptxD a paralog. Its substrate stays open, as the review says.
+- **PP_4638.** KT2440's canonical MetF, Q88D51, passes TIGR00676.1 (340.2 / 293.7), and
+  PP_4638 does not (26.3). That confirms what the review already records: PP_4638 is not a
+  MetF. The review keeps the row open because PP_4638's divergent MTHFR-like fold might
+  carry noncanonical folate chemistry, and models built on canonical MetF cannot test
+  that, so the row stays UNDECIDED.
+
+A third row, PP_0556 NAD+ kinase, was flagged in the earlier run only because the runner
+read a retired row. It no longer runs on retired rows.
 
 ### Where they disagree, and why
 
@@ -137,9 +154,13 @@ toward a more general term, not a removal on its own.
   crotonase, VOC and SDR/MDR.
 - `BTC` or `SFA` together with a competing family that passes is strong support for
   replacing the term (`MODIFY` to the competing activity, or `REMOVE`). Record the scores
-  in `review.reason`. A `BTC` with no competitor points to `MODIFY` toward a more general
-  activity, which is the paper's own remedy: annotate only "at the level of function for
-  which there is strong evidence".
+  in `review.reason`. A `BTC` with no competitor says only that the protein is not in the
+  family that carries the term. Before acting on it, score the protein against the sister
+  families it most resembles (as `followup_scan.py` does for ptxD; see Limitations): if it
+  sits just outside a sister family, the BTC says nothing about its activity. Only when no
+  related family fits either does it point to `MODIFY` toward a more general activity, the
+  paper's own remedy: annotate only "at the level of function for which there is strong
+  evidence".
 - `ABOVE_TC` does not establish activity: check catalytic residues (pseudoenzymes), and
   check whether the family is broader than the specificity in question.
 - `NO_MODEL` is expected for most eukaryote-specific enzymes and says nothing either way.
@@ -165,5 +186,14 @@ its full fingerprint in *P. putida* PP_5147.
   whole library. A lack of hits therefore does not establish that the protein lacks the
   superfamily (Schnoes step 1).
 - Coverage depends on NCBIfam's EC/GO mappings and is mainly prokaryotic.
+- Target families are those whose EC numbers or GO terms include the annotated activity.
+  A closely related model that carries only a general term (NCBIfam's GhrB model, for
+  ptxD) is not scored as a target, so a BTC can mean only "not this sister family".
+  The check cannot find that sister family by itself: besides target families it scores
+  only the families InterPro reports, and InterPro reports none for ptxD because its
+  scores fall below each model's reporting threshold. Name the candidate sister families
+  and score them, as `followup_scan.py` does, or scan the whole NCBIfam library.
+- A BTC with no competing family says the annotation lacks family support. It cannot
+  rule out an activity carried by a divergent family that no model covers.
 - The NCBIfam release and the InterPro and QuickGO responses can change. Results are tied
   to the recorded release.
