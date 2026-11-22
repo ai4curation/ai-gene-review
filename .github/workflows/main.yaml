@@ -236,6 +236,23 @@ jobs:
       - name: Validate supporting_text quotes (whole repo)
         run: just validate-quotes
 
+      # When a PR edits a local source (publication cache, Reactome cache,
+      # family review, gene-local file or any other file: target), unchanged
+      # records can still quote the old text. Recheck only those incoming
+      # citations against this merge commit instead of waiting for validate-all.
+      - name: Validate incoming local-source quotes
+        run: |
+          set -euo pipefail
+          base=$(git cat-file -p HEAD | awk '/^parent / && !p {p = $2} END {print p}')
+          if [[ ! "$base" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Unexpected parent id: $base" >&2
+            exit 1
+          fi
+          if ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            git fetch --quiet --no-tags --depth=1 origin "$base"
+          fi
+          just validate-incoming-quotes "$base" HEAD
+
       # History records (append-only session provenance under history/, ported
       # from dismech) validate against src/ai_gene_review/schema/history.yaml.
       # Cheap, so run whenever they, their tooling, or the curated dirs whose

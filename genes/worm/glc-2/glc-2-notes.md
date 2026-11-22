@@ -51,3 +51,8 @@ Evidence notes:
   glc-2 promoter-reporter expression result; PMID:37811674 expands that native
   reporter picture to enteric and anal-depressor muscles, making WormBase's
   pharynx-restricted expression statement outdated.
+- After `modules/nematode_glutamate_gated_chloride_channels.yaml` merged, I
+  cross-checked the `glc1_glc2_receptor` annoton against this review. The
+  review already models GLC-2 as the beta subunit of a homomeric and
+  GLC-1/GLC-2 heteromeric extracellularly glutamate-gated chloride channel,
+  matching the module participant.
