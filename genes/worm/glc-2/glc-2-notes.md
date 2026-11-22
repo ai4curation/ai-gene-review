@@ -34,8 +34,8 @@ Evidence notes:
   avoid overfitting the sparse abstract-only PMID cache.
 - The PTHR18945 family review places Q17328 inside the anion-selective
   `PTN001055382` GluCl/glycine-receptor lineage. The lineage is right, but its
-  `GO:0005231` excitatory-channel IBD has the same sign problem already found in
-  `glc-1`.
+  `GO:0005231` excitatory-channel IBD is the sign-bearing assertion that the
+  family review flagged as unresolved for this anion-selective node.
 - PMID:37811674 shows that `glc-2` and `glc-4` reporters are expressed in
   enteric and anal-depressor muscles, and that loss of either receptor subunit
   suppresses the `ubr-1` expulsion and enteric-muscle calcium defects. This is
