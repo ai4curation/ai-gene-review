@@ -6,6 +6,8 @@
   large-scale localization and not as direct mechanistic evidence.
 - Searched for `SPCC63.14`, `Q9Y7U0`, `YCJE_SCHPO`, and S. pombe Eis1/eisosome
   terms. No direct SPCC63.14 paper was found.
-- Pinned PANTHER 19 places Q9Y7U0 under the EIS1-family PTN002001648 node.
-  That supports the PAINT `GO:0032126` and `GO:0070941` rows even though the
-  PAINT row's taxon field is narrower than the leaves actually under the PTN.
+- Read cached full-text PMID:21900489, which supports Pil1 cortical-filament
+  eisosomes in fission yeast but does not assay SPCC63.14.
+- Pinned PANTHER 19 places Q9Y7U0 under the EIS1-family PTN002001648 node, but
+  the PAINT row's `taxon:4890` Ascomycota scope is broader than the
+  Saccharomycotina seeds and the S. pombe placement was left unresolved.
