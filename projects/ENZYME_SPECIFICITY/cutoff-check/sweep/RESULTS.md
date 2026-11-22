@@ -10,9 +10,13 @@ This sweep runs that check over every live (not retired) IEA or IBA row in the
 P. putida KT2440 (`PSEPK`) and E. coli (`ECOLI`) reviews whose GO term maps to a
 complete EC number: 1306 rows on 1043 proteins, NCBIfam release 20.0. The reviewer's
 action is read afterwards and is never an input to the verdict. Proposed (`NEW`) rows
-are skipped. **No review is changed here.** Two pairs of electronic rows on one term
-(pedI, `GO:0004029` and `GO:0004030`) carry different actions; the generated list
-reports them for the review's action-consistency check.
+are skipped. **No review is changed here.**
+
+Three accessions have two review folders each: Q88JG9 (`aldB-II` and `pedI`), Q88IJ7
+(`aroE` and `aroE__Q88IJ7`) and Q88JU3 (`quiC1` and `quiC1_qsuB`). The sweep merges their
+rows under the first folder in sort order. For Q88JG9 the two reviews disagree on
+`GO:0004029` and `GO:0004030`. The open question for each pair is whether both folders
+should exist, and the generated list names both.
 
 - Runner: [`run_sweep.py`](run_sweep.py), about 6 minutes once sequences and the pressed
   library are cached. `--rerender` re-derives the lists from saved scores.

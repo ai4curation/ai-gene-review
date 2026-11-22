@@ -18,6 +18,8 @@ Rows are then sorted into the disagreements worth a curator's time:
 * ``kept_record_states_ec``: every passing family is named for the protein or carries
   an EC its UniProt record states, and the record states the annotated EC too (often
   a secondary or partial reaction).
+* ``kept_no_model_fits_other``: kept, no family carries the term, and the protein
+  passes another function-level family.
 * ``kept_below_cutoff``: kept, fails its target families, no competing family passes.
   The closest family is listed, since this is often a sister family (ptxD's case).
 * ``removed_but_passes``: the row was removed or marked over-annotated, yet a
@@ -97,8 +99,9 @@ def collect_rows() -> tuple[list[dict], list[dict]]:
     """Live electronic rows that map to a complete EC number, one per protein and term.
 
     Proposed (``NEW``) rows are not GOA rows and are skipped. Where two electronic rows
-    on one term carry different actions, the first is kept and the pair is returned as
-    a conflict, since the review's actions on one term should agree.
+    on one protein and term carry different actions (in one review, or in two review
+    folders for the same accession), the first is kept and the pair is returned as a
+    conflict naming both folders.
     """
     raw = []
     for org in ORGANISMS:
@@ -114,6 +117,7 @@ def collect_rows() -> tuple[list[dict], list[dict]]:
                     {
                         "organism": org,
                         "gene": review["gene_symbol"],
+                        "folder": path.parent.name,
                         "accession": review["id"],
                         "go": ann["term"]["id"],
                         "label": ann["term"]["label"],
@@ -131,8 +135,13 @@ def collect_rows() -> tuple[list[dict], list[dict]]:
         if key in first:
             if r["action"] != first[key]["action"]:
                 conflicts.append(
-                    {k: r[k] for k in ("organism", "gene", "go", "label")}
-                    | {"actions": [first[key]["action"], r["action"]]}
+                    {k: r[k] for k in ("organism", "accession", "go", "label")}
+                    | {
+                        "rows": [
+                            f"{first[key]['folder']}: {first[key]['action']}",
+                            f"{r['folder']}: {r['action']}",
+                        ]
+                    }
                 )
             continue
         first[key] = r
@@ -140,13 +149,25 @@ def collect_rows() -> tuple[list[dict], list[dict]]:
     return rows, conflicts
 
 
-def review_paths() -> dict[str, Path]:
-    """Review file for each UniProt accession in the swept organisms."""
-    paths = {}
+def review_paths() -> dict[str, list[Path]]:
+    """Review files for each UniProt accession in the swept organisms.
+
+    Normally one; a few accessions have two review folders, which the sweep reports.
+    """
+    paths: dict[str, list[Path]] = {}
     for org in ORGANISMS:
         for path in sorted((REPO / "genes" / org).glob("*/*-ai-review.yaml")):
-            paths[yaml.safe_load(path.read_text())["id"]] = path
+            paths.setdefault(yaml.safe_load(path.read_text())["id"], []).append(path)
     return paths
+
+
+def duplicate_accessions() -> list[dict]:
+    """Accessions with more than one review folder."""
+    return [
+        {"accession": acc, "folders": [str(p.parent.relative_to(REPO)) for p in ps]}
+        for acc, ps in sorted(review_paths().items())
+        if len(ps) > 1
+    ]
 
 
 def uniprot_record(review: Path) -> tuple[set[str], set[str]]:
@@ -162,10 +183,13 @@ def uniprot_record(review: Path) -> tuple[set[str], set[str]]:
 def gene_token(gene: str) -> str:
     """The gene symbol as it appears in a family name: ``puuA-II`` -> ``puua``.
 
-    >>> gene_token("puuA-II"), gene_token("pyrC'"), gene_token("nuoG")
-    ('puua', 'pyrc', 'nuog')
+    Paralog numbering (``-II``, a trailing digit, a prime) is dropped, so ``cheB1``
+    matches a family named for CheB.
+
+    >>> gene_token("puuA-II"), gene_token("pyrC'"), gene_token("nuoG"), gene_token("cheB1")
+    ('puua', 'pyrc', 'nuog', 'cheb')
     """
-    return re.sub(r"(-[IVX]+|')$", "", gene).lower()
+    return re.sub(r"(-[IVX]+|'|\d+)$", "", gene).lower()
 
 
 def relation(
@@ -192,6 +216,8 @@ def relation(
 
 def classify(row: dict) -> str | None:
     """Which disagreement list a row belongs to, if any."""
+    if row["action"] in KEPT and row["verdict"] == "NO_MODEL":
+        return "kept_no_model_fits_other" if row["better_fitting_families"] else None
     if row["action"] in KEPT and row["verdict"] in {"BTC", "SFA", "NO_TARGET_HIT"}:
         relations = set(row["better_fitting_relations"].values())
         if not relations:
@@ -212,7 +238,13 @@ def classify(row: dict) -> str | None:
 
 def annotate(results: list[dict], db: NCBIfam) -> None:
     """Add the UniProt-record checks, competitor relations and disagreement list."""
-    records = {acc: uniprot_record(path) for acc, path in review_paths().items()}
+    records = {}
+    for acc, paths in review_paths().items():
+        parts = [uniprot_record(p) for p in paths]
+        records[acc] = (
+            set().union(*(e for e, _ in parts)),
+            set().union(*(n for _, n in parts)),
+        )
     by_accession = {f.accession: f for f in db.families}
     for r in results:
         ecs, names = records.get(r["accession"], (set(), set()))
@@ -301,6 +333,7 @@ def main(limit: int | None = None) -> None:
         "organisms": ORGANISMS,
         "rows": len(results),
         "conflicting_actions": conflicts,
+        "duplicate_accessions": duplicate_accessions(),
     }
     (HERE / "sweep_results.yaml").write_text(
         yaml.safe_dump({"meta": meta, "rows": results}, sort_keys=False, width=120)
@@ -337,16 +370,26 @@ def render(meta: dict, results: list[dict]) -> str:
     conflicts = meta.get("conflicting_actions") or []
     lines += [
         "",
-        f"## Electronic rows on one term with different actions ({len(conflicts)})",
+        f"## Electronic rows on one protein and term with different actions ({len(conflicts)})",
         "",
-        "The sweep keeps one row per protein and term. These pairs disagree, which the "
-        "action-consistency rules say should not happen.",
+        "The sweep keeps one row per protein and term (the first folder in sort order). "
+        "These pairs disagree; each names the review folder it comes from.",
         "",
     ]
     lines += [
-        f"- {c['organism']} {c['gene']} {c['go']} {c['label']}: {' vs '.join(map(str, c['actions']))}"
+        f"- {c['organism']} {c['accession']} {c['go']} {c['label']}: {' vs '.join(c['rows'])}"
         for c in conflicts
     ]
+    dups = meta.get("duplicate_accessions") or []
+    lines += [
+        "",
+        f"## Accessions with more than one review folder ({len(dups)})",
+        "",
+        "Their rows are merged in this sweep. Each pair needs a decision on whether both "
+        "folders should exist.",
+        "",
+    ]
+    lines += [f"- {d['accession']}: {', '.join(d['folders'])}" for d in dups]
 
     def cell(s: dict) -> str:
         """Family, score and cutoff; the best-domain score too when it is what fails."""
@@ -412,6 +455,13 @@ def render(meta: dict, results: list[dict]) -> str:
         "the annotated EC is weak.",
     )
     section(
+        "kept_no_model_fits_other",
+        "Kept rows no family is mapped to, though the protein passes another family",
+        "No NCBIfam family carries the term, and the protein passes a function-level family "
+        "for something else. Check whether the passing family's name or EC fits the term: "
+        "if it does, the release table is missing the term (purT's case).",
+    )
+    section(
         "kept_below_cutoff",
         "Kept rows below cutoff with no competing family",
         "Weaker leads. The last column is the closest family; if it is a sister family the "
@@ -433,7 +483,13 @@ def render(meta: dict, results: list[dict]) -> str:
 def rerender() -> None:
     """Re-derive the lists and DISAGREEMENTS.md from saved scores, without rescanning."""
     saved = yaml.safe_load((HERE / "sweep_results.yaml").read_text())
-    annotate(saved["rows"], NCBIfam(CACHE / "ncbifam"))
+    db = NCBIfam(CACHE / "ncbifam")
+    if saved["meta"]["ncbifam_release"] != db.release():
+        raise SystemExit(
+            f"saved results are from NCBIfam {saved['meta']['ncbifam_release']}, the cache "
+            f"holds {db.release()}: rerun the sweep instead of --rerender"
+        )
+    annotate(saved["rows"], db)
     (HERE / "sweep_results.yaml").write_text(
         yaml.safe_dump(saved, sort_keys=False, width=120)
     )
