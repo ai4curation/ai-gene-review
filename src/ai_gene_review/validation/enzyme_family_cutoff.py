@@ -22,7 +22,14 @@ Which families are scored
 * every NCBIfam family whose EC numbers or GO terms include the annotated function
   ("target" families), and
 * every NCBIfam family InterPro reports for the protein ("observed" families), so a
-  competing family the protein fits better is visible.
+  competing family the protein fits better is visible, or, with ``library=True``, the
+  protein's closest families from a scan of the whole function-level library.
+
+InterPro reports only matches above each model's own threshold, so a sister family the
+protein narrowly misses is invisible to the default check (ptxD, which sits just below
+the GhrB model, is the worked case). The library scan closes that gap: every report then
+names the families the protein is closest to, ranked by score as a fraction of each
+model's trusted cutoff, whether or not they pass it.
 
 Verdicts
 --------
@@ -139,6 +146,25 @@ class CutoffReport:
     note: str
     better_fitting_families: list[str]
     scores: list[FamilyScore]
+    closest_families: list[FamilyScore] = field(default_factory=list)
+
+
+def rank_closest(scores: Iterable[FamilyScore], top: int) -> list[FamilyScore]:
+    """The ``top`` function-level families with the highest score as a fraction of TC.
+
+    Ranking by the fraction of the trusted cutoff, not raw score, puts a family the
+    protein narrowly misses above one it clears only because that model's cutoff is low.
+
+    >>> f = lambda acc, s, t="equivalog": FamilyScore(acc, acc, t, [], [], False, s, s, (100.0, 100.0), None)
+    >>> [x.accession for x in rank_closest([f("a", 50.0), f("b", 90.0), f("c", 200.0, "domain"), f("d", None)], 2)]
+    ['b', 'a']
+    """
+    hits = [
+        s
+        for s in scores
+        if s.seq_score is not None and s.family_type in FUNCTIONAL_TYPES
+    ]
+    return sorted(hits, key=lambda s: -(s.seq_score or 0.0) / s.tc[0])[:top]
 
 
 def classify_hit(
@@ -280,6 +306,43 @@ class NCBIfam:
             f for f in self.families if ecs & set(f.ec_numbers) or gos & set(f.go_terms)
         ]
 
+    def library(self) -> Path:
+        """Pressed HMMER database of every function-level model, built once and cached.
+
+        The release ships one file per model; they are unpacked from the release archive
+        into the same folder ``hmm_path`` reads, then pressed so a scan can stream the
+        profiles instead of holding about 17,000 models in memory.
+        """
+        prefix = self.cache_dir / "library" / "functional.hmm"
+        if prefix.with_suffix(".hmm.h3m").exists():
+            return prefix
+        import tarfile
+
+        import pyhmmer
+
+        archive = self._download(
+            f"{NCBIFAM_BASE}/hmm_PGAP.HMM.tgz", self.cache_dir / "hmm_PGAP.HMM.tgz"
+        )
+        hmm_dir = self.cache_dir / "hmm"
+        hmm_dir.mkdir(parents=True, exist_ok=True)
+        with tarfile.open(archive) as tar:
+            for member in tar.getmembers():
+                name = Path(member.name).name
+                if member.isfile() and not (hmm_dir / name).exists():
+                    source = tar.extractfile(member)
+                    assert source is not None
+                    (hmm_dir / name).write_bytes(source.read())
+
+        def functional_hmms():
+            for family in self.families:
+                if family.family_type in FUNCTIONAL_TYPES:
+                    with pyhmmer.plan7.HMMFile(self.hmm_path(family)) as fh:
+                        yield fh.read()
+
+        prefix.parent.mkdir(parents=True, exist_ok=True)
+        pyhmmer.hmmer.hmmpress(functional_hmms(), prefix)
+        return prefix
+
     def hmm_path(self, family: Family) -> Path:
         name = f"{family.accession}.HMM"
         return self._download(
@@ -294,7 +357,7 @@ MAX_RETRY_WAIT = 60.0  # seconds; a server-supplied Retry-After is capped at thi
 def _read_with_retry(req: urllib.request.Request) -> bytes:
     """Read a URL, waiting and retrying when the server answers 429 Too Many Requests.
 
-    InterPro rate-limits clients; a batch run of the check makes dozens of calls. The
+    InterPro and QuickGO rate-limit clients; a batch run of the check makes dozens of calls. The
     wait follows the server's Retry-After header (capped at ``MAX_RETRY_WAIT``), else
     doubles from 2 s, and gives up
     after ``RATE_LIMIT_RETRIES`` attempts by re-raising the last 429.
@@ -341,8 +404,7 @@ def go_ec_xrefs(go_id: str) -> tuple[str, ...]:
     req = urllib.request.Request(
         QUICKGO_XREFS.format(go=go_id), headers={"Accept": "application/json"}
     )
-    with urllib.request.urlopen(req, timeout=60) as fh:
-        results = json.load(fh)["results"]
+    results = json.loads(_read_with_retry(req))["results"]
     return tuple(
         x["dbId"] for r in results for x in r.get("xRefs", []) if x["dbCode"] == "EC"
     )
@@ -432,9 +494,104 @@ def score_families(
     )
 
 
+def scan_library(
+    sequences: dict[str, str], db: NCBIfam, top: int = 5
+) -> dict[str, list[FamilyScore]]:
+    """Each protein's ``top`` closest function-level families across the whole library.
+
+    Unlike ``score_families`` this keeps HMMER's acceleration filters on: it looks for
+    the families a protein resembles most, which are strong enough hits to survive them,
+    and a full library scan without filters would be very slow. Scores are bit scores,
+    so they are comparable with ``score_families`` for any hit both report.
+    """
+    import pyhmmer
+
+    alphabet = pyhmmer.easel.Alphabet.amino()
+    block = pyhmmer.easel.DigitalSequenceBlock(
+        alphabet,
+        [
+            pyhmmer.easel.TextSequence(name=acc.encode(), sequence=seq).digitize(
+                alphabet
+            )
+            for acc, seq in sequences.items()
+        ],
+    )
+    by_accession = {f.accession: f for f in db.families}
+    closest: dict[str, list[FamilyScore]] = {}
+    with pyhmmer.plan7.HMMFile(db.library()) as profiles:
+        for hits in pyhmmer.hmmscan(block, profiles.optimized_profiles()):
+            scores = []
+            for hit in hits:
+                if hit.score <= 0:
+                    continue
+                name = hit.name if isinstance(hit.name, str) else hit.name.decode()
+                accession = (
+                    hit.accession.decode()
+                    if isinstance(hit.accession, bytes)
+                    else hit.accession
+                )
+                family = by_accession.get(accession or "") or by_accession.get(name)
+                if family is None:
+                    continue
+                scores.append((family, hit))
+            query = hits.query.name
+            query_name = query if isinstance(query, str) else query.decode()
+            closest[query_name] = _hits_to_scores(scores, db, top)
+    return closest
+
+
+def _hits_to_scores(hits: list, db: NCBIfam, top: int) -> list[FamilyScore]:
+    """FamilyScores for library hits, with each model's own cutoffs, closest first."""
+    import pyhmmer
+
+    scores = []
+    for family, hit in hits:
+        with pyhmmer.plan7.HMMFile(db.hmm_path(family)) as fh:
+            tc, nc = _cutoffs(fh.read())
+        scores.append(
+            FamilyScore(
+                accession=family.accession,
+                product_name=family.product_name,
+                family_type=family.family_type,
+                ec_numbers=family.ec_numbers,
+                go_terms=family.go_terms,
+                is_target=False,
+                seq_score=round(hit.score, 1),
+                dom_score=round(max(d.score for d in hit.domains), 1),
+                tc=tc,
+                nc=nc,
+            )
+        )
+    return rank_closest(scores, top)
+
+
+def _with_closest(verdict: str, note: str, closest: list[FamilyScore]) -> str:
+    """Name the closest non-target family on a verdict that leaves the protein unplaced.
+
+    >>> f = FamilyScore("NF1.0", "GhrB", "equivalog", [], [], False, 418.1, 418.1, (492.0, 492.0), None)
+    >>> _with_closest("BTC", "below", [f])
+    'below; closest family NF1.0 GhrB (418.1 / 492.0)'
+    >>> _with_closest("ABOVE_TC", "passes", [f])
+    'passes'
+    """
+    if verdict not in {"BTC", "SFA", "NO_TARGET_HIT"} or not closest:
+        return note
+    top = closest[0]
+    return f"{note}; closest family {top.accession} {top.product_name} ({top.seq_score} / {top.tc[0]})"
+
+
 def check(
-    accession: str, ecs: list[str], gos: list[str], cache_dir: Path
+    accession: str,
+    ecs: list[str],
+    gos: list[str],
+    cache_dir: Path,
+    library: bool = False,
 ) -> CutoffReport:
+    """Apply the trusted-cutoff check to one protein and one annotated activity.
+
+    With ``library=True`` the observed families come from a whole-library scan
+    (``scan_library``) instead of InterPro, and the report lists the closest families.
+    """
     db = NCBIfam(cache_dir / "ncbifam")
     sequence = SequenceCache(cache_dir / "uniprot_seq").get(accession)
     # Schnoes's check is about a specific reaction. A broad GO term ("oxidoreductase
@@ -448,16 +605,22 @@ def check(
     targets = db.targets_for(
         [*(ec for ec in ecs if is_complete_ec(ec)), *expanded], specific_gos
     )
-    observed = [
-        db.by_source[i]
-        for i in interpro_ncbifam_matches(accession)
-        if i in db.by_source
-    ]
+    closest: list[FamilyScore] = []
+    if library:
+        closest = scan_library({accession: sequence}, db)[accession]
+        observed = [db.by_source[s.accession.split(".")[0]] for s in closest]
+    else:
+        observed = [
+            db.by_source[i]
+            for i in interpro_ncbifam_matches(accession)
+            if i in db.by_source
+        ]
     families = {f.accession: f for f in [*targets, *observed]}
     scores = score_families(
         sequence, accession, list(families.values()), {f.accession for f in targets}, db
     )
     verdict, note, better = verdict_for(scores)
+    note = _with_closest(verdict, note, closest)
     return CutoffReport(
         accession=accession,
         targets=[*ecs, *gos],
@@ -466,6 +629,7 @@ def check(
         note=note,
         better_fitting_families=better,
         scores=scores,
+        closest_families=closest,
     )
 
 
@@ -479,12 +643,20 @@ def main(argv: list[str] | None = None) -> int:
         "--go", action="append", default=[], help="GO MF id of the annotated activity"
     )
     parser.add_argument("--cache-dir", type=Path, default=Path(".cache"))
+    parser.add_argument(
+        "--library",
+        action="store_true",
+        help="find the protein's closest families by scanning the whole NCBIfam library"
+        " (first use downloads and presses about 3 GB of models)",
+    )
     parser.add_argument("-o", "--output", type=Path, help="Write the YAML report here")
     args = parser.parse_args(argv)
     if not args.ec and not args.go:
         parser.error("give at least one --ec or --go")
 
-    report = check(args.accession, args.ec, args.go, args.cache_dir)
+    report = check(
+        args.accession, args.ec, args.go, args.cache_dir, library=args.library
+    )
     text = yaml.safe_dump(asdict(report), sort_keys=False, default_flow_style=None)
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

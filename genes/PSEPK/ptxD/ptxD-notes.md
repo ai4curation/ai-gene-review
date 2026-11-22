@@ -44,7 +44,7 @@ activity").
 The Enzyme Specificity cutoff check placed the hydroxypyruvate and glyoxylate reductase
 rows below cutoff, but it scored only NCBIfam's GhrA model (80.8 / 403), and Q88HI1
 resembles GhrB, not GhrA (53.1% identity to E. coli GhrB P37666 and PANTHER subfamily
-PTHR10996:SF283, both recorded above). A follow-up scored the GhrB model NF011938.0, which carries no
+PTHR10996:SF283; the identity is recorded above and the subfamily in the review YAML). A follow-up scored the GhrB model NF011938.0, which carries no
 EC number and so was never a target: Q88HI1 scores 418.1 against a trusted cutoff of 492,
 E. coli GhrB passes at 690.3, and no KT2440 protein passes it, with Q88HI1 the closest
 [file:projects/ENZYME_SPECIFICITY/cutoff-check/followup.yaml "flagged_protein_score: 418.1"].
