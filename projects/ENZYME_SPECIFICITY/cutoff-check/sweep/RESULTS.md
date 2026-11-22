@@ -93,6 +93,17 @@ The record's support for the annotated EC can still be the weak point. In yihU t
 evidence (PMID:19372223), but the protein's own family is named for its
 sulfolactaldehyde reductase activity, and the review keeps the row as non-core.
 
+### Kept rows no family is mapped to, though the protein passes another family (41)
+
+No NCBIfam family carries the term, so the verdict is `NO_MODEL`, but the protein passes
+some function-level family. In 15 rows every passing family is `[named]`, so the protein's
+own family simply lacks the term in the release table. These are purT (both PurT models
+carry the folate-dependent term instead), thiH, recJ, secA, rbsA, mazG, fliI and fadB,
+and the glycolate oxidase subunits glcD, glcE and glcF with the D-lactate dehydrogenase
+term. Most other rows are a related activity of a broader family: lysine and arginine
+racemase on the broad-specificity racemase alr, leucine transaminase on the
+branched-chain transaminase ilvE, and cysteine desulfhydrase on metC and cysK.
+
 ### Kept rows below cutoff with no competing family (45)
 
 These are the weakest leads. The closest family is usually the expected one, scored just

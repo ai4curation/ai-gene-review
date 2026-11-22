@@ -17,12 +17,20 @@ RESULTS.md for how to read each case.
 | NO_MODEL | 50 | 9 | 9 | 8 | 10 | 2 | 1 |
 | SFA | 17 | 7 | 8 | 6 | 14 | 1 | 2 |
 
-## Electronic rows on one term with different actions (2)
+## Electronic rows on one protein and term with different actions (2)
 
-The sweep keeps one row per protein and term. These pairs disagree, which the action-consistency rules say should not happen.
+The sweep keeps one row per protein and term (the first folder in sort order). These pairs disagree; each names the review folder it comes from.
 
-- PSEPK pedI GO:0004029 aldehyde dehydrogenase (NAD+) activity: ACCEPT vs MODIFY
-- PSEPK pedI GO:0004030 aldehyde dehydrogenase [NAD(P)+] activity: KEEP_AS_NON_CORE vs MARK_AS_OVER_ANNOTATED
+- PSEPK Q88JG9 GO:0004029 aldehyde dehydrogenase (NAD+) activity: aldB-II: ACCEPT vs pedI: MODIFY
+- PSEPK Q88JG9 GO:0004030 aldehyde dehydrogenase [NAD(P)+] activity: aldB-II: KEEP_AS_NON_CORE vs pedI: MARK_AS_OVER_ANNOTATED
+
+## Accessions with more than one review folder (3)
+
+Their rows are merged in this sweep. Each pair needs a decision on whether both folders should exist.
+
+- Q88IJ7: genes/PSEPK/aroE, genes/PSEPK/aroE__Q88IJ7
+- Q88JG9: genes/PSEPK/aldB-II, genes/PSEPK/pedI
+- Q88JU3: genes/PSEPK/quiC1, genes/PSEPK/quiC1_qsuB
 
 ## Kept rows whose protein passes a family for another activity (41)
 
@@ -106,7 +114,7 @@ Every passing family is named for the protein or carries an EC its UniProt recor
 | ECOLI | nirD | GO:0106316 nitrite reductase (NADH) activity | ACCEPT | no hit |  | TIGR02378.1 nitrite reductase small subunit NirD [named]; NF007066.0 nitrite reductase small subunit NirD [named] |
 | ECOLI | uvrD | GO:0043138 3'-5' DNA helicase activity | ACCEPT | no hit |  | NF008743.0 DNA helicase II [named]; TIGR01075.1 DNA helicase II [named] |
 | ECOLI | yihU | GO:0047577 4-hydroxybutyrate dehydrogenase activity | KEEP_AS_NON_CORE | no hit |  | NF012005.0 sulfolactaldehyde 3-reductase [record_ec] |
-| PSEPK | cheB1 | GO:0050568 protein-glutamine glutaminase activity | ACCEPT | NF041119.1 chemoreceptor glutamine deamidase/glutamate methylesterase CheD (0.3 / 240.0) | ec | NF001965.0 chemotaxis-specific protein-glutamate methyltransferase CheB [record_ec] |
+| PSEPK | cheB1 | GO:0050568 protein-glutamine glutaminase activity | ACCEPT | NF041119.1 chemoreceptor glutamine deamidase/glutamate methylesterase CheD (0.3 / 240.0) | ec | NF001965.0 chemotaxis-specific protein-glutamate methyltransferase CheB [named] |
 | ECOLI | cheB | GO:0050568 protein-glutamine glutaminase activity | ACCEPT | NF010020.0 chemoreceptor glutamine deamidase CheD (1.1 / 236.0) | ec | NF001965.0 chemotaxis-specific protein-glutamate methyltransferase CheB [named]; NF009206.0 chemotaxis-specific protein-glutamate methyltransferase CheB [named] |
 | ECOLI | btuE | GO:0140824 thioredoxin-dependent peroxiredoxin activity | ACCEPT | NF006960.0 thioredoxin-dependent thiol peroxidase (5.4 / 140.0) | ec | NF007900.0 glutathione peroxidase [record_ec] |
 | PSEPK | recG | GO:0043138 3'-5' DNA helicase activity | ACCEPT | TIGR01389.1 DNA helicase RecQ (25.3 / 640.2) | ec | NF008163.0 ATP-dependent DNA helicase RecG [named]; TIGR00643.1 ATP-dependent DNA helicase RecG [named]; NF008168.0 ATP-dependent DNA helicase RecG [named]; NF008166.0 ATP-dependent DNA helicase RecG [named]; NF008165.0 ATP-dependent DNA helicase RecG [named] |
@@ -117,6 +125,54 @@ Every passing family is named for the protein or carries an EC its UniProt recor
 | ECOLI | puuC | GO:0004777 succinate-semialdehyde dehydrogenase (NAD+) activity | KEEP_AS_NON_CORE | TIGR01780.1 succinate-semialdehyde dehydrogenase (356.8 / 646.3) | go_only | NF007352.0 aldehyde dehydrogenase PuuC [named] |
 | ECOLI | puuC | GO:0019145 aminobutyraldehyde dehydrogenase (NAD+) activity | KEEP_AS_NON_CORE | NF010000.0 aminobutyraldehyde dehydrogenase (453.2 / 615.0) | ec | NF007352.0 aldehyde dehydrogenase PuuC [named] |
 | PSEPK | moeB | GO:0061605 molybdopterin-synthase adenylyltransferase activity | ACCEPT | TIGR02355.1 molybdopterin-synthase adenylyltransferase MoeB (301.8 / 376.5) | ec | NF004281.0 molybdopterin-synthase adenylyltransferase MoeB [named] |
+
+## Kept rows no family is mapped to, though the protein passes another family (41)
+
+No NCBIfam family carries the term, and the protein passes a function-level family for something else. Check whether the passing family's name or EC fits the term: if it does, the release table is missing the term (purT's case).
+
+| organism | gene | term | action | best target (score / TC) | matched by | other families |
+|---|---|---|---|---|---|---|
+| PSEPK | PP_4545 | GO:0061990 beta-ketodecanoyl-[acyl-carrier-protein] synthase activity | ACCEPT | no hit |  | NF005703.0 beta-ketoacyl-ACP synthase III [other] |
+| PSEPK | algD | GO:0047919 GDP-mannose 6-dehydrogenase activity | ACCEPT | no hit |  | TIGR03026.1 nucleotide sugar dehydrogenase [other] |
+| PSEPK | alr | GO:0018113 lysine racemase activity | ACCEPT | no hit |  | TIGR00492.1 alanine racemase [other]; NF009879.0 alanine racemase [other] |
+| PSEPK | alr | GO:0047679 arginine racemase activity | ACCEPT | no hit |  | TIGR00492.1 alanine racemase [other]; NF009879.0 alanine racemase [other] |
+| PSEPK | carB | GO:0004087 carbamoyl-phosphate synthase (ammonia) activity | ACCEPT | no hit |  | NF003671.0 carbamoyl-phosphate synthase large subunit [record_ec]; TIGR01369.1 carbamoyl-phosphate synthase (glutamine-hydrolyzing) large subunit [record_ec] |
+| PSEPK | cysH | GO:0043866 adenylyl-sulfate reductase (thioredoxin) activity | ACCEPT | no hit |  | NF002537.0 phosphoadenylyl-sulfate reductase [other]; TIGR02055.1 adenylylsulfate reductase, thioredoxin dependent [other]; TIGR00434.1 phosophoadenylyl-sulfate reductase [other] |
+| PSEPK | davD | GO:0102810 glutarate-semialdehyde dehydrogenase (NADP+) activity | ACCEPT | no hit |  | NF008415.0 NADP-dependent succinate-semialdehyde dehydrogenase [other]; TIGR01780.1 succinate-semialdehyde dehydrogenase [other] |
+| PSEPK | davT | GO:0047589 5-aminovalerate:2-oxoglutarate transaminase activity | ACCEPT | no hit |  | NF005985.0 4-aminobutyrate--2-oxoglutarate transaminase [other]; TIGR00700.1 4-aminobutyrate--2-oxoglutarate transaminase [other] |
+| PSEPK | fadB | GO:0016509 long-chain (3S)-3-hydroxyacyl-CoA dehydrogenase (NAD+) activity | ACCEPT | no hit |  | TIGR02437.1 fatty acid oxidation complex subunit alpha FadB [named]; NF008727.0 fatty acid oxidation complex subunit alpha FadB [named] |
+| PSEPK | fliI | GO:0008564 protein-exporting ATPase activity | ACCEPT | no hit |  | TIGR01026.1 FliI/YscN family ATPase [named]; TIGR03496.1 flagellar protein export ATPase FliI [named] |
+| PSEPK | gcd | GO:0008876 quinoprotein glucose dehydrogenase activity | ACCEPT | no hit |  | TIGR03074.1 membrane-bound PQQ-dependent dehydrogenase, glucose/quinate/shikimate family [other] |
+| PSEPK | glcF | GO:0047809 D-lactate dehydrogenase activity | KEEP_AS_NON_CORE | no hit |  | NF008434.0 glycolate oxidase subunit GlcF [named] |
+| PSEPK | ilvE | GO:0052654 L-leucine:2-oxoglutarate transaminase activity | KEEP_AS_NON_CORE | no hit |  | TIGR01123.1 branched-chain-amino-acid transaminase [record_ec]; NF009897.0 branched-chain amino acid aminotransferase [record_ec] |
+| PSEPK | liuC | GO:0004490 methylglutaconyl-CoA hydratase activity | ACCEPT | no hit |  | NF004227.0 gamma-carboxygeranoyl-CoA hydratase [other] |
+| PSEPK | mazG | GO:0047693 ATP diphosphatase activity | ACCEPT | no hit |  | TIGR00444.1 MazG family protein [named]; NF007113.1 nucleoside triphosphate pyrophosphohydrolase [named] |
+| PSEPK | metF | GO:0106312 methylenetetrahydrofolate reductase (NADH) activity | ACCEPT | no hit |  | TIGR00676.1 methylenetetrahydrofolate reductase [NAD(P)H] [other] |
+| PSEPK | pedE | GO:0052934 alcohol dehydrogenase (cytochrome c) activity | ACCEPT | no hit |  | TIGR03075.1 PQQ-dependent dehydrogenase, methanol/ethanol family [other] |
+| PSEPK | pedH | GO:0052934 alcohol dehydrogenase (cytochrome c) activity | ACCEPT | no hit |  | TIGR03075.1 PQQ-dependent dehydrogenase, methanol/ethanol family [other] |
+| PSEPK | purT | GO:0043815 phosphoribosylglycinamide formyltransferase 2 activity | ACCEPT | no hit |  | NF006766.0 formate-dependent phosphoribosylglycinamide formyltransferase [named]; TIGR01142.1 phosphoribosylglycinamide formyltransferase 2 [named] |
+| PSEPK | quiA | GO:0047519 quinate dehydrogenase (quinone) activity | ACCEPT | no hit |  | TIGR03074.1 membrane-bound PQQ-dependent dehydrogenase, glucose/quinate/shikimate family [other] |
+| PSEPK | secA | GO:0008564 protein-exporting ATPase activity | ACCEPT | no hit |  | NF009538.1 preprotein translocase subunit SecA [named]; TIGR00963.1 preprotein translocase subunit SecA [named] |
+| ECOLI | RidA | GO:0120241 2-iminobutanoate/2-iminopropanoate deaminase activity | ACCEPT | no hit |  | TIGR00004.1 Rid family detoxifying hydrolase [other] |
+| ECOLI | SecA | GO:0008564 protein-exporting ATPase activity | ACCEPT | no hit |  | NF009538.1 preprotein translocase subunit SecA [named]; TIGR00963.1 preprotein translocase subunit SecA [named] |
+| ECOLI | allF | GO:0050205 oxamate carbamoyltransferase activity | ACCEPT | no hit |  | NF004760.0 acyl-CoA synthetase FdrA [other] |
+| ECOLI | astC | GO:0043825 succinylornithine:2-oxoglutarate transaminase activity | ACCEPT | no hit |  | TIGR00707.1 acetylornithine/succinylornithine family transaminase [other]; NF009047.0 bifunctional succinylornithine transaminase/acetylornithine transaminase [other]; NF003468.0 acetylornithine/succinyldiaminopimelate transaminase [other]; NF002325.0 acetylornithine transaminase [other]; TIGR03246.1 acetylornithine/succinylornithine family transaminase [other] |
+| ECOLI | cysK | GO:0080146 L-cysteine desulfhydrase activity | KEEP_AS_NON_CORE | no hit |  | TIGR01139.1 cysteine synthase A [named]; TIGR01136.1 cysteine synthase [record_ec]; NF007989.0 cysteine synthase A [named] |
+| ECOLI | eda | GO:0106009 (4S)-4-hydroxy-2-oxoglutarate aldolase activity | KEEP_AS_NON_CORE | no hit |  | TIGR01182.1 bifunctional 4-hydroxy-2-oxoglutarate aldolase/2-dehydro-3-deoxy-phosphogluconate aldolase [record_ec]; NF004325.0 keto-hydroxyglutarate-aldolase/keto-deoxy-phosphogluconate aldolase [record_ec] |
+| ECOLI | fadB | GO:0016509 long-chain (3S)-3-hydroxyacyl-CoA dehydrogenase (NAD+) activity | ACCEPT | no hit |  | NF008727.0 fatty acid oxidation complex subunit alpha FadB [named]; TIGR02437.1 fatty acid oxidation complex subunit alpha FadB [named] |
+| ECOLI | glcD | GO:0047809 D-lactate dehydrogenase activity | KEEP_AS_NON_CORE | no hit |  | NF008408.0 glycolate oxidase subunit GlcD [named]; TIGR00387.1 glycolate oxidase subunit GlcD [named] |
+| ECOLI | glcE | GO:0047809 D-lactate dehydrogenase activity | KEEP_AS_NON_CORE | no hit |  | NF008439.0 glycolate oxidase subunit GlcE [named] |
+| ECOLI | glcF | GO:0047809 D-lactate dehydrogenase activity | KEEP_AS_NON_CORE | no hit |  | NF008434.0 glycolate oxidase subunit GlcF [named] |
+| ECOLI | ilvE | GO:0052654 L-leucine:2-oxoglutarate transaminase activity | ACCEPT | no hit |  | TIGR01122.1 branched-chain-amino-acid transaminase [record_ec]; NF005146.0 branched-chain amino acid transaminase [record_ec] |
+| ECOLI | metC | GO:0080146 L-cysteine desulfhydrase activity | KEEP_AS_NON_CORE | no hit |  | TIGR01324.1 cystathionine beta-lyase [record_ec]; NF005990.0 cystathionine beta-lyase [record_ec] |
+| ECOLI | metF | GO:0106312 methylenetetrahydrofolate reductase (NADH) activity | ACCEPT | no hit |  | NF006950.0 methylenetetrahydrofolate reductase [other]; TIGR00676.1 methylenetetrahydrofolate reductase [NAD(P)H] [other] |
+| ECOLI | purT | GO:0043815 phosphoribosylglycinamide formyltransferase 2 activity | ACCEPT | no hit |  | NF006766.0 formate-dependent phosphoribosylglycinamide formyltransferase [named]; TIGR01142.1 phosphoribosylglycinamide formyltransferase 2 [named] |
+| ECOLI | rbsA | GO:0015611 ABC-type D-ribose transporter activity | ACCEPT | no hit |  | NF008030.0 ribose ABC transporter ATP-binding protein RbsA [named] |
+| ECOLI | recJ | GO:0045145 single-stranded DNA 5'-3' DNA exonuclease activity | ACCEPT | no hit |  | TIGR00644.1 single-stranded-DNA-specific exonuclease RecJ [named]; NF008290.0 single-stranded-DNA-specific exonuclease RecJ [named] |
+| ECOLI | serA | GO:0120568 (R)-2-hydroxyglutarate (NAD+) dehydrogenase activity | KEEP_AS_NON_CORE | no hit |  | NF008759.0 phosphoglycerate dehydrogenase [record_ec] |
+| ECOLI | thiH | GO:0036355 2-iminoacetate synthase activity | ACCEPT | no hit |  | TIGR02351.2 2-iminoacetate synthase ThiH [named] |
+| ECOLI | ygfF | GO:0047934 glucose 1-dehydrogenase (NAD+) activity | ACCEPT | no hit |  | NF007273.0 SDR family oxidoreductase [other]; NF004777.0 SDR family oxidoreductase [other] |
+| ECOLI | yihQ | GO:1990929 sulfoquinovosidase activity | ACCEPT | no hit |  | NF007746.0 alpha-glucosidase [other] |
 
 ## Kept rows below cutoff with no competing family (45)
 
