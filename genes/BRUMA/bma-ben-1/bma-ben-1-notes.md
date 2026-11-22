@@ -14,13 +14,17 @@
   architecture plus the complete PTHR11588 family review.
 - The two EnsemblMetazoa behavior rows, chemosensory behavior and egg-laying
   behavior, are transferred from the C. elegans `ben-1` product. I marked both
-  over-annotated for the parasite ortholog: the direct evidence for BMA-BEN-1 is
-  the conserved beta-tubulin sequence, not a Brugia sensory or egg-laying
-  circuit assay.
-- PubMed search for Brugia/filarial beta-tubulin and benzimidazoles found
-  in vivo and in vitro Brugia flubendazole/oxfendazole efficacy papers and one
-  B. malayi beta-tubulin docking paper, but no primary experiment assigning
-  this exact B. malayi isotype as the sensitive benzimidazole target. I kept
-  the direct core function to the conserved beta-tubulin structural role and
-  recorded the Brugia benzimidazole-isotype assignment as a residual knowledge
-  gap.
+  over-annotated for this parasite beta-tubulin: the direct evidence for
+  BMA-BEN-1 is the conserved beta-tubulin sequence, not a Brugia sensory or
+  egg-laying circuit assay.
+- PubMed searches for Brugia or filarial beta-tubulin papers in the
+  flubendazole/oxfendazole/benzimidazole literature found efficacy papers
+  reporting activity against Brugia or filarial systems (PMID:42545617,
+  PMID:38362501, PMID:37440891, PMID:30650084, PMID:27733308, PMID:27145083),
+  plus papers on Litomosoides oxfendazole activity or B. malayi beta-tubulin
+  docking (PMID:42013151, PMID:41244930). None of these search hits was a
+  primary Brugia loss-of-function, allele-swap or resistance-mapping experiment
+  assigning the Bm4733 beta-tubulin isotype as the sensitive benzimidazole
+  target, so I kept the direct core function to the conserved beta-tubulin
+  structural role and recorded the Brugia benzimidazole-isotype assignment as a
+  residual knowledge gap.
