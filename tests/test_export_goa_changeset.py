@@ -126,7 +126,8 @@ def test_missing_organism_directory_is_an_error(tmp_path):
     mod = _load()
     (tmp_path / "genes").mkdir()
     out = tmp_path / "out.tsv"
-    assert mod.main(["--genes-dir", str(tmp_path / "genes"), "--organism", "hmuan", "-o", str(out)]) == 2
+    argv = ["--genes-dir", str(tmp_path / "genes"), "--organism", "hmuan", "-o", str(out)]
+    assert mod.main(argv) == 2
     assert not out.exists()
 
 
@@ -145,3 +146,49 @@ def test_output_is_world_readable(tmp_path):
     out = tmp_path / "out.tsv"
     assert mod.main(["--genes-dir", str(tmp_path / "genes"), "-o", str(out)]) == 0
     assert out.stat().st_mode & 0o777 == 0o644
+
+
+ORDERING_REVIEW = """\
+id: P00002
+gene_symbol: GENE2
+existing_annotations:
+  - term: {id: GO:0016787, label: hydrolase activity}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      action: MODIFY
+      proposed_replacement_terms:
+        - {id: NTR, label: proposed activity}
+        - {id: GO:0004553, label: hydrolase activity, hydrolyzing O-glycosyl compounds}
+  - term: {id: GO:0016301, label: kinase activity}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      action: MODIFY
+      proposed_replacement_terms:
+        - {id: GO:0004674, label: protein serine/threonine kinase activity}
+        - {id: GO:0004713, label: protein tyrosine kinase activity}
+  - term: {id: GO:0003824, label: catalytic activity}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    review:
+      action: MODIFY
+      proposed_replacement_terms:
+        - {id: NEW_TERM_001, label: proposed catalytic activity}
+"""
+
+
+def test_replacements_keep_order_and_pass_unknown_ids_through(tmp_path):
+    mod = _load()
+    _write_genes(tmp_path, {"GENE2": ORDERING_REVIEW})
+    out = tmp_path / "out.tsv"
+    assert mod.main(["--genes-dir", str(tmp_path / "genes"), "-o", str(out)]) == 0
+    rows = {r["term_id"]: r for r in _read(out)}
+    # NTR listed before a GO replacement: order kept, a GO id remains.
+    assert rows["GO:0016787"]["replacement_term_ids"] == "NTR|GO:0004553"
+    assert rows["GO:0016787"]["replacement_is_proposed_term"] == ""
+    # Two GO replacements, in review order.
+    assert rows["GO:0016301"]["replacement_term_ids"] == "GO:0004674|GO:0004713"
+    # A non-GO placeholder other than NTR is passed through verbatim.
+    assert rows["GO:0003824"]["replacement_term_ids"] == "NEW_TERM_001"
+    assert rows["GO:0003824"]["replacement_is_proposed_term"] == "true"

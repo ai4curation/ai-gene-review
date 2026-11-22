@@ -15,15 +15,18 @@ Output contract:
   start with `#`; the third line is the TSV header.
 - `retired` is `true` for annotations the review marks as no longer in GOA, so a
   consumer can tell an expected non-match from a key mismatch.
-- `replacement_term_ids` lists MODIFY replacements. A replacement that is a
-  proposed new term (no GO id yet) appears once as the placeholder `NTR`;
-  ignore it. `replacement_is_proposed_term` is `true` only when no GO
-  replacement remains, i.e. every replacement is proposed: a consumer applying
-  MODIFY should skip those rows rather than drop the original term, and use
-  the GO ids on every other row.
+- `replacement_term_ids` lists MODIFY replacements, `|`-separated, in review
+  order with duplicates removed (so several proposed terms collapse to one
+  `NTR`). A replacement with no GO id is a proposed new term and is passed
+  through verbatim, usually as the placeholder `NTR`; ignore it.
+  `replacement_is_proposed_term` is `true` only when no GO replacement
+  remains, i.e. every replacement is proposed: a consumer applying MODIFY
+  should skip those rows rather than drop the original term, and use the GO
+  ids on every other row.
 - `term_is_proposed_term` is `true` when the row's own term has no GO id yet
-  (`term_id` is `NTR`, e.g. a NEW annotation to a term GO does not have).
-  Such rows cannot be added to a GAF.
+  (`term_id` is `NTR` or another placeholder, e.g. a NEW annotation to a term
+  GO does not have). Such rows cannot be added to a GAF.
+- Read columns by header name, not position: columns may be added later.
 - `is_core_function_term` is an exact-id match against the review's
   `core_functions` GO terms (MF, BP and CC pooled). It is not ancestor-aware.
 - The key (accession, term, qualifier, evidence, reference) is not guaranteed
@@ -125,10 +128,9 @@ def rows_for(path: Path) -> list[dict]:
         for t in review.get("proposed_replacement_terms") or []:
             if not isinstance(t, dict):
                 continue
-            term_id = str(t.get("id", ""))
-            entry = term_id if term_id.startswith("GO:") else ("NTR" if term_id else "")
-            if entry and entry not in replacements:
-                replacements.append(entry)
+            term_id = str(t.get("id", "") or "")
+            if term_id and term_id not in replacements:
+                replacements.append(term_id)
         only_proposed = bool(replacements) and not any(r.startswith("GO:") for r in replacements)
         own_id = str(term.get("id", ""))
         rows.append(
@@ -185,7 +187,13 @@ def export(organism_dir: Path, organism: str, output: Path) -> tuple[int, int, i
             for path in files:
                 try:
                     rows = rows_for(path)
-                except (yaml.YAMLError, ReviewFileError, AttributeError, TypeError, UnicodeDecodeError) as exc:
+                except (
+                    yaml.YAMLError,
+                    ReviewFileError,
+                    AttributeError,
+                    TypeError,
+                    UnicodeDecodeError,
+                ) as exc:
                     n_errors += 1
                     print(f"skip {path}: {exc}", file=sys.stderr)
                     continue
@@ -204,7 +212,9 @@ def export(organism_dir: Path, organism: str, output: Path) -> tuple[int, int, i
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--organism", default="human")
     parser.add_argument("--genes-dir", type=Path, default=REPO_ROOT / "genes")
     parser.add_argument("-o", "--output", type=Path, required=True)
@@ -219,7 +229,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: no *-ai-review.yaml files under {organism_dir}", file=sys.stderr)
         return 2
     if n_errors:
-        print(f"error: {n_errors} of {n_files} review files unreadable; {args.output} not written", file=sys.stderr)
+        print(
+            f"error: {n_errors} of {n_files} review files unreadable; "
+            f"{args.output} not written",
+            file=sys.stderr,
+        )
         return 1
     print(f"{n_files} review files, {n_rows} rows -> {args.output}")
     return 0
