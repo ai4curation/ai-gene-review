@@ -9,6 +9,9 @@
   parkeol production.
 - PMID:29158519 reconstituted the nine-gene hel cluster and supports the
   helvolic-acid pathway assignment.
+- PMID:42478844 identifies `erg7C` (`Afu4g14770`) as `osc3`/`helA`;
+  overexpressed erg7C accumulates protostadienol in *A. fumigatus* and does not
+  rescue the `erg7A` deletion growth defect.
 - Proposed a GO molecular-function NTR for protostadienol synthase activity and
   recorded PAINT pruning actions for the lanosterol synthase and ergosterol IBDs
   that currently descend to the HelA leaf.
