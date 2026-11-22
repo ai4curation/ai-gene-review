@@ -52,7 +52,7 @@ next, and how to rerun everything.
 **Bottom line:** GO treats a protein ligand as part of the signaling pathway it starts, and
 human and fly curators annotate it that way. That gives a simple completeness test: every
 receptor-initiated pathway an organism annotates should contain at least one gene with
-receptor ligand activity. Run on seven GO Consortium GAFs, the test fails for a third or more
+receptor ligand activity. Run on ten GO Consortium GAFs, the test fails for a third or more
 of the pathway terms in every organism. Most failures have no protein ligand to find (small
 molecules, light, microbial products, antigens). The rest are real gaps: ligands missing from
 their pathway, ligands placed only on a neighbouring term, and ligands that carry a
@@ -158,12 +158,16 @@ for the GAFs dated 2026-05-21 and GO release 2026-07-26:
 | rat | 231 | 79 |
 | zebrafish | 145 | 91 |
 | fly | 74 | 39 |
+| worm | 62 | 46 |
 | budding yeast | 6 | 6 |
 | fission yeast | 4 | 4 |
+| Arabidopsis | 11 | 10 |
+| Dictyostelium | 16 | 7 |
 
 **Triage.** [scripts/triage.py](LIGANDS_IN_SIGNALING/scripts/triage.py) sorts each failure.
-Where a term passes in another species of the same lineage, that species' ligands are looked up
-by gene symbol in the failing species. Where no species passes, an expected-ligand list is used.
+Where a term passes in another species of the same lineage (the four vertebrates form one
+lineage; every other organism is its own), that species' ligands are looked up by gene symbol in
+the failing species. Where no species passes, an expected-ligand list is used.
 Both curated inputs are explicit files, so the prior knowledge is visible and reviewable:
 
 - [curated/term_labels.yaml](LIGANDS_IN_SIGNALING/curated/term_labels.yaml): terms with no host
@@ -173,14 +177,14 @@ Both curated inputs are explicit files, so the prior knowledge is visible and re
 - [curated/organism_flags.yaml](LIGANDS_IN_SIGNALING/curated/organism_flags.yaml): suspect
   over-annotations (O) and misapplied or generic terms (G).
 
-| Category | human | mouse | rat | zebrafish | fly |
-|---|---|---|---|---|---|
-| A: ligand counterpart not on the pathway | 11 | 10 | 13 | 29 | 5 |
-| B: ligand only on a related pathway term | 8 | 9 | 9 | 7 | 1 |
-| C: ligand on the pathway but no ligand-activity MF | 4 | 4 | 4 | 8 | 2 |
-| X/Y: no host protein ligand expected | 48 | 51 | 45 | 39 | 21 |
-| O: suspect over-annotation | 0 | 0 | 0 | 0 | 6 |
-| Other (N, U, G) | 7 | 12 | 8 | 8 | 4 |
+| Category | human | mouse | rat | zebrafish | fly | worm | budding yeast | fission yeast | Arabidopsis | Dictyostelium |
+|---|---|---|---|---|---|---|---|---|---|---|
+| A: ligand counterpart not on the pathway | 11 | 9 | 12 | 27 | 5 | 5 | 1 | 1 | 1 | 0 |
+| B: ligand only on a related pathway term | 8 | 9 | 9 | 7 | 1 | 3 | 0 | 0 | 0 | 0 |
+| C: ligand on the pathway but no ligand-activity MF | 4 | 4 | 4 | 8 | 2 | 3 | 0 | 0 | 0 | 0 |
+| X/Y: no host protein ligand expected | 48 | 52 | 46 | 41 | 22 | 21 | 3 | 2 | 5 | 4 |
+| O: suspect over-annotation | 0 | 1 | 1 | 0 | 6 | 5 | 1 | 0 | 4 | 3 |
+| Other (N, U, G) | 7 | 11 | 7 | 8 | 3 | 9 | 1 | 1 | 0 | 0 |
 
 Examples (human unless noted). A: KITLG, IL21, IL22, CXCL8, C5, MIF, FASLG and the netrins are
 not on their pathways. B: VEGFA/VEGFB/PGF are on VEGF receptor signaling but not the VEGFR-1
@@ -189,6 +193,26 @@ and NT1 are only on Toll signaling, not neurotrophin signaling. C: IL34 and the 
 their pathways without a ligand MF; fly Ephrin and sli likewise. O (fly; from background
 knowledge, not checked): NGF, neurotrophin TRK, G-CSF, adiponectin, TLR4 and LPS-mediated
 signaling terms in a genome without those ligands or receptors.
+
+Beyond the vertebrates and fly (counts from the table above):
+
+- **Yeasts.** Both place their pheromones outside any pathway term (A on GPCR signaling): budding
+  yeast MFA1, MFA2, MF(ALPHA)1 and MF(ALPHA)2, and fission yeast map2 and mfm1-3, all with
+  mating pheromone activity, are `involved_in` only generic signal transduction, while the
+  receptors are in the GPCR pathway. The adenylate cyclase GPCR terms are glucose sensing (X).
+- **Worm.** Netrin (unc-6), the ephrins and the DSL Notch ligands (lag-2, dsl-1) are in their
+  pathways without a ligand MF (C); the Wnts sit on Wnt signaling, not the non-canonical or
+  spindle-positioning subterms (B). Smoothened, NGF, adiponectin, TLR4 and LPS terms name
+  pathways worms lack (O).
+- **Arabidopsis.** The receptor serine/threonine kinase term holds receptor-like kinases (BRL2,
+  FLS2, SERK1) but none of TAIR's peptide ligands (PSK, CLE, CEP, GLV/RGF, RALF, EPFL), which
+  are `involved_in` only generic signal transduction or downstream processes (A). The GPCR terms
+  rest on heterotrimeric G-protein genes, and a canonical plant GPCR is contested (O).
+- **Dictyostelium.** Its GPCR pathways pass, but falsely: the cAMP receptor carA-1 carries
+  *pathogen-derived receptor ligand activity*, so the receptor itself counts as the ligand.
+- **A suspect human pass.** Human *G protein-coupled acetylcholine receptor signaling pathway*
+  passes only on AGRN; agrin signals through MuSK, not a muscarinic receptor. The term is now
+  labelled X, so the mouse, rat and zebrafish failures no longer borrow agrin as a donor.
 
 Before the triage was automated, 28 human and fly failures were sorted by hand into A, B or C.
 The automatic lookup agrees on 21. The differences: three FGF "involved in X" subterms have no
@@ -199,8 +223,10 @@ spz5/NT1 sit on a sibling pathway) come out A because the sibling shares only ge
 
 **Reverse check.** Ligand-activity genes in no signaling pathway: 22 of 571 in human (mostly
 chemokines such as CCL17, CCL27, CCL28, CXCL2, CXCL3, CXCL16, PPBP, PF4V1, and beta-defensins;
-ALKBH1 and DPP4 look like MF over-annotation), 1 in fly (orion), none in either yeast. In
-budding yeast the receptors STE2/STE3 are in the pheromone pathway but the pheromones are not.
+ALKBH1 and DPP4 look like MF over-annotation), 1 in fly (orion), none in either yeast (only
+because an automatic MF-to-process inference puts the pheromones in generic signal transduction).
+In budding yeast the receptors STE2/STE3 are in the pheromone pathway but the pheromones are not.
+Arabidopsis has 22 of 95 (mostly CEP and GLV peptides), worm 2 of 61, Dictyostelium 1 of 6.
 
 **Relaxing the rule does not work.** Counting genes with a *signaling receptor binding* MF plus
 an extracellular CC annotation as ligands makes 31 more human terms and 3 more fly terms pass,
@@ -208,8 +234,9 @@ almost all falsely: G-protein alphas, LYN and IRAK4 qualify through exosome or e
 annotations, and netrin signaling "passes" on DSCAM and tubulin. Only IL34 (human) and sli
 (fly) are real. The ligand step has to come from curated modules.
 
-Caveats: symbol matching stands in for orthology; budding yeast and fission yeast have no
-same-lineage donor in the seven-species panel (so unflagged yeast terms fall into U);
+Caveats: symbol matching stands in for orthology; worm, the yeasts, Arabidopsis and
+Dictyostelium have no same-lineage donor (each is its own lineage), so their lookups rest on
+curated/expected_ligands.yaml and unlisted terms fall into U;
 go-basic omits MF-to-BP part_of links, which is harmless here because only BP annotations
 place genes in pathways.
 
@@ -653,12 +680,10 @@ validators.
   (human, fly and fission yeast snapshot). It predates the GPCR scope and the other species, so
   its counts are lower than section 3.
 - Interactive version: the [Ligand gap check](https://claude.ai/artifact/J3MezLgjhawKdowHbNDKRJ)
-  artifact (AI generated, updated 2026-11-22). It covers ten organisms (section 3's seven plus
-  worm, Arabidopsis and Dictyostelium) with the GPCR scope, and its per-organism totals match
-  section 3. Its failure categories come from a separate triage pass, not from
-  `scripts/triage.py`, so its A/B/C split differs from the table in section 3. It also notes
-  that Dictyostelium's GPCR pathways pass only because the cAMP receptor carA-1 carries a
-  ligand-activity MF.
+  artifact (AI generated, updated 2026-11-22). It covers the ten organisms of section 3 with the
+  GPCR scope, and its per-organism totals match
+  section 3. It is built from the committed `results/` files (gap check, triage and survey), so
+  its counts and categories are the ones in section 3.
 
 ### Next steps
 
@@ -697,13 +722,15 @@ validators.
 ```bash
 # data (GAFs + go-basic.obo) into the git-ignored .cache/ligands_in_signaling
 projects/LIGANDS_IN_SIGNALING/scripts/fetch_data.sh
-# gap check for all seven organisms, then the relaxed-rule variant for human and fly
+# gap check for all ten organisms, then the relaxed-rule variant for human and fly
 uv run python projects/LIGANDS_IN_SIGNALING/scripts/ligand_gap_check.py --out projects/LIGANDS_IN_SIGNALING/results
 uv run python projects/LIGANDS_IN_SIGNALING/scripts/ligand_gap_check.py --out projects/LIGANDS_IN_SIGNALING/results --orgs human fly --or-receptor-binding
 # triage; writes results/triage.json and results/RESULTS.md
 uv run python projects/LIGANDS_IN_SIGNALING/scripts/triage.py --results projects/LIGANDS_IN_SIGNALING/results
 # QuickGO survey of textbook ligands (network; a few minutes)
 uv run python projects/LIGANDS_IN_SIGNALING/scripts/survey/ligand_pathway_survey.py --out projects/LIGANDS_IN_SIGNALING/results/ligand_survey.json
+# data file for the Ligand gap check artifact (published beside the page as data.json)
+uv run python projects/LIGANDS_IN_SIGNALING/scripts/export_artifact_data.py --out data.json
 ```
 
 ### Known issues

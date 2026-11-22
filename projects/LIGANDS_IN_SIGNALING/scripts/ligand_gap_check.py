@@ -42,8 +42,11 @@ ORGANISMS = {
     "rat": "rgd",
     "zebrafish": "zfin",
     "fly": "fb",
+    "worm": "wb",
     "yeast": "sgd",
     "pombe": "pombase",
+    "arabidopsis": "tair",
+    "dicty": "dictybase",
 }
 CELL_SURFACE = "GO:0007166"
 GPCR = "GO:0007186"
@@ -108,7 +111,7 @@ def check_organism(go: GO, gaf: Path, pathways: set[str], or_receptor_binding: b
                 evidence=sorted({e for _, e in direct[p]}),
             )
         )
-    rows.sort(key=lambda r: (r["n_ligand_genes"] > 0, -r["n_genes"]))
+    rows.sort(key=lambda r: (r["n_ligand_genes"] > 0, -r["n_genes"], r["term"]))
     return dict(
         n_ligand_activity_genes=len(ligand),
         ligand_genes_not_in_any_signaling=sorted(symbol[g] for g in ligand - in_signal),

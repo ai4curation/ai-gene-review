@@ -17,22 +17,25 @@ GO version: releases/2026-07-26. GAFs: current.geneontology.org at run time.
 | rat | 231 | 79 | 547 | 46 |
 | zebrafish | 145 | 91 | 431 | 62 |
 | fly | 74 | 39 | 117 | 1 |
+| worm | 62 | 46 | 61 | 2 |
 | yeast | 6 | 6 | 4 | 0 |
 | pombe | 4 | 4 | 4 | 0 |
+| arabidopsis | 11 | 10 | 95 | 22 |
+| dicty | 16 | 7 | 6 | 1 |
 
 ## Failures by triage category
 
-| Category | human | mouse | rat | zebrafish | fly | yeast | pombe |
-|---|---|---|---|---|---|---|---|
-| A: ligand counterpart not on the pathway | 11 | 10 | 13 | 29 | 5 | 0 | 0 |
-| B: ligand counterpart only on a related pathway term | 8 | 9 | 9 | 7 | 1 | 0 | 0 |
-| C: ligand counterpart on the pathway but lacks a ligand-activity MF | 4 | 4 | 4 | 8 | 2 | 0 | 0 |
-| N: no same-symbol ligand counterpart annotated | 0 | 5 | 1 | 7 | 0 | 0 | 0 |
-| U: no donor ligand available | 3 | 7 | 7 | 1 | 4 | 6 | 2 |
-| X: no protein ligand expected (small molecule, light, microbial) | 37 | 40 | 34 | 29 | 17 | 0 | 1 |
-| Y: antigen, contact or ligand-independent | 11 | 11 | 11 | 10 | 4 | 0 | 0 |
-| O: suspect over-annotation | 0 | 0 | 0 | 0 | 6 | 0 | 0 |
-| G: misapplied or generic term | 4 | 0 | 0 | 0 | 0 | 0 | 1 |
+| Category | human | mouse | rat | zebrafish | fly | worm | yeast | pombe | arabidopsis | dicty |
+|---|---|---|---|---|---|---|---|---|---|---|
+| A: ligand counterpart not on the pathway | 11 | 9 | 12 | 27 | 5 | 5 | 1 | 1 | 1 | 0 |
+| B: ligand counterpart only on a related pathway term | 8 | 9 | 9 | 7 | 1 | 3 | 0 | 0 | 0 | 0 |
+| C: ligand counterpart on the pathway but lacks a ligand-activity MF | 4 | 4 | 4 | 8 | 2 | 3 | 0 | 0 | 0 | 0 |
+| N: no same-symbol ligand counterpart annotated | 0 | 4 | 0 | 7 | 0 | 0 | 0 | 0 | 0 | 0 |
+| U: no donor ligand available | 3 | 7 | 7 | 1 | 3 | 9 | 0 | 0 | 0 | 0 |
+| X: no protein ligand expected (small molecule, light, microbial) | 37 | 41 | 35 | 31 | 18 | 17 | 3 | 2 | 5 | 4 |
+| Y: antigen, contact or ligand-independent | 11 | 11 | 11 | 10 | 4 | 4 | 0 | 0 | 0 | 0 |
+| O: suspect over-annotation | 0 | 1 | 1 | 0 | 6 | 5 | 1 | 0 | 4 | 3 |
+| G: misapplied or generic term | 4 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 0 | 0 |
 
 ## Curation candidates (categories A, B, C)
 
@@ -40,112 +43,108 @@ GO version: releases/2026-07-26. GAFs: current.geneontology.org at run time.
 |---|---|---|---|
 | human | netrin-activated signaling pathway (GO:0038007) | A | NTN1: A; NTN3: A |
 | human | apolipoprotein A-I-mediated signaling pathway (GO:0038027) | A | APOA1: A (ligand MF) |
-| human | interleukin-22-mediated signaling pathway (GO:0140865) | A | IL22: A (ligand MF) |
-| human | complement component C5a signaling pathway (GO:0038178) | A | C5: A (ligand MF) |
 | human | Fas signaling pathway (GO:0036337) | A | FASLG: A (ligand MF) |
-| human | thyroid-stimulating hormone signaling pathway (GO:0038194) | A | CGA: A (ligand MF); TSHB: A (ligand MF) |
-| human | interleukin-21-mediated signaling pathway (GO:0038114) | A | IL21: A |
+| human | complement component C5a signaling pathway (GO:0038178) | A | C5: A (ligand MF) |
+| human | interleukin-22-mediated signaling pathway (GO:0140865) | A | IL22: A (ligand MF) |
+| human | bombesin receptor signaling pathway (GO:0031989) | A | GRP: A (ligand MF); NMB: A (ligand MF) |
 | human | Kit signaling pathway (GO:0038109) | A | KITLG: A (ligand MF) |
 | human | interleukin-8-mediated signaling pathway (GO:0038112) | A | CXCL8: A (ligand MF) |
-| human | bombesin receptor signaling pathway (GO:0031989) | A | GRP: A (ligand MF); NMB: A (ligand MF) |
+| human | interleukin-21-mediated signaling pathway (GO:0038114) | A | IL21: A |
+| human | thyroid-stimulating hormone signaling pathway (GO:0038194) | A | CGA: A (ligand MF); TSHB: A (ligand MF) |
 | human | macrophage migration inhibitory factor signaling pathway (GO:0035691) | A | MIF: A (ligand MF) |
 | human | phospholipase C-activating angiotensin-activated signaling pathway (GO:0086097) | B | AGT: B (ligand MF) on angiotensin-activated signaling pathway |
 | human | galanin-activated signaling pathway (GO:0090663) | B | GAL: B (ligand MF) on neuropeptide signaling pathway; GALP: A (ligand MF) |
-| human | vascular endothelial growth factor receptor-1 signaling pathway (GO:0036323) | B | PGF: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway; VEGFA: B (ligand MF) on positive regulation of endothelial cell chemotaxis by VEGF-activated vascular endothelial growth factor receptor signaling pathway; VEGFB: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway |
-| human | Notch signaling involved in heart development (GO:0061314) | B | DLL4: B (ligand MF) on Notch signaling pathway; JAG1: B (ligand MF) on Notch signaling pathway |
-| human | fibroblast growth factor receptor signaling pathway involved in negative regulation of apoptotic process in bone marrow cell (GO:0035602) | B | FGF10: B (ligand MF) on fibroblast growth factor receptor signaling pathway; FGF2: B (ligand MF) on fibroblast growth factor receptor signaling pathway; FGF8: B (ligand MF) on fibroblast growth factor receptor signaling pathway |
 | human | adenylate cyclase-inhibiting opioid receptor signaling pathway (GO:0031635) | B | PDYN: A (ligand MF); PENK: B (ligand MF) on G protein-coupled opioid receptor signaling pathway; POMC: B (ligand MF) on adenylate cyclase-activating G protein-coupled receptor signaling pathway |
+| human | fibroblast growth factor receptor signaling pathway involved in negative regulation of apoptotic process in bone marrow cell (GO:0035602) | B | FGF10: B (ligand MF) on fibroblast growth factor receptor signaling pathway; FGF2: B (ligand MF) on fibroblast growth factor receptor signaling pathway; FGF8: B (ligand MF) on fibroblast growth factor receptor signaling pathway |
+| human | vascular endothelial growth factor receptor-1 signaling pathway (GO:0036323) | B | PGF: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway; VEGFA: B (ligand MF) on positive regulation of endothelial cell chemotaxis by VEGF-activated vascular endothelial growth factor receptor signaling pathway; VEGFB: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway |
 | human | vascular endothelial growth factor receptor-3 signaling pathway (GO:0036325) | B | VEGFC: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway; VEGFD: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway |
+| human | Notch signaling involved in heart development (GO:0061314) | B | DLL4: B (ligand MF) on Notch signaling pathway; JAG1: B (ligand MF) on Notch signaling pathway |
 | human | phospholipase C-activating endothelin receptor signaling pathway (GO:0160135) | B | EDN1: B (ligand MF) on endothelin receptor signaling pathway; EDN2: B (ligand MF) on endothelin receptor signaling pathway; EDN3: A (ligand MF) |
 | human | collagen-activated signaling pathway (GO:0038065) | C | COL1A1: A; COL4A2: C |
-| human | collagen-activated tyrosine kinase receptor signaling pathway (GO:0038063) | C | COL1A1: A; COL4A2: C |
+| human | collagen-activated tyrosine kinase receptor signaling pathway (GO:0038063) | C | COL1A1: A; COL1A2: A; COL2A1: A; COL3A1: A; COL4A2: C |
 | human | interleukin-34-mediated signaling pathway (GO:0061514) | C | IL34: C |
 | human | fibroblast growth factor receptor apoptotic signaling pathway (GO:1902178) | C | FGF2: B (ligand MF) on fibroblast growth factor receptor signaling pathway; FGF8: B (ligand MF) on fibroblast growth factor receptor signaling pathway; FGFR3: C |
 | mouse | G protein-coupled receptor signaling pathway, coupled to cyclic nucleotide second messenger (GO:0007187) | A | Agt: A (ligand MF); Ccl2: A (ligand MF); Npy: A (ligand MF) |
-| mouse | G protein-coupled acetylcholine receptor signaling pathway (GO:0007213) | A | Agrn: A (ligand MF) |
 | mouse | netrin-activated signaling pathway (GO:0038007) | A | Ntn1: A; Ntn3: A |
 | mouse | apolipoprotein A-I-mediated signaling pathway (GO:0038027) | A | Apoa1: A (ligand MF) |
 | mouse | brain-derived neurotrophic factor receptor signaling pathway (GO:0031547) | A | Bdnf: A (ligand MF) |
-| mouse | bombesin receptor signaling pathway (GO:0031989) | A | Grp: A (ligand MF); Nmb: A (ligand MF) |
 | mouse | G protein-coupled receptor signaling pathway coupled to cGMP nucleotide second messenger (GO:0007199) | A | Agt: A (ligand MF) |
+| mouse | bombesin receptor signaling pathway (GO:0031989) | A | Grp: A (ligand MF); Nmb: A (ligand MF) |
 | mouse | interleukin-22-mediated signaling pathway (GO:0140865) | A | Il22: A (ligand MF) |
-| mouse | thyroid-stimulating hormone signaling pathway (GO:0038194) | A | Cga: A (ligand MF); Tshb: A (ligand MF) |
 | mouse | macrophage migration inhibitory factor signaling pathway (GO:0035691) | A | Mif: A (ligand MF) |
+| mouse | thyroid-stimulating hormone signaling pathway (GO:0038194) | A | Cga: A (ligand MF); Tshb: A (ligand MF) |
 | mouse | phospholipase C-activating angiotensin-activated signaling pathway (GO:0086097) | B | Agt: B (ligand MF) on angiotensin-activated signaling pathway |
-| mouse | galanin-activated signaling pathway (GO:0090663) | B | Gal: B (ligand MF) on neuropeptide signaling pathway; Galp: A (ligand MF) |
 | mouse | adenylate cyclase-inhibiting opioid receptor signaling pathway (GO:0031635) | B | Pdyn: A (ligand MF); Penk: B (ligand MF) on G protein-coupled opioid receptor signaling pathway; Pomc: B (ligand MF) on adenylate cyclase-activating G protein-coupled receptor signaling pathway |
 | mouse | positive regulation of MAPKKK cascade by fibroblast growth factor receptor signaling pathway (GO:0090080) | B | Fgf15: B (ligand MF) on fibroblast growth factor receptor signaling pathway; Fgf21: B (ligand MF) on fibroblast growth factor receptor signaling pathway; Fgf23: B (ligand MF) on fibroblast growth factor receptor signaling pathway |
-| mouse | vascular endothelial growth factor receptor-1 signaling pathway (GO:0036323) | B | Pgf: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway; Vegfa: B (ligand MF) on positive regulation of endothelial cell chemotaxis by VEGF-activated vascular endothelial growth factor receptor signaling pathway; Vegfb: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway |
-| mouse | Notch signaling involved in heart development (GO:0061314) | B | Dll4: B (ligand MF) on Notch signaling pathway; Jag1: B (ligand MF) on Notch signaling pathway |
+| mouse | galanin-activated signaling pathway (GO:0090663) | B | Gal: B (ligand MF) on neuropeptide signaling pathway; Galp: A (ligand MF) |
 | mouse | fibroblast growth factor receptor signaling pathway involved in negative regulation of apoptotic process in bone marrow cell (GO:0035602) | B | Fgf10: B (ligand MF) on fibroblast growth factor receptor signaling pathway; Fgf2: B (ligand MF) on fibroblast growth factor receptor signaling pathway; Fgf8: B (ligand MF) on fibroblast growth factor receptor signaling pathway |
+| mouse | vascular endothelial growth factor receptor-1 signaling pathway (GO:0036323) | B | Pgf: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway; Vegfa: B (ligand MF) on positive regulation of endothelial cell chemotaxis by VEGF-activated vascular endothelial growth factor receptor signaling pathway; Vegfb: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway |
 | mouse | vascular endothelial growth factor receptor-3 signaling pathway (GO:0036325) | B | Vegfc: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway; Vegfd: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway |
+| mouse | Notch signaling involved in heart development (GO:0061314) | B | Dll4: B (ligand MF) on Notch signaling pathway; Jag1: B (ligand MF) on Notch signaling pathway |
 | mouse | phospholipase C-activating endothelin receptor signaling pathway (GO:0160135) | B | Edn1: B (ligand MF) on endothelin receptor signaling pathway; Edn2: B (ligand MF) on endothelin receptor signaling pathway; Edn3: A (ligand MF) |
 | mouse | collagen-activated signaling pathway (GO:0038065) | C | Col1a1: A; Col4a2: C |
-| mouse | collagen-activated tyrosine kinase receptor signaling pathway (GO:0038063) | C | Col1a1: A; Col4a2: C |
+| mouse | collagen-activated tyrosine kinase receptor signaling pathway (GO:0038063) | C | Col1a1: A; Col1a2: A; Col2a1: A; Col3a1: A; Col4a2: C |
 | mouse | interleukin-34-mediated signaling pathway (GO:0061514) | C | Il34: C |
 | mouse | fibroblast growth factor receptor apoptotic signaling pathway (GO:1902178) | C | Fgf2: B (ligand MF) on fibroblast growth factor receptor signaling pathway; Fgf8: B (ligand MF) on fibroblast growth factor receptor signaling pathway; Fgfr3: C |
 | rat | G protein-coupled receptor signaling pathway, coupled to cyclic nucleotide second messenger (GO:0007187) | A | Agt: A (ligand MF); Ccl2: A (ligand MF); Npy: A (ligand MF) |
-| rat | G protein-coupled acetylcholine receptor signaling pathway (GO:0007213) | A | Agrn: A (ligand MF) |
 | rat | netrin-activated signaling pathway (GO:0038007) | A | Ntn1: A; Ntn3: A |
 | rat | apolipoprotein A-I-mediated signaling pathway (GO:0038027) | A | Apoa1: A (ligand MF) |
-| rat | brain-derived neurotrophic factor receptor signaling pathway (GO:0031547) | A | Bdnf: A (ligand MF) |
 | rat | G protein-coupled receptor signaling pathway coupled to cGMP nucleotide second messenger (GO:0007199) | A | Agt: A (ligand MF) |
-| rat | complement component C5a signaling pathway (GO:0038178) | A | C5: A (ligand MF) |
-| rat | Fas signaling pathway (GO:0036337) | A | Faslg: A (ligand MF) |
+| rat | brain-derived neurotrophic factor receptor signaling pathway (GO:0031547) | A | Bdnf: A (ligand MF) |
 | rat | bombesin receptor signaling pathway (GO:0031989) | A | Grp: A (ligand MF); Nmb: A (ligand MF) |
-| rat | interleukin-22-mediated signaling pathway (GO:0140865) | A | Il22: A (ligand MF) |
+| rat | Fas signaling pathway (GO:0036337) | A | Faslg: A (ligand MF) |
+| rat | complement component C5a signaling pathway (GO:0038178) | A | C5: A (ligand MF) |
 | rat | Kit signaling pathway (GO:0038109) | A | Kitlg: A (ligand MF) |
-| rat | thyroid-stimulating hormone signaling pathway (GO:0038194) | A | Cga: A (ligand MF); Tshb: A (ligand MF) |
+| rat | interleukin-22-mediated signaling pathway (GO:0140865) | A | Il22: A (ligand MF) |
 | rat | macrophage migration inhibitory factor signaling pathway (GO:0035691) | A | Mif: A (ligand MF) |
+| rat | thyroid-stimulating hormone signaling pathway (GO:0038194) | A | Cga: A (ligand MF); Tshb: A (ligand MF) |
 | rat | phospholipase C-activating angiotensin-activated signaling pathway (GO:0086097) | B | Agt: B (ligand MF) on angiotensin-activated signaling pathway |
-| rat | galanin-activated signaling pathway (GO:0090663) | B | Gal: B (ligand MF) on neuropeptide signaling pathway; Galp: A (ligand MF) |
-| rat | Notch signaling involved in heart development (GO:0061314) | B | Dll4: B (ligand MF) on Notch signaling pathway; Jag1: B (ligand MF) on Notch signaling pathway |
 | rat | adenylate cyclase-inhibiting opioid receptor signaling pathway (GO:0031635) | B | Pdyn: A (ligand MF); Penk: B (ligand MF) on G protein-coupled opioid receptor signaling pathway; Pomc: B (ligand MF) on adenylate cyclase-activating G protein-coupled receptor signaling pathway |
-| rat | vascular endothelial growth factor receptor-1 signaling pathway (GO:0036323) | B | Pgf: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway; Vegfa: B (ligand MF) on positive regulation of endothelial cell chemotaxis by VEGF-activated vascular endothelial growth factor receptor signaling pathway; Vegfb: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway |
+| rat | Notch signaling involved in heart development (GO:0061314) | B | Dll4: B (ligand MF) on Notch signaling pathway; Jag1: B (ligand MF) on Notch signaling pathway |
+| rat | galanin-activated signaling pathway (GO:0090663) | B | Gal: B (ligand MF) on neuropeptide signaling pathway; Galp: A (ligand MF) |
 | rat | fibroblast growth factor receptor signaling pathway involved in negative regulation of apoptotic process in bone marrow cell (GO:0035602) | B | Fgf10: B (ligand MF) on fibroblast growth factor receptor signaling pathway; Fgf2: B (ligand MF) on fibroblast growth factor receptor signaling pathway; Fgf8: B (ligand MF) on fibroblast growth factor receptor signaling pathway |
+| rat | platelet-derived growth factor receptor-alpha signaling pathway (GO:0035790) | B | Pdgfa: B (ligand MF) on platelet-derived growth factor receptor signaling pathway |
+| rat | vascular endothelial growth factor receptor-1 signaling pathway (GO:0036323) | B | Pgf: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway; Vegfa: B (ligand MF) on positive regulation of endothelial cell chemotaxis by VEGF-activated vascular endothelial growth factor receptor signaling pathway; Vegfb: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway |
 | rat | vascular endothelial growth factor receptor-3 signaling pathway (GO:0036325) | B | Vegfc: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway; Vegfd: B (ligand MF) on vascular endothelial growth factor receptor signaling pathway |
 | rat | phospholipase C-activating endothelin receptor signaling pathway (GO:0160135) | B | Edn1: B (ligand MF) on endothelin receptor signaling pathway; Edn2: B (ligand MF) on endothelin receptor signaling pathway; Edn3: A (ligand MF) |
-| rat | platelet-derived growth factor receptor-alpha signaling pathway (GO:0035790) | B | Pdgfa: B (ligand MF) on platelet-derived growth factor receptor signaling pathway |
 | rat | collagen-activated signaling pathway (GO:0038065) | C | Col1a1: A; Col4a2: C |
-| rat | collagen-activated tyrosine kinase receptor signaling pathway (GO:0038063) | C | Col1a1: A; Col4a2: C |
+| rat | collagen-activated tyrosine kinase receptor signaling pathway (GO:0038063) | C | Col1a1: A; Col1a2: A; Col2a1: A; Col3a1: A; Col4a2: C |
 | rat | interleukin-34-mediated signaling pathway (GO:0061514) | C | Il34: C |
 | rat | urokinase plasminogen activator signaling pathway (GO:0038195) | C | Plau: A (ligand MF); Slurp1: C |
 | zebrafish | phospholipase C-activating G protein-coupled receptor signaling pathway (GO:0007200) | A | agt: A; calca: A (ligand MF); ccka: A (ligand MF); cckb: A (ligand MF); edn2: A (ligand MF); hcrt: A (ligand MF); il2: A; kiss1: A; nmu: A; tac1: A |
 | zebrafish | G protein-coupled receptor signaling pathway, coupled to cyclic nucleotide second messenger (GO:0007187) | A | agt: A; npy: A (ligand MF) |
 | zebrafish | insulin receptor signaling pathway (GO:0008286) | A | igf1: A (ligand MF); igf2b: A (ligand MF); igf2a: A (ligand MF); insb: A (ligand MF); ins: A (ligand MF) |
 | zebrafish | tumor necrosis factor-mediated signaling pathway (GO:0033209) | A | tnfa: A (ligand MF); tnfb: A (ligand MF); tnfsf11: A (ligand MF); tnfsf13b: A (ligand MF) |
-| zebrafish | G protein-coupled acetylcholine receptor signaling pathway (GO:0007213) | A | agrn: A |
-| zebrafish | lipopolysaccharide-mediated signaling pathway (GO:0031663) | A | il1b: A (ligand MF); tnfa: A (ligand MF); tnfb: A (ligand MF) |
 | zebrafish | G protein-coupled opioid receptor signaling pathway (GO:0038003) | A | penkb: A (ligand MF); penka: A (ligand MF) |
 | zebrafish | netrin-activated signaling pathway (GO:0038007) | A | ntn1b: A; ntn1a: A |
 | zebrafish | endothelin receptor signaling pathway (GO:0086100) | A | edn1: A (ligand MF); edn2: A (ligand MF) |
-| zebrafish | collagen-activated tyrosine kinase receptor signaling pathway (GO:0038063) | A | col1a1b: A; col1a1a: A; col4a2: A |
 | zebrafish | interleukin-15-mediated signaling pathway (GO:0035723) | A | il15: A (ligand MF) |
-| zebrafish | thyroid-stimulating hormone signaling pathway (GO:0038194) | A | cga: A (ligand MF); tshba: A (ligand MF); tshbb: A (ligand MF) |
-| zebrafish | Kit signaling pathway (GO:0038109) | A | kitlga: A; kitlgb: A |
-| zebrafish | interleukin-1-mediated signaling pathway (GO:0070498) | A | il1b: A (ligand MF) |
-| zebrafish | reelin-mediated signaling pathway (GO:0038026) | A | reln: A |
-| zebrafish | TRAIL-activated apoptotic signaling pathway (GO:0036462) | A | tnfsf10: A (ligand MF) |
-| zebrafish | macrophage colony-stimulating factor signaling pathway (GO:0038145) | A | csf1b: A (ligand MF); csf1a: A (ligand MF) |
+| zebrafish | collagen-activated tyrosine kinase receptor signaling pathway (GO:0038063) | A | col1a1b: A; col1a1a: A; col1a2: A; col2a1b: A; col2a1a: A; col4a2: A |
 | zebrafish | Roundabout signaling pathway (GO:0035385) | A | slit2: A |
+| zebrafish | TRAIL-activated apoptotic signaling pathway (GO:0036462) | A | tnfsf10: A (ligand MF) |
+| zebrafish | reelin-mediated signaling pathway (GO:0038026) | A | reln: A |
+| zebrafish | Kit signaling pathway (GO:0038109) | A | kitlga: A; kitlgb: A |
+| zebrafish | macrophage colony-stimulating factor signaling pathway (GO:0038145) | A | csf1b: A (ligand MF); csf1a: A (ligand MF) |
 | zebrafish | CXCL12-activated CXCR4 signaling pathway (GO:0038160) | A | cxcl12a: A (ligand MF); cxcl12b: A (ligand MF) |
 | zebrafish | gastric inhibitory peptide signaling pathway (GO:0038192) | A | gip: A |
-| zebrafish | apolipoprotein A-I-mediated signaling pathway (GO:0038027) | A | apoa1b: A; apoa1a: A |
-| zebrafish | complement component C5a signaling pathway (GO:0038178) | A | c5: A |
-| zebrafish | Fas signaling pathway (GO:0036337) | A | faslg: A (ligand MF) |
-| zebrafish | thrombopoietin-mediated signaling pathway (GO:0038163) | A | thpo: A (ligand MF) |
-| zebrafish | follicle-stimulating hormone signaling pathway (GO:0042699) | A | cga: A (ligand MF); fshb: A (ligand MF); slit2: A |
+| zebrafish | thyroid-stimulating hormone signaling pathway (GO:0038194) | A | cga: A (ligand MF); tshba: A (ligand MF); tshbb: A (ligand MF) |
+| zebrafish | interleukin-1-mediated signaling pathway (GO:0070498) | A | il1b: A (ligand MF) |
 | zebrafish | brain-derived neurotrophic factor receptor signaling pathway (GO:0031547) | A | bdnf: A (ligand MF) |
-| zebrafish | cholecystokinin signaling pathway (GO:0038188) | A | ccka: A (ligand MF); cckb: A (ligand MF) |
-| zebrafish | luteinizing hormone signaling pathway (GO:0042700) | A | lhb: A (ligand MF) |
+| zebrafish | Fas signaling pathway (GO:0036337) | A | faslg: A (ligand MF) |
+| zebrafish | apolipoprotein A-I-mediated signaling pathway (GO:0038027) | A | apoa1b: A; apoa1a: A |
 | zebrafish | chemokine (C-C motif) ligand 19 signaling pathway (GO:0038115) | A | ccl19b: A (ligand MF) |
+| zebrafish | thrombopoietin-mediated signaling pathway (GO:0038163) | A | thpo: A (ligand MF) |
+| zebrafish | complement component C5a signaling pathway (GO:0038178) | A | c5: A |
+| zebrafish | cholecystokinin signaling pathway (GO:0038188) | A | ccka: A (ligand MF); cckb: A (ligand MF) |
+| zebrafish | follicle-stimulating hormone signaling pathway (GO:0042699) | A | cga: A (ligand MF); fshb: A (ligand MF); slit2: A |
+| zebrafish | luteinizing hormone signaling pathway (GO:0042700) | A | lhb: A (ligand MF) |
 | zebrafish | growth hormone receptor signaling pathway via JAK-STAT (GO:0060397) | B | gh1: B (ligand MF) on growth hormone receptor signaling pathway |
 | zebrafish | platelet-derived growth factor receptor-beta signaling pathway (GO:0035791) | B | pdgfaa: B (ligand MF) on platelet-derived growth factor receptor signaling pathway; pdgfab: B (ligand MF) on platelet-derived growth factor receptor signaling pathway; pdgfbb: B (ligand MF) on platelet-derived growth factor receptor signaling pathway; pdgfba: B on platelet-derived growth factor receptor signaling pathway |
 | zebrafish | neurotrophin TRK receptor signaling pathway (GO:0048011) | B | ngfb: B (ligand MF) on nerve growth factor signaling pathway; ngfa: B (ligand MF) on nerve growth factor signaling pathway |
-| zebrafish | galanin-activated signaling pathway (GO:0090663) | B | gal: B (ligand MF) on neuropeptide signaling pathway |
-| zebrafish | Notch signaling involved in heart development (GO:0061314) | B | dll4: B on Notch signaling pathway; jag1a: B (ligand MF) on Notch signaling pathway; jag1b: B on Notch signaling pathway |
-| zebrafish | platelet-derived growth factor receptor-alpha signaling pathway (GO:0035790) | B | pdgfaa: B (ligand MF) on platelet-derived growth factor receptor signaling pathway; pdgfab: B (ligand MF) on platelet-derived growth factor receptor signaling pathway |
 | zebrafish | smoothened signaling pathway involved in ventral spinal cord patterning (GO:0021910) | B | shha: B on smoothened signaling pathway; shhb: B on smoothened signaling pathway |
+| zebrafish | platelet-derived growth factor receptor-alpha signaling pathway (GO:0035790) | B | pdgfaa: B (ligand MF) on platelet-derived growth factor receptor signaling pathway; pdgfab: B (ligand MF) on platelet-derived growth factor receptor signaling pathway |
+| zebrafish | Notch signaling involved in heart development (GO:0061314) | B | dll4: B on Notch signaling pathway; jag1a: B (ligand MF) on Notch signaling pathway; jag1b: B on Notch signaling pathway |
+| zebrafish | galanin-activated signaling pathway (GO:0090663) | B | gal: B (ligand MF) on neuropeptide signaling pathway |
 | zebrafish | ephrin receptor signaling pathway (GO:0048013) | C | efna1a: C; efna1b: C; efna5a: C; efna5b: C; efnb2b: C; efnb2a: C; epha7: C |
 | zebrafish | non-canonical Wnt signaling pathway (GO:0035567) | C | sfrp2: C; wnt11: B on Wnt signaling pathway; wnt3a: B (ligand MF) on Wnt signaling pathway; wnt4b: B (ligand MF) on Wnt signaling pathway; wnt4: B (ligand MF) on Wnt signaling pathway; wnt5a: B (ligand MF) on Wnt signaling pathway; wnt7aa: B (ligand MF) on Wnt signaling pathway; wnt7ab: B (ligand MF) on Wnt signaling pathway; wnt7ba: B (ligand MF) on Wnt signaling pathway; wnt7bb: B (ligand MF) on Wnt signaling pathway; wnt9b: B (ligand MF) on Wnt signaling pathway |
 | zebrafish | tachykinin receptor signaling pathway (GO:0007217) | C | tac1: C; tac3a: C; tac3b: C; tac4: A |
@@ -162,6 +161,20 @@ GO version: releases/2026-07-26. GAFs: current.geneontology.org at run time.
 | fly | Frizzled Nuclear Import pathway (GO:0140709) | B | wg: B (ligand MF) on Wnt signaling pathway |
 | fly | ephrin receptor signaling pathway (GO:0048013) | C | Ephrin: C |
 | fly | Roundabout signaling pathway (GO:0035385) | C | sli: C |
+| worm | cytokine-mediated signaling pathway (GO:0019221) | A | ilc-17.1: A (ligand MF) |
+| worm | insulin-like growth factor receptor signaling pathway (GO:0048009) | A | daf-28: A (ligand MF); ins-6: A (ligand MF) |
+| worm | interleukin-17-mediated signaling pathway (GO:0097400) | A | ilc-17.1: A (ligand MF) |
+| worm | Roundabout signaling pathway (GO:0035385) | A | slt-1: A |
+| worm | collagen-activated tyrosine kinase receptor signaling pathway (GO:0038063) | A | emb-9: A; let-2: A |
+| worm | non-canonical Wnt signaling pathway (GO:0035567) | B | cwn-1: B (ligand MF) on Wnt signaling pathway; cwn-2: B (ligand MF) on Wnt signaling pathway; egl-20: B (ligand MF) on canonical Wnt signaling pathway; lin-44: B (ligand MF) on Wnt signaling pathway; mom-2: B (ligand MF) on Wnt signaling pathway |
+| worm | Wnt signaling pathway, regulating spindle positioning (GO:0060069) | B | mom-2: B (ligand MF) on Wnt signaling pathway |
+| worm | activin receptor signaling pathway (GO:0032924) | B | daf-7: B (ligand MF) on BMP signaling pathway; dbl-1: B (ligand MF) on BMP signaling pathway; tig-2: B (ligand MF) on BMP signaling pathway |
+| worm | Notch signaling pathway (GO:0007219) | C | apx-1: A; arg-1: A; dsl-1: C; lag-2: C |
+| worm | netrin-activated signaling pathway (GO:0038007) | C | unc-6: C |
+| worm | ephrin receptor signaling pathway (GO:0048013) | C | efn-2: C; efn-3: C; efn-4: C; vab-2: C |
+| yeast | G protein-coupled receptor signaling pathway (GO:0007186) | A | MF(ALPHA)1: A (ligand MF); MF(ALPHA)2: A (ligand MF); MFA1: A (ligand MF); MFA2: A (ligand MF) |
+| pombe | G protein-coupled receptor signaling pathway (GO:0007186) | A | map2: A (ligand MF); mfm1: A (ligand MF); mfm2: A (ligand MF); mfm3: A (ligand MF) |
+| arabidopsis | cell surface receptor protein serine/threonine kinase signaling pathway (GO:0007178) | A | CEP1: A (ligand MF); CLE9: A (ligand MF); EPFL6: A (ligand MF); GLV1: A (ligand MF); PSK1: A (ligand MF); RALF1: A (ligand MF) |
 
 ## Ligand-activity genes in no signaling term
 
@@ -170,5 +183,8 @@ GO version: releases/2026-07-26. GAFs: current.geneontology.org at run time.
 - **rat**: AABR07001348.1, AABR07016805.1, Alkbh1, C5, Ccl17, Ccl22, Ccl27, Ccl28, Cd48, Cklf, Colec10, Cxcl1, Cxcl14, Cxcl16, Cxcl2, Cxcl3, Defb14, Defb17, Defb3, Defb33, Defb4, Defb41, Defb42, Defb5, Dpp4, ENSRNOG00000070971, Fgf12, Fgf13, Fgf14, H60al, Hamp, Hmgb2, Hmgb2l1, Hmgb2l2, LOC108353456, LOC120093164, LOC120102174, Lama1, Lgals3, Mifl2, Mifl3, Mifl4, Ppbp, Rln1, S100a4, Stc2
 - **zebrafish**: LOC567978, cckb, ccl19a.2, ccl19b, ccl20a.3, ccl20a.4, ccl20b, ccl20l, ccl25b, ccl27a, ccl27b, ccl32b.3, ccl33.2, ccl33.3, ccl34a.3, ccl34a.4, ccl34b.1, ccl34b.4, ccl34b.9, ccl35.1, ccl35.2, ccl36.1, ccl38.1, ccl38a.3, ccl38a.4, ccl38a.5, ccl39.1, ccl39.2, ccl39.3, ccl44, cxcl11.1, cxcl11.3, cxcl11.4, cxcl11.6, cxcl11.8, cxcl12a, cxcl12b, cxcl13, cxcl14, cxcl18a.1, cxcl18b, cxcl19, cxcl32b.1, cxcl8a, cxcl8b.3, cxl34b.11, cxl34c, edn3b, fam19a1, fbn3, fgl1, ghrh, grem2a, grem2b, igfbp7, izumo1, kazald2, osgn1, si:ch73-330k17.3, tafa1a, tnfsf13, vip
 - **fly**: orion
+- **worm**: ZC168.2, tig-3
 - **yeast**: none
 - **pombe**: none
+- **arabidopsis**: At1g06135, At1g06137, At2g31335, At2g31345, At3g23123, CEP1, CEP10, CEP11, CEP2, CEP3, CEP4, CEP5, CEP6, CEP7, CEP8, CEP9, GLV11, GLV2, GLV5, GLV6, GLV7, RALF1
+- **dicty**: aprA
