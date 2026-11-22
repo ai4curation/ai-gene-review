@@ -109,21 +109,22 @@ def check_organism(go: GO, gaf: Path, pathways: set[str], or_receptor_binding: b
                 name=go.name[p],
                 n_genes=len(genes),
                 n_ligand_genes=len(lig),
-                # Symbol lists are capped (8/6/12) to keep gapcheck-*.json compact.
-                ligand_genes=sorted(symbol[g] for g in lig)[:8],
-                # scripts/triage.py reads donor_genes as the cross-species donor pool, so the cap
-                # can change a category. Complex Portal entries are left out because they can
-                # never match a gene symbol in another species.
-                donor_genes=sorted(symbol[g] for g in lig - complexes)[:8],
-                binding_only_genes=sorted(symbol[g] for g in (genes & binding) - ligand)[:6],
-                genes=sorted(symbol[g] for g in genes)[:12],
+                # Display lists are deduplicated (two ids can share a symbol) and capped
+                # (8/6/12) to keep gapcheck-*.json compact.
+                ligand_genes=sorted({symbol[g] for g in lig})[:8],
+                # scripts/triage.py reads donor_genes as the cross-species donor pool, so it is
+                # not capped. Complex Portal entries are left out because they can never match
+                # a gene symbol in another species.
+                donor_genes=sorted({symbol[g] for g in lig - complexes}),
+                binding_only_genes=sorted({symbol[g] for g in (genes & binding) - ligand})[:6],
+                genes=sorted({symbol[g] for g in genes})[:12],
                 evidence=sorted({e for _, e in direct[p]}),
             )
         )
     rows.sort(key=lambda r: (r["n_ligand_genes"] > 0, -r["n_genes"], r["term"]))
     return dict(
         n_ligand_activity_genes=len(ligand),
-        ligand_genes_not_in_any_signaling=sorted(symbol[g] for g in ligand - in_signal),
+        ligand_genes_not_in_any_signaling=sorted({symbol[g] for g in ligand - in_signal}),
         rows=rows,
     )
 

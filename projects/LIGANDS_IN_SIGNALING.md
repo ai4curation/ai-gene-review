@@ -242,9 +242,8 @@ annotations, and netrin signaling "passes" on DSCAM and tubulin. Only IL34 (huma
 
 Caveats: symbol matching stands in for orthology, so a ligand named differently in another
 species is missed (mouse Fasl, Kitl and Hc for human FASLG, KITLG and C5 make mouse Fas, Kit
-and C5a signaling N rather than A); a passing species offers at most eight ligand symbols per
-term as donors, so the cap can change a category (complexes and proteoform symbols are left out
-of the donor list); fly, worm, the yeasts, Arabidopsis and Dictyostelium have no same-lineage
+and C5a signaling N rather than A); every ligand gene of a passing species is offered as a
+donor, except Complex Portal entries, which can never match a gene symbol; fly, worm, the yeasts, Arabidopsis and Dictyostelium have no same-lineage
 donor (each is its own lineage), so their lookups rest on curated/expected_ligands.yaml and
 unlisted terms fall into U; gene counts are of GAF object ids, so a gene listed under two ids
 (CERK1 in Arabidopsis, carA-1 in Dictyostelium) counts twice;

@@ -111,7 +111,7 @@ GO version: releases/2026-07-26. GAFs: current.geneontology.org at run time.
 | rat | collagen-activated tyrosine kinase receptor signaling pathway (GO:0038063) | C | Col1a1: A; Col1a2: A; Col2a1: A; Col3a1: A; Col4a2: C |
 | rat | interleukin-34-mediated signaling pathway (GO:0061514) | C | Il34: C |
 | rat | urokinase plasminogen activator signaling pathway (GO:0038195) | C | Plau: A (ligand MF); Slurp1: C |
-| zebrafish | phospholipase C-activating G protein-coupled receptor signaling pathway (GO:0007200) | A | agt: A; calca: A (ligand MF); ccka: A (ligand MF); cckb: A (ligand MF); edn2: A (ligand MF); hcrt: A (ligand MF); il2: A; kiss1: A; nmu: A; tac1: A |
+| zebrafish | phospholipase C-activating G protein-coupled receptor signaling pathway (GO:0007200) | A | agt: A; calca: A (ligand MF); ccka: A (ligand MF); cckb: A (ligand MF); edn2: A (ligand MF); hcrt: A (ligand MF); il2: A; kiss1: A; nmu: A; tac1: A; tac3a: A; tac3b: A; vegfaa: A (ligand MF); vegfab: A (ligand MF); wnt5a: A (ligand MF) |
 | zebrafish | G protein-coupled receptor signaling pathway, coupled to cyclic nucleotide second messenger (GO:0007187) | A | agt: A; npy: A (ligand MF) |
 | zebrafish | insulin receptor signaling pathway (GO:0008286) | A | igf1: A (ligand MF); igf2a: A (ligand MF); igf2b: A (ligand MF); ins: A (ligand MF); insb: A (ligand MF) |
 | zebrafish | tumor necrosis factor-mediated signaling pathway (GO:0033209) | A | tnfa: A (ligand MF); tnfb: A (ligand MF); tnfsf11: A (ligand MF); tnfsf13b: A (ligand MF) |

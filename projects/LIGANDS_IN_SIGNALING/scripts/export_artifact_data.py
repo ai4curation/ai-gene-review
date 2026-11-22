@@ -69,8 +69,8 @@ def build() -> dict:
                            "nlig": row["n_ligand_genes"], "ligs": row["ligand_genes"][:6]})
                 continue
             t = by_key.get((org, row["term"]))
-            if t is None or "source" not in t:
-                raise SystemExit(
+            if t is None or t.get("source") not in SRC:
+                raise RuntimeError(
                     f"results/triage.json has no current row for {org} {row['term']}: rerun "
                     "scripts/triage.py for every organism with a gapcheck file, then export again.")
             miss.append({"id": row["term"], "name": row["name"], "n": row["n_genes"],
@@ -98,7 +98,10 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--out", type=Path, required=True)
     args = ap.parse_args()
-    data = build()
+    try:
+        data = build()
+    except RuntimeError as err:
+        raise SystemExit(str(err)) from err
     args.out.write_text(json.dumps(data, separators=(",", ":")))
     print(f"{len(data['orgs'])} organisms, "
           f"{sum(len(o['miss']) for o in data['orgs'])} failing terms -> {args.out}")
