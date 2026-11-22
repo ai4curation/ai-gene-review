@@ -1333,6 +1333,28 @@ earlier sets split out.
 The Reelin synapse candidate is not modelled: its NMDA and AMPA receptor evidence
 is from mouse.
 
+### Sixteenth set: follow-ups
+
+The sixteenth set closes follow-ups from the earlier sets rather than adding modules.
+
+- `nucleotide_excision_repair` and `eukaryotic_mismatch_repair` now reach their
+  gap-filling and ligation steps by `module_ref` to
+  `dna_repair_gap_filling_synthesis_and_ligation` (MMR keeps `pcna_loading`, which also
+  activates MutLalpha). The NER file lists 18 fewer accessions and the MMR file 5; both
+  still cite their PW ids, so their tiers do not change.
+- `gpcr_camp_pka_signaling`'s cyclase and PKA steps now resolve into
+  `camp_pka_signal_transduction`; its ten callers in seven modules are unchanged, and the
+  CREB step stays in the compact module because the fuller one leaves PKA substrates out.
+- `plasma_membrane_calcium_extrusion` models PMCA1-4 as complexes with NPTN or BSG as
+  obligatory subunits (PMID:29056295, PMID:30190470) and asks for a direction-neutral
+  definition of GO:0090534.
+- `retinoic_acid_receptor_signaling`'s production part now references
+  `retinoic_acid_metabolism`'s `retinal_oxidation` and `crabp2_variant` nodes.
+- The HDAC4 gene review now marks its histone deacetylase rows over-annotated,
+  matching the HDAC5 review and `histone_deacetylation`, and its description names
+  His976 (not His803) as the residue that replaces the catalytic Tyr. The met-2 review
+  now reads GO:0140942 as the full two-step dimethylation.
+
 ## Next steps
 
 - Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
@@ -1344,9 +1366,10 @@ is from mouse.
   Filtering `curation_rule` on `pw2go:qa/` returns all 50 rows: `qa/OBSOLETE_TARGET` 45, `qa/MISSING_TARGET` 1,
   `qa/PAGE_XREF_DISAGREES` 4 (the three wrong citations and the defensible
   PW:0000862) and `qa/ID_ECHO` 1 (PW:0000076, which also disagrees).
-- Reconcile `gpcr_camp_pka_signaling` with the fuller
-  `camp_pka_signal_transduction`: the four Gs hormone modules still refer to the
-  compact module's cyclase and PKA steps.
+- Consider a transmembrane-only adenylyl cyclase node in
+  `camp_pka_signal_transduction`: since the sixteenth set the Gs callers of
+  `gpcr_camp_pka_signaling` resolve to its `camp_production` variant set, which also
+  admits soluble ADCY10.
 - Submit the new-term requests now recorded in module `proposed_new_terms`
   (`export_proposed_terms.py modules` lists them) to GO. Deduplicate by
   `proposed_name`: calcium channel activator activity is requested by both
@@ -1363,17 +1386,9 @@ is from mouse.
   [broad_pathway_split_plans.md](RGD_PATHWAY_ONTOLOGY/broad_pathway_split_plans.md),
   with a suggested order. All of them are now carried out (ninth to fourteenth
   sets), and the candidates they split out are modelled in the fifteenth set.
-- Point the `repair_synthesis` and `ligation` parts of `nucleotide_excision_repair`
-  and the `pold_resynthesis` and `lig1_ligation` parts of `eukaryotic_mismatch_repair`
-  at `dna_repair_gap_filling_synthesis_and_ligation` (MMR's `pcna_loading` stays, as it
-  also activates MutLalpha).
-- Revisit the HDAC4 gene review: it accepts HDAC4's histone deacetylase rows, which
-  the HDAC5 review and `histone_deacetylation` treat as over-annotation.
-- Add the obligatory PMCA subunits NPTN and BSG to
-  `plasma_membrane_calcium_extrusion`.
-- Point
-  `retinoic_acid_receptor_signaling`'s production step at
-  `retinoic_acid_metabolism`.
+- Teach the triage to follow `module_ref` when counting a module's genes: since the
+  sixteenth set, NER and mismatch repair reach their gap-filling proteins only by
+  reference.
 - Fix the triage's prose scraping of GO and UniProt ids
   (ai4curation/ai-gene-review#6006).
 - Candidate modules split out during the sets: Reelin modulation of NMDA/AMPA
@@ -1409,6 +1424,7 @@ is from mouse.
 - [x] Model ribosome biogenesis (thirteenth set)
 - [x] Model the SK channels from the calcium-mediated signaling leftovers and decide PW:0001437 (fourteenth set)
 - [x] Model the candidate modules split out of earlier sets (fifteenth set)
+- [x] Close the follow-ups from the earlier sets (sixteenth set)
 
 ## Notes
 
@@ -1503,3 +1519,9 @@ polarity, DNA repair gap filling and stereocilium bundle organization, plus the
 follow-ups from the review of sets 11-14 and the removal of a claim resting on a
 retracted paper from `nucleotide_excision_repair`. Tiers are unchanged (136
 `has_module`); `modules_compared` is 873.
+
+### 2026-11-22
+
+Sixteenth set: NER and MMR gap filling by module_ref, the cAMP/PKA reconciliation,
+PMCA accessory subunits, the retinoic acid production repoint, and the HDAC4 and met-2
+gene review revisits.
