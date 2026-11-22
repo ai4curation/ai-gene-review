@@ -90,3 +90,9 @@ core molecular function.
 - OMM, single-pass, N-terminal TM anchor (PMID:17028579; PMID:21397848).
 - Golgi only from a mouse spermatocyte study (UniProt ECO:0000250, with a CAUTION
   noting the conflict with mitochondrial localization).
+
+## 2026-11-22: PR review follow-up
+
+- PMID:37584589 (Su et al. 2023, J Cell Biol, full text cached) was missing. It shows that clustering by overexpressed PLD6 depends on its catalytic activity and needs the PA-binding tether NME3 [PMID:37584589 "Overexpression of PLD6 was sufficient to induce mitochondria clustering (Fig. 1, A and B), which depends on its catalytic activity (Fig. S1 A)."]. This is more cell-based evidence for PA made by PLD6 catalysis. It does not assay cardiolipin hydrolysis, so the GO:0035755 actions stand.
+- The GO:0008654 row moved from MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE. RHEA:44884 makes PA and PG, and the production GO-CAM gomodel:67e5e74400003200 frames the lipase as part_of phospholipid biosynthesis.
+- PMID:26678338 (MYC, UniProt activity regulation) is cached as abstract only, and its abstract describes no lipase assay.
