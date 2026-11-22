@@ -2069,9 +2069,10 @@ export-annotations-tsv output_file="exports/exported_annotations.tsv":
 
 # Export reviews as a GOA change set (one row per reviewed annotation + NEW rows),
 # consumed by the genesets enrichment eval (evals/aigr_changeset in monarch-initiative/genesets)
-export-goa-changeset organism="human" output_file="exports/goa_changeset_human.tsv":
+export-goa-changeset organism="human" output_file="":
     @mkdir -p exports
-    uv run python scripts/export_goa_changeset.py --organism {{organism}} -o {{output_file}}
+    uv run python scripts/export_goa_changeset.py --organism {{organism}} \
+        -o {{ if output_file == "" { "exports/goa_changeset_" + organism + ".tsv" } else { output_file } }}
 
 # Export existing_annotations to JSON format (for linkml-browser)
 export-annotations-json output_file="exports/exported_annotations.json":
