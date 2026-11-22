@@ -32,22 +32,26 @@ each subfamily the review names as affected lie below the node.
 
 | | Batches | Rows read | Applied | Left for adjudication |
 |---|---:|---:|---:|---:|
-| Gene reviews, candidate genes (`g001` to `g012`) | 12 of 73 | 278 | 227 | 49, and 2 not read |
-| Gene reviews, pilot of the corrected rules (`g013`, `g014`) | 2 of 73 | 47 | 47, one of them by hand | 0 |
+| Gene reviews, candidate genes (`g001` to `g012`) | 12 of 73 | 278 | 217 | 59, and 2 not read |
+| Gene reviews, pilot of the corrected rules (`g013`, `g014`) | 2 of 73 | 47 | 41 | 6 |
 | Gene reviews, the rest (`g015` to `g073`) | 0 of 59 | 0 | | |
-| Family reviews (`f001` to `f018`) | 18 of 18 | 386 | 321, two of them by hand | 65 |
+| Family reviews (`f001` to `f018`) | 18 of 18 | 386 | 320, two of them by hand | 66 |
 
 `tree_rereview.py status` prints the current counts. Results and what they show are in
 [tree-evidence.md](../tree-evidence.md#the-re-read). What is left for a curator is in
 [`needs-curator.yaml`](needs-curator.yaml).
 
-The 59 unread gene batches hold 1,370 overruled rows in 934 genes. Since the plans were
-made, reviews merged on main have added 337 overruled IBA rows in 230 genes and 276
-disputed node assessments: 260 in 145 families the plan does not cover, and 16 new ones
-in 10 families it had read (as of the seventh merge, 2026-11-22). Those have extracts and
-listings, and are not
-in either plan; `plan` makes a plan once and does not extend it, so they need batches of
-their own.
+The 59 unread gene batches hold 1,350 rows in 919 genes that are still overruled. Since
+the plans were made, reviews merged on main have added 345 overruled IBA rows in 234
+genes and 281 disputed node assessments: 265 in 147 families the plan does not cover, and
+16 new ones in 10 families it had read (as of the eighth merge, 2026-11-22). Those have
+extracts and listings, and are not in either plan; `plan` makes a plan once and does not
+extend it, so they need batches of their own.
+
+Main has also re-reviewed every IBA row marked `REMOVE` against the PAINT tree
+([rereview-2026-11-21](../rereview-2026-11-21/README.md)). It judged 654 of the 1,695
+unread gene rows; the other 1,041, nearly all `MARK_AS_OVER_ANNOTATED`, have been read
+against the tree by nobody.
 
 The plan is fixed in its batches, not in its rows. A batch names genes or families; its
 rows are looked up when the batch is read, so a review that another change has edited in
@@ -123,13 +127,15 @@ is left for a curator, with the reason in the run record:
   agreed correction exists, so there is nothing to apply by hand. Often the verifier
   accepted the finding and faulted only the drafted text, and then the review may still
   state something the tree contradicts. `needs-curator.yaml` marks these rows
-  `contradiction_disputed` and counts them apart (15 today), with the verifier's objection;
+  `contradiction_disputed` and counts them apart (12 today), with the verifier's objection;
   they need a new reading, and `finish` prints how many a batch leaves. A contradiction
   the verifier never saw would be counted here too; there is none today.
 - **A row whose review changed on main after it was read is not re-applied.** The row is
-  taken as on main, and the work list marks it `needs_new_reading` (30 today): its
+  taken as on main, and the work list marks it `needs_new_reading` (52 today): its
   `action`, `tree_reading` and `note` describe the review as it was read and may no longer
-  describe the committed one.
+  describe the committed one. A row that was already waiting for a curator when main
+  rewrote it gets the same mark: its run record keeps why it was left (`outcome_detail`)
+  and says what main changed (`changed_on_main`). Five of the 52 are of this kind.
 - **Quoting around an adverse fact.** A reading must quote more than the sentence that
   names the term, and must quote every sentence that stands against the verdict: that the
   gene is itself a seed, that it is inside the clade the seeds span, that seeds share its

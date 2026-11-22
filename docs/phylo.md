@@ -194,7 +194,9 @@ Run with `--residue-backlog`, it lists every row in the corpus that raises
 - Identity and coverage are over the family model's columns. A domain the family model
   does not cover is invisible to both.
 - Sequences are those of the PANTHER 19.0 build. Check `same_as_uniprot_file` before
-  citing a position.
+  citing a position or a coverage figure: the summary gives coverage as a share of
+  PANTHER's sequence. Equal lengths do not stand in for the flag (SCHPO ags1 has 2,410
+  residues in both sequences and they differ).
 - PAINT losses on the path (`paint_losses_on_path`, and so `kept_under_paint_loss` and
   the count of stale rows) are read from the family's local PAINT slice
   (`<PTHR>-paint.tsv`). A family without a slice has `paint_slice: false` and no loss

@@ -263,10 +263,28 @@ listing. Not read by the re-read there are now 337 overruled rows in 230 genes a
 disputed node assessments. The extract of human ADAT3 records that PANTHER's sequence
 for it (351 residues) is not the one in its UniProt file (367).
 
+**Eighth merge with main (2026-11-22).** Twelve gene reviews conflicted. Main had run a
+re-review of its own, of every IBA row marked `REMOVE` against the PAINT tree (the entry
+of 2026-11-21 below), and had rewritten 16 gene rows that this re-read had edited; one
+family assessment had been rewritten by a family review. All 17 are main's rows now and
+were not re-applied: 47 such rows over eight merges, and 578 rows applied. Six of the
+reviews hold no edit of this re-read any more. Three of the rows had carried a statement
+the tree contradicts, corrected here (LCYB, MNS1, NDUFA9); main's text was checked and
+does not make those statements. Five more rows that were waiting for a curator here were
+rewritten by main too, and the work list now marks them as needing a new reading instead
+of counting three of them as disputed contradictions. Four more genes and two more
+families from main got an extract or a listing. Of the 1,695 overruled gene rows this
+re-read has not read, main's re-review judged 654; 1,041, nearly all
+`MARK_AS_OVER_ANNOTATED`, have been read against the tree by nobody.
+
+- **Two re-reads of the same rows ran at once without knowing of each other.** Both were
+  about the tree, both edited the reason of a `REMOVE` row, and sixteen rows had to be
+  given up at the merge. Work of this kind should be announced where the other can see
+  it before it starts.
 - **A check that runs on part of the corpus says nothing about the rest.** The break
   above merged green and stayed invisible until a PR that validates everything met it.
   A source that other records quote needs its incoming quotes checked when it changes.
-- **A long-lived branch pays for every day it stays open.** Seven merges in eleven days,
+- **A long-lived branch pays for every day it stays open.** Eight merges in eleven days,
   each one a re-check of every applied row against a moving base. Where a re-read can
   land in small pieces, it should.
 

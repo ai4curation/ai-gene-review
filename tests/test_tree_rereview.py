@@ -333,15 +333,22 @@ def test_the_worklist_marks_and_counts_both_kinds_of_contradiction(tmp_path: Pat
     moved = row(term="GO:0005682", tree_reading="REASON_CONTRADICTED", outcome="adjudicate", verifier=AGREED, outcome_detail=tr.NOT_REAPPLIED)
     noted = row(term="GO:0005683", outcome="applied", note="the failure mode no longer fits")
     plain = row(term="GO:0005684", outcome="applied")
+    # left for a curator like `faulted`, and then rewritten on main before anyone read it again
+    rewritten = row(
+        term="GO:0005685", tree_reading="REASON_CONTRADICTED", outcome="adjudicate",
+        verifier={"agrees": False, "problem": "The finding holds; the drafted reason overstates."},
+        outcome_detail="the verifier disagrees with the reading",
+        changed_on_main="2026-11-22: main changed the verdict from REMOVE to MODIFY",
+    )
     (tmp_path / "g900.yaml").write_text(
-        tr.dump({"batch": "g900", "rows": [left, faulted, moved, noted, plain]}), encoding="utf-8"
+        tr.dump({"batch": "g900", "rows": [left, faulted, moved, noted, plain, rewritten]}), encoding="utf-8"
     )
 
     worklist = tr.worklist(tmp_path)
 
     assert worklist["counts"] == {
-        "adjudicate": 3, "not_read": 0, "applied_with_note": 1, "contradicted_and_left": 1, "contradiction_disputed": 1,
-        "needs_new_reading": 1,
+        "adjudicate": 4, "not_read": 0, "applied_with_note": 1, "contradicted_and_left": 1, "contradiction_disputed": 1,
+        "needs_new_reading": 2,
     }
     by_term = {entry["term"]: entry for entry in worklist["adjudicate"]}
     assert by_term["GO:0000398"]["contradicted_and_left"] is True and "contradiction_disputed" not in by_term["GO:0000398"]
@@ -350,7 +357,13 @@ def test_the_worklist_marks_and_counts_both_kinds_of_contradiction(tmp_path: Pat
     assert not {"contradicted_and_left", "contradiction_disputed"} & set(by_term["GO:0005682"])
     # the review changed on main after the reading: what the entry says describes the review as it was read
     assert by_term["GO:0005682"]["needs_new_reading"] is True
-    assert not any(entry.get("needs_new_reading") for term, entry in by_term.items() if term != "GO:0005682")
+    # so does a row that was waiting for a curator when main rewrote it: it keeps the reason it was left,
+    # says what main changed, and is no longer counted as a disputed contradiction
+    assert by_term["GO:0005685"]["needs_new_reading"] is True
+    assert by_term["GO:0005685"]["outcome_detail"] == "the verifier disagrees with the reading"
+    assert by_term["GO:0005685"]["changed_on_main"] == "2026-11-22: main changed the verdict from REMOVE to MODIFY"
+    assert not {"contradicted_and_left", "contradiction_disputed"} & set(by_term["GO:0005685"])
+    assert not any(entry.get("needs_new_reading") for term, entry in by_term.items() if term not in ("GO:0005682", "GO:0005685"))
     assert [entry["term"] for entry in worklist["applied_with_note"]] == ["GO:0005683"]
 
 
@@ -364,7 +377,7 @@ def test_the_committed_worklist_agrees_with_its_own_counts() -> None:
     moved = [entry for entry in worklist["adjudicate"] if entry.get("needs_new_reading")]
     # no lower bound here: the count goes to 0 once these rows are read again (the fixture test has a row)
     assert worklist["counts"]["needs_new_reading"] == len(moved)
-    assert all(entry["outcome_detail"].startswith(tr.NOT_REAPPLIED) for entry in moved)
+    assert all(entry["outcome_detail"].startswith(tr.NOT_REAPPLIED) or entry.get("changed_on_main") for entry in moved)
     assert not any(entry.get("contradicted_and_left") or entry.get("contradiction_disputed") for entry in moved)
 
 
@@ -372,8 +385,9 @@ def test_the_worklist_says_what_its_markers_cover() -> None:
     about = tr.worklist()["about"]
     # a contradiction the verifier never saw is disputed too, and the gloss has to say so
     assert "or never saw the row" in about
-    # a row not re-applied keeps its fields as read
+    # a row not re-applied keeps its fields as read, and so does one main rewrote while it waited for a curator
     assert "needs_new_reading" in about and "as it was read" in about
+    assert "changed_on_main" in about
 
 
 def test_a_row_whose_review_changed_on_main_needs_a_new_reading() -> None:
@@ -381,6 +395,16 @@ def test_a_row_whose_review_changed_on_main_needs_a_new_reading() -> None:
     assert tr.needs_new_reading(moved)
     assert not tr.needs_new_reading(row(outcome="adjudicate", outcome_detail="the verifier disagrees with the reading"))
     assert not tr.needs_new_reading(row(outcome="applied"))
+
+
+def test_a_row_main_rewrote_while_it_waited_for_a_curator_needs_a_new_reading() -> None:
+    waiting = row(
+        outcome="adjudicate", outcome_detail="the verifier disagrees with the reading",
+        changed_on_main="2026-11-22: main changed the verdict from REMOVE to MODIFY",
+    )
+    assert tr.needs_new_reading(waiting)
+    # an applied row is checked against main at each merge, not here
+    assert not tr.needs_new_reading(row(outcome="applied", changed_on_main="2026-11-22: main rewrote the reason"))
 
 
 def test_what_finish_reports_about_a_batch_beyond_its_outcomes() -> None:

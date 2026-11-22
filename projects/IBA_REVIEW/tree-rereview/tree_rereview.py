@@ -1250,7 +1250,7 @@ def _first_error(output: str) -> str:
 
 WORKLIST = HERE / "needs-curator.yaml"
 WORKLIST_FIELDS = (
-    "action", "tree_reading", "outcome", "outcome_detail", "proposed_action", "failure_modes_add",
+    "action", "tree_reading", "outcome", "outcome_detail", "changed_on_main", "proposed_action", "failure_modes_add",
     "failure_modes_remove", "false_claims", "note", "correction",
 )
 
@@ -1260,8 +1260,11 @@ NOT_REAPPLIED = "not re-applied when main was merged"
 
 
 def needs_new_reading(row: dict[str, Any]) -> bool:
-    """True for a row whose review changed on main after it was read, so that its edit was not carried over.
+    """True for a row left to a curator whose review changed on main after it was read.
 
+    Either its edit was not carried over at a merge (``outcome_detail`` starts with
+    :data:`NOT_REAPPLIED`), or it was already waiting for a curator when main rewrote it
+    (``changed_on_main`` says what changed; ``outcome_detail`` keeps why it was left).
     What the record holds for such a row (action, reading, sentence, note) describes the
     review as it was read and may no longer describe the committed one.
 
@@ -1269,8 +1272,13 @@ def needs_new_reading(row: dict[str, Any]) -> bool:
     True
     >>> needs_new_reading({"outcome": "adjudicate", "outcome_detail": "the verifier disagrees with the reading"})
     False
+    >>> needs_new_reading({"outcome": "adjudicate", "outcome_detail": "the verifier disagrees with the reading",
+    ...                    "changed_on_main": "2026-11-22: main changed the verdict from REMOVE to MODIFY"})
+    True
     """
-    return row.get("outcome") == "adjudicate" and str(row.get("outcome_detail", "")).startswith(NOT_REAPPLIED)
+    if row.get("outcome") != "adjudicate":
+        return False
+    return str(row.get("outcome_detail", "")).startswith(NOT_REAPPLIED) or bool(row.get("changed_on_main"))
 
 
 def _contradiction_left(row: dict[str, Any]) -> bool:
@@ -1373,9 +1381,10 @@ def worklist(runs: Path = RUNS) -> dict[str, Any]:
             "the verifier accepted the finding itself (verifier_problem says which), so the review may still "
             "state something the tree contradicts; no agreed correction exists, and the row needs a new "
             "reading. needs_new_reading marks an adjudicate row whose review changed on main after it was "
-            "read, so that its edit was not carried over: its action, tree_reading and note describe the "
-            "review as it was read and may no longer describe the committed one. Such a row is in neither "
-            "of the two contradiction counts."
+            "read: either its edit was not carried over at a merge, or it was already waiting for a curator "
+            "when main rewrote it (changed_on_main says what changed). Its action, tree_reading and note "
+            "describe the review as it was read and may no longer describe the committed one. Such a row is "
+            "in neither of the two contradiction counts."
         ),
         "counts": {
             **{group: len(rows) for group, rows in groups.items()},

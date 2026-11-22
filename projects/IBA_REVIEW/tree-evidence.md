@@ -63,13 +63,13 @@ at a tree and left only prose was not counted.
   is inside the seed clade, shares its branch with seeds, or every seed is an ortholog
   under a paralog claim), when a row is kept although PAINT has removed the term on the
   path to the gene (`kept_under_paint_loss`), and when a propagated row is overruled for
-  residue loss without a checkable residue claim (`missing_residue_evidence`; 105 rows in
+  residue loss without a checkable residue claim (`missing_residue_evidence`; 104 rows in
   65 reviews on 2026-11-22, [below](#residue-arguments-without-a-residue-claim)).
   `just validate-families` reports a node assessment that disputes a placement without
   quoting a tree listing (`NODE_TREE_EVIDENCE`).
-- **Backfill.** Extracts are committed for 1,418 genes: every gene whose review overrules
+- **Backfill.** Extracts are committed for 1,422 genes: every gene whose review overrules
   an IBA row that is still in its GOA file, and the genes with a kept row under a PAINT
-  loss. Node listings are committed for 364 families: those whose family review disputes a
+  loss. Node listings are committed for 366 families: those whose family review disputes a
   node placement, and PTHR48034 (the CIRBP family below). A review row whose IBA has since
   been withdrawn from GOA has no tree row to quote and is not asked for one. The committed
   set is what was written when the tooling landed and at each merge with main since. It
@@ -282,15 +282,17 @@ then edited by script. The method, the plans and a record of every row are in
 
 | | Rows read | Applied | Left for adjudication |
 |---|---:|---:|---:|
-| Gene reviews: the 12 batches that hold every candidate gene | 278 | 227 | 49, and 2 not read |
-| Gene reviews: two further batches, as a pilot of the corrected rules | 47 | 47, one of them by hand | 0 |
-| Family reviews: every disputed node assessment without a tree listing | 386 | 321, two of them by hand | 65 |
+| Gene reviews: the 12 batches that hold every candidate gene | 278 | 217 | 59, and 2 not read |
+| Gene reviews: two further batches, as a pilot of the corrected rules | 47 | 41 | 6 |
+| Family reviews: every disputed node assessment without a tree listing | 386 | 320, two of them by hand | 66 |
 
 An applied row quotes its own extract or listing in `supported_by` and says in its reason
-what the tree shows. The script changed no verdict. 30 rows that had been applied were
+what the tree shows. The script changed no verdict. 47 rows that had been applied were
 changed on main before this work was merged with it (26 at the first merge, 2 at the
-second, 1 at the fourth, 1 at the sixth); their edits were not carried over, and they are
-counted here as left for adjudication.
+second, 1 at the fourth, 1 at the sixth, 17 at the eighth); their edits were not carried
+over, and they are counted here as left for adjudication. Sixteen of the 17 are gene rows
+that main rewrote in its own re-review of every IBA row marked `REMOVE`
+([below](#mains-re-review-of-the-rows-marked-remove)).
 
 Review of the first batches found four things the script should not have done, and all
 four were put right on 2026-11-16 and 2026-11-17, in the rows already applied and in the
@@ -331,17 +333,20 @@ batch, against about 275,000 before the verifier was given every such row.
 
 Review of the pilot asked why a statement that both agents had found false should stay in
 a review because of what the script may rewrite. It should not. MNS1 was corrected by
-hand in all three places, with the reason the verifier had checked. So were the two
+hand in all three places, with the reason the verifier had checked. (Since the eighth
+merge the MNS1 and LCYB rows are main's, rewritten in its own re-review; main's text says
+that human MAN1A1 is a seed in MNS1's Golgi clade, and no longer puts LCYB outside the
+seeded clade.) So were the two
 family assessments of the same kind, PTHR10048 `GO:0005944` and PTHR16675 `GO:0002476`,
 each of which listed as affected a subfamily with no leaf below the node; both were
 checked against the release tree first, and the second against QuickGO (human HFE does
 not carry the row). `finish` now names such rows, and `needs-curator.yaml` counts them
 (`contradicted_and_left`, 0 today). That count covers a reading the verifier accepted
 whole. A contradiction whose drafted correction the verifier faulted is counted apart
-(`contradiction_disputed`, 15 today, below).
+(`contradiction_disputed`, 12 today, below).
 
 What the re-read leaves for a curator is in
-[`needs-curator.yaml`](tree-rereview/needs-curator.yaml): the rows below, and the 349
+[`needs-curator.yaml`](tree-rereview/needs-curator.yaml): the rows below, and the 336
 applied rows on which the reader left a note, often about a verdict or failure mode that
 no longer fits.
 
@@ -378,25 +383,28 @@ Three things follow.
   tree that was wrong.** Typical cases:
   a "paralog" that the tree makes a one-to-one ortholog, a "broad" node with five leaves,
   a seed list described from gene names, a subfamily named as affected that does not
-  descend from the node. 11 gene rows and 24 family rows had their reason corrected after
-  the verifier agreed with the correction, and three more were corrected by hand (above);
-  the rest are among the rows left for a curator.
+  descend from the node. Counted from the run records after the eighth merge, 14 gene
+  rows and 24 family rows carry a reason the script corrected after the verifier agreed
+  with the correction, and three more were corrected by hand (DROME mam, and the two
+  family assessments above); the rest are among the rows left for a curator.
 - **Family reviewers argue from the tree more than gene reviewers, and are mostly right.**
   More than half of the disputed node assessments make a placement argument that the tree
   bears out.
 
-114 rows are left for adjudication, each with its reason in the run records: 42 where the
-verifier did not accept the reading or its correction (among them 2 verdicts the reader
+131 rows are left for adjudication, each with its reason in the run records: 37 where the
+verifier did not accept the reading or its correction (among them 1 verdict the reader
 found unsupported and 2 kept rows under a PAINT loss), 26 family rows whose node or term
 is not in the listing (all read as `CANNOT_TELL`; the run records give them as "a row
 that must be verified was not checked by the verifier", since the verifier was not asked
-about a reading with nothing to check), 30 rows that changed on main after they were
+about a reading with nothing to check), 52 rows that changed on main after they were
 read, 11 kept rows under a PAINT loss, and 5 verdicts or assessments the tree does not
-support. Two gene rows were not read: the reader returned no entry for them. The 30 rows
-that changed on main are marked `needs_new_reading` in `needs-curator.yaml`: what their
-entries say describes the review as it was read.
+support. Two gene rows were not read: the reader returned no entry for them. Of the 52
+rows that changed on main, 47 had been applied and were not re-applied, and 5 were
+already waiting for a curator when main rewrote them. All are marked `needs_new_reading`
+in `needs-curator.yaml`: what their entries say describes the review as it was read.
 
-Fifteen of the 42 are readings of a contradiction (11 gene rows, 4 family rows). In most
+Twelve of the 37 are readings of a contradiction (8 gene rows, 4 family rows); three more
+were among them until main rewrote those rows (SCHPO mid1 and pom1, worm gpa-12). In most
 of them the verifier accepted that the review states something the tree contradicts and
 faulted the drafted correction: a clause that overstates, a second claim that is no
 contradiction, a missing quote. No agreed text exists for these. They were also read
@@ -405,12 +413,39 @@ regenerated, so the old drafts cannot simply be applied: they need a fresh readi
 the corrected rules, and are the first rows a curator should look at. `needs-curator.yaml`
 marks them `contradiction_disputed`.
 
-Not yet read: 59 gene batches with no candidate row, 1,370 overruled rows in 934 genes.
-They still raise `missing_tree_evidence`. So do 337 overruled rows in 230 genes that
-reviews merged on main have added since the plan was made. 276 disputed node assessments
-are in the same position: 260 in 145 families the plan does not cover, and 16 new ones in
-10 families it had read (as of the seventh merge, 2026-11-22). These have extracts and
-listings but are in neither plan.
+Not yet read: 59 gene batches with no candidate row. 1,350 of their rows, in 919 genes,
+are still overruled; main's re-review changed the verdict of the others. They still raise
+`missing_tree_evidence`. So do 345 overruled rows in 234 genes that reviews merged on
+main have added since the plan was made. 281 disputed node assessments are in the same
+position: 265 in 147 families the plan does not cover, and 16 new ones in 10 families it
+had read (as of the eighth merge, 2026-11-22). These have extracts and listings but are
+in neither plan.
+
+### Main's re-review of the rows marked REMOVE
+
+While this work was in review, main ran a re-review of its own
+([rereview-2026-11-21](rereview-2026-11-21/README.md)): every IBA row with the verdict
+`REMOVE`, 788 rows in 561 gene reviews, judged against the PAINT tree with its own
+inventory and tree view. It kept `REMOVE` on 711, 53 of them rows that PAINT no longer
+propagates, and changed the verdict of 77. The two pieces of work overlap and do not
+replace each other:
+
+- **Rows both touched.** Sixteen gene rows that had been applied here were rewritten
+  there, and five rows that were waiting for a curator here were rewritten too. All are
+  main's rows now. Three of the sixteen had carried a statement that the tree contradicts
+  and had been corrected here (LCYB, MNS1, NDUFA9); main's text does not make those
+  statements.
+- **Rows only main read.** Its rows state the tree facts in the reason and do not quote
+  the extract, so `missing_tree_evidence` still fires on them. Of the 1,695 overruled gene
+  rows this re-read has not read, main has judged 654 against the tree: 605 it upheld as
+  `REMOVE` and 49 it moved to `MARK_AS_OVER_ANNOTATED`. The other 1,041 have been read
+  against the tree by nobody: 1,032 `MARK_AS_OVER_ANNOTATED` rows, and 9 `REMOVE` rows
+  newer than main's inventory.
+- **Rows only this re-read covers.** `MARK_AS_OVER_ANNOTATED` rows, the family node
+  assessments, the quotes of adverse sentences, and the checks.
+
+Whether a row main upheld should also quote its extract, or whether the check should
+accept main's batch record as the tree evidence, is not decided here.
 
 The readers of the candidate gene batches and of the first four family batches ran on the
 session's model; the remaining family batches and the pilot ran on Opus. A trial of a smaller model as reader on
@@ -423,9 +458,9 @@ The pilot met four rows overruled as `PSEUDO_OR_SUBACTIVITY_LOSS` with nothing i
 `residue_claims` (ARATH CRY1 `GO:0003904`, and GID1A, GID1B and GID1C `GO:0016787`).
 Counted over every gene review on 2026-11-22, with or without an extract: 175 rows in 96
 reviews use the failure mode; 46 state residue claims, 16 say why the argument is not a
-point-residue question, 8 are not overruled and so are not asked, and **105 rows in 65
-reviews** raise `missing_residue_evidence` (84 `REMOVE`, 21 `MARK_AS_OVER_ANNOTATED`; 72
-of them IBA rows). On 2026-11-18 it was 97 rows in 63 reviews; the eight more came with
+point-residue question, 9 are not overruled and so are not asked, and **104 rows in 65
+reviews** raise `missing_residue_evidence` (83 `REMOVE`, 21 `MARK_AS_OVER_ANNOTATED`; 71
+of them IBA rows). On 2026-11-18 it was 97 rows in 63 reviews; the difference came with
 reviews merged on main. They are listed in
 [`residue-evidence-backlog.yaml`](residue-evidence-backlog.yaml). For 5 of them the
 gene's extract already reads the family's curated sites off the alignment. These are
