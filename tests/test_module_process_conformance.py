@@ -8,6 +8,7 @@ was correct, so the function check passed; only the process was wrong.
 from pathlib import Path
 
 import pytest
+import yaml
 
 from ai_gene_review.module_process_conformance import (
     GoProcessGraph,
@@ -162,6 +163,69 @@ def test_sibling_only_is_informational_off_the_receptor_tier(tmp_path, function)
     doc = module(function=function)
     row = module_process_conformance(doc, gene_index=index, graph=GRAPH)["rows"][0]
     assert (row["status"], row["severity"]) == ("SIBLING_PROCESS_ONLY", "info")
+
+
+@pytest.mark.parametrize(
+    "review",
+    [
+        # A proposed NEW annotation, or any retained row.
+        {"existing_annotations": [{"term": {"id": PLC}, "review": {"action": "NEW"}}]},
+        # A MODIFY whose replacement is the expected process.
+        {
+            "existing_annotations": [
+                {
+                    "term": {"id": GPCR},
+                    "review": {
+                        "action": "MODIFY",
+                        "proposed_replacement_terms": [{"id": PLC}],
+                    },
+                }
+            ]
+        },
+        # A core function placed in the process.
+        {"core_functions": [{"directly_involved_in": [{"id": PLC}]}]},
+    ],
+)
+def test_the_gene_review_can_supply_the_missing_process(tmp_path, review):
+    """GOA lags our own reviews; a process the review asserts is not a gap."""
+    index = write_gene(tmp_path, "P1", [("involved_in", ADRENERGIC_CAMP, "IDA")])
+    index["P1"].write_text(yaml.safe_dump({"id": "P1", **review}))
+    row = module_process_conformance(module(), gene_index=index, graph=GRAPH)["rows"][0]
+    assert (row["status"], row["severity"]) == ("PROCESS_SUPPORTED_BY_REVIEW", "info")
+
+
+@pytest.mark.parametrize(
+    "review",
+    [
+        # A removed or negated row is not an assertion that the process holds.
+        {
+            "existing_annotations": [
+                {"term": {"id": PLC}, "review": {"action": "REMOVE"}}
+            ]
+        },
+        {
+            "existing_annotations": [
+                {"term": {"id": PLC}, "negated": True, "review": {"action": "ACCEPT"}}
+            ]
+        },
+        # The term being replaced is not what the review asserts.
+        {
+            "existing_annotations": [
+                {
+                    "term": {"id": PLC},
+                    "review": {
+                        "action": "MODIFY",
+                        "proposed_replacement_terms": [{"id": CAMP}],
+                    },
+                }
+            ]
+        },
+    ],
+)
+def test_a_review_that_does_not_assert_the_process_changes_nothing(tmp_path, review):
+    index = write_gene(tmp_path, "P1", [("involved_in", ADRENERGIC_CAMP, "IDA")])
+    index["P1"].write_text(yaml.safe_dump({"id": "P1", **review}))
+    assert status(module(), index) == ["SIBLING_PROCESS_ONLY"]
 
 
 def test_other_statuses_are_informational(tmp_path):

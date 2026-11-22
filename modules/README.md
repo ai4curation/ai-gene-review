@@ -166,7 +166,10 @@ The validator **warns** (`Process conformance [SIBLING_PROCESS_ONLY]`) when all 
 these hold: the annoton's function is a signaling receptor activity
 (`GO:0038023`) or receptor ligand activity (`GO:0048018`); GOA has no positive
 row for the exemplar at or under the expected process (`is_a` and `part_of`);
-and GOA has an experimental row under a sibling of it. The warning is limited to
+and GOA has an experimental row under a sibling of it. A process that the gene's
+own review asserts (a retained or `NEW` annotation, a `MODIFY` replacement, or a
+core function's `directly_involved_in`) counts as support, because GOA lags the
+reviews. The warning is limited to
 receptors and ligands because they decide which pathway a module is. For other
 participants the same pattern is recorded but not reported: across the corpus it
 is mostly shared downstream components (GRB2 or JAK1 in a receptor-specific

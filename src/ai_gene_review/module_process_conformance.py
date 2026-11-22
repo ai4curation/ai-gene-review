@@ -11,6 +11,10 @@ its annoton sits under: the annoton's own ``processes`` when stated, otherwise
 the GO process concepts of the nearest enclosing node that has any.
 
 - ``PROCESS_SUPPORTED``: a positive GOA row at or under the expected process.
+- ``PROCESS_SUPPORTED_BY_REVIEW``: no such GOA row, but the gene's own review
+  asserts the process: a retained or ``NEW`` annotation, the replacement term of
+  a ``MODIFY``, or a core function's ``directly_involved_in``. GOA lags the
+  reviews, and a process the review already adds is not an exemplar problem.
 - ``PROCESS_NOT_ANNOTATED``: none. Informational only, because downstream
   members of a pathway often lack the pathway term.
 - ``SIBLING_PROCESS_ONLY``: none, and an experimental row under a sibling of the
@@ -30,6 +34,9 @@ pathways. The check therefore never produces an error.
 from __future__ import annotations
 
 import csv
+
+import yaml
+from yaml import CSafeLoader
 from collections import Counter
 from dataclasses import dataclass
 from functools import cached_property, lru_cache
@@ -191,6 +198,42 @@ def load_goa_process_rows(goa_path: Path) -> tuple[tuple[str, str], ...]:
     return tuple(rows)
 
 
+# Review actions that leave the annotated term standing as a claim about the gene.
+_RETAINED_ACTIONS = frozenset({"ACCEPT", "KEEP_AS_NON_CORE", "NEW", "TOO_GENERAL"})
+
+
+@lru_cache(maxsize=4096)
+def load_review_asserted_terms(review_path: Path) -> frozenset[str]:
+    """GO terms a gene review asserts of the gene, whatever GOA currently holds.
+
+    Collects the term of every retained, non-negated annotation, the replacement
+    terms of every ``MODIFY``, and each core function's ``directly_involved_in``.
+    Terms of every aspect are returned; the caller keeps those under a process.
+    """
+    data = yaml.load(review_path.read_text(encoding="utf-8"), Loader=CSafeLoader)
+    if not isinstance(data, dict):
+        return frozenset()
+    terms: set[str] = set()
+    for annotation in as_list(data.get("existing_annotations")):
+        if not isinstance(annotation, dict) or annotation.get("negated"):
+            continue
+        review = annotation.get("review")
+        review = review if isinstance(review, dict) else {}
+        action = review.get("action")
+        if action in _RETAINED_ACTIONS:
+            terms.update(_go_ids([annotation]))
+        elif action == "MODIFY":
+            for replacement in as_list(review.get("proposed_replacement_terms")):
+                if isinstance(replacement, dict):
+                    terms.update(_go_ids([{"term": replacement}]))
+    for core in as_list(data.get("core_functions")):
+        if isinstance(core, dict):
+            for process in as_list(core.get("directly_involved_in")):
+                if isinstance(process, dict):
+                    terms.update(_go_ids([{"term": process}]))
+    return frozenset(terms)
+
+
 def _go_ids(holders: Any) -> list[str]:
     """GO ids of a list of descriptor holders (``concepts`` or ``processes``)."""
     ids: list[str] = []
@@ -296,6 +339,11 @@ def _message(status: str, expected: list[str], siblings: list[str]) -> str:
             "Check that the exemplar belongs in this branch; GOA is a lead here, "
             "not proof that the choice is wrong."
         )
+    if status == "PROCESS_SUPPORTED_BY_REVIEW":
+        return (
+            f"GOA has no annotation of this exemplar at or under {wanted}, but its "
+            "gene review asserts the process."
+        )
     if status == "PROCESS_NOT_ANNOTATED":
         return f"GOA has no annotation of this exemplar at or under {wanted}."
     if status == "GOA_UNAVAILABLE":
@@ -355,6 +403,18 @@ def module_process_conformance(
                 status, severity, siblings = _assess(
                     load_goa_process_rows(goa_path), expected, graph, pathway_defining
                 )
+                if status != "PROCESS_SUPPORTED" and review_path is not None:
+                    asserted = load_review_asserted_terms(review_path)
+                    if any(
+                        graph.is_at_or_under(term, want)
+                        for term in asserted
+                        for want in expected
+                    ):
+                        status, severity, siblings = (
+                            "PROCESS_SUPPORTED_BY_REVIEW",
+                            "info",
+                            [],
+                        )
             rows.append(
                 {
                     "annoton_id": str(annoton.get("id") or ""),
