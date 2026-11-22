@@ -8,7 +8,7 @@ import math
 import os
 import re
 import time
-from typing import Any
+from typing import Any, Literal
 
 import httpx
 
@@ -65,6 +65,30 @@ def response_schema(task: ClassificationTask) -> dict[str, Any]:
     }
 
 
+ProbabilitySource = Literal["measured", "synthesized"]
+
+
+def _match_choice(token_text: str, allowed: set[str]) -> str | None:
+    """Match a token string to an allowed enum choice by exact or unique-prefix match.
+
+    Under JSON-schema enum-constrained decoding, multi-token enum labels such as
+    ``KEEP_AS_NON_CORE`` or ``MARK_AS_OVER_ANNOTATED`` emit an unambiguous first
+    value token (``KEEP``, ``MARK``). Exact matches always win; otherwise a
+    prefix of length >= 2 that uniquely identifies one allowed choice is matched.
+    """
+    text = token_text.strip()
+    if not text:
+        return None
+    if text in allowed:
+        return text
+    if len(text) < 2:
+        return None
+    matches = [choice for choice in allowed if choice.startswith(text)]
+    if len(matches) == 1:
+        return matches[0]
+    return None
+
+
 def _find_value_token(
     tokens: list[dict[str, Any]],
     allowed: set[str],
@@ -76,19 +100,23 @@ def _find_value_token(
     candidates: list[tuple[dict[str, Any], int]] = []
     for index in range(start, stop):
         token = tokens[index]
-        text = str(token.get("token", "")).strip()
-        alts = {
-            str(alt.get("token", "")).strip() for alt in token.get("top_logprobs", [])
+        text_match = _match_choice(str(token.get("token", "")), allowed)
+        alt_matches = {
+            m
+            for alt in token.get("top_logprobs", [])
+            if (m := _match_choice(str(alt.get("token", "")), allowed)) is not None
         }
-        if text in allowed or alts & allowed:
+        if text_match is not None or alt_matches:
             candidates.append((token, index + 1))
     if not candidates:
         return None
     for token, next_index in candidates:
-        alts = {
-            str(alt.get("token", "")).strip() for alt in token.get("top_logprobs", [])
+        alt_matches = {
+            m
+            for alt in token.get("top_logprobs", [])
+            if (m := _match_choice(str(alt.get("token", "")), allowed)) is not None
         }
-        if len(alts & allowed) >= 2:
+        if len(alt_matches) >= 2:
             return token, next_index
     return candidates[0]
 
@@ -99,9 +127,9 @@ def _property_value_windows(
 ) -> dict[str, tuple[int, int]]:
     """Anchor each JSON property to its ``(val_start, val_end)`` token index window.
 
-    Reconstructs the raw token text and locates each ``"<name>":`` key in
-    order, preventing multi-token enum values (e.g. ``KEEP`` + ``_AS`` +
-    ``_NON`` + ``_CORE``) from bleeding into subsequent properties.
+    Reconstructs the raw token text and locates each ``"<name>":`` key regardless
+    of emission order, preventing multi-token enum values (e.g. ``KEEP`` +
+    ``_AS`` + ``_NON`` + ``_CORE``) from bleeding into subsequent properties.
     """
     spans: list[tuple[int, int]] = []
     pieces: list[str] = []
@@ -114,17 +142,17 @@ def _property_value_windows(
     full_text = "".join(pieces)
 
     key_matches: list[tuple[str, int, int]] = []
-    search_from = 0
     for name in property_names:
         pattern = re.compile(re.escape(json.dumps(name)) + r"\s*:")
-        match = pattern.search(full_text, search_from)
+        match = pattern.search(full_text)
         if match is None:
             continue
         key_matches.append((name, match.start(), match.end()))
-        search_from = match.end()
 
     if not key_matches:
         return {}
+
+    key_matches.sort(key=lambda item: item[1])
 
     def _first_token_at_or_after(char_offset: int) -> int:
         for idx, (_start, tok_end) in enumerate(spans):
@@ -144,35 +172,61 @@ def _property_value_windows(
     return windows
 
 
+def _one_hot(choices: list[str], selected: str) -> dict[str, float]:
+    return {choice: (1.0 if choice == selected else 0.0) for choice in choices}
+
+
 def _probabilities(
     token: dict[str, Any], choices: list[str], selected: str
-) -> dict[str, float]:
+) -> tuple[dict[str, float], ProbabilitySource]:
     allowed = set(choices)
     probs = {choice: 0.0 for choice in choices}
     for alt in token.get("top_logprobs", []):
-        label = str(alt.get("token", "")).strip()
-        if label in allowed and "logprob" in alt:
-            probs[label] = math.exp(float(alt["logprob"]))
-    if selected in allowed and probs[selected] == 0.0 and "logprob" in token:
+        label = _match_choice(str(alt.get("token", "")), allowed)
+        if label is not None and "logprob" in alt:
+            probs[label] += math.exp(float(alt["logprob"]))
+    tok_text = str(token.get("token", "")).strip()
+    if (
+        selected in allowed
+        and probs[selected] == 0.0
+        and "logprob" in token
+        and (
+            _match_choice(tok_text, allowed) == selected
+            or (len(tok_text) >= 2 and selected.startswith(tok_text))
+        )
+    ):
         probs[selected] = math.exp(float(token["logprob"]))
     total = sum(probs.values())
     if total > 0:
-        return {label: value / total for label, value in probs.items()}
-    return {choice: (1.0 if choice == selected else 0.0) for choice in choices}
+        return {label: value / total for label, value in probs.items()}, "measured"
+    return _one_hot(choices, selected), "synthesized"
+
+
+def extract_probabilities_with_source(
+    response: Mapping[str, Any], task: ClassificationTask, selected: str
+) -> tuple[dict[str, float], ProbabilitySource]:
+    """Convert TypeSafe token logprobs into ``(probabilities, source)``."""
+    choices = [choice.value for choice in task.choices]
+    tokens = response.get("logprobs")
+    if not isinstance(tokens, list):
+        return _one_hot(choices, selected), "synthesized"
+    windows = _property_value_windows(tokens, ["label"])
+    if "label" in windows:
+        win_start, win_end = windows["label"]
+        found = _find_value_token(tokens, set(choices), win_start, win_end)
+    else:
+        found = _find_value_token(tokens, set(choices))
+    if found is None:
+        return _one_hot(choices, selected), "synthesized"
+    return _probabilities(found[0], choices, selected)
 
 
 def extract_probabilities(
     response: Mapping[str, Any], task: ClassificationTask, selected: str
 ) -> dict[str, float]:
     """Convert TypeSafe token logprobs into a distribution over task choices."""
-    choices = [choice.value for choice in task.choices]
-    tokens = response.get("logprobs")
-    if not isinstance(tokens, list):
-        return {choice: (1.0 if choice == selected else 0.0) for choice in choices}
-    found = _find_value_token(tokens, set(choices))
-    if found is None:
-        return {choice: (1.0 if choice == selected else 0.0) for choice in choices}
-    return _probabilities(found[0], choices, selected)
+    probs, _source = extract_probabilities_with_source(response, task, selected)
+    return probs
 
 
 def extract_schema_answers(
@@ -180,7 +234,7 @@ def extract_schema_answers(
     schema: Mapping[str, Any],
     parsed: Mapping[str, Any],
 ) -> dict[str, dict[str, Any]]:
-    """Extract labels and distributions for an object schema of enum fields."""
+    """Extract labels, distributions, and provenance for an object schema of enum fields."""
     tokens = (
         response.get("logprobs") if isinstance(response.get("logprobs"), list) else []
     )
@@ -208,10 +262,15 @@ def extract_schema_answers(
         else:
             found = None
         if found is None:
-            probs = {choice: (1.0 if choice == selected else 0.0) for choice in choices}
+            probs = _one_hot(choices, selected)
+            source: ProbabilitySource = "synthesized"
         else:
-            probs = _probabilities(found[0], choices, selected)
-        answers[name] = {"label": selected, "probabilities": probs}
+            probs, source = _probabilities(found[0], choices, selected)
+        answers[name] = {
+            "label": selected,
+            "probabilities": probs,
+            "probabilities_source": source,
+        }
     return answers
 
 
@@ -270,6 +329,7 @@ class TypeSafeClassifier:
             return ClassificationResult(
                 label=root.get("label"),
                 probabilities=root.get("probabilities", {}),
+                probabilities_source=root.get("probabilities_source"),
                 answers=answers,
                 model=body.get("model", self.model),
                 elapsed_seconds=elapsed,
@@ -280,9 +340,11 @@ class TypeSafeClassifier:
         allowed = {choice.value for choice in task.choices}
         if label not in allowed:
             raise ValueError(f"TypeSafe label {label!r} is not in {sorted(allowed)}")
+        probs, probs_source = extract_probabilities_with_source(body, task, label)
         return ClassificationResult(
             label=label,
-            probabilities=extract_probabilities(body, task, label),
+            probabilities=probs,
+            probabilities_source=probs_source,
             model=body.get("model", self.model),
             elapsed_seconds=elapsed,
             usage=usage,

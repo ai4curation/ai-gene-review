@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 
 @dataclass(frozen=True)
@@ -65,6 +65,7 @@ class ClassificationResult:
 
     label: str | None = None
     probabilities: Mapping[str, float] = field(default_factory=dict)
+    probabilities_source: Literal["measured", "synthesized"] | None = None
     answers: Mapping[str, Any] = field(default_factory=dict)
     model: str | None = None
     elapsed_seconds: float | None = None

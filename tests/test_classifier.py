@@ -378,6 +378,7 @@ def test_tasks_and_typesafe_single_label_roundtrip(
     clf = TypeSafeClassifier(api_key="test-key", post=fake_post)
     res = clf.classify(act_task)
     assert res.label == "ACCEPT"
+    assert res.probabilities_source == "measured"
     assert res.confidence is not None and res.confidence > 0.9
     assert res.usage["input_tokens"] == 120
 
@@ -385,7 +386,7 @@ def test_tasks_and_typesafe_single_label_roundtrip(
 def test_typesafe_output_schema_multi_token_and_property_anchoring(
     sample_gene_doc: dict[str, Any],
 ) -> None:
-    """Multi-token enum KEEP_AS_NON_CORE must not bleed into /coarse_action."""
+    """Multi-token enum KEEP_AS_NON_CORE gets prefix-matched logprobs and does not bleed into /coarse_action."""
     ann_case = extract_annotation_case(sample_gene_doc, "/existing_annotations/3")
     aspects_task = annotation_action_aspects_task(ann_case)
     assert aspects_task.output_schema is not None
@@ -397,16 +398,19 @@ def test_typesafe_output_schema_multi_token_and_property_anchoring(
         "/propagation_root_cause": "NO_FAILURE_NON_CORE",
     }
     # Simulate BPE splitting KEEP_AS_NON_CORE into KEEP + _AS + _NON + _CORE,
-    # where the first KEEP token has different logprobs than /coarse_action's KEEP.
+    # where the first token's alternatives are unique ActionEnum prefixes
+    # (KEEP -> KEEP_AS_NON_CORE, MARK -> MARK_AS_OVER_ANNOTATED), and
+    # /propagation_root_cause emits an ambiguous prefix ("NO" matches both
+    # NO_FAILURE_CORE and NO_FAILURE_NON_CORE) so it falls back to synthesized.
     logprobs = [
         {"token": '{"/"', "logprob": 0.0, "top_logprobs": []},
         {"token": ': "', "logprob": 0.0, "top_logprobs": []},
         {
             "token": "KEEP",
-            "logprob": -0.5,
+            "logprob": -0.2,
             "top_logprobs": [
-                {"token": "KEEP", "logprob": -0.5},
-                {"token": "REJECT", "logprob": -0.5},
+                {"token": "KEEP", "logprob": -0.2},
+                {"token": "MARK", "logprob": -1.6},
             ],
         },
         {"token": "_AS", "logprob": 0.0, "top_logprobs": []},
@@ -422,14 +426,22 @@ def test_typesafe_output_schema_multi_token_and_property_anchoring(
             ],
         },
         {"token": '", "/is_core": "', "logprob": 0.0, "top_logprobs": []},
-        {"token": "NON", "logprob": 0.0, "top_logprobs": []},
+        {
+            "token": "NON",
+            "logprob": -0.1,
+            "top_logprobs": [
+                {"token": "NON", "logprob": -0.1},
+                {"token": "CORE", "logprob": -2.3},
+            ],
+        },
         {"token": "_CORE", "logprob": 0.0, "top_logprobs": []},
         {
             "token": '", "/propagation_root_cause": "',
             "logprob": 0.0,
             "top_logprobs": [],
         },
-        {"token": "NO_FAILURE_NON_CORE", "logprob": -0.2, "top_logprobs": []},
+        {"token": "NO", "logprob": -0.2, "top_logprobs": []},
+        {"token": "_FAILURE_NON_CORE", "logprob": 0.0, "top_logprobs": []},
         {"token": '"}', "logprob": 0.0, "top_logprobs": []},
     ]
 
@@ -446,16 +458,23 @@ def test_typesafe_output_schema_multi_token_and_property_anchoring(
     clf = TypeSafeClassifier(api_key="test-key", post=fake_post)
     res = clf.classify(aspects_task)
     assert res.label == "KEEP_AS_NON_CORE"
-    # Multi-token KEEP_AS_NON_CORE falls back cleanly to one-hot (confidence 1.0)
-    assert res.probabilities["KEEP_AS_NON_CORE"] == 1.0
-    assert res.confidence == 1.0
-    # /coarse_action must use its own anchored KEEP token (~0.99), NOT the 50/50 KEEP fragment from /
+    # Unique-prefix matching measures KEEP -> KEEP_AS_NON_CORE (~0.80) vs MARK -> MARK_AS_OVER_ANNOTATED (~0.20)
+    assert res.probabilities_source == "measured"
+    assert 0.75 < res.probabilities["KEEP_AS_NON_CORE"] < 0.85
+    assert 0.15 < res.probabilities["MARK_AS_OVER_ANNOTATED"] < 0.25
+    # /coarse_action uses its own anchored KEEP token (~0.99), NOT the KEEP fragment from /
+    assert res.answers["/coarse_action"]["probabilities_source"] == "measured"
     coarse_probs = res.answers["/coarse_action"]["probabilities"]
     assert coarse_probs["KEEP"] > 0.98
     assert coarse_probs["REFINE"] < 0.02
-    assert res.answers["/is_core"]["label"] == "NON_CORE"
-    assert res.answers["/is_core"]["probabilities"]["NON_CORE"] == 1.0
+    # /is_core measures NON -> NON_CORE vs CORE
+    assert res.answers["/is_core"]["probabilities_source"] == "measured"
+    assert res.answers["/is_core"]["probabilities"]["NON_CORE"] > 0.85
+    # /propagation_root_cause had ambiguous prefix "NO" -> explicitly marked synthesized
     assert res.answers["/propagation_root_cause"]["label"] == "NO_FAILURE_NON_CORE"
+    assert (
+        res.answers["/propagation_root_cause"]["probabilities_source"] == "synthesized"
+    )
     assert (
         res.answers["/propagation_root_cause"]["probabilities"]["NO_FAILURE_NON_CORE"]
         == 1.0
@@ -463,12 +482,13 @@ def test_typesafe_output_schema_multi_token_and_property_anchoring(
 
 
 def test_typesafe_probabilities_missing_logprob_falls_back_to_one_hot() -> None:
-    probs = _probabilities(
+    probs, source = _probabilities(
         {"token": "ACCEPT", "top_logprobs": []},
         ["ACCEPT", "REMOVE"],
         "ACCEPT",
     )
     assert probs == {"ACCEPT": 1.0, "REMOVE": 0.0}
+    assert source == "synthesized"
 
     # Unanchored synthetic stream: single-alternative fallback must pick the FIRST match,
     # not candidates[-1], so later fields are not starved.
@@ -490,4 +510,6 @@ def test_typesafe_probabilities_missing_logprob_falls_back_to_one_hot() -> None:
         {"/": "MATCH", "/about/gene": "MISMATCH"},
     )
     assert answers["/"]["probabilities"] == {"MATCH": 1.0, "MISMATCH": 0.0}
+    assert answers["/"]["probabilities_source"] == "measured"
     assert answers["/about/gene"]["probabilities"] == {"MATCH": 0.0, "MISMATCH": 1.0}
+    assert answers["/about/gene"]["probabilities_source"] == "measured"
