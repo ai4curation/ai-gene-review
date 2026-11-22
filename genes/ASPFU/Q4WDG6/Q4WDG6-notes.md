@@ -20,9 +20,10 @@
   glycosphingolipids and accumulates the precursor IPC, so GOA's older
   `GO:0000030` and `GO:0016740` IMP rows should be replaced by the exact
   `GO:0103064 inositol phosphorylceramide mannosyltransferase activity`.
-- Both PTHR32385 PAINT rows from `PANTHER:PTN001285482` are sound for Q4WDG6.
-  The GO:0000030 MF row is too broad because GO:0103064 now exists; the
-  GO:0051999 MIPC biosynthesis row is exact.
+- Both PTHR32385 PAINT rows from `PANTHER:PTN001285482` are correct for
+  Q4WDG6, but the 19.0 PANTHER tree also places many non-IPC descendants below
+  that node. The GO:0000030 MF row is broad because GO:0103064 now exists; the
+  GO:0051999 MIPC biosynthesis row is exact for Q4WDG6.
 - The UniProt ARBA process rows to `GO:0006673` and `GO:0006688` are ancestors
   of the exact MIPC-biosynthesis process. No M(IP)2C row appears here, which is
   appropriate because the Aspergillus acidic GIPC pathway is not the budding

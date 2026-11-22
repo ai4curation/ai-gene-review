@@ -15,13 +15,14 @@
   find a newer paper changing the IPC mannosyltransferase call. The 2023
   fission-yeast MIPC/cell-wall paper is paralog-specific to S. pombe and not
   used for MIT1.
-- The `GO:0000030` IBA from `PANTHER:PTN001285482` is sound but generic now
-  that GOA already carries `GO:0103064 inositol phosphorylceramide
+- The `GO:0000030` IBA from `PANTHER:PTN001285482` is correct for MIT1 but
+  generic now that GOA already carries `GO:0103064 inositol phosphorylceramide
   mannosyltransferase activity` by an EC/Rhea IEA. The exact EC/Rhea row is the
   core molecular function.
-- The `GO:0051999` IBA from `PANTHER:PTN001285482` is sound. The node is seeded
-  by MIT1, A. fumigatus MitA, the three S. pombe Imt proteins, and the S.
-  cerevisiae Sur1/Csh1 enzymes.
+- The `GO:0051999` IBA from `PANTHER:PTN001285482` is correct for MIT1. The
+  node is seeded by MIT1, A. fumigatus MitA, the three S. pombe Imt proteins,
+  and the S. cerevisiae Sur1/Csh1 enzymes, but the PANTHER tree's current
+  descendants are broader than those IPC mannosyltransferases.
 - The root `GO:0005575 cellular_component` ND row was created by CGD in 2026
   and remains valid: ARBA/UniProt predict a membrane protein, but no literature
   located the C. albicans Mit1 protein more specifically.
