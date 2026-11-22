@@ -11,8 +11,8 @@
   endoplasmic reticulum palmitoyltransferase complex` based on close orthology
   to S. cerevisiae Shr5/Erf4.
 - No Candida-specific experimental publication for ERF4 was found in the cached or fetched references.
-  This review screened the cached C. albicans
-  ERF4 genome papers PMID:15123810, PMID:17419877, and PMID:24025428; searched
+  This review screened the C. albicans ERF4 UniProt sequence and reannotation
+  references PMID:15123810, PMID:17419877, and PMID:24025428; searched
   PubMed for `"Candida albicans" ERF4`, `"Candida albicans" SHR5`, and
   `"Candida albicans" "Ras palmitoyltransferase"`; and searched CGD for
   `ERF4`, `SHR5`, and `orf19.9510`. The S. cerevisiae ISO row for
