@@ -10,3 +10,9 @@
 - PMID:37811674 is full text in the local cache. Li et al. identify GLC-3 as the DVB glutamate-gated chloride channel that mediates autoinhibition when glutamate tone is elevated and reconstitute a GLC-3-dependent, chloride-sensitive glutamate conductance in HEK293T cells.
 - The Alliance `WB:WBGene00001593` API returns the same uncited WormBase brief description and no backing expression evidence for the sentence that GLC-3 is expressed in AIY. WormBook Table 3 also reports `glc-3`/GluClalpha4 expression in AIY and cites Wenick and Hobert 2004, but that primary expression paper was not fetched/read in this pass; the MOD description is therefore marked UNVERIFIED for the AIY clause, and later AIA/DVB functional placement is based on the Shinkai and Li full texts rather than on the brief description.
 - Remaining biology gap: endogenous GLC-3 complexes have not been purified, so the native subunit stoichiometry and whether GLC-3 concentrates at a postsynaptic specialization remain open.
+- After `modules/nematode_glutamate_gated_chloride_channels.yaml` merged, I
+  cross-checked the `glc3_receptor` annoton against this review. The review
+  already models GLC-3/G5EEZ3 as a homomeric ivermectin-sensitive
+  extracellularly glutamate-gated chloride channel with primary support from
+  Xenopus-oocyte electrophysiology and native AIA/DVB signaling studies,
+  matching the module participant.
