@@ -2076,6 +2076,25 @@ def validate_module_file(
         elif finding["severity"] == "warning":
             warnings.append(message)
 
+    # Process fit of exemplars: a receptor or ligand exemplar that GOA places
+    # only in a sibling pathway of the one this module asserts. Advisory.
+    from ai_gene_review.module_process_conformance import module_process_conformance
+
+    if not resolver_was_injected:
+        process_conformance = module_process_conformance(
+            doc,
+            gene_index=gene_index,
+            genes_dir=genes_dir if genes_dir is not None else project_root / "genes",
+        )
+        if process_conformance["failure"]:
+            warnings.append(f"Process conformance not checked: {process_conformance['failure']}")
+        for finding in process_conformance["rows"]:
+            if finding["severity"] == "warning":
+                warnings.append(
+                    f"Process conformance [{finding['status']}] {finding['annoton_id']} "
+                    f"({finding['participant_id']}): {finding['message']}"
+                )
+
     # Reference titles: every literature reference (PMID/DOI ``id``/``source_id``
     # paired with a ``title``) must match the fetched/cached publication title
     # (normalized). Mismatches block; unfetchable references degrade to warnings.
