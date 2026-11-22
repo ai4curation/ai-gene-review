@@ -37,6 +37,16 @@ existing_annotations:
       action: MODIFY
       proposed_replacement_terms:
         - {id: NTR, label: proposed specific kinase activity}
+  - term: {id: GO:0004672, label: protein kinase activity}
+    qualifier: enables
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    negated: true
+    isoform: P00001-2
+    review:
+      action: MODIFY
+      proposed_replacement_terms:
+        - {id: GO:0004674, label: protein serine/threonine kinase activity}
   - term: {id: GO:0004674, label: protein serine/threonine kinase activity}
     qualifier: enables
     evidence_type: NEW
@@ -72,6 +82,10 @@ def test_rows_carry_qualifier_retired_and_ntr(tmp_path):
     assert rows["GO:0003674"]["retired"] == "true"
     assert rows["GO:0016301"]["replacement_term_ids"] == "NTR"
     assert rows["GO:0016301"]["replacement_is_proposed_term"] == "true"
+    assert rows["GO:0004672"]["replacement_term_ids"] == "GO:0004674"
+    assert rows["GO:0004672"]["replacement_is_proposed_term"] == ""
+    assert rows["GO:0004672"]["negated"] == "true"
+    assert rows["GO:0004672"]["isoform"] == "P00001-2"
     assert rows["GO:0004674"]["action"] == "NEW"
     assert rows["GO:0004674"]["qualifier"] == "enables"
     assert out.read_text().startswith("# ai-gene-review commit: ")
@@ -92,3 +106,20 @@ def test_missing_organism_directory_is_an_error(tmp_path):
     out = tmp_path / "out.tsv"
     assert mod.main(["--genes-dir", str(tmp_path / "genes"), "--organism", "hmuan", "-o", str(out)]) == 2
     assert not out.exists()
+
+
+def test_empty_organism_directory_leaves_previous_export_untouched(tmp_path):
+    mod = _load()
+    (tmp_path / "genes" / "human").mkdir(parents=True)
+    out = tmp_path / "out.tsv"
+    out.write_text("previous good export\n")
+    assert mod.main(["--genes-dir", str(tmp_path / "genes"), "-o", str(out)]) == 2
+    assert out.read_text() == "previous good export\n"
+
+
+def test_output_is_world_readable(tmp_path):
+    mod = _load()
+    _write_genes(tmp_path, {"GENE1": REVIEW})
+    out = tmp_path / "out.tsv"
+    assert mod.main(["--genes-dir", str(tmp_path / "genes"), "-o", str(out)]) == 0
+    assert out.stat().st_mode & 0o777 == 0o644

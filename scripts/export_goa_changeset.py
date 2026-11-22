@@ -21,8 +21,16 @@ Output contract:
   MODIFY should skip such rows rather than drop the original term.
 - `is_core_function_term` is an exact-id match against the review's
   `core_functions` GO terms (MF, BP and CC pooled). It is not ancestor-aware.
-- The run exits non-zero if any review file could not be read; the output is
-  written to a temporary file and only moved into place on success.
+- The key (accession, term, qualifier, evidence, reference) is not guaranteed
+  unique: GAF with/from and annotation extensions are not exported, so two GOA
+  rows differing only there share a key. Where their actions disagree a
+  consumer cannot tell them apart.
+- `action` is empty when the annotation has no `review` block; `PENDING`
+  appears only where a review says so explicitly. Boolean columns are `true`
+  or empty (not `false`).
+- The run exits non-zero if any review file could not be read, or if there are
+  none; the output is written (UTF-8, mode 0644) to a temporary file and only
+  moved into place on success, so a failed run never replaces a previous export.
 
 Usage:
     uv run python scripts/export_goa_changeset.py --organism human \
@@ -90,7 +98,7 @@ def core_function_terms(doc: dict) -> set[str]:
 
 
 def rows_for(path: Path) -> list[dict]:
-    with path.open() as handle:
+    with path.open(encoding="utf-8") as handle:
         doc = yaml.load(handle, Loader=Loader) or {}
     if not isinstance(doc, dict):
         raise ReviewFileError(f"top level is {type(doc).__name__}, not a mapping")
@@ -147,14 +155,19 @@ def git_describe(repo: Path) -> str:
 
 
 def export(organism_dir: Path, organism: str, output: Path) -> tuple[int, int, int]:
-    """Write the change set; return (files, rows, unreadable files)."""
+    """Write the change set; return (files, rows, unreadable files).
+
+    Nothing is written when there are no review files or any is unreadable.
+    """
     files = sorted(organism_dir.glob("*/*-ai-review.yaml"))
+    if not files:
+        return 0, 0, 0
     output.parent.mkdir(parents=True, exist_ok=True)
     n_rows = 0
     n_errors = 0
     fd, tmp_name = tempfile.mkstemp(dir=output.parent, prefix=f".{output.name}.", suffix=".tmp")
     try:
-        with os.fdopen(fd, "w", newline="") as out:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as out:
             out.write(f"# ai-gene-review commit: {git_describe(REPO_ROOT)}\n")
             out.write(f"# organism: {organism}; review files: {len(files)}\n")
             writer = csv.DictWriter(out, fieldnames=COLUMNS, delimiter="\t", lineterminator="\n")
@@ -162,7 +175,7 @@ def export(organism_dir: Path, organism: str, output: Path) -> tuple[int, int, i
             for path in files:
                 try:
                     rows = rows_for(path)
-                except (yaml.YAMLError, ReviewFileError, AttributeError, TypeError) as exc:
+                except (yaml.YAMLError, ReviewFileError, AttributeError, TypeError, UnicodeDecodeError) as exc:
                     n_errors += 1
                     print(f"skip {path}: {exc}", file=sys.stderr)
                     continue
@@ -171,6 +184,7 @@ def export(organism_dir: Path, organism: str, output: Path) -> tuple[int, int, i
         if n_errors:
             os.unlink(tmp_name)
         else:
+            os.chmod(tmp_name, 0o644)  # mkstemp creates 0600
             os.replace(tmp_name, output)
     except BaseException:
         if os.path.exists(tmp_name):
