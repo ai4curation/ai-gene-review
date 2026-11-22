@@ -32,4 +32,7 @@
   `GO:0005737` are current and include C. elegans cpi-2 among the direct
   descendant evidence at `PTN005285938`; the `GO:0031982` vesicle IBA at the
   same node is sourced only from rat cystatin C rows and does not match the
-  C. elegans-specific yolk-granule compartment.
+  C. elegans-specific yolk-granule compartment. QuickGO does not make yolk
+  granule (`GO:0042718`) an `is_a` or `part_of` descendant of vesicle
+  (`GO:0031982`): its `is_a`/`part_of` ancestors on 2026-11-22 were cytoplasm,
+  yolk, cellular anatomical entity, and the ontology roots.
