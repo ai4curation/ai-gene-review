@@ -145,6 +145,7 @@ def main() -> None:
         dropped = next((s for s in snaps if (not on or s > on[-1]) and not hist[s][0]), snaps[-1])
         _, block, anywhere = hist[snaps[-1]]
         row["first_snapshot_dropped"] = dropped if on else ""
+        row["loss_date_after_drop"] = "no_loss_record"
         if block:
             row["upstream_change"] = "LOSS_ADDED"
             row["loss_node"], row["loss_evidence"], row["loss_date"] = block

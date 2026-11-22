@@ -125,14 +125,21 @@ prediction: the reviewer could not see PAINT's change. Three GID1 rows are absen
 the snapshot's leaf file although the replay still propagates them; they are counted as
 `STILL_PROPAGATED` here and as withdrawn in the batch record, and need a look.
 
+Two further outcomes exist and have no rows in this run: `NEVER_PROPAGATED` (the gene is
+on the tree and no snapshot carries the term to it) and `UNDATED` (no REMOVE found in git
+history, which a shallow clone produces). The `loss_date_after_drop` column reads `no_loss_record` where PAINT dropped the term
+without recording a loss.
+
 Snapshots are months apart, so only a loss record, which carries its own date, pins the
 order to the day.
 
 ### What the spurious removals had in common
 
 `reason_scan.py` flags reasons by phrase and by where the seeds sit; `reason_scan.tsv`
-holds the flags for every live row. Measured over all 735 live rows, against each row's
-text before the re-review. "Changed" is a new action; "edited" also counts a reason
+holds the flags for every live row as the reviews stood partway through the pass, so it
+is a working file and not the source of this table. The table comes from
+`reason_signal.py`, which reads each row's text at the commit before the re-review. It is
+measured over all 735 live rows. "Changed" is a new action; "edited" also counts a reason
 rewritten under the same action.
 
 | Signal in the original reason | Rows | Changed | Edited |
