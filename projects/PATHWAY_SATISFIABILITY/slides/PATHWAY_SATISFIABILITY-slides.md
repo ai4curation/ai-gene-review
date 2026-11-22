@@ -100,9 +100,13 @@ Reading a curation module as a boolean formula, evaluated in a context
 
 <div>
 
-- **Abduction targets**: *Synechocystis*, *M. jannaschii* make methionine with **no candidate** for a step.
+- **Retracted**: *Synechocystis* / *M. jannaschii* were flagged as "dark matter" — both in fact
+  encode the aspartate-semialdehyde route (K23975/K23976). A model-scope + oracle-coverage
+  artifact, now fixed; the microbial panel has **no** abduction targets.
 - *Rickettsia* gap correctly read as **auxotrophy**.
-- Eukaryotic side: **liver ketolysis** gap at OXCT1 (GTEx liver 0 TPM); **intestinal gluconeogenesis** flagged at G6PC1.
+- Eukaryotic side: **liver ketolysis** gap at OXCT1 (GTEx liver 0.46 TPM vs heart 60);
+  **intestinal gluconeogenesis** flagged at G6PC1.
+- Lesson: **a gap indicts the model before the organism.**
 
 </div>
 </div>

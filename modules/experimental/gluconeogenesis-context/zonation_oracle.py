@@ -81,9 +81,50 @@ def load_profiles() -> dict[str, list[float]]:
 
 
 def relative_profile(prof: list[float]) -> list[float]:
-    """Normalise a profile to its own max (0..1) so genes are comparable."""
+    """Normalise a profile to its own max (0..1) so genes are comparable.
+
+    Note this deliberately discards absolute abundance: a gene that is essentially
+    off across the whole lobule still reaches 1.0 at its own (tiny) maximum. Callers
+    must therefore gate on :func:`expressed`, not on this alone -- see
+    :data:`ABSOLUTE_FLOOR`.
+    """
     mx = max(prof) or 1.0
     return [v / mx for v in prof]
+
+
+#: Minimum absolute profile value (Halpern fraction-of-layer-UMI) for a gene to count
+#: as expressed at all, whatever its own peak.
+#:
+#: Without this, per-gene peak normalisation lets a gene that mouse liver does not
+#: express satisfy a pathway step: ``Fbp2`` (max 1.07e-06) and ``Pck2`` (max 3.91e-06)
+#: are 2-3 orders of magnitude below every gene the liver genuinely expresses (lowest
+#: is ``G6pc`` at 1.28e-04), yet both reach relative 1.0 at their own peaks. Choosing
+#: 1e-5 places the cut inside a 33-fold empty gap, so any floor in ~[4e-6, 1.2e-4]
+#: gives the same result -- the value is not load-bearing.
+ABSOLUTE_FLOOR = 1e-5
+
+
+def expressed(prof: list[float], layer_idx: int, rel_threshold: float,
+              floor: float = ABSOLUTE_FLOOR) -> bool:
+    """Is this gene expressed in this lobule layer?
+
+    Requires BOTH that the layer clears the absolute floor and that it reaches
+    ``rel_threshold`` of the gene's own peak. The absolute test rejects genes the
+    tissue does not express; the relative test is what resolves zonation among genes
+    it does.
+
+    >>> fbp1 = [0.000607, 0.000863, 0.000963, 0.00130, 0.00163, 0.00170, 0.00189, 0.00202, 0.00207]
+    >>> fbp2 = [7.6e-08, 6.0e-07, 1.07e-06, 8.6e-07, 4.8e-07, 5.9e-07, 8.6e-07, 8.4e-07, 7.0e-07]
+    >>> expressed(fbp1, 8, 0.5)          # periportal pole, genuinely expressed
+    True
+    >>> expressed(fbp1, 0, 0.5)          # pericentral pole, below its own 50% mark
+    False
+    >>> expressed(fbp2, 2, 0.5)          # at its own peak, but the liver does not express it
+    False
+    """
+    if prof[layer_idx] < floor:
+        return False
+    return relative_profile(prof)[layer_idx] >= rel_threshold
 
 
 def portal_pole(profiles: dict[str, list[float]]) -> int:

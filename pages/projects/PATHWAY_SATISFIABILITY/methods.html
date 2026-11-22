@@ -375,13 +375,15 @@
 
 
 
+
+
     <div class="content">
         <h1 id="methods-reproduction">Methods &amp; reproduction</h1>
 <p>Companion to <a href="../PATHWAY_SATISFIABILITY.html">Pathway satisfiability</a> and<br />
 <a href="background.html">Background: pathway hole filling</a>. This page holds the actual model, the engine<br />
 API, the module-YAML shape, the oracle interface, and the commands to reproduce every result.<br />
 Nothing here is needed to read the main page — start there for the bottom line.</p>
-<p>The whole thing is ~330 lines of pure-logic Python (<code>module_logic.py</code>, doctested and mypy-clean)<br />
+<p>The whole thing is ~680 lines of pure-logic Python (<code>module_logic.py</code>, doctested and mypy-clean)<br />
 plus a handful of per-context oracle/resolver scripts. The logic core carries <strong>no biological<br />
 data</strong>; only the oracle changes between contexts. That separation is the whole design.</p>
 <h2 id="the-model">The model</h2>
@@ -399,6 +401,9 @@ boolean circuit and evaluated against a <em>context oracle</em>:</p>
 <div class="codehilite"><pre><span></span><code><span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Atom</span><span class="p">:</span>                 <span class="c1"># a leaf step: a participant gene, truth value from an oracle</span>
     <span class="n">node_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">;</span> <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">;</span> <span class="n">gene_symbol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">];</span> <span class="n">uniprot</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">representative_gene_symbols</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">];</span> <span class="n">representative_uniprots</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
+    <span class="n">function_ids</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>   <span class="c1"># GO MF ids the step requires</span>
+    <span class="n">family_ids</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">];</span> <span class="n">domain_ids</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>  <span class="c1"># selectors, for proteome oracles</span>
 
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">And</span><span class="p">:</span>                  <span class="c1"># satisfied iff every child is satisfied</span>
@@ -407,6 +412,7 @@ boolean circuit and evaluated against a <em>context oracle</em>:</p>
 <span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Or</span><span class="p">:</span>                   <span class="c1"># disjunction over variant branches (&gt;=1 for satisfiability)</span>
     <span class="n">set_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">;</span> <span class="n">selection</span><span class="p">:</span> <span class="nb">str</span><span class="p">;</span> <span class="n">children</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="s2">&quot;Circuit&quot;</span><span class="p">]</span>
+    <span class="n">kind</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">VariantKind</span><span class="p">];</span> <span class="n">kind_inferred</span><span class="p">:</span> <span class="nb">bool</span>  <span class="c1"># REALIZER / ROUTE, declared or inferred</span>
 
 <span class="n">Circuit</span>   <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">Atom</span><span class="p">,</span> <span class="n">And</span><span class="p">,</span> <span class="n">Or</span><span class="p">]</span>
 <span class="n">Predicate</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Atom</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span>     <span class="c1"># the oracle: does this atom hold?</span>
@@ -457,6 +463,11 @@ boolean circuit and evaluated against a <em>context oracle</em>:</p>
 <td><code>unsatisfied_steps</code></td>
 <td><code>(circuit, holds) -&gt; list[Circuit]</code></td>
 <td>the <strong>gaps</strong>: top-level steps with no satisfiable variant</td>
+</tr>
+<tr>
+<td><code>gap_report</code></td>
+<td><code>(circuit, holds) -&gt; list[Gap]</code></td>
+<td>each gap at its innermost failing element (through <code>module_ref</code>), with its path, layer (<code>REALIZER</code>, <code>ROUTE</code>, <code>UNCLASSIFIED</code>) and absent atoms</td>
 </tr>
 <tr>
 <td><code>abduce</code></td>
@@ -552,7 +563,7 @@ cached data matrix and hands it to <code>is_satisfied</code> / <code>unsatisfied
 <tr>
 <td>liver zonation</td>
 <td><code>zonation_oracle.py</code></td>
-<td>Halpern 2017 layer profile ≥ relative threshold</td>
+<td>Halpern 2017 layer profile ≥ relative threshold <strong>and</strong> ≥ absolute floor</td>
 </tr>
 <tr>
 <td>substrate entry</td>
@@ -568,6 +579,18 @@ cached data matrix and hands it to <code>is_satisfied</code> / <code>unsatisfied
 </table>
 <p><code>gtex_oracle.py</code> is a real GTEx v8 API client (resolves symbol → versioned GENCODE id,<br />
 alias-aware e.g. <code>G6PC1</code>→<code>G6PC</code>; caches a gene×tissue TSV) — it does not fabricate values.</p>
+<p>Two things an oracle must get right, both learned the hard way (see<br />
+<a href="REVIEW.html">Independent review</a>):</p>
+<ul>
+<li><strong>Never default an undecidable atom to <code>False</code>.</strong> <code>kegg_oracle.holds_for()</code> raises<br />
+<code>UnmappedStepError</code> when an atom's gene symbol has no entry in <code>STEP_KO</code>. Returning <code>False</code><br />
+  instead makes "my lookup table is incomplete" indistinguishable from "this genome lacks the<br />
+  gene", which manufactured two phantom "metabolic dark matter" leads.</li>
+<li><strong>Never let a relative measure stand alone.</strong> <code>zonation_oracle.expressed()</code> requires an<br />
+  absolute floor as well as the relative-to-own-peak threshold, because per-gene peak<br />
+  normalisation otherwise lets a gene the tissue does not express satisfy a step at its own<br />
+  (tiny) maximum.</li>
+</ul>
 <h2 id="abduction-a-gap-is-a-hypothesis">Abduction: a gap is a hypothesis</h2>
 <p><code>abduce(circuit, holds, asserted_active)</code> crosses satisfiability with an <strong>independent</strong> activity<br />
 claim (a growth phenotype, a documented tissue function) and returns an <code>Abduction</code> with one of<br />
@@ -608,11 +631,23 @@ four <code>Classification</code> values:</p>
 </tr>
 </tbody>
 </table>
-<p>For an <code>ABDUCTION_TARGET</code> the engine attaches <code>gap_candidates</code> (the absent genes per gap step)<br />
-and a fixed <code>GAP_HYPOTHESES</code> set: non-orthologous/unannotated enzyme · unmodelled alternative<br />
-route · <strong>not cell-autonomous</strong> (intermediate supplied by another cell/organ — the metazoan-only<br />
-explanation) · the activity assertion itself is wrong. The activity column is independent of the<br />
+<p>For an <code>ABDUCTION_TARGET</code> the engine attaches <code>gap_candidates</code> (the absent genes per gap step),<br />
+the layered <code>gaps</code> from <code>gap_report</code>, and the <code>GAP_HYPOTHESES</code> that fit those layers. Only a<br />
+declared layer narrows them: a declared realizer gap (activity required, no known carrier) gets<br />
+non-orthologous/unannotated enzyme; a declared route gap (no modelled route present) gets<br />
+unmodelled alternative route, plus the enzyme one when an alternative is partly present. A<br />
+single-carrier step, an unclassified set or an inferred realizer set gets both, because nothing<br />
+in the structure rules either out. Every gap also gets <strong>not cell-autonomous</strong> (intermediate supplied by another<br />
+cell/organ — the metazoan-only explanation) and the activity assertion itself is wrong. See<br />
+<code>variant_kind</code> in <code>modules/README.md</code>. The activity column is independent of the<br />
 oracle, so a scored gap is a genuine prediction, not a circular restatement.</p>
+<p><strong>Work the hypotheses in the right order.</strong> Independence of the phenotype axis says nothing<br />
+about whether the <em>gap</em> axis is right, and two of the hypotheses are about the model rather<br />
+than the organism. The microbial retraction on the main page is the worked example: the true<br />
+explanation was "an unmodelled alternative route", the write-up reached for "unannotated<br />
+enzyme", and the difference was a KO missing from a lookup table. Before treating a gap as a<br />
+lead, confirm (i) the module can represent the routes this organism plausibly uses, and (ii)<br />
+the oracle covers every atom in the module.</p>
 <h2 id="architecture">Architecture</h2>
 <div class="mermaid">
 flowchart LR
@@ -662,9 +697,11 @@ uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </sp
   (<code>uv run --with matplotlib python figures.py</code>); the satisfiable/blocked colouring is the<br />
   engine's own verdict.</li>
 <li><strong>Demos:</strong> <code>demo.py</code> (interactive, needs the project env), <code>demo_standalone.py</code> (import-free,<br />
-  generated by <code>build_standalone_demo.py</code>). The committed static snapshot <code>demo.html</code> is<br />
-  regenerated with<br />
-<code>uv run --with marimo marimo export html projects/PATHWAY_SATISFIABILITY/demo_standalone.py -o projects/PATHWAY_SATISFIABILITY/demo.html -f</code>.</li>
+  generated by <code>build_standalone_demo.py</code>, which fails if any <code>ai_gene_review</code> import survives<br />
+  and carries the engine's own symbol rule, <code>descriptor_symbol</code>). The committed static snapshot<br />
+<code>demo.html</code> is regenerated outside the project env, so a stray repo import fails the export, with<br />
+  marimo pinned to the version the build script writes (<code>__generated_with</code>):<br />
+<code>uvx --from marimo==0.23.13 marimo export html projects/PATHWAY_SATISFIABILITY/demo_standalone.py -o projects/PATHWAY_SATISFIABILITY/demo.html -f --no-include-code</code>.</li>
 <li><strong>Oracles &amp; resolvers + the full, exhaustive results walk-through:</strong><br />
 <code>modules/experimental/gluconeogenesis-context/</code> — see its <code>RESULTS.md</code> for the complete<br />
   per-context output (threshold sweeps, zonation layers, per-genome routes, abduction tables)<br />
@@ -674,6 +711,17 @@ uv<span class="w"> </span>run<span class="w"> </span>python<span class="w"> </sp
 
     <footer>
         <small>Generated from methods.md</small>
+
+<small class="source-provenance">
+    <strong>Local changes</strong> ·
+
+    Last committed source:
+    <time datetime="2026-10-31T16:38:59Z">31 Oct 2026, 16:38 UTC</time>
+    · <a href="https://github.com/ai4curation/ai-gene-review/commit/e4e542af190ffba4218d89ad2e9e108cce1b45cf" aria-label="View source change e4e542af190ffba4218d89ad2e9e108cce1b45cf">e4e542af190f</a>
+    · <a href="https://github.com/ai4curation/ai-gene-review/blob/e4e542af190ffba4218d89ad2e9e108cce1b45cf/projects/PATHWAY_SATISFIABILITY/methods.md">View committed source</a>
+
+</small>
+
         <small>AI Gene Review Project</small>
     </footer>
 </body>
