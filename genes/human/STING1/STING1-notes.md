@@ -243,3 +243,8 @@ output.
 
 **Non-core**: senescence, TORC1 regulation, lysosome organization, cytokine production in general,
 dsRNA responses, ubiquitin-ligase binding, IRF3 (TF) binding, self-oligomerization as a BP.
+
+## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
+
+- Peroxisome Ensembl IEA (donor: mouse Sting1 IDA PMID:22745163, MGI): MARK_AS_OVER_ANNOTATED -> UNDECIDED. Section 6 above calls this the one removed CC; the action in the review was already MARK_AS_OVER_ANNOTATED, and is now UNDECIDED.
+- The donor paper is abstract-only; PMC3406844 (DOI 10.1073/pnas.1203405109) returned no full text on 2026-11-21. The abstract states the location positively but as a clause [PMID:22745163 "viral infection causes translocation of LSm14A to peroxisomes, where RIG-I, VISA, and MITA are located."], without showing whether MITA's location was assayed. Rule 9 (CD247): a projection whose donor paper cannot be read is UNDECIDED. MARK_AS_OVER_ANNOTATED if the full text shows no Sting1 assay; KEEP_AS_NON_CORE if it shows marker co-localisation.

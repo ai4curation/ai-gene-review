@@ -56,3 +56,12 @@ Many GO:0005515 protein binding annotations from interactome/specific studies: P
 - GO:0061753 substrate localization to autophagosome
 - GO:0032480 negative regulation of type I interferon production
 - GO:0140374 antiviral innate immune response
+
+## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
+
+- Lysosome (GO:0005764) EXP (PMID:19250911) and IEA (SL-0158) rows: UniProt's curated note on the
+  same paper reads "Is targeted to lysosomes for degradation"; the abstract reports NBR1 degraded by
+  autophagy in a LIR-dependent way. Autophagic cargo, no lysosomal function: both changed
+  KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED (degradation endpoint is not a location). Full text not
+  read (abstract-only in cache; cell.com PDF returned 403). Autophagosome and peroxisome rows out of
+  scope.
