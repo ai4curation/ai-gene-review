@@ -1297,6 +1297,42 @@ unless stated):
 - **RGD.** PALS2 on PW:0001066 looks meant for MPHOSPH6, the exosome cofactor
   RGD's text calls Mpp6.
 
+### Fifteenth set: candidate modules from the earlier sets
+
+With every RGD seed modelled or decided, the fifteenth set takes candidates the
+earlier sets split out.
+
+- [`modules/ribosome_quality_control_and_stalled_ribosome_rescue.yaml`](../modules/ribosome_quality_control_and_stalled_ribosome_rescue.yaml)
+  (PW:0001671 no-go and PW:0000549 nonstop mRNA decay; RGD annotates no genes to
+  either): ZNF598 collision sensing, splitting by ASC-1 or by PELO-HBS1L then
+  ABCE1, RQC on the 60S (NEMF, LTN1, ANKZF1, optional VCP), and optional
+  GIGYF2-4EHP repression. The no-go/nonstop endonuclease is a knowledge gap.
+- [`modules/histone_deubiquitination.yaml`](../modules/histone_deubiquitination.yaml)
+  (PW:0001338): the ATXN7L3-ENY2 modules with USP22 (SAGA), USP27X or USP51, PR-DUB
+  (BAP1 with ASXL1-3), USP16, and optional MYSM1 and USP3. USP22, the last RGD
+  histone gene without a module, is now covered.
+- [`modules/epithelial_apical_basal_polarity_complexes.yaml`](../modules/epithelial_apical_basal_polarity_complexes.yaml):
+  the PAR, Crumbs and Scribble complexes with the aPKC-LGL antagonism. PW has no
+  apical-basal polarity pathway.
+- [`modules/dna_repair_gap_filling_synthesis_and_ligation.yaml`](../modules/dna_repair_gap_filling_synthesis_and_ligation.yaml):
+  RFC or CTF18-RFC, PCNA, Pol delta, epsilon or kappa, and LIG1 or LIG3-XRCC1, the
+  late steps shared by NER and mismatch repair.
+- [`modules/hair_cell_stereocilium_bundle_organization.yaml`](../modules/hair_cell_stereocilium_bundle_organization.yaml)
+  (PW:0001503): the twelve bundle genes left out of hair-cell mechanotransduction,
+  as actin core, cross-linkers, MYO15A tip complex, myosin III length tuning, the
+  USH2 ankle links and base anchoring.
+- **Ontology requests**: two `proposed_new_terms` (histone H2AK119 deubiquitinase
+  activity; Crumbs complex) and two `proposed_ontology_changes` (the definition of
+  GO:0000731 describes only recombination; an edge GO:0060122 part_of GO:0160194).
+- **Follow-ups from the set 11-14 review**: G9a/GLP carries histone H3K9
+  dimethyltransferase activity; the branching annoton is the catalytic step 1
+  spliceosome; four papers cited only in prose are cached. The NER module no longer
+  says LIG3-XRCC1 is the main NER ligase in quiescent cells: that rested on
+  PMID:17643379, retracted in 2021.
+
+The Reelin synapse candidate is not modelled: its NMDA and AMPA receptor evidence
+is from mouse.
+
 ## Next steps
 
 - Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
@@ -1326,12 +1362,16 @@ unless stated):
   gene overlap) now have split plans in
   [broad_pathway_split_plans.md](RGD_PATHWAY_ONTOLOGY/broad_pathway_split_plans.md),
   with a suggested order. All of them are now carried out (ninth to fourteenth
-  sets); remaining candidates are a histone H2A deubiquitination module (BAP1,
-  USP16) and the SAGA deubiquitinase module (USP22).
+  sets), and the candidates they split out are modelled in the fifteenth set.
+- Point the `repair_synthesis` and `ligation` parts of `nucleotide_excision_repair`
+  and the `pold_resynthesis` and `lig1_ligation` parts of `eukaryotic_mismatch_repair`
+  at `dna_repair_gap_filling_synthesis_and_ligation` (MMR's `pcna_loading` stays, as it
+  also activates MutLalpha).
+- Revisit the HDAC4 gene review: it accepts HDAC4's histone deacetylase rows, which
+  the HDAC5 review and `histone_deacetylation` treat as over-annotation.
 - Add the obligatory PMCA subunits NPTN and BSG to
   `plasma_membrane_calcium_extrusion`.
-- Factor a human DNA gap-filling module (PCNA, RFC, Pol delta, LIG1) out of the
-  NER and mismatch repair modules, and point
+- Point
   `retinoic_acid_receptor_signaling`'s production step at
   `retinoic_acid_metabolism`.
 - Fix the triage's prose scraping of GO and UniProt ids
@@ -1368,6 +1408,7 @@ unless stated):
 - [x] Split histone modification into seven modules (twelfth set)
 - [x] Model ribosome biogenesis (thirteenth set)
 - [x] Model the SK channels from the calcium-mediated signaling leftovers and decide PW:0001437 (fourteenth set)
+- [x] Model the candidate modules split out of earlier sets (fifteenth set)
 
 ## Notes
 
@@ -1456,3 +1497,9 @@ Sets eleven to fourteen: three spliceosome modules, seven histone modification
 modules, ribosome biogenesis, and the SK/IK channels. PW:0001073 and PW:0001338
 move to `has_module`, and PW:0001437 is left without a module by decision: 136
 `has_module` and 1 `no_specific_go_term`, with `modules_compared` at 868.
+
+Fifteenth set: ribosome quality control, histone deubiquitination, apical-basal
+polarity, DNA repair gap filling and stereocilium bundle organization, plus the
+follow-ups from the review of sets 11-14 and the removal of a claim resting on a
+retracted paper from `nucleotide_excision_repair`. Tiers are unchanged (136
+`has_module`); `modules_compared` is 873.
