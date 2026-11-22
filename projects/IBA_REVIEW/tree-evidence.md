@@ -67,9 +67,9 @@ at a tree and left only prose was not counted.
   65 reviews on 2026-11-21, [below](#residue-arguments-without-a-residue-claim)).
   `just validate-families` reports a node assessment that disputes a placement without
   quoting a tree listing (`NODE_TREE_EVIDENCE`).
-- **Backfill.** Extracts are committed for 1,401 genes: every gene whose review overrules
+- **Backfill.** Extracts are committed for 1,414 genes: every gene whose review overrules
   an IBA row that is still in its GOA file, and the genes with a kept row under a PAINT
-  loss. Node listings are committed for 357 families: those whose family review disputes a
+  loss. Node listings are committed for 361 families: those whose family review disputes a
   node placement, and PTHR48034 (the CIRBP family below). A review row whose IBA has since
   been withdrawn from GOA has no tree row to quote and is not asked for one.
 
@@ -275,15 +275,15 @@ then edited by script. The method, the plans and a record of every row are in
 
 | | Rows read | Applied | Left for adjudication |
 |---|---:|---:|---:|
-| Gene reviews: the 12 batches that hold every candidate gene | 278 | 228 | 48, and 2 not read |
+| Gene reviews: the 12 batches that hold every candidate gene | 278 | 227 | 49, and 2 not read |
 | Gene reviews: two further batches, as a pilot of the corrected rules | 47 | 47, one of them by hand | 0 |
 | Family reviews: every disputed node assessment without a tree listing | 386 | 321, two of them by hand | 65 |
 
 An applied row quotes its own extract or listing in `supported_by` and says in its reason
-what the tree shows. The script changed no verdict. 29 rows that had been applied were
+what the tree shows. The script changed no verdict. 30 rows that had been applied were
 changed on main before this work was merged with it (26 at the first merge, 2 at the
-second, 1 at the fourth); their edits were not carried over, and they are counted here as
-left for adjudication.
+second, 1 at the fourth, 1 at the sixth); their edits were not carried over, and they are
+counted here as left for adjudication.
 
 Review of the first batches found four things the script should not have done, and all
 four were put right on 2026-11-16 and 2026-11-17, in the rows already applied and in the
@@ -334,7 +334,7 @@ whole. A contradiction whose drafted correction the verifier faulted is counted 
 (`contradiction_disputed`, 15 today, below).
 
 What the re-read leaves for a curator is in
-[`needs-curator.yaml`](tree-rereview/needs-curator.yaml): the rows below, and the 350
+[`needs-curator.yaml`](tree-rereview/needs-curator.yaml): the rows below, and the 349
 applied rows on which the reader left a note, often about a verdict or failure mode that
 no longer fits.
 
@@ -378,14 +378,16 @@ Three things follow.
   More than half of the disputed node assessments make a placement argument that the tree
   bears out.
 
-113 rows are left for adjudication, each with its reason in the run records: 42 where the
+114 rows are left for adjudication, each with its reason in the run records: 42 where the
 verifier did not accept the reading or its correction (among them 2 verdicts the reader
 found unsupported and 2 kept rows under a PAINT loss), 26 family rows whose node or term
-is not in the listing, 29 rows that changed on main after they were read, 11 kept rows
-under a PAINT loss, and 5 verdicts or assessments the tree does not support. Two gene
-rows were not read: the reader returned no entry for them. The 29 rows that changed on
-main are marked `needs_new_reading` in `needs-curator.yaml`: what their entries say
-describes the review as it was read.
+is not in the listing (all read as `CANNOT_TELL`; the run records give them as "a row
+that must be verified was not checked by the verifier", since the verifier was not asked
+about a reading with nothing to check), 30 rows that changed on main after they were
+read, 11 kept rows under a PAINT loss, and 5 verdicts or assessments the tree does not
+support. Two gene rows were not read: the reader returned no entry for them. The 30 rows
+that changed on main are marked `needs_new_reading` in `needs-curator.yaml`: what their
+entries say describes the review as it was read.
 
 Fifteen of the 42 are readings of a contradiction (11 gene rows, 4 family rows). In most
 of them the verifier accepted that the review states something the tree contradicts and
@@ -397,10 +399,10 @@ the corrected rules, and are the first rows a curator should look at. `needs-cur
 marks them `contradiction_disputed`.
 
 Not yet read: 59 gene batches with no candidate row, 1,370 overruled rows in 934 genes.
-They still raise `missing_tree_evidence`. So do 293 overruled rows in 213 genes that
-reviews merged on main have added since the plan was made. 254 disputed node assessments
-are in the same position: 238 in 138 families the plan does not cover, and 16 new ones in
-10 families it had read (as of the fifth merge, 2026-11-21). These have extracts and
+They still raise `missing_tree_evidence`. So do 333 overruled rows in 226 genes that
+reviews merged on main have added since the plan was made. 272 disputed node assessments
+are in the same position: 256 in 142 families the plan does not cover, and 16 new ones in
+10 families it had read (as of the sixth merge, 2026-11-22). These have extracts and
 listings but are in neither plan.
 
 The readers of the candidate gene batches and of the first four family batches ran on the

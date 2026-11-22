@@ -28,11 +28,11 @@ are read against the family's node listing (`<PTHR>-tree-nodes.yaml`) in the sam
 with two additions from the release tree: where each seed sits, and how many leaves of
 each subfamily the review names as affected lie below the node.
 
-## Status (2026-11-21)
+## Status (2026-11-22)
 
 | | Batches | Rows read | Applied | Left for adjudication |
 |---|---:|---:|---:|---:|
-| Gene reviews, candidate genes (`g001` to `g012`) | 12 of 73 | 278 | 228 | 48, and 2 not read |
+| Gene reviews, candidate genes (`g001` to `g012`) | 12 of 73 | 278 | 227 | 49, and 2 not read |
 | Gene reviews, pilot of the corrected rules (`g013`, `g014`) | 2 of 73 | 47 | 47, one of them by hand | 0 |
 | Gene reviews, the rest (`g015` to `g073`) | 0 of 59 | 0 | | |
 | Family reviews (`f001` to `f018`) | 18 of 18 | 386 | 321, two of them by hand | 65 |
@@ -42,9 +42,9 @@ each subfamily the review names as affected lie below the node.
 [`needs-curator.yaml`](needs-curator.yaml).
 
 The 59 unread gene batches hold 1,370 overruled rows in 934 genes. Since the plans were
-made, reviews merged on main have added 293 overruled IBA rows in 213 genes and 254
-disputed node assessments: 238 in 138 families the plan does not cover, and 16 new ones
-in 10 families it had read (as of the fifth merge, 2026-11-21). Those have extracts and
+made, reviews merged on main have added 333 overruled IBA rows in 226 genes and 272
+disputed node assessments: 256 in 142 families the plan does not cover, and 16 new ones
+in 10 families it had read (as of the sixth merge, 2026-11-22). Those have extracts and
 listings, and are not
 in either plan; `plan` makes a plan once and does not extend it, so they need batches of
 their own.
@@ -127,7 +127,7 @@ is left for a curator, with the reason in the run record:
   they need a new reading, and `finish` prints how many a batch leaves. A contradiction
   the verifier never saw would be counted here too; there is none today.
 - **A row whose review changed on main after it was read is not re-applied.** The row is
-  taken as on main, and the work list marks it `needs_new_reading` (29 today): its
+  taken as on main, and the work list marks it `needs_new_reading` (30 today): its
   `action`, `tree_reading` and `note` describe the review as it was read and may no longer
   describe the committed one.
 - **Quoting around an adverse fact.** A reading must quote more than the sentence that

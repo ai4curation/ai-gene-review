@@ -241,6 +241,18 @@ re-applied after a merge is marked `needs_new_reading` in the work list (29), si
 entry describes the review as it was read; and `finish` prints how many disputed
 contradictions a batch leaves.
 
+**Sixth merge with main (2026-11-22).** Two conflicts, both taken as on main. Main had
+re-quoted CANAL ERG13 itself, with the same sentence, so this branch's record of that
+re-quote was withdrawn. And main changed the verdict of human SOD1 `GO:0005777` (the
+peroxisome IBA row, now `KEEP_AS_NON_CORE`) after it had been read, so that row is not
+re-applied: 30 such rows over six merges, and 595 rows applied. Thirteen more genes and
+four more families from main got an extract or a listing; not read by the re-read there
+are now 333 overruled rows in 226 genes and 272 disputed node assessments.
+
+- **A long-lived branch pays for every day it stays open.** Six merges in eleven days,
+  each one a re-check of every applied row against a moving base. Where a re-read can
+  land in small pieces, it should.
+
 ---
 
 ## 2026-11-16 — Re-read with the tree: candidate genes and families

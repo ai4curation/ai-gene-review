@@ -362,7 +362,8 @@ def test_the_committed_worklist_agrees_with_its_own_counts() -> None:
         assert all(entry["tree_reading"] == "REASON_CONTRADICTED" for entry in marked)
         assert key in worklist["about"]
     moved = [entry for entry in worklist["adjudicate"] if entry.get("needs_new_reading")]
-    assert worklist["counts"]["needs_new_reading"] == len(moved) > 0
+    # no lower bound here: the count goes to 0 once these rows are read again (the fixture test has a row)
+    assert worklist["counts"]["needs_new_reading"] == len(moved)
     assert all(entry["outcome_detail"].startswith(tr.NOT_REAPPLIED) for entry in moved)
     assert not any(entry.get("contradicted_and_left") or entry.get("contradiction_disputed") for entry in moved)
 
