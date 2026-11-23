@@ -3902,6 +3902,56 @@ def compare_module_regulation(
 
 
 @app.command()
+def compare_module_sbml(
+    module_file: Annotated[
+        Path, typer.Argument(help="Curated module YAML (e.g. modules/erk_cascade.yaml)")
+    ],
+    sbml_file: Annotated[
+        Path, typer.Argument(help="SBML kinetic model to read signed edges from")
+    ],
+    mapping: Annotated[
+        Path,
+        typer.Option(
+            "--mapping",
+            "-m",
+            help="Reviewed mapping with modules, external and activity_levels sections",
+        ),
+    ],
+    module_key: Annotated[
+        Optional[str],
+        typer.Option(
+            "--module-key",
+            help="Key under modules: in the mapping (default: module file stem)",
+        ),
+    ] = None,
+):
+    """Diff a curated module's signed causal graph against an SBML kinetic model.
+
+    Signed edges are read from the model's rate laws (sign of the partial
+    derivative of each rate with respect to each effector, times the reaction's
+    effect on its target's activity) and compared with the module's signed edges
+    through the reviewed mapping. The model is evidence, not truth; nothing is
+    written to the module.
+
+    Example:
+        ai-gene-review compare-module-sbml \\
+            modules/erk_cascade.yaml \\
+            models/kinetic/biomd0000000010/model.xml \\
+            -m models/kinetic/biomd0000000010/mapping_to_modules.yaml
+    """
+    from ai_gene_review.sbml_signed import compare_module_to_sbml, format_comparison
+
+    for path in (module_file, sbml_file, mapping):
+        if not path.exists():
+            typer.echo(f"Error: file not found: {path}", err=True)
+            raise typer.Exit(code=1)
+    comparison = compare_module_to_sbml(
+        module_file, sbml_file, mapping, module_key=module_key
+    )
+    typer.echo(format_comparison(comparison))
+
+
+@app.command()
 def fetch_descriptions(
     organism: Annotated[
         str, typer.Argument(help="Organism name (e.g., human, yeast)")
