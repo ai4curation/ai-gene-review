@@ -91,7 +91,8 @@ root organelle terms, and asks whether the same review also has a more specific
 part of that organelle (an `is_a`/`part_of` descendant, from GO via OAK). The
 descendant can be another kept annotation, a proposed replacement or a
 `core_functions` location. Run of 2026-10-18 (after merging main; the
-generated files are authoritative):
+generated files are authoritative; later batch entries in NOTES cite their own
+regenerated runs, human only, so their counts differ from this all-organism table):
 
 | organelle | rows | genes | genes also given a sub-compartment | rows with only the root |
 |---|---|---|---|---|
@@ -348,7 +349,9 @@ plastids come later.
     - **Degradation is not a lysosome location unless the pool exists in an unperturbed
       cell.** A pool present without blocking the protein's own destruction, reached under
       its physiological trigger (the endogenous receptor after its own agonist), is the
-      ligand-driven pool of rule 8: real and non-core (CXCR4). A pool seen only when
+      ligand-driven pool of rule 8: real and non-core (CXCR4; for endocytosed surface
+      proteins at the endosome, rule 11 narrows the endogenous-receptor and foreign-cell
+      clauses). A pool seen only when
       lysosomal degradation is inhibited, with a mutant, after depleting a deubiquitinase,
       with overexpression in a foreign cell, or that the source itself frames as the place of
       degradation, is `MARK_AS_OVER_ANNOTATED` on every row of the term (BACE1, GRIN2B,
@@ -441,16 +444,26 @@ plastids come later.
       transporter that reaches marked endosomes under its own ligand or by constitutive
       internalisation is a real, ligand-driven or recycling pool, `KEEP_AS_NON_CORE` when
       the core activity is at the plasma membrane (CXCR4 precedent), even when the cells
-      are transfected (FGFR4, LPAR1). Recruited cytosolic proteins get the stricter test:
+      are transfected (FGFR4, LPAR1). This narrows rule 10's "endogenous receptor" and
+      "overexpression in a foreign cell" clauses for endocytosed surface proteins: a
+      wild-type receptor, untagged or with a small epitope tag, moved by its own ligand
+      along a route traced with endosome markers counts even in a non-expressing host,
+      because what is observed is the route the ligand drives, not a pool the expression
+      level creates. A large fusion (GFP), a mutant, constitutive overexpression with no
+      ligand trigger, or a compartment seen only beside an overexpressed partner stays
+      under rule 10's clauses. MARK_AS_OVER_ANNOTATED is the close alternative when every
+      line is ectopic (FGFR4). Recruited cytosolic proteins get the stricter test:
       a pool that exists only beside an overexpressed partner is perturbed (GRAP2), and an
       adaptor or kinase needs a line on the protein itself (GRB2 and JAK1 have one, JAK3 an
       abstract-level one, JAK2 none). Overexpression of a partner that enlarges endosomes
       is a perturbed line even for the endogenous protein (BIN1 on RIN3-enlarged vesicles,
       the RUBCN case applied to a partner).
-    - **Degradation route.** Unlike rule 10, an endosome pool on the normal route to
-      lysosomal degradation is a real pool when seen in unperturbed cells, because passage
-      through endosomes is normal and the early endosome is a sorting station (SLC34A1
-      after PTH, CDKN1B). Seen only with degradation blocked, it does not count.
+    - **Degradation route.** The unperturbed-pool test of rule 10 applies unchanged; what
+      does not carry over is its clause that a pool the source itself frames as the place
+      of degradation is over-annotated. An endosome pool on the normal route to lysosomal
+      degradation is a real pool when seen in unperturbed cells, because passage through
+      endosomes is normal and the early endosome is a sorting station (SLC34A1 after PTH,
+      CDKN1B). Seen only with degradation blocked, it does not count.
     - **When the endosome is core.** An endocytic receptor whose activity includes ligand
       release or recycling in the endosome (FOLR1, CUBN), a delivery chaperone that
       releases its client there (UNC93B1), and the subunit of an endosome-acting complex
@@ -470,7 +483,9 @@ plastids come later.
       alone would not reach the limiting membrane, and recycling is what places the pool
       there. This anchor-plus-recycling route is its own route, not the TM or tail-anchor
       route of rules 7 and 10. A recruited protein needs rule 7's tethering route for
-      `GO:0010009` (or `GO:0098559` for the early endosome); none met it.
+      `GO:0010009` cytoplasmic side of endosome membrane (or `GO:0098559` cytoplasmic side
+      of early endosome membrane; both checked against GO with OAK, 2026-11-23); none met
+      it.
     - **Source tracing.** Trace by-similarity and ISS chains to the donor's own row: four
       of five ended at one experimental row on a rodent ortholog, and paralogs can share
       one donor study (SLC6A5 and SLC6A9, PMID:12091465), which then needs one shared call.
@@ -623,7 +638,13 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
   - [x] Endosome rule written as rule 11 (2026-11-23)
   - [ ] Propose CLAUDE.md wording that adds the endosome to the root-organelle
         exception (the maintainer decision is recorded in rule 11; CLAUDE.md still
-        lists the endosome as not covered)
+        lists the endosome as not covered, so a reviewer reading CLAUDE.md alone would
+        MODIFY an endosome root row). Do this before endosome batch 2
+  - [ ] Add GO:0005768 to FIRST_PASS in `ORGANELLES/scripts/root_organelle_usage.py` so
+        the red-flags page lists endosome rows, ahead of the 74-gene sweep
+  - [ ] Check the 8 human genes whose endosome rows are root-only with direct or TAS
+        evidence only (ACE, AVPR1A, CBLIF, EZR, GIGYF2, IL15, LRBA, RHOA) for rule 11
+        stage candidates
   - [ ] Endosome batch 2: stage rows that rest on the same evidence as a lysosome row
         changed in the lysosome batches. GRIN2B (SEP-NR2B figure), BACE1 (LAMP2 imaging
         that cannot separate late endosome from lysosome), RUBCN (overexpressed
@@ -654,7 +675,8 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 The first endosome (GO:0005768) batch and the first for a series organelle (#6756). The
 survey regenerated on 2026-11-23 found 110 human genes with an endosome row; 74 already
 carry a stage or sub-compartment somewhere in the review, and 28 are root-only with a
-synthesis row. All 28 were checked. Before the batch the maintainer extended CLAUDE.md's
+synthesis row. The other 8 are root-only with direct or TAS evidence only (ACE, AVPR1A,
+CBLIF, EZR, GIGYF2, IL15, LRBA, RHOA) and were not in scope. All 28 were checked. Before the batch the maintainer extended CLAUDE.md's
 root-organelle exception to the endosome (keep the root; add a stage only on two
 independent lines). Two genes gained a sub-compartment row, and endosome rows changed
 action on 9 genes. The lessons are folded into rule 11.
