@@ -299,14 +299,33 @@ def test_goa_index_reads_the_whole_corpus_not_one_gene(tmp_path):
     assert "fresh-goa.tsv" in index["GO:0098734"][1]
 
 
-def test_goa_index_prefers_the_most_recent_detection(tmp_path):
+def test_goa_index_names_a_deterministic_source(tmp_path):
+    """Several files can carry the same obsoletion; the message must not vary.
+
+    The row's ``DATE`` is the annotation date, not the fetch date, so it cannot
+    rank the files -- here the alphabetically first one wins, and the old
+    annotation date on it is deliberately not preferred away.
+    """
+    write_goa(tmp_path, "human/A/A-goa.tsv", [("GO:0000111", "obsolete x", "20250101")])
+    write_goa(tmp_path, "human/B/B-goa.tsv", [("GO:0000111", "obsolete x", "20260727")])
+    assert "A-goa.tsv" in goa_obsolete_labels(tmp_path)["GO:0000111"][1]
+
+
+def test_one_prefixed_file_outweighs_many_unprefixed(tmp_path):
+    """A majority of unprefixed rows does not clear a term.
+
+    GO:0005615 was carried as ``extracellular space`` by 218 GOA files and as
+    ``obsolete extracellular space`` by six; QuickGO confirms the six. A stale
+    file misses an obsoletion, it does not invent one.
+    """
+    for name in "CDEFGH":
+        write_goa(
+            tmp_path, f"human/{name}/{name}-goa.tsv", [("GO:0005615", "live", "20200101")]
+        )
     write_goa(
-        tmp_path, "human/A/A-goa.tsv", [("GO:0000111", "obsolete x", "20250101")]
+        tmp_path, "human/B/B-goa.tsv", [("GO:0005615", "obsolete live", "20200101")]
     )
-    write_goa(
-        tmp_path, "human/B/B-goa.tsv", [("GO:0000111", "obsolete x", "20260727")]
-    )
-    assert "B-goa.tsv" in goa_obsolete_labels(tmp_path)["GO:0000111"][1]
+    assert "GO:0005615" in goa_obsolete_labels(tmp_path)
 
 
 def test_goa_index_on_empty_corpus(tmp_path):

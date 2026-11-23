@@ -159,22 +159,28 @@ def goa_obsolete_labels(project_root: Path = PROJECT_ROOT) -> Dict[str, Tuple[st
     than another's. Reading the whole corpus is what makes the signal useful:
     ``CPT1C-goa.tsv`` carried ``GO:0098734``'s live label from a January fetch
     while four sibling genes' files carried the ``obsolete`` prefix from July.
-    Where several files disagree, the most recently dated row wins.
+
+    A single prefixed row is therefore enough, and a majority of unprefixed
+    rows means nothing: when the check was written, 218 GOA files carried
+    ``GO:0005615`` as ``extracellular space`` and six as ``obsolete
+    extracellular space``, and the six were right -- they were simply fetched
+    after GO retired it. A stale file can miss an obsoletion; it cannot invent
+    one, short of GO reinstating a term it had retired. Files are read in sorted
+    order and the first prefixed row names the source, so the message is
+    deterministic. The row's own ``DATE`` is the date of the *annotation*, not
+    of the fetch, so it says nothing about which file is fresher and is not
+    consulted.
     """
-    found: Dict[str, Tuple[str, str, str]] = {}
+    found: Dict[str, Tuple[str, str]] = {}
     for goa in sorted((project_root / "genes").rglob("*-goa.tsv")):
         with goa.open(newline="") as handle:
             for row in csv.DictReader(handle, delimiter="\t"):
                 curie = (row.get("GO TERM") or "").strip()
                 label = (row.get("GO NAME") or "").strip()
-                if not curie or not is_obsolete_label(label):
+                if not curie or curie in found or not is_obsolete_label(label):
                     continue
-                date = (row.get("DATE") or "").strip()
-                source = goa.name
-                previous = found.get(curie)
-                if previous is None or date >= previous[2]:
-                    found[curie] = (label, source, date)
-    return {curie: (label, source) for curie, (label, source, _) in found.items()}
+                found[curie] = (label, goa.name)
+    return found
 
 
 @lru_cache(maxsize=4)
