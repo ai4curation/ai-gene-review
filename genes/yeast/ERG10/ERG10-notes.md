@@ -25,3 +25,8 @@
 - iMM904 constrains both Erg10 reactions to the condensation direction (ACACT1r, ACACT1m; lower bound 0). yeast-GEM 9.1.1 keeps them reversible (r_0103, r_0104) [file:gocams/YeastPathways_PWY-5177/YeastPathways_PWY-5177-bioinformatics/gem_reactions.md].
 - Both models also place an Erg10 reaction in the mitochondrion. The reviewed evidence is cytosolic [PMID:7989303 "was demonstrated to encode cytoplasmic aceto-acetyl-CoA thiolase"]. The same paper found no other acetoacetyl-CoA thiolase activity [PMID:7989303 "null alleles of ERG10 produced no detectable acetoacetyl-CoA thiolase enzyme activity"], so a mitochondrial activity, if real, would also be Erg10. Whole-cell extracts cannot resolve location: the mitochondrial reaction is unsupported, not refuted.
 - The current UniProt record carries an IBA mitochondrion line (DR GO:0005739) that is not in this gene's GOA snapshot; worth checking at the next fetch-gene.
+
+## Source defects filed (2026-11-23)
+- PWY-5177 carboxylic acid catabolic process RCA (MARK_AS_OVER_ANNOTATED): `SGD` `CHECK` (PROBABLE, `SCOPE_OVER_REACH`), matching the GO-CAM part_of CHECK on gomodel:YeastPathways_PWY-5177/ACETYL-COA-ACETYLTRANSFER-RXN.
+- Vacuole NAS from PMID:28904410 (REMOVE): `UNIPROT` `CHECK` (PROBABLE). UniProt's own subcellular location for ERG10 is cytosol. The cached review text (about 1,300 words) mentions neither Erg10 nor the vacuole, so the claim may be in a figure; filed as a query. ERG8 and MVD1 remove the same NAS but file no defect.
+- The mitochondrial Erg10 reaction in iMM904 and yeast-GEM is a model-side finding, not a GOA error. ERG10 has no mitochondrion row in this GOA snapshot.
