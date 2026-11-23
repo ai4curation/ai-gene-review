@@ -173,8 +173,24 @@ action and reason are the review's own; neither GOA-sourced term id was touched.
   process, points at `GO:0008474` for the molecular function, and records the earlier
   mislabelling.
 
-**Addendum (2026-11-23, PR #6790 review).** The retained GOA IEA row on
-`GO:0098734` now records in its own `reason` that the term is obsolete as of the
-2026-11-21 release, so a reader of that row alone does not have to re-derive it.
-The id itself is unchanged: it is GOA-sourced, and propagating the obsoletion is
-upstream GOA's to do.
+**Addendum (2026-11-23, PR #6790 review).** The GOA IEA row on `GO:0098734` is
+now `MODIFY` to `GO:0008474`, not `ACCEPT`. Four merged reviews carry the
+identical GOA row (`GO:0098734` + IEA + `GO_REF:0000108` + `WITH/FROM
+GO:0008474`) and none accepts it: `genes/DANRE/abhd10a` and
+`genes/DANRE/abhd10b` modify it to `GO:0008474`, `genes/human/ABHD12` removes it
+citing the GO editors' own tracker threads, and `genes/human/CLN5` marks it
+over-annotated on substrate-scope grounds. An `ACCEPT` here would have recorded
+the obsoletion in the `reason` while still asserting in the same breath the
+aspect the obsoletion denies. The id itself is untouched — the action and the
+proposed replacement are the review's own, which is the same distinction that
+let `GO:0003824` become `TOO_GENERAL`.
+
+**Correction to the round-2 note.** That note claimed the `GO:0098734`
+obsoletion was "visible only in QuickGO". That is wrong, and the repository
+itself refutes it: the GOA files of ABHD12, CLN5, abhd10a and abhd10b all carry
+the obsolete-prefixed label `obsolete macromolecule depalmitoylation`, and
+ABHD12's `reason` cites the GO editors' threads. The obsoletion was discoverable
+from committed content. What is true is narrower: CPT1C's *own* `CPT1C-goa.tsv`
+is a stale fetch, dated `20260106` against `20260727` for the other four, so this
+gene's GOA file alone still shows the pre-obsoletion label. A later
+`just fetch-gene human CPT1C` will surface the prefix on this row.
