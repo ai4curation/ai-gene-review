@@ -492,3 +492,76 @@ def test_lookup_does_not_scan_the_corpus_until_a_term_is_looked_up(tmp_path):
     assert calls == [tmp_path.resolve()]
     lookup("GO:0000002")
     assert calls == [tmp_path.resolve()], "the index should be built at most once"
+
+
+# --------------------------------------------------------------------------
+# Review round 4: corroboration by both signals
+# --------------------------------------------------------------------------
+
+
+def lookup_both_signals(curie: str):
+    """Both offline signals mark the term obsolete -- the strongest case."""
+    if curie == "GO:0051082":
+        return [
+            ("GOA file genes/human/X/X-goa.tsv", "obsolete unfolded protein binding"),
+            ("the GO snapshot", "obsolete unfolded protein binding"),
+        ]
+    return []
+
+
+def test_both_signals_are_named_not_just_the_first():
+    """Corroboration must not read like a single-signal hit.
+
+    Which signal fired is the useful part of this check, so a term both the
+    corpus GOA files and the GO snapshot mark obsolete is the strongest case it
+    can make.
+    """
+    report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
+    check_obsolete_authored_terms(OBSOLETE_DOC, report, lookup_both_signals)
+    assert len(report.issues) == 1
+    issue = report.issues[0]
+    assert "GOA file genes/human/X/X-goa.tsv" in issue.message
+    assert "the GO snapshot" in issue.message
+    assert issue.details is not None
+    assert issue.details["signal_count"] == 2
+    assert issue.details["detected_by"] == (
+        "GOA file genes/human/X/X-goa.tsv and the GO snapshot"
+    )
+
+
+def test_single_signal_reports_one_source():
+    report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
+    check_obsolete_authored_terms(OBSOLETE_DOC, report, lookup_obsolete)
+    assert report.issues[0].details["signal_count"] == 1
+    assert report.issues[0].details["detected_by"] == "GO snapshot"
+
+
+def test_a_live_signal_alongside_an_obsolete_one_is_not_counted():
+    """Only signals that actually say "obsolete" are named.
+
+    A stale snapshot reporting the live label while a GOA file reports the
+    obsoletion is the normal case, not corroboration.
+    """
+
+    def mixed(curie: str):
+        return [
+            ("GOA file genes/human/X/X-goa.tsv", "obsolete unfolded protein binding"),
+            ("the GO snapshot", "unfolded protein binding"),
+        ]
+
+    report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
+    check_obsolete_authored_terms(OBSOLETE_DOC, report, mixed)
+    assert report.issues[0].details["signal_count"] == 1
+    assert "the GO snapshot" not in report.issues[0].message
+
+
+def test_cached_index_is_read_only():
+    """The cached dict is process-wide; handing out the mutable original makes
+    "nothing mutates it" an observed invariant rather than an enforced one."""
+    from ai_gene_review.validation.obsolete_authored_terms import (
+        _cached_goa_obsolete_labels,
+    )
+
+    index = _cached_goa_obsolete_labels(Path(".").resolve())
+    with pytest.raises(TypeError):
+        index["GO:0000001"] = ("x", "y")  # type: ignore[index]

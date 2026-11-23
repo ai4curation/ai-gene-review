@@ -19,8 +19,11 @@ This check is a **warning**, not an error, for two reasons. The signals
 available are incomplete, so a clean result does not mean the id is live (see
 below); and the corpus already carries a backlog an error would turn into red
 CI on every unrelated PR until a sweep lands. The audit at introduction found
-87 hits in 44 of 12,281 reviews -- 49 of them in ``proposed_replacement_terms``
-and 29 in ``core_functions.directly_involved_in``.
+**87 hits in 44 of 12,281 reviews with both signals, of which 86 across 43
+reviews came from the GOA files alone** -- which is what ``just
+obsolete-term-audit --no-ontology`` reproduces, and what anyone without a
+usable GO snapshot will see. 49 of the hits are in
+``proposed_replacement_terms`` and 29 in ``core_functions.directly_involved_in``.
 
 Detection combines two offline signals, and neither is sufficient alone. GO's
 sqlite build prefixes a retired term's label with ``obsolete ``, which is the
@@ -45,8 +48,20 @@ import argparse
 import csv
 from dataclasses import dataclass
 from functools import lru_cache
+from types import MappingProxyType
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Sequence, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 import yaml
 
@@ -237,15 +252,19 @@ def goa_obsolete_labels(project_root: Path = PROJECT_ROOT) -> Dict[str, Tuple[st
 
 
 @lru_cache(maxsize=4)
-def _cached_goa_obsolete_labels(project_root: Path) -> Dict[str, Tuple[str, str]]:
+def _cached_goa_obsolete_labels(project_root: Path) -> Mapping[str, Tuple[str, str]]:
     """``goa_obsolete_labels`` memoised, so a batch run scans the corpus once.
 
     The key is the *resolved* path. Callers reach this from two directions --
     ``local_source_text.PROJECT_ROOT`` is already resolved while
     ``validator.get_project_root()`` is not -- and under a symlinked checkout
     the two spellings would otherwise each pay for their own corpus scan.
+
+    The result is wrapped read-only. One dict is shared by every caller in the
+    process, so handing out the mutable original would make "nothing mutates
+    it" an invariant to observe rather than one the type enforces.
     """
-    return goa_obsolete_labels(project_root)
+    return MappingProxyType(goa_obsolete_labels(project_root))
 
 
 @lru_cache(maxsize=None)
@@ -269,7 +288,9 @@ def _snapshot_label(curie: str) -> Optional[str]:
 def build_label_lookup(
     project_root: Path = PROJECT_ROOT,
     use_ontology: bool = True,
-    goa_index_loader: Callable[[Path], Dict[str, Tuple[str, str]]] = _cached_goa_obsolete_labels,
+    goa_index_loader: Callable[
+        [Path], Mapping[str, Tuple[str, str]]
+    ] = _cached_goa_obsolete_labels,
 ) -> LabelLookup:
     """A lookup over the offline signals: the corpus GOA labels and GO's snapshot.
 
@@ -279,7 +300,7 @@ def build_label_lookup(
     injectable for testing.
     """
     resolved = project_root.resolve()
-    goa: Optional[Dict[str, Tuple[str, str]]] = None
+    goa: Optional[Mapping[str, Tuple[str, str]]] = None
 
     def lookup(curie: str) -> List[Tuple[str, str]]:
         nonlocal goa
@@ -303,24 +324,34 @@ def check_obsolete_authored_terms(
     report: ValidationReport,
     lookup: LabelLookup,
 ) -> None:
-    """Warn on every author-supplied GO id an offline signal marks obsolete."""
+    """Warn on every author-supplied GO id an offline signal marks obsolete.
+
+    Every signal that fired is named, not just the first. Which signal fired is
+    the useful part of this check (a hit is informative, a miss proves nothing),
+    so a term that both the corpus GOA files *and* the GO snapshot mark obsolete
+    is the strongest case the check can make and must not read like a
+    single-signal hit. Sources are reported in the lookup's own order, so the
+    message stays deterministic.
+    """
     for term in iter_authored_go_terms(data):
         hits = [
             (source, label) for source, label in lookup(term.curie) if is_obsolete_label(label)
         ]
         if not hits:
             continue
-        source, label = hits[0]
+        sources = " and ".join(source for source, _ in hits)
+        label = hits[0][1]
         report.add_issue(
             ValidationSeverity.WARNING,
-            f"{term.curie} is obsolete according to {source} ('{label}'), but it is "
+            f"{term.curie} is obsolete according to {sources} ('{label}'), but it is "
             f"written here as an author-supplied term",
             path=term.path,
             details={
                 "term_id": term.curie,
                 "written_label": term.label,
                 "detected_label": label,
-                "detected_by": source,
+                "detected_by": sources,
+                "signal_count": len(hits),
             },
             suggestion=(
                 "Repoint to a live term that the evidence on this row supports -- check "
