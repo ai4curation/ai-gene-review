@@ -4,6 +4,8 @@ Checks first, and fails rather than writing a misleading report:
 
 * every ``unrelated``, ``narrower`` and ``no_go_for_model_ec`` pair in
   ``release_table_check.yaml`` has a triage entry, and every verdict is a known one;
+* conversely, every triaged (model, GO term) pair is one of those flagged pairs, unless
+  its entry is marked ``source: sweep`` (a model the EC comparison cannot catch);
 * every triaged (model, GO term) pair exists in the NCBIfam release table;
 * every ``better`` term exists in the GO database and is not obsolete.
 
@@ -22,7 +24,9 @@ import yaml
 from ai_gene_review.validation.enzyme_family_cutoff import NCBIfam
 
 sys.path.insert(0, str(Path(__file__).parent))
-from check_release_table import refseq_hits  # noqa: E402
+from check_release_table import GoHierarchy, refseq_hits  # noqa: E402
+
+from ai_gene_review.validation.enzyme_family_cutoff import is_complete_ec  # noqa: E402
 
 HERE = Path(__file__).parent
 CACHE = Path(".cache")
@@ -54,17 +58,25 @@ def go_label(db: sqlite3.Connection, go: str) -> tuple[str | None, bool]:
 MAX_CANDIDATES = 10
 
 
-def candidate_text(row: dict, go_db: sqlite3.Connection) -> str:
-    """The machine-derived GO terms for a model's own EC, or why there are none to show.
+def candidate_text(
+    ec_numbers: list[str], hierarchy: GoHierarchy, go_db: sqlite3.Connection
+) -> str:
+    """The GO terms that cross-reference a model's own EC numbers, or why none are shown.
 
-    A partial model EC can match a whole EC subclass, so long lists are summarised
-    rather than shown as if they were candidates.
+    Computed from the model itself, not from the check's pair records, so a model added
+    by hand from the sweep gets the same treatment as a flagged one. A partial EC would
+    match a whole EC subclass, so its terms are not offered as candidates.
     """
-    terms, count = row.get("model_ec_terms", []), row.get("model_ec_term_count", 0)
-    if not count:
+    if not ec_numbers:
+        return "(model has no EC)"
+    partial = [ec for ec in ec_numbers if not is_complete_ec(ec)]
+    if partial:
+        return f"(partial EC {', '.join(partial)}; not listed)"
+    terms = sorted(set().union(*(hierarchy.terms_for_ec(ec) for ec in ec_numbers)))
+    if not terms:
         return "(none in GO)"
-    if count > MAX_CANDIDATES:
-        return f"({count} terms under the model's EC; too broad to list)"
+    if len(terms) > MAX_CANDIDATES:
+        return f"({len(terms)} terms under the model's EC; too broad to list)"
     return "; ".join(f"{t} {go_label(go_db, t)[0]}" for t in terms)
 
 
@@ -74,6 +86,7 @@ def main() -> None:
     triage = yaml.safe_load((HERE / "triage.yaml").read_text())["triage"]
     families = {f.accession: f for f in NCBIfam(CACHE / "ncbifam").families}
     go_db = sqlite3.connect(GO_DB)
+    hierarchy = GoHierarchy(GO_DB)
     hits = refseq_hits(CACHE / "ncbifam")
     flagged = [r for r in check["pairs"] if r["placement"] in TRIAGED]
     pair_of = {(r["model"], r["go"]): r for r in flagged}
@@ -93,6 +106,12 @@ def main() -> None:
                 covered.add((m, t["go"]))
                 if t["go"] not in families[m].go_terms:
                     errors.append(f"{m}: does not carry {t['go']}")
+                if (m, t["go"]) not in pair_of and t.get("source") != "sweep":
+                    errors.append(
+                        f"{m} {t['go']}: not a flagged pair and not marked source: sweep"
+                    )
+            elif t.get("source") == "sweep":
+                errors.append(f"{m}: a sweep addition must name its GO term")
             else:
                 # "various" dismisses only the model's own flagged pairs, nothing else
                 covered.update(k for k in pair_of if k[0] == m)
@@ -124,8 +143,10 @@ def main() -> None:
         "RefSeq hits are the release table's `n_refseq_protein_hits`. `proposed` is a "
         "curator's replacement where one was checked; `GO terms for the model's EC` "
         "lists, unreviewed, the terms that cross-reference the model's own EC numbers. "
-        "`(none in GO)` there means GO has no term for the model's EC, so the fix may "
-        "need a new GO term rather than a removal. The RefSeq column is summed over the "
+        "`(none in GO)` there means GO has no term for the model's complete EC, so the "
+        "fix may need a new GO term rather than a removal; a partial EC would match a "
+        "whole subclass, so its terms are not listed. In the EC_SUSPECT section these "
+        "are the terms the verdict does not propose adopting. The RefSeq column is summed over the "
         "distinct models in each verdict; a model in two verdicts counts in both, so the "
         "rows are not additive.",
         "",
@@ -145,9 +166,14 @@ def main() -> None:
             key=lambda t: -sum(hits.get(m, 0) for m in t["models"]),
         )
         lines.extend(["", f"## {TITLES[v]} ({len(entries)})", ""])
+        # in EC_SUSPECT the model's EC is the suspect, so its terms are evidence, not proposals
+        ec_column = (
+            "GO terms for the (suspect) EC"
+            if v == "EC_SUSPECT"
+            else "GO terms for the model's EC"
+        )
         lines.append(
-            "| model, product name (EC) | GO term | proposed | "
-            "GO terms for the model's EC | note |"
+            f"| model, product name (EC) | GO term | proposed | {ec_column} | note |"
         )
         lines.append("|---|---|---|---|---|")
         for t in entries:
@@ -163,7 +189,7 @@ def main() -> None:
                 models.append(
                     f"{m} {f.product_name} ({', '.join(f.ec_numbers) or 'no EC'})"
                 )
-                candidates.append(candidate_text(pair_of.get((m, go), {}), go_db))
+                candidates.append(candidate_text(f.ec_numbers, hierarchy, go_db))
             if len(set(candidates)) == 1:
                 candidates = candidates[:1]
             lines.append(

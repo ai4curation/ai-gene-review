@@ -44,7 +44,9 @@ that reach, and the lists rank by it.
    - every verdict is a known one;
    - every triaged model carries its term and has a RefSeq hit count in the release
      table;
-   - every suggested replacement term exists in GO and is not obsolete.
+   - every suggested replacement term exists in GO and is not obsolete;
+   - every triaged pair is a flagged pair, unless its entry is one of the four marked
+     `source: sweep`.
 
    It refuses to write the report otherwise. FEEDBACK.md then shows two kinds of
    replacement:
@@ -137,10 +139,12 @@ carries the term for another member's reaction.
   triage come from the sweep; a name-versus-term check over the rest would need
   curation.
 - **Partial ECs give weaker placements.** A partial model EC such as `4.1.-.-` matches
-  every GO term under it, so its placement says little, and FEEDBACK.md does not list
-  candidates when there are more than ten. Where it shows `(none in GO)`, GO has no term
-  for the model's EC (bacterial Tgt, EC 2.4.2.29, is one example). There the fix may be a
-  new GO term rather than a removal.
+  every GO term under it, so its placement says little. FEEDBACK.md computes the GO
+  terms for each model's own EC from the model itself. It does not list them for a
+  partial EC, which would offer a whole subclass, or when a complete EC has more than
+  ten. It says `(model has no EC)` for the sweep models without one. Where it shows
+  `(none in GO)`, GO has no term for the model's complete EC (bacterial Tgt, EC
+  2.4.2.29, is one example). There the fix may be a new GO term rather than a removal.
 - **Reach beyond PGAP is unchecked.** Whether these GO terms also reach UniProt through
   InterPro2GO depends on which models InterPro integrates and how InterPro maps them.
   That was not checked here.

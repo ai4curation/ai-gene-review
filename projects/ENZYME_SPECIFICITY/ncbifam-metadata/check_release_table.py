@@ -268,7 +268,7 @@ def main() -> None:
             else:
                 where, model_terms = placement(go, f.ec_numbers, t["ec"], hierarchy)
                 rows[-1]["placement"] = where
-                rows[-1]["model_ec_terms"] = model_terms[:10]
+                rows[-1]["model_ec_terms_first10"] = model_terms[:10]
                 rows[-1]["model_ec_term_count"] = len(model_terms)
     meta = {
         "ncbifam_release": db.release(),
