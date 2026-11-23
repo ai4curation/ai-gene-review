@@ -72,7 +72,7 @@ The live GOA input contains exactly 11 rows, all for Q96Q04. There are no duplic
 - **Secondary molecular role:** PP1-targeting scaffold/adaptor activity. The cached human abstract connects PP1α to the nuclear KAP1 module, cached full text explicitly states that the LMTK3 C-terminus binds PP1, and mouse brain experiments show functional PP1 targeting to KCC2. Candidate docking-motif details remain non-cached journal context. This role should be described without asserting that LMTK3 phosphorylates KCC2 or KAP1 and without inventing a universally stable complex.
 - **Non-core/contextual:** ATP binding; axon and dendrite localization; mouse behavioral/LTP phenotypes; ERα-positive breast-cancer proliferation and therapy response; chromatin repression; cell repulsion/metastasis; EV-driven immune-microenvironment effects. These are credible but either generic, orthology-derived, or tissue/disease bounded.
 - **Source-row consequences:** retain the specific serine/serine-threonine kinase rows, refine generic kinase parents, replace generic protein binding with nuclear estrogen receptor binding, retain mouse-transferred membrane/Golgi statements with caveats, and keep axon/dendrite as non-core. No source row warrants removal from the evidence reviewed here.
-- **New annotation recommendations:** add direct human late-endosome localization (GO:0005770, IDA, PMID:40405280); negative regulation of late-endosome-to-lysosome transport (GO:1902823, IMP, PMID:40405280); negative regulation of EPHA2 transport from endosome to plasma membrane (GO:1905750, IMP, PMID:28294115, `has_input` P29317); PP1 binding (GO:0008157, IPI, human source PMID:26212333 with additional cached support from PMID:38715938, partner P62136); and contextual positive regulation of intracellular estrogen-receptor signaling (GO:0033148, IMP, PMID:21602804). GO:0018105 was deliberately not added because current GO marks it as an obsoletion candidate; the direct RAB7A Ser72 result instead strengthens the existing protein-serine-kinase annotation and core substrate record.
+- **New annotation recommendations:** add direct human late-endosome localization (GO:0005770, IDA, PMID:40405280); negative regulation of late-endosome-to-lysosome transport (GO:1902823, IMP, PMID:40405280); negative regulation of EPHA2 transport from endosome to plasma membrane (GO:2001136, IMP, PMID:28294115, `has_input` P29317; originally recorded as GO:1905750, see the correction note below); PP1 binding (GO:0008157, IPI, human source PMID:26212333 with additional cached support from PMID:38715938, partner P62136); and contextual positive regulation of intracellular estrogen-receptor signaling (GO:0033148, IMP, PMID:21602804). GO:0018105 was deliberately not added because current GO marks it as an obsoletion candidate; the direct RAB7A Ser72 result instead strengthens the existing protein-serine-kinase annotation and core substrate record.
 
 ## Knowledge gaps and discriminating experiments
 
@@ -84,3 +84,38 @@ The live GOA input contains exactly 11 rows, all for Q96Q04. There are no duplic
 - Reproduce PPP1CA/PP1α binding with current-sequence Q96Q04 and systematically map the responsible docking region, then test endogenous LMTK3-PP1-KCC2 and LMTK3-PP1α-KAP1 assemblies. Determine whether scaffold function is kinase-independent and whether the docking region controls target selection beyond rodent neurons or cancer-cell chromatin.
 - Use human iPSC-derived neurons to test NMDAR and GluA1 endocytic trafficking, KCC2 S940 phosphorylation/chloride extrusion, neuronal excitability, and axonal/dendritic localization. This is the clearest route from strong mouse/rat evidence to human neuronal annotation.
 - Determine whether Rab7 Ser72 phosphorylation and altered EV biogenesis are physiological outside LMTK3-overexpressing breast-cancer models, and distinguish changes in EV size/cargo from EV number and from downstream immune effects.
+
+## Correction (2026-11-23, issue #6783)
+
+The `NEW` transport row in this review asserted `GO:1905750 negative regulation of
+endosome to plasma membrane protein transport`. GO obsoleted that term on 2026-09-20
+with the comment "The reason for obsoletion is that the regulated process, GO:0099638
+(endosome to plasma membrane protein transport), was obsoleted and replaced by GO:0032456
+(endosome to plasma membrane transport); this term was therefore replaced by GO:2001136
+(negative regulation of endosome to plasma membrane transport)", and recorded
+`replaced_by GO:2001136` (verified against the QuickGO term history for GO:1905750 on
+2026-11-23; the returned id was GO:1905750 itself, not a silently resolved merge target).
+Validation did not catch it because `existing_annotations[].term.id` is deliberately not
+hard-validated, and the row still carried the pre-obsoletion label.
+
+Choice made: **keep the row and swap the term to `GO:2001136 negative regulation of
+endosome to plasma membrane transport`**, in both the annotation row and in the
+`directly_involved_in` list of the RAB11FIP1/RCP core function, where the obsolete id also
+appeared. Nothing substantive is lost: this obsoletion was a consequence of restructuring
+the regulated process, not a judgement that the claim was wrong. `GO:2001136` negatively
+regulates `GO:0032456`, defined as the recycling of internalized transmembrane proteins
+from endosomes back to the plasma membrane — precisely the EPHA2 recycling route measured
+in PMID:28294115. The dropped "protein" qualifier was redundant with that definition, and
+the cargo identity remains explicit and more precise in the `has_input` (RO:0002233)
+extension naming UniProtKB:P29317 EPHA2. No evidence, quote, extension or reference was
+changed.
+
+
+One expected validation warning follows from this swap: `just validate human LMTK3` reports
+`Label mismatch for 'GO:2001136': expected 'negative regulation of endocytic recycling'`. The
+committed shared term cache (`cache/go/terms.csv`, snapshot 2026-09-12) predates GO's rename of
+`GO:2001136` on 2026-10-20, when "negative regulation of endocytic recycling" became a narrow
+synonym and the current label became "negative regulation of endosome to plasma membrane
+transport" (QuickGO term history, checked 2026-11-23). The label written here is GO's current
+one; the stale cache is deliberately not touched, since shared single-file caches are refreshed
+in dedicated refresh PRs.

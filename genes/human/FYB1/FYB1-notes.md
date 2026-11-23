@@ -51,3 +51,42 @@ Default schema, ontology, reference and best-practice validation passed with 14 
 ## Amendment validation on 2026-11-01
 
 Default schema, ontology, reference and best-practice checks pass with 10 advisories, all for the remaining positive generic-binding annotations. Strict GOA reconciliation preserves all 35 original contexts; the review additionally contains two manually supported process annotations, for 37 entries in total. The native status audit remains DRAFT. All nine supporting-text associations are exact cache substrings, and the three UNDECIDED contexts remain unchanged. Native EDIT history and the private rendered review pass. The 47 scientific sources, original CREATE history and GO term cache remain unchanged; the compact evidence archive is now YAML.
+
+## Correction (2026-11-23, issue #6783)
+
+The manually added `NEW` process row in this review asserted `GO:0033630 positive
+regulation of cell adhesion mediated by integrin`. GO obsoleted that term on 2026-11-10
+with the comment "The reason for obsoletion is that this term classifies adhesion by the
+molecule that mediates it. The role of the adhesion molecule is captured by its molecular
+function (for example integrin binding or cadherin binding) together with the adhesion
+process", and recorded `replaced_by GO:0045785 (positive regulation of cell adhesion)`
+(verified against the QuickGO term history for GO:0033630 on 2026-11-23; the returned id
+was GO:0033630 itself, not a silently resolved merge target). The id was not caught by
+validation because `existing_annotations[].term.id` is deliberately not hard-validated,
+and the row still carried the pre-obsoletion label.
+
+Choice made: **keep the row and swap the term to `GO:0045785 positive regulation of cell
+adhesion`** in both the annotation row and in `core_functions[0].directly_involved_in`,
+where the obsolete id also appeared. The row is not redundant — `GO:0045785` is asserted
+nowhere else in this review and is absent from FYB1's GOA — and the underlying evidence is
+unchanged (PMID:16980616: tagged human ADAP enhances stimulated Jurkat adhesion to ICAM-1
+and fibronectin; SKAP-binding disruption abolishes the enhancement; corroborated by
+PMID:17403904).
+
+Handling of the integrin specificity that the replacement term drops. GO's stated intent
+is that the mediating molecule be carried by a molecular function plus the generic adhesion
+process. That route is only partly available here, and the review should not pretend
+otherwise: FYB1 has **no integrin-binding annotation** and none is warranted — it is not
+shown to bind integrin, its molecular function is `GO:0035591 signaling adaptor activity`,
+and it acts upstream of the integrin through the SKAP55/RIAM/Rap1 recruitment module. So no
+`GO:0005178 integrin binding` row was invented to fill GO's template. Instead the integrin
+context is preserved where it is genuinely supported: the `GO:0007229 integrin-mediated
+signaling pathway` rows (IBA and IEA) are retained and `GO:0007229` remains in
+`core_functions[0].directly_involved_in` alongside the new `GO:0045785`, and the `reason`
+prose on the row now states explicitly that the measured adhesion was to ICAM-1 and
+fibronectin, why no integrin-binding MF is asserted, and where the specificity went. Note
+that `GO:0007229` is ligand-initiated (outside-in) signalling, whereas the adhesion
+measured in PMID:16980616 is inside-out; the two are kept distinct in the review and the
+combination is not claimed to be an exact substitute for the obsoleted precomposed term.
+Nothing in `supported_by`, the references or the evidence was changed.
+

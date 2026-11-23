@@ -88,3 +88,65 @@ Despite retaining the carnitine palmitoyltransferase family fold and name, CPT1C
 - Different enzymatic mechanism (hydrolysis vs transfer)
 - Different substrate (palmitoylated proteins vs acyl-CoA + carnitine)
 - Different biological role (synaptic regulation vs energy metabolism)
+
+---
+
+**Correction (2026-11-23, issue #6783)**
+
+The review carried a `NEW` biological-process row on **GO:0002084 "protein
+depalmitoylation"** (IDA, PMID:30135643), and listed the same id under
+`core_functions[].directly_involved_in`. That term is **obsolete** in the current
+ontology (verified against QuickGO, GO release 2026-11-21, where it resolves as
+"obsolete protein depalmitoylation"). GO's obsoletion comment: *"The reason for
+obsoletion is that this term represents a molecular function, not a biological
+process. Consider instead annotating to the molecular function
+'palmitoyl-(protein) hydrolase activity' (GO:0008474)."* There is no `replaced_by`.
+
+Three things were checked before deciding:
+
+1. **The `consider` target is already annotated.** GO:0008474
+   palmitoyl-(protein) hydrolase activity is live, and CPT1C already carries it
+   twice in GOA — by **IDA from the very same PMID:30135643** (ECO:0000314) and by
+   IEA (GO_REF:0000120). Both rows are `ACCEPT` in this review, and GO:0008474 is
+   already the review's `core_functions[].molecular_function`. A `NEW` row is by
+   definition "a proposed annotation, not one that exists in the existing GO
+   annotations", so re-proposing GO:0008474 is not available: it would be a
+   duplicate, and CLAUDE.md's `NEW` bar explicitly rejects a term "the gene already
+   carries".
+2. **The suggested BP fallback is also obsolete.** GO:0098734 "macromolecule
+   depalmitoylation", which the old `reason` cited as the broader IEA row that
+   GO:0002084 would refine, has *also* been obsoleted in the current release, for
+   the same stated reason (*"this term represents a molecular function, not a
+   biological process. Consider instead ... 'palmitoyl hydrolase activity'
+   (GO:0098599), or, for protein substrates, 'palmitoyl-(protein) hydrolase
+   activity' (GO:0008474)"*). Note that this is recent: the 2026-07-26 go-basic
+   release still has both terms live (GO:0002084 flagged
+   `subset: gocheck_obsoletion_candidate`), and OLS and api.geneontology.org were
+   both still serving them as non-obsolete when checked on 2026-11-23. QuickGO,
+   on the 2026-11-21 release, is the current source. So "fall back to GO:0098734"
+   is not an option either.
+3. **No other live BP term states the claim.** The surviving ancestors
+   (GO:0035601 protein deacylation, GO:0098732 macromolecule deacylation) are live,
+   but asserting one would reintroduce exactly the aspect error GO obsoleted the
+   branch to remove — the chemistry CPT1C performs is a molecular function, and the
+   biological process it serves is already asserted on this gene as GO:0099072
+   regulation of postsynaptic membrane neurotransmitter receptor levels and as the
+   `NEW` row GO:1904719 positive regulation of AMPA glutamate receptor clustering
+   (both verified live).
+
+**Decision: the `NEW` GO:0002084 row was dropped**, and GO:0002084 was removed
+from `core_functions[].directly_involved_in` (leaving GO:0099072 there). Nothing
+is lost: the depalmitoylation chemistry is carried by the existing GO:0008474 IDA
+row from the same paper, and the biological consequence by GO:0099072 /
+GO:1904719. No replacement BP term was invented, and no `proposed_new_terms` entry
+was added, because GO's obsoletion was a deliberate decision that this chemistry
+belongs in the molecular-function aspect, not an accidental gap.
+
+**Left alone, deliberately:** the *existing* GOA row on GO:0098734 (IEA,
+GO_REF:0000108) is still present in `GENE-goa.tsv` and is still `ACCEPT` here.
+Per CLAUDE.md, `existing_annotations[].term.id` comes from GOA and is not
+rewritten by this review; the obsoletion is upstream GOA's to propagate. Its
+`reason` prose ("correctly captures the core molecular function of CPT1C") does
+read oddly for a BP-aspect row, and is arguably the same aspect confusion GO
+obsoleted the term for — worth revisiting in a review of that row, which is out of
+scope for this correction.

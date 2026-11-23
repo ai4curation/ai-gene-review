@@ -119,3 +119,72 @@ spent-fluid-catalytic-cracking-catalyst, spent-nickel-metal-hydride-batteries) t
 - GO:0008876 label: GOA uses the newer name "glucose dehydrogenase (PQQ, quinone)
   activity"; authored slots keep "quinoprotein glucose dehydrogenase activity", the
   label in the validation ontology version.
+
+---
+
+**Correction (2026-11-23, issue #6783)**
+
+The review carried a `NEW` row on **GO:0019595 "non-phosphorylated glucose
+catabolic process"** (IC, PMID:20453146), and the same id under
+`core_functions[].directly_involved_in`. That term is **obsolete** in the current
+ontology (verified against QuickGO, GO release 2026-11-21, where it resolves as
+"obsolete non-phosphorylated glucose catabolic process"). GO's obsoletion comment:
+*"This term was obsoleted because it overlaps other GO terms: glucose 1-phosphate
+catabolic process ; GO:0019255 and Entner-Doudoroff pathway ; GO:0061678."* There
+is no `replaced_by`, only those two `consider` targets.
+
+Candidates weighed:
+
+- **GO:0019255 glucose 1-phosphate catabolic process** (live) — rejected. It
+  requires a phosphorylated hexose. No phosphorylated intermediate occurs anywhere
+  in the periplasmic route; mGDH oxidizes free D-glucose directly to
+  D-glucono-1,5-lactone.
+- **GO:0061678 Entner-Doudoroff pathway** (live) — rejected. Its definition is
+  conversion of a carbohydrate "to pyruvate and either glyceraldehyde or
+  glyceraldehyde-3 phosphate by dehydration and aldol cleavage via a gluconate or
+  6-phosphogluconate intermediate". mGDH performs none of that chemistry: it is a
+  periplasmic, membrane-anchored oxidase upstream of and physically separated from
+  any cytoplasmic ED enzymes, and in *G. oxydans* most of its product leaves the
+  cell as gluconic acid. Asserting ED here would fail CLAUDE.md's participation
+  test — the entity that performs the dehydration and the aldol cleavage is not
+  this protein.
+- **GO:0046178 D-gluconate biosynthetic process** — the obvious third candidate,
+  and it is **also obsolete** in the current release, with the comment *"The reason
+  for obsoletion is that D-gluconate is formed as a product of glucose and glucose
+  1-phosphate catabolism, and is not the output of a dedicated biosynthetic
+  process."* Worth recording, because that ruling is what settles the choice: GO
+  itself places the formation of gluconate from glucose **inside glucose
+  catabolism**. (GO:0046177 D-gluconate catabolic process is obsolete too;
+  GO:0019521 D-gluconate metabolic process is live but is a bare metabolic grouping
+  whose only remaining child is the obsoleted biosynthetic term, and it says nothing
+  about glucose.)
+- **GO:0006007 glucose catabolic process** (live) — chosen. It is the direct parent
+  under which the obsoleted GO:0019595 sat, it is true of this enzyme, and GO's own
+  GO:0046178 obsoletion comment licenses it for gluconate formation. Its other live
+  children (GO:0019658 bifid shunt, GO:0061621 canonical glycolysis, GO:0061633
+  transport-coupled glycolytic process, GO:0061718 glucose catabolic process to
+  pyruvate) are all wrong for a periplasmic oxidase, so GO:0006007 is the most
+  specific live term available.
+
+**Decision: the `NEW` row was restated at GO:0006007 glucose catabolic process**
+(evidence, qualifier and quotes unchanged), `core_functions[].directly_involved_in`
+updated to match, and the `reason` rewritten to argue for that term and record why
+each alternative was rejected. The gene's GOA record carries no biological-process
+annotation at all, so the row still adds coverage rather than restating something.
+
+**A `proposed_new_terms` entry was added** ("periplasmic oxidative glucose
+catabolic process", parent GO:0006007), because the granularity was lost to the
+obsoletions rather than to the evidence: the direct, non-phosphorylative,
+extracytoplasmic oxidation of glucose is a real and widespread peripheral pathway
+in the *Acetobacteraceae* and the pseudomonads, and neither obsoletion addressed
+it. GO:0006007 does not distinguish it from glycolysis.
+
+**Elsewhere in the corpus (not edited here).** The same obsolete id is asserted in
+two other places, both of which need the same correction in their own PRs:
+`genes/PSEPK/gcd/gcd-ai-review.yaml` (a `NEW` IMP row, plus
+`core_functions[].directly_involved_in`), and
+`modules/pseudomonad_2_ketogluconate_loop.yaml` (as the module's top-level
+concept). Separately, QuickGO on 2026-11-23 still shows *E. coli* Gcd
+(UniProtKB:P15877) annotated to GO:0019595 from EcoCyc on EXP evidence
+(PMID:2228962, `acts_upstream_of_or_within`) — i.e. GOA has not yet propagated the
+obsoletion, so there is no upstream remapping to follow.
