@@ -90,7 +90,8 @@ hypothesis jobs for gene function review.
   their place in the queue. Do not re-submit. Re-attach with
   `scripts/openscientist_attach_job.py <job_id> <research args>`, using the args from a
   `--dry-run` of the same hypothesis. It never re-submits or cancels, and writes the
-  normal report.
+  normal report. Pass `submit` instead of a job id to submit a new job that
+  waits out a busy queue without being cancelled.
 
 ## Failure Modes
 

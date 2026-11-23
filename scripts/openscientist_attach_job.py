@@ -2,7 +2,10 @@
 """Attach to an already-submitted OpenScientist job instead of submitting a new one.
 
 Usage:
-    uv run python scripts/openscientist_attach_job.py <job_id> <deep-research-client research args...>
+    uv run python scripts/openscientist_attach_job.py <job_id|submit> <deep-research-client research args...>
+
+With ``submit`` in place of a job id, a new job is submitted normally but is still
+polled without a client-side deadline or cancel, so it can wait out a busy queue.
 
 The research args are the ones `scripts/gene_hypothesis_deep_research.py run ... --dry-run`
 prints after `command=uv run deep-research-client`. This runs the normal
@@ -40,7 +43,8 @@ def main() -> int:
     async def _no_cancel(self, client, jid):
         return None
 
-    osp.OpenScientistProvider._submit_job = _submit
+    if job_id != "submit":
+        osp.OpenScientistProvider._submit_job = _submit
     osp.OpenScientistProvider._poll_until_done = _poll
     osp.OpenScientistProvider._cancel_job = _no_cancel
 
