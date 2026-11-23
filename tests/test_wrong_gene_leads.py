@@ -5,6 +5,7 @@ citing entries, so they need no network. One integration test exercises the
 UniProt lookup against a recorded cassette.
 """
 
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -15,14 +16,18 @@ from ai_gene_review.tools.wrong_gene_leads import (
     MAX_CITING_ENTRIES,
     MAX_RANGE,
     SHARED_ANNOTATION_GENES,
+    UNREVIEWED_PENALTY,
     candidate_rows,
     fetch_citing_entries,
     find_leads,
     gene_specific_names,
+    lead_kind,
     named_in_abstract,
+    parse_uniprot_flatfile,
     pombase_names,
     score_lead,
     shared_annotation_counts,
+    shared_annotation_families,
     token_forms,
 )
 
@@ -553,3 +558,95 @@ def test_title_case_title_does_not_name_a_one_word_gene():
     """
     own, _ = candidate_rows(GENES / "DROME/tub")
     assert named_in_abstract("28031263", [], PUBLICATIONS, own.protein_names) is False
+
+
+def test_reviewed_status_is_parsed():
+    """The ID line says whether the annotated protein's own entry is reviewed."""
+    own = parse_uniprot_flatfile(
+        "ID   D3ZAQ8_RAT              Unreviewed;       189 AA.\nAC   D3ZAQ8;\n"
+    )
+    assert own.reviewed is False
+    own = parse_uniprot_flatfile(
+        "ID   SRPRB_HUMAN             Reviewed;         271 AA.\nAC   Q9Y5M8;\n"
+    )
+    assert own.reviewed is True
+
+
+def test_unreviewed_own_entry_is_down_weighted():
+    """An unreviewed entry cites few papers, so its silence about one says little."""
+    others = [CitingEntry("P2", "X", "10090", frozenset())]
+    reviewed = GeneRecord("P1", "9606", frozenset(), frozenset({"ABC1"}), frozenset())
+    unreviewed = replace(reviewed, reviewed=False)
+    assert score_lead(reviewed, others, None) == (1, "few_citing_entries")
+    assert score_lead(unreviewed, others, None) == (
+        1 - UNREVIEWED_PENALTY,
+        "few_citing_entries;own_entry_unreviewed",
+    )
+
+
+@pytest.mark.parametrize(
+    "others,evidence,expected",
+    [
+        # SRPRB: the crystal pairs human SRalpha with mouse SRbeta.
+        (
+            [
+                CitingEntry("P08240", "SRPRA", "9606", frozenset()),
+                CitingEntry("P47758", "Srprb", "10090", frozenset()),
+            ],
+            "EXP",
+            "evidence_code",
+        ),
+        # An author statement may rest on the ortholog; it is not an assay claim.
+        ([CitingEntry("P47758", "Srprb", "10090", frozenset())], "TAS", "wrong_gene"),
+        ([CitingEntry("P08240", "SRPRA", "9606", frozenset())], "EXP", "wrong_gene"),
+    ],
+)
+def test_lead_kind(others, evidence, expected):
+    """A direct assay row whose paper the ortholog's entry cites is an evidence-code lead."""
+    own = GeneRecord("Q9Y5M8", "9606", frozenset(), frozenset({"SRPRB"}), frozenset())
+    assert lead_kind(own, others, evidence) == expected
+
+
+def test_srprb_lead_is_an_evidence_code_lead():
+    """The SRPRB EXP row from the mixed-species structure paper is reported as such."""
+    citing = {
+        "16439358": [
+            CitingEntry("P08240", "SRPRA", "9606", frozenset({"PTHR43134"})),
+            CitingEntry("P47758", "Srprb", "10090", frozenset({"PTHR45909"})),
+        ]
+    }
+    leads = find_leads([GENES / "human" / "SRPRB"], citing=citing)
+    exp = [r for r in leads if r["evidence"] == "EXP"]
+    assert exp and all(r["lead_kind"] == "evidence_code" for r in exp)
+    nas = [r for r in leads if r["evidence"] == "NAS"]
+    assert nas and all(r["lead_kind"] == "wrong_gene" for r in nas)
+
+
+def test_row_shared_with_a_local_paralog_is_down_weighted():
+    """GstO1 and GstO2 carry the same FlyBase rows from the Omega GST paper."""
+    se = CitingEntry("Q9VSL3", "se", "7227", frozenset({"PTHR43968"}))
+    dirs = [GENES / "DROME" / "GstO1", GENES / "DROME" / "GstO2"]
+    leads = find_leads(dirs, citing={"16712527": [se]})
+    assert leads
+    assert all("shared_with_local_paralog" in r["reasons"] for r in leads)
+    alone = find_leads(dirs[:1], citing={"16712527": [se]})
+    assert alone and not any("shared_with_local_paralog" in r["reasons"] for r in alone)
+
+
+def test_paralog_share_needs_a_shared_family(tmp_path):
+    """The same row on a gene of another family is not a family annotation."""
+    a = _gene_folder(
+        tmp_path / "a",
+        "AC   P00001;\nOX   NCBI_TaxID=9606;\nDR   PANTHER; PTHR1; X; 1.\n",
+    )
+    b = _gene_folder(
+        tmp_path / "b",
+        "AC   P00002;\nOX   NCBI_TaxID=9606;\nDR   PANTHER; PTHR2; X; 1.\n",
+        acc="P00002",
+    )
+    shared = shared_annotation_families([a, b])
+    key = ("PMID:1", "GO:0003674", "UniProt")
+    assert sorted(sorted(f) for f in shared[key]) == [["PTHR1"], ["PTHR2"]]
+    citing = {"1": [CitingEntry("P9", "X", "9606", frozenset({"PTHR1"}))]}
+    (lead,) = find_leads([a, b], citing=citing, publications_dir=tmp_path)[:1]
+    assert "shared_with_local_paralog" not in lead["reasons"]
