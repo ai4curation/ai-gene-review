@@ -24,3 +24,15 @@
   genes to usually one, in BZ-resistant populations."]. This supports the
   anthelmintic-target lane, but it does not directly assay the later `A2TF56`
   allele.
+- A2TF56's direct GenBank record does not assign a community gene symbol beyond
+  "beta tubulin isotype 1", so the review keeps the UniProt accession as
+  `gene_symbol`. The 1993 isotype-1 genomic clone was `gru-1`, and the older
+  tub8-9 cDNA was the nearest full-length H. contortus isotype-1-like
+  comparator for the A2TF56 sequence.
+- Added a reproducible alignment under `A2TF56-bioinformatics/` to check the
+  benzimidazole-resistance codons. A2TF56 maps without indels to the Geary
+  tub8-9 cDNA and maps the partial susceptible isotype-1 fragment MF034043.1 to
+  residues 152-245; A2TF56 retains Phe167 and Glu198 and carries Tyr200 where
+  the susceptible fragment and tub8-9 encode Phe. This makes A2TF56 an F200Y
+  resistant-isolate allele by sequence, although direct benzimidazole binding
+  or polymerization assays on this exact submitted allele were not reported.
