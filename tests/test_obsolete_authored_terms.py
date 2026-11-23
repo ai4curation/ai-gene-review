@@ -711,6 +711,7 @@ def test_consulted_sources_distinguishes_silence_from_not_asking(tmp_path):
 
 
 def test_consulted_sources_lists_the_snapshot_when_it_can_answer(tmp_path):
+    write_goa(tmp_path, "human/A/A-goa.tsv", [("GO:0000118", "live", "20260101")])
     lookup = build_label_lookup(
         tmp_path, use_ontology=True, snapshot_available=lambda: True
     )
@@ -729,6 +730,7 @@ def test_a_configured_but_unloadable_snapshot_is_not_reported_as_consulted(tmp_p
     exists to remove -- the reader could not tell "asked, nothing to say" from
     "never loaded".
     """
+    write_goa(tmp_path, "human/A/A-goa.tsv", [("GO:0000119", "live", "20260101")])
     lookup = build_label_lookup(
         tmp_path, use_ontology=True, snapshot_available=lambda: False
     )
@@ -752,3 +754,39 @@ def test_consulted_sources_is_none_for_an_injected_lookup():
     report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
     check_obsolete_authored_terms(OBSOLETE_DOC, report, lookup_obsolete)
     assert report.issues[0].details["consulted_sources"] is None
+
+
+def test_an_absent_corpus_is_not_reported_as_consulted(tmp_path):
+    """The GOA half has the same mute state, and the snapshot fix missed it.
+
+    With no `genes/` tree, `goa_obsolete_labels` returns an empty index
+    silently rather than raising, so claiming the corpus was consulted is the
+    same false statement the snapshot probe exists to prevent -- on the other
+    source in the same expression.
+    """
+    lookup = build_label_lookup(
+        tmp_path, use_ontology=True, snapshot_available=lambda: True
+    )
+    assert lookup.consulted_sources() == ["the GO snapshot"]  # type: ignore[attr-defined]
+
+
+def test_neither_source_available_reports_neither(tmp_path):
+    lookup = build_label_lookup(
+        tmp_path, use_ontology=True, snapshot_available=lambda: False
+    )
+    assert lookup.consulted_sources() == []  # type: ignore[attr-defined]
+
+
+def test_availability_is_probed_once(tmp_path):
+    """Probed per hit, so the result is memoised in the closure."""
+    write_goa(tmp_path, "human/A/A-goa.tsv", [("GO:0000120", "live", "20260101")])
+    calls = []
+
+    def probe():
+        calls.append(1)
+        return True
+
+    lookup = build_label_lookup(tmp_path, use_ontology=True, snapshot_available=probe)
+    lookup.consulted_sources()  # type: ignore[attr-defined]
+    lookup.consulted_sources()  # type: ignore[attr-defined]
+    assert calls == [1]

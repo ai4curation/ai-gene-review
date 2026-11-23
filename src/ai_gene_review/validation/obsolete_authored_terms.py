@@ -267,6 +267,19 @@ def _cached_goa_obsolete_labels(project_root: Path) -> Mapping[str, Tuple[str, s
     return MappingProxyType(goa_obsolete_labels(project_root))
 
 
+def _goa_corpus_available(project_root: Path) -> bool:
+    """Whether any GOA file exists to answer at all.
+
+    The GOA half has the same systemic-mute state as the snapshot: with no
+    ``genes/`` tree, ``goa_obsolete_labels`` returns an empty index silently
+    rather than raising, so "asked, nothing to say" and "there was nothing to
+    ask" are indistinguishable in its output. Checked by existence rather than
+    by emptiness, because an empty index over a real corpus legitimately means
+    the corpus holds no obsolete labels.
+    """
+    return next((project_root / "genes").rglob("*-goa.tsv"), None) is not None
+
+
 def _snapshot_adapter_available() -> bool:
     """Whether the GO snapshot can actually answer, not merely whether it is configured.
 
@@ -305,6 +318,7 @@ def build_label_lookup(
         [Path], Mapping[str, Tuple[str, str]]
     ] = _cached_goa_obsolete_labels,
     snapshot_available: Callable[[], bool] = _snapshot_adapter_available,
+    goa_available: Callable[[Path], bool] = _goa_corpus_available,
 ) -> LabelLookup:
     """A lookup over the offline signals: the corpus GOA labels and GO's snapshot.
 
@@ -315,6 +329,7 @@ def build_label_lookup(
     """
     resolved = project_root.resolve()
     goa: Optional[Mapping[str, Tuple[str, str]]] = None
+    consulted: Optional[List[str]] = None
 
     def lookup(curie: str) -> List[Tuple[str, str]]:
         nonlocal goa
@@ -333,19 +348,26 @@ def build_label_lookup(
     def consulted_sources() -> List[str]:
         """The sources that can actually answer, resolved lazily on first use.
 
-        Deliberately NOT computed from ``use_ontology`` alone. The snapshot is
-        configured but mute when its OAK build cannot load -- which is the
-        state of any runner without the GO sqlite -- and reporting it as
-        consulted there would recreate, one level down, the very ambiguity
-        ``live_according_to`` and this field exist to remove.
+        Deliberately NOT computed from configuration alone. **Both** sources
+        have a systemic-mute state, and the first fix here covered only the
+        snapshot: it is configured but mute when its OAK build cannot load,
+        which is any runner without the GO sqlite; and the GOA half is mute
+        when no ``genes/`` tree exists, where the index comes back empty
+        rather than raising. Reporting either as consulted in those states
+        recreates, one level down, the very ambiguity ``live_according_to``
+        and this field exist to remove.
 
         Resolved on first use rather than at build time so a review with no
         authored GO ids still never pays for loading the snapshot.
         """
-        names = ["the corpus GOA files"]
-        if use_ontology and snapshot_available():
-            names.append("the GO snapshot")
-        return names
+        nonlocal consulted
+        if consulted is None:
+            consulted = []
+            if goa_available(resolved):
+                consulted.append("the corpus GOA files")
+            if use_ontology and snapshot_available():
+                consulted.append("the GO snapshot")
+        return consulted
 
     lookup.consulted_sources = consulted_sources  # type: ignore[attr-defined]
     return lookup
