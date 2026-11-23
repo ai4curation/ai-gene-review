@@ -102,7 +102,9 @@ transmembrane helices 367-630, cytoplasmic tail 631-695
   internalized FSH-FSHR complex accumulates in endosomes and subsequently recycles back
   to the cell surface", detected "in heterologous (human kidney 293T) cells transfected
   with the rat (r) or human (h) FSHR" [PMID:12907758]; the human receptor internalises
-  into small APPL1-type endosomes in HEK293 [PMID:24375413: "Targeting receptors to these
+  into small endosomes of a similar physical profile to the LHR's APPL1 endosomes in HEK293
+  (assigned by size only; the marker data are on LHR; corrected 2026-11-23)
+  [PMID:24375413: "Targeting receptors to these
   small endosomes was not a specific feature of the LHR because both the FSHR and B1AR
   also internalized to endosomes with a similar physical profile"].
 - Note on participation: being internalised and recycled, or carried across an
