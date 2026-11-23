@@ -1,128 +1,60 @@
-# COL4A1 (collagen alpha-1(IV) chain, human, P02462) review notes
+# COL4A1 biological evidence notes
 
-Automated deep research was unavailable for this review (no provider keys), so no
-`-deep-research-*.md` file exists. These notes are based on the UniProt record, the GOA rows
-and the cached publications in `publications/`. Full text was available for PMID:12011424,
-16107487, 19949034, 23065703, 28418331 and 24344311 (and the proteomics papers 23658023,
-23979707, 25037231, 27068509, 27559042, 28327460, 28675934, which mostly list COL4A1 only in
-supplementary tables). PMID:18160688, 20818663, 8900172, 14718574, 22261194, 28344315 and
-29853175 are abstract-only.
+## Basement-membrane structure and collagen contact
 
-## Core biology
+COL4A1 supplies two alpha1(IV) chains to the alpha1(IV)2alpha2(IV) protomer. Human placental NC1 structure resolves the trimeric caps and opposing interfaces, including beta-hairpin contacts between adjacent chains. This gives direct structural evidence for the positive COL4A1–COL4A2 interaction. Collagen binding and collagen type IV trimer membership describe different properties of this assembly. GO:0005518 does not restrict the binding protein to a non-collagen; neither native-compartment speculation nor a different gene's review overrides the observed contacts. The exact IntAct crystallography and molecular-sieving records are retained. [PMID:12011424, Methods and Results, NC1 caps and monomer interfaces]
 
-- Collagen IV protomers form the basement membrane network: "Triple-helical collagen IV
-  protomers associate through their N- and C-termini forming a three-dimensional network,
-  which provides basement membranes with an anchoring scaffold and mechanical strength."
-  [PMID:12011424]
-- Chain composition: "The major collagen IV protomers detected in all basement membranes
-  consist of two α1(IV) chains and one α2(IV) chain" [PMID:12011424]; "Type IV collagen α1 and
-  α2 chains form the widely expressed α1α1α2(IV) heterotrimers." [PMID:19949034]
-- NC1 hexamer and cross-link: "The trimer–trimer interaction is further stabilized by a
-  previously uncharacterized type of covalent cross-link between the side chains of a Met and a
-  Lys residue of the α1 and α2 chains from opposite trimers" [PMID:12011424]. The bond is a
-  sulfilimine made by peroxidasin: "Peroxidasin, a heme peroxidase embedded in the basement
-  membrane, produces hypohalous acid intermediates that oxidize methionine, forming the
-  sulfilimine cross-link." [PMID:24344311]
-- UniProt: proteolytic processing releases the NC1 fragment arresten, reported to be
-  anti-angiogenic (PMID:10811134, PMID:18775695 per UniProt; not cached, not read; no GOA row,
-  so not used in the review).
+The matrix core remains GO:0030020 in the type IV trimer and basement membrane, contributing to basement-membrane organization. The current GO comment permits extracellular-matrix collagens in this structural class; that convention does not turn type IV into an extended fibrillar collagen or establish an isolated force assay. COL4A1 supplies cross-linked network residues, whereas peroxidasin supplies oxidant-generating catalysis. Human haploinsufficiency and HANAC tissue observations connect chain defects to abnormal thickness, continuity and organization of basement membranes. [PMID:12011424; PMID:24344311; PMID:18160688; PMID:19949034; PMID:23065703]
 
-## Human genetics (BM organization rows)
+## Arresten is a distinct cleavage-product class
 
-- HANAC: "Histologic analysis revealed complex basement-membrane defects in kidney and skin."
-  [PMID:18160688, abstract]
-- HANAC skin: "Replication of the lamina densa was observed at the dermoepidermal junction in
-  the affected subjects of the 3 families" [PMID:19949034]
-- Haploinsufficiency: "thickening of the capillary basement membrane in the skin was
-  documented" [PMID:23065703]; "a clear reduction in COL4A1 protein in both families"
-  [PMID:23065703]
-- Porencephaly: glycine mutations "predicted to result in abnormal collagen IV assembly"
-  [PMID:16107487]. The same paper attributes porencephaly to perinatal vascular accidents and
-  basement-membrane fragility, not to a primary role in brain development: "Porencephaly
-  (cystic cavities of the brain) is caused by perinatal vascular accidents from various
-  causes." and "compatible with abnormalities of the vascular basement membrane as a result of
-  COL4A1 mutations." [PMID:16107487]. So `brain development` is downstream/over-annotated.
-- HANAC mutations cluster in CB3[IV], "which encompasses major integrin-binding sites"
-  [PMID:20818663, abstract]. Retinal arterial tortuosity supports a retinal vessel morphogenesis
-  phenotype; the abstract does not mention vessel branching (full text not available), so
-  `branching involved in blood vessel morphogenesis` is left UNDECIDED.
+`COL4A1_ARRESTEN` maps to the official arresten chain PRO_0000390482, residues 1445–1669 of the 1669-residue reference protein. It is a cleavage-product class, not a third splice product. The two existing alternative-product records are unchanged. The exact 519-residue short product lacks NC1 and is not assigned arresten activity. The natural-chain mapping is separate from the experimental preparations: the 2000 primer starts at the SVDH motif at residue 1441 and includes vector sequence; the 2008 recombinant preparation is tagged and denatured/refolded. Its half-domain constructs are also distinct, with Arr-2 called 115 residues in Methods and 113 in Results/Discussion. No claim is made that every assay tested the untagged native 225-residue chain. [UniProt P02462 features and sequence; PMID:10811134 construct Methods; PMID:18775695 recombinant-protein Methods]
 
-## Other rows
+Human arresten was isolated from placenta and also produced recombinantly. The original study reports [PMID:10811134, "inhibiting endothelial cell proliferation, migration, tube formation, and Matrigel neovascularization"]. Its whole-cell Scatchard assay measures endothelial-cell binding rather than purified-integrin affinity. In the attachment experiment, alpha1 and beta1 antibodies inhibit adhesion to arresten, with other integrin antibodies, control IgG and matrix coatings distinguishing the result. HSPG binding is a separate observation and remains a possible additional cell-surface interaction. [PMID:10811134, Scatchard and cell-adhesion Methods; Results and Figure 4 caption]
 
-- `collagen fibril organization` (NAS, PMID:29853175): the cited review is about fibrillar
-  collagens ("Collagen fibrils are the major mechanical component..."). Collagen IV is a
-  network-forming collagen, not a fibril-forming one, so REMOVE.
-- `protein binding` (IPI, PMID:12011424, with COL4A2): the interaction is chain assembly into the
-  alpha1alpha1alpha2 protomer/NC1 hexamer, already captured by `collagen type IV trimer` (IPI,
-  same paper). REMOVE as uninformative.
-- `platelet-derived growth factor binding` (IDA, PMID:8900172, abstract): PDGF binds collagens
-  I-VI "and their constituent chains", with medium affinity (KD 4-22 nM). Kept as non-core.
-- `epithelial cell differentiation` (IEA, Ensembl Compara from rat): no human or direct
-  evidence; a structural BM protein is at most permissive. Over-annotated.
-- ER lumen (ARBA, Reactome procollagen assembly/secretion): biosynthetic transit compartment
-  where chains fold and trimerise. Kept as non-core.
-- ECM `HDA` rows and `RCA`/`HDA` rows for `GO:0030020` come from matrisome proteomics; they show
-  presence in ECM, not tensile function. Function itself is well established (PMID:12011424,
-  IBA), so ACCEPT and note the weak evidence type.
+The 2008 paper's own experiments compare wild-type and alpha1-integrin-null mouse microvascular endothelial cells exposed to recombinant human arresten. Antibody-controlled attachment, cell-survival, Matrigel and tumor-vessel assays support integrin-dependent antiangiogenic activity at that species and preparation scope. They do not measure endogenous fragment concentrations or prove universal native-product equivalence. The microvascular caspase increase in one endpoint was not statistically significant. The entire 2005 article is retracted after ORI notification of falsified data and supplies no positive mechanistic support; a citation to it in the 2008 introduction does not rehabilitate its results. The separate 2000 and 2008 articles are not retracted by that notice. [PMID:18775695, Results/Figure 5 and tumor experiment; PMID:16151532; PMID:31895054; https://www.jci.org/articles/view/135305]
 
-## GO-CAM
+Integrin binding and negative regulation of angiogenesis are recorded as arresten-class activities. The direct attachment experiments support one additional GO:0005178 assertion, restricted to the tested human NC1-derived preparations and the mapped COL4A1_ARRESTEN product class. Row 3 retains original GO:0005515 as historical provenance but its effective replacement is collagen binding, GO:0005518; the latter is not an ancestor of integrin binding. Thus the new assertion supplies distinct effective molecular-function coverage. This supersedes the earlier decision to omit it after recognizing that coverage distinction. The GO:0098640 child can describe the coated-substrate attachment context. The broader GO:0005178 records the shared receptor-engagement activity across attachment and soluble-fragment inhibition, so a second redundant child assertion is not added. Neither purified-integrin affinity nor universal intact-chain or isoform activity is inferred. [PMID:18775695, Cell attachment assay Methods and Results, Figure 5A–B; PMID:10811134, Cell Adhesion and Scatchard experiments, Figure 4]
 
-`gocams/index.tsv` has no COL4A1 entry (checked 2026-10-01).
+The existing antiangiogenesis proposal is based on work performed by the applied fragment, not merely on the precursor being cleaved or needed. Its earlier typed nonredundancy audit and same-role canstatin/tumstatin comparison remain in the source index. The exact endostatin query was empty and is not evidence of absence. More specific sprouting, branching, adhesion-regulation and wound-healing processes remain unresolved, and the checked GO-CAM index contained no target match. No new process is added in this follow-up.
 
-## Premetazoan context (verified from cached full text)
+## Developmental and source-specific uncertainty
 
-- Collagen IV is absent from unicellular relatives of animals: "Moreover, collagen IV is absent
-  in unicellular sister-groups." [PMID:28418331]; "unicellular protists (Choanozoa,
-  Filasterea, Amoebozoa, Apusozoa) do not contain collagen IV as determined by genomic analyses"
-  [PMID:28418331]. Choanoflagellates do have fragments: "collagenous GXY repeats were identified
-  in Monosiga, Salpingoeca, and Dictyost[elium]", and "Laminin architecture appears to be
-  present in choanoflagellates" [PMID:28418331].
-- Present in early-branching animals: ctenophores ("We identified basement membrane (BM) and
-  collagen IV in Ctenophora"), placozoans ("Placozoa contains the necessary components for a BM,
-  including collagen IV, laminin, perlecan, and nidogen"), homoscleromorph sponges ("the ECM of
-  homoscleromorph sponges contains basement membranes (Boute et al., 1996), with collagen IV and
-  laminin"); demosponges and hexactinellids lack both collagen IV and a basement membrane
-  [PMID:28418331].
-- Sulfilimine cross-link: "the cross-link is conserved throughout Eumetazoa and arose at the
-  divergence of Porifera and Cnidaria over 500 Mya" [PMID:24344311]; ctenophore collagen IV
-  lacks the Met/Lys pair and uses a different cross-link [PMID:28418331].
-- PMID:29848444 (animal stem lineage gene families) was checked: it does not discuss collagen IV
-  or basement membrane specifically (only fibrillar collagen loss in fly/worm), so it is not
-  cited for these claims.
-- Conclusion: COL4A1's structural function in a basement membrane is an animal innovation; there
-  is no ancestral unicellular function to separate out. Some building blocks (GXY repeats,
-  laminin-like domains, integrins in Capsaspora) predate animals, but the collagen IV protomer
-  and its NC1 domain do not appear before Metazoa on current genomic evidence.
-- Unverified background (not used in YAML): whether the alpha1/alpha2 (odd/even) chain split
-  dates to the cnidarian-bilaterian ancestor; Fidler 2017 notes paired head-to-head genes in
-  Nematostella and Trichoplax.
+Three precise assertions remain UNDECIDED. The human HANAC abstract reports retinal arterial tortuosity and CB3[IV] substitutions but does not resolve the coordinated growth and sprouting required by GO:0001569. Its unavailable full text prevents a confident rejection of the experimental annotation. The same observed vascular architecture supports retaining the broader vessel and retinal-vessel annotations non-core; those terms are not silently equated with branching. [PMID:20818663]
 
-## Decisions summary
+GO:0030199 concerns processes determining collagen-fibril size or arrangement. COL4A1's network-forming architecture does not exclude an effect on fibril organization. The complete PMID:29853175 abstract is a general fibril-assembly review, while the relevant full target discussion remains unrecovered after the author-repository download failed. The NAS assertion therefore remains uncertain, without a confident wrong-gene or miscitation claim.
 
-See `COL4A1-ai-review.yaml`. Core function: `GO:0030020` ECM structural constituent conferring
-tensile strength, in `GO:0005587` collagen type IV trimer, at `GO:0005604` basement membrane,
-directly involved in `GO:0071711` basement membrane organization. No NEW rows.
+The current rat Col4a1 donor supporting the epithelial-differentiation transfer has IEP evidence from PMID:8635488. Its complete abstract describes reduced alpha1(IV) expression as rat tracheal epithelial cells differentiate on type I collagen gel. That is positive expression-associated evidence, not a COL4A1 perturbation or independently established product-performed differentiation step. The donor full text remains unavailable, so the exact process scope is unresolved. This preserves the observation without either automatically equating expression with participation or denying all structural contributions to differentiation.
 
-## Correction (2026-10-01): collagen IV in a unicellular filasterean
+A vascular matrix constituent can contribute to broad brain or renal-tubule development without acting as a neural signaling or fate-specification enzyme. Human porencephaly and renal/tubular abnormalities retain that contextual scope, distinct from cited mouse mechanisms. Human skin and kidney microscopy supports basement-membrane organization directly, including splitting, interruptions and replicated lamina densa. [PMID:16107487; PMID:18160688; PMID:19949034; PMID:23065703]
 
-The statements above that collagen IV is absent from all unicellular relatives
-of animals are out of date. They follow Fidler et al. 2017 (PMID:28418331),
-which surveyed genomes including the filasterean *Capsaspora*. A broader genome
-survey published the same year found an exception:
+## Proteomics, pathway locations and inherited annotations
 
-- [PMID:28726632 "We found, however, a remarkable exception: a canonical type IV collagen gene in the filasterean Ministeria vibrans, a naked filose amoeba devoid of basement membrane or ECM"]
-- A 2026 study of *Ministeria* aggregation found the gene upregulated during
-  aggregation: [PMID:42265479 "Diverse ECM-related genes were also upregulated, including alpha type IV collagen"]
+Exact COL4A1 target rows were inspected in the human stem-cell-supporting ECM table, colorectal/liver workbooks and bone-marrow ECM workbooks. Protein-group/shared-peptide and cohort-threshold limits remain. These detections support matrix membership and matrisome classification, not an isolated tensile measurement or every natural splice product. Other studies have selected Methods/Results or partial text without an inspected COL4A1 target row. The vein study's COL4A2 row is not COL4A1 evidence, and the attempted PMID:28675934 workbooks returned HTML rather than usable spreadsheets. PMID:28327460 supplies abstract, Introduction, Discussion and Conclusions, not complete Methods/Results. [PMID:23658023; PMID:25037231; PMID:28344315; PMID:23979707; PMID:27068509; PMID:27559042; PMID:28327460; PMID:28675934]
 
-Revised conclusion:
-- **Animal-specific:** the basement membrane, and the structural role of
-  collagen IV in it.
-- **Older than animals:** the collagen IV gene itself, at least in Filasterea.
-  It is absent from choanoflagellates and *Capsaspora*, so it was lost in those
-  lineages, or *Ministeria* acquired it some other way. The papers read here do
-  not resolve this.
-- **COL4A1 as a control:** it remains an animal-innovation control for
-  basement-membrane function, but not for gene presence.
+The 17 retained Reactome summaries distinguish extracellular matrix/ligand/substrate roles from biosynthetic ER localization. Fourteen scoped current graphs reached target-material paths; three ER events did not resolve a literal P02462 path. Those limits do not establish that the historical curator mapping was wrong. Collagen inputs to degradation, secretion or processing are not assigned protease, export-machine or chaperone activity. The source index preserves the exact event paths and access limits.
 
-The YAML records this as a `finding_review` (OVERTURNED) on the Fidler 2017
-finding, and the description and core function were updated.
+PAINT assertions retain their ancestral-curator context. Target self-evidence is legitimate, and donor count or missing current donor terms does not establish a node-placement error. The current UniProt donor subset does not reconstruct every historical/non-UniProt donor or the full ancestral tree. The combined electronic and ortholog location assertions remain supported by the physical collagen IV network where appropriate. ER-lumen annotations describe precursor biosynthesis rather than the mature chain's principal structural site.
+
+## Evolutionary findings and their limits
+
+Historical finding statements remain identifiable, with explicit correction metadata. PMID:28418331's surveyed-genome absence statement is not valid for all filastereans: PMID:28726632 identifies canonical type IV collagen in Ministeria vibrans, and PMID:42265479 reports its upregulation during aggregation. Gene presence and expression are not a demonstrated basement-membrane function. The historical distribution claim also conflated toolkit presence with organized basement membrane: the original paper distinguishes negative Trichoplax and Mnemiopsis from positive Beroe, Pleurobrachia and homoscleromorph sponges. The broader historical sulfilimine claim is disputed at its phyletic scope because the later study distinguishes ctenophore cysteine-loop cross-linking and the Hydra exception; direct human sulfilimine evidence is unaffected. [PMID:28418331; PMID:28726632; PMID:42265479; PMID:24344311]
+
+## Checkable source locations
+
+The companion `COL4A1-source-evidence.json` retains the original tables, record identities, product reconstructions and source selections. Its `followup_4933` section gives current official definitions, dated response hashes, exact original-read locations and the structured arresten mapping. The short verbatim anchors are attached to relevant YAML findings/assessments and the arresten paragraph above; source locators carry the remaining context without repeating source text.
+
+| Source | Actual accessed material and boundary |
+|---|---|
+| PMID:12011424 | Selected complete original Methods/Results on human placental NC1 purification, caps and chain interfaces; no all-product experiment. |
+| PMID:10811134 | [Author-uploaded original](https://www.researchgate.net/publication/12506976_Anti-angiogenic_cues_from_vascular_basement_membrane_collagen), construct lines 310–338, Scatchard/adhesion Methods 781–898, Results 1363–1614 and Figure 4 caption 1722–1761 in the indexed capture. The normal cache remains abstract-only. No figure-pixel claim. |
+| PMID:18775695 | Selected complete recombinant-protein Methods and original attachment/survival/Matrigel/tumor Results, including Figure 5 context; historical citations distinguished from performed experiments. |
+| PMID:28418331 | Original selected paragraph 58 on surveyed genes and paragraph 93 on cross-link chemistry/caption, plus previously documented distribution evidence. |
+| PMID:28726632; PMID:42265479 | Original collagen-domain/Ministeria Results paragraph 204 and aggregation-expression Results paragraph 44 respectively; genomic and expression scope. |
+| PMID:16107487 | Human-family Results and genotype analysis; the assembly defect is predicted in this study, with independent NC1 structure supplying physical trimer evidence. |
+| PMID:18160688 | Complete abstract, human HANAC families, renal cysts and kidney/skin basement-membrane histology; no newly recovered full-text claim. |
+| PMID:19949034 | Skin-biopsy Methods and Ultrastructural skin arterial lesions Results, Figure 3: affected-family specimens compared with an unaffected control. |
+| PMID:23065703 | Complete abstract, reduced protein expression and thickened skin capillary basement membrane; structural consequence distinguished from direct tensile measurement. |
+| PMID:20818663; PMID:29853175; PMID:8635488 | Complete genuine abstracts; the pertinent full source remains unavailable. |
+
+Earlier conclusions that binding was dispensable because of assembly, that a network collagen could not affect fibril organization, or that vascular mechanisms precluded developmental participation remain superseded by the scoped assessments above. The earlier claim that original GO:0005515 preservation supplied effective integrin coverage is also superseded. The original source assertions remain distinguishable from the effective reviewed activities.

@@ -125,3 +125,30 @@ T = 28009 Choanoflagellata, 2687318 Filasterea, 127916 Ichthyosporea.
   these IBAs, even though UniProt places *S. rosetta* and *Capsaspora* tyrosine
   kinases in PTHR24418. This probably reflects which proteomes are in the PANTHER
   tree; I did not check that.
+
+## 2026-10-24 ORGANELLES batch 2 (mitochondrion rows)
+
+Rows on GO:0005739: IEA GO_REF:0000044 (UniProt keyword SL-0173), previously
+KEEP_AS_NON_CORE; NAS PMID:24522549 (ParkinsonsUK-UCL), previously ACCEPT. The two
+actions were inconsistent. No sub-compartment rows.
+
+Checked:
+- UniProt location is By similarity [file:human/ABL1/ABL1-uniprot.txt "Localizes to
+  mitochondria in response to oxidative stress (By similarity)."]; the FUNCTION text
+  reads "ABL1 targets to mitochondria in response to oxidative stress and thereby
+  mediates mitochondrial dysfunction and cell death."
+- The primary papers (fetched, abstract-only): [PMID:11350980 "The present study
+  demonstrates that reactive oxygen species (ROS) induce targeting of c-Abl to
+  mitochondria."] and [PMID:11509666 "induction of ER stress with calcium ionophore
+  A23187, brefeldin A, or tunicamycin is associated with translocation of
+  ER-associated c-Abl to mitochondria"].
+- PMID:24522549 is an abstract-only review that lists c-Abl among PINK1-associated
+  proteins in mitochondrial networks; the old supporting_text was the title only and
+  was replaced with abstract text.
+- ABL1 has no presequence and no TM segment; it is a cytoplasmic/nuclear kinase
+  recruited under stress. No cached paper resolves a sub-compartment; an outer-surface
+  location is plausible but not shown, and the ER-to-mitochondria translocation could
+  not be separated from MAM from the abstract alone.
+
+Outcome: root. Both rows KEEP_AS_NON_CORE (NAS changed from ACCEPT for consistency);
+reasons record the check; PMID:11350980 and PMID:11509666 added to references.

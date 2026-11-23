@@ -38,22 +38,29 @@ dependencies = [
   "plotly>=6.3.0",
   "rich>=14.1.0",
   "jinja2>=3.1.6",
+  "markupsafe>=2.1",
   "markdown>=3.8.2",
   "lxml>=6.0.1",
-  "deep-research-client[cyberian]==0.2.7rc1",
+  "deep-research-client[cyberian]==0.2.15",
   "cyberian>=0.2.1",
   "playwright>=1.56.0",
   "rapidfuzz>=3.14.3",
   "scipy>=1.16.1",
   "linkml-data-qc>=0.1.0",
-  # <0.3: publication_warm.py calls LRV's private ReferenceFetcher._materialize;
-  # lift the bound once a public API lands (tracked in issue #2789).
-  "linkml-reference-validator>=0.2.1,<0.3",
+  # publication_warm.py still uses ReferenceFetcher._materialize (issue #2789).
+  # Its contract is covered by the warming tests; recheck on the next minor release.
+  "linkml-reference-validator>=0.3.1rc1,<0.4",
   "linkml-term-validator>=0.4.5",
   "gocam>=0.11.0",
   "pyhmmer>=0.12.1",
   "minify-html>=0.18.1,<0.19",
 ]
+
+[project.optional-dependencies]
+# Falcon (FutureHouse/Edison) deep research is opt-in: `uv sync --extra edison`.
+# Its stack (edison-client, fhlmi, ldp -> litellm, tiktoken) is kept out of the
+# default install so CI does not need to build it.
+edison = ["deep-research-client[edison]==0.2.15"]
 
 [dependency-groups]
 dev = [
@@ -72,10 +79,13 @@ dev = [
     "types-markdown>=3.9.0.20250906",
     "vcrpy>=6.0.0",
     "yamlfix>=1.19.1",
+    "biodivine-aeon>=1.2",
+    "cobra>=0.32.1",
 ]
 
 [project.scripts]
 ai-gene-review = "ai_gene_review.cli:main"
+validate-goa-support = "ai_gene_review.validation.goa_support:main"
 
 
 # See https://hatch.pypa.io/latest/config/build/#file-selection for how to
@@ -101,6 +111,8 @@ skip = [
   "pyproject.toml",
   "uv.lock",
   "project/*",
+  "issues/*/*/thread.jsonl",
+  "issues/*/*/source.yaml",
   "src/ai_gene_review/datamodel/ai_gene_review_pydantic.py",
   "src/ai_gene_review/datamodel/ai_gene_review.py",
 ]
@@ -155,8 +167,16 @@ extend-exclude = [
   "interpro/panther/**/iba_descendants.py",
 ]
 
+[tool.uv]
+# litellm is not a dependency of this project; it arrives only through the
+# optional `edison` extra (deep-research-client[edison] -> edison-client/fhlmi).
+# 1.84.0 is the first release past every advisory open at 1.83.0
+# (CVE-2026-42271 and 13 siblings); the floor keeps a re-lock from regressing
+# below it. Constraints never add a package, so the default install is unaffected.
+constraint-dependencies = ["litellm>=1.84.0"]
+
 [tool.uv.workspace]
-members = ["genes/human/RBFOX3/RBFOX3-bioinformatics/rbfox3_analysis", "genes/yeast/MTC7/MTC7-bioinformatics", "genes/human/CFAP418/CFAP418-bioinformatics", "genes/pombe/Epe1/Epe1-bioinformatics", "genes/pombe/tam10/tam10-bioinformatics", "genes/PSEPK/pedH/pedH-bioinformatics", "genes/human/C18orf21/C18orf21-bioinformatics", "genes/human/C18orf21/C18orf21-bioinformatics/genes/human/C18orf21/C18orf21-bioinformatics", "genes/fly/CG6051/CG6051-bioinformatics", "genes/PENCH/aatA/aatA-bioinformatics", "genes/METBS/Pks1/Pks1-bioinformatics", "genes/human/GATA3/GATA3-bioinformatics", "genes/RAMVA/RvY_13070/RvY_13070-bioinformatics", "projects/THLAR_OILSEED/ortholog_mapping"]
+members = ["genes/human/RBFOX3/RBFOX3-bioinformatics/rbfox3_analysis", "genes/yeast/MTC7/MTC7-bioinformatics", "genes/human/CFAP418/CFAP418-bioinformatics", "genes/pombe/Epe1/Epe1-bioinformatics", "genes/pombe/tam10/tam10-bioinformatics", "genes/PSEPK/pedH/pedH-bioinformatics", "genes/human/C18orf21/C18orf21-bioinformatics", "genes/human/C18orf21/C18orf21-bioinformatics/genes/human/C18orf21/C18orf21-bioinformatics", "genes/fly/CG6051/CG6051-bioinformatics", "genes/PENCH/aatA/aatA-bioinformatics", "genes/METBS/Pks1/Pks1-bioinformatics", "genes/human/GATA3/GATA3-bioinformatics", "genes/RAMVA/RvY_13070/RvY_13070-bioinformatics", "projects/THLAR_OILSEED/ortholog_mapping", "analysis/mf_metabolic_network"]
 
 [tool.uv.sources]
 ai-gene-review = { workspace = true }

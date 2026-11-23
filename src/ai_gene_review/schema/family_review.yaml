@@ -189,7 +189,9 @@ slots:
     range: Term
     inlined: true
     required: true
-    description: The GO term asserted at this node by PAINT (IBD), which descends as IBA.
+    description: >-
+      The GO term PAINT records at this node: an IBD gain, which descends as IBA, or, when
+      ``negated`` is true, an IRD/IKR loss that stops an ancestral IBD descending.
     bindings:
       - binds_value_of: id
         range: GOTermEnum
@@ -198,11 +200,17 @@ slots:
     range: ProteinRef
     inlined_as_list: true
     multivalued: true
-    description: The experimentally annotated descendants the PAINT curator used (the IBD seeds).
+    description: >-
+      PAINT's with/from for this node and term. For an IBD these are the experimentally
+      annotated descendants (the seeds); for an IRD/IKR loss it is the ancestral IBD node
+      whose term is being stopped.
   assessment:
     range: NodeAssessmentEnum
     required: true
-    description: Whether the node placement is sound, too deep, or otherwise wrong.
+    description: >-
+      The verdict on the node row. Gain verdicts (SOUND, TOO_DEEP, WRONG_NODE, NEEDS_PRUNING,
+      TERM_SUPERSEDED) apply to IBD rows; LOSS_* verdicts apply to negated IRD/IKR rows; UNRESOLVED to either.
+      The validator rejects a verdict whose polarity does not match ``negated``.
   assessment_reason:
     range: string
     required: true
@@ -214,8 +222,9 @@ slots:
     inlined_as_list: true
     multivalued: true
     description: >-
-      Subfamilies that wrongly inherit the term, if the assessment is negative, as
-      id/label pairs. The label must be PANTHER's official subfamily name verbatim -- a
+      Subfamilies that should not carry the term, as id/label pairs: those that wrongly
+      inherit it under a negative gain verdict, or those below the loss under
+      LOSS_SUPPORTED. The label must be PANTHER's official subfamily name verbatim -- a
       plausible-sounding label is exactly how a wrong SF accession stays hidden.
   node_taxon:
     range: Term
@@ -227,6 +236,20 @@ slots:
       is the clade the curator judged the function arose in, and therefore the thing a
       TOO_DEEP assessment disputes. Roughly a quarter of PAINT rows carry no taxon at all,
       so this slot is optional.
+  evidence:
+    range: PaintEvidenceEnum
+    description: >-
+      PAINT's evidence code for this node row, copied from the family's paint.tsv. Optional
+      for IBD gains (the default reading); required whenever the row is a loss, so that an
+      IRD or IKR is never assessed as if it were a gain. Checked against paint.tsv.
+      `just fill-node-evidence` copies it (and ``negated`` and a loss's seed) from paint.tsv.
+  negated:
+    range: boolean
+    description: >-
+      True when the PAINT row is a NOT (an IRD or IKR loss, or a rare NOT|IBD). An IRD
+      produces no leaf annotation at all: it only stops the ancestral IBD from descending,
+      so the genes below it get nothing rather than a NOT (see projects/IRD_EVIDENCE.md).
+      An IKR loss does descend, as NOT|IBA. Checked against paint.tsv.
   paint_snapshot:
     range: string
     pattern: "^[0-9]{8}$"
@@ -234,6 +257,40 @@ slots:
       The PAINT row date (YYYYMMDD) this assessment was made against, copied from the
       family's paint.tsv. Cached PAINT slices in this repo range from 2017 to 2026, so an
       assessment without a snapshot cannot be told apart from one made against stale data.
+  proposed_action:
+    range: ProposedPaintAction
+    inlined: true
+    description: >-
+      The change to PAINT this assessment recommends, in machine-readable form: which
+      action, and at which node. ``assessment`` says what is wrong with the row;
+      ``proposed_action`` says what to do about it, so that a list of requested PAINT
+      changes can be produced without reading ``assessment_reason``. Optional, and absent
+      for SOUND, LOSS_SUPPORTED and UNRESOLVED rows. The action must fit the verdict and
+      its target node is checked against the family's PANTHER tree (see
+      ``ProposedPaintAction``).
+
+  # --- ProposedPaintAction ---
+  paint_action:
+    range: PaintActionEnum
+    required: true
+    description: The kind of PAINT change requested.
+  target_node_id:
+    range: string
+    pattern: "^PANTHER:PTN[0-9]+$"
+    description: >-
+      The PANTHER node the action applies to: where a moved IBD should go, or where a new
+      IRD/IKR loss should be placed. Required for MOVE_IBD, MOVE_LOSS, ADD_IRD and ADD_IKR;
+      omitted for REMOVE_IBD and REMOVE_LOSS, which act on the assessed node itself. Must be
+      a node of this family's PANTHER tree, internal or leaf: a loss in a single gene is
+      placed at its leaf. For TOO_DEEP, NEEDS_PRUNING and LOSS_TOO_BROAD it must lie
+      strictly below ``node_id``; for WRONG_NODE it may be anywhere in the family except
+      ``node_id``.
+  target_node_taxon:
+    range: Term
+    inlined: true
+    description: >-
+      Optional taxon of the target node, as an id/label pair with an NCBITaxon CURIE, for
+      readers who cannot resolve the PTN id.
 
   # --- ResidueSite ---
   site_id:
@@ -464,7 +521,8 @@ slots:
     description: >-
       The PAINT node whose propagation this exception prunes. When set, the review must
       carry a node_assessment for this node and term with a negative verdict
-      (NEEDS_PRUNING, TOO_DEEP or WRONG_NODE); the cross-check enforces this, so an
+      (NEEDS_PRUNING, TOO_DEEP or WRONG_NODE on a gain row, or LOSS_SUPPORTED on an
+      IRD/IKR row that already stops the term); the cross-check enforces this, so an
       exception is always anchored in an adjudicated node rather than standing alone.
   lost_in_clade_node_id:
     range: string
@@ -585,9 +643,10 @@ classes:
 
   NodeAssessment:
     description: >-
-      Assessment of a PAINT/IBD assertion at one ancestral node. This is where an IBA is
-      actually adjudicated: the question is whether the node placement is right, not
-      whether the target resembles the donors.
+      Assessment of a PAINT assertion at one ancestral node. For an IBD gain this is where
+      an IBA is actually adjudicated: the question is whether the node placement is right,
+      not whether the target resembles the donors. For an IRD or IKR loss (``negated:
+      true``) the question is whether the clade below the node really lacks the function.
     slots:
       - node_id
       - asserted_term
@@ -596,8 +655,24 @@ classes:
       - assessment_reason
       - affected_subfamilies
       - node_taxon
+      - evidence
+      - negated
       - paint_snapshot
+      - proposed_action
       - supported_by
+
+  ProposedPaintAction:
+    description: >-
+      A requested change to PAINT for the row a node assessment judges. Allowed actions by
+      verdict: TOO_DEEP -> MOVE_IBD (to a descendant) or REMOVE_IBD; WRONG_NODE -> MOVE_IBD
+      (to another node of the family) or REMOVE_IBD; NEEDS_PRUNING -> ADD_IRD or ADD_IKR
+      (at a descendant); TERM_SUPERSEDED -> REMOVE_IBD; LOSS_CONTRADICTED and LOSS_STALE ->
+      REMOVE_LOSS; LOSS_TOO_BROAD -> MOVE_LOSS (to a descendant). SOUND, LOSS_SUPPORTED and UNRESOLVED take no action.
+      ``family_residue_validator`` enforces the pairing and the tree relation.
+    slots:
+      - paint_action
+      - target_node_id
+      - target_node_taxon
 
   ResidueSite:
     description: >-
@@ -739,6 +814,25 @@ classes:
 # Enums
 # =====================================================================
 enums:
+  PaintEvidenceEnum:
+    description: Evidence codes that occur on PAINT node rows in IBD.gaf.
+    permissible_values:
+      IBD:
+        description: Inferred from Biological aspect of Descendant (a gain at the node).
+        meaning: ECO:0000319
+      IRD:
+        description: >-
+          Inferred from Rapid Divergence (a loss at the node). Stops the ancestral IBD
+          descending; produces no leaf annotation.
+        meaning: ECO:0000321
+      IKR:
+        description: >-
+          Inferred from Key Residues (a loss at the node). Descends to leaves as NOT|IBA.
+        meaning: ECO:0000320
+      IBA:
+        description: A small number of PAINT node rows carry IBA directly.
+        meaning: ECO:0000318
+
   FunctionalCoherenceEnum:
     permissible_values:
       COHERENT:
@@ -761,13 +855,68 @@ enums:
           The function arose later than the node it is placed at, so clades that never had
           it inherit the term.
       WRONG_NODE:
-        description: The seeds do not support placement at this node at all.
+        description: >-
+          The seeds do not support placement at this node at all. Not for a right node whose
+          term PAINT has since replaced with the correct one at that same node: use
+          TERM_SUPERSEDED.
       NEEDS_PRUNING:
         description: >-
           Placement is defensible but one identified branch has lost the function and needs
           an IRD/NOT to stop the term descending.
+      TERM_SUPERSEDED:
+        description: >-
+          (Gain rows only.) The node is the right place for the function, but the asserted
+          term misdescribes it for the clade, and PAINT already asserts the correct term at
+          this same node; the older IBD was never retracted, so both descend. Distinct from
+          SOUND (the term is not true as stated for the recipients) and from TOO_DEEP or
+          WRONG_NODE (the placement is not in question). Name the superseding IBD (term and
+          PAINT snapshot) in assessment_reason, and cite its PAINT row in supported_by.
+          Use WRONG_NODE when the seeds support no placement for the term. A right node with
+          a wrong term and no correct same-node IBD has no dedicated verdict yet; PTHR43023
+          and PTHR11610 record such rows as WRONG_NODE.
       UNRESOLVED:
-        description: Investigated but not confidently classifiable.
+        description: >-
+          Investigated but not confidently classifiable. Not for a term that PAINT has
+          superseded at the same node: use TERM_SUPERSEDED.
+      LOSS_SUPPORTED:
+        description: >-
+          (Loss rows only.) The clade below the node lacks the function, so stopping the
+          term here is right. Name the evidence (assay, key residues, absent partner or
+          pathway) in assessment_reason.
+      LOSS_CONTRADICTED:
+        description: >-
+          (Loss rows only.) Members below the node retain the function, so the IRD/IKR
+          should be removed and the ancestral term allowed to descend.
+      LOSS_TOO_BROAD:
+        description: >-
+          (Loss rows only.) The function was lost, but on a narrower branch than this node;
+          some members below it retain the function. Name the branch that lost it and the
+          members that kept it.
+      LOSS_STALE:
+        description: >-
+          (Loss rows only.) The ancestral node named in with/from no longer carries the IBD
+          this row overrides, so the loss stops nothing and can be retired.
+
+  PaintActionEnum:
+    description: Kinds of change a family review can request of PAINT.
+    permissible_values:
+      MOVE_IBD:
+        description: Retire the IBD at the assessed node and place it at target_node_id.
+      REMOVE_IBD:
+        description: Retire the IBD at the assessed node without replacing it.
+      ADD_IRD:
+        description: >-
+          Add an IRD (loss inferred from rapid divergence) at target_node_id, stopping the
+          assessed node's IBD from descending into that clade.
+      ADD_IKR:
+        description: >-
+          Add an IKR (loss inferred from key residues) at target_node_id, stopping the
+          assessed node's IBD from descending into that clade. Use when the loss rests on
+          named residues, ideally a residue site in this review.
+      REMOVE_LOSS:
+        description: Retire the IRD/IKR at the assessed node so the ancestral IBD descends.
+      MOVE_LOSS:
+        description: Retire the IRD/IKR at the assessed node and place it at target_node_id.
 
   RequirementStrengthEnum:
     permissible_values:

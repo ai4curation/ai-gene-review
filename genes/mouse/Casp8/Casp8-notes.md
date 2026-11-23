@@ -47,3 +47,55 @@ annotation-reviewer sidecar for a systematic pass over mouse-specific GO rows.
   could not expose the exact interactor. `PMID:11684016`, `PMID:21382479`,
   `PMID:24113711`, `PMID:24557836`, and `PMID:26649818` are still
   `UNDECIDED` pending full-text checks.
+
+## 2026-10-12 Ortholog/family consistency audit
+
+- GOA refresh (`just fetch-gene mouse Casp8`): no new annotations; all 182
+  unique GOA term/reference rows are covered and no stale rows remain.
+- PANTHER: Casp8 is in PTHR48169 (DED domain-containing protein; subfamily
+  SF7) [file:mouse/Casp8/Casp8-uniprot.txt "PTHR48169; DED DOMAIN-CONTAINING PROTEIN"],
+  shared with human CASP8; Casp9 and Casp3 are in PTHR47901 / PTHR10454 respectively,
+  so only the caspase-wide IBA rows (cysteine-type endopeptidase activity,
+  cytoplasm, apoptotic process, positive regulation of neuron apoptotic process)
+  are directly comparable across the family.
+- Compared against `genes/human/CASP8` (DRAFT), `genes/mouse/Casp3`,
+  `genes/mouse/Casp9`, `genes/human/CASP9`, `genes/DROME/Dronc`, `genes/worm/ced-3`.
+- Resolved mouse/human disagreements by aligning mouse to the human CASP8
+  treatment (48 rows changed, each `review.reason` prefixed "Ortholog audit 2026-10-12"):
+  - `GO:0097191` extrinsic apoptotic signaling (all rows), `GO:0036462` TRAIL
+    pathway, `GO:0016485` protein processing, `GO:0097110` scaffold protein
+    binding -> ACCEPT. The previous MODIFY (narrowing to GO:0008625) was dropped
+    because it would exclude the non-receptor activation platforms, matching
+    human CASP8.
+  - `GO:0006915` apoptotic process, `GO:0097190` apoptotic signaling pathway and
+    `GO:0006508` proteolysis: not narrowed to GO:0008625 (which would lose the
+    non-receptor platforms) but, after PR #5079 review, kept as KEEP_AS_NON_CORE
+    rather than ACCEPT. These are true but broad parents strictly entailed by the
+    accepted GO:0097191/GO:0008625/GO:0016485 rows, so they are correct-but-not-core.
+    (Casp9/CASP9 MODIFY their apoptotic rows to intrinsic signaling; Casp9 is
+    essentially restricted to the apoptosome pathway, so the difference is
+    biological, not inconsistent.)
+  - `GO:0097194` execution phase (MODIFY -> KEEP_AS_NON_CORE; experimental rows no
+    longer recast), `GO:0043065`, `GO:0042981`, `GO:0045862`, plasma membrane IEA,
+    `GO:0042802` identical protein binding (ACCEPT -> non-core, binding term),
+    `GO:0044877` (REMOVE -> non-core), and the ARBA developmental/immune parents
+    (`GO:0048513`, `GO:0043009`, `GO:0030154`, `GO:0009967`, `GO:0002682`;
+    over-annotated -> non-core, given Casp8-null midgestation lethality through
+    unrestrained necroptosis) -> KEEP_AS_NON_CORE.
+  - `GO:0030690` Noc1p-Noc2p complex IMP (PMID:14657025) REMOVE -> UNDECIDED: an
+    experimental MGI row whose full text was not inspected (project rule), matching
+    the human UNDECIDED verdict on its electronic transfer.
+  - `GO:0005123` death receptor binding and `GO:0044297` cell body (rat-donor ISO)
+    REMOVE -> UNDECIDED, matching human CASP8; donor assays not traced.
+  - `GO:0005164` tumor necrosis factor receptor binding (rat-donor ISO, same
+    RGD:620945) REMOVE -> UNDECIDED (PR #5079 review suggestion 10). TNFR1 is a
+    death receptor, so this row stands or falls with GO:0005123; the audit did
+    not reach it in the first pass because it has no human CASP8 counterpart to
+    align against (human CASP8 carries only the GO:0005123 IEA).
+- No human CASP8 edits: no donor-side row was clearly wrong.
+- PR #5079 review follow-up: after demoting GO:0006915 apoptotic process,
+  GO:0097190 apoptotic signaling pathway and GO:0006508 proteolysis to
+  KEEP_AS_NON_CORE (strictly-entailed broad parents of accepted descendants),
+  these three parents now *intentionally* differ from human CASP8, which still
+  has them ACCEPT. This is a new, deliberate mouse/human divergence: human CASP8
+  is DRAFT and should be demoted the same way when it leaves DRAFT.

@@ -39,3 +39,12 @@ Notch-module role: **CSL — the DNA-binding nuclear effector of canonical Notch
 Falcon deep research completed (Rbpj-deep-research-falcon.md; wrapper reported a 600 s timeout but the
 falcon client finished and wrote the file). Consistent with the above
 [file:mouse/Rbpj/Rbpj-deep-research-falcon.md "Rbpj encodes a sequence-specific DNA-binding transcription factor that serves as the central nuclear mediator of canonical Notch signaling in mammals"].
+
+## 2026-10-12 Ortholog/family audit (Dll1, Dll3, Hes7, Rbpj)
+
+- GOA refreshed: no new rows, coverage complete. Compared with human RBPJ and worm lag-1.
+- Core functions agree. All three have DNA-binding TF activity (GO:0000981), Pol II cis-regulatory sequence-specific DNA binding, positive regulation of transcription of Notch receptor target (GO:0007221) and the CSL-Notch-Mastermind complex. The Notch binding core MF matches lag-1. Human RBPJ has no Notch binding row in GOA.
+- Changed: GO:0043467 regulation of generation of precursor metabolites and energy (IEA and ISO, transferred from human RBPJ) from KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED. The source is a single-gene COX4I2 activation result [PMID:23303788 "We demonstrate that RBPJ and CHCHD2 function towards activating the ORE at 4% oxygen,"], which the human review marks as over-annotated. The earlier mouse summary was a generic phenotype text that did not describe this term.
+- Changed: GO:0061629 and GO:0140297 (IEA and ISO, transferred from human RBPJ) from ACCEPT to KEEP_AS_NON_CORE, matching human. The human sources are SPEN corepressor binding (MODIFIED there to corepressor binding) and minor co-binding reports. The term is independently true for mouse because Rbpj binds Ptf1a (PMID:11318877), but that is a tissue-specific function.
+- Not changed, documented: human marks transfers of cross-pathway terms (BMP, ERBB and ephrin signalling) as over-annotated. Mouse holds the experimental IMP source (PMID:17336907) and keeps it non-core, consistent with its handling of other pleiotropic Rbpj IMP phenotypes. Worm lag-1 MODIFYs general transcription-regulation terms to GO:0007221; mouse ACCEPTs them as correct but general, and GO:0007221 is already accepted.
+- Status set to COMPLETE.

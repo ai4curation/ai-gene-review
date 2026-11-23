@@ -403,6 +403,23 @@ is created: committed generated HTML is not refreshed and is not the live site.
 The repository's Pages source must separately be set to **GitHub Actions**.
 Artifact failures preserve the previous deployment and fail publication status.
 
+The published homepage shows **Site built** in UTC and links to the originating
+Actions run. `_site/build-info.json` records that timestamp, the checked-out
+commit and the run URL. These describe the artifact: redeploying an older
+artifact preserves its original build date. Project HTML separately shows
+**Source last changed**, using the last commit touching its Markdown source,
+with links to the commit and that exact source revision. Stamps omit names,
+emails and commit messages. Source history follows the published branch's first
+parents: merged edits use the merge commit that introduced them on that branch,
+while discarded side-branch edits do not affect the stamp. History and the gene
+symbol index are each collected once per rendering batch.
+Local edits are marked; incomplete shallow history
+is labelled instead of assigning a misleading date. Standalone Markdown exports
+without Git history can still be rendered, without a source stamp.
+The maintained `index.html` must contain exactly one `<!-- site-build-info -->`
+marker; staging fails if it is missing or duplicated, and audits the injected
+link along with the other published links.
+
 The legacy regeneration PR path is retained only when artifact publication is
 disabled; artifact-build failures do not block that path. It still enforces Git's
 100 MiB blob limit and cannot handle the current browser payload, so disabling

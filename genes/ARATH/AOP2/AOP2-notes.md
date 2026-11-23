@@ -30,3 +30,12 @@ No falcon deep-research file was present during review.
   synthase activity" (parent GO:0016706), used as proposed_molecular_function in core
   functions.
 - No localization asserted (no experimental data).
+
+
+## Module-member evidence audit — 2026-10-25
+
+Reviewed every original row (4) and core function using review/annotation-reviewer instructions, current cached primary publications and the existing research. Preserved all source annotation fields and all pre-existing proposed rows. Reused the existing genuine Falcon provider report and its artifacts. These plant targets do not require bacterial FEBA retrieval.
+
+This accession Q945B5 represents functional Cvi AOP2, not the frameshifted Columbia endogenous allele. Core now says so explicitly. PMID11251105 directly assays conversion to alkenyl products;20699011 complements Col0 with functional AOP2. Preserve existing archived-record evidence and accession provenance. Optional side-chain editing is not an invariant step of all aliphatic glucosinolate synthesis.
+
+Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.

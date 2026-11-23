@@ -137,3 +137,13 @@ were confined to `description`, two narrative fields and one new suggested quest
 Falcon file is deliberately **not** cited as `supported_by` on any annotation, because its
 gene-name mapping is inverted and a reader following the citation would be misled; the
 validator warning about unused deep research is accepted for that reason.
+
+## 2026-10-12 Ortholog/family audit (no change)
+
+GOA refreshed via `just fetch-gene mouse Tlr11`: unmodified, all 8 GOA rows already covered; the 9th review row (GO:0042832 defense response to protozoan) is a proposed NEW annotation not in GOA, as expected. Status already COMPLETE.
+
+Ortholog consistency: human TLR11 is a pseudogene and TLR12/TLR13 are absent from the human genome, so there are no human ortholog reviews to reconcile; `grep -ril 'Toll-like receptor 1[123]' genes --include=*-ai-review.yaml` returns only the three mouse reviews. The receptor-pair biology is therefore reviewed on its own evidence.
+
+Family consistency (vs Tlr12, Tlr13 and human endosomal TLRs TLR3/TLR7/TLR8/TLR9): consistent. GO:0002224 IBA ACCEPT, GO:0038023 IBA -> MODIFY to GO:0038187 pattern recognition receptor activity, and GO:0038187 as the core molecular_function all match the family convention (human TLR8 performs the same GO:0038023->GO:0038187 MODIFY; every family core MF is GO:0038187). The plasma-membrane IBA is handled by MODIFY to GO:0005768 endosome here, where the human endosomal TLRs instead KEEP_AS_NON_CORE/MARK_AS_OVER_ANNOTATED because they carry separate experimental endosome-membrane rows; the mouse entry has no such separate row, so MODIFY is the correct route and this is a justified difference, not an inconsistency.
+
+Heterodimer: Tlr11-Tlr12 heterodimer treatment is consistent with Tlr12 [PMID:23246311 "TLR11 and TLR12 act as obligate heterodimers to activate NF-κB and produce IL-12 in response to TgPRF"]. Both reviews describe the obligate heterodimer in prose and core_functions, assert no complex cellular-component term, and record that the paralogue supplies MyD88 recruitment. The nomenclature inversion (literature TLR12 = this entry Q6R5P0) is handled identically in both files, with the flagellin/UPEC rows left UNDECIDED here and proposed NEW on Tlr12 per the sequence evidence [PMID:24078692, MGI allele note on MGI:3045751]. No defects; outcome no_change.

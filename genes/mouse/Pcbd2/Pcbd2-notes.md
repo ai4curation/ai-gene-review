@@ -192,3 +192,9 @@ question for PAINT curators, not actioned.
 | GO:0008124 | IEA GO_REF:0000120 | ACCEPT (core) |
 | GO:0045893 positive regulation of DNA-templated transcription | ISO GO_REF:0000119 | ACCEPT (core) |
 | GO:0003713 transcription coactivator activity | — | **NEW** from PMID:24389307 |
+
+## 2026-10-12 Ortholog/family audit
+
+GOA refetched (no new rows); review already COMPLETE and unchanged. PANTHER PTHR12599 confirmed from UniProt (Pcbd1 SF13, Pcbd2 SF15). Family treatment is consistent between the two mouse paralogs: both MODIFY the GO:0004505 phenylalanine-4-monooxygenase IDA to GO:0008124 (dehydratase, per go-annotation#6591), REMOVE the ARBA-sourced GO:0004505 IEA and the GO:0006571 tyrosine-biosynthesis inference, ACCEPT GO:0008124 and GO:0006729, MODIFY the Hnf1a protein-binding IPI to GO:0140297, mark the paralog self-binding IPI UNDECIDED, and KEEP_AS_NON_CORE identical-protein-binding. Core functions in both: GO:0008124 dehydratase + GO:0003713 transcription coactivator (DCoH/DCoH2).
+
+Human PCBD1 (status INITIALIZED, do-not-complete) agrees on GO:0004505->GO:0008124 MODIFY, GO:0004505 IEA REMOVE, GO:0006571 REMOVE, GO:0008124 ACCEPT, and the GO:0003713 coactivator core. Noted mismatch (not fixed, human is a stub): human PCBD1 marks its Hnf1a protein-binding rows KEEP_AS_NON_CORE whereas mouse Pcbd1 MODIFYs the Hnf1a IPI to GO:0140297 DNA-binding transcription factor binding. No human PCBD2 review exists.

@@ -124,3 +124,13 @@ were confined to `description`, two `reason`/`summary` fields, three new `suppor
 quotes, two new references and one new suggested question. The Falcon file itself is not
 cited as annotation support, because its gene-name mapping is inverted; the validator
 warning about unused deep research is accepted for that reason.
+
+## 2026-10-12 Ortholog/family audit (no change)
+
+GOA refreshed via `just fetch-gene mouse Tlr12`: unmodified, all 7 GOA rows already covered; the 8th review row (GO:0009617 response to bacterium) is a proposed NEW annotation not in GOA, as expected. Status already COMPLETE.
+
+Ortholog consistency: no human counterpart (TLR12 absent in human); no non-mouse TLR12 reviews exist, so nothing to reconcile cross-species.
+
+Family consistency (vs Tlr11, Tlr13, human TLR3/7/8/9): consistent. GO:0002224 IBA ACCEPT, GO:0038023 IBA -> MODIFY to GO:0038187, GO:0038187 core MF, and the IEA generics (GO:0007165, GO:0016020, GO:0051707) KEEP_AS_NON_CORE all match Tlr11/Tlr13 and the family convention. Plasma-membrane IBA MODIFY -> GO:0005768 endosome matches Tlr11 (Tlr13 uses GO:0010008 endosome membrane because it has an experimental endosome-membrane row).
+
+Heterodimer: consistent with Tlr11. Both assert no complex CC term and describe the obligate heterodimer in prose/core_functions, this entry supplying the MyD88-recruiting function [PMID:24078692 "only TLR11 is capable of recruiting MyD88 to the receptor complex"]. Nomenclature inversion (literature TLR11 = this entry Q6QNU9) handled identically: the UPEC/flagellin function (GO:0009617 NEW, GO:0038187 flagellin support) is placed here and left UNDECIDED on Tlr11, consistent with the allele evidence (MGI:3045751 = Tlr12<tm1Gho>) and UniProt's citation of PMID:15001781 under Q6QNU9. No defects; outcome no_change.

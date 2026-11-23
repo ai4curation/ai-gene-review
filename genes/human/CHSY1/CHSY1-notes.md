@@ -1,0 +1,33 @@
+# CHSY1 review notes
+
+## 2026-10-10 — whole-gene review
+
+The immutable normal intake contains 25 assertions, 13 original references and no alternative-products field. All original term, evidence, source, supporting-entity and relation fields are retained. HGNC:17198 and UniProt Q86X52 identify human CHSY1; CHSY, CSS1 and KIAA0990 were included in ownership checks. The genuine Falcon attempt timed out after 90 seconds and its actual Perplexity-lite fallback failed with HTTP 401/quota. Manual primary research replaced the failed provider attempt; no provider output was invented.
+
+### Catalytic synthesis
+
+Two core molecular functions describe the two sugar-transfer reactions of the same Golgi polymerase. GO:0047238 represents beta1,4-GalNAc addition and GO:0050510 beta1,3-GlcA addition. Both already occur in the seed. The broad glycosyltransferase row is refined to these terms; no NEW assertion is needed. CHSY1 performs the chemistry rather than serving as a glycan substrate. CHPF or CHPF2 supports the enzyme complex, and the common biosynthetic role is GO:0050650. CHSY1 does not perform the sulfate-transfer steps.
+
+The original [PMID:11514575](https://doi.org/10.1074/jbc.M106871200) study tested a human KIAA0990/AB023207 construct with residues 1–46 replaced by a signal/protein-A fusion, expressed in COS-1 and captured on IgG-Sepharose. Radiolabeled donors and product digestion support the two chain-elongation activities. The selected original Methods, Results and product analysis were read as indexed author-uploaded journal text; the normal cache remains an unchanged abstract. The isolated construct did not establish sustained chain polymerization.
+
+[PMID:12716890](https://doi.org/10.1074/jbc.M302493200) coexpressed human CHSY1 with soluble CHPF in COS-1. Polymer products on alpha-thrombomodulin linkage-region acceptors were characterized by chromatography and glycosidase analysis. Mixing separately expressed material did not reproduce coexpression. The external indexed original Methods and Results provide this evidence; an Elsevier metadata response is not treated as full text and the normal abstract is preserved.
+
+Recent reconstitution distinguishes the catalytic subunit from its supporting partner. [PMID:41298522](https://pmc.ncbi.nlm.nih.gov/articles/PMC12748766/) tested human CHSY1 residues 68–802 in purified complexes, separately from full-length FLAG-tagged cellular complementation. [PMID:42204168](https://pmc.ncbi.nlm.nih.gov/articles/PMC13389171/) tested human Q86X52 residues 32–802 as tagged soluble protein, with defined oligosaccharides, bikunin, donor-specific assays and product MS. Selective catalytic-domain mutants assign GlcA transfer to the N-terminal GT31 domain and GalNAc transfer to the C-terminal GT7 domain. The experimental cryo-EM structures are CHSY3–CHPF complexes, not atomic CHSY1 structures. CHSY1 modeling, biochemical activity and cellular rescue are kept distinct; CHSY3 kinetic constants and cystatin-domain perturbations are not transferred wholesale. No untested alternative-product or all-mutant claim is made.
+
+### Locations and downstream contexts
+
+The live normal Reactome chains reach Q86X52 through a CHSY1-or-CHSY3 synthase set partnered with CHPF-or-CHPF2, explicitly at the Golgi membrane. The two disease events instead use a CHSY1 mutant set and normalReaction links. Their gene-level normal MF is independently corroborated by biochemistry; retaining it does not imply that every truncated or missense disease entity is catalytically active or correctly targeted.
+
+[PMID:21129727](https://pmc.ncbi.nlm.nih.gov/articles/PMC2997365/) positively detects CHSY1 in conditioned medium from unaffected primary human fibroblasts, with loss in mutant cells. This extracellular pool is retained as non-core. Proposed shedding or disulfide-linked processing is not demonstrated cleavage or a defined isoform. Human fetal osteoblast knockdown increases differentiation markers and reported alkaline-phosphatase activity, supporting the existing negative-regulation direction as a non-core downstream role. WT versus D171A rescue supports a catalytic-domain requirement for altered NOTCH readouts, but the authors explicitly leave direct NOTCH/ligand glycosylation unestablished and consider chondroitin-dependent alternatives. Independent review of the selected Methods, Results and Discussion corroborated these three decisions.
+
+The membrane HDA row from [PMID:19946888](https://doi.org/10.1002/jms.1696) remains UNDECIDED. Its genuine abstract describes positive YTS membrane-enrichment proteomics, but bounded retrieval did not recover the original CHSY1 target/peptide XLS. General Golgi biology does not resolve this source-specific gap. No wrong-gene or negative-localization claim is made.
+
+The rat D3ZRM3/Chsy1 donor has a real IEP annotation to [PMID:14975935](https://doi.org/10.1152/ajpheart.01237.2003). Its authentic abstract and indexed official Fig. 3 Results report increased skin Chsy1 transcript after dietary NaCl loading. The nutrient-response definition includes altered expression, so this peripheral ortholog response is retained as non-core. The full body and linked erratum remain unrecovered; no human salt-response experiment, nutrient sensor or sodium transporter is inferred.
+
+### Propagation and provenance
+
+The four PAINT decisions respect the actual curated nodes and distinguish target biochemical corroboration from reconstructing historical IBD placement. The Golgi source does not contain target Q86X52; its comment therefore does not invoke target self-inclusion. The catalytic and biosynthesis sources do contain the target, which is legitimate descendant experimental grounding. Donor count is not used as a confidence measure. Official UniProt identities and complete current QuickGO responses contextualize the sources; historical alignments and every non-UniProt donor experiment were not reconstructed.
+
+The source artifact is a compact index of identifiers, URLs, hashes, locators and bounded paraphrases. Raw primary responses and complete record inventories remain in temporary evidence. Bare file citations are retained only where actual ontology, donor or Reactome context is relevant; they are not self-quotations of reviewer reasons. The two short primary anchors occur only in the YAML cores, totaling 22 conservative word tokens from PMID:42204168 including both occurrences; neither notes nor artifact repeats them.
+
+Normal validation, calculated status, rendering and final source/ownership guards are recorded separately in the sealed handoff. Project completion requires publication, review and merge, independently of the artifact's calculated status.

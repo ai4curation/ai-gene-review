@@ -107,3 +107,10 @@ AcrIIC1 does not act upstream of the suppression, its binding to the Cas9 HNH do
 the suppression, so `involved_in` is better supported; and the `positive_effect` component
 reads as though the protein up-regulated something. Flagged in `review.reason` for CACAO
 rather than rewritten, since a qualifier change is not a term change.
+
+
+## 2026-10-25 comparative anti-CRISPR audit
+
+PMID:28844692 establishes HNH active-site engagement and DNA-bound inactive Cas9; scope is the tested susceptible orthologues. PMID:36400778 supports a redox-sensitive monomer/dimer transition, but native Neisseria regulation is not established. PDB 5VGB maps the HNH-binding structure to this accession. The bacterial source taxon is retained despite mobile-element origin.
+
+Existing GOA assertions were preserved. Earlier reviewer-authored NEW proposals were reassessed independently. Primary references were obtained through the normal publication cache. A normal Falcon attempt with perplexity-lite fallback failed; logs are in `.cache/module-audit-logs/anti-crispr-deep-NEIME-acrIIC1.log`. These are manual research notes, not provider-generated research.

@@ -30,3 +30,13 @@ Annotation stance:
 The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
 
 - Moved out of the YAML description: the Proteostasis Network autophagy component recruitment context was interpreted at gene level through TRAPP/TRAPPII/TRAPPIII complex membership rather than a broad autophagy-process annotation.
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+Row: GO:0005783 IEA (GO_REF:0000044, located_in), the only ER row. No sub-compartment rows.
+
+- UniProt: "Endoplasmic reticulum {ECO:0000250}" (by similarity); yeast BET5 (Q03630, UniProt REST 2026-11-06) carries cis-Golgi network and ER lines unattributed; mouse Q5NCF2 is also ECO:0000250. No TRAPPC1-specific localization study.
+- Complex-level support: [PMID:21525244 "TRAPP functions either at ER exit sites or at peripheral ERGIC (BFA-resistant) elements"]; [PMID:21525244 "Localization of subunits by fluorescence microscopy has proven difficult due to the large soluble pools of the proteins"]. Core partner TRAPPC3/Bet3 is concentrated on Sec31-labelled transitional ER by immuno-EM (PMID:16880271; handled in the TRAPPC3 review in this batch, which adds a NEW ER exit site row).
+- Soluble, no signal peptide or TM: no ER membrane/lumen row. No NEW GO:0070971 row: only a partner's localization line, and SEC23 binding belongs to TRAPPC3.
+- Yeast PMID:11239471 ("TRAPP I is the receptor on the Golgi for COPII vesicles") fetched to check, not cited, deleted.
+- Outcome: ACCEPT kept (RAB1 GEF/tethering exercised at ERES); KEEP_AS_NON_CORE noted as alternative. core_functions unchanged.

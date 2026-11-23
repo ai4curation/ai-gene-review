@@ -25,3 +25,12 @@ grouping term"). No gene product in any species carries GO:0033322. Read togethe
 convention to annotate the chain-elongation enzymes to glucosinolate biosynthetic process
 (GO:0019761), which this gene already carries, not a gap to fill. The question is kept as a
 suggested_question for GO.
+
+
+## 2026-10-25 independent chain-elongation audit
+
+Re-examined every existing annotation and core against the primary studies and exact GO reactions; preserved all machine-sourced fields and prior rows. Normal fetch-gene and fetch-gene-pmids completed. The default Falcon attempt for this panel (MAM1) failed authentication and perplexity-lite failed insufficient quota; no fabricated provider report was created. Existing provider reports were contextual only; primary sources govern decisions. Plant proteins do not require bacterial fitness fetches.
+
+Correct broad terms now refine to supported descendants. IIL1 and SSU3 catalytic claims refer to heterodimers, with contributes_to in cores; catalytic-site ownership alone does not establish autonomous subunit activity. MAM1 lacks measured IPMS activity, whereas MAM3 retains a weak non-core activity without established native leucine-pathway participation. IMDH1 biochemical comparisons distinguish its specialized methylthioalkylmalate substrate from 3-isopropylmalate; IPMDH2 structural data are not direct IMDH1 structures. BCAT3 terminal transamination is distinct from unelongated methionine transamination and does not establish exclusivity over all chain lengths.
+
+Retained prior NEW process after participation/comparator/ontology/GO-CAM checks. QuickGO queried 2026-10-25: BCAT4 Q9LE06 has one GO:0019761 annotation (PMID:17056707); BCAT6 Q9LPM9 and BCAT3 Q9M401 have none. Comparator absence is recorded, not treated as a gap by itself. Direct BCAT3 recombinant transamination plus native genetics (PMID:18162591) establish catalytic participation. GO:0019761 parents include biosynthesis and sulfur-compound metabolism. Exact accession search in gocams/index.tsv returned no matching models for BCAT3, BCAT4, IIL1, SSU3 or IMDH1. No redundant BP proposal was added.

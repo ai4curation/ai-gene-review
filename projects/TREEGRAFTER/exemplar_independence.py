@@ -95,7 +95,7 @@ def main() -> None:
         for r in csv.DictReader(fh, delimiter="\t"):
             by_file.setdefault(r["file"], set()).add(r["term_id"])
     n_all = n_cite_all = n_down = n_cite_down = 0
-    down = {"REMOVE", "MODIFY", "MARK_AS_OVER_ANNOTATED"}
+    down = {"REMOVE", "MODIFY", "MARK_AS_OVER_ANNOTATED", "TOO_GENERAL"}  # TOO_GENERAL counts as down-graded
     for rel, terms in by_file.items():
         with open(os.path.join(ROOT, rel)) as fh:
             doc = yaml.load(fh, Loader=LOADER) or {}

@@ -7,8 +7,9 @@ rejection stands on stated biological grounds, or whether it should be relaxed
 to `ACCEPT`, `KEEP_AS_NON_CORE`, `MODIFY`, or `UNDECIDED`.
 
 Genes whose rejected rows were already re-assessed in the
-[2026-09-20 audit](../rereview-2026-09-20/) (`status: reviewed`) are excluded
-here; those decisions stand as recorded there.
+[2026-09-20 audit](https://github.com/ai4curation/ai-gene-review/tree/main/projects/TREEGRAFTER/rereview-2026-09-20)
+(`status: reviewed`) are excluded here; those decisions stand as recorded
+there.
 
 Scope is the flagged rows only (`scope: treegrafter_rejections`), not a
 full-gene re-review. Other annotations in the same gene are not re-adjudicated
@@ -76,6 +77,32 @@ inconsistently (some entries tracked the file rather than the decision); PR
 it. `check_outcomes.py` enforces it, so the next audit inherits a rule rather
 than re-inferring one. `summarize.py` reads only the annotation-level field, so
 the gene-level value is documentary.
+
+## Later reviews that overturn an adjudication
+
+This audit's records are a snapshot of what it decided. A later gene review can
+legitimately reach a different action on the same TreeGrafter row; the ProtNLM2
+gene re-review campaign did so for three batch-01 rows. Do not rewrite the
+recorded `action` or `outcome` for those rows: they describe this audit's
+decision. Declare the later decision on the annotation instead:
+
+```yaml
+    superseded_by:
+      action: UNDECIDED          # the live review's action
+      by: 'PR #5304'
+      date: '2026-10-23'
+      reason: 'Why the later review (PR #5304) differs.'
+```
+
+Quote every value in this block. In an unquoted YAML value a `#` preceded by a space
+starts a comment, so `reason: ... (PR #5304): ...` silently loads as `... (PR`. The
+checker therefore requires `by` to name a PR (`PR #NNNN`) and `reason` to end with
+sentence punctuation, so a truncated value fails the gate instead of passing it.
+
+`check_outcomes.py` then checks the live row against `superseded_by.action`
+rather than `action`, and lists each such row as `superseded`, so a further
+drift still fails the gate. `summarize.py` is unaffected: it counts this
+audit's own transitions.
 
 ## What the verbatim check does and does not cover
 

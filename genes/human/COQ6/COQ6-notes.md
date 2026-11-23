@@ -89,8 +89,16 @@ susceptibility.
 - ubiquinone biosynthesis complex (GO:0110142, part_of, IPI PMID:27499296) — core
   CC of the synthome, ACCEPT.
 - Four IPI GO:0005515 "protein binding" (COQ3/COQ4/COQ5/COQ7) collapse to a single
-  seeded annotation — MARK_AS_OVER_ANNOTATED per policy (never REMOVE an IPI bare
-  protein binding); the informative content is captured by the complex membership
-  term.
-</content>
-</invoke>
+  seeded annotation. First marked MARK_AS_OVER_ANNOTATED; superseded in the 2026-10-11
+  pass below by REMOVE under the current bare protein-binding policy. The informative
+  content is captured by the complex membership term.
+
+## 2026-10-11 completion pass (claude-code)
+
+Core functions limited to the two catalytic activities: C5 hydroxylation (GO:0106364) and C1 hydroxylation (GO:0120538), both FAD-dependent with electrons from FDX2/FDXR [PMID:38425362 "corroborating its dual functionality as both a C5 and C1 hydroxylase"]. FAD binding is now non-core because it is cofactor binding. Duplicate-evidence rows for core terms changed to ACCEPT. Bare protein binding changed to REMOVE. Status COMPLETE.
+
+## 2026-11-15 ORGANELLES Golgi batch 2 (Golgi apparatus rows)
+
+- One GO:0005794 row: IEA GO_REF:0000120 from the HAMAP rule MF_03193 location line ("Localizes to cell processes and Golgi apparatus in podocytes"). The rule propagates a single rat observation [PMID:21540551 "In rats, COQ6 was located within cell processes and the Golgi apparatus of renal glomerular podocytes"].
+- I fetched PMID:21540551: abstract-only. PMC3083770 exists, but the publisher blocks full-text download, so I could not check whether a Golgi marker was used.
+- MARK_AS_OVER_ANNOTATED confirmed and the reason rewritten. The rule turns a cell-type-restricted staining into an unrestricted location for all orthologs. COQ6 has a 28-residue mitochondrial transit peptide and is experimentally in the inner membrane in the CoQ complex (PMID:27499296), so it follows the CEPT1 pattern. UNDECIDED was considered but rejected: this is rule over-propagation, not a projection whose truth hinges on the unread figure. The mitochondrial rows are untouched.

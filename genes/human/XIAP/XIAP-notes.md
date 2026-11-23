@@ -45,3 +45,18 @@
   loose ubiquitin-process rows to `GO:0061630 ubiquitin protein ligase activity`
   or to specific RIPK2/NOD, Wnt/TLE, PTEN, CCS, IRF7, or BCL2 substrate
   contexts where the cited paper supported direct XIAP RING action.
+
+
+## 2026-10-26 systematic mammalian apoptosis audit
+
+Reviewed every seeded annotation from the review YAML, preserving every original machine-sourced field and adding no NEW rows. Original terms, evidence, references, relationship fields and supporting entities are unchanged. The gene-level assessment includes functions outside the apoptosis module. Existing source-specific evidence guides and prior history records remain intact.
+
+The review and annotation-reviewer workflow was applied. Default Falcon research and normal publication caching were launched in parallel. Falcon and the perplexity-lite fallback failed for all four targets (provider access errors; command logs under `.cache/module-audit-logs/execution-deep-*`). `fetch-gene-pmids` completed successfully for each. No provider-branded research file was fabricated. This manual notebook and the normal primary publication/UniProt caches supply the research trail.
+
+XIAP has two separable molecular roles: direct caspase inhibition and RING E3 activity. Human caspase-3/7 inhibition (PMID:9230442; PMID:11257230) and BIR3/caspase-9 biochemistry (PMID:12620238) do not support pan-caspase inhibition or extrapolation to every IAP paralog. Mouse neuro2a/mutant-SOD1 experiments show XIAP suppressing caspase-3 activity and death (PMID:12153481); sympathetic neurons retain XIAP-dependent resistance despite endogenous SMAC release (PMID:14623868). Mouse Fas/hepatocyte data (PMID:19626005) support a context-dependent XIAP barrier, not a native-SMAC requirement established merely from a SMAC mimetic.
+
+RIPK2 ubiquitination and LUBAC recruitment (PMID:22607974, PMID:29452636, PMID:30026309) establish major innate NOD/NF-kappaB signaling roles. Positive regulation of linear ubiquitination describes LUBAC recruitment, not XIAP directly making linear chains. The cIAP-heavy PMID:21931591 paper does not contradict independent XIAP evidence; its weaker XIAP results are not grounds to delete the shared process. Wnt/TLE monoubiquitination (PMID:22304967; PMID:36749823), CCS ubiquitination/copper regulation (PMID:20154138), and direct human cell-cycle findings (PMID:23720779, newly normally fetched) are retained on biological merits. In the interferon source (PMID:36394357), CUL3-KLHL22 directly targets IRF7; this is not evidence that XIAP directly ubiquitinates IRF7.
+
+Corrected previous removal/overannotation based only on broadness, nucleolar localization lacking a special function, or biological roles lying outside apoptosis. Identical-protein binding has structural support and is not bare GO:0005515. XIAP survival after DNA damage (PMID:18049476), TNF-associated survival (PMID:11865055), and native intestinal crypt homeostasis (PMID:30389919) remain contextual valid claims. PMID:21849505 full text explicitly says “In addition, XIAP associated with USP19”; Figure 1B resolves the old abstract-only uncertainty, but the generic binding term is removed as uninformative without disputing the interaction.
+
+LPS source PMID:35263589 remains UNDECIDED: the accessible abstract concerns Reg3gamma/EXTL3/BCL10 and does not expose the XIAP experiment; targeted searching did not recover it. Absence from an abstract is not proof of wrong-gene annotation. The GO:0010804 QuickGO definition was verified: any decrease in the rate or extent of TNF signaling qualifies, so inhibiting an apoptotic branch does not require suppressing all TNF downstream outputs.

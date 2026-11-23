@@ -15,6 +15,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/9cUTrMWePSbqsUwiuS3bXt
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Mitochondrion Targeting Sequence Binding — Obsoletion & Replacement

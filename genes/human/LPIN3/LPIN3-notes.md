@@ -46,3 +46,7 @@ The nuclear annotation is judged by biological location, without treating machin
 PAINT: {'family': 'PTHR12181', 'nodes': ['PTN000256564', 'PTN000256565', 'PTN000953144'], 'finding': 'Current PAP, nuclear/TAG/FA-catabolism and coactivation/insulin/PolII IBDs persist; no target-specific coactivation loss established.'}
 
 All 12 rows were assessed, including experimental, electronic, negated and old proposed entries. Source annotation fields and row counts remain unchanged. Remaining questions are recorded in `projects/IBA_REVIEW/rereview-2026-09-20/receptor-and-lipid-claims.yaml`; coordinated reports will be assessed critically when available.
+
+## OpenScientist transcription/metabolism follow-up (2026-10-05)
+
+The focused LPIN3 report was incorporated as a caution on the IBA-only regulatory branch rather than as proof of complete loss. It correctly emphasized that transcription coactivation, RNA polymerase II regulation, fatty-acid catabolism and insulin response have no direct LPIN3 assay. GO:0003713 and GO:0045944 were moved from `ACCEPT` to `KEEP_AS_NON_CORE`, and GO:0009062/GO:0032869 retained their non-core or unresolved handling with the report attached. PMID:19753306 was fetched and cited for the direct Liu/Gerace observation that lipin-3 sumoylation was not detected, but that result was not treated as definitive loss of coactivation because it is not itself an LPIN3 coactivation assay.

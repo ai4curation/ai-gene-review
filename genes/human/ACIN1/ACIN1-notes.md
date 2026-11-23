@@ -66,3 +66,13 @@ Marked the refreshed APOPTOSIS review `COMPLETE`. The remaining validation
 warning is advisory-only: `ACIN1-deep-research-falcon.md` is available and was
 summarized in these notes, but the curated YAML intentionally cites the primary
 papers and UniProt snippets that directly support each retained annotation.
+
+## 2026-10-26: comparative execution-phase source audit
+
+The established nuclear RNA-binding/ASAP/EJC role remains the core. Condensation is retained as a contextual process: the original PMID:10490026 abstract and publisher previews report reconstitution, immunodepletion and antisense support, while full PMID:16177823 shows phosphorylation/cleavage-dependent effects in HEK293 and PC12 experiments. PMID:16537548 reports opposing inducible-RNAi results in its abstract: condensation persisted while oligonucleosomal DNA fragmentation was impaired. The original1999 and2006 full papers remain inaccessible. This is not a basis for blanket removal of the experimental condensation annotation or a claim of universal requirement. The RNA-binding MF was removed from the separate condensation core: no experiment establishes RNA binding as the condensation mechanism.
+
+The ATP-hydrolysis NAS and enzyme-binding NAS claims now remain UNDECIDED. Live QuickGO confirms actual ATP-hydrolysis chemistry and the broad enzyme-binding definition. Accessible Acinus source text does not resolve these assays, and absence from later summaries was insufficient grounds for the previous REMOVE. The special protein-binding removal rule does not automatically apply to enzyme binding. The Reactome cytosol claim is likewise unresolved: its cached cleavage-reaction summary does not resolve localization, and nuclear predominance does not prove a transient cytosolic pool absent. Nuclear lumen is refined to nucleoplasm and nuclear speckles. Differentiation contexts and existing generic-binding decisions were reviewed without assigning the functions of caspases or interaction partners to Acinus.
+
+PMID:27365209 supports Acinus-dependent DFFA transcript splicing. Its legacy cache says full_text_xml but the currently accessible content is the abstract; no full-body claim is made from that metadata. Existing Falcon research was consulted; primary sources remain the evidence for decisions.
+
+Review/annotation-reviewer workflows were applied, with independent annotation-reviewer consultation on claim consistency and the distinctions among Acinus condensation, ICAD folding/inhibition, and AIF death pathways. Row count: 46; actions: ACCEPT=20, KEEP_AS_NON_CORE=4, MODIFY=4, REMOVE=15, UNDECIDED=3. No imported annotation payload was edited and no new row was added in this session.

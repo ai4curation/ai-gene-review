@@ -22,3 +22,12 @@ No falcon deep-research file was present at review time.
 - GO:0120526 IEA -> ACCEPT (core); GO:0016709 IDA -> MODIFY to GO:0120526; GO:0016709 IBA -> MODIFY to GO:0016712
 - GO:0019761 IBA/IMP -> ACCEPT; ER IBA/IDA, ER membrane IEA, membrane IBA -> ACCEPT
 - generic P450 IEA MF terms -> KEEP_AS_NON_CORE; chloroplast ISM -> REMOVE; response to insect IEP -> KEEP_AS_NON_CORE
+
+
+## Module-member evidence audit — 2026-10-25
+
+Reviewed every original row (15) and core function using review/annotation-reviewer instructions, current cached primary publications and the existing research. Preserved all source annotation fields and all pre-existing proposed rows. Reused the existing genuine Falcon provider report and its artifacts. These plant targets do not require bacterial FEBA retrieval.
+
+GO:0120526 is defined for an L-polyhomomethionine, so it covers the directly measured penta-/hexahomomethionine activity in PMID12609033. It does not imply CYP79F2 accepts the shorter CYP79F1 substrates. ER localization is direct in PMID11226190. Broad terms are refined consistently across evidence codes.
+
+Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.

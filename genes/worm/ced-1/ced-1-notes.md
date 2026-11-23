@@ -20,3 +20,7 @@ Provider deep research was not run: Falcon returned 402 and the OpenAI key was i
 ## Wnt paper (PMID:20126385)
 - DTC migration: [PMID:20126385 "we found that the CED-1/6/7 pathway appears to play at most a minor role, if any, in this process"].
 - Spindle: [PMID:20126385 "we did observe spindle defects in a small fraction of ced-1; ced-5 double mutants"].
+
+Round 6 of projects/INVOLVED_IN_PRECOMPOSITION.md (2026-11-10): the two GO:1902742 MODIFY replacements and the four GOA GO:1904747 rows (previously KEEP_AS_NON_CORE, now MODIFY) now use GO:0043065 positive regulation of apoptotic process instead of the precomposed GO:1904747 positive regulation of apoptotic process involved in development, with `decomposed_into.context_dropped`. The sign correction (the gene promotes death from the engulfing cell rather than taking part in the dying cell's program) is unchanged; only the developmental context is dropped. Earlier mentions of GO:1904747 above are superseded.
+
+Round 7 of projects/INVOLVED_IN_PRECOMPOSITION.md (2026-11-18) supersedes the round-6 paragraph above: a MODIFY's replacement must be a claim the review would accept, and this gene's pro-death role is non-core. The four GOA GO:1904747 rows are KEEP_AS_NON_CORE again, and the two GO:1902742 rows are MARK_AS_OVER_ANNOTATED, with no replacement. The sign correction (regulation from the engulfing cell, not participation) is unchanged.

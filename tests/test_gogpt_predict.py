@@ -10,9 +10,12 @@ from scripts.gogpt_predict import (
     build_prediction_entry,
     deterministic_assessment,
     filter_to_leaf_terms,
+    format_assessment_counts,
     parse_bioreason_go_terms,
     prediction_review_status,
+    resolve_web_export_source,
     validate_leaf_terms,
+    web_export_source_documents,
 )
 
 
@@ -151,6 +154,62 @@ def test_document_is_draft_until_all_placeholders_are_resolved():
     assert prediction_review_status(resolved) == "COMPLETE"
 
 
+def test_format_assessment_counts_includes_manual_categories():
+    assert (
+        format_assessment_counts({"CNN": 3, "LSP": 1, "UNC": 5})
+        == "COR:0 CNN:3 LSP:1 UNC:5 PLI:0 NPI:0 REP:0"
+    )
+
+
+def test_web_export_source_documents_are_repo_relative(tmp_path):
+    raw_export = (
+        tmp_path
+        / "genes"
+        / "SCHPO"
+        / "atg2"
+        / "atg2-bioreason-rl-predictions.md"
+    )
+    existing = {
+        "source_documents": [
+            "atg2-bioreason-rl-predictions.md",
+            "genes/SCHPO/atg2/atg2-hypotheses/prediction-lipid-transfer-activity/openscientist.md",
+        ]
+    }
+
+    assert web_export_source_documents(existing, raw_export, tmp_path) == [
+        "genes/SCHPO/atg2/atg2-bioreason-rl-predictions.md",
+        "genes/SCHPO/atg2/atg2-hypotheses/prediction-lipid-transfer-activity/openscientist.md",
+    ]
+
+
+def test_resolve_web_export_source_accepts_old_and_new_paths(tmp_path):
+    raw_export = (
+        tmp_path
+        / "genes"
+        / "SCHPO"
+        / "atg2"
+        / "atg2-bioreason-rl-predictions.md"
+    )
+    raw_export.parent.mkdir(parents=True)
+    raw_export.write_text("raw GO-GPT export")
+    review_path = raw_export.parent / "atg2-gogpt-leaf-predictions.yaml"
+
+    assert (
+        resolve_web_export_source(
+            tmp_path,
+            review_path,
+            "genes/SCHPO/atg2/atg2-bioreason-rl-predictions.md",
+        )
+        == raw_export
+    )
+    assert (
+        resolve_web_export_source(
+            tmp_path, review_path, "atg2-bioreason-rl-predictions.md"
+        )
+        == raw_export
+    )
+
+
 def test_committed_gogpt_leaf_reviews_are_not_false_complete():
     repo_root = Path(__file__).resolve().parents[1]
     paths = sorted(repo_root.glob("genes/*/*/*-gogpt-leaf-predictions.yaml"))
@@ -185,7 +244,7 @@ def test_committed_gogpt_leaf_reviews_are_not_false_complete():
         if any(MANUAL_ASSESSMENT_MARKER in summary for summary in summaries):
             assert document["status"] == "DRAFT"
         for source in document.get("source_documents", []):
-            assert (path.parent / source).exists()
+            assert (repo_root / source).exists() or (path.parent / source).exists()
 
     assert dfrp_assessment == "CNN"
     assert cts2_assessment == "NPI"

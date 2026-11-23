@@ -17,8 +17,15 @@ import markdown
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from ai_gene_review.render import normalize_artifact_metadata, resolve_research_artifacts
-from ai_gene_review.publication_links import protect_scientific_notation, rewrite_publication_links
+from ai_gene_review.render import (
+    normalize_artifact_metadata,
+    resolve_research_artifacts,
+)
+from ai_gene_review.publication_links import (
+    protect_scientific_notation,
+    rewrite_publication_links,
+)
+from ai_gene_review.site_provenance import SourceHistory
 
 MARKDOWN_SUFFIXES = {".md", ".markdown"}
 NOTEBOOK_SUFFIXES = {".ipynb"}
@@ -26,7 +33,7 @@ NOTEBOOK_SUFFIXES = {".ipynb"}
 
 def has_gene_review(genes_dir: Path, species: str, symbol: str) -> bool:
     """Only link targets that the gene renderer will actually publish."""
-    return (genes_dir / species / symbol / f'{symbol}-ai-review.yaml').is_file()
+    return (genes_dir / species / symbol / f"{symbol}-ai-review.yaml").is_file()
 
 
 def build_symbol_to_species_index(genes_dir: Path) -> Dict[str, List[str]]:
@@ -204,14 +211,18 @@ def set_frontmatter_key(content: str, key: str, value: Any) -> str:
     if end_idx is None:
         raise ValueError("content has no YAML frontmatter block")
     lines = content.split("\n")
-    block = yaml.dump(
-        {key: value},
-        Dumper=_IndentedListDumper,
-        sort_keys=False,
-        allow_unicode=True,
-        default_flow_style=False,
-        width=10_000,
-    ).rstrip("\n").split("\n")
+    block = (
+        yaml.dump(
+            {key: value},
+            Dumper=_IndentedListDumper,
+            sort_keys=False,
+            allow_unicode=True,
+            default_flow_style=False,
+            width=10_000,
+        )
+        .rstrip("\n")
+        .split("\n")
+    )
     # Locate the key's lines with the YAML parser, not a text heuristic: the
     # block runs from the key to the next top-level key (or the closing ---).
     root = yaml.compose("\n".join(lines[1:end_idx]))
@@ -283,6 +294,22 @@ MANIFEST_KINDS: Dict[str, ManifestKind] = {
     "artifacts": ManifestKind(label="Brief", allow_local=False),
 }
 
+#: Sections of the generated projects index (``pages/projects/index.html``), in
+#: display order. A project picks one with its ``index_group`` frontmatter key;
+#: projects without one are listed under :data:`UNGROUPED_HEADING`.
+INDEX_GROUPS: Dict[str, str] = {
+    "WORM": "C. elegans Projects",
+    "YEAST": "Yeast Projects",
+    "MAMMAL": "Human / Mammalian Projects",
+    "BACTERIA": "Bacterial Projects",
+    "ARCHAEA": "Archaeal Projects",
+    "PLANT": "Plant Projects",
+    "OTHER_ORGANISM": "Other Organism Projects",
+    "GO_TRACKER_BACKLOG": "GO Tracker Backlog",
+    "CROSS_CUTTING": "Cross-Cutting & Methodology",
+}
+UNGROUPED_HEADING = "Not yet grouped"
+
 #: Allowed keys inside a single manifest entry.
 MANIFEST_ENTRY_KEYS = {"href", "title", "description"}
 
@@ -347,7 +374,9 @@ def validate_manifest(
     return valid, errors
 
 
-def _manifest_entry_errors(entry: Any, spec: ManifestKind, projects_dir: Path) -> List[str]:
+def _manifest_entry_errors(
+    entry: Any, spec: ManifestKind, projects_dir: Path
+) -> List[str]:
     """Problems with one manifest entry (empty if valid)."""
     if not isinstance(entry, dict):
         return ["must be a mapping"]
@@ -372,7 +401,10 @@ def _manifest_entry_errors(entry: Any, spec: ManifestKind, projects_dir: Path) -
         errors.append(f"href {href!r} must be an https URL or a path under projects/")
     elif not target.is_file():
         errors.append(f"href {href!r} does not exist under projects/")
-    elif spec.local_source_suffix and not target.with_suffix(spec.local_source_suffix).is_file():
+    elif (
+        spec.local_source_suffix
+        and not target.with_suffix(spec.local_source_suffix).is_file()
+    ):
         errors.append(
             f"href {href!r} has no sibling "
             f"{target.with_suffix(spec.local_source_suffix).name} source"
@@ -460,6 +492,65 @@ def referenced_manifest_files(md_path: Path, projects_dir: Path) -> List[Path]:
             if candidate not in files:
                 files.append(candidate)
     return files
+
+
+def project_ontology_changes(
+    frontmatter: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    """The valid ``proposed_ontology_changes`` entries of a project page.
+
+    A project page is the natural home for an obsoletion that spans several
+    terms and MODs and so belongs to no single gene or module review -- the
+    ``projects/*_OBSOLETION.md`` pages are exactly that case. Unlike a gene or
+    module review the page is markdown, so LinkML never validates it and the
+    structural checks come from
+    :func:`~ai_gene_review.validation.ontology_change_policy.validate_change_entries`
+    instead.
+
+    >>> project_ontology_changes({})
+    []
+    >>> project_ontology_changes({"proposed_ontology_changes": [{"change_type": "OTHER"}]})
+    []
+    """
+    from ai_gene_review.validation.ontology_change_policy import validate_change_entries
+
+    if "proposed_ontology_changes" not in frontmatter:
+        return []
+    valid, _errors = validate_change_entries(frontmatter["proposed_ontology_changes"])
+    return valid
+
+
+def ontology_change_warnings(frontmatter: Dict[str, Any], md_path: Path) -> List[str]:
+    """Page warnings for every proposed change the renderer had to exclude.
+
+    >>> warn = ontology_change_warnings(
+    ...     {"proposed_ontology_changes": [{"change_type": "OTHER"}]},
+    ...     Path("projects/FOO.md"))
+    >>> warn[0].startswith("Invalid proposed_ontology_changes in FOO.md")
+    True
+    >>> "missing required field(s)" in warn[0]
+    True
+    >>> ontology_change_warnings({}, Path("projects/FOO.md"))
+    []
+    """
+    from ai_gene_review.validation.ontology_change_policy import (
+        change_policy_warnings,
+        validate_change_entries,
+    )
+
+    if "proposed_ontology_changes" not in frontmatter:
+        return []
+    changes = frontmatter["proposed_ontology_changes"]
+    _valid, errors = validate_change_entries(changes)
+    # Structural errors exclude the entry; policy violations are advisory and
+    # the entry still renders, so the two are phrased differently.
+    return [
+        f"Invalid proposed_ontology_changes in {md_path.name}, entry not rendered: {error}"
+        for error in errors
+    ] + [
+        f"Proposed ontology change in {md_path.name} needs review: {warning}"
+        for warning in change_policy_warnings(changes)
+    ]
 
 
 def manifest_warnings(
@@ -729,9 +820,10 @@ def replace_gene_symbols(
     # Exclude very short symbols from prose auto-linking. One- and two-character gene
     # names are common enough in this repository to be valid review folders, but they
     # also collide with ordinary text such as "don't", author initials, and allele
-    # suffixes. Link those through explicit <gene> tags instead.
+    # suffixes. Link those through explicit <gene> tags instead. Purely numeric
+    # names (phage genes such as BPT7 "4.2") would turn scores into links.
     symbols = sorted(
-        (s for s in symbol_index.keys() if len(s) >= 3 and not s.isdigit()),
+        (s for s in symbol_index.keys() if len(s) >= 3 and not re.fullmatch(r"[\d.]+", s)),
         key=len,
         reverse=True,
     )
@@ -1055,6 +1147,7 @@ def process_markdown_content(content: str) -> str:
     """
 
     content = protect_scientific_notation(content)
+
     # Process mermaid blocks for HTML
     def replace_mermaid(match: re.Match) -> str:
         mermaid_code = match.group(1)
@@ -1438,6 +1531,8 @@ def render_project(
     template_path: Optional[Path] = None,
     projects_dir: Optional[Path] = None,
     source_ref: str = "main",
+    source_history: SourceHistory | None = None,
+    symbol_index: Optional[Dict[str, List[str]]] = None,
 ) -> Tuple[Path, List[str]]:
     """Render a single project markdown file to HTML.
 
@@ -1457,6 +1552,8 @@ def render_project(
             mirrors ``md_path``'s location relative to it. When ``None`` the
             file is rendered flat as ``output_dir/<stem>.html``.
         source_ref: Git revision for catalog GitHub links; defaults to main.
+        source_history: Shared checkout metadata for a batch of source files.
+        symbol_index: Shared gene-symbol index for a batch of source files.
 
     Returns:
         Tuple of (output_path, list_of_warnings)
@@ -1486,7 +1583,8 @@ def render_project(
     frontmatter, content = parse_frontmatter(raw_content)
 
     # Build symbol index
-    symbol_index = build_symbol_to_species_index(genes_dir)
+    if symbol_index is None:
+        symbol_index = build_symbol_to_species_index(genes_dir)
 
     # Get species hints from frontmatter
     species_hints = frontmatter.get("species", [])
@@ -1524,9 +1622,13 @@ def render_project(
     # Replace prose gene symbols with links unless the page opts out. Explicit
     # <gene> tags above still link because they are intentional, not automatic.
     if should_autolink_gene_symbols(frontmatter):
+        # ``autolink_exclude`` lists symbols that are ordinary words on this page
+        # (e.g. the evidence code RCA vs the Arabidopsis gene RCA); they stay plain
+        # text, while every other symbol still links.
+        excluded = set(_as_string_list(frontmatter.get("autolink_exclude")))
         linked_content, symbol_warnings = replace_gene_symbols(
             content,
-            symbol_index,
+            {s: sp for s, sp in symbol_index.items() if s not in excluded},
             species_hints=species_hints,
             base_path=genes_base_path,
         )
@@ -1539,6 +1641,7 @@ def render_project(
         + qualified_warnings
         + symbol_warnings
         + manifest_warnings(frontmatter, md_path, manifest_root)
+        + ontology_change_warnings(frontmatter, md_path)
     )
 
     # Link raw SPKW sample rows such as `MCP/P06491` to UniProt. Local review
@@ -1619,19 +1722,27 @@ def render_project(
         title=title,
         content=html_content,
         source_file=md_path.name,
+        source_provenance=(source_history or SourceHistory(md_path.parent)).for_file(
+            md_path
+        ),
         family_rows=family_rows,
         source_ref=quote(source_ref, safe=""),
         warnings=warnings,
         frontmatter=frontmatter,
         collections=collections,
         resources=manifest_resources(frontmatter, md_path, manifest_root),
+        ontology_changes=project_ontology_changes(frontmatter),
         projects_base_path="../" * subdir_depth,
     )
     html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
 
     # Create output directory and write file, mirroring subfolder structure
     output_path = output_dir / rel_path.with_suffix(".html")
-    repo_root = projects_dir.resolve().parent if projects_dir is not None else genes_dir.resolve().parent
+    repo_root = (
+        projects_dir.resolve().parent
+        if projects_dir is not None
+        else genes_dir.resolve().parent
+    )
     # Bundle assets are copied after rendering; retain their mirrored URLs even
     # on a clean build where those output files do not exist yet.
     mirrored_assets = (
@@ -1646,9 +1757,14 @@ def render_project(
     # Keep artifact URLs relative to the source here; the publication rewriter
     # below maps archived files into their mirrored output locations.
     html = resolve_research_artifacts(
-        normalize_artifact_metadata(frontmatter), html, md_path, md_path.parent,
+        normalize_artifact_metadata(frontmatter),
+        html,
+        md_path,
+        md_path.parent,
     )
-    html = rewrite_publication_links(html, md_path, output_path, repo_root, mirrored_assets)
+    html = rewrite_publication_links(
+        html, md_path, output_path, repo_root, mirrored_assets
+    )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html)
 
@@ -1709,6 +1825,8 @@ def render_project_bundle(
     md_files = project_bundle_markdown_files(md_path, projects_dir)
     output_paths: List[Path] = []
     all_warnings: List[str] = []
+    source_history = SourceHistory(md_path.parent)
+    symbol_index = build_symbol_to_species_index(genes_dir)
 
     for bundle_file in md_files:
         output_path, warnings = render_project(
@@ -1718,6 +1836,8 @@ def render_project_bundle(
             template_path=template_path,
             projects_dir=projects_dir,
             source_ref=source_ref,
+            source_history=source_history,
+            symbol_index=symbol_index,
         )
         output_paths.append(output_path)
         index_path = write_readme_index_alias(bundle_file, output_path, projects_dir)
@@ -1819,9 +1939,17 @@ def collect_project_rows(projects_dir: Path) -> List[Dict[str, Any]]:
 
         collections = _as_string_list(frontmatter.get("collections"))
         resources = manifest_resources(frontmatter, md_path, projects_dir)
+        pathway = support_dir / f"{md_path.stem}-pathway.md"
         rows.append(
             {
                 "slug": md_path.stem,
+                "index_group": frontmatter.get("index_group"),
+                "description": frontmatter.get("description"),
+                "pathway_url": (
+                    f"{md_path.stem}/{pathway.with_suffix('.html').name}"
+                    if pathway.is_file()
+                    else None
+                ),
                 "collections": collections,
                 "title": title,
                 "url": f"{md_path.stem}.html",
@@ -1855,8 +1983,11 @@ def collection_context(
     """
     registry = load_collections(projects_dir)
     memberships = [
-        {"key": key, "title": registry[key].get("title", key),
-         "index": registry[key].get("index")}
+        {
+            "key": key,
+            "title": registry[key].get("title", key),
+            "index": registry[key].get("index"),
+        }
         for key in _as_string_list(frontmatter.get("collections"))
         if key in registry and registry[key].get("index") != slug
     ]
@@ -1866,8 +1997,13 @@ def collection_context(
         rows = collect_project_rows(projects_dir)
         for key in indexed:
             members = [r for r in rows if key in r["collections"] and r["slug"] != slug]
-            indexes.append({"key": key, "title": registry[key].get("title", key),
-                            "members": members})
+            indexes.append(
+                {
+                    "key": key,
+                    "title": registry[key].get("title", key),
+                    "members": members,
+                }
+            )
     return {"memberships": memberships, "indexes": indexes}
 
 
@@ -1884,7 +2020,7 @@ def render_projects_table(
     ``maturity``, ``tags``, ``species``, ``genes``) plus a count of supporting
     markdown docs in its ``FOO/`` folder. The rendered page provides client-side
     filtering by tag/maturity/species and a title/slug search. This complements
-    the hand-curated ``index.html`` by guaranteeing every project is listed.
+    the grouped ``index.html`` (:func:`render_projects_index`) with filters.
 
     Args:
         projects_dir: Directory containing project markdown files
@@ -1951,6 +2087,49 @@ def render_projects_table(
     return output_path
 
 
+def group_project_rows(
+    rows: List[Dict[str, Any]],
+) -> List[Tuple[str, List[Dict[str, Any]]]]:
+    """Group project rows by ``index_group`` in :data:`INDEX_GROUPS` order.
+
+    Projects without a known group are listed last, under
+    :data:`UNGROUPED_HEADING`; empty groups are omitted.
+
+    >>> rows = [{"slug": "A", "index_group": "YEAST"}, {"slug": "B", "index_group": "WORM"},
+    ...         {"slug": "C", "index_group": None}]
+    >>> [(heading, [r["slug"] for r in members]) for heading, members in group_project_rows(rows)]
+    [('C. elegans Projects', ['B']), ('Yeast Projects', ['A']), ('Not yet grouped', ['C'])]
+    """
+    groups: List[Tuple[str, List[Dict[str, Any]]]] = [
+        (heading, [r for r in rows if r.get("index_group") == key])
+        for key, heading in INDEX_GROUPS.items()
+    ]
+    groups.append(
+        (UNGROUPED_HEADING, [r for r in rows if r.get("index_group") not in INDEX_GROUPS])
+    )
+    return [(heading, members) for heading, members in groups if members]
+
+
+def render_projects_index(
+    projects_dir: Path = Path("projects"),
+    output_dir: Path = Path("pages/projects"),
+) -> Path:
+    """Render ``index.html``: every top-level project, grouped by ``index_group``."""
+    template_path = Path(__file__).parent / "templates" / "projects_index.html.j2"
+    env = Environment(
+        loader=FileSystemLoader(template_path.parent),
+        autoescape=select_autoescape(["html", "j2"]),
+    )
+    rows = collect_project_rows(projects_dir)
+    html = env.get_template(template_path.name).render(
+        groups=group_project_rows(rows), total=len(rows)
+    )
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "index.html"
+    output_path.write_text("\n".join(line.rstrip() for line in html.splitlines()) + "\n")
+    return output_path
+
+
 def render_all_projects(
     projects_dir: Path = Path("projects"),
     output_dir: Path = Path("pages/projects"),
@@ -1988,6 +2167,8 @@ def render_all_projects(
         return output_paths, all_warnings
 
     print(f"Found {len(md_files)} project files to render")
+    source_history = SourceHistory(projects_dir)
+    symbol_index = build_symbol_to_species_index(genes_dir)
 
     for md_file in md_files:
         try:
@@ -1997,6 +2178,8 @@ def render_all_projects(
                 genes_dir=genes_dir,
                 projects_dir=projects_dir,
                 source_ref=source_ref,
+                source_history=source_history,
+                symbol_index=symbol_index,
             )
             output_paths.append(output_path)
             index_path = write_readme_index_alias(md_file, output_path, projects_dir)
@@ -2041,6 +2224,9 @@ def render_all_projects(
     table_path = render_projects_table(projects_dir, output_dir)
     output_paths.append(table_path)
     print(f"Rendered project table -> {table_path}")
+    index_path = render_projects_index(projects_dir, output_dir)
+    output_paths.append(index_path)
+    print(f"Rendered grouped project index -> {index_path}")
 
     if all_warnings:
         print(f"\n{len(all_warnings)} warnings:")

@@ -9,6 +9,7 @@ autolink_gene_symbols: false
 # PSEPK UPA00694: Cellulose biosynthesis
 
 - Module seed: `bacterial_cellulose_biosynthesis`
+- Pull request: https://github.com/ai4curation/ai-gene-review/pull/2143
 - Candidate genes from membership table: 3
 - Accessory/name-correction genes added during curation: 1
 - Primary bucket genes: 2
@@ -25,7 +26,7 @@ autolink_gene_symbols: false
 - [x] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
-- [ ] Open one PR for this module/pathway.
+- [x] Open one PR for this module/pathway.
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
@@ -47,3 +48,11 @@ by the partition heuristic, but it is the catalytic UPA00694 BcsA subunit and
 must stay in this module. PP_2634 was added as an accessory curation item because
 its domain architecture identifies BcsQ/YhjQ rather than a second cellulose
 synthase.
+
+2026-07-15 refinement: revised the module from a KT2440-specific record into a
+reusable Gram-negative BcsA/BcsB/BcsC cellulose synthase/export module with PSEPK
+representative UniProt exemplars. Kept PP_2634 as BcsQ/YhjQ accessory context
+and left broader bcs-locus hydrolase/editing factors for a later accessory-module
+pass.
+
+2026-11-06 comparative audit: all four KT2440 reviews are COMPLETE. The bacterial module now distinguishes BcsB/BcsC, enterobacterial intact-BcsQ, unresolved typeIII and cyanobacterial envelope mechanisms, and the monoderm CslA–GlxA complex. The cross-taxon panel contains 21 completed reviews and 17 curated module references. BcsB sequence-family names do not establish direct c-di-GMP binding, and the KT2440 PP_2634 nucleotide chemistry remains unresolved. Local module and 23 capacity checks pass; repository-wide validation and publication of this update to PR #2143 remain pending. Existing raw sources and provider reports are preserved. The merge checklist remains open until an actual merge.

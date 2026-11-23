@@ -18,13 +18,7 @@ from pathlib import Path
 import yaml as pyyaml
 from ruamel.yaml import YAML
 
-from linkml_reference_validator.validation.supporting_text_validator import (
-    SupportingTextValidator,
-)
-from linkml_reference_validator.models import ReferenceValidationConfig
-from ai_gene_review.validation.reference_cache_compat import (
-    install_reference_cache_compatibility,
-)
+from ai_gene_review.validation.supporting_text import build_supporting_text_validator
 
 yaml_rt = YAML()
 yaml_rt.preserve_quotes = True
@@ -95,12 +89,7 @@ def main():
         return has_ft
 
     # Set up LRV to check if supporting_text passes strict validation
-    config = ReferenceValidationConfig(
-        cache_dir="publications",
-        literal_bracket_patterns=[r"[^a-zA-Z\s]", r"^[A-Z]{2,5}$"],
-    )
-    install_reference_cache_compatibility()
-    lrv = SupportingTextValidator(config)
+    lrv, _ = build_supporting_text_validator(cache_dir)
 
     total_marked = 0
     files_changed = 0

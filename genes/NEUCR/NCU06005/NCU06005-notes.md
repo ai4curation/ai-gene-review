@@ -28,3 +28,21 @@ PMID:29563189 lists NCU06005 as glycerol kinase GLK-1 in a cold-sensitive mutant
 ## 2026-10-01 re-review after GOA refresh
 
 GOA/UniProt sources were refreshed; no new (PENDING) rows and no vanished GOA rows for this gene. Existing judgments were re-audited and retained. Added structured `propagation_review` to the two IBA rows that lacked it: the mitochondrion IBA (UNDECIDED; PTN000023394 node placement versus classical cytosolic glycerokinase fractionation left UNRESOLVED) and the glycerol metabolic process IBA (MODIFY to glycerol catabolic process; TERM_SCOPING_PROBLEM, node transfer itself sound).
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 files were not opened or used. Evidence: UniProt record, GOA, PAINT rows for PTHR10196, the PTHR10196 family review, the falcon deep-research report, PMID:6284716 (abstract-only), PMID:17054397, and the yeast GUT1 review.
+
+Identity: Q7S2F2 is the canonical (and only) UniProt entry for NCU06005, 584 aa, sequence version 3, Linkage Group VI. Not an isoform, fragment or alternative gene model; it carries the full FGGY_N/FGGY_C architecture and the glycerol-kinase-specific IPR005999/TIGR01311 signatures. New analysis (`NCU06005-bioinformatics/compare_sequences_rereview.py`, `RESULTS-rereview.md`): NCU06005 is the only N. crassa entry with EC 2.7.1.30 and one of only two PTHR10196 members (the other is xylulose kinase NCU11353, SF57).
+
+Evolutionary grounding: PANTHER PTHR10196:SF69 (GLYCEROL KINASE) contains NCU06005 together with experimentally characterised S. cerevisiae GUT1 (P32190), A. thaliana GLPK and E. coli GlpK; mammalian GK is SF56. Pairwise identity is similar to all (46-51%), so GUT1 is chosen by subfamily and lineage (fungal SF69), not best hit. The glycerol kinase activity IBD sits at PTN000023392; the location and process IBDs at the eukaryotic node PTN000023394. The family review (interpro/panther/PTHR10196/PTHR10196-review.yaml) also places NCU06005 in SF69; no disagreement. It flags the cytosol IRD at PTN000023394 as LOSS_CONTRADICTED.
+
+Locus identity: classical glp-4 (cytosolic, glycerol/cold/deoxyribose-inducible glycerokinase; linkage group VI; PMID:6284716) is best explained as NCU06005 (sole GK gene, same chromosome), but no molecular complementation is published.
+
+Changes in this pass:
+- mitochondrion IBA: MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE. The SF69 sister seed Gut1p has an experimentally shown imported mitochondrial pool (PMID:17054397), and the 1982 Neurospora fractionation reports the main cytosolic pool without excluding a minor one. No target-specific evidence of loss, so the inheritance stands as a minor location; consistent with the GUT1 review and with the family review's call that the clade inherits both locations. propagation_review now NO_FAILURE_NON_CORE / SUPPORTS_TRANSFER.
+- cytosol NEW: evidence code IDA -> IC, because the paper assayed the activity but did not identify the gene molecularly; attribution to NCU06005 is curator inference.
+- Retained: glycerol kinase activity (IBA, IEA) ACCEPT; glycerol catabolic process ACCEPT; glycerol-3-phosphate biosynthetic process ACCEPT; kinase activity, phosphotransferase alcohol-acceptor, carbohydrate metabolic process, glycerol metabolic process, glycerol-3-phosphate metabolic process MODIFY to the specific descendants already carried; triglyceride metabolic process MARK_AS_OVER_ANNOTATED (mammal-specific SF56 physiology, precursor supply is not participation; same call as on GUT1).
+- PMID:29563189 (cold-shock knockout screen) kept as LOW-relevance reference; organismal phenotype, not used as support.
+
+Relative: yeast GUT1 (P32190), SF69 fungal ortholog-level relative; complete review exists at genes/yeast/GUT1/GUT1-ai-review.yaml. Modules: modules/glycerol_metabolism.yaml (yeast GUT1-GUT2 route); modules/bacterial_glycerol_uptake_catabolism.yaml (GlpK) is the bacterial counterpart.

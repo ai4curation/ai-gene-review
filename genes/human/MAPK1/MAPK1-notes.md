@@ -84,3 +84,39 @@ The duplicate GO:0035094 response to nicotine row was kept as non-core,
 matching the already reviewed mouse/rat-supported nicotine response rows:
 nicotine is an upstream stimulus context that can recruit ERK signaling, not
 MAPK1's primary conserved function.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+Rows: GO:0005739 IEA (GO_REF:0000107, Ensembl projection from mouse Mapk1 P63085) and TAS (PMID:19565474),
+both located_in, both MARK_AS_OVER_ANNOTATED before. No sub-compartment rows.
+
+Checks:
+- QuickGO (2026-11-03): mouse Mapk1 mitochondrion rows are MGI IDA PMID:11884367 and UniProt TAS PMID:19565474.
+  The IDA is Baines et al. 2002, abstract-only [PMID:11884367 "MAPK co-localized with cardiac mitochondria"];
+  projection not circular, ER control of the fraction not checkable.
+- TAS review PMID:19565474 is abstract-only and does not mention mitochondria.
+- Primary studies: PMID:18545666 (full text, mouse LP07) [PMID:18545666 "caused ERK2 retention in mitochondria"],
+  subfractionation to OMM and IMS (no ER marker); PMID:15030409 (rat brain, abstract-only) [PMID:15030409 "outer
+  membrane/intermembrane space fraction"]; PMID:19847302 (HeLa, ERK1, full text) with ER contamination indexes
+  [PMID:19847302 "5′ nucleotidase and glucose-6-phosphatase were determined in mitochondria from HeLa cells"].
+
+Outcome: both rows MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE (minor stimulus-dependent pool; the earlier
+action read the term as a core-location claim). Stays at root: transient trafficking (TRAF3/BRAF precedent), no
+targeting signal, OMM vs IMS split, antibodies do not separate ERK1/ERK2. References added: PMID:11884367,
+PMID:18545666, PMID:15030409, PMID:19847302.
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- Two GO:0005794 rows: IEA GO_REF:0000117 (ARBA00028708) and TAS PMID:19565474 (UniProt), both
+  `located_in`. Both stay MARK_AS_OVER_ANNOTATED; reasons rewritten (the old reason argued
+  "non-core", which is a different action).
+- Check: no readable paper places ERK2 at the Golgi with a marker. The marker-controlled study of the
+  Golgi ERK pool, PMID:16533948 (full text cached; Shaul and Seger 2006, PMC2063732), finds the pool is
+  the ERK1 splice form ERK1c ["Interestingly, these ERKs were not found to be associated with the
+  fragmented Golgi"; "the monophosphorylated ERK colocalized with ERK1c but not with ERK1/2"].
+  PMID:23241949 notes MEK1-driven Golgi fragmentation reported independent of ERK1/ERK2. ERK2
+  phosphorylates GRASP55 in mitotic extracts (PMID:11408587, abstract only) - a Golgi substrate, not a
+  localization.
+- PMID:19565474 (the TAS source, a Seger-lab review) is abstract-only and its abstract does not name
+  the Golgi; no PMCID. UNDECIDED was the close alternative for the TAS row.
+- Newly cached and cited: PMID:16533948, PMID:11408587.

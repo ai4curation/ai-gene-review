@@ -21,3 +21,10 @@
 - NEW: GO:0009316 3-isopropylmalate dehydratase complex (IPI, PMID:20663849) to capture subunit semantics. The large subunit is a structural/catalytic component, so this is not a substrate/necessity inference.
 - Core functions expressed as contributes_to (complex-level activity) for GO:0003861 (with SSU1, Leu) and GO:0120528 (with SSU2/SSU3, glucosinolates).
 - Falcon deep research not available at time of review.
+
+
+## 2026-10-25 independent chain-elongation audit
+
+Re-examined every existing annotation and core against the primary studies and exact GO reactions; preserved all machine-sourced fields and prior rows. Normal fetch-gene and fetch-gene-pmids completed. The default Falcon attempt for this panel (MAM1) failed authentication and perplexity-lite failed insufficient quota; no fabricated provider report was created. Existing provider reports were contextual only; primary sources govern decisions. Plant proteins do not require bacterial fitness fetches.
+
+Correct broad terms now refine to supported descendants. IIL1 and SSU3 catalytic claims refer to heterodimers, with contributes_to in cores; catalytic-site ownership alone does not establish autonomous subunit activity. MAM1 lacks measured IPMS activity, whereas MAM3 retains a weak non-core activity without established native leucine-pathway participation. IMDH1 biochemical comparisons distinguish its specialized methylthioalkylmalate substrate from 3-isopropylmalate; IPMDH2 structural data are not direct IMDH1 structures. BCAT3 terminal transamination is distinct from unelongated methionine transamination and does not establish exclusivity over all chain lengths.

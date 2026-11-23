@@ -293,7 +293,7 @@ routine event in the repo into a red X.
   fails outright, which is how `pr-shepherd` came to fail 121 runs in a row — so
   deleting it is bookkeeping rather than a cutover.
 - **Five workflows run with `--dangerously-skip-permissions`**:
-  `arba-issue-monitor`, `curation-scanner`, `go-annotation-scanner`,
+  `arba-issue-monitor`, `curation-scanner`, `shadow-issues-worker`,
   `pr-shepherd` and `weekly-compliance`. Not just the scanners —
   **`pr-shepherd` reads PR titles, bodies, diffs and review comments**, a wider
   untrusted-input surface than upstream GO issue text. The mitigations are the
@@ -319,7 +319,8 @@ routine event in the repo into a red X.
 dismech has scanners this repo deliberately did not take: `discussion-scanner`,
 `literature-scan`, `preprint-scan`, `knowledge-gap-scan`. ai-gene-review does
 less literature mining and more scanning of GO repositories, which its own
-`go-annotation-scanner`, `arba-issue-monitor` and `litscan-module-member` cover.
+`shadow-issues-worker` (which replaced `go-annotation-scanner`), `arba-issue-monitor`
+and `litscan-module-member` cover.
 `post-review-agent` (turns human review comments into suggested changes) and
 `auto-merge-compliance` are still open candidates.
 
@@ -549,10 +550,13 @@ the live schedule. Manual `review_retry_mode` remains independent. This switch
 does not cancel requests accepted by previous sweeps.
 
 The retry sweep checks the current PR and attempt again before acting, skips
-superseded commits, completed formal verdicts, generated-page branches, and
+superseded commits, generated-page branches, and
 already running or newer reviews, and reports actions and deferrals in the
 Actions summary. Draft state, author identity, assignment, PR age, and merge
-eligibility do not suppress recovery of an already-triggered review. GitHub's
+eligibility do not suppress recovery of an already-triggered review. A formal
+approval or change request does not suppress recovery either: the verdict can
+predate a later failed run, or a job can fail after posting its verdict. The
+failed Actions check still needs recovery. GitHub's
 [rerun limits](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs)
 restrict this lane to runs less than 30 days old and below the attempt limit.
 Missing/cancelled reviews, successful runs without a verdict, and expired or
