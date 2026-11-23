@@ -738,15 +738,26 @@ def test_a_configured_but_unloadable_snapshot_is_not_reported_as_consulted(tmp_p
 
 
 def test_consulted_sources_is_not_resolved_until_a_hit(tmp_path):
-    """Probing at build time would reload the snapshot for every clean review."""
+    """Probing at build time would reload the snapshot for every clean review.
+
+    The name claims more than "not at build time", so the hitless lookup is
+    exercised too: a term that is consulted and produces no hit must not probe
+    either, which is the common case across the corpus.
+    """
+    write_goa(tmp_path, "human/A/A-goa.tsv", [("GO:0000121", "live", "20260101")])
     probes = []
 
     def probe():
         probes.append(1)
         return True
 
-    build_label_lookup(tmp_path, use_ontology=True, snapshot_available=probe)
-    assert probes == []
+    lookup = build_label_lookup(tmp_path, use_ontology=False, snapshot_available=probe)
+    assert probes == [], "built without probing"
+
+    assert lookup("GO:0000121") == [], "a consulted term with no obsolete label"
+    assert probes == [], "a hitless lookup must not probe either"
+
+    assert lookup.consulted_sources() == ["the corpus GOA files"]  # type: ignore[attr-defined]
 
 
 def test_consulted_sources_is_none_for_an_injected_lookup():
@@ -790,3 +801,20 @@ def test_availability_is_probed_once(tmp_path):
     lookup.consulted_sources()  # type: ignore[attr-defined]
     lookup.consulted_sources()  # type: ignore[attr-defined]
     assert calls == [1]
+
+
+def test_an_observed_query_failure_makes_the_snapshot_unavailable():
+    """Loading is not the only way to be mute.
+
+    `_get_cached_adapter` catches construction failures only; `_snapshot_label`
+    separately swallows per-curie query exceptions. A build that loads but
+    whose queries raise would otherwise be reported as consulted while mute.
+    """
+    from ai_gene_review.validation import obsolete_authored_terms as mod
+
+    original = mod._SNAPSHOT_QUERY_FAILED
+    try:
+        mod._SNAPSHOT_QUERY_FAILED = True
+        assert mod._snapshot_adapter_available() is False
+    finally:
+        mod._SNAPSHOT_QUERY_FAILED = original

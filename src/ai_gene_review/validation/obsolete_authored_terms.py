@@ -280,16 +280,30 @@ def _goa_corpus_available(project_root: Path) -> bool:
     return next((project_root / "genes").rglob("*-goa.tsv"), None) is not None
 
 
+#: Set once a snapshot query has actually raised. ``_get_cached_adapter``
+#: only catches *construction* failures, so a build that loads but whose
+#: queries raise would otherwise be reported as available while mute.
+_SNAPSHOT_QUERY_FAILED = False
+
+
 def _snapshot_adapter_available() -> bool:
-    """Whether the GO snapshot can actually answer, not merely whether it is configured.
+    """Whether the GO snapshot can answer, not merely whether it is configured.
 
     ``_get_cached_adapter`` returns None when the OAK build cannot load and
     remembers the failure, so every snapshot lookup then returns None. Without
-    this probe, "configured to consult the snapshot" and "the snapshot answered"
-    are indistinguishable.
+    this probe, "configured to consult the snapshot" and "the snapshot
+    answered" are indistinguishable.
+
+    Loading is not the only way to be mute, so an observed query failure counts
+    too. **The residual limit is real and is not papered over:** a build whose
+    queries raise is reported available until the first such query, because
+    nothing can know a query will fail before it does. This narrows the claim
+    to what is observable; it does not make it total.
     """
     from ai_gene_review.validation.module_validator import _get_cached_adapter
 
+    if _SNAPSHOT_QUERY_FAILED:
+        return False
     return _get_cached_adapter("sqlite:obo:go") is not None
 
 
@@ -308,6 +322,10 @@ def _snapshot_label(curie: str) -> Optional[str]:
     try:  # external system: ontology query may fail transiently
         return adapter.label(curie)
     except Exception:  # noqa: BLE001 - external system
+        # Record it: a loaded-but-unqueryable build is mute, and the
+        # availability probe would otherwise keep reporting it as consulted.
+        global _SNAPSHOT_QUERY_FAILED
+        _SNAPSHOT_QUERY_FAILED = True
         return None
 
 
