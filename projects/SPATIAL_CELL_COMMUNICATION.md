@@ -6,6 +6,11 @@ description: Audit ligand-receptor databases against GO and curated modules, and
 species: [human]
 autolink_gene_symbols: false
 index_group: CROSS_CUTTING
+manifest:
+  artifacts:
+    - href: https://claude.ai/artifact/QEwA3WVfB54ywVCbYW9AgT
+      title: Explainer
+      description: AI generated
 ---
 
 # Spatial cell-cell communication
