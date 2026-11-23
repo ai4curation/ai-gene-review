@@ -30,8 +30,10 @@
   treated its relationship to the benzimidazole-engaged beta-tubulin isotype
   pool and to cloned Strongyloides BTUB/Q4KS25 as unresolved.
 - A reproducible global alignment of the four local S. stercoralis
-  beta-tubulins found that A0AAF5DAP5 is a full-length, distinct isoform with
-  an N-terminal `LFNII` extension relative to Q4KS25/BTUB and other terminal
-  shifts. The Q4KS25 versus A0AAF5DAP5 alignment spans 453 columns with 420
-  identities, 24 substitutions and 9 gap columns. The residues equivalent to
-  Q4KS25 F168, E199 and F201 are retained as A0AAF5DAP5 F173, E204 and F206.
+  beta-tubulins found that A0AAF5DAP5 is a distinct WBParaSite model whose
+  `LFNII` residues before the conserved `MREIV` start are likely a wrong-start
+  extension rather than a biological N-terminal extension. The Q4KS25 versus
+  A0AAF5DAP5 alignment spans 453 columns with 420 identities, 24 substitutions
+  and 9 gap columns. The literature codon names F167, E198 and F200 correspond
+  to Q4KS25 residues F168, E199 and F201 and then to A0AAF5DAP5 residues F173,
+  E204 and F206.
