@@ -11,6 +11,7 @@ from pathlib import Path
 
 import pytest
 
+from ai_gene_review.validation.module_validator import is_obsolete_label
 from ai_gene_review.validation.obsolete_authored_terms import (
     OBSOLETE_AUTHORED_CHECK,
     AuthoredTerm,
@@ -523,7 +524,7 @@ def test_both_signals_are_named_not_just_the_first():
     assert "GOA file genes/human/X/X-goa.tsv" in issue.message
     assert "the GO snapshot" in issue.message
     assert issue.details is not None
-    assert issue.details["signal_count"] == 2
+    assert len(issue.details["detected_by_sources"]) == 2
     assert issue.details["detected_by_sources"] == [
         "GOA file genes/human/X/X-goa.tsv",
         "the GO snapshot",
@@ -533,7 +534,6 @@ def test_both_signals_are_named_not_just_the_first():
 def test_single_signal_reports_one_source():
     report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
     check_obsolete_authored_terms(OBSOLETE_DOC, report, lookup_obsolete)
-    assert report.issues[0].details["signal_count"] == 1
     assert report.issues[0].details["detected_by_sources"] == ["the GO snapshot"]
 
 
@@ -552,7 +552,9 @@ def test_a_live_signal_alongside_an_obsolete_one_is_not_counted():
 
     report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
     check_obsolete_authored_terms(OBSOLETE_DOC, report, mixed)
-    assert report.issues[0].details["signal_count"] == 1
+    assert report.issues[0].details["detected_by_sources"] == [
+        "GOA file genes/human/X/X-goa.tsv"
+    ]
     assert "the GO snapshot" not in report.issues[0].message
 
 
@@ -636,7 +638,7 @@ def test_a_live_signal_is_recorded_not_discarded():
     report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
     check_obsolete_authored_terms(OBSOLETE_DOC, report, mixed)
     details = report.issues[0].details
-    assert details["signal_count"] == 1
+    assert details["detected_by_sources"] == ["GOA file genes/human/X/X-goa.tsv"]
     assert details["live_according_to"] == ["the GO snapshot"]
 
 
@@ -662,7 +664,7 @@ def test_goa_index_never_yields_a_live_label(tmp_path):
     )
     index = goa_obsolete_labels(tmp_path)
     assert set(index) == {"GO:0000117"}
-    assert all(label.startswith("obsolete ") for label, _ in index.values())
+    assert all(is_obsolete_label(label) for label, _ in index.values())
 
 
 def test_a_label_containing_quotes_reads_cleanly():
@@ -682,3 +684,40 @@ def test_a_label_containing_quotes_reads_cleanly():
         'the GO snapshot ("obsolete \'de novo\' NAD+ biosynthetic process")'
         in report.issues[0].message
     )
+
+
+def test_consulted_sources_distinguishes_silence_from_not_asking(tmp_path):
+    """An empty ``live_according_to`` means two different things without this.
+
+    With ``use_ontology=False`` the snapshot is never consulted at all -- the
+    whole ``--no-ontology`` audit path, and a plain ``validate`` without
+    ``--terms`` -- so an empty list would read as "nothing disagreed" when it
+    means "nothing was asked". That is the ambiguity the field itself exists to
+    remove, so it must not reproduce it.
+    """
+    write_goa(
+        tmp_path, "human/A/A-goa.tsv", [("GO:0051082", "obsolete unfolded", "20260101")]
+    )
+    doc = {"core_functions": [{"molecular_function": {"id": "GO:0051082", "label": "u"}}]}
+
+    offline = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
+    check_obsolete_authored_terms(
+        doc, offline, build_label_lookup(tmp_path, use_ontology=False)
+    )
+    assert offline.issues[0].details["consulted_sources"] == ["the corpus GOA files"]
+    assert offline.issues[0].details["live_according_to"] == []
+
+
+def test_consulted_sources_lists_the_snapshot_when_it_is_consulted(tmp_path):
+    lookup = build_label_lookup(tmp_path, use_ontology=True)
+    assert lookup.consulted_sources == [  # type: ignore[attr-defined]
+        "the corpus GOA files",
+        "the GO snapshot",
+    ]
+
+
+def test_consulted_sources_is_none_for_an_injected_lookup():
+    """A test double has no such attribute; the check must not require one."""
+    report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
+    check_obsolete_authored_terms(OBSOLETE_DOC, report, lookup_obsolete)
+    assert report.issues[0].details["consulted_sources"] is None

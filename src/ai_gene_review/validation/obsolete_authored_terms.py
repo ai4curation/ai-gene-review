@@ -316,6 +316,14 @@ def build_label_lookup(
                 pairs.append(("the GO snapshot", snapshot))
         return pairs
 
+    # What this lookup CAN consult, which a caller cannot otherwise infer: a
+    # source that was asked and had nothing to say is indistinguishable, in the
+    # returned pairs, from one that was never asked.
+    lookup.consulted_sources = (  # type: ignore[attr-defined]
+        ["the corpus GOA files", "the GO snapshot"]
+        if use_ontology
+        else ["the corpus GOA files"]
+    )
     return lookup
 
 
@@ -351,7 +359,7 @@ def check_obsolete_authored_terms(
     obsoletion. A hit there names a detecting sibling and leaves no trace that
     the gene's own GOA file disagrees. Capturing that would mean indexing live
     rows as well, which is most of 12,000 files' worth of labels in memory to
-    record a disagreement the hit's own `source` already hints at, so it is
+    record a disagreement the hit's own ``source`` already hints at, so it is
     deliberately not done.
     """
     for term in iter_authored_go_terms(data):
@@ -382,8 +390,16 @@ def check_obsolete_authored_terms(
                 # prose form is already in `message`.
                 "detected_by_sources": [source for source, _ in hits],
                 "detected_labels": [label for _, label in hits],
-                "signal_count": len(hits),
                 "live_according_to": live,
+                # Which sources were ASKED, so an empty `live_according_to`
+                # can be told apart from one that was never populated. The
+                # snapshot is not consulted at all when `check_ontology` is
+                # false -- the whole `--no-ontology` audit path, and a plain
+                # `validate` without `--terms` -- where an empty list would
+                # otherwise read as "nothing disagreed" rather than "nothing
+                # was asked". That is the same ambiguity this field exists to
+                # remove, so leaving it in place here would be self-defeating.
+                "consulted_sources": getattr(lookup, "consulted_sources", None),
             },
             suggestion=(
                 "Repoint to a live term that the evidence on this row supports -- check "
