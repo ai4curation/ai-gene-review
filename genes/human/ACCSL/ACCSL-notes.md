@@ -24,3 +24,9 @@ Direct inspection of `Q4AC99` (`genes/human/ACCSL/ACCSL-uniprot.txt`, 568 aa, of
 ## 4. Affinage Deep-Research Audit (`ACCSL-deep-research-affinage.md`)
 - Affinage returned `n_discoveries: 0`, `citation_count: 0`, `"No mechanistic discoveries found in literature."`
 - While this reflects the genuine absence of wet-lab biochemical experiments directly assaying purified `ACCSL`, Affinage missed `PMID:39876065`, which contains a dedicated section (*"Molecular insights for hACCSL function"*) modeling `Q4AC99`, identifying `C529`, `Y423`, and `S273`, and testing the surrogate `R457C` and `R351Y` mutations in `hACCS`.
+
+## 2026-11-23: OpenScientist residue-loss test and rs2074051 allele frequency
+
+- A focused OpenScientist run (`ACCSL-hypotheses/residue-loss-transaminase/openscientist.md`) tested only whether Lys395 and the substrate alpha-carboxylate arginine are conserved. Lys395 is conserved and not polymorphic.
+- Its key finding: the reference Cys529 is the **minor** allele of rs2074051. Checked independently against the Ensembl REST variation endpoint: the C allele (Cgc, Arg529) has frequency 0.7586 in gnomAD exomes, 0.776 in gnomAD genomes and 0.794 in 1000 Genomes, and is the ancestral allele. So most human ACCSL alleles keep the arginine, and the "C529 loss" argument above (and in PMID:39876065) describes a minority haplotype.
+- Consequence for the review: the Cys529 LOST residue claims were withdrawn from the IBA and IEA rows. The IBA REMOVE actions stand on the retired PAINT node and the mismatched plant donors, not on residue loss. Tyr423 is the only fixed substrate-pocket change.
