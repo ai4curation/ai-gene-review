@@ -10,7 +10,7 @@ Core molecular function: MPST is the human 3-mercaptopyruvate sulfurtransferase.
 
 Locations: UniProt transfers cytoplasm and mitochondrion from rat MPST and synaptosome from mouse Mpst; Morgenstern et al. 2021 put MPST in MitoCoP, the high-confidence human mitochondrial proteome; Reactome places the curated human MPST sulfur-transfer reactions in the mitochondrial matrix. The synapse/neuron-projection calls are peripheral localizations. Urinary and prostatic exosome proteomics are peripheral high-throughput detections rather than MPST core locations.
 
-Weak and misplaced rhodanese/cyanide calls: MPST has weak thiosulfate-cyanide sulfurtransferase activity and can support 3-mercaptopyruvate-dependent cyanide conversion in Reactome, but TST is the dedicated human thiosulfate-cyanide sulfurtransferase. PMID:9070219 cloned and expressed TST/rhodanese, not MPST; the three PINC annotations citing that paper on MPST are legacy misapplications.
+Weak and misplaced rhodanese/cyanide calls: MPST has weak thiosulfate-cyanide sulfurtransferase activity and can support 3-mercaptopyruvate-dependent cyanide conversion in Reactome, but TST is the dedicated human thiosulfate-cyanide sulfurtransferase. MPST's UniProt GN line lists Synonyms=TST2, and the 2003 PINC batch citing PMID:9070219 put GO:0004792 and GO:0009440 on both MPST and TST on 20030904. This looks like family-wide over-propagation across the rhodanese pair; the three PINC annotations citing that TST paper on MPST need checking rather than a confident wrong-accession diagnosis.
 
 Cyanate is not cyanide. The MPST GO:0009440 cyanate catabolic process rows cite either ARBA:ARBA00092626 or the TST cDNA paper PMID:9070219, and neither source establishes catabolism of OCN- cyanate by MPST.
 
