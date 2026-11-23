@@ -176,8 +176,10 @@ pass on their polyphosphate-filled vacuole, which the rule does not distinguish 
 nematode GLO-3. It is met in human, *Drosophila*, *C. elegans* and Trichoplax. The worm has no HPS1 or HPS4
 (PMID:30419011); it passes on GLO-3 (Q21045), which with CCZ-1 activates the worm Rab32 GLO-1. GLO-3 has
 no PANTHER classification, so the step is selected by its accession and holds in the worm because UniProt
-names *C. elegans* as its organism; it is the module's only accession step. Elsewhere it does not hold, so
-the exchange-factor gaps of the other organisms read as the absence of BLOC-3 in PANTHER's files. Nematostella
+names *C. elegans* as its organism; it is the module's only accession step. An accession step can only
+show that the protein's own organism has it, so elsewhere it does not hold by construction: the census
+marks the exchange-factor gaps of the other 20 organisms under `gaps_on_accession_steps`. For those
+gaps the observed part is the absence of BLOC-3 in PANTHER's files; GLO-3 itself was not looked for. Nematostella
 fails on both Rab32/38 and the exchange factor: PANTHER's file has no Rab32/38-subfamily protein for it, and
 an HPS4 but no HPS1. Outside animals the rule's parts are older than the organelles it describes.
 Dictyostelium has AP-3, BLOC-1, a Rab32 and HPS1, and fails only on HPS4. Monosiga has a Rab32 and HPS1 and
@@ -226,7 +228,8 @@ subfamily count, not checked orthologues.
 
 `module_logic` compiles a protein-complex annoton that lists `active_units` into an AND over one step
 per unit, each grounded through that unit's own selector, so any oracle can evaluate a complex and a
-gap names the missing unit (`bloc1_complex/snapin_unit`, not `bloc1_complex`). Before this, the engine
+gap names the missing unit (`bloc1_complex/snapin_unit`, not `bloc1_complex`). Each unit carries its
+own `function`, or the complex's when it has none, so function-keyed oracles still test the step. Before this, the engine
 compiled a complex into a single step with no selector and the census read the units itself; the
 verdicts are the same either way, except that a unit selected by accession is now evaluated, which is
 how the worm's GLO-3 step holds. The Tim50 step that the import rule gained in #6736

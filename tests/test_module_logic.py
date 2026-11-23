@@ -566,8 +566,11 @@ def _descriptor_is_usable(slot: str, descriptor: dict) -> bool:
     """
     if slot == "protein_complex":
         # A complex grounds through its units, each compiled to its own atom and
-        # checked under its own id (see `_participant_slots`); the complex is
-        # usable when any unit carries a usable descriptor in a read slot.
+        # checked under its own id: the per-unit entries `_participant_slots`
+        # adds are what guard a dropped unit grounding. A complex with units
+        # produces no atom under the annoton id, so this case only classifies
+        # the slot (usable when any unit carries a usable read-slot descriptor)
+        # for the partition test and for complexes compiled without units.
         return any(
             _descriptor_is_usable(unit_slot, (unit.get("participant") or {})[unit_slot])
             for unit in as_list(descriptor.get("active_units"))
@@ -782,3 +785,42 @@ def test_complex_without_units_stays_one_atom():
         {"id": "cx", "participant": {"protein_complex": {"preferred_term": "some complex"}}}
     ]}}]}}
     assert [atom.node_id for atom in iter_atoms(compile_module(doc))] == ["cx"]
+
+
+def test_complex_units_carry_their_own_or_the_complex_function():
+    """A unit atom carries the unit's own function, else the complex annoton's.
+
+    Function-keyed oracles and REALIZER inference read ``function_ids``, so a
+    complex step compiled to units must not lose the function it asserted.
+    """
+    doc = {"module": {"id": "m", "parts": [{"node": {"id": "step", "annotons": [{
+        "id": "cx",
+        "function": {"term": {"id": "GO:0005085"}},
+        "participant": {"protein_complex": {"active_units": [
+            {"id": "u1", "function": {"term": {"id": "GO:0003924"}},
+             "participant": {"gene_product": {"term": {"id": "UniProtKB:P11111"}}}},
+            {"id": "u2", "participant": {"family": {"term": {"id": "PANTHER:PTHR9"}}}},
+        ]}},
+    }]}}]}}
+    atoms = {atom.node_id: atom for atom in iter_atoms(compile_module(doc))}
+    assert atoms["u1"].function_ids == ("GO:0003924",)
+    assert atoms["u2"].function_ids == ("GO:0005085",)
+
+
+def test_atoms_sharing_an_id_share_their_selector(curated_corpus):
+    """Atom ids are one namespace for annotons and complex units within a module.
+
+    The same unit id legitimately recurs when one subunit sits in several
+    complexes of a module, and route merging, core-atom detection, the organelle
+    census and context detectors all key atoms on ``node_id``. That is safe only
+    while every atom with a given id names the same participant; two different
+    selectors under one id would be silently merged into one step.
+    """
+    offenders = []
+    for path, circuit in curated_corpus.items():
+        selectors: dict[str, set] = {}
+        for atom in iter_atoms(circuit):
+            key = (atom.gene_symbols, atom.uniprots, atom.family_ids, atom.domain_ids)
+            selectors.setdefault(atom.node_id, set()).add(key)
+        offenders += [f"{path.name}:{node_id}" for node_id, keys in selectors.items() if len(keys) > 1]
+    assert offenders == [], "these atom ids name more than one selector: " + ", ".join(offenders[:10])

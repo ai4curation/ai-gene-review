@@ -10,7 +10,10 @@ family or subfamily ids selects a protein there. A step with no PANTHER id falls
 accessions and holds where the organism's classification file lists one of them or where one of them
 is that organism's own protein by UniProt's organism name, fetched once and cached in
 ``.cache/panther/uniprot-organisms.json``; ``accession_steps`` lists these steps with the organism of
-each accession. The ``unsatisfied_gaps`` of an organism are the engine's innermost gaps. Every step of
+each accession, and ``gaps_on_accession_steps`` names, per organism, the unsatisfied gaps whose absent
+steps include an accession step from another organism, which cannot hold there by construction, so such
+a gap is not an observed absence either. The ``unsatisfied_gaps`` of an organism are the engine's
+innermost gaps. Every step of
 the compiled module is classified once, before any organism is evaluated: ``unevaluable_steps`` lists
 the steps this oracle cannot evaluate at all (a step with neither a PANTHER id nor an accession), which
 never hold; and ``gaps_on_unevaluable_steps`` names, per organism, the unsatisfied gaps whose absent
@@ -42,7 +45,7 @@ import urllib.request
 from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Iterator, Literal
+from typing import Any, Callable, Iterator, Literal, Mapping
 
 import yaml
 
@@ -225,7 +228,7 @@ def _cached_uniprot_lookup(
     cache_file: Path,
     field: str,
     key: str,
-    parse: Callable[[str], dict[str, object]],
+    parse: Callable[[str], Mapping[str, Any]],
 ) -> dict[str, dict]:
     """Fetch one UniProt ``field`` per accession, caching each answer under ``key`` in ``cache_file``.
 
@@ -355,6 +358,11 @@ def same_species(organism_name: str, label: str) -> bool:
     True
     >>> same_species("Caenorhabditis briggsae", "Caenorhabditis elegans")
     False
+
+    Subspecies and strains collapse onto the species on purpose, since the census organisms are species:
+
+    >>> same_species("Oryza sativa subsp. indica", "Oryza sativa")
+    True
     """
     return organism_name.split()[:2] == label.split()[:2]
 
@@ -491,7 +499,7 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
             {acc for a in accession_steps for acc in a.uniprots},
             cache / "uniprot-organisms.json",
         )
-        met, gaps, undetermined = {}, {}, {}
+        met, gaps, undetermined, on_accession = {}, {}, {}, {}
         for o in ORGANISMS:
             native = {
                 acc
@@ -516,6 +524,21 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
                 }
                 if any(marked.values()):
                     undetermined[o.slug] = {k: v for k, v in marked.items() if v}
+                # A gap that an accession step from another organism could fill is
+                # not an observed absence either: such a step cannot hold here.
+                foreign = {
+                    "/".join(g.path): sorted(
+                        {
+                            a.node_id
+                            for a in g.absent
+                            if kinds[a.node_id] == "accession"
+                            and not set(a.uniprots) & native
+                        }
+                    )
+                    for g in report
+                }
+                if any(foreign.values()):
+                    on_accession[o.slug] = {k: v for k, v in foreign.items() if v}
         modules.append(
             {
                 "module": name,
@@ -523,6 +546,7 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
                 "required_parts_met": met,
                 "unsatisfied_gaps": gaps,
                 "gaps_on_unevaluable_steps": undetermined,
+                "gaps_on_accession_steps": on_accession,
                 "unevaluable_steps": sorted(
                     k for k, v in kinds.items() if v == "unevaluable"
                 ),

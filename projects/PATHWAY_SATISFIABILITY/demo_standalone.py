@@ -250,16 +250,21 @@ def _():
         A ``protein_complex`` participant with ``active_units`` needs every unit, so it
         compiles to an :class:`And` named after the annoton whose children are one atom
         per unit, each grounded through that unit's own ``participant`` (``gene``,
-        ``gene_product`` or ``family``). The complex's own ``function`` describes the
-        assembly and is not copied onto the units. A complex without active units, and
+        ``gene_product`` or ``family``). Each unit atom carries the unit's own
+        ``function``, or, when the unit has none, the complex annoton's ``function``
+        (as the FBA module propagates it onto subunits), so a
+        function-keyed oracle still tests the step. A complex without active units, and
         every other participant, compiles to a single atom as before.
 
-        >>> step = _compile_annoton({"id": "cx", "participant": {"protein_complex": {
-        ...     "active_units": [
-        ...         {"id": "u1", "participant": {"gene_product": {"term": {"id": "UniProtKB:P1"}}}},
+        >>> step = _compile_annoton({"id": "cx", "function": {"term": {"id": "GO:0000001"}},
+        ...     "participant": {"protein_complex": {"active_units": [
+        ...         {"id": "u1", "function": {"term": {"id": "GO:0000002"}},
+        ...          "participant": {"gene_product": {"term": {"id": "UniProtKB:P1"}}}},
         ...         {"id": "u2", "participant": {"family": {"term": {"id": "PANTHER:PTHR9"}}}}]}}})
         >>> step.node_id, [(a.node_id, a.uniprot, a.family_ids) for a in step.children]
         ('cx', [('u1', 'P1', ()), ('u2', None, ('PANTHER:PTHR9',))])
+        >>> [a.function_ids for a in step.children]
+        [('GO:0000002',), ('GO:0000001',)]
         >>> _compile_annoton({"id": "solo", "participant": {"protein_complex": {}}}).node_id
         'solo'
         """
@@ -268,17 +273,18 @@ def _():
         if not units:
             return _atom_from_annoton(annoton, namespace)
         annoton_id = annoton.get("id", "?")
-        children: list[Circuit] = [
-            _atom_from_annoton(
+        children: list[Circuit] = []
+        for index, unit in enumerate(units, start=1):
+            unit_id = unit.get("id") or f"{annoton_id}_unit{index}"
+            children.append(_atom_from_annoton(
                 {
-                    "id": unit.get("id") or f"{annoton_id}_unit{index}",
-                    "label": unit.get("label", unit.get("id", "?")),
+                    "id": unit_id,
+                    "label": unit.get("label") or unit_id,
                     "participant": unit.get("participant") or {},
+                    "function": unit.get("function") or annoton.get("function"),
                 },
                 namespace,
-            )
-            for index, unit in enumerate(units, start=1)
-        ]
+            ))
         return And(node_id=f"{namespace}#{annoton_id}" if namespace else annoton_id, children=children)
 
 
