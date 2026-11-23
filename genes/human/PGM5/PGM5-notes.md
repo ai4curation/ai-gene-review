@@ -24,12 +24,16 @@ and at myotendinous junctions"], while the human quadriceps ultrastructure paper
 supports the inner-sarcolemma IDA [PMID:10867799, "aciculin was present along
 the inner surface of muscle plasma membrane"].
 
-The catalytic InterPro2GO rows (`GO:0000287`, `GO:0005975`, `GO:0016868`) are
-fold carryover onto a known inactive paralog and were removed. The two PGM5
-process IBAs from the zebrafish seed (`GO:0014706` and `GO:0030239`) were left
-`UNDECIDED`: the structural location makes a myofibrillar role plausible, but
-the cached human literature only localizes PGM5 to mature muscle junctions and
-the PTHR22573 family review leaves those two nodes unresolved.
+The catalytic InterPro2GO rows mostly reflect fold carryover onto a known
+inactive paralog. `GO:0016868` and `GO:0005975` were removed. The Mg-binding
+row was instead marked over-annotated because PGM5 keeps the FDADGDR Mg loop
+while lacking direct Mg-binding evidence, and the cytosol row was marked
+over-annotated because the current PAINT prune is scoped only to plastidic
+PGMs. The two PGM5 process IBAs from the zebrafish seed (`GO:0014706` and
+`GO:0030239`) were left `UNDECIDED`: the structural location and the
+mouse-derived UniProt myofibril/sarcomere statement make a myofibrillar role
+plausible, but the cached human literature only localizes PGM5 to mature muscle
+junctions and the PTHR22573 family review leaves those two nodes unresolved.
 
 Deep research was attempted with Falcon and a Perplexity Lite fallback, but the
 runtime only exposed `claude_code` as a provider, so both configured providers
