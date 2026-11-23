@@ -15,9 +15,10 @@
   GO_REF:0000044 `cytoskeleton` row, a GO_REF:0000108 `cytoskeleton
   organization` inference, and a broad InterPro `microtubule-based process`
   row.
-- Reading the local `O44388-uniprot.txt` `SQ` block gives Phe167, Glu198 and
-  Phe200. In the 161-200 segment, `DRIMTTFSVV` places Phe at position 167 and
-  `QLVENTDETF` places Glu198 and Phe200.
+- Reading the local `O44388-uniprot.txt` `SQ` block gives the wild-type
+  benzimidazole-susceptible residues Phe167, Glu198 and Phe200. In the 161-200
+  segment, `DRIMTTFSVV` places Phe at position 167 and `QLVENTDETF` places
+  Glu198 and Phe200.
 - The Bennett et al. PMID is abstractless in PubMed and has no PMC record in the
   cache, so the review uses it only as publication provenance for the T.
   trichiura beta-tubulin gene and relies on the Swiss-Prot record's free-text
