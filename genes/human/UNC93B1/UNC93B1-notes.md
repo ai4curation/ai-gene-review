@@ -107,3 +107,21 @@ ACCEPT; consistent with the ER-to-endolysosome trafficking route.
 ### Review follow-up (2026-11-22)
 
 - The IBA reason now contrasts the kept is_active_in qualifier with the queried RAB rows.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Four endosome rows (IBA is_active_in, IDA PMID:21642595, IEA GO_REF:0000120, ISS Q8VCW4) kept
+  ACCEPT. Human IDA: UniProt ECO:0000269 note (colocalizes with LAMP5 in large endosomal vesicles),
+  paper abstract-only with no PMC copy, curator deference. ISS/IEA: the circular mouse UniProt
+  chain found in lysosome batch 2 (mouse Endosome item untagged), plus ARBA00028568 and an
+  Ensembl projection from the mouse IDA (PMID:18305481, abstract-only). IBA seeds: mouse Unc93b1
+  and human UNC93B1 itself.
+- Deciding evidence (mouse full text PMID:31546247, cached): Unc93b1 quantified in Lamp1+
+  endosomes by SIM in Unc93b1-knockout RAW264.7 cells re-expressing tagged Unc93b1, and
+  co-fractionating with TLR9 in CpG-ligand-enriched endosomal fractions, where TLR9 is released
+  ["As predicted, the association of Unc93b1 and TLR9 was weaker in endosomes than in the ER"].
+- ACCEPT because the release step (end of the carrier-chaperone activity) is shown in the
+  endosome and the compartment is resolved as endosomal; the lysosome rows stay KEEP_AS_NON_CORE
+  because LAMP1 does not resolve the lysosome. core_functions (protein carrier chaperone) now lists
+  the endosome root beside the ER membrane. No stage row (LAMP1 and an unstaged CpG fraction).
+- is_active_in IBA: activity shown in endosomes; qualifier kept, no WRONG_QUALIFIER.
