@@ -30,37 +30,52 @@ that reach, and the lists rank by it.
      the model's EC subclass;
    - `no_go_for_model_ec`: GO has no term for the model's EC;
    - `unrelated`: none of these.
-4. **Triage by hand.** Every `unrelated` pair is triaged in [`triage.yaml`](triage.yaml)
-   from the model's product name and the term's definition. Four models the EC comparison
-   cannot catch are added from the sweep: TIGR02095.1, TIGR02491.1 and TIGR01142.1 (no
-   EC) and NF006766.0 (partial EC).
-5. **Check the triage.** [`render_feedback.py`](render_feedback.py) checks that every
-   `unrelated` pair is triaged, that every triaged model carries the term, and that every
-   suggested replacement term exists in GO and is not obsolete. It refuses to write the
-   report otherwise. It then builds FEEDBACK.md.
+
+   A partial model EC such as `7.1.1.-` matches the GO terms of every EC under it.
+   The `broad_class` heuristic is applied before the hierarchy is consulted.
+4. **Triage by hand.** Every `unrelated`, `narrower` and `no_go_for_model_ec` pair is
+   triaged in [`triage.yaml`](triage.yaml), 231 pairs in all, from the model's product
+   name and the term's definition. Four models the EC comparison cannot catch are added
+   from the sweep: TIGR02095.1, TIGR02491.1 and TIGR01142.1 (no EC) and NF006766.0
+   (partial EC).
+5. **Check the triage.** [`render_feedback.py`](render_feedback.py) checks the triage
+   before writing anything:
+   - every pair in the three triaged buckets has an entry;
+   - every verdict is a known one;
+   - every triaged model carries its term and has a RefSeq hit count in the release
+     table;
+   - every suggested replacement term exists in GO and is not obsolete.
+
+   It refuses to write the report otherwise. FEEDBACK.md then shows two kinds of
+   replacement:
+   - `proposed`: a curator's replacement, where one was checked;
+   - the machine-derived GO terms for the model's own EC, which are unreviewed.
 
 | step | pairs |
 |---|---|
 | EC on both sides | 2847 |
 | consistent | 2584 |
 | not consistent | 263 |
-| placed `broader` or `broad_class` (true, less specific) | 32 |
-| placed `narrower` | 6 |
-| `no_go_for_model_ec` | 82 |
-| `unrelated`, triaged | 143 |
+| placed `broader` or `broad_class` (true, less specific; not hand-triaged) | 32 |
+| placed `narrower`, triaged | 9 |
+| `no_go_for_model_ec`, triaged | 57 |
+| `unrelated`, triaged | 165 |
 
 The release table also carries 112 obsolete GO terms (model, term pairs), listed in
-[CANDIDATES.md](CANDIDATES.md).
+[CANDIDATES.md](CANDIDATES.md). Every GO id in the table resolves in QuickGO.
 
 ## Triage result
 
 | verdict | entries | models | RefSeq hits |
 |---|---|---|---|
-| WRONG_REACTION | 42 | 64 | 731526 |
-| WRONG_COFACTOR | 9 | 9 | 166282 |
-| EC_SUSPECT | 2 | 15 | 185397 |
-| CHECK | 20 | 23 | 403449 |
-| ACCEPTABLE | 16 | 33 | 530446 |
+| WRONG_REACTION | 64 | 95 | 1189591 |
+| WRONG_COFACTOR | 11 | 12 | 153187 |
+| EC_SUSPECT | 4 | 17 | 194686 |
+| CHECK | 32 | 36 | 1119506 |
+| ACCEPTABLE | 23 | 66 | 1030292 |
+
+RefSeq hits are summed over the distinct models in each verdict, read from the release
+table, so the models without an EC number count too.
 
 ### Wrong reaction
 
@@ -69,6 +84,8 @@ carries the term for another member's reaction.
 
 - **Family homologues:**
   - glycogen synthase GlgA (ADP-glucose) carries the UDP-glucose term;
+  - adenosine deaminase carries adenine deaminase;
+  - V-type ATPase subunits carry the P-type proton-exporting transporter term;
   - phytoene synthase CrtB and squalene synthase HpnC carry geranylgeranyl diphosphate
     synthase;
   - FolX carries FolB's dihydroneopterin aldolase;
@@ -95,7 +112,8 @@ carries the term for another member's reaction.
   - the degradative, NAD-dependent HMG-CoA reductase carries the NADPH term.
 - **EC suspect.** Here the error looks like it is in the EC number:
   - 14 complex I subunit models carry EC 1.6.5.9, the non-electrogenic NDH-2 reaction,
-    while their GO term is complex I's (EC 7.1.1.2);
+    while their GO term is complex I's (EC 7.1.1.2). Three more complex I models (EC
+    `7.1.1.-`) show the mirror image: the NDH-2 term itself, filed as wrong reaction;
   - EntD, the phosphopantetheinyl transferase, carries EC 6.3.2.14, the
     2,3-dihydroxybenzoate--serine ligase reaction.
 - **Check.** These need family knowledge rather than names. Examples are whether
@@ -109,10 +127,12 @@ carries the term for another member's reaction.
 - **Names, not literature.** Verdicts are judged from product names and GO definitions,
   not from literature or the models' seed proteins. Each row is a proposal for NCBIfam
   curators.
-- **Some models cannot be checked by EC.** A model with no EC number, or with a partial
-  EC that its wrong term falls under, cannot be caught this way. PurT's
-  NF006766.0 (`2.1.2.-`) is the example; the four such models in the triage come
-  from the sweep. A name-versus-term check would need curation.
+- **Not every pair was triaged by hand.** The 32 `broader` and `broad_class` pairs and
+  the 2584 `consistent` pairs were not. A `consistent` pair can still hide an error, as
+  PurT's NF006766.0 does: its wrong term falls under its partial EC `2.1.2.-`. A model
+  with no EC number cannot be checked this way at all. The four such models in the
+  triage come from the sweep; a name-versus-term check over the rest would need
+  curation.
 - **Reach beyond PGAP is unchecked.** Whether these GO terms also reach UniProt through
   InterPro2GO depends on which models InterPro integrates and how InterPro maps them.
   That was not checked here.

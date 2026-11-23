@@ -21,7 +21,9 @@ substrate or cofactor) or ``unrelated`` (a different reaction, the strongest lea
 
 GO terms that QuickGO reports as obsolete are listed separately. Models whose EC list
 is empty cannot be checked this way; a term that contradicts only the model's name
-(TIGR02095.1, TIGR02491.1) needs a curator's eye.
+(TIGR02095.1, TIGR02491.1, TIGR01142.1) needs a curator's eye, as does a wrong term that
+falls under a partial model EC (NF006766.0, ``2.1.2.-``). GO ids QuickGO does not
+return are listed as unresolved.
 
     uv run python projects/ENZYME_SPECIFICITY/ncbifam-metadata/check_release_table.py
 
@@ -92,7 +94,7 @@ def classify(family_ecs: list[str], term_ecs: list[str]) -> str:
 
 
 class GoHierarchy:
-    """EC-to-GO cross-references and is_a/part_of ancestry from the semsql GO database."""
+    """EC-to-GO cross-references and is_a ancestry from the semsql GO database."""
 
     def __init__(self, path: Path) -> None:
         if not path.exists():
@@ -102,10 +104,16 @@ class GoHierarchy:
         self.db = sqlite3.connect(path)
 
     def terms_for_ec(self, ec: str) -> set[str]:
-        """GO terms that cross-reference this EC number."""
+        """GO terms that cross-reference this EC number, or any EC under a partial one
+        (``7.1.1.-`` matches every ``7.1.1.n``)."""
+        if is_complete_ec(ec):
+            query, arg = "value=?", f"EC:{ec}"
+        else:
+            prefix = ".".join(p for p in ec.split(".") if p != "-")
+            query, arg = "value LIKE ?", f"EC:{prefix}.%"
         rows = self.db.execute(
-            "SELECT subject FROM statements WHERE predicate='oio:hasDbXref' AND value=?",
-            (f"EC:{ec}",),
+            f"SELECT subject FROM statements WHERE predicate='oio:hasDbXref' AND {query}",
+            (arg,),
         )
         return {r[0] for r in rows if r[0].startswith("GO:")}
 
@@ -135,7 +143,7 @@ def broad_class_term(family_ecs: list[str], term_ecs: list[str]) -> bool:
 
 def placement(
     go: str, family_ecs: list[str], term_ecs: list[str], hierarchy: GoHierarchy
-) -> str:
+) -> tuple[str, list[str]]:
     """Where a metadata GO term sits relative to the GO terms for the model's own ECs.
 
     ``broader``: an ancestor of a term for the model's EC (true, only less specific).
@@ -144,19 +152,21 @@ def placement(
     ``no_go_for_model_ec``: no GO term cross-references the model's EC numbers.
     ``broad_class``: a class-level term covering the model's EC subclass (see
     ``broad_class_term``), which GO's hierarchy does not always link to the EC's term.
+    This heuristic is tested first, before the hierarchy is consulted.
+
+    Also returns the GO terms for the model's own ECs (a partial EC matches every EC
+    under it), the machine-derived candidates to replace an ``unrelated`` term.
     """
     if broad_class_term(family_ecs, term_ecs):
-        return "broad_class"
-    model_terms = {
-        t for ec in family_ecs if is_complete_ec(ec) for t in hierarchy.terms_for_ec(ec)
-    }
+        return "broad_class", []
+    model_terms = {t for ec in family_ecs for t in hierarchy.terms_for_ec(ec)}
     if not model_terms:
-        return "no_go_for_model_ec"
+        return "no_go_for_model_ec", []
     if any(go in hierarchy.ancestors(t) for t in model_terms):
-        return "broader"
+        return "broader", sorted(model_terms)
     if model_terms & hierarchy.ancestors(go):
-        return "narrower"
-    return "unrelated"
+        return "narrower", sorted(model_terms)
+    return "unrelated", sorted(model_terms)
 
 
 def term_data(go_ids: set[str]) -> dict[str, dict]:
@@ -215,6 +225,15 @@ def main() -> None:
     hits = refseq_hits(db.cache_dir)
     terms = term_data({go for f in db.families for go in f.go_terms})
     rows, obsolete = [], []
+    # GO ids in the release table that QuickGO does not return (merged or invalid ids)
+    unresolved = sorted(
+        {
+            f"{f.accession} {go}"
+            for f in db.families
+            for go in f.go_terms
+            if not terms[go]["name"]
+        }
+    )
     for f in db.families:
         for go in f.go_terms:
             t = terms[go]
@@ -240,12 +259,16 @@ def main() -> None:
                     "go_name": t["name"],
                     "go_ec": t["ec"],
                     "relation": (rel := classify(f.ec_numbers, t["ec"])),
-                    "placement": None
-                    if rel == "consistent"
-                    else placement(go, f.ec_numbers, t["ec"], hierarchy),
                     "refseq_hits": hits.get(f.accession, 0),
                 }
             )
+            if rel == "consistent":
+                rows[-1]["placement"] = None
+            else:
+                where, model_terms = placement(go, f.ec_numbers, t["ec"], hierarchy)
+                rows[-1]["placement"] = where
+                rows[-1]["model_ec_terms"] = model_terms[:10]
+                rows[-1]["model_ec_term_count"] = len(model_terms)
     meta = {
         "ncbifam_release": db.release(),
         "models": len(db.families),
@@ -254,10 +277,16 @@ def main() -> None:
         "relations": dict(Counter(r["relation"] for r in rows)),
         "placements": dict(Counter(r["placement"] for r in rows if r["placement"])),
         "obsolete_go_pairs": len(obsolete),
+        "unresolved_go": unresolved,
     }
     (HERE / "release_table_check.yaml").write_text(
         yaml.safe_dump(
-            {"meta": meta, "pairs": rows, "obsolete_go": obsolete},
+            {
+                "meta": meta,
+                # consistent pairs are only counted in meta, to keep the file small
+                "pairs": [r for r in rows if r["relation"] != "consistent"],
+                "obsolete_go": obsolete,
+            },
             sort_keys=False,
             width=120,
         )

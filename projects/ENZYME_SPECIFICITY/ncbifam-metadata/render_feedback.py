@@ -2,7 +2,8 @@
 
 Checks first, and fails rather than writing a misleading report:
 
-* every ``unrelated`` pair in ``release_table_check.yaml`` has a triage entry;
+* every ``unrelated``, ``narrower`` and ``no_go_for_model_ec`` pair in
+  ``release_table_check.yaml`` has a triage entry, and every verdict is a known one;
 * every triaged (model, GO term) pair exists in the NCBIfam release table;
 * every ``better`` term exists in the GO database and is not obsolete.
 
@@ -20,10 +21,15 @@ import yaml
 
 from ai_gene_review.validation.enzyme_family_cutoff import NCBIfam
 
+sys.path.insert(0, str(Path(__file__).parent))
+from check_release_table import refseq_hits  # noqa: E402
+
 HERE = Path(__file__).parent
 CACHE = Path(".cache")
 GO_DB = Path.home() / ".data" / "oaklib" / "go.db"
 REPORTED = ["WRONG_REACTION", "WRONG_COFACTOR", "EC_SUSPECT", "CHECK"]
+VERDICTS = set(REPORTED) | {"ACCEPTABLE"}
+TRIAGED = {"unrelated", "narrower", "no_go_for_model_ec"}
 TITLES = {
     "WRONG_REACTION": "GO term names a different enzyme's reaction",
     "WRONG_COFACTOR": "GO term names the same transformation with another cofactor, donor or acceptor",
@@ -51,30 +57,36 @@ def main() -> None:
     triage = yaml.safe_load((HERE / "triage.yaml").read_text())["triage"]
     families = {f.accession: f for f in NCBIfam(CACHE / "ncbifam").families}
     go_db = sqlite3.connect(GO_DB)
-    hits = {r["model"]: r["refseq_hits"] for r in check["pairs"]}
-    hits.update({o["model"]: o["refseq_hits"] for o in check["obsolete_go"]})
+    hits = refseq_hits(CACHE / "ncbifam")
+    flagged = [r for r in check["pairs"] if r["placement"] in TRIAGED]
+    pair_of = {(r["model"], r["go"]): r for r in flagged}
 
     errors = []
     covered = set()
     for t in triage:
+        if t["verdict"] not in VERDICTS:
+            errors.append(f"unknown verdict {t['verdict']} for {t['models']}")
         for m in t["models"]:
             if m not in families:
                 errors.append(f"{m}: not in the release table")
                 continue
+            if m not in hits:
+                errors.append(f"{m}: no RefSeq hit count in the release table")
             if t["go"] != "various":
                 covered.add((m, t["go"]))
                 if t["go"] not in families[m].go_terms:
                     errors.append(f"{m}: does not carry {t['go']}")
             else:
-                covered.update((m, go) for go in families[m].go_terms)
+                # "various" dismisses only the model's own flagged pairs, nothing else
+                covered.update(k for k in pair_of if k[0] == m)
         if "better" in t:
             label, deprecated = go_label(go_db, t["better"])
             if label is None or deprecated:
                 errors.append(f"better term {t['better']} missing or obsolete")
             t["better_label"] = label
-    for r in check["pairs"]:
-        if r["placement"] == "unrelated" and (r["model"], r["go"]) not in covered:
-            errors.append(f"untriaged unrelated pair {r['model']} {r['go']}")
+    for r in flagged:
+        if (r["model"], r["go"]) not in covered:
+            errors.append(f"untriaged {r['placement']} pair {r['model']} {r['go']}")
     if errors:
         sys.exit("triage does not match the data:\n  " + "\n  ".join(errors))
 
@@ -92,7 +104,9 @@ def main() -> None:
         "`hmm_PGAP.tsv` whose GO term disagrees with the model's own product name or "
         "EC number. Verdicts are judged from names and GO definitions, not checked "
         "against literature: they are proposals for NCBIfam curators to confirm. "
-        "RefSeq hits are the release table's `n_refseq_protein_hits`.",
+        "RefSeq hits are the release table's `n_refseq_protein_hits`. `proposed` is a "
+        "curator's replacement where one was checked; `GO terms for the model's EC` "
+        "lists, unreviewed, the terms that cross-reference the model's own EC numbers.",
         "",
         "| verdict | entries | models | RefSeq hits |",
         "|---|---|---|---|",
@@ -110,23 +124,32 @@ def main() -> None:
             key=lambda t: -sum(hits.get(m, 0) for m in t["models"]),
         )
         lines.extend(["", f"## {TITLES[v]} ({len(entries)})", ""])
-        lines.append("| models | product name | model EC | GO term | proposed | note |")
-        lines.append("|---|---|---|---|---|---|")
+        lines.append(
+            "| models | product name | model EC | GO term | proposed | "
+            "GO terms for the model's EC | note |"
+        )
+        lines.append("|---|---|---|---|---|---|---|")
         for t in entries:
             f0 = families[t["models"][0]]
             go = t["go"]
             label = go_label(go_db, go)[0] if go != "various" else ""
-            better = (
-                f"{t['better']} {t['better_label']}"
-                if "better" in t
-                else "remove or check"
-            )
+            better = f"{t['better']} {t['better_label']}" if "better" in t else "check"
             if v == "EC_SUSPECT":
                 better = "keep the term; check the EC"
+            row = pair_of.get((t["models"][0], go), {})
+            machine = row.get("model_ec_terms", [])
+            extra = row.get("model_ec_term_count", 0) - len(machine)
+            candidates = "; ".join(
+                f"{m} {go_label(go_db, m)[0]}" for m in machine[:3]
+            ) + (
+                f" (+{extra + max(len(machine) - 3, 0)} more)"
+                if len(machine) > 3 or extra
+                else ""
+            )
             lines.append(
                 f"| {', '.join(t['models'])} | {f0.product_name} | "
                 f"{', '.join(f0.ec_numbers) or '(none)'} | {go} {label} | {better} | "
-                f"{t['note']} |"
+                f"{candidates or '(none)'} | {t['note']} |"
             )
     lines.extend(
         [

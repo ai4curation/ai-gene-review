@@ -16,11 +16,11 @@ Pairs whose EC numbers do not match are placed in the GO hierarchy relative to t
 |---|---|
 | broad_class | 20 |
 | broader | 12 |
-| narrower | 6 |
-| no_go_for_model_ec | 82 |
-| unrelated | 143 |
+| narrower | 9 |
+| no_go_for_model_ec | 57 |
+| unrelated | 165 |
 
-## GO term names a different reaction from the model's EC (143)
+## GO term names a different reaction from the model's EC (165)
 
 The strongest leads. The term is neither an ancestor nor a descendant of any GO term for the model's EC numbers. Bifunctional models (two activities in the product name) can legitimately carry such a term; the rest name the wrong reaction. Ranked by the number of RefSeq proteins the model hits.
 
@@ -35,11 +35,17 @@ The strongest leads. The term is neither an ancestor nor a descendant of any GO 
 | NF008907.0 | multifunctional oxoglutarate decarboxylase/oxoglutarate dehydrogenase thiamine pyrophosphate-binding subunit/dihydrolipoyllysine-residue succinyltransferase subunit | 4.1.1.71 | GO:0004591 oxoglutarate dehydrogenase (succinyl-transferring) activity | 1.2.4.2 | other_reaction | 71314 |
 | TIGR00482.1 | nicotinate (nicotinamide) nucleotide adenylyltransferase | 2.7.7.18 | GO:0000309 nicotinamide-nucleotide adenylyltransferase activity | 2.7.7.1 | sister_reaction | 70596 |
 | TIGR00256.1 | D-aminoacyl-tRNA deacylase | 3.1.1.96 | GO:0004045 peptidyl-tRNA hydrolase activity | 3.1.1.29 | sister_reaction | 57255 |
+| TIGR01973.1 | NADH-quinone oxidoreductase subunit NuoG | 7.1.1.- | GO:0050136 NADH dehydrogenase (quinone) (non-electrogenic) activity | 1.6.5.9 | other_reaction | 55534 |
 | TIGR00538.1 | oxygen-independent coproporphyrinogen III oxidase | 1.3.98.3 | GO:0004109 coproporphyrinogen oxidase activity | 1.3.3.3 | other_reaction | 47356 |
 | NF005012.1 | NADH-quinone oxidoreductase subunit NuoB | 1.6.5.9 | GO:0008137 NADH dehydrogenase (ubiquinone) activity | 7.1.1.2 | other_reaction | 47209 |
+| TIGR00143.1 | carbamoyltransferase HypF | 6.1.2.- | GO:0003998 acylphosphatase activity | 3.6.1.7 | other_reaction | 40905 |
+| TIGR01962.1 | NADH dehydrogenase (quinone) subunit D | 7.1.1.- | GO:0050136 NADH dehydrogenase (quinone) (non-electrogenic) activity | 1.6.5.9 | other_reaction | 40254 |
+| NF001933.0 | D-amino acid dehydrogenase | 1.4.99.- | GO:0008718 D-amino-acid dehydrogenase activity | 1.4.5.1 | other_reaction | 37307 |
 | NF001244.0 | bifunctional demethylmenaquinone methyltransferase/2-methoxy-6-polyprenyl-1,4-benzoquinol methylase UbiE | 2.1.1.163, 2.1.1.201 | GO:0052624 2-phytyl-1,4-naphthoquinone methyltransferase activity | 2.1.1.329 | sister_reaction | 35502 |
 | TIGR01104.1 | V-type H(+)-translocating pyrophosphatase | 3.6.1.1 | GO:0009678 diphosphate hydrolysis-driven proton transmembrane transporter activity | 7.1.3.1 | other_reaction | 34360 |
 | NF004079.0 | 5'-methylthioadenosine/adenosylhomocysteine nucleosidase | 3.2.2.9 | GO:0008930 methylthioadenosine nucleosidase activity | 3.2.2.16 | sister_reaction | 34068 |
+| TIGR01971.1 | NADH-quinone oxidoreductase, chain I | 7.1.1.- | GO:0050136 NADH dehydrogenase (quinone) (non-electrogenic) activity | 1.6.5.9 | other_reaction | 32291 |
+| NF004067.0 | primosomal protein N' | 3.6.1.- | GO:0003678 DNA helicase activity | 3.6.4.12 | other_reaction | 31728 |
 | TIGR02363.1 | dihydroxyacetone kinase subunit DhaK | 2.7.1.121 | GO:0004371 glycerone kinase activity | 2.7.1.29 | sister_reaction | 30366 |
 | NF001979.1 | NAD(+) synthase | 6.3.1.5 | GO:0003952 NAD+ synthase (glutamine-hydrolyzing) activity | 6.3.5.1 | other_reaction | 30272 |
 | NF001979.1 | NAD(+) synthase | 6.3.1.5 | GO:0004359 glutaminase activity | 3.5.1.2 | other_reaction | 30272 |
@@ -51,6 +57,7 @@ The strongest leads. The term is neither an ancestor nor a descendant of any GO 
 | TIGR03138.1 | NADPH-dependent 7-cyano-7-deazaguanine reductase QueF | 1.7.1.13 | GO:0043867 tRNA-guanine(15) transglycosylase activity | 2.4.2.48 | other_reaction | 22720 |
 | NF002730.0 | NAD(+) synthase | 6.3.1.5 | GO:0003952 NAD+ synthase (glutamine-hydrolyzing) activity | 6.3.5.1 | other_reaction | 21350 |
 | NF002730.0 | NAD(+) synthase | 6.3.1.5 | GO:0004359 glutaminase activity | 3.5.1.2 | other_reaction | 21350 |
+| NF004066.1 | primosomal protein N' | 3.6.1.- | GO:0003678 DNA helicase activity | 3.6.4.12 | other_reaction | 21179 |
 | TIGR01108.1 | sodium-extruding oxaloacetate decarboxylase subunit alpha | 7.2.4.2 | GO:0008948 oxaloacetate decarboxylase activity | 4.1.1.112 | other_reaction | 20536 |
 | NF006698.0 | nicotinate phosphoribosyltransferase | 6.3.4.21 | GO:0004514 nicotinate-nucleotide diphosphorylase (carboxylating) activity | 2.4.2.19 | other_reaction | 20017 |
 | NF002342.0 | arginyltransferase | 2.3.2.8 | GO:0008914 leucyl-tRNA--protein transferase activity | 2.3.2.6 | sister_reaction | 19808 |
@@ -67,9 +74,11 @@ The strongest leads. The term is neither an ancestor nor a descendant of any GO 
 | NF004500.0 | NADH-quinone oxidoreductase subunit M | 1.6.5.9 | GO:0008137 NADH dehydrogenase (ubiquinone) activity | 7.1.1.2 | other_reaction | 15719 |
 | TIGR03464.1 | squalene synthase HpnC | 2.5.1.21 | GO:0004311 geranylgeranyl diphosphate synthase activity | 2.5.1.29 | sister_reaction | 15482 |
 | NF052358.1 | GMP reductase | 1.7.1.7 | GO:0003938 IMP dehydrogenase activity | 1.1.1.205 | other_reaction | 15433 |
+| NF002014.0 | RNA 2'-phosphotransferase | 2.7.1.- | GO:0003950 NAD+ poly-ADP-ribosyltransferase activity | 2.4.2.30 | other_reaction | 15369 |
 | NF003483.0 | aspartate--tRNA(Asn) ligase | 6.1.1.23 | GO:0004815 aspartate-tRNA ligase activity | 6.1.1.12 | sister_reaction | 15111 |
 | NF008557.0 | 3-mercaptopyruvate sulfurtransferase | 2.8.1.2 | GO:0004792 thiosulfate-cyanide sulfurtransferase activity | 2.8.1.1 | sister_reaction | 14696 |
 | NF006183.0 | NAD-dependent dihydropyrimidine dehydrogenase subunit PreA | 1.3.1.1 | GO:0017113 dihydropyrimidine dehydrogenase (NADP+) activity | 1.3.1.2 | sister_reaction | 14667 |
+| NF008751.0 | tRNA 2-selenouridine(34) synthase MnmH | 2.5.1.- | GO:0043828 tRNA 2-selenouridine synthase activity | 2.9.1.3 | other_reaction | 14144 |
 | NF005164.0 | NADH-quinone oxidoreductase subunit J | 1.6.5.9 | GO:0008137 NADH dehydrogenase (ubiquinone) activity | 7.1.1.2 | other_reaction | 13961 |
 | TIGR01239.1 | UDP-glucose--hexose-1-phosphate uridylyltransferase | 2.7.7.12 | GO:0017103 UTP:galactose-1-phosphate uridylyltransferase activity | 2.7.7.10 | sister_reaction | 13958 |
 | NF010933.0 | bifunctional UDP-N-acetylglucosamine diphosphorylase/glucosamine-1-phosphate N-acetyltransferase GlmU | 2.7.7.23 | GO:0019134 glucosamine-1-phosphate N-acetyltransferase activity | 2.3.1.157 | other_reaction | 13293 |
@@ -79,13 +88,17 @@ The strongest leads. The term is neither an ancestor nor a descendant of any GO 
 | NF005856.0 | NADH-quinone oxidoreductase subunit C | 1.6.5.9 | GO:0008137 NADH dehydrogenase (ubiquinone) activity | 7.1.1.2 | other_reaction | 12717 |
 | NF006589.0 | methionine synthase | 2.1.1.13 | GO:0003871 5-methyltetrahydropteroyltriglutamate-homocysteine S-methyltransferase activity | 2.1.1.14 | sister_reaction | 12485 |
 | NF008235.0 | phosphate regulon sensor histidine kinase PhoR | 2.7.13.3 | GO:0004721 phosphoprotein phosphatase activity | 3.1.3.55 | other_reaction | 11689 |
+| NF004070.0 | primosomal protein N' | 3.6.1.- | GO:0003678 DNA helicase activity | 3.6.4.12 | other_reaction | 11593 |
 | NF001951.0 | sodium-translocating pyrophosphatase | 3.6.1.1 | GO:0009678 diphosphate hydrolysis-driven proton transmembrane transporter activity | 7.1.3.1 | other_reaction | 11213 |
 | NF006946.0 | CDP-diacylglycerol--serine O-phosphatidyltransferase | 2.7.8.8 | GO:0008444 CDP-diacylglycerol-glycerol-3-phosphate 3-phosphatidyltransferase activity | 2.7.8.5 | sister_reaction | 11085 |
+| NF008668.0 | D-alanyl-D-alanine endopeptidase | 3.4.21.- | GO:0009002 serine-type D-Ala-D-Ala carboxypeptidase activity | 3.4.16.4 | other_reaction | 10895 |
 | TIGR00387.1 | glycolate oxidase subunit GlcD | 1.1.99.14 | GO:0003973 (S)-2-hydroxy-acid oxidase activity | 1.1.3.15 | other_reaction | 10331 |
+| NF011452.0 | primosomal protein N' | 3.6.1.- | GO:0003678 DNA helicase activity | 3.6.4.12 | other_reaction | 10322 |
 | NF006629.0 | nicotinate phosphoribosyltransferase | 6.3.4.21 | GO:0004514 nicotinate-nucleotide diphosphorylase (carboxylating) activity | 2.4.2.19 | other_reaction | 9789 |
 | NF045497.1 | fused isobutyryl-CoA mutase/GTPase IcmF | 3.6.5.-, 5.4.99.13 | GO:0004494 methylmalonyl-CoA mutase activity | 5.4.99.2 | sister_reaction | 9370 |
 | NF008400.0 | bifunctional chorismate mutase/prephenate dehydrogenase | 1.3.1.12, 5.4.99.5 | GO:0004665 prephenate dehydrogenase (NADP+) activity | 1.3.1.13 | sister_reaction | 9345 |
 | NF010706.0 | bifunctional [glutamine synthetase] adenylyltransferase/[glutamine synthetase]-adenylyl-L-tyrosine phosphorylase | 2.7.7.89 | GO:0008882 [glutamate-ammonia-ligase] adenylyltransferase activity | 2.7.7.42 | sister_reaction | 9175 |
+| NF008752.0 | tRNA 2-selenouridine(34) synthase MnmH | 2.5.1.- | GO:0043828 tRNA 2-selenouridine synthase activity | 2.9.1.3 | other_reaction | 9123 |
 | NF004733.0 | NADH-quinone oxidoreductase subunit C | 1.6.5.9 | GO:0008137 NADH dehydrogenase (ubiquinone) activity | 7.1.1.2 | other_reaction | 8971 |
 | NF004730.0 | NADH-quinone oxidoreductase subunit C | 1.6.5.9 | GO:0008137 NADH dehydrogenase (ubiquinone) activity | 7.1.1.2 | other_reaction | 8939 |
 | NF007525.0 | alpha-glucosidase | 3.2.1.20 | GO:0004555 alpha,alpha-trehalase activity | 3.2.1.28 | sister_reaction | 8400 |
@@ -99,11 +112,13 @@ The strongest leads. The term is neither an ancestor nor a descendant of any GO 
 | NF004678.0 | 5-(carboxyamino)imidazole ribonucleotide synthase | 6.3.4.18 | GO:0004638 phosphoribosylaminoimidazole carboxylase activity | 4.1.1.21 | other_reaction | 7536 |
 | TIGR02691.1 | arsenate reductase (thioredoxin) | 1.20.4.4 | GO:0004725 protein tyrosine phosphatase activity | 3.1.3.48 | other_reaction | 7322 |
 | NF006307.0 | prephenate dehydrogenase | 1.3.1.12 | GO:0004665 prephenate dehydrogenase (NADP+) activity | 1.3.1.13 | sister_reaction | 7244 |
+| NF008126.0 | cysteine desulfurase CsdA | 3.13.1.- | GO:0031071 cysteine desulfurase activity | 2.8.1.7 | other_reaction | 6734 |
 | NF011685.0 | peptidoglycan glycosyltransferase FtsI | 3.4.16.4 | GO:0008955 peptidoglycan glycosyltransferase activity | 2.4.99.28 | other_reaction | 6527 |
 | TIGR00458.1 | aspartate--tRNA(Asn) ligase | 6.1.1.23 | GO:0004815 aspartate-tRNA ligase activity | 6.1.1.12 | sister_reaction | 6507 |
 | TIGR01718.1 | uridine phosphorylase | 2.4.2.3 | GO:0004731 purine-nucleoside phosphorylase activity | 2.4.2.1 | sister_reaction | 6069 |
 | NF009874.0 | diacylglycerol kinase | 2.7.1.107 | GO:0003951 NAD+ kinase activity | 2.7.1.23 | sister_reaction | 5885 |
 | NF007187.0 | gamma-glutamyltransferase | 2.3.2.2 | GO:0036374 glutathione gamma-glutamate hydrolase | 3.4.19.13 | other_reaction | 5884 |
+| NF008749.0 | tRNA 2-selenouridine(34) synthase MnmH | 2.5.1.- | GO:0043828 tRNA 2-selenouridine synthase activity | 2.9.1.3 | other_reaction | 5780 |
 | TIGR03494.1 | salicylate synthase | 4.2.99.21 | GO:0008909 isochorismate synthase activity | 5.4.4.2 | other_reaction | 5604 |
 | NF008408.0 | glycolate oxidase subunit GlcD | 1.1.99.14 | GO:0003973 (S)-2-hydroxy-acid oxidase activity | 1.1.3.15 | other_reaction | 5494 |
 | NF008436.0 | NADH-quinone oxidoreductase subunit NuoF | 1.6.5.9 | GO:0008137 NADH dehydrogenase (ubiquinone) activity | 7.1.1.2 | other_reaction | 5490 |
@@ -117,18 +132,22 @@ The strongest leads. The term is neither an ancestor nor a descendant of any GO 
 | NF007604.0 | enterobactin synthase subunit EntD | 6.3.2.14 | GO:0008897 holo-[acyl-carrier-protein] synthase activity | 2.7.8.7 | other_reaction | 4482 |
 | TIGR02416.1 | aerobic carbon-monoxide dehydrogenase large subunit | 1.2.5.3 | GO:0043885 anaerobic carbon-monoxide dehydrogenase activity | 1.2.7.4 | other_reaction | 4417 |
 | NF051899.1 | beta-galactosidase BglA | 3.2.1.23 | GO:0004556 alpha-amylase activity | 3.2.1.1 | sister_reaction | 4305 |
+| TIGR01886.1 | dipeptidase PepV | 3.4.13.- | GO:0004151 dihydroorotase activity | 3.5.2.3 | other_reaction | 4248 |
 | NF005108.0 | prephenate dehydrogenase | 1.3.1.12 | GO:0004665 prephenate dehydrogenase (NADP+) activity | 1.3.1.13 | sister_reaction | 4132 |
 | NF008044.0 | 8-oxo-dGTP diphosphatase MutT | 3.6.1.55 | GO:0008413 8-oxo-7,8-dihydroguanosine triphosphate pyrophosphatase activity | 3.6.1.69 | sister_reaction | 4116 |
+| NF004069.0 | primosomal protein N' | 3.6.1.- | GO:0003678 DNA helicase activity | 3.6.4.12 | other_reaction | 4090 |
 | NF006369.1 | enoyl-ACP reductase FabI | 1.3.1.39 | GO:0004318 enoyl-[acyl-carrier-protein] reductase (NADH) activity | 1.3.1.9 | sister_reaction | 4017 |
 | NF010939.0 | bifunctional UDP-N-acetylglucosamine diphosphorylase/glucosamine-1-phosphate N-acetyltransferase GlmU | 2.7.7.23 | GO:0019134 glucosamine-1-phosphate N-acetyltransferase activity | 2.3.1.157 | other_reaction | 4016 |
 | NF007975.0 | phosphatidylglycerophosphatase B | 3.1.3.27 | GO:0004609 phosphatidylserine decarboxylase activity | 4.1.1.65 | other_reaction | 4001 |
 | NF058672.1 | 4-hydroxybutyrate dehydrogenase | 1.1.1.61 | GO:0004022 alcohol dehydrogenase (NAD+) activity | 1.1.1.1 | sister_reaction | 3977 |
 | NF011704.0 | RNA 2',3'-cyclic phosphodiesterase | 3.1.4.58 | GO:0004113 2',3'-cyclic-nucleotide 3'-phosphodiesterase activity | 3.1.4.37 | sister_reaction | 3826 |
 | NF053707.1 | protein-arginine kinase McsB | 2.7.14.1 | GO:0004111 creatine kinase activity | 2.7.3.2 | other_reaction | 3588 |
+| NF004068.0 | primosomal protein N' | 3.6.1.- | GO:0003678 DNA helicase activity | 3.6.4.12 | other_reaction | 3526 |
 | NF005832.0 | NADH-quinone oxidoreductase subunit C | 1.6.5.9 | GO:0008137 NADH dehydrogenase (ubiquinone) activity | 7.1.1.2 | other_reaction | 3492 |
 | NF008418.0 | dihydroneopterin triphosphate 2'-epimerase | 5.1.99.7 | GO:0004150 dihydroneopterin aldolase activity | 4.1.2.25 | other_reaction | 3397 |
 | TIGR02505.1 | ribonucleoside-triphosphate reductase, adenosylcobalamin-dependent | 1.17.4.2 | GO:0004748 ribonucleoside-diphosphate reductase activity, thioredoxin disulfide as acceptor | 1.17.4.1 | sister_reaction | 2916 |
 | TIGR03385.1 | CoA-disulfide reductase | 1.8.1.14 | GO:0003756 protein disulfide isomerase activity | 5.3.4.1 | other_reaction | 2824 |
+| NF004071.0 | primosomal protein N' | 3.6.1.- | GO:0003678 DNA helicase activity | 3.6.4.12 | other_reaction | 2778 |
 | NF007668.0 | glycerate 2-kinase | 2.7.1.165 | GO:0008887 glycerate kinase activity | 2.7.1.31 | sister_reaction | 2735 |
 | NF042949.2 | 3-phenylpropionate/cinnamic acid dioxygenase ferredoxin--NAD(+) reductase subunit | 1.18.1.3 | GO:0008695 3-phenylpropionate dioxygenase activity | 1.14.12.19 | other_reaction | 2696 |
 | NF053844.1 | retaining alpha-galactosidase | 3.2.1.22 | GO:0004339 glucan 1,4-alpha-glucosidase activity | 3.2.1.3 | sister_reaction | 2644 |
@@ -148,6 +167,7 @@ The strongest leads. The term is neither an ancestor nor a descendant of any GO 
 | TIGR00748.1 | hydroxymethylglutaryl-CoA synthase | 2.3.3.10 | GO:0004315 3-oxoacyl-[acyl-carrier-protein] synthase activity | 2.3.1.179, 2.3.1.41 | other_reaction | 941 |
 | NF045686.1 | 15-cis-phytoene synthase CrtB | 2.5.1.32 | GO:0004311 geranylgeranyl diphosphate synthase activity | 2.5.1.29 | sister_reaction | 752 |
 | NF045923.1 | spheroidene monooxygenase | 1.14.15.9 | GO:0004311 geranylgeranyl diphosphate synthase activity | 2.5.1.29 | other_reaction | 618 |
+| NF058623.1 | 2-hydroxyacyl-CoA lyase | 4.1.-.- | GO:0003984 acetolactate synthase activity | 2.2.1.6 | other_reaction | 419 |
 | NF000129.1 | D-alanine--(R)-lactate ligase VanA-Sc | 6.1.2.1 | GO:0008716 D-alanine-D-alanine ligase activity | 6.3.2.4 | other_reaction | 357 |
 | NF045701.1 | NAD(P)-dependent benzaldehyde dehydrogenase MdlD | 1.2.1.28 | GO:0018477 benzaldehyde dehydrogenase (NADP+) activity | 1.2.1.7 | sister_reaction | 354 |
 | NF052352.1 | triacylglycerol lipase LipY | 3.1.1.3 | GO:0008126 acetylesterase activity | 3.1.1.6 | sister_reaction | 330 |
@@ -160,6 +180,8 @@ The strongest leads. The term is neither an ancestor nor a descendant of any GO 
 | NF041124.1 | phosphopantetheine adenylyltransferase | 2.7.7.3 | GO:0004140 dephospho-CoA kinase activity | 2.7.1.24 | other_reaction | 96 |
 | NF040832.1 | NADPH-dependent hydrogenase/sulfhydrogenase 1 subunit alpha | 1.12.1.3 | GO:0008901 ferredoxin hydrogenase activity | 1.12.7.2 | other_reaction | 94 |
 | NF045547.1 | gamma-glutamylputrescine synthetase | 6.3.1.11 | GO:0004356 glutamine synthetase activity | 6.3.1.2 | sister_reaction | 80 |
+| NF041075.1 | proton pump complex quinol oxidase subunit SoxB | 1.10.3.- | GO:0004129 cytochrome-c oxidase activity | 7.1.1.9 | other_reaction | 72 |
+| NF041074.2 | proton pump complex quinol oxidase subunit SoxA | 1.10.3.- | GO:0004129 cytochrome-c oxidase activity | 7.1.1.9 | other_reaction | 60 |
 | NF012216.1 | D-alanine--(R)-lactate ligase VanB | 6.1.2.1 | GO:0008716 D-alanine-D-alanine ligase activity | 6.3.2.4 | other_reaction | 34 |
 | NF012217.1 | D-alanine--(R)-lactate ligase VanA | 6.1.2.1 | GO:0008716 D-alanine-D-alanine ligase activity | 6.3.2.4 | other_reaction | 18 |
 | NF000372.1 | D-alanine--(R)-lactate ligase VanI | 6.1.2.1 | GO:0008716 D-alanine-D-alanine ligase activity | 6.3.2.4 | other_reaction | 17 |
@@ -170,20 +192,23 @@ The strongest leads. The term is neither an ancestor nor a descendant of any GO 
 | NF040855.1 | isocitrate--homoisocitrate dehydrogenase | 1.1.1.286 | GO:0047046 homoisocitrate dehydrogenase activity | 1.1.1.87 | sister_reaction | 5 |
 | NF040790.2 | bifunctional D-gluconate/D-galactonate dehydratase | 4.2.1.140, 4.2.1.39 | GO:0008869 galactonate dehydratase activity | 4.2.1.6 | sister_reaction | 0 |
 
-## GO term is more specific than the model's EC (6)
+## GO term is more specific than the model's EC (9)
 
 The term is a descendant of a GO term for the model's EC: a specific substrate or cofactor. Right only if every member of the family has that specificity.
 
 | model | product name | model EC | GO term | term EC | EC relation | RefSeq hits |
 |---|---|---|---|---|---|---|
 | TIGR01930.1 | acetyl-CoA C-acyltransferase | 2.3.1.16 | GO:0003985 acetyl-CoA C-acetyltransferase activity | 2.3.1.9 | sister_reaction | 398160 |
+| TIGR01972.1 | NADH-quinone oxidoreductase subunit M | 1.6.5.- | GO:0008137 NADH dehydrogenase (ubiquinone) activity | 7.1.1.2 | other_reaction | 78881 |
+| NF007545.0 | taurine ABC transporter permease TauC | 7.2.2.- | GO:0015411 ABC-type taurine transporter transporter activity | 7.6.2.7 | other_reaction | 7544 |
+| NF008553.0 | taurine ABC transporter substrate-binding protein | 7.2.2.- | GO:0015411 ABC-type taurine transporter transporter activity | 7.6.2.7 | other_reaction | 3990 |
 | NF042999.1 | beta-ketothiolase BktB | 2.3.1.1, 2.3.1.16 | GO:0003985 acetyl-CoA C-acetyltransferase activity | 2.3.1.9 | sister_reaction | 2555 |
 | NF052576.1 | pyrimidine 5'-nucleotidase PynA | 3.1.3.5 | GO:0002953 5'-deoxynucleotidase activity | 3.1.3.89 | sister_reaction | 1744 |
 | NF040869.1 | NADP-dependent glyceraldehyde-3-phosphate dehydrogenase | 1.2.1.90 | GO:0008886 glyceraldehyde-3-phosphate dehydrogenase (NADP+) (non-phosphorylating) activity | 1.2.1.9 | sister_reaction | 124 |
 | NF040817.1 | glutamate dehydrogenase | 1.4.1.3 | GO:0004352 L-glutamate dehydrogenase (NAD+) activity | 1.4.1.2 | sister_reaction | 120 |
 | NF040817.1 | glutamate dehydrogenase | 1.4.1.3 | GO:0004354 L-glutamate dehydrogenase (NADP+) activity | 1.4.1.4 | sister_reaction | 120 |
 
-## No GO term cross-references the model's EC (82)
+## No GO term cross-references the model's EC (57)
 
 These cannot be placed: GO has no term for the model's EC (often a recently created EC number). Check by name.
 
@@ -191,48 +216,26 @@ These cannot be placed: GO has no term for the model's EC (often a recently crea
 |---|---|---|---|---|---|---|
 | TIGR01511.1 | copper-translocating P-type ATPase | 3.6.3.- | GO:0043682 P-type divalent copper transporter activity | 7.2.2.9 | other_reaction | 234502 |
 | TIGR00401.1 | peptide-methionine (S)-S-oxide reductase MsrA | 1.8.4.11 | GO:0033744 L-methionine (S)-S-oxide reductase activity | 1.8.4.13 | sister_reaction | 122085 |
-| TIGR01972.1 | NADH-quinone oxidoreductase subunit M | 1.6.5.- | GO:0008137 NADH dehydrogenase (ubiquinone) activity | 7.1.1.2 | other_reaction | 78881 |
 | TIGR00430.1 | tRNA guanosine(34) transglycosylase Tgt | 2.4.2.29 | GO:0008479 tRNA-guanosine(34) queuine transglycosylase activity | 2.4.2.64 | sister_reaction | 63949 |
 | TIGR00198.1 | catalase/peroxidase HPI | 1.11.1.21 | GO:0004096 catalase activity | 1.11.1.6 | sister_reaction | 63797 |
-| TIGR01973.1 | NADH-quinone oxidoreductase subunit NuoG | 7.1.1.- | GO:0050136 NADH dehydrogenase (quinone) (non-electrogenic) activity | 1.6.5.9 | other_reaction | 55534 |
-| TIGR00143.1 | carbamoyltransferase HypF | 6.1.2.- | GO:0003998 acylphosphatase activity | 3.6.1.7 | other_reaction | 40905 |
-| TIGR01962.1 | NADH dehydrogenase (quinone) subunit D | 7.1.1.- | GO:0050136 NADH dehydrogenase (quinone) (non-electrogenic) activity | 1.6.5.9 | other_reaction | 40254 |
-| NF001933.0 | D-amino acid dehydrogenase | 1.4.99.- | GO:0008718 D-amino-acid dehydrogenase activity | 1.4.5.1 | other_reaction | 37307 |
-| TIGR01971.1 | NADH-quinone oxidoreductase, chain I | 7.1.1.- | GO:0050136 NADH dehydrogenase (quinone) (non-electrogenic) activity | 1.6.5.9 | other_reaction | 32291 |
-| NF004067.0 | primosomal protein N' | 3.6.1.- | GO:0003678 DNA helicase activity | 3.6.4.12 | other_reaction | 31728 |
 | NF005968.0 | cobalt-precorrin-6A reductase | 1.3.1.106 | GO:0016994 precorrin-6A reductase activity | 1.3.1.54 | sister_reaction | 27257 |
 | NF006850.0 | adenosine deaminase | 3.5.4.4 | GO:0000034 adenine deaminase activity | 3.5.4.2 | sister_reaction | 24889 |
 | NF007020.0 | homocysteine S-methyltransferase | 2.1.1.10 | GO:0047150 betaine-homocysteine S-methyltransferase activity | 2.1.1.5 | sister_reaction | 24357 |
 | NF053853.1 | succinyl-CoA:acetate CoA-transferase ScpC | 2.8.3.18 | GO:0008775 acetate CoA-transferase activity | 2.8.3.8 | sister_reaction | 22077 |
-| NF004066.1 | primosomal protein N' | 3.6.1.- | GO:0003678 DNA helicase activity | 3.6.4.12 | other_reaction | 21179 |
 | TIGR01751.1 | crotonyl-CoA carboxylase/reductase | 1.3.1.85 | GO:0043880 crotonyl-CoA reductase activity | 1.3.1.86 | sister_reaction | 17258 |
-| NF002014.0 | RNA 2'-phosphotransferase | 2.7.1.- | GO:0003950 NAD+ poly-ADP-ribosyltransferase activity | 2.4.2.30 | other_reaction | 15369 |
 | TIGR03465.1 | presqualene diphosphate synthase HpnD | 2.5.1.103 | GO:0046905 15-cis-phytoene synthase activity | 2.5.1.32 | sister_reaction | 14819 |
 | NF008377.0 | 2,5-didehydrogluconate reductase DkgB | 1.1.1.346 | GO:0047834 D-threo-aldose 1-dehydrogenase activity | 1.1.1.122 | sister_reaction | 14624 |
-| NF008751.0 | tRNA 2-selenouridine(34) synthase MnmH | 2.5.1.- | GO:0043828 tRNA 2-selenouridine synthase activity | 2.9.1.3 | other_reaction | 14144 |
 | NF005530.0 | biotin-independent malonate decarboxylase subunit beta | 4.1.1.88 | GO:0003989 acetyl-CoA carboxylase activity | 6.4.1.2 | other_reaction | 12637 |
-| NF004070.0 | primosomal protein N' | 3.6.1.- | GO:0003678 DNA helicase activity | 3.6.4.12 | other_reaction | 11593 |
 | TIGR03568.1 | UDP-N-acetylglucosamine 2-epimerase | 3.2.1.183 | GO:0008761 UDP-N-acetylglucosamine 2-epimerase activity | 5.1.3.14 | other_reaction | 11473 |
-| NF008668.0 | D-alanyl-D-alanine endopeptidase | 3.4.21.- | GO:0009002 serine-type D-Ala-D-Ala carboxypeptidase activity | 3.4.16.4 | other_reaction | 10895 |
-| NF011452.0 | primosomal protein N' | 3.6.1.- | GO:0003678 DNA helicase activity | 3.6.4.12 | other_reaction | 10322 |
 | TIGR01734.1 | D-alanine--poly(phosphoribitol) ligase subunit DltA | 6.1.1.13 | GO:0047473 D-alanine [D-alanyl carrier protein] ligase activity | 6.2.1.54 | other_reaction | 9265 |
-| NF008752.0 | tRNA 2-selenouridine(34) synthase MnmH | 2.5.1.- | GO:0043828 tRNA 2-selenouridine synthase activity | 2.9.1.3 | other_reaction | 9123 |
 | NF053785.1 | decaprenylphosphoryl-beta-D-ribose oxidase | 1.1.98.3 | GO:0003885 D-arabinono-1,4-lactone oxidase activity | 1.1.3.37 | other_reaction | 7866 |
 | TIGR00309.1 | V-type ATP synthase subunit D | 7.1.2.2 | GO:0008553 P-type proton-exporting transporter activity | 7.1.2.1 | sister_reaction | 7559 |
-| NF007545.0 | taurine ABC transporter permease TauC | 7.2.2.- | GO:0015411 ABC-type taurine transporter transporter activity | 7.6.2.7 | other_reaction | 7544 |
-| NF008126.0 | cysteine desulfurase CsdA | 3.13.1.- | GO:0031071 cysteine desulfurase activity | 2.8.1.7 | other_reaction | 6734 |
-| NF008749.0 | tRNA 2-selenouridine(34) synthase MnmH | 2.5.1.- | GO:0043828 tRNA 2-selenouridine synthase activity | 2.9.1.3 | other_reaction | 5780 |
 | NF052481.1 | L-fucose dehydrogenase | 1.1.1.435 | GO:0004316 3-oxoacyl-[acyl-carrier-protein] reductase (NADPH) activity | 1.1.1.100 | sister_reaction | 5602 |
 | NF005969.0 | cobalt-precorrin-6A reductase | 1.3.1.106 | GO:0016994 precorrin-6A reductase activity | 1.3.1.54 | sister_reaction | 5566 |
 | NF049939.1 | (R)-1-hydroxy-2-aminoethylphosphonate ammonia-lyase | 4.3.1.33 | GO:0034386 4-aminobutyrate:2-oxoglutarate transaminase activity | 2.6.1.19 | other_reaction | 5468 |
 | NF007293.0 | PTS 2-O-a-mannosyl-D-glycerate transporter subunit IIABC | 2.7.1.195 | GO:0022877 protein-N(PI)-phosphohistidine-fructose phosphotransferase system transporter activity | 2.7.1.202 | sister_reaction | 4992 |
-| TIGR01886.1 | dipeptidase PepV | 3.4.13.- | GO:0004151 dihydroorotase activity | 3.5.2.3 | other_reaction | 4248 |
 | NF006848.0 | adenosine deaminase | 3.5.4.4 | GO:0000034 adenine deaminase activity | 3.5.4.2 | sister_reaction | 4093 |
-| NF004069.0 | primosomal protein N' | 3.6.1.- | GO:0003678 DNA helicase activity | 3.6.4.12 | other_reaction | 4090 |
-| NF008553.0 | taurine ABC transporter substrate-binding protein | 7.2.2.- | GO:0015411 ABC-type taurine transporter transporter activity | 7.6.2.7 | other_reaction | 3990 |
 | NF053589.1 | octanoyl-[GcvH]:protein N-octanoyltransferase | 2.3.1.204 | GO:0033819 lipoyl(octanoyl) transferase activity | 2.3.1.181 | sister_reaction | 3579 |
-| NF004068.0 | primosomal protein N' | 3.6.1.- | GO:0003678 DNA helicase activity | 3.6.4.12 | other_reaction | 3526 |
-| NF004071.0 | primosomal protein N' | 3.6.1.- | GO:0003678 DNA helicase activity | 3.6.4.12 | other_reaction | 2778 |
 | NF049936.1 | 2-trimethylaminoethylphosphonate dioxygenase | 1.13.11.90 | GO:0008336 gamma-butyrobetaine dioxygenase activity | 1.14.11.1 | other_reaction | 2597 |
 | NF051855.1 | glycine/sarcosine N-methyltransferase | 2.1.1.156 | GO:0017174 glycine N-methyltransferase activity | 2.1.1.20 | sister_reaction | 1277 |
 | NF042422.1 | 2-alkyl-3-oxoalkanoate reductase | 1.1.1.412 | GO:0003854 3-beta-hydroxy-Delta5-steroid dehydrogenase (NAD+) activity | 1.1.1.145 | sister_reaction | 1237 |
@@ -245,7 +248,6 @@ These cannot be placed: GO has no term for the model's EC (often a recently crea
 | NF041293.1 | NAD-dependent glucose-6-phosphate dehydrogenase Azf | 1.1.1.388 | GO:0004345 glucose-6-phosphate dehydrogenase activity | 1.1.1.49 | sister_reaction | 643 |
 | NF049969.1 | D-glycero-D-manno-heptose 7-phosphate kinase | 2.7.1.168 | GO:0004335 galactokinase activity | 2.7.1.6 | sister_reaction | 595 |
 | NF045732.1 | styrene monooxygenase subunit StyA | 1.14.14.11 | GO:0016712 oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen, reduced flavin or flavoprotein as one donor, and incorporation of one atom of oxygen | 1.14.14.1 | sister_reaction | 425 |
-| NF058623.1 | 2-hydroxyacyl-CoA lyase | 4.1.-.- | GO:0003984 acetolactate synthase activity | 2.2.1.6 | other_reaction | 419 |
 | NF050049.1 | D-glycero-alpha-D-manno-heptose-1,7-bisphosphate 7-phosphatase | 3.1.3.83 | GO:0034200 D-glycero-beta-D-manno-heptose 1,7-bisphosphate 7-phosphatase activity | 3.1.3.82 | sister_reaction | 319 |
 | NF041170.1 | 2-oxoacid:ferredoxin oxidoreductase subunit alpha | 1.2.7.11 | GO:0019164 pyruvate synthase activity | 1.2.7.1 | sister_reaction | 249 |
 | NF041170.1 | 2-oxoacid:ferredoxin oxidoreductase subunit alpha | 1.2.7.11 | GO:0047553 2-oxoglutarate synthase activity | 1.2.7.3 | sister_reaction | 249 |
@@ -255,11 +257,9 @@ These cannot be placed: GO has no term for the model's EC (often a recently crea
 | NF040828.1 | NAD(P)-dependent hydrogenase/sulfhydrogenase 2 subunit alpha | 1.12.1.5 | GO:0008901 ferredoxin hydrogenase activity | 1.12.7.2 | other_reaction | 88 |
 | NF040828.1 | NAD(P)-dependent hydrogenase/sulfhydrogenase 2 subunit alpha | 1.12.1.5 | GO:0047985 hydrogen dehydrogenase activity | 1.12.1.2 | sister_reaction | 88 |
 | NF040831.1 | NAD(P)-dependent hydrogenase/sulfhydrogenase 2 subunit delta | 1.12.1.5 | GO:0047985 hydrogen dehydrogenase activity | 1.12.1.2 | sister_reaction | 79 |
-| NF041075.1 | proton pump complex quinol oxidase subunit SoxB | 1.10.3.- | GO:0004129 cytochrome-c oxidase activity | 7.1.1.9 | other_reaction | 72 |
 | NF040938.1 | bifunctional 2-dehydro-3-deoxygluconokinase/2-dehydro-3-deoxygalactonokinase | 2.7.1.178 | GO:0008671 2-dehydro-3-deoxygalactonokinase activity | 2.7.1.58 | sister_reaction | 64 |
 | NF040938.1 | bifunctional 2-dehydro-3-deoxygluconokinase/2-dehydro-3-deoxygalactonokinase | 2.7.1.178 | GO:0008673 2-dehydro-3-deoxygluconokinase activity | 2.7.1.45 | sister_reaction | 64 |
 | NF045493.1 | 4-hydroxybutyrate--CoA ligase | 6.2.1.56 | GO:0043758 acetate-CoA ligase (ADP-forming) activity | 6.2.1.13 | sister_reaction | 63 |
-| NF041074.2 | proton pump complex quinol oxidase subunit SoxA | 1.10.3.- | GO:0004129 cytochrome-c oxidase activity | 7.1.1.9 | other_reaction | 60 |
 | NF040954.1 | bifunctional 2-dehydro-3-deoxy-phosphogluconate/2-dehydro-3-deoxy-6-phosphogalactonate aldolase | 4.1.2.55 | GO:0008674 2-dehydro-3-deoxy-6-phosphogalactonate aldolase activity | 4.1.2.21 | sister_reaction | 56 |
 | NF040954.1 | bifunctional 2-dehydro-3-deoxy-phosphogluconate/2-dehydro-3-deoxy-6-phosphogalactonate aldolase | 4.1.2.55 | GO:0008675 2-dehydro-3-deoxy-phosphogluconate aldolase activity | 4.1.2.14 | sister_reaction | 56 |
 | NF053628.1 | benzoylsuccinyl-CoA thiolase subunit BbsB | 2.3.1.310 | GO:0003988 acetyl-CoA C-acyltransferase activity | 2.3.1.16 | sister_reaction | 42 |
