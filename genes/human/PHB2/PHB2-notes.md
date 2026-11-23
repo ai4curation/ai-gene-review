@@ -169,35 +169,45 @@ synthesis.
   and annotated to PHB1 as well). These are host-pathogen interactions, not PHB2
   functions.
 
-## Annotations this review argues against
+## Negative (NOT) annotations this review accepts
 
-1. **`GO:0030449` regulation of complement activation, IDA, PMID:17070910 — wrong gene
-   product.** The paper's own abstract excludes PHB2:
+GOA carries two `NOT|involved_in` rows on PHB2. Both are correct, and both are
+`ACCEPT`ed: the claim under review on a NOT row is the negative one, and `REMOVE`
+would only doubt it (`docs/action_consistency.md`).
+
+1. **`GO:0030449` regulation of complement activation, IDA, PMID:17070910 — correct
+   negative.** The paper's own abstract excludes PHB2:
    [PMID:17070910 "PHB1, but not the closely related PHB2, was able to enhance
    complement activation and induce lysis of sensitized sheep erythrocytes when added
-   with normal serum but not with C3-deficient serum."] QuickGO confirms the paper was
-   also annotated to PHB1 (P35232) for `GO:0001850` and `GO:0001851`, i.e. the intended
-   target carries it. This is the "abstract defines the entity as another protein" case
-   in `CLAUDE.md`, so the claim is confident: `REMOVE` + `WRONG_GENE_PRODUCT`
-   (`CONFIRMED`, `DELETE_ROW`).
-2. **`GO:0043410` positive regulation of MAPK cascade, IDA, PMID:24003225 — contradicted
-   by its own paper.** [PMID:24003225 "In contrast, IGFBP-6-induced MAPK pathway
+   with normal serum but not with C3-deficient serum."] The curator encoded that
+   exclusion as a NOT row on PHB2 and annotated the positive half of the same study to
+   PHB1 (QuickGO: P35232 carries `GO:0001850` and `GO:0001851` from this PMID). Both
+   halves are right, so there is no wrong-gene defect here — the row is valuable
+   precisely because it blocks propagation of a PHB1 function onto PHB2.
+2. **`GO:0043410` positive regulation of MAPK cascade, IDA, PMID:24003225 — correct
+   negative.** [PMID:24003225 "In contrast, IGFBP-6-induced MAPK pathway
    activation was not affected, suggesting that PHB2 may act as a downstream effector of
    these pathways."] PHB2 knockdown abolished migration but left MAPK activation intact,
    so the paper places PHB2 downstream of the cascade, not as a positive regulator of
-   it.
-3. **`GO:0006606` protein import into nucleus, IDA, PMID:17008324 — PHB2 is the cargo.**
+   it — which is what the NOT asserts. The migration phenotype is kept on the
+   `GO:0016477` row. The descendant row `GO:0070374` is marked over-annotated for its
+   own reasons (antibody-bead co-clustering does not show positive ERK regulation),
+   which agrees with this NOT rather than conflicting with it.
+
+## Annotations this review argues against
+
+1. **`GO:0006606` protein import into nucleus, IDA, PMID:17008324 — PHB2 is the cargo.**
    The result is that PHB2 itself translocates to the nucleus when ERα and estradiol are
    present. Being transported is not participating in the transport process
    (`CLAUDE.md`: "being the thing it acts on is not participation"). Marked over-annotated
    rather than removed, because the full text is not in the cache and could conceivably
    show PHB2 promoting the import of another protein.
-4. **`GO:0005741` mitochondrial outer membrane, IDA, PMID:17008324 — wrong membrane.**
+2. **`GO:0005741` mitochondrial outer membrane, IDA, PMID:17008324 — wrong membrane.**
    The complex reported there contains VDAC2 (OMM) and ANT2 (IMM), i.e. it spans a
    contact site; co-purification with an OMM protein does not place PHB2 in the OMM, and
    every dedicated localisation study and UniProt place it in the IMM. The mitophagy
    mechanism depends on PHB2 being behind the OMM.
-5. **`GO:0043066` negative regulation of apoptotic process, IMP, PMID:17008324 and
+3. **`GO:0043066` negative regulation of apoptotic process, IMP, PMID:17008324 and
    `GO:0070374` positive regulation of ERK1/2 cascade, IMP, PMID:22417827 —
    over-annotation from indirect perturbation.** Knocking out a structural IMM scaffold
    fragments mitochondria, which triggers apoptosis downstream; and the same PHB1/PHB2
