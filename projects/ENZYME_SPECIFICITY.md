@@ -12,6 +12,9 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/16YgnHyBS1PjY9QWUZgZwZ
       title: Project brief
+    - href: https://claude.ai/artifact/GHRaq9M5SJkRknTDVgUFt6
+      title: Cutoff check
+      description: AI generated
 index_group: CROSS_CUTTING
 ---
 
@@ -265,6 +268,19 @@ would only duplicate it. See `genes/SACEN/eryCIII/`.
 2. **Check reaction mechanism**: Domain family doesn't guarantee mechanism
 3. **Distinguish promiscuity from core function**: see the three tiers below
 4. **Propose specific terms**: When existing terms are too broad or narrow
+5. **Check family membership against a trusted cutoff**: For electronic enzyme rows,
+   score the protein against the NCBIfam family models for the annotated reaction
+   (`just enzyme-cutoff-check ACC --go GO:...`). A score below the trusted cutoff,
+   especially when a family for a different reaction passes, is the overprediction
+   pattern of Schnoes et al. 2009 [PMID:20011109]. Add `--library` to see the protein's
+   closest families from the whole NCBIfam library. See the
+   [trusted-cutoff check](ENZYME_SPECIFICITY/cutoff-check/RESULTS.md).
+6. **Check a specificity fingerprint where one is curated**: In superfamilies where
+   close paralogs catalyse different reactions, family membership does not fix the
+   substrate. `just enzyme-fingerprint-check ACC` reads the residues at positions an
+   alanine scan showed to decide the reaction, as in the histidinol-phosphate
+   phosphatase fingerprint of Kinateder et al. 2024 [PMID:38284491]. Fingerprints
+   are curated in `conf/specificity_fingerprints.yaml` from mutagenesis papers only.
 
 ### Promiscuous and residual activities
 
@@ -308,9 +324,53 @@ Worked pair (both from the same ML-prediction paper, PMID:37963869):
 ## Pending Reviews
 - (none)
 
-Last updated: 2026-10-04
+Last updated: 2026-11-22
 
 # NOTES
+
+## 2026-11-22
+
+**Swept the cutoff check, with a whole-library scan, over the KT2440 and E. coli reviews.**
+
+The check now scans each protein against every function-level NCBIfam model, so a
+below-cutoff verdict comes with the families the protein does fit. The
+[sweep](ENZYME_SPECIFICITY/cutoff-check/sweep/RESULTS.md) covers 1306 live electronic
+enzyme rows on 1043 proteins. 82% of the 1014 kept rows pass a family carrying the
+activity, but so do 47% of the 169 removed rows. The removed rows that pass are subunit
+models carrying the complex's EC number, pseudoenzymes and paralogs the reviews identified,
+broader substrate terms, and six NCBIfam models whose GO metadata names the sister
+reaction (models for PurT, ADP-glucose glycogen synthase, PS synthase and NrdG). The kept rows that fit
+another family are mostly partial reactions, cofactor variants and complex activities on a
+subunit. The ranked lists are in
+[DISAGREEMENTS.md](ENZYME_SPECIFICITY/cutoff-check/sweep/DISAGREEMENTS.md). No review
+action changes.
+
+## 2026-11-21
+
+**Followed up the UNDECIDED rows the cutoff check placed below cutoff; none is decided by it.**
+
+The 2026-11-18 re-run listed four UNDECIDED rows as reviews to revisit. A follow-up
+([followup_scan.py](ENZYME_SPECIFICITY/cutoff-check/followup_scan.py)) found that each
+flag said less than claimed. ptxD was scored only against GhrA, but it resembles GhrB;
+against NCBIfam's GhrB model, which carries no EC number and so was never a target, it
+scores 418.1 / 492, and no KT2440 protein passes that model, so its substrate stays open.
+PP_4638 fails the canonical MetF models that KT2440's own MetF passes, which the review
+already records; its open question, noncanonical folate chemistry, is outside what those
+models test. PP_0556's NAD+ kinase row is retired from GOA, and the runner now skips retired
+rows. No review action changes. RESULTS.md now states the sister-family limitation.
+
+## 2026-11-11
+
+**Added a specificity-fingerprint check from Kinateder et al. 2024 [PMID:38284491].**
+
+`ai_gene_review.validation.specificity_fingerprint` aligns a protein to a
+characterized reference and reads the residues at curated function-deciding positions.
+The first fingerprint is the HAD-superfamily histidinol-phosphate phosphatase of
+*P. aeruginosa* PA0335 (DxD at 16/18 and Y47 required; Y57 and T113 supporting), which
+separates it from the phosphoserine phosphatases many of its homologues are annotated
+as. *P. putida* PP_5147 (68% identical to PA0335) carries all five residues. A protein
+below the fingerprint's identity floor (45%) is reported as LOW_IDENTITY rather than
+given residue calls from an unreliable alignment.
 
 ## 2026-10-24
 
@@ -324,6 +384,23 @@ cutoff. Prompted by OpenScientist function-assignment runs on seven bacterial
 REMOVE/over-annotated calls (yciO, yjdM, traB, glpK, PP_3195, mdcD, kguE); all
 seven supported the direction of the existing calls. yciO stays REMOVE and
 yjdM stays MARK_AS_OVER_ANNOTATED, as in the worked pair above.
+
+## 2026-10-18
+
+**Added a trusted-cutoff check from Schnoes et al. 2009 [PMID:20011109].**
+
+`ai_gene_review.validation.enzyme_family_cutoff` scores a protein against the NCBIfam
+models for an annotated EC/GO activity and compares each score with the model's
+trusted and noise cutoffs (Schnoes steps 2 and 4). It also reports function-level
+families for other reactions that the protein passes. On 37 live electronic enzyme
+rows from 20 *P. putida* reviews plus human HADH, 11 of 12 ACCEPT rows with a model
+passed and 10 of 13 REMOVE rows with a model failed (counts as of the 2026-11-21
+re-run, which skips retired rows; see the 2026-11-21 note on the UNDECIDED rows). The
+three passing REMOVE rows were a
+pseudoenzyme (pyrC′, which needs a residue check), overlapping MetX donor families
+(metXS) and a paralog with ortholog biochemistry (PP_2325). The failing ACCEPT row was
+human HADH, below prokaryote-calibrated cutoffs. Details:
+[cutoff-check/RESULTS.md](ENZYME_SPECIFICITY/cutoff-check/RESULTS.md).
 
 ## 2026-10-04
 

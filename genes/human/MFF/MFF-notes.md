@@ -66,3 +66,27 @@ here. No further query can close that gap either, because "is a receptor or adap
 dynamin-family GTPase" is not a field any annotation set returns; establishing it would mean
 classifying 486 gene products by a property GO does not record. The review text therefore asserts
 only the two checked claims, which is what the MFF case needs.
+
+## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
+
+- Four GO:0005777 rows (IBA is_active_in, IDA PMID:18353969, IDA PMID:23921378, IEA SL-0204).
+  All stay ACCEPT (core: peroxisome fission is one of MFF's two processes). Dated check
+  sentence added to each reason; PMID:21149567 quote added.
+- UniProt Peroxisome item: ECO:0000269 from PMID:18353969 and PMID:23921378. PAINT IBD
+  PTN000420890 seeded by MGI:1922984 and Q9GZY8.
+- Full text read outside the cache: Gandre-Babbe & van der Bliek 2008, PMC2397315
+  (DOI 10.1091/mbc.E07-12-1287), Results and Discussion. Peroxisomal pool shown with
+  myc-tagged Mff colocalizing with a peroxisomal marker in Drp1-siRNA cells (Supplemental
+  Figure 3, not viewed); authors: "there is a small but significant amount of Mff on
+  peroxisomes". Endogenous-protein immunofluorescence in that paper (Figure 2A-C legend) is
+  counterstained with MitoTracker only, not a peroxisomal marker. Mff siRNA gives tubular peroxisomes (catalase stain). Not quoted in YAML.
+- Palmer 2013 (PMID:23921378, cached full text): Mff expressed as GFP fusion; text says MiD49/51,
+  unlike Fis1 and Mff, are not targeted to peroxisomes.
+- No GO:0005778 peroxisomal membrane row: MFF's own tail anchor is one line, but no readable
+  source shows the endogenous protein at peroxisomes with a peroxisome-specific assay.
+  Candidate for a later pass if a paper with endogenous MFF immunostaining on peroxisomes
+  (or peroxisome proteomics) is cached.
+- Mitochondrial rows not touched. Note for the coordinator: the two GO:0005739
+  mitochondrion rows (HTP PMID:34800366, IDA GO_REF:0000052) are MODIFY -> GO:0005741 from
+  an earlier PR round, which conflicts with ORGANELLES rule 1 (never MODIFY the root); left
+  for the mitochondrion pass.

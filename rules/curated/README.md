@@ -14,6 +14,9 @@ auditable record, and names the external source it replaces.
 | [CR-0005](CR-0005.yaml) | GO:0044548 S100 protein binding | IPR037893 AND (Craniata OR Tunicata) | interpro2go IPR037893 | PROPOSED |
 | [CR-0006](CR-0006.yaml) | GO:0005118 sevenless binding, GO:0045500 sevenless signaling pathway | IPR002956 AND IPR050726 AND Diptera | interpro2go IPR002956 (sevenless binding) | PROPOSED |
 | [CR-0007](CR-0007.yaml) | GO:0020037 heme binding, GO:0009055 electron transfer activity | CDD cd21555 | (new coverage; model unintegrated in InterPro) | PROPOSED |
+| [CR-0008](CR-0008.yaml) | GO:0007219 Notch signaling pathway | IPR039398 AND Metazoa | interpro2go IPR039398 (Notch signaling pathway) | PROPOSED |
+| [CR-0009](CR-0009.yaml) | GO:0005540 hyaluronic acid binding | IPR026203 AND (Vertebrata OR Cephalochordata) | interpro2go IPR026203 | PROPOSED |
+| [CR-0010](CR-0010.yaml) | GO:0070823 HDA1 complex | IPR021006 AND Fungi | interpro2go IPR021006 | PROPOSED |
 
 ## Semantics
 

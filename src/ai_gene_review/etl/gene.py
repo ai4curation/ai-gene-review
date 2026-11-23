@@ -1274,12 +1274,13 @@ def _goa_results_to_tsv(results: List[Dict[str, Any]]) -> str:
     Sorts (IBA first, then newest date, then GO id), projects each result to the
     16 TSV columns, deduplicates byte-identical rows, and backfills the
     ``TAXON NAME`` column from ``taxonId`` when QuickGO did not supply a
-    ``taxonName`` (its ``includeFields=taxonName`` path returns HTTP 500 while
-    ``goName`` and ``name`` still work). The projection is deterministic given the
-    results; its only external touchpoint is the ``_resolve_taxon_name`` taxonomy
-    lookup, used solely to backfill ``TAXON NAME`` when ``taxonName`` is absent
-    (and offline for the common taxa), so the function is straightforward to test
-    with synthetic results.
+    ``taxonName`` (QuickGO's ``includeFields=taxonName`` path has returned HTTP
+    500s, read timeouts, and empty result sets while ``goName`` and ``name`` still
+    work). The projection is deterministic given the results; its only external
+    touchpoint is the ``_resolve_taxon_name`` taxonomy lookup, used solely to
+    backfill ``TAXON NAME`` when ``taxonName`` is absent (and offline for the
+    common taxa), so the function is straightforward to test with synthetic
+    results.
 
     >>> rows = _goa_results_to_tsv([
     ...     {"geneProductId": "UniProtKB:O43511", "goId": "GO:0005886",
@@ -1379,12 +1380,10 @@ def fetch_goa_data(uniprot_id: str) -> str:
     are deduplicated after projection, so annotations that differ only in fields the
     TSV does not represent (such as annotation extensions) collapse to one row.
 
-    ``taxonName`` is requested from QuickGO as before; while QuickGO's
-    ``includeFields=taxonName`` path returns HTTP 500, the request is retried
-    once without it and the ``TAXON NAME`` column is backfilled from ``taxonId``
-    (``goName`` and ``name`` are unaffected). When EBI restores the endpoint the
-    retry never triggers and ``taxonName`` is used verbatim, so the behaviour
-    reverts automatically.
+    QuickGO's ``includeFields=taxonName`` path has returned HTTP 500s, read
+    timeouts, and empty result sets while ``goName`` and ``name`` still work, so
+    only the stable display fields are requested and ``TAXON NAME`` is backfilled
+    from ``taxonId``.
 
     Args:
         uniprot_id: UniProt accession ID
@@ -1404,10 +1403,6 @@ def fetch_goa_data(uniprot_id: str) -> str:
     page = 1
     limit = 200  # QuickGO's actual max limit per page (not 400!)
     expected_total = 0
-    # Request taxonName as normal; drop it (for the rest of this fetch) only if
-    # QuickGO rejects it with a 500, so behaviour reverts automatically once EBI
-    # fixes it.
-    include_taxon_name = True
     max_transient_retries = 3  # per page, for errors unrelated to taxonName
     transient_retries = 0
 
@@ -1415,8 +1410,6 @@ def fetch_goa_data(uniprot_id: str) -> str:
         # Build URL with properly formatted parameters
         # QuickGO expects multiple includeFields parameters, not an array
         params = [("geneProductId", uniprot_id), ("includeFields", "goName")]
-        if include_taxon_name:
-            params.append(("includeFields", "taxonName"))
         params.append(("includeFields", "name"))
         params.append(("limit", str(limit)))
 
@@ -1460,18 +1453,10 @@ def fetch_goa_data(uniprot_id: str) -> str:
             page += 1
 
         except requests.exceptions.RequestException as e:
-            status = getattr(getattr(e, "response", None), "status_code", None)
-            if include_taxon_name and status == 500:
-                # QuickGO currently 500s specifically on includeFields=taxonName.
-                # Drop it for the rest of this fetch and retry this page; TAXON NAME
-                # is backfilled from taxonId in _goa_results_to_tsv. When EBI fixes
-                # the field this branch never runs and taxonName is used verbatim.
-                include_taxon_name = False
-                continue
             if transient_retries < max_transient_retries:
-                # A genuine transient error (timeout, 5xx other than the taxonName
-                # 500, connection reset): back off and retry the same page rather
-                # than aborting a multi-page fetch on one blip.
+                # A genuine transient error (timeout, 5xx, connection reset):
+                # back off and retry the same page rather than aborting a
+                # multi-page fetch on one blip.
                 transient_retries += 1
                 time.sleep(min(2**transient_retries, 8))
                 continue
