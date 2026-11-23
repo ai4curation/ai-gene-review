@@ -11,6 +11,11 @@
 - The live UniProt search also returned multiple other PTHR11588 ASCSU
   beta-tubulin fragments or near-full-length candidates. I kept this review
   accession-scoped and did not invent an Ascaris gene symbol.
+- F1L8A5 is 444 aa and has a UniProt `NON_TER` flag at residue 444, so this
+  beta-tubulin has the conserved N-terminal and C-terminal domains but appears
+  to be open at the isotype-informative C-terminal tail. A future
+  bioinformatics pass should reconcile the TSA accession to current A. suum
+  beta-tubulin gene models before making locus-level drug-resistance claims.
 - `just deep-research-falcon ASCSU F1L8A5 --fallback perplexity-lite` could
   not generate a provider report because only `claude_code` was available, so
   this review uses the seeded GOA rows, live-matching UniProt flatfile, the
@@ -21,3 +26,7 @@
   the nucleotide-sequence publication for the imported transcript.
 - `just paint-losses ASCSU F1L8A5` reported no IRD or IKR loss on the gene's
   lineage, noting that F1L8A5 is not a leaf of the cached PTHR11588 tree.
+- I added PMID:2592410 as the C. elegans genetic anchor that a beta-tubulin can
+  convey nematode benzimidazole sensitivity. I did not find direct A. suum
+  evidence assigning F1L8A5 or a reconciled F1L8A5-encoding locus to the
+  equivalent Ascaris drug-sensitive isotype.
