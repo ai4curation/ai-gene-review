@@ -108,3 +108,18 @@ Batch 9 canonical-surfaceome backfill. Research journal for the GO annotation re
   (PTN008522004) for the glycine-transporter clade and is grounded on GlyT2 itself — no cross-paralog
   mis-propagation seen. The broader plasma-membrane IBA (PTN000177662) and Na+-transport IBA span the
   wider SLC6 family, which is fine for those general terms.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- ISS endosome row from rat GlyT2 P58295 (looked up; no Endosome item in UniProt). Donor's
+  endosome row is an ARUK-UCL IDA from PMID:12091465 (Geerlings et al. 2002, DOI
+  10.1046/j.1471-4159.2002.00930.x, abstract-only): GFP-GLYT2 stably overexpressed in PC12 cells
+  ["whereas most of GFP-GLYT2 was present on large dense-core vesicles and endosomes"], an
+  overexpressed fusion in a heterologous host.
+- Readable rescue in the donor species: PMID:19374720 (Nunez et al. 2009, Traffic, DOI
+  10.1111/j.1600-0854.2009.00911.x, abstract-only): endogenous GLYT2 in rat brainstem in
+  Rab11-positive (Rab5A-negative) vesicles by confocal and immunogold ["Therefore, the
+  intracellular GLYT2 resides in a subset of endosomal membranes and may traffic around several
+  compartments, mainly Rab11-positive endosomes."]. KEEP_AS_NON_CORE; recycling endosome is one
+  line (one study; the Rab11 DN experiment is a perturbation), so no stage row. Same call as
+  SLC6A9.
