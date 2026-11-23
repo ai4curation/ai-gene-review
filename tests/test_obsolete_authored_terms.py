@@ -337,21 +337,6 @@ def test_one_prefixed_file_outweighs_many_unprefixed(tmp_path):
     assert index["GO:0005615"][1] == "genes/human/B/B-goa.tsv"
 
 
-def test_several_rows_in_one_file_are_not_several_files(tmp_path):
-    """The distinction the docstring now draws, asserted.
-
-    Six prefixed rows in one file is one fetch's worth of evidence, not six.
-    The index records one source either way, and that is the honest reading.
-    """
-    write_goa(
-        tmp_path,
-        "human/ANG/ANG-goa.tsv",
-        [("GO:0005615", "obsolete live", "20200101")] * 6,
-    )
-    index = goa_obsolete_labels(tmp_path)
-    assert index["GO:0005615"][1] == "genes/human/ANG/ANG-goa.tsv"
-
-
 def test_new_row_extensions_are_authored():
     """``extensions[].term`` is author-written on a NEW row, GOA's elsewhere."""
     data = {

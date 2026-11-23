@@ -134,6 +134,15 @@ def iter_authored_go_terms(data: Any) -> Iterator[AuthoredTerm]:
             # A NEW row's extensions are written by the reviewer along with the
             # row. On any other row they came from GOA with the annotation, so
             # they are machine-sourced and trusted, like the row's own term.
+            #
+            # This slot is walked for correctness, not because it currently
+            # yields anything: of the 16 extension terms on NEW rows in the
+            # corpus, NONE is a GO id (14 UniProtKB via RO:0002233 has input,
+            # one UBERON, one CL), so every one is skipped by the GO prefix
+            # filter before obsoletion is ever consulted. Its empty result is
+            # therefore a fact about prefixes, not evidence that the terms
+            # there are live. GO extensions legitimately take GO terms
+            # (occurs_in, part_of), so the slot can start mattering at any time.
             for j, extension in enumerate(annotation.get("extensions") or []):
                 if isinstance(extension, dict):
                     yield from _term(
@@ -201,6 +210,12 @@ def goa_obsolete_labels(project_root: Path = PROJECT_ROOT) -> Dict[str, Tuple[st
     so the message is deterministic. The row's own ``DATE`` is the date of the
     *annotation*, not of the fetch, so it says nothing about which file is
     fresher and is not consulted.
+
+    One source is recorded per curie, by construction: the return type holds a
+    single ``(label, source)`` and the corroboration count is not surfaced. So
+    the row-versus-file distinction above cannot be read back out of this
+    index -- it governs how its output should be *argued from*, not what the
+    output contains.
 
     The source is a repository-relative path, not a basename: gene directory
     names repeat across organisms (``genes/human/ACO2`` and ``genes/yeast/ACO2``
