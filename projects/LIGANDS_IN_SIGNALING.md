@@ -199,15 +199,21 @@ Beyond the vertebrates and fly (counts from the table above):
 - **Yeasts.** Both place their pheromones outside any pathway term (A on GPCR signaling): budding
   yeast MFA1, MFA2, MF(ALPHA)1 and MF(ALPHA)2, and fission yeast map2 and mfm1-3, all with
   mating pheromone activity, are `involved_in` only generic signal transduction, while the
-  receptors are in the GPCR pathway. The adenylate cyclase GPCR terms are glucose sensing (X).
+  receptors are in the GPCR pathway. The adenylate cyclase GPCR terms are glucose sensing (X),
+  except budding yeast's adenylate cyclase-inhibiting term, which holds only the Ras GAPs IRA1
+  and IRA2 (G).
 - **Worm.** Netrin (unc-6), the ephrins and the DSL Notch ligands (lag-2, dsl-1) are in their
   pathways without a ligand MF (C); the Wnts sit on Wnt signaling, not the non-canonical or
   spindle-positioning subterms (B). Smoothened, NGF, adiponectin, TLR4 and LPS terms name
   pathways worms lack (O).
 - **Arabidopsis.** The receptor serine/threonine kinase term holds receptor-like kinases (BRL2,
   FLS2, SERK1) but none of TAIR's peptide ligands (PSK, CLE, CEP, GLV/RGF, RALF, EPFL), which
-  are `involved_in` only generic signal transduction or downstream processes (A). The GPCR terms
-  rest on heterotrimeric G-protein genes, and a canonical plant GPCR is contested (O).
+  are `involved_in` only generic signal transduction or downstream processes (A). Three GPCR
+  terms rest on heterotrimeric G-protein genes, and a canonical plant GPCR is contested (O). Two
+  terms are G: the phospholipase C GPCR term holds only the diacylglycerol kinases DGK1-7, by IEA
+  alone, which points at an annotation rule rather than a curator; and the innate immune
+  activating term mixes the chitin receptors CERK1 and LYK3 with the intracellular NLRs RPS2 and
+  RPS5.
 - **Dictyostelium.** Its GPCR pathways pass, but falsely: the cAMP receptor carA-1 carries
   *pathogen-derived receptor ligand activity*, so the receptor itself counts as the ligand.
 - **A suspect human pass.** Human *G protein-coupled acetylcholine receptor signaling pathway*
@@ -236,9 +242,8 @@ annotations, and netrin signaling "passes" on DSCAM and tubulin. Only IL34 (huma
 
 Caveats: symbol matching stands in for orthology, so a ligand named differently in another
 species is missed (mouse Fasl, Kitl and Hc for human FASLG, KITLG and C5 make mouse Fas, Kit
-and C5a signaling N rather than A); a passing species offers at most eight ligand symbols per
-term as donors, so the cap can change a category (complexes and proteoform symbols are left out
-of the donor list); fly, worm, the yeasts, Arabidopsis and Dictyostelium have no same-lineage
+and C5a signaling N rather than A); every ligand gene of a passing species is offered as a
+donor, except Complex Portal entries, which can never match a gene symbol; fly, worm, the yeasts, Arabidopsis and Dictyostelium have no same-lineage
 donor (each is its own lineage), so their lookups rest on curated/expected_ligands.yaml and
 unlisted terms fall into U; gene counts are of GAF object ids, so a gene listed under two ids
 (CERK1 in Arabidopsis, carA-1 in Dictyostelium) counts twice;
