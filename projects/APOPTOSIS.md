@@ -19,6 +19,11 @@ first review slice should stay mammal-focused, with human and mouse rows handled
 together, while using conserved opisthokont components as comparators rather
 than blindly transferring every mammalian branch to flies, worms, or fungi.
 
+**Phase 2 (proposed 2026-11-23):** the review campaign below is complete. The
+next phase is scoped in [phase 2 scope](APOPTOSIS/PHASE2_SCOPE.md): ontology
+refactoring of the apoptosis branch, step-level annotation completeness across
+species, and GO-CAMs projected from axiomatized module steps.
+
 ## Overview
 
 Apoptosis is a caspase-centered programmed cell-death program in metazoans. In
