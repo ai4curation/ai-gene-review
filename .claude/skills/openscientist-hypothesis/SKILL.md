@@ -76,6 +76,22 @@ hypothesis jobs for gene function review.
   broad "characterize this gene") both avoids timeouts and gives cleaner,
   more decisive provenance.
 
+## Server Queue and Orphaned Jobs
+
+- The account's OpenScientist jobs share a small server-side concurrency limit
+  (observed: about two running at once), and other workstreams on the same API key
+  compete for it. Extra submissions sit in `queued` for hours.
+- The provider's client-side timeout counts queue time, and on expiry it cancels the
+  job. A narrowly scoped job can therefore be cancelled as a "7200s timeout" without
+  ever running. Before narrowing scope after a timeout, list the jobs
+  (`GET https://www.openscientist.io/api/v1/jobs`, Bearer `OPENSCIENTIST_API_KEY`) and
+  check whether it ever left `queued`. Do not launch more jobs than the queue can run.
+- A container restart kills the local wrappers but not the server jobs, which keep
+  their place in the queue. Do not re-submit. Re-attach with
+  `scripts/openscientist_attach_job.py <job_id> <research args>`, using the args from a
+  `--dry-run` of the same hypothesis. It never re-submits or cancels, and writes the
+  normal report.
+
 ## Failure Modes
 
 - A job can exit 0 yet write no report. Always confirm `openscientist.md` (and
