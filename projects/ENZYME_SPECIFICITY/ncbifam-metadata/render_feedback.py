@@ -65,19 +65,41 @@ def candidate_text(
 
     Computed from the model itself, not from the check's pair records, so a model added
     by hand from the sweep gets the same treatment as a flagged one. A partial EC would
-    match a whole EC subclass, so its terms are not offered as candidates.
+    match a whole EC subclass, so its terms are not offered; a complete EC beside it
+    still is. An empty result means no GO term carries the EC as a cross-reference,
+    not that GO lacks a term for the reaction: many GO terms cross-reference only Rhea.
+
+    >>> class Hierarchy:
+    ...     def terms_for_ec(self, ec):
+    ...         return {"3.4.16.4": {"GO:0009002"}}.get(ec, set())
+    >>> db = sqlite3.connect(":memory:")
+    >>> _ = db.execute("CREATE TABLE statements (subject, predicate, value)")
+    >>> _ = db.execute("INSERT INTO statements VALUES ('GO:0009002', 'rdfs:label', 'x')")
+    >>> candidate_text([], Hierarchy(), db)
+    '(model has no EC)'
+    >>> candidate_text(["2.1.2.-"], Hierarchy(), db)
+    '(partial EC 2.1.2.-; not listed)'
+    >>> candidate_text(["3.5.4.4"], Hierarchy(), db)
+    '(no GO term cross-references EC 3.5.4.4)'
+    >>> candidate_text(["3.4.16.4", "3.4.21.-"], Hierarchy(), db)
+    'GO:0009002 x; partial EC 3.4.21.- not listed'
     """
     if not ec_numbers:
         return "(model has no EC)"
     partial = [ec for ec in ec_numbers if not is_complete_ec(ec)]
-    if partial:
+    complete = [ec for ec in ec_numbers if is_complete_ec(ec)]
+    if not complete:
         return f"(partial EC {', '.join(partial)}; not listed)"
-    terms = sorted(set().union(*(hierarchy.terms_for_ec(ec) for ec in ec_numbers)))
+    terms = sorted(set().union(*(hierarchy.terms_for_ec(ec) for ec in complete)))
     if not terms:
-        return "(none in GO)"
-    if len(terms) > MAX_CANDIDATES:
-        return f"({len(terms)} terms under the model's EC; too broad to list)"
-    return "; ".join(f"{t} {go_label(go_db, t)[0]}" for t in terms)
+        text = f"(no GO term cross-references EC {', '.join(complete)})"
+    elif len(terms) > MAX_CANDIDATES:
+        text = f"({len(terms)} terms under the model's EC; too broad to list)"
+    else:
+        text = "; ".join(f"{t} {go_label(go_db, t)[0]}" for t in terms)
+    if partial:
+        text += f"; partial EC {', '.join(partial)} not listed"
+    return text
 
 
 def main() -> None:
@@ -115,6 +137,10 @@ def main() -> None:
             else:
                 # "various" dismisses only the model's own flagged pairs, nothing else
                 covered.update(k for k in pair_of if k[0] == m)
+        if "better" in t and t["verdict"] == "EC_SUSPECT":
+            errors.append(
+                f"{t['models']}: EC_SUSPECT keeps the term, so takes no better"
+            )
         if "better" in t:
             label, deprecated = go_label(go_db, t["better"])
             if label is None or deprecated:
@@ -143,9 +169,10 @@ def main() -> None:
         "RefSeq hits are the release table's `n_refseq_protein_hits`. `proposed` is a "
         "curator's replacement where one was checked; `GO terms for the model's EC` "
         "lists, unreviewed, the terms that cross-reference the model's own EC numbers. "
-        "`(none in GO)` there means GO has no term for the model's complete EC, so the "
-        "fix may need a new GO term rather than a removal; a partial EC would match a "
-        "whole subclass, so its terms are not listed. In the EC_SUSPECT section these "
+        "`no GO term cross-references EC …` means no GO term carries that EC as a "
+        "cross-reference; GO often has a term for the reaction all the same, "
+        "cross-referenced only to Rhea, as `proposed` shows for adenosine deaminase. "
+        "A partial EC would match a whole subclass, so its terms are not listed. In the EC_SUSPECT section these "
         "are the terms the verdict does not propose adopting. The RefSeq column is summed over the "
         "distinct models in each verdict; a model in two verdicts counts in both, so the "
         "rows are not additive.",
@@ -191,7 +218,8 @@ def main() -> None:
                 )
                 candidates.append(candidate_text(f.ec_numbers, hierarchy, go_db))
             if len(set(candidates)) == 1:
-                candidates = candidates[:1]
+                prefix = "(all models) " if len(candidates) > 1 else ""
+                candidates = [prefix + candidates[0]]
             lines.append(
                 f"| {'<br>'.join(models)} | {go} {label} | {better} | "
                 f"{'<br>'.join(candidates)} | {t['note']} |"

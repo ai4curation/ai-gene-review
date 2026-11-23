@@ -210,7 +210,7 @@ The term is a descendant of a GO term for the model's EC: a specific substrate o
 
 ## No GO term cross-references the model's EC (57)
 
-These cannot be placed: GO has no term for the model's EC (often a recently created EC number). Check by name.
+These cannot be placed: no GO term carries the model's EC as a cross-reference (a recent EC number, or a GO term cross-referenced only to Rhea). Check by name.
 
 | model | product name | model EC | GO term | term EC | EC relation | RefSeq hits |
 |---|---|---|---|---|---|---|

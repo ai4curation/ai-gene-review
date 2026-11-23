@@ -268,8 +268,9 @@ def main() -> None:
             else:
                 where, model_terms = placement(go, f.ec_numbers, t["ec"], hierarchy)
                 rows[-1]["placement"] = where
-                rows[-1]["model_ec_terms_first10"] = model_terms[:10]
-                rows[-1]["model_ec_term_count"] = len(model_terms)
+                if where != "broad_class":  # the heuristic does not look terms up
+                    rows[-1]["model_ec_terms_first10"] = model_terms[:10]
+                    rows[-1]["model_ec_term_count"] = len(model_terms)
     meta = {
         "ncbifam_release": db.release(),
         "models": len(db.families),
@@ -358,8 +359,9 @@ def render(meta: dict, rows: list[dict], obsolete: list[dict]) -> str:
     table(
         "no_go_for_model_ec",
         "No GO term cross-references the model's EC",
-        "These cannot be placed: GO has no term for the model's EC (often a recently "
-        "created EC number). Check by name.",
+        "These cannot be placed: no GO term carries the model's EC as a "
+        "cross-reference (a recent EC number, or a GO term cross-referenced only to "
+        "Rhea). Check by name.",
     )
     broader = meta["placements"].get("broader", 0)
     broad = meta["placements"].get("broad_class", 0)

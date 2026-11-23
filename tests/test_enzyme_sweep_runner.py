@@ -11,6 +11,7 @@ PROJECT = Path(__file__).parents[1] / "projects/ENZYME_SPECIFICITY"
 SCRIPTS = [
     PROJECT / "cutoff-check/sweep/run_sweep.py",
     PROJECT / "ncbifam-metadata/check_release_table.py",
+    PROJECT / "ncbifam-metadata/render_feedback.py",
 ]
 
 

@@ -28,7 +28,7 @@ that reach, and the lists rank by it.
    - `narrower`: a descendant of them;
    - `broad_class`: a class term, such as serine-type endopeptidase activity, that covers
      the model's EC subclass;
-   - `no_go_for_model_ec`: GO has no term for the model's EC;
+   - `no_go_for_model_ec`: no GO term cross-references the model's EC;
    - `unrelated`: none of these.
 
    A partial model EC such as `7.1.1.-` matches the GO terms of every EC under it.
@@ -142,9 +142,13 @@ carries the term for another member's reaction.
   every GO term under it, so its placement says little. FEEDBACK.md computes the GO
   terms for each model's own EC from the model itself. It does not list them for a
   partial EC, which would offer a whole subclass, or when a complete EC has more than
-  ten. It says `(model has no EC)` for the sweep models without one. Where it shows
-  `(none in GO)`, GO has no term for the model's complete EC (bacterial Tgt, EC
-  2.4.2.29, is one example). There the fix may be a new GO term rather than a removal.
+  ten. It says `(model has no EC)` for the sweep models without one.
+- **GO's EC cross-references are incomplete.** EC-to-GO lookups use the
+  cross-references on GO terms, and many terms carry only a Rhea one. Adenosine
+  deaminase (EC 3.5.4.4) is an example: GO:0004000 exists, but no GO term
+  cross-references the EC, so its models are placed `no_go_for_model_ec`. FEEDBACK.md
+  says "no GO term cross-references EC …" rather than "GO has no term", and a curator
+  should look for a term by name before asking GO for a new one.
 - **Reach beyond PGAP is unchecked.** Whether these GO terms also reach UniProt through
   InterPro2GO depends on which models InterPro integrates and how InterPro maps them.
   That was not checked here.
