@@ -142,8 +142,10 @@ GO:1904719. No replacement BP term was invented, and no `proposed_new_terms` ent
 was added, because GO's obsoletion was a deliberate decision that this chemistry
 belongs in the molecular-function aspect, not an accidental gap.
 
-**Left alone, deliberately:** the *existing* GOA row on GO:0098734 (IEA,
-GO_REF:0000108) is still present in `GENE-goa.tsv` and is still `ACCEPT` here.
+**Left alone, deliberately** — *superseded; see the addendum at the end of this
+file, where the row became `MODIFY` to GO:0008474.* The *existing* GOA row on
+GO:0098734 (IEA, GO_REF:0000108) is still present in `GENE-goa.tsv` and was at
+the time `ACCEPT` here.
 Per CLAUDE.md, `existing_annotations[].term.id` comes from GOA and is not
 rewritten by this review; the obsoletion is upstream GOA's to propagate. Its
 `reason` prose ("correctly captures the core molecular function of CPT1C") does
@@ -168,10 +170,12 @@ action and reason are the review's own; neither GOA-sourced term id was touched.
   evidence for the deeper term. The action judges the term, not the evidence; the claim is
   not called false.
 - `GO:0098734 macromolecule depalmitoylation` (IEA, GO_REF:0000108) is a biological-process
-  row whose reason called it "the core molecular function of CPT1C". It stays `ACCEPT` —
-  the claim and the aspect are right — and the reason now calls it the core biological
-  process, points at `GO:0008474` for the molecular function, and records the earlier
-  mislabelling.
+  row whose reason called it "the core molecular function of CPT1C". At this point it
+  stayed `ACCEPT`, on the reasoning that the claim and the aspect were right. *That
+  parenthetical is wrong and is reversed by the addendum below: the aspect is precisely
+  what GO's obsoletion rejects, and the row is now `MODIFY` to `GO:0008474`.* The round-2
+  edit did correct the reason to call it the core biological process and to point at
+  `GO:0008474` for the molecular function.
 
 **Addendum (2026-11-23, PR #6790 review).** The GOA IEA row on `GO:0098734` is
 now `MODIFY` to `GO:0008474`, not `ACCEPT`. Four merged reviews carry the
