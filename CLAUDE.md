@@ -630,8 +630,9 @@ are real GOA terms); author-supplied ids are checked hard.
 *reachability* and a retired term is still reachable. `just validate` therefore warns
 (`obsolete_authored_term`,
 `src/ai_gene_review/validation/obsolete_authored_terms.py`) on every author-supplied GO
-id — a `NEW` row's term, `core_functions`, `proposed_replacement_terms`, a
-`proposed_parent` — that an offline signal marks obsolete; `just obsolete-term-audit`
+id — a `NEW` row's term and its extensions, `core_functions`,
+`proposed_replacement_terms`, a `proposed_parent`, an isoform's
+`isoform_specific_terms` — that an offline signal marks obsolete; `just obsolete-term-audit`
 lists them. Detection combines the GO sqlite snapshot's `obsolete ` label prefix with the
 same prefix in the corpus' own `GENE-goa.tsv` files, which are refetched per gene and so
 catch obsoletions the snapshot has not picked up (this is how `GO:0098734` was found while

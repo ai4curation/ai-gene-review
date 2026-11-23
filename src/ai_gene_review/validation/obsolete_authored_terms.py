@@ -17,9 +17,10 @@ reviews were not.
 
 This check is a **warning**, not an error, for two reasons. The signals
 available are incomplete, so a clean result does not mean the id is live (see
-below); and a corpus sweep found ~50 files with obsolete
-``proposed_replacement_terms``, which an error would turn into red CI on every
-unrelated PR until the sweep lands.
+below); and the corpus already carries a backlog an error would turn into red
+CI on every unrelated PR until a sweep lands. The audit at introduction found
+87 hits in 44 of 12,281 reviews -- 49 of them in ``proposed_replacement_terms``
+and 29 in ``core_functions.directly_involved_in``.
 
 Detection combines two offline signals, and neither is sufficient alone. GO's
 sqlite build prefixes a retired term's label with ``obsolete ``, which is the
@@ -80,7 +81,7 @@ MULTI_CORE_SLOTS = (
 LabelLookup = Callable[[str], Iterable[Tuple[str, str]]]
 
 
-@dataclass(frozen=True, order=True)
+@dataclass(frozen=True)
 class AuthoredTerm:
     """A GO term id the reviewer wrote, and where they wrote it."""
 
@@ -130,6 +131,15 @@ def iter_authored_go_terms(data: Any) -> Iterator[AuthoredTerm]:
         review = review if isinstance(review, dict) else {}
         if review.get("action") == "NEW":
             yield from _term(annotation.get("term"), f"existing_annotations[{i}].term")
+            # A NEW row's extensions are written by the reviewer along with the
+            # row. On any other row they came from GOA with the annotation, so
+            # they are machine-sourced and trusted, like the row's own term.
+            for j, extension in enumerate(annotation.get("extensions") or []):
+                if isinstance(extension, dict):
+                    yield from _term(
+                        extension.get("term"),
+                        f"existing_annotations[{i}].extensions[{j}].term",
+                    )
         for j, replacement in enumerate(review.get("proposed_replacement_terms") or []):
             yield from _term(
                 replacement,
@@ -174,16 +184,23 @@ def goa_obsolete_labels(project_root: Path = PROJECT_ROOT) -> Dict[str, Tuple[st
     ``CPT1C-goa.tsv`` carried ``GO:0098734``'s live label from a January fetch
     while four sibling genes' files carried the ``obsolete`` prefix from July.
 
-    A single prefixed row is therefore enough, and a majority of unprefixed
-    rows means nothing: when the check was written, 218 GOA files carried
-    ``GO:0005615`` as ``extracellular space`` and six as ``obsolete
-    extracellular space``, and the six were right -- they were simply fetched
-    after GO retired it. A stale file can miss an obsoletion; it cannot invent
-    one, short of GO reinstating a term it had retired. Files are read in sorted
-    order and the first prefixed row names the source, so the message is
-    deterministic. The row's own ``DATE`` is the date of the *annotation*, not
-    of the fetch, so it says nothing about which file is fresher and is not
-    consulted.
+    That independence is real where several genes' files agree:
+    ``GO:0008379`` carries the ``obsolete `` prefix in 14 different genes' GOA
+    files, which is 14 separate fetches reaching the same answer.
+
+    But a single prefixed row is enough on its own, and a majority of
+    unprefixed rows means nothing. The starkest case when the check was written
+    was ``GO:0005615``: 218 rows across 88 files carried it as ``extracellular
+    space``, against six rows that all sit in **one** file
+    (``genes/human/ANG/ANG-goa.tsv``) carrying ``obsolete extracellular
+    space``. That one file was right -- QuickGO confirms the obsoletion -- so
+    the rule is not a vote. A stale file can miss an obsoletion; it cannot
+    invent one, short of GO reinstating a term it had retired.
+
+    Files are read in sorted order and the first prefixed row names the source,
+    so the message is deterministic. The row's own ``DATE`` is the date of the
+    *annotation*, not of the fetch, so it says nothing about which file is
+    fresher and is not consulted.
 
     The source is a repository-relative path, not a basename: gene directory
     names repeat across organisms (``genes/human/ACO2`` and ``genes/yeast/ACO2``

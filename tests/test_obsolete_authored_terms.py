@@ -228,8 +228,11 @@ def test_each_obsolete_slot_is_reported_once():
     assert len(report.issues) == 2
 
 
-def test_authored_term_is_hashable_and_ordered():
-    """Deterministic output: callers sort and de-duplicate these."""
+def test_authored_term_is_hashable():
+    """Callers de-duplicate these; ordering is not used, so it is not declared.
+
+    ``order=True`` would raise TypeError comparing a None label with a str.
+    """
     a = AuthoredTerm(path="p", curie="GO:1", label="x")
     assert a == AuthoredTerm(path="p", curie="GO:1", label="x")
     assert len({a, AuthoredTerm(path="p", curie="GO:1", label="x")}) == 1
@@ -313,11 +316,14 @@ def test_goa_index_names_a_deterministic_source(tmp_path):
 
 
 def test_one_prefixed_file_outweighs_many_unprefixed(tmp_path):
-    """A majority of unprefixed rows does not clear a term.
+    """A majority of unprefixed files does not clear a term.
 
-    GO:0005615 was carried as ``extracellular space`` by 218 GOA files and as
-    ``obsolete extracellular space`` by six; QuickGO confirms the six. A stale
-    file misses an obsoletion, it does not invent one.
+    This is `GO:0005615` as the corpus actually held it: 218 rows across 88
+    files carried `extracellular space`, against six rows in the *single* file
+    `genes/human/ANG/ANG-goa.tsv` carrying `obsolete extracellular space` --
+    and QuickGO confirms that one file. So the fixture writes one prefixed file
+    against many unprefixed ones, not six against six: a stale file misses an
+    obsoletion, it does not invent one, and the rule is not a vote.
     """
     for name in "CDEFGH":
         write_goa(
@@ -326,7 +332,48 @@ def test_one_prefixed_file_outweighs_many_unprefixed(tmp_path):
     write_goa(
         tmp_path, "human/B/B-goa.tsv", [("GO:0005615", "obsolete live", "20200101")]
     )
-    assert "GO:0005615" in goa_obsolete_labels(tmp_path)
+    index = goa_obsolete_labels(tmp_path)
+    assert "GO:0005615" in index
+    assert index["GO:0005615"][1] == "genes/human/B/B-goa.tsv"
+
+
+def test_several_rows_in_one_file_are_not_several_files(tmp_path):
+    """The distinction the docstring now draws, asserted.
+
+    Six prefixed rows in one file is one fetch's worth of evidence, not six.
+    The index records one source either way, and that is the honest reading.
+    """
+    write_goa(
+        tmp_path,
+        "human/ANG/ANG-goa.tsv",
+        [("GO:0005615", "obsolete live", "20200101")] * 6,
+    )
+    index = goa_obsolete_labels(tmp_path)
+    assert index["GO:0005615"][1] == "genes/human/ANG/ANG-goa.tsv"
+
+
+def test_new_row_extensions_are_authored():
+    """``extensions[].term`` is author-written on a NEW row, GOA's elsewhere."""
+    data = {
+        "existing_annotations": [
+            {
+                "term": {"id": "GO:0000020", "label": "t"},
+                "extensions": [
+                    {"predicate": "part_of", "term": {"id": "GO:0000021", "label": "e"}}
+                ],
+                "review": {"action": "NEW"},
+            },
+            {
+                "term": {"id": "GO:0000022", "label": "u"},
+                "extensions": [
+                    {"predicate": "part_of", "term": {"id": "GO:0000023", "label": "f"}}
+                ],
+                "review": {"action": "ACCEPT"},
+            },
+        ]
+    }
+    assert curies(data) == ["GO:0000020", "GO:0000021"]
+    assert paths(data)[1] == "existing_annotations[0].extensions[0].term"
 
 
 def test_goa_index_on_empty_corpus(tmp_path):
