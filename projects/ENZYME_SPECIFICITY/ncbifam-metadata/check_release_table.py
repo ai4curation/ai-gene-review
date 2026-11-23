@@ -56,8 +56,10 @@ CACHE = Path(".cache")
 SKIP_LABELS = {  # in reporting order; each test applies only to pairs the ones above passed
     "model_has_no_ec": "where the model has no EC number",
     "non_mf_term": "with a biological process or cellular component term",
-    "mf_term_partial_ec_covers_model": "with a class term whose partial EC covers the model's EC or lies within it",
-    "mf_term_partial_ec_outside_model": "with a class term whose partial EC is unrelated to the model's EC",
+    "mf_term_partial_ec_contains_model": "with a class term whose partial EC contains the model's EC",
+    "mf_term_ancestor_of_model_term": "with a class term that is a GO ancestor of a term for the model's EC, though its partial EC does not contain it",
+    "mf_term_partial_ec_within_model": "with a class term whose partial EC lies inside the model's partial EC (narrower)",
+    "mf_term_partial_ec_outside_model": "with a class term unrelated to the model's EC by EC class or GO ancestry",
     "mf_term_has_no_ec": "with a molecular function term that has no EC cross-reference at all",
 }
 QUICKGO = "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{ids}"
@@ -71,6 +73,24 @@ def ec_under(ec: str, family_ec: str) -> bool:
     """
     fam = family_ec.split(".")
     return all(f == "-" or f == e for f, e in zip(fam, ec.split(".")))
+
+
+def ec_class_relation(model_ec: str, term_ec: str) -> str | None:
+    """How a GO term's partial EC class relates to a model's EC number.
+
+    ``contains``: the term's class contains the model's EC (the term is broader).
+    ``within``: the term's class lies inside a partial model EC (the term is narrower).
+
+    >>> ec_class_relation("3.5.3.1", "3.5.-.-"), ec_class_relation("3.5.-.-", "3.5.3.-")
+    ('contains', 'within')
+    >>> ec_class_relation("2.6.1.121", "1.-.-.-") is None
+    True
+    """
+    if ec_under(model_ec, term_ec):
+        return "contains"
+    if ec_under(term_ec, model_ec):
+        return "within"
+    return None
 
 
 def same_subclass(a: str, b: str) -> bool:
@@ -275,23 +295,35 @@ def main() -> None:
                 if t["aspect"] != "molecular_function":
                     skipped["non_mf_term"] += 1
                 elif partial := hierarchy.partial_ecs(go):
-                    # related when either EC class contains the other
-                    if any(
-                        ec_under(m, pe) or ec_under(pe, m)
-                        for m in f.ec_numbers
-                        for pe in partial
+                    relations = {
+                        ec_class_relation(m, pe) for m in f.ec_numbers for pe in partial
+                    }
+                    model_terms = {
+                        mt for m in f.ec_numbers for mt in hierarchy.terms_for_ec(m)
+                    }
+                    if "contains" in relations:
+                        skipped["mf_term_partial_ec_contains_model"] += 1
+                    elif any(
+                        go == mt or go in hierarchy.ancestors(mt) for mt in model_terms
                     ):
-                        skipped["mf_term_partial_ec_covers_model"] += 1
+                        # the term's own EC xref is narrower than its scope
+                        # (endopeptidase activity carries only EC:3.4.99.-)
+                        skipped["mf_term_ancestor_of_model_term"] += 1
+                    elif "within" in relations:
+                        skipped["mf_term_partial_ec_within_model"] += 1
                     else:
                         skipped["mf_term_partial_ec_outside_model"] += 1
                         class_mismatch.append(
                             {
                                 "model": f.accession,
                                 "product_name": f.product_name,
+                                "family_type": f.family_type,
                                 "ec_numbers": f.ec_numbers,
                                 "go": go,
                                 "go_name": t["name"],
                                 "go_partial_ec": partial,
+                                # without a GO term for the model's EC, ancestry is untested
+                                "ancestry_tested": bool(model_terms),
                                 "refseq_hits": hits.get(f.accession, 0),
                             }
                         )
@@ -436,17 +468,26 @@ def render(
             f"## Class term outside the model's EC class ({len(class_mismatch)})",
             "",
             "Not compared above and not triaged: the GO term carries only a partial EC, "
-            "and neither it nor the model's EC lies within the other (an oxidoreductase term on an "
-            "aminotransferase, say). Some are wrong-class terms; others follow an EC "
-            "reclassification, such as transporters moved from EC 3.6 to EC 7.",
+            "neither EC class contains the other, and the term is not a GO ancestor of "
+            "any term for the model's EC (a glycoside hydrolase term on the branching "
+            "enzyme GlgB, say). Some are wrong-class terms; others follow an EC "
+            "reclassification or a term whose partial EC is narrower than its scope.",
             "",
-            "| model | product name | model EC | GO term | term EC | RefSeq hits |",
-            "|---|---|---|---|---|---|",
+            "`ancestry tested` is `no` where GO has no term cross-referencing the "
+            "model's EC, so the GO-ancestor test could not run; endopeptidase activity "
+            "(cross-referenced only to EC 3.4.99.-) on proteasome subunits (EC 3.4.25.1) "
+            "is such a row, and is correct.",
+            "",
+            "| model | product name | family type | model EC | GO term | term EC | "
+            "ancestry tested | RefSeq hits |",
+            "|---|---|---|---|---|---|---|---|",
         ]
     )
     lines.extend(
-        f"| {r['model']} | {r['product_name']} | {', '.join(r['ec_numbers'])} | "
-        f"{r['go']} {r['go_name']} | {', '.join(r['go_partial_ec'])} | {r['refseq_hits']} |"
+        f"| {r['model']} | {r['product_name']} | {r['family_type']} | "
+        f"{', '.join(r['ec_numbers'])} | {r['go']} {r['go_name']} | "
+        f"{', '.join(r['go_partial_ec'])} | {'yes' if r['ancestry_tested'] else 'no'} | "
+        f"{r['refseq_hits']} |"
         for r in sorted(class_mismatch, key=lambda r: (-r["refseq_hits"], r["model"]))
     )
     lines.extend(
