@@ -345,9 +345,10 @@ def _snapshot_label(curie: str) -> Optional[str]:
         # not outweigh a query that has already answered -- see the probe.
         _SNAPSHOT_QUERY_FAILED = True
         return None
-    # A returned label (even None, meaning "no such term") is proof the build
-    # answers; only a non-None one proves it answers usefully, which is the
-    # stronger evidence and the one worth latching.
+    # Only a non-None label latches, which is deliberate conservatism rather
+    # than the obvious reading: a returned None is consistent with a healthy
+    # build that simply lacks the term, but also with one that answers nothing
+    # at all, and those are exactly what this flag exists to tell apart.
     if label is not None:
         _SNAPSHOT_QUERY_SUCCEEDED = True
     return label
@@ -371,7 +372,6 @@ def build_label_lookup(
     """
     resolved = project_root.resolve()
     goa: Optional[Mapping[str, Tuple[str, str]]] = None
-    consulted: Optional[List[str]] = None
 
     def lookup(curie: str) -> List[Tuple[str, str]]:
         nonlocal goa
@@ -399,17 +399,25 @@ def build_label_lookup(
         recreates, one level down, the very ambiguity ``live_according_to``
         and this field exist to remove.
 
-        Resolved on first use rather than at build time so a review with no
-        authored GO ids still never pays for loading the snapshot.
+        Resolved on each use rather than at build time, so a review with no
+        authored GO ids never pays for loading the snapshot and a change in
+        availability mid-run is still seen.
         """
-        nonlocal consulted
-        if consulted is None:
-            consulted = []
-            if goa_available(resolved):
-                consulted.append("the corpus GOA files")
-            if use_ontology and snapshot_available():
-                consulted.append("the GO snapshot")
-        return consulted
+        # Deliberately NOT memoised. Availability can change during a run: a
+        # snapshot query may raise and a later one succeed, and the probe is
+        # meant to track that. Freezing the first answer narrowed the
+        # contradiction below without stopping it -- the first hit could pin
+        # "GOA only" and a later snapshot detection would then name a source
+        # the same dict called unconsulted. `main()` builds one lookup outside
+        # the file loop, so that froze for the whole process. Both probes are
+        # cheap: one is a dict lookup after the adapter is cached, the other a
+        # lazy first-match rglob.
+        names = []
+        if goa_available(resolved):
+            names.append("the corpus GOA files")
+        if use_ontology and snapshot_available():
+            names.append("the GO snapshot")
+        return names
 
     lookup.consulted_sources = consulted_sources  # type: ignore[attr-defined]
     return lookup

@@ -795,19 +795,25 @@ def test_neither_source_available_reports_neither(tmp_path):
     assert lookup.consulted_sources() == []  # type: ignore[attr-defined]
 
 
-def test_availability_is_probed_once(tmp_path):
-    """Probed per hit, so the result is memoised in the closure."""
+def test_availability_is_re_probed_rather_than_frozen(tmp_path):
+    """Availability can change mid-run, so the answer must not be memoised.
+
+    Memoising narrowed the detected/consulted contradiction without stopping
+    it: a first hit could freeze "GOA only" and a later snapshot detection
+    would then name a source the same dict called unconsulted. `main()` builds
+    one lookup outside the file loop, so that froze for the whole process.
+    """
     write_goa(tmp_path, "human/A/A-goa.tsv", [("GO:0000120", "live", "20260101")])
-    calls = []
+    states = iter([False, True])
 
-    def probe():
-        calls.append(1)
-        return True
-
-    lookup = build_label_lookup(tmp_path, use_ontology=True, snapshot_available=probe)
-    lookup.consulted_sources()  # type: ignore[attr-defined]
-    lookup.consulted_sources()  # type: ignore[attr-defined]
-    assert calls == [1]
+    lookup = build_label_lookup(
+        tmp_path, use_ontology=True, snapshot_available=lambda: next(states, True)
+    )
+    assert lookup.consulted_sources() == ["the corpus GOA files"]  # type: ignore[attr-defined]
+    assert lookup.consulted_sources() == [  # type: ignore[attr-defined]
+        "the corpus GOA files",
+        "the GO snapshot",
+    ], "a later success must be seen, not frozen out"
 
 
 def test_an_observed_query_failure_makes_the_snapshot_unavailable(monkeypatch):
