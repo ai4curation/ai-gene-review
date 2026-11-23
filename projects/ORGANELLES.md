@@ -353,8 +353,8 @@ plastids come later.
       proteins at the endosome, rule 11 narrows the endogenous-receptor and foreign-cell
       clauses). A pool seen only when lysosomal degradation is inhibited, with a mutant,
       after depleting a deubiquitinase, with overexpression in a foreign cell, or that the
-      source itself frames as the place of degradation, is `MARK_AS_OVER_ANNOTATED` on every row of the term (BACE1, GRIN2B,
-      NBR1, SOD1). This sits beside rule 2 rather than against it: rule 2 says a
+      source itself frames as the place of degradation, is `MARK_AS_OVER_ANNOTATED` on
+      every row of the term (BACE1, GRIN2B, NBR1, SOD1). This sits beside rule 2 rather than against it: rule 2 says a
       direct-evidence row that cannot resolve the sub-compartment keeps the organelle;
       here the row is over-annotated because the organelle claim itself does not hold in an
       unperturbed cell, as with rule 8's perturbation-only evidence. The same holds for a
@@ -677,8 +677,9 @@ carry a stage or sub-compartment somewhere in the review, and 28 are root-only w
 synthesis row. The other 8 are root-only with direct or TAS evidence only (ACE, AVPR1A,
 CBLIF, EZR, GIGYF2, IL15, LRBA, RHOA) and were not in scope. All 28 were checked.
 Before the batch the maintainer extended CLAUDE.md's root-organelle exception to the
-endosome (keep the root; add a stage only on two independent lines). Two genes gained a sub-compartment row, and endosome rows changed
-action on 9 genes. The lessons are folded into rule 11.
+endosome (keep the root; add a stage only on two independent lines). Two genes gained a
+sub-compartment row, and endosome rows changed action on 9 genes. The lessons are folded
+into rule 11.
 
 | gene | outcome | evidence |
 |---|---|---|
