@@ -151,6 +151,20 @@ def iter_authored_go_terms(data: Any) -> Iterator[AuthoredTerm]:
                 proposed.get("proposed_parent"), f"proposed_new_terms[{i}].proposed_parent"
             )
 
+    for i, isoform in enumerate(data.get("functional_isoforms") or []):
+        if not isinstance(isoform, dict):
+            continue
+        for j, item in enumerate(isoform.get("isoform_specific_terms") or []):
+            yield from _term(
+                item, f"functional_isoforms[{i}].isoform_specific_terms[{j}]"
+            )
+
+    # Deliberately NOT walked: proposed_ontology_changes[].about_node,
+    # .has_direct_replacement, .has_nondirect_replacement and .subject. They are
+    # author-supplied and Term-ranged, so they look like candidates, but naming a
+    # retired term is exactly their purpose -- walking them would flag every
+    # correctly recorded obsoletion.
+
 
 def goa_obsolete_labels(project_root: Path = PROJECT_ROOT) -> Dict[str, Tuple[str, str]]:
     """Map every GO id some ``GENE-goa.tsv`` marks obsolete to its label and source.
@@ -170,22 +184,35 @@ def goa_obsolete_labels(project_root: Path = PROJECT_ROOT) -> Dict[str, Tuple[st
     deterministic. The row's own ``DATE`` is the date of the *annotation*, not
     of the fetch, so it says nothing about which file is fresher and is not
     consulted.
+
+    The source is a repository-relative path, not a basename: gene directory
+    names repeat across organisms (``genes/human/ACO2`` and ``genes/yeast/ACO2``
+    both hold an ``ACO2-goa.tsv``), and the citation is only useful if the
+    reader can find the file it names.
     """
     found: Dict[str, Tuple[str, str]] = {}
-    for goa in sorted((project_root / "genes").rglob("*-goa.tsv")):
+    genes = project_root / "genes"
+    for goa in sorted(genes.rglob("*-goa.tsv")):
+        source = goa.relative_to(project_root).as_posix()
         with goa.open(newline="") as handle:
             for row in csv.DictReader(handle, delimiter="\t"):
                 curie = (row.get("GO TERM") or "").strip()
                 label = (row.get("GO NAME") or "").strip()
                 if not curie or curie in found or not is_obsolete_label(label):
                     continue
-                found[curie] = (label, goa.name)
+                found[curie] = (label, source)
     return found
 
 
 @lru_cache(maxsize=4)
 def _cached_goa_obsolete_labels(project_root: Path) -> Dict[str, Tuple[str, str]]:
-    """``goa_obsolete_labels`` memoised, so a batch run scans the corpus once."""
+    """``goa_obsolete_labels`` memoised, so a batch run scans the corpus once.
+
+    The key is the *resolved* path. Callers reach this from two directions --
+    ``local_source_text.PROJECT_ROOT`` is already resolved while
+    ``validator.get_project_root()`` is not -- and under a symlinked checkout
+    the two spellings would otherwise each pay for their own corpus scan.
+    """
     return goa_obsolete_labels(project_root)
 
 
@@ -208,12 +235,24 @@ def _snapshot_label(curie: str) -> Optional[str]:
 
 
 def build_label_lookup(
-    project_root: Path = PROJECT_ROOT, use_ontology: bool = True
+    project_root: Path = PROJECT_ROOT,
+    use_ontology: bool = True,
+    goa_index_loader: Callable[[Path], Dict[str, Tuple[str, str]]] = _cached_goa_obsolete_labels,
 ) -> LabelLookup:
-    """A lookup over the offline signals: the corpus GOA labels and GO's snapshot."""
-    goa = _cached_goa_obsolete_labels(project_root)
+    """A lookup over the offline signals: the corpus GOA labels and GO's snapshot.
+
+    Building the lookup is free: the corpus scan is deferred until a term is
+    actually looked up, because most reviews reach this with no author-supplied
+    GO id at all and should not pay for the index. ``goa_index_loader`` is
+    injectable for testing.
+    """
+    resolved = project_root.resolve()
+    goa: Optional[Dict[str, Tuple[str, str]]] = None
 
     def lookup(curie: str) -> List[Tuple[str, str]]:
+        nonlocal goa
+        if goa is None:
+            goa = goa_index_loader(resolved)
         pairs: List[Tuple[str, str]] = []
         if curie in goa:
             goa_label, source = goa[curie]
@@ -245,6 +284,12 @@ def check_obsolete_authored_terms(
             f"{term.curie} is obsolete according to {source} ('{label}'), but it is "
             f"written here as an author-supplied term",
             path=term.path,
+            details={
+                "term_id": term.curie,
+                "written_label": term.label,
+                "detected_label": label,
+                "detected_by": source,
+            },
             suggestion=(
                 "Repoint to a live term that the evidence on this row supports -- check "
                 "the obsoleted term's replaced_by and consider against the gene rather "

@@ -14,6 +14,7 @@ import pytest
 from ai_gene_review.validation.obsolete_authored_terms import (
     OBSOLETE_AUTHORED_CHECK,
     AuthoredTerm,
+    build_label_lookup,
     check_obsolete_authored_terms,
     goa_obsolete_labels,
     iter_authored_go_terms,
@@ -362,3 +363,100 @@ def test_check_runs_as_part_of_best_practices():
     hits = [i for i in report.issues if i.check_type == OBSOLETE_AUTHORED_CHECK]
     assert len(hits) == 1
     assert hits[0].severity == ValidationSeverity.WARNING
+
+
+# --------------------------------------------------------------------------
+# Review round 1: slot coverage and citation precision
+# --------------------------------------------------------------------------
+
+
+def test_isoform_specific_terms_are_authored():
+    """``functional_isoforms[].isoform_specific_terms[]`` is a fifth authored slot.
+
+    It is `range: Term`, author-written, and in use in 24 corpus reviews, so
+    omitting it left a real coverage hole.
+    """
+    data = {
+        "functional_isoforms": [
+            {
+                "isoform_id": "P1-2",
+                "isoform_specific_terms": [
+                    {"id": "GO:0000007", "label": "g"},
+                    {"id": "GO:0000008", "label": "h"},
+                ],
+            }
+        ]
+    }
+    assert curies(data) == ["GO:0000007", "GO:0000008"]
+    assert paths(data) == [
+        "functional_isoforms[0].isoform_specific_terms[0]",
+        "functional_isoforms[0].isoform_specific_terms[1]",
+    ]
+
+
+def test_proposed_ontology_changes_are_deliberately_not_walked():
+    """Its ``Term`` slots name retired terms on purpose -- that is their job.
+
+    ``about_node``, ``has_direct_replacement`` and ``has_nondirect_replacement``
+    are author-supplied and `range: Term`, so they look like candidates; walking
+    them would flag every correctly-recorded obsoletion.
+    """
+    data = {
+        "proposed_ontology_changes": [
+            {
+                "about_node": {"id": "GO:0051082", "label": "unfolded protein binding"},
+                "has_direct_replacement": {"id": "GO:0000010", "label": "x"},
+            }
+        ]
+    }
+    assert curies(data) == []
+
+
+def test_goa_source_is_a_repo_relative_path(tmp_path):
+    """A bare basename is ambiguous: two organisms can share a gene symbol."""
+    write_goa(
+        tmp_path, "yeast/ACO2/ACO2-goa.tsv", [("GO:0000112", "obsolete y", "20260101")]
+    )
+    _, source = goa_obsolete_labels(tmp_path)["GO:0000112"]
+    assert source == "genes/yeast/ACO2/ACO2-goa.tsv"
+
+
+def test_distinct_organisms_sharing_a_symbol_are_distinguishable(tmp_path):
+    write_goa(
+        tmp_path, "human/ACO2/ACO2-goa.tsv", [("GO:0000113", "obsolete z", "20260101")]
+    )
+    write_goa(
+        tmp_path, "yeast/ACO2/ACO2-goa.tsv", [("GO:0000114", "obsolete z", "20260101")]
+    )
+    index = goa_obsolete_labels(tmp_path)
+    assert index["GO:0000113"][1] == "genes/human/ACO2/ACO2-goa.tsv"
+    assert index["GO:0000114"][1] == "genes/yeast/ACO2/ACO2-goa.tsv"
+
+
+def test_issue_details_record_the_written_and_detected_labels():
+    """``AuthoredTerm.label`` was collected but never surfaced anywhere."""
+    report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
+    check_obsolete_authored_terms(OBSOLETE_DOC, report, lookup_obsolete)
+    details = report.issues[0].details
+    assert details is not None
+    assert details["written_label"] == "unfolded protein binding"
+    assert details["detected_label"] == "obsolete unfolded protein binding"
+    assert details["detected_by"] == "GO snapshot"
+
+
+def test_lookup_does_not_scan_the_corpus_until_a_term_is_looked_up(tmp_path):
+    """Building the lookup must be free: most files have no authored GO ids."""
+    calls = []
+
+    def counting_scan(root):
+        calls.append(root)
+        return {}
+
+    lookup = build_label_lookup(
+        tmp_path, use_ontology=False, goa_index_loader=counting_scan
+    )
+    assert calls == []
+    lookup("GO:0000001")
+    assert calls == [tmp_path.resolve()]
+    lookup("GO:0000002")
+    assert calls == [tmp_path.resolve()], "the index should be built at most once"
