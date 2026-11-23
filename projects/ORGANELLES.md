@@ -368,18 +368,23 @@ plastids come later.
     - **Lysosome lines.** LAMP1, LAMP2 and LysoTracker do not separate late endosome or
       endolysosome from lysosome: they carry the root, never a sub-compartment, and when the
       core activity is shown elsewhere they keep the pool non-core (UNC93B1, RAB9A). An
-      endocytosed cargo marker (LDL, transferrin) traces the cargo (ARRDC3); a
+      endocytosed cargo marker (LDL) traces the cargo (ARRDC3); a
       "lysosome-associated" or "lysosome-interacting" compartment that the authors keep
       distinct is not the lysosome (TNFAIP3); overexpression that enlarges the compartment
       it is seen on is a perturbed line (RUBCN).
     - **Recruited and regulated pools are not tethering**: RAB GTPases in a GTPase cycle
       (RAB7B, RAB8A, RAB9A, RAB9B), PI3P binding (ANK2), a peripheral V-ATPase subunit or
       mTORC1-regulated binding (CRYAB, UVRAG), regulated ATG8 conjugation (GABARAP), a
-      stress-induced LRRK2-dependent pool (RAB8A). A RAB's lysosome pool is a recruited
-      stop: `KEEP_AS_NON_CORE`, no `GO:0098574`, and a `WRONG_QUALIFIER` `CHECK` on any IBA
-      `is_active_in` whose activity acts elsewhere. A prenyl anchor settles membrane versus
-      lumen, but compartment identity is still the weak link, so no `GO:0005765`.
-    - **Sub-compartments.** None of the 34 genes gained one. `GO:0005765` needs the
+      stress-induced LRRK2-dependent pool (RAB8A). A RAB whose activity acts elsewhere (as
+      for RAB7B and RAB9A, at late endosomes and the TGN) has a lysosome pool that is a
+      recruited stop: `KEEP_AS_NON_CORE`, and a `WRONG_QUALIFIER` `CHECK` on any IBA
+      `is_active_in`; a RAB whose activity is itself shown at the lysosome (RAB7A is the
+      obvious candidate) can be core. A GTPase cycle is recruitment, so no `GO:0098574`
+      unless rule 7's tethering route is met. A prenyl anchor settles membrane versus lumen,
+      but compartment identity is still the weak link (LAMP1 does not separate late
+      endosome from lysosome), so no `GO:0005765` on that evidence.
+    - **Sub-compartments.** None of the 33 genes gained one (34 organelle lists; SOD1
+      was on both). `GO:0005765` needs the
       protein's own TM plus a lysosome-specific assay on the endogenous protein; a lysosomal
       pool shown only for overexpressed protein in a non-expressing cell does not count,
       even for a resident type II enzyme (PLD4). `GO:0043202` needs a signal-peptide
@@ -543,9 +548,11 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
         same background sentence as its lysosome IDA), UNC93B1 (endosome rows on the
         same mouse donor chain), UVRAG (late and early endosome rows on the same unread
         papers)
-  - [ ] Vacuole series: UVRAG's GO:0000323 lytic vacuole MODIFY lists lysosome as a
-        replacement while the lysosome row is KEEP_AS_NON_CORE; likely landing is
-        KEEP_AS_NON_CORE on GO:0000323 or dropping lysosome from the replacement list
+  - [ ] UVRAG's GO:0000323 lytic vacuole MODIFY lists lysosome as a replacement while
+        the lysosome row is KEEP_AS_NON_CORE, the shape CLAUDE.md's "replacement must be
+        a claim you would ACCEPT" rule targets; fix ahead of the rest of the vacuole
+        series (likely KEEP_AS_NON_CORE on GO:0000323, or drop lysosome from the
+        replacement list)
   - [ ] SORL1's GO:1905146 lysosomal protein catabolic process row needs the
         participation test (sorLA sorts the cargo; it does not degrade it)
   - [ ] At the next `just local-quote-baseline --prune`, check the RAB7B and RAB9A
