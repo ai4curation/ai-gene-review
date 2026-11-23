@@ -24,10 +24,15 @@
   `BRUMA/bma-ben-1` review and are supported by the local UniProt domain
   architecture.
 - The two EnsemblMetazoa behavior rows, chemosensory behavior and egg-laying
-  behavior, are transferred from the *C. elegans* BEN-1 product. I marked both
-  over-annotated for this parasite beta-tubulin: the direct evidence for O61358
-  is the conserved beta-tubulin sequence, not an *O. volvulus* sensory or
-  egg-laying circuit assay.
+  behavior, are transferred from the *C. elegans* BEN-1 product. I marked the
+  chemosensory behavior transfer over-annotated for this parasite beta-tubulin:
+  the direct evidence for O61358 is the conserved beta-tubulin sequence, not an
+  *O. volvulus* sensory assay. I removed the egg-laying behavior transfer
+  because Engelbrecht and Schulz-Key directly observed adult *O. volvulus*
+  females expelling microfilariae [PMID:6087508 Observations on adult
+  Onchocerca volvulus maintained in vitro., "Up to 4,000 microfilariae were
+  expelled by each female per day"], so the egg-laying behavior term does not
+  fit filarial release of first-stage larvae.
 - Geary et al. reported that all four filarial beta-tubulins considered in
   their comparison encoded Phe at the codon-200 site associated with
   benzimidazole resistance [PMID:9576511 Cloning and characterization of cDNAs
@@ -36,3 +41,6 @@
   That residue is consistent with a benzimidazole-sensitive beta-tubulin
   sequence, so the remaining gap is not O61358's local codon 200 but whether
   this cloned isotype is a drug-engaged target in adult *O. volvulus*.
+- The merged `BRUMA/bma-ben-1` review still marks the same egg-laying behavior
+  transfer as `MARK_AS_OVER_ANNOTATED`; revisit that sibling in a later BRUMA
+  follow-up rather than editing it in this ONCVO PR.
