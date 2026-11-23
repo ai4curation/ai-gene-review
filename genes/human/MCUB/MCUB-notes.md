@@ -17,8 +17,14 @@ rows and places `GO:0019855` calcium channel inhibitor activity on the same
 MCUB branch. The ancestral `GO:0036444` calcium import into the mitochondrion
 IBD still descends into MCUB and needs a matching IRD at `PTN002668518`.
 
-The direct ComplexPortal `GO:0036444` NAS row is best read as a sign error on
-the same Lambert et al. evidence: the row points at the MCUB paper that
-supports `GO:0110099` negative regulation of calcium import into the
-mitochondrion, and that specific negative-regulation row is already present
-experimentally in GOA.
+The direct ComplexPortal `GO:0036444` NAS row is best read as a component-level
+over-propagation from the uniplex complex to MCUB: the row sits in a
+2025-10-15 ComplexPortal batch that also propagated mitochondrial calcium
+homeostasis and uniplex component terms to MCU and MCUB. MCUB is structurally
+part of the variant pore, but the Lambert et al. row supports the inhibitory
+`GO:0110099` negative-regulation term rather than positive calcium import.
+
+Bare `GO:0005515` protein-binding rows from proteome-scale interaction
+screens do not specify a molecular function beyond untyped binding, so this
+review removes that term and keeps the specific uniplex and inhibitory
+activities instead.

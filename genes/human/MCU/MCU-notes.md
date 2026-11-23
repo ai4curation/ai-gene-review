@@ -21,3 +21,8 @@ Production GO-CAM `gomodel:65d7e4ac00002808` captures the MCUB inhibitory
 model. Its MCU activity uses `GO:0005262` part_of `GO:0036444` in the
 mitochondrial inner membrane, which is consistent with this review and with
 the existing `modules/mitochondrial_calcium_uniporter.yaml` module.
+
+Bare `GO:0005515` protein-binding rows from co-purification and
+proteome-scale interaction evidence do not specify a molecular function beyond
+untyped binding, so this review removes that term and keeps calcium-channel,
+uniplex membership, and specific EMRE/MICU gating claims instead.
