@@ -643,3 +643,22 @@ def test_no_live_signal_leaves_an_empty_trace():
     report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
     check_obsolete_authored_terms(OBSOLETE_DOC, report, lookup_both_signals)
     assert report.issues[0].details["live_according_to"] == []
+
+
+def test_goa_index_never_yields_a_live_label(tmp_path):
+    """Why ``live_according_to`` can only ever name the snapshot.
+
+    ``goa_obsolete_labels`` indexes a row only when its label already carries
+    the ``obsolete `` prefix, so the GOA pair ``lookup`` appends is always a hit
+    and can never be the live source. This pins that structurally, because it
+    is what bounds the field's domain -- the GOA-versus-GOA disagreement
+    (CPT1C's own stale file versus its fresh siblings) is not recordable.
+    """
+    write_goa(
+        tmp_path,
+        "human/A/A-goa.tsv",
+        [("GO:0000116", "live label", "20260101"), ("GO:0000117", "obsolete x", "20260101")],
+    )
+    index = goa_obsolete_labels(tmp_path)
+    assert set(index) == {"GO:0000117"}
+    assert all(label.startswith("obsolete ") for label, _ in index.values())

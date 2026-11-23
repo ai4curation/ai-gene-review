@@ -339,7 +339,20 @@ def check_obsolete_authored_terms(
     A source reporting the term as still **live** is not a hit -- a stale
     snapshot beside a freshly fetched GOA file is the normal case, not
     agreement -- but it is recorded in ``live_according_to`` so the hit carries
-    the disagreement instead of discarding it.
+    that disagreement instead of discarding it.
+
+    ``live_according_to`` covers **snapshot-versus-GOA only**, and can hold
+    nothing else: ``goa_obsolete_labels`` indexes a row only when its label
+    already carries the ``obsolete `` prefix, so the GOA pair ``lookup``
+    appends is always a hit and can never be the live source. The
+    GOA-versus-GOA case is therefore *not* recorded -- including the
+    ``GO:0098734`` case this check was built from, where CPT1C's own file still
+    reported the live label while four sibling genes' files carried the
+    obsoletion. A hit there names a detecting sibling and leaves no trace that
+    the gene's own GOA file disagrees. Capturing that would mean indexing live
+    rows as well, which is most of 12,000 files' worth of labels in memory to
+    record a disagreement the hit's own `source` already hints at, so it is
+    deliberately not done.
     """
     for term in iter_authored_go_terms(data):
         signals = list(lookup(term.curie))
