@@ -351,10 +351,9 @@ plastids come later.
       its physiological trigger (the endogenous receptor after its own agonist), is the
       ligand-driven pool of rule 8: real and non-core (CXCR4; for endocytosed surface
       proteins at the endosome, rule 11 narrows the endogenous-receptor and foreign-cell
-      clauses). A pool seen only when
-      lysosomal degradation is inhibited, with a mutant, after depleting a deubiquitinase,
-      with overexpression in a foreign cell, or that the source itself frames as the place of
-      degradation, is `MARK_AS_OVER_ANNOTATED` on every row of the term (BACE1, GRIN2B,
+      clauses). A pool seen only when lysosomal degradation is inhibited, with a mutant,
+      after depleting a deubiquitinase, with overexpression in a foreign cell, or that the
+      source itself frames as the place of degradation, is `MARK_AS_OVER_ANNOTATED` on every row of the term (BACE1, GRIN2B,
       NBR1, SOD1). This sits beside rule 2 rather than against it: rule 2 says a
       direct-evidence row that cannot resolve the sub-compartment keeps the organelle;
       here the row is over-annotated because the organelle claim itself does not hold in an
@@ -451,8 +450,8 @@ plastids come later.
       because what is observed is the route the ligand drives, not a pool the expression
       level creates. A large fusion (GFP), a mutant, constitutive overexpression with no
       ligand trigger, or a compartment seen only beside an overexpressed partner stays
-      under rule 10's clauses. MARK_AS_OVER_ANNOTATED is the close alternative when every
-      line is ectopic (FGFR4). Recruited cytosolic proteins get the stricter test:
+      under rule 10's clauses. For FGFR4, whose every line is ectopic, MARK_AS_OVER_ANNOTATED
+      was weighed and not taken. Recruited cytosolic proteins get the stricter test:
       a pool that exists only beside an overexpressed partner is perturbed (GRAP2), and an
       adaptor or kinase needs a line on the protein itself (GRB2 and JAK1 have one, JAK3 an
       abstract-level one, JAK2 none). Overexpression of a partner that enlarges endosomes
@@ -676,9 +675,9 @@ The first endosome (GO:0005768) batch and the first for a series organelle (#675
 survey regenerated on 2026-11-23 found 110 human genes with an endosome row; 74 already
 carry a stage or sub-compartment somewhere in the review, and 28 are root-only with a
 synthesis row. The other 8 are root-only with direct or TAS evidence only (ACE, AVPR1A,
-CBLIF, EZR, GIGYF2, IL15, LRBA, RHOA) and were not in scope. All 28 were checked. Before the batch the maintainer extended CLAUDE.md's
-root-organelle exception to the endosome (keep the root; add a stage only on two
-independent lines). Two genes gained a sub-compartment row, and endosome rows changed
+CBLIF, EZR, GIGYF2, IL15, LRBA, RHOA) and were not in scope. All 28 were checked.
+Before the batch the maintainer extended CLAUDE.md's root-organelle exception to the
+endosome (keep the root; add a stage only on two independent lines). Two genes gained a sub-compartment row, and endosome rows changed
 action on 9 genes. The lessons are folded into rule 11.
 
 | gene | outcome | evidence |
