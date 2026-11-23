@@ -360,10 +360,13 @@ def check_obsolete_authored_terms(
         if not hits:
             continue
         live = [source for source, label in signals if not is_obsolete_label(label)]
+        # Double quotes, not single: GO labels themselves contain single quotes
+        # (the corpus holds `obsolete 'de novo' NAD+ biosynthetic process from
+        # L-tryptophan`), which would nest unreadably.
         if len({label for _, label in hits}) == 1:
-            attribution = f"{' and '.join(s for s, _ in hits)} ('{hits[0][1]}')"
+            attribution = f"{' and '.join(s for s, _ in hits)} (\"{hits[0][1]}\")"
         else:
-            attribution = " and ".join(f"{source} ('{label}')" for source, label in hits)
+            attribution = " and ".join(f'{source} ("{label}")' for source, label in hits)
         report.add_issue(
             ValidationSeverity.WARNING,
             f"{term.curie} is obsolete according to {attribution}, but it is "
@@ -372,8 +375,11 @@ def check_obsolete_authored_terms(
             details={
                 "term_id": term.curie,
                 "written_label": term.label,
-                "detected_label": hits[0][1],
-                "detected_by": " and ".join(source for source, _ in hits),
+                # Parallel lists, not also a singular key and a joined
+                # string: four keys for two facts invites a consumer to read
+                # the singular one and silently get the first source's wording
+                # in exactly the divergent case these exist to expose. The
+                # prose form is already in `message`.
                 "detected_by_sources": [source for source, _ in hits],
                 "detected_labels": [label for _, label in hits],
                 "signal_count": len(hits),

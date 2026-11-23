@@ -472,8 +472,8 @@ def test_issue_details_record_the_written_and_detected_labels():
     details = report.issues[0].details
     assert details is not None
     assert details["written_label"] == "unfolded protein binding"
-    assert details["detected_label"] == "obsolete unfolded protein binding"
-    assert details["detected_by"] == "the GO snapshot"
+    assert details["detected_labels"] == ["obsolete unfolded protein binding"]
+    assert details["detected_by_sources"] == ["the GO snapshot"]
 
 
 def test_lookup_does_not_scan_the_corpus_until_a_term_is_looked_up(tmp_path):
@@ -524,16 +524,17 @@ def test_both_signals_are_named_not_just_the_first():
     assert "the GO snapshot" in issue.message
     assert issue.details is not None
     assert issue.details["signal_count"] == 2
-    assert issue.details["detected_by"] == (
-        "GOA file genes/human/X/X-goa.tsv and the GO snapshot"
-    )
+    assert issue.details["detected_by_sources"] == [
+        "GOA file genes/human/X/X-goa.tsv",
+        "the GO snapshot",
+    ]
 
 
 def test_single_signal_reports_one_source():
     report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
     check_obsolete_authored_terms(OBSOLETE_DOC, report, lookup_obsolete)
     assert report.issues[0].details["signal_count"] == 1
-    assert report.issues[0].details["detected_by"] == "the GO snapshot"
+    assert report.issues[0].details["detected_by_sources"] == ["the GO snapshot"]
 
 
 def test_a_live_signal_alongside_an_obsolete_one_is_not_counted():
@@ -593,8 +594,8 @@ def test_divergent_labels_are_attributed_per_source():
     report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
     check_obsolete_authored_terms(OBSOLETE_DOC, report, divergent)
     message = report.issues[0].message
-    assert "genes/human/X/X-goa.tsv ('obsolete unfolded protein binding')" in message
-    assert "the GO snapshot ('obsolete chaperone binding')" in message
+    assert 'genes/human/X/X-goa.tsv ("obsolete unfolded protein binding")' in message
+    assert 'the GO snapshot ("obsolete chaperone binding")' in message
     assert report.issues[0].details["detected_labels"] == [
         "obsolete unfolded protein binding",
         "obsolete chaperone binding",
@@ -608,8 +609,8 @@ def test_agreeing_labels_are_not_repeated():
     message = report.issues[0].message
     assert message.count("obsolete unfolded protein binding") == 1
     assert (
-        "GOA file genes/human/X/X-goa.tsv and the GO snapshot "
-        "('obsolete unfolded protein binding')" in message
+        'GOA file genes/human/X/X-goa.tsv and the GO snapshot '
+        '("obsolete unfolded protein binding")' in message
     )
 
 
@@ -662,3 +663,22 @@ def test_goa_index_never_yields_a_live_label(tmp_path):
     index = goa_obsolete_labels(tmp_path)
     assert set(index) == {"GO:0000117"}
     assert all(label.startswith("obsolete ") for label, _ in index.values())
+
+
+def test_a_label_containing_quotes_reads_cleanly():
+    """GO labels contain single quotes, so the wrapping must not nest.
+
+    The corpus holds `obsolete 'de novo' NAD+ biosynthetic process from
+    L-tryptophan`; wrapping that in single quotes produced three apostrophes in
+    a row and no way to see where the label ended.
+    """
+
+    def quoted(curie: str):
+        return [("the GO snapshot", "obsolete 'de novo' NAD+ biosynthetic process")]
+
+    report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
+    check_obsolete_authored_terms(OBSOLETE_DOC, report, quoted)
+    assert (
+        'the GO snapshot ("obsolete \'de novo\' NAD+ biosynthetic process")'
+        in report.issues[0].message
+    )
