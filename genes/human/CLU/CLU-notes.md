@@ -68,3 +68,9 @@ Outstanding biology for expert review:
 - Which intracellular or nuclear CLU isoforms have evolved in-vivo functions,
   rather than representing rare translation products, failed translocation, or
   stress-induced relocalization?
+
+## 2026-11-15 ORGANELLES Golgi batch 2 (Golgi apparatus rows)
+
+- One GO:0005794 row: ISS (GO_REF:0000024, ParkinsonsUK-UCL) from dog CLU P25473. That donor's Golgi row is an IDA from PMID:10837345 (Bando et al. 2000, ORP150 in MDCK cells; QuickGO). I fetched it: abstract-only, no PMC record. The abstract follows ER export and maturation of endogenous GP80/clusterin and does not mention the Golgi.
+- The previous ACCEPT reason said the precursor is "processed in the Golgi". The UniProt PTM line says "probably within the Golgi lumen" and cites PMID:2387851, a 1990 apoJ plasma purification whose abstract only proposes a common precursor. That is not a Golgi assay. PMID:25051234 (transfected HEK293T fractionation) only interprets fractions as ER/Golgi-related, with no marker.
+- Action ACCEPT -> UNDECIDED (unreadable donor, the CD247 line). If the donor shows endogenous GP80 with a Golgi marker in its native cell, the row is KEEP_AS_NON_CORE; otherwise MARK_AS_OVER_ANNOTATED (transit). It is never core for a secreted chaperone. The ER rows were not changed (out of scope).

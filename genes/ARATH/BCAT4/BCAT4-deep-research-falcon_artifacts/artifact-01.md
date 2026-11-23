@@ -1,0 +1,16 @@
+| Tissue | Phenotype / analyte | WT control for **bcat4-1** | **bcat4-1** | WT control for **bcat4-2** | **bcat4-2** | Interpretation |
+|---|---|---:|---:|---:|---:|---|
+| Rosette leaves | Total glucosinolates (µmol·g⁻¹ dry weight) | 27.23 | 17.62 | 24.87 | 16.66 | Decreased by approximately 35% and 33%, respectively. (pqac-00000013) |
+| Rosette leaves | Total methionine-derived glucosinolates (µmol·g⁻¹ dry weight) | 21.54 | 11.38 | 21.04 | 11.37 | Decreased by approximately 47% and 46%, establishing a major role for BCAT4 in pathway flux. (pqac-00000012, pqac-00000013) |
+| Rosette leaves | Individual aliphatic glucosinolates | — | 3MSOP, 4MSOB, 7MSOH, and 8MSOO reduced | — | 3MSOP, 4MSOB, 7MSOH, and 8MSOO reduced | The effect extends across several methionine-derived glucosinolate chain lengths. (pqac-00000013) |
+| Rosette leaves | Free methionine | Lower baseline | Increased | Lower baseline | Increased | Impaired conversion of methionine to MTOB causes upstream substrate accumulation; exact leaf concentrations were unavailable. (pqac-00000012, pqac-00000015) |
+| Rosette leaves | S-methylmethionine (SMM) | Lower baseline | Strongly increased | Lower baseline | Strongly increased | Accumulation of the phloem methionine-transport form supports reduced pathway entry; exact leaf concentrations were unavailable. (pqac-00000012, pqac-00000014) |
+| Seeds | Total glucosinolates (µmol·g⁻¹ dry weight) | 85.35 | 44.85 | 116.55 | 69.17 | Decreased by approximately 47% and 41%, respectively. (pqac-00000013) |
+| Seeds | Total methionine-derived glucosinolates (µmol·g⁻¹ dry weight) | 83.23 | 42.22 | 111.78 | 63.12 | Decreased by approximately 49% and 44%, respectively. (pqac-00000013) |
+| Seeds | Free methionine (nmol·mg⁻¹ dry weight) | 0.08 | 0.28 | 0.09 | 0.43 | Increased approximately 3.5-fold in **bcat4-1** and 4.8-fold in **bcat4-2**. (pqac-00000013) |
+| Seeds | S-methylmethionine (SMM) | Undetectable | Strongly accumulated | Undetectable | Strongly accumulated | SMM became highly abundant, indicating pronounced disruption of methionine allocation; line-specific concentrations were unavailable. (pqac-00000014) |
+| Seeds | Individual aliphatic glucosinolates | Multiple compounds at normal levels | Several reduced; 4MSOB and 5MSOP increased | Multiple compounds at normal levels | Several reduced; 4MSOB and 5MSOP increased | Most aliphatic products declined, but selected compounds accumulated, indicating altered composition and reduced total flux. (pqac-00000013) |
+| Overall | BCAT4 protein/expression | BCAT4 present | Not detected | BCAT4 present | Not detected | Both T-DNA lines were complete expression knockouts, strengthening the causal link between BCAT4 loss and the metabolic phenotype. (pqac-00000012, pqac-00000018) |
+
+
+*Table: Comparison of glucosinolate and methionine-related phenotypes in Arabidopsis bcat4-1 and bcat4-2 knockout lines. Both mutants show reduced methionine-derived glucosinolates and accumulation of free methionine and S-methylmethionine.*

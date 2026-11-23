@@ -65,3 +65,7 @@ Signature molecular functions: 3'2'-cGAMP synthase (GO:0140700) and 2'3'-cGAMP s
 virus (GO:0051607), (immune) response to exogenous dsRNA (GO:0043330, GO:1902615), cellular
 response to virus (GO:0098586). All existing GOA annotations are well supported and specific;
 the ND root-CC placeholder (GO:0005575) is superseded by the specific cytosol annotation.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[2], GO:0005575 cellular_component (ND, ACCEPT): may be stale. FlyBase curated cytosol (GO:0005829, IC, is_active_in) from PMID:34261128 (Holleufer et al. 2021), a study of fly cGLR1, and these notes already describe the root CC ND as superseded by that cytosol annotation. The cytosol call is a curator inference from the enzyme activity, not a direct localization assay, so a curator should decide whether it retires the ND. Action left unchanged.

@@ -1,0 +1,11 @@
+# EARS2 evidence results
+
+The current PTHR43311 tree and alignment contain 275 nodes/sequences. Human Q5JPH6 maps to PTN002535098; its unaligned sequence matches the official 523-residue sequence exactly. PTN000012469 and PTN008450384 are on the target lineage, and all three imported IBA source terms join to their literal IBD records. This supports inspection of the actual phylogenetic inference; it is not a reconstruction of the historical curator's reading. Target self-donation is legitimate experimental grounding.
+
+Rhea 23540 describes glutamate transfer to tRNA-Glu, whereas 64612 describes glutamate transfer to tRNA-Gln. Rhea 18397 is the broader Glx reaction. None assigns subsequent glutamate amidation to EARS2. Current InterPro records match the mapped synthetase family and domains; current SL-0170 maps to mitochondrial matrix.
+
+The official E. coli P04805 Zn-site features map through the saved family alignment to human EARS2 C140, C142, C167 and N169, corresponding to bacterial C98, C100, C125 and H127. The three cysteine correspondences are conserved and the fourth differs. This supports a bounded uncertainty about transfer of the metal-binding inference; it is neither a human coordination assay nor proof of lost zinc binding.
+
+The authentic PMID:34800366 Table S1 contains EARS2 in sheet `(A) All protein groups`, Excel row 333 (group 6714), and `(B) MitoCoP (1,134 genes)`, row 301. The measured group includes Q5JPH6, H3BTB7 and Q5JPH6-2. It is subtractive-proteomics Class 1 (mean log2 purified/crude mitochondrial enrichment 1.1159; mean sequence coverage 85.925%), spatial Cluster 1 and importomics Class 1. Carbonate/sonication classifies it as peripheral: approximately 86.43% membrane-associated and 18.01% integral under the paper's operational metrics. Those fractions do not determine a membrane face. The separate matrix GO flag is prior annotation, not an independent matrix-specific assay.
+
+ARBA00026962 currently outputs mitochondrion, but no complete target-specific FunFam condition is reconstructed here. Independent localization support does not depend on that unresolved trigger. This package contributes no new GO assertions, new publication quotations or claims of equal activity across natural products.

@@ -19,7 +19,11 @@ from pathlib import Path
 import shutil
 from typing import Any
 
-from ai_gene_review.export.browser_payload import validate_browser_data_js_size
+from ai_gene_review.export.browser_payload import (
+    GITHUB_FILE_SIZE_LIMIT_BYTES,
+    browser_data_size_limit,
+    validate_browser_data_js_size,
+)
 from ai_gene_review.export.propagation_export import DEFAULT_DATA_DIR, collect_propagation_data
 
 #: Row fields, in encoded order. Lists are encoded element-wise.
@@ -87,7 +91,8 @@ def encode_propagation_data(rows: list[dict[str, Any]], metadata: dict[str, Any]
 
 
 def build_propagation_browser(root: Path, output_dir: Path,
-                              data_dir: Path = DEFAULT_DATA_DIR) -> dict[str, Any]:
+                              data_dir: Path = DEFAULT_DATA_DIR, *,
+                              max_bytes: int | None = GITHUB_FILE_SIZE_LIMIT_BYTES) -> dict[str, Any]:
     """Write ``index.html`` and ``data.js`` for the propagation browser."""
     root = root.resolve()
     rows = collect_propagation_data(root, data_dir)["rows"]
@@ -99,7 +104,7 @@ def build_propagation_browser(root: Path, output_dir: Path,
     }
     encoded = encode_propagation_data(rows, metadata)
     size = len(encoded.encode("utf-8"))
-    validate_browser_data_js_size(size)
+    validate_browser_data_js_size(size, max_bytes=max_bytes)
     # Rows link to gene review pages; list the ones that exist so Pages
     # staging copies them (dynamic links are invisible to static discovery).
     links = sorted({r["review_link"] for r in rows if r.get("review_link")
@@ -118,10 +123,12 @@ def main() -> None:
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--output-dir", type=Path, default=Path("app/propagation"))
     parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR)
+    parser.add_argument("--target", choices=("git", "pages"), default="git")
     args = parser.parse_args()
     root = args.root.resolve()
     output = args.output_dir if args.output_dir.is_absolute() else root / args.output_dir
-    result = build_propagation_browser(root, output, args.data_dir)
+    result = build_propagation_browser(root, output, args.data_dir,
+                                       max_bytes=browser_data_size_limit(args.target))
     print(json.dumps({"output": str(output), **result}, indent=2))
 
 

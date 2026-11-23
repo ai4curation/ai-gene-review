@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministically squash-merge pull requests that satisfy a fixed policy.
+"""Deterministically merge or enqueue pull requests that satisfy a fixed policy.
 
 This is intended as the non-agentic closing step of the PR Shepherd. It never
 judges a change. It re-reads GitHub state immediately before merging and only
@@ -20,6 +20,12 @@ mergeability lazily and large bulk GraphQL requests for mergeStateStatus can
 fail, so mergeability, exact-head approval, and checks are evaluated only on a
 fresh per-PR view. The final merge is pinned with
 --match-head-commit.
+When a merge queue is active, the controller skips existing entries, limits
+admissions, and uses enqueuePullRequest with expectedHeadOid (never a direct
+merge). Queue builds verify integration with current main without rewriting the
+reviewed branch. Two failed-check removals since the head was committed hold
+automatic retries. An unreadable queue state stops the entire sweep.
+
 The PR does not have to be rebased onto the latest base-branch tip. GitHub
 re-evaluates mergeability against the current base, while the controller pins
 the exact reviewed and tested head with ``--match-head-commit``. This matches
@@ -92,6 +98,11 @@ MERGE_COMMENT = (
     "🐑 **PR Shepherd** (deterministic sweep) — Squash-merged: approved, "
     "unassigned, no conflicts, all "
     "checks green, and open longer than {days} days. No further action needed."
+)
+ENQUEUE_COMMENT = (
+    "🐑 **PR Shepherd** (deterministic sweep) — Added to the merge queue: "
+    "the reviewed head and checks passed all admission guards. GitHub will "
+    "test integration with current main before merging."
 )
 TOO_YOUNG = "too_young"
 
@@ -719,6 +730,149 @@ def require_unchanged_file_inventory_head(
         )
 
 
+@dataclass(frozen=True)
+class QueueState:
+    """Verified queue configuration and complete current membership."""
+
+    active: bool
+    numbers: frozenset[int] = frozenset()
+
+
+def read_queue_state(repo: str, branch: str) -> QueueState:
+    """Read all queue entries; API errors must not turn into direct merges."""
+    owner, name = repo.split("/", 1)
+    query = (
+        "query($owner:String!,$name:String!,$branch:String!,$endCursor:String){"
+        "repository(owner:$owner,name:$name){mergeQueue(branch:$branch){id "
+        "entries(first:100,after:$endCursor){totalCount "
+        "pageInfo{hasNextPage endCursor} nodes{pullRequest{number}}}}}}"
+    )
+    pages = json.loads(_gh([
+        "api", "graphql", "--paginate", "--slurp",
+        "-f", f"owner={owner}", "-f", f"name={name}",
+        "-f", f"branch={branch}", "-f", f"query={query}",
+    ]))
+    numbers: set[int] = set()
+    queue_id = None
+    if not isinstance(pages, list) or not pages:
+        raise ValueError("invalid merge-queue response")
+    try:
+        for index, page in enumerate(pages):
+            if page.get("errors"):
+                raise ValueError("merge-queue lookup returned GraphQL errors")
+            queue = page["data"]["repository"]["mergeQueue"]
+            if queue is None:
+                if len(pages) != 1:
+                    raise ValueError("merge queue disappeared during pagination")
+                return QueueState(False)
+            if not queue["id"] or (queue_id and queue_id != queue["id"]):
+                raise ValueError("merge queue changed during pagination")
+            queue_id = queue["id"]
+            entries = queue["entries"]
+            for node in entries["nodes"]:
+                number = node["pullRequest"]["number"]
+                if type(number) is not int or number <= 0 or number in numbers:
+                    raise ValueError("invalid or duplicate queue entry")
+                numbers.add(number)
+            if entries["pageInfo"]["hasNextPage"] != (index < len(pages) - 1):
+                raise ValueError("incomplete merge-queue pagination")
+        if len(numbers) != entries["totalCount"]:
+            raise ValueError("merge-queue membership changed or was truncated")
+    except (KeyError, TypeError, AttributeError) as exc:
+        raise ValueError("malformed merge-queue response") from exc
+    return QueueState(True, frozenset(numbers))
+
+
+def queue_retry_hold(repo: str, number: int, expected_head: str) -> str:
+    """Stop repeated failed-check ejections since this head was committed.
+
+    Like dismech, allow one retry for transient/collateral failures. Look at
+    the latest 100 removals; two failed_checks events after the head commit's
+    date hold admission until a new commit or human intervention. An unreadable
+    history holds this candidate rather than risking a repeated-build loop.
+    """
+    owner, name = repo.split("/", 1)
+    query = (
+        "query($owner:String!,$name:String!,$number:Int!){"
+        "repository(owner:$owner,name:$name){pullRequest(number:$number){"
+        "headRefOid commits(last:1){nodes{commit{committedDate}}} "
+        "timelineItems(last:100,itemTypes:[REMOVED_FROM_MERGE_QUEUE_EVENT])"
+        "{nodes{... on RemovedFromMergeQueueEvent{createdAt reason}}}}}}"
+    )
+    payload = json.loads(_gh([
+        "api", "graphql", "-f", f"owner={owner}", "-f", f"name={name}",
+        "-F", f"number={number}", "-f", f"query={query}",
+    ]))
+    try:
+        if payload.get("errors"):
+            raise ValueError("queue history returned GraphQL errors")
+        pr = payload["data"]["repository"]["pullRequest"]
+        if pr["headRefOid"] != expected_head:
+            raise HeadMovedError("head moved during queue-history lookup")
+        head_at = _parse_ts(pr["commits"]["nodes"][0]["commit"]["committedDate"])
+        strikes = sum(
+            event["reason"] == "failed_checks" and _parse_ts(event["createdAt"]) > head_at
+            for event in pr["timelineItems"]["nodes"]
+        )
+    except (KeyError, TypeError, IndexError, AttributeError) as exc:
+        raise ValueError("malformed queue ejection history") from exc
+    if strikes >= 2:
+        return f"{strikes} failed queue builds since this head was committed; investigate before retrying"
+    return ""
+
+
+def enqueue_pr(repo: str, number: int, head_sha: str, write_token: str) -> bool:
+    """Enqueue the verified head atomically; never fall back to a direct merge.
+
+    Returns False if another actor already queued the same head. Discovery uses
+    the read credential; only the mutation and courtesy comment use the writer.
+    """
+    if not head_sha.strip() or not write_token.strip():
+        raise ValueError("enqueue requires a verified head and dedicated writer")
+    owner, name = repo.split("/", 1)
+    query = (
+        "query($owner:String!,$name:String!,$number:Int!){"
+        "repository(owner:$owner,name:$name){pullRequest(number:$number){"
+        "id headRefOid mergeQueueEntry{id}}}}"
+    )
+    data = json.loads(_gh([
+        "api", "graphql", "-f", f"owner={owner}", "-f", f"name={name}",
+        "-F", f"number={number}", "-f", f"query={query}",
+    ]))
+    try:
+        if data.get("errors"):
+            raise ValueError("enqueue discovery returned GraphQL errors")
+        pr = data["data"]["repository"]["pullRequest"]
+        if pr["headRefOid"] != head_sha:
+            raise HeadMovedError("head moved before enqueue")
+        if pr["mergeQueueEntry"] is not None:
+            return False
+        pr_id = pr["id"]
+        if not isinstance(pr_id, str) or not pr_id:
+            raise ValueError("missing pull request node id")
+    except (KeyError, TypeError, AttributeError) as exc:
+        raise ValueError("malformed enqueue discovery") from exc
+    mutation = (
+        "mutation($id:ID!,$head:GitObjectID!){enqueuePullRequest(input:{"
+        "pullRequestId:$id,expectedHeadOid:$head,jump:false}){mergeQueueEntry{id}}}"
+    )
+    response = json.loads(_gh([
+        "api", "graphql", "-f", f"id={pr_id}", "-f", f"head={head_sha}",
+        "-f", f"query={mutation}",
+    ], token=write_token))
+    try:
+        if response.get("errors") or not response["data"]["enqueuePullRequest"]["mergeQueueEntry"]["id"]:
+            raise ValueError("enqueue was not confirmed")
+    except (KeyError, TypeError, AttributeError) as exc:
+        raise ValueError("enqueue was not confirmed") from exc
+    try:
+        _gh(["pr", "comment", str(number), "--repo", repo,
+             "--body", ENQUEUE_COMMENT], token=write_token)
+    except subprocess.CalledProcessError as exc:
+        print(f"WARN  #{number}: queued, but comment failed: {_gh_error(exc)}", file=sys.stderr)
+    return True
+
+
 def merge_pr(
     repo: str,
     number: int,
@@ -790,16 +944,19 @@ def render_summary(
     failed: list[dict],
     *,
     dry_run: bool = False,
+    queue_active: bool = False,
 ) -> str:
     title = "## 🐑 Deterministic auto-merge sweep"
     if dry_run:
         title += " (dry run — nothing was merged)"
     lines = [title, ""]
-    verb = "Would merge" if dry_run else "Merged"
+    verb = ("Would enqueue" if dry_run else "Queued") if queue_active else (
+        "Would merge" if dry_run else "Merged"
+    )
     if merged:
         lines.append(f"**{verb} {len(merged)}:**")
         lines += [f"- #{row['number']} — {row['title']}" for row in merged]
-        if dry_run and len(merged) > 1:
+        if dry_run and len(merged) > 1 and not queue_active:
             lines.extend(
                 [
                     "",
@@ -812,7 +969,8 @@ def render_summary(
         lines.append(f"**{verb} 0** — nothing met every criterion.")
     lines.append("")
     if failed:
-        lines.append(f"**Failed to merge {len(failed)}:**")
+        operation = "enqueue" if queue_active else "merge"
+        lines.append(f"**Failed to {operation} {len(failed)}:**")
         lines += [f"- #{row['number']} — {row['reason']}" for row in failed]
         lines.append("")
     if skipped:
@@ -851,6 +1009,21 @@ def main(argv: list[str] | None = None) -> int:
         help=(
             "consider approved drafts; execute marks an otherwise eligible draft "
             "ready immediately before final verification (default: exclude drafts)"
+        ),
+    )
+    parser.add_argument(
+        "--max-enqueue-per-run", type=positive_int, default=50,
+        help="maximum queue admission attempts per sweep (default: 50)",
+    )
+    parser.add_argument(
+        "--max-queue-size", type=positive_int, default=50,
+        help="stop admitting when the observed queue reaches this size (default: 50)",
+    )
+    parser.add_argument(
+        "--time-budget-seconds", type=positive_int, default=None,
+        help=(
+            "stop starting new PRs after this many seconds so the sweep still "
+            "writes its summary before an external timeout (default: no limit)"
         ),
     )
     parser.add_argument(
@@ -900,12 +1073,12 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument(
         "--execute",
         action="store_true",
-        help="perform eligible merges; without this flag the controller only reports",
+        help="merge or enqueue eligible PRs; without this flag the controller only reports",
     )
     mode.add_argument(
         "--dry-run",
         action="store_true",
-        help="explicitly report without merging (also the default)",
+        help="report without merging or enqueueing (also the default)",
     )
     parser.add_argument(
         "--summary-file",
@@ -925,6 +1098,12 @@ def main(argv: list[str] | None = None) -> int:
         *args.exclude_head_prefix,
     )
     dry_run = not args.execute
+    try:
+        queue = read_queue_state(args.repo, args.base_branch)
+    except (subprocess.CalledProcessError, OSError, ValueError) as exc:
+        print(f"FAIL  cannot establish merge-queue state; no writes: {exc}", file=sys.stderr)
+        return 1
+    print(f"Merge queue: {'active' if queue.active else 'disabled'}; {len(queue.numbers)} queued")
     now = datetime.now(timezone.utc)
     prs = list_open_prs(args.repo, args.limit, args.base_branch)
     if len(prs) >= args.limit:
@@ -937,6 +1116,9 @@ def main(argv: list[str] | None = None) -> int:
     candidates: list[dict] = []
     skipped: list[dict] = []
     for pr in prs:
+        if pr["number"] in queue.numbers:
+            skipped.append({"number": pr["number"], "reason": "already in merge queue"})
+            continue
         decision = evaluate(
             pr,
             now=now,
@@ -968,8 +1150,34 @@ def main(argv: list[str] | None = None) -> int:
 
     merged: list[dict] = []
     failed: list[dict] = []
+    enqueue_attempts = 0
+    queue_size = len(queue.numbers)
+    started = time.monotonic()
     for pr in candidates:
         number = pr["number"]
+        elapsed = time.monotonic() - started
+        if args.time_budget_seconds is not None and elapsed >= args.time_budget_seconds:
+            skipped.append({
+                "number": number,
+                "reason": f"sweep time budget reached: {elapsed:.0f}/{args.time_budget_seconds}s",
+            })
+            continue
+        if queue.active and queue_size >= args.max_queue_size:
+            skipped.append({
+                "number": number,
+                "reason": f"queue capacity reached: {queue_size}/{args.max_queue_size} observed entries",
+            })
+            continue
+        if queue.active and enqueue_attempts >= args.max_enqueue_per_run:
+            skipped.append({
+                "number": number,
+                "reason": (
+                    f"queue admission attempt budget reached: "
+                    f"{enqueue_attempts}/{args.max_enqueue_per_run} attempts "
+                    f"({queue_size}/{args.max_queue_size} observed entries)"
+                ),
+            })
+            continue
         try:
             fresh = view_pr(args.repo, number)
             fresh["reviews"] = list_pr_reviews(args.repo, number)
@@ -1015,13 +1223,27 @@ def main(argv: list[str] | None = None) -> int:
             print(f"SKIP  #{number}: {decision.reason}")
             skipped.append({"number": number, "reason": decision.reason})
             continue
+        if queue.active:
+            try:
+                hold = queue_retry_hold(args.repo, number, fresh["headRefOid"])
+            except (subprocess.CalledProcessError, OSError, ValueError) as exc:
+                hold = f"could not verify queue retry history: {exc}"
+            if hold:
+                print(f"SKIP  #{number}: {hold}")
+                skipped.append({"number": number, "reason": hold})
+                continue
         if dry_run:
-            action = "mark ready and merge" if fresh.get("isDraft") else "merge"
+            action = "enqueue" if queue.active else "merge"
+            if fresh.get("isDraft"):
+                action = "mark ready and " + action
             print(
                 f"DRY-RUN would {action} #{number}: {fresh['title']} — "
                 f"{decision.reason}"
             )
             merged.append({"number": number, "title": fresh["title"]})
+            if queue.active:
+                enqueue_attempts += 1
+                queue_size += 1
             continue
         marked_ready = bool(fresh.get("isDraft"))
         if marked_ready:
@@ -1088,14 +1310,49 @@ def main(argv: list[str] | None = None) -> int:
                 skipped.append({"number": number, "reason": reason})
                 continue
             try:
-                merge_pr(
-                    args.repo,
-                    number,
-                    args.min_age_days,
-                    fresh["headRefOid"],
-                    write_token,
-                )
+                latest_queue = read_queue_state(args.repo, args.base_branch)
+                if latest_queue.active != queue.active:
+                    raise ValueError("merge-queue configuration changed; retry next sweep")
+                if queue.active:
+                    if number not in latest_queue.numbers and len(latest_queue.numbers) >= args.max_queue_size:
+                        skipped.append({
+                            "number": number,
+                            "reason": (
+                                f"queue filled during verification: "
+                                f"{len(latest_queue.numbers)}/{args.max_queue_size} observed entries"
+                            ),
+                        })
+                        continue
+                    hold = queue_retry_hold(args.repo, number, fresh["headRefOid"])
+                    if hold:
+                        skipped.append({"number": number, "reason": hold})
+                        continue
+                    enqueue_attempts += 1
+                    added = enqueue_pr(args.repo, number, fresh["headRefOid"], write_token)
+                    queue_size += 1
+                    if not added:
+                        merge_completed = True  # queued elsewhere; do not re-draft it
+                        skipped.append({"number": number, "reason": "already in merge queue"})
+                        continue
+                else:
+                    merge_pr(
+                        args.repo,
+                        number,
+                        args.min_age_days,
+                        fresh["headRefOid"],
+                        write_token,
+                    )
                 merge_completed = True
+            except HeadMovedError as exc:
+                reason = str(exc)
+                print(f"SKIP  #{number}: {reason}")
+                skipped.append({"number": number, "reason": reason})
+                continue
+            except ValueError as exc:
+                reason = str(exc)
+                print(f"FAIL  #{number}: {reason}", file=sys.stderr)
+                failed.append({"number": number, "reason": reason})
+                continue
             except subprocess.CalledProcessError as exc:
                 reason = _gh_error(exc)
                 merge_error = exc.stderr or reason
@@ -1120,10 +1377,10 @@ def main(argv: list[str] | None = None) -> int:
                     reason = f"could not restore draft state: {detail}"
                     print(f"FAIL  #{number}: {reason}", file=sys.stderr)
                     failed.append({"number": number, "reason": reason})
-        print(f"MERGED #{number}: {fresh['title']}")
+        print(f"{'QUEUED' if queue.active else 'MERGED'} #{number}: {fresh['title']}")
         merged.append({"number": number, "title": fresh["title"]})
 
-    report = render_summary(merged, skipped, failed, dry_run=dry_run)
+    report = render_summary(merged, skipped, failed, dry_run=dry_run, queue_active=queue.active)
     print()
     print(report)
     if args.summary_file:

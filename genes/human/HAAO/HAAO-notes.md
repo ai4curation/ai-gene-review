@@ -1,5 +1,7 @@
 # HAAO (P46952) — review notes
 
+Current review (2026-11-11): DRAFT; **22 ACCEPT, 6 KEEP_AS_NON_CORE, 7 MODIFY and 3 UNDECIDED** across 38 contexts; zero NEW or PENDING. Earlier sections below are historical snapshots. The YAML and latest follow-up record the current decisions.
+
 ## Identity and core biochemistry
 
 HAAO encodes **3-hydroxyanthranilate 3,4-dioxygenase** (3-HAO; also "3-hydroxyanthranilic acid dioxygenase / oxygenase"; EC 1.13.11.6), a 286-aa cytosolic enzyme of the kynurenine pathway of tryptophan degradation.
@@ -53,5 +55,31 @@ GO:0009055 (electron transfer activity) NAS is mechanistically wrong: 3-HAO is a
 - CC: cytosol (GO:0005829).
 
 Disease: biallelic LoF causes congenital NAD-deficiency malformation syndrome (VCRL1), rescuable in mice by gestational niacin (PMID:28792876).
-</content>
-</invoke>
+
+## 2026-11-11 initial reassessment (historical snapshot)
+
+This historical snapshot superseded the earlier annotation-disposition commentary above. At that stage the DRAFT review recorded: 26 ACCEPT, 6 KEEP_AS_NON_CORE, 2 MODIFY and 4 UNDECIDED judgments across 38 stored contexts, with no PENDING or NEW annotations. The [authored source guide](HAAO-source-guide.md) gives source-access limits and precise evidence locations; it is not a provider report. Falcon failed with HTTP 403 and Perplexity-lite with HTTP 401/insufficient quota. Existing publication caches and all 12 inherited supporting quotations are preserved.
+
+The native fetcher archived 35 current QuickGO records and produced the corresponding 35-row TSV. The historical and current 35-context inventories share 32, yielding 38 retained contexts. Native seeding restored the second donor context from PMID:25416956 and added three updated electronic mappings; three older mappings remain explicit historical contexts with `retired: true` lifecycle flags. See the [context audit](HAAO-context-audit.json) and [literal archive](HAAO-context-archive.json). No extension, NOT or isoform-qualified assertion is introduced.
+
+The core is consolidated into one Fe(II)-dependent dioxygenase activity. HAAO produces ACMS; subsequent cyclization to quinolinate is spontaneous. Curated cytosolic localization is accepted with explicit source limits. The Fe(III) state of the air-prepared human crystal is distinguished from physiological Fe(II) [PMID:28375145, original Methods §2.2 and Results §3.3; PMID:12007609, abstract]. Human disease evidence and mouse niacin rescue are kept distinct [PMID:28792876].
+
+Five HAAO–GAD1 contexts are supported by exact IntAct/IMEx records and retained as non-core under the ClinGen project instruction. Both Q8IVA8 and Q99259 contexts from PMID:25416956 are retained. HAAO–POT1 remains UNDECIDED because the paper-specific target/supplementary evidence was not recovered, despite the positive UniProt interaction entry. Missing returned records are not treated as evidence against that interaction.
+
+The older electron-carrier-only objection to GO:0009055 is withdrawn after checking its current definition, which includes enzymatic redox reactions. The broad annotation is non-core. Iron/metal binding is refined to ferrous iron binding. Zinc response, cadmium response and neuron cellular homeostasis remain UNDECIDED rather than being rejected from abstract-only evidence [PMID:12007609; PMID:2967497].
+
+GO:0034354 has a QuickGO/OLS version discrepancy. Its incoming IDs and stored labels are retained; acceptance concerns the supported biological pathway claim, while the authored core uses active terms. The [source-evidence record](HAAO-source-evidence.json) contains the service checks. An inherited PTHR15497/BNA1 prose error misidentifies P46952 as bacterial NbaC; this reassessment uses the literal PAINT donors and verified human identity and does not borrow that label.
+
+## 2026-11-11 11:54 UTC interaction follow-up (historical snapshot)
+
+This follow-up supersedes the earlier POT1 uncertainty. Updated IntAct evidence resolves target verification; the [source guide](HAAO-source-guide.md) records the access limits.
+
+The existing binding context is now KEEP_AS_NON_CORE under the project instruction. That follow-up recorded 26 ACCEPT, 7 KEEP_AS_NON_CORE, 2 MODIFY and 3 UNDECIDED across the same 38 stored contexts, with zero NEW or PENDING. The catalytic core, all machine source fields, all 12 inherited quotations and all publication caches remain unchanged; status remains DRAFT.
+
+## 2026-11-11 PR review follow-up
+
+Two cytoplasm rows now propose cytosol, preserving their distinct source qualifiers. Two GO:0034354 rows propose active NAD+ biosynthetic process GO:0009435 while retaining the incoming IDs and the documented ontology-version discrepancy. Electron transfer activity now proposes the demonstrated dioxygenase activity as a mechanistic replacement; no ontology descendant relationship is asserted. Two short, exact ontology-definition excerpts were added, while all 12 inherited quotations remain unchanged.
+
+The three experimental process judgments remain UNDECIDED. The inspected abstracts establish inhibition or correlation, but do not verify the full process assertions or exhaust the inaccessible original methods. This follows the standing incomplete-evidence instruction. Correctness of neuronal homeostasis is not asserted by keeping its evidence unresolved.
+
+The source guide is retained as a locator guide in these notes; per-annotation citations now point to the underlying literature, curated records and literal interaction archive. Interaction-paper relevance is LOW relative to the established catalytic function. Earlier history records and their then-current counts remain unchanged; a new history entry captures this follow-up.

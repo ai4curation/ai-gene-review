@@ -517,3 +517,14 @@ node, not a protein" is a true statement that invites you to stop looking.** The
 an unresolved WITH/FROM cannot be dismissed, only deferred — the same applies to an *unresolvable*
 one. A PANTHER node cannot be resolved to a protein, but it can be looked up in the family's PAINT
 table, where it may carry an explicit negation of exactly the term under discussion.
+
+## 2026-11-13 ORGANELLES Golgi batch 1 (Golgi apparatus rows)
+
+Rows: GO:0005794 Golgi apparatus, IEA GO_REF:0000120 (located_in), ISS GO_REF:0000024 (located_in), ISS GO_REF:0000024 (colocalizes_with). All from mouse Actl7a Q9QY84. No sub-compartment rows.
+
+Checks:
+- UniProt Golgi line is by similarity: "Golgi apparatus {ECO:0000250|UniProtKB:Q9QY84}" [file:human/ACTL7A/ACTL7A-uniprot.txt]; the combined IEA maps it (SL-0132).
+- Mouse donor: Q9QY84 colocalizes_with Golgi IDA PMID:21278383 (QuickGO). Full text cached: adult mouse testis sections; "Arp7A co-localizes with GM130 on the Golgi apparatus of round spermatids" and "Arp7A is associated with the Golgi apparatus prior to and throughout the biogenesis of the acrosome" [PMID:21278383]. Endogenous protein, native cell, marker-controlled.
+- No TRANSMEM or SIGNAL features in UniProt; soluble actin-related protein.
+
+Outcome: all three rows stay KEEP_AS_NON_CORE (stage-specific association during acrosome biogenesis; structural work at the acroplaxome). Root only: GM130 light-microscope co-staining does not resolve cis from trans, no TM, and no integral Golgi partner known to tether it. Fixed "rodent" to "mouse" sections in the IEA reason.

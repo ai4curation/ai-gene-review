@@ -20,7 +20,14 @@
 
 ## Review Status
 
-- **Date**: 2026-06-28
-- **Reviewer**: AI-assisted Falcon integration
-- **Status**: DRAFT
+This free-text page is the legacy Falcon integration note. The authoritative review of
+this family is the structured [PTHR11699-review.yaml](PTHR11699-review.yaml), whose
+`review_status` is **COMPLETE** as of 2026-11-04: every (node, term) pair in
+`PTHR11699-paint.tsv` carries a `node_assessment`, and the subfamilies, term assessments
+and residue sites recorded there supersede anything stated here. The structured review
+agrees with the Falcon verdict below that no family-wide GO mapping is safe.
+
+- **Date**: 2026-06-28 (this page); 2026-11-04 (structured review)
+- **Reviewer**: AI-assisted Falcon integration (this page); Claude (AI-assisted) for the structured review
+- **Status**: superseded by the structured review, which is COMPLETE
 - **Based on**: Falcon/Edison family deep research, local PANTHER metadata, and current InterPro2GO mapping context.

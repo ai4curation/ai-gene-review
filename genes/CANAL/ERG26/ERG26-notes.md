@@ -1,0 +1,9 @@
+# ERG26 (CAL0000199131, UniProt Q5A1B0) notes
+
+Module: ergosterol biosynthesis, C-3 sterol dehydrogenase/C-4 decarboxylase between Erg25 and Erg27.
+
+- Cached direct Candida evidence is Aaron et al. 2001, abstract-only. The abstract reports that C. albicans ERG26 was cloned by complementing a Saccharomyces cerevisiae erg26 mutant, that the two chromosomal copies were disrupted in a pMAL2-ERG26 rescue strain, and that the resulting cells grew only with inducer [PMID:12702354 "Sequential disruption of both copies of the ERG26 gene in the presence of an integrated rescue cassette"].
+- Older S. cerevisiae primary evidence provides the direct enzymology and localization behind the PAINT/orthology call: erg26 mutants accumulate the predicted 4-alpha-carboxysterol substrates [PMID:9811880 "the predicted substrates for the C-3 sterol dehydrogenase"], erg26-1 microsomes have reduced C3 dehydrogenase activity [PMID:11279045 "microsomes isolated from erg26-1 cells contained greatly reduced 4alpha-carboxysterol-C3 dehydrogenase activity"], and Erg26 is part of the ER C-4 demethylation complex with Erg25/Erg27/Erg28 [PMID:12119386 "a complex containing Erg25p/Erg26p/Erg27p/Erg28p was identified"].
+- The committed PAINT snapshot places exact `GO:0000252` at `PTN000041374`, fungal ER at `PTN000820972`, and Dikarya ergosterol biosynthesis at `PTN000820973`.
+- UniProt 2026-11 currently cross-references C. albicans ERG26 to `PTHR43000`, but GO_Central 2025 IBAs still descend from the committed `PTHR43245` PAINT rows, where CGD `CAL0000199131` is a seed. This review follows the audited PAINT snapshot and records the cross-release mismatch for follow-up rather than repointing the gene.
+- Web searches for newer C. albicans ERG26 papers found antifungal-response and genomewide contexts but no newer direct ERG26 biochemical or localization paper to supersede PMID:12702354 plus the yeast Erg26 evidence.

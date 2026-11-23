@@ -13,3 +13,7 @@
 - Keep zinc binding and predicted cytosol only as non-core properties.
 - Mark generic hydrolase/deaminase parents and broad guanine metabolism as over-annotations because exact child terms are present.
 - Do not promote the report's inferred catalytic-residue numbering, regulation, cytosolic localization, or ammeline promiscuity to established KT2440 facts.
+
+## Completion pass
+
+- Completion pass (2026-11-09): generic parents of the accepted guanine deaminase activity / guanine catabolic process rows are now TOO_GENERAL (true but entailed by the child), and every row carries vetted supported_by (PTHR11271 PAINT lines, UniProt curated reaction/pathway, PMID:10913105). Status set to COMPLETE.

@@ -23,6 +23,13 @@ hypothesis jobs for gene function review.
   literature/deep-research references.
 - Avoid sending every function for genes with large reviews; select the specific
   hypothesis being tested.
+- Withholding the gene symbol and accession does not blind a sequence. OpenScientist
+  will compute the UniProt CRC64 checksum, find the exact UniParc match and read the
+  gene's literature (observed: SALTY ybbO, `seq-only-blinded-activity`). Treat such a
+  run as an independent interpretation of the same evidence, not independent evidence.
+  A genuine sequence-only test needs the prompt to forbid identifier/database lookups
+  of the query, or a perturbed sequence, and the report must be checked for whether it
+  de-anonymized the query.
 
 ## Running Jobs
 

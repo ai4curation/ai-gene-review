@@ -32,3 +32,13 @@ ZFIN:ZDB-GENE-080220-51, Ensembl ENSDARG00000056458, chr8. Mutant allele vo35 (C
   consequence of lost transduction.
 - Tried a NEW IMP row for GO:0050974; the validator rejects NEW for a term already in GOA (IBA), so the
   experimental evidence is attached to the IBA review instead.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[0], GO:0003674 molecular_function (ND), currently ACCEPT: may be stale. This
+  notes file's own literature search cites PMID:32009898 (zebrafish lhfpl5b vo35 mutant), which shows
+  loss of lateral-line MET channel activity rescued by GFP-lhfpl5a, and the earlier decision above
+  recorded "ND root MF → REMOVE (function known: MET accessory subunit, interchangeable with Lhfpl5a)".
+  The current ACCEPT reason argues this is necessity rather than an activity; a curator should decide
+  whether PMID:32009898 identifies a molecular function (e.g. a MET channel accessory-subunit role) for
+  this gene product in zebrafish. Action not changed; no search citation added.
