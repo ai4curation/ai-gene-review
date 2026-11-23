@@ -28,29 +28,29 @@ are read against the family's node listing (`<PTHR>-tree-nodes.yaml`) in the sam
 with two additions from the release tree: where each seed sits, and how many leaves of
 each subfamily the review names as affected lie below the node.
 
-## Status (2026-11-22)
+## Status (2026-11-23)
 
 | | Batches | Rows read | Applied | Left for adjudication |
 |---|---:|---:|---:|---:|
 | Gene reviews, candidate genes (`g001` to `g012`) | 12 of 73 | 278 | 217 | 59, and 2 not read |
 | Gene reviews, pilot of the corrected rules (`g013`, `g014`) | 2 of 73 | 47 | 41 | 6 |
 | Gene reviews, the rest (`g015` to `g073`) | 0 of 59 | 0 | | |
-| Family reviews (`f001` to `f018`) | 18 of 18 | 386 | 320, two of them by hand | 66 |
+| Family reviews (`f001` to `f018`) | 18 of 18 | 386 | 317, two of them by hand | 69 |
 
 `tree_rereview.py status` prints the current counts. Results and what they show are in
 [tree-evidence.md](../tree-evidence.md#the-re-read). What is left for a curator is in
 [`needs-curator.yaml`](needs-curator.yaml).
 
 The 59 unread gene batches hold 1,350 rows in 919 genes that are still overruled. Since
-the plans were made, reviews merged on main have added 345 overruled IBA rows in 234
-genes and 281 disputed node assessments: 265 in 147 families the plan does not cover, and
-16 new ones in 10 families it had read (as of the eighth merge, 2026-11-22). Those have
+the plans were made, reviews merged on main have added 348 overruled IBA rows in 237
+genes and 284 disputed node assessments: 268 in 149 families the plan does not cover, and
+16 new ones in 10 families it had read (as of the ninth merge, 2026-11-23). Those have
 extracts and listings, and are not in either plan; `plan` makes a plan once and does not
 extend it, so they need batches of their own.
 
 Main has also re-reviewed every IBA row marked `REMOVE` against the PAINT tree
-([rereview-2026-11-21](../rereview-2026-11-21/README.md)). It judged 654 of the 1,695
-unread gene rows; the other 1,041, nearly all `MARK_AS_OVER_ANNOTATED`, have been read
+([rereview-2026-11-21](../rereview-2026-11-21/README.md)). It judged 654 of the 1,698
+unread gene rows; the other 1,044, nearly all `MARK_AS_OVER_ANNOTATED`, have been read
 against the tree by nobody.
 
 The plan is fixed in its batches, not in its rows. A batch names genes or families; its
@@ -131,11 +131,11 @@ is left for a curator, with the reason in the run record:
   they need a new reading, and `finish` prints how many a batch leaves. A contradiction
   the verifier never saw would be counted here too; there is none today.
 - **A row whose review changed on main after it was read is not re-applied.** The row is
-  taken as on main, and the work list marks it `needs_new_reading` (52 today): its
+  taken as on main, and the work list marks it `needs_new_reading` (55 today): its
   `action`, `tree_reading` and `note` describe the review as it was read and may no longer
   describe the committed one. A row that was already waiting for a curator when main
   rewrote it gets the same mark: its run record keeps why it was left (`outcome_detail`)
-  and says what main changed (`changed_on_main`). Five of the 52 are of this kind.
+  and says what main changed (`changed_on_main`). Five of the 55 are of this kind.
 - **Quoting around an adverse fact.** A reading must quote more than the sentence that
   names the term, and must quote every sentence that stands against the verdict: that the
   gene is itself a seed, that it is inside the clade the seeds span, that seeds share its
@@ -180,7 +180,10 @@ horizontal-transfer node between it and the gene is never a one-to-one ortholog.
   otherwise be lost in a run record. `contradicted_and_left` and `contradiction_disputed`
   mark the two kinds of row left for adjudication after a contradiction was read (see
   above); a row whose review changed on main after the reading is in neither and is marked
-  `needs_new_reading`.
+  `needs_new_reading`. `tree_file_not_listed` names each review that quotes its tree file
+  in an applied row and does not list the file under `references`, because it has no
+  `references` list the script could add to (five family reviews today). A curator adds
+  the list; the script does not create one.
 - `workflows/`: the instructions the reading and verifying agents work from, as workflow
   scripts. They define the readings.
 - `tree_rereview.py`: `plan`, `dossier`, `inputs`, `record`, `apply`, `finish`, `status`,

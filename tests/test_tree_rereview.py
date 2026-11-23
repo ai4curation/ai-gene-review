@@ -348,7 +348,7 @@ def test_the_worklist_marks_and_counts_both_kinds_of_contradiction(tmp_path: Pat
 
     assert worklist["counts"] == {
         "adjudicate": 4, "not_read": 0, "applied_with_note": 1, "contradicted_and_left": 1, "contradiction_disputed": 1,
-        "needs_new_reading": 2,
+        "needs_new_reading": 2, "tree_file_not_listed": 0,
     }
     by_term = {entry["term"]: entry for entry in worklist["adjudicate"]}
     assert by_term["GO:0000398"]["contradicted_and_left"] is True and "contradiction_disputed" not in by_term["GO:0000398"]
@@ -378,7 +378,27 @@ def test_the_committed_worklist_agrees_with_its_own_counts() -> None:
     # no lower bound here: the count goes to 0 once these rows are read again (the fixture test has a row)
     assert worklist["counts"]["needs_new_reading"] == len(moved)
     assert all(entry["outcome_detail"].startswith(tr.NOT_REAPPLIED) or entry.get("changed_on_main") for entry in moved)
+    assert worklist["counts"]["tree_file_not_listed"] == len(worklist["tree_file_not_listed"])
     assert not any(entry.get("contradicted_and_left") or entry.get("contradiction_disputed") for entry in moved)
+
+
+def test_the_worklist_names_reviews_that_quote_a_tree_file_they_do_not_list(tmp_path: Path) -> None:
+    why = "the top-level references list is missing, empty or written in flow style"
+    quoting = row(family="PTHR00001", node="PANTHER:PTN000000001", outcome="applied")
+    undone = row(family="PTHR00002", node="PANTHER:PTN000000002", outcome="adjudicate", outcome_detail="edit refused")
+    for item in (quoting, undone):
+        del item["gene"]
+    (tmp_path / "f900.yaml").write_text(
+        tr.dump({"batch": "f900", "rows": [quoting, undone], tr.NOT_LISTED: {"PTHR00001": why, "PTHR00002": why}}),
+        encoding="utf-8",
+    )
+
+    worklist = tr.worklist(tmp_path)
+
+    # only a review that still holds an applied row quotes its tree file
+    assert worklist["tree_file_not_listed"] == {"PTHR00001": why}
+    assert worklist["counts"]["tree_file_not_listed"] == 1
+    assert "tree_file_not_listed" in worklist["about"]
 
 
 def test_the_worklist_says_what_its_markers_cover() -> None:

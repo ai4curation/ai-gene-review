@@ -63,13 +63,13 @@ at a tree and left only prose was not counted.
   is inside the seed clade, shares its branch with seeds, or every seed is an ortholog
   under a paralog claim), when a row is kept although PAINT has removed the term on the
   path to the gene (`kept_under_paint_loss`), and when a propagated row is overruled for
-  residue loss without a checkable residue claim (`missing_residue_evidence`; 104 rows in
-  65 reviews on 2026-11-22, [below](#residue-arguments-without-a-residue-claim)).
+  residue loss without a checkable residue claim (`missing_residue_evidence`; 105 rows in
+  66 reviews on 2026-11-23, [below](#residue-arguments-without-a-residue-claim)).
   `just validate-families` reports a node assessment that disputes a placement without
   quoting a tree listing (`NODE_TREE_EVIDENCE`).
-- **Backfill.** Extracts are committed for 1,422 genes: every gene whose review overrules
+- **Backfill.** Extracts are committed for 1,425 genes: every gene whose review overrules
   an IBA row that is still in its GOA file, and the genes with a kept row under a PAINT
-  loss. Node listings are committed for 366 families: those whose family review disputes a
+  loss. Node listings are committed for 368 families: those whose family review disputes a
   node placement, and PTHR48034 (the CIRBP family below). A review row whose IBA has since
   been withdrawn from GOA has no tree row to quote and is not asked for one. The committed
   set is what was written when the tooling landed and at each merge with main since. It
@@ -284,15 +284,17 @@ then edited by script. The method, the plans and a record of every row are in
 |---|---:|---:|---:|
 | Gene reviews: the 12 batches that hold every candidate gene | 278 | 217 | 59, and 2 not read |
 | Gene reviews: two further batches, as a pilot of the corrected rules | 47 | 41 | 6 |
-| Family reviews: every disputed node assessment without a tree listing | 386 | 320, two of them by hand | 66 |
+| Family reviews: every disputed node assessment without a tree listing | 386 | 317, two of them by hand | 69 |
 
 An applied row quotes its own extract or listing in `supported_by` and says in its reason
-what the tree shows. The script changed no verdict. 47 rows that had been applied were
+what the tree shows. The script changed no verdict. 50 rows that had been applied were
 changed on main before this work was merged with it (26 at the first merge, 2 at the
-second, 1 at the fourth, 1 at the sixth, 17 at the eighth); their edits were not carried
-over, and they are counted here as left for adjudication. Sixteen of the 17 are gene rows
-that main rewrote in its own re-review of every IBA row marked `REMOVE`
-([below](#mains-re-review-of-the-rows-marked-remove)).
+second, 1 at the fourth, 1 at the sixth, 17 at the eighth, 3 at the ninth); their edits
+were not carried over, and they are counted here as left for adjudication. Sixteen of the
+17 are gene rows that main rewrote in its own re-review of every IBA row marked `REMOVE`
+([below](#mains-re-review-of-the-rows-marked-remove)). The three of the ninth merge are
+family assessments: two reasons rewritten by a family review, and one assessment given
+main's new verdict `TERM_SUPERSEDED`.
 
 Review of the first batches found four things the script should not have done, and all
 four were put right on 2026-11-16 and 2026-11-17, in the rows already applied and in the
@@ -346,7 +348,7 @@ whole. A contradiction whose drafted correction the verifier faulted is counted 
 (`contradiction_disputed`, 12 today, below).
 
 What the re-read leaves for a curator is in
-[`needs-curator.yaml`](tree-rereview/needs-curator.yaml): the rows below, and the 336
+[`needs-curator.yaml`](tree-rereview/needs-curator.yaml): the rows below, and the 335
 applied rows on which the reader left a note, often about a verdict or failure mode that
 no longer fits.
 
@@ -383,7 +385,7 @@ Three things follow.
   tree that was wrong.** Typical cases:
   a "paralog" that the tree makes a one-to-one ortholog, a "broad" node with five leaves,
   a seed list described from gene names, a subfamily named as affected that does not
-  descend from the node. Counted from the run records after the eighth merge, 14 gene
+  descend from the node. Counted from the run records after the ninth merge, 14 gene
   rows and 24 family rows carry a reason the script corrected after the verifier agreed
   with the correction, and three more were corrected by hand (DROME mam, and the two
   family assessments above); the rest are among the rows left for a curator.
@@ -391,15 +393,15 @@ Three things follow.
   More than half of the disputed node assessments make a placement argument that the tree
   bears out.
 
-131 rows are left for adjudication, each with its reason in the run records: 37 where the
+134 rows are left for adjudication, each with its reason in the run records: 37 where the
 verifier did not accept the reading or its correction (among them 1 verdict the reader
 found unsupported and 2 kept rows under a PAINT loss), 26 family rows whose node or term
 is not in the listing (all read as `CANNOT_TELL`; the run records give them as "a row
 that must be verified was not checked by the verifier", since the verifier was not asked
-about a reading with nothing to check), 52 rows that changed on main after they were
+about a reading with nothing to check), 55 rows that changed on main after they were
 read, 11 kept rows under a PAINT loss, and 5 verdicts or assessments the tree does not
-support. Two gene rows were not read: the reader returned no entry for them. Of the 52
-rows that changed on main, 47 had been applied and were not re-applied, and 5 were
+support. Two gene rows were not read: the reader returned no entry for them. Of the 55
+rows that changed on main, 50 had been applied and were not re-applied, and 5 were
 already waiting for a curator when main rewrote them. All are marked `needs_new_reading`
 in `needs-curator.yaml`: what their entries say describes the review as it was read.
 
@@ -415,10 +417,10 @@ marks them `contradiction_disputed`.
 
 Not yet read: 59 gene batches with no candidate row. 1,350 of their rows, in 919 genes,
 are still overruled; main's re-review changed the verdict of the others. They still raise
-`missing_tree_evidence`. So do 345 overruled rows in 234 genes that reviews merged on
-main have added since the plan was made. 281 disputed node assessments are in the same
-position: 265 in 147 families the plan does not cover, and 16 new ones in 10 families it
-had read (as of the eighth merge, 2026-11-22). These have extracts and listings but are
+`missing_tree_evidence`. So do 348 overruled rows in 237 genes that reviews merged on
+main have added since the plan was made. 284 disputed node assessments are in the same
+position: 268 in 149 families the plan does not cover, and 16 new ones in 10 families it
+had read (as of the ninth merge, 2026-11-23). These have extracts and listings but are
 in neither plan.
 
 ### Main's re-review of the rows marked REMOVE
@@ -436,10 +438,10 @@ replace each other:
   and had been corrected here (LCYB, MNS1, NDUFA9); main's text does not make those
   statements.
 - **Rows only main read.** Its rows state the tree facts in the reason and do not quote
-  the extract, so `missing_tree_evidence` still fires on them. Of the 1,695 overruled gene
+  the extract, so `missing_tree_evidence` still fires on them. Of the 1,698 overruled gene
   rows this re-read has not read, main has judged 654 against the tree: 605 it upheld as
-  `REMOVE` and 49 it moved to `MARK_AS_OVER_ANNOTATED`. The other 1,041 have been read
-  against the tree by nobody: 1,032 `MARK_AS_OVER_ANNOTATED` rows, and 9 `REMOVE` rows
+  `REMOVE` and 49 it moved to `MARK_AS_OVER_ANNOTATED`. The other 1,044 have been read
+  against the tree by nobody: 1,035 `MARK_AS_OVER_ANNOTATED` rows, and 9 `REMOVE` rows
   newer than main's inventory.
 - **Rows only this re-read covers.** `MARK_AS_OVER_ANNOTATED` rows, the family node
   assessments, the quotes of adverse sentences, and the checks.
@@ -456,10 +458,10 @@ the review contradicts the tree, so it is not used.
 
 The pilot met four rows overruled as `PSEUDO_OR_SUBACTIVITY_LOSS` with nothing in
 `residue_claims` (ARATH CRY1 `GO:0003904`, and GID1A, GID1B and GID1C `GO:0016787`).
-Counted over every gene review on 2026-11-22, with or without an extract: 175 rows in 96
+Counted over every gene review on 2026-11-23, with or without an extract: 176 rows in 97
 reviews use the failure mode; 46 state residue claims, 16 say why the argument is not a
-point-residue question, 9 are not overruled and so are not asked, and **104 rows in 65
-reviews** raise `missing_residue_evidence` (83 `REMOVE`, 21 `MARK_AS_OVER_ANNOTATED`; 71
+point-residue question, 9 are not overruled and so are not asked, and **105 rows in 66
+reviews** raise `missing_residue_evidence` (83 `REMOVE`, 22 `MARK_AS_OVER_ANNOTATED`; 72
 of them IBA rows). On 2026-11-18 it was 97 rows in 63 reviews; the difference came with
 reviews merged on main. They are listed in
 [`residue-evidence-backlog.yaml`](residue-evidence-backlog.yaml). For 5 of them the

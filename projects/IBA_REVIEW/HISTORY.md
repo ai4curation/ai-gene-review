@@ -277,6 +277,15 @@ families from main got an extract or a listing. Of the 1,695 overruled gene rows
 re-read has not read, main's re-review judged 654; 1,041, nearly all
 `MARK_AS_OVER_ANNOTATED`, have been read against the tree by nobody.
 
+**Ninth merge with main (2026-11-23).** Two family reviews conflicted. A review of the
+ERG20 family had rewritten the reasons of two PTHR11525 assessments, and main's new
+verdict `TERM_SUPERSEDED` (PAINT has superseded the IBD at the same node) had replaced
+`WRONG_NODE` on a PTHR11550 assessment. All three are main's rows now: 50 rows not
+re-applied over nine merges, and 575 applied. Three more genes and two more families
+from main got an extract or a listing. The five family reviews that quote their tree
+listing without a `references` list are now named in the work list, and `docs/phylo.md`
+says that an extract's facts are per node and term, with yeast DUG2 as the example.
+
 - **Two re-reads of the same rows ran at once without knowing of each other.** Both were
   about the tree, both edited the reason of a `REMOVE` row, and sixteen rows had to be
   given up at the merge. Work of this kind should be announced where the other can see
@@ -284,7 +293,7 @@ re-read has not read, main's re-review judged 654; 1,041, nearly all
 - **A check that runs on part of the corpus says nothing about the rest.** The break
   above merged green and stayed invisible until a PR that validates everything met it.
   A source that other records quote needs its incoming quotes checked when it changes.
-- **A long-lived branch pays for every day it stays open.** Eight merges in eleven days,
+- **A long-lived branch pays for every day it stays open.** Nine merges in twelve days,
   each one a re-check of every applied row against a moving base. Where a re-read can
   land in small pieces, it should.
 

@@ -1329,16 +1329,20 @@ def worklist(runs: Path = RUNS) -> dict[str, Any]:
     Every row left for adjudication or not read, and every applied row on which the reader
     left a note: an applied row quotes its tree file and so drops out of the work list and
     out of the validator's warnings, which would otherwise make the note the last anyone
-    hears of it.
+    hears of it. Also every review that quotes its tree file in an applied row and does not
+    list the file under ``references``, with the reason the entry could not be added.
     """
     groups: dict[str, list[dict[str, Any]]] = {"adjudicate": [], "not_read": [], "applied_with_note": []}
     standing = disputed = moved = 0
+    unlisted: dict[str, str] = {}
     for path in sorted(runs.glob("*.yaml")):
         record = load(path)
         left = {id(row) for row in standing_contradictions(record["rows"])}
         faulted = {id(row) for row in disputed_contradictions(record["rows"])}
         standing += len(left)
         disputed += len(faulted)
+        quoting = {unit_of(row) for row in record["rows"] if row.get("outcome") == "applied"}
+        unlisted.update({unit: str(why) for unit, why in mapping(record.get(NOT_LISTED)).items() if unit in quoting})
         for row in record["rows"]:
             outcome = row.get("outcome", "")
             group = outcome if outcome in ("adjudicate", "not_read") else "applied_with_note" if row.get("note") else ""
@@ -1384,14 +1388,18 @@ def worklist(runs: Path = RUNS) -> dict[str, Any]:
             "read: either its edit was not carried over at a merge, or it was already waiting for a curator "
             "when main rewrote it (changed_on_main says what changed). Its action, tree_reading and note "
             "describe the review as it was read and may no longer describe the committed one. Such a row is "
-            "in neither of the two contradiction counts."
+            "in neither of the two contradiction counts. tree_file_not_listed names each review that quotes "
+            "its tree file in an applied row and does not list the file under references, with the reason "
+            "the script could not add the entry; a curator adds a references list to such a review."
         ),
         "counts": {
             **{group: len(rows) for group, rows in groups.items()},
             "contradicted_and_left": standing,
             "contradiction_disputed": disputed,
             "needs_new_reading": moved,
+            "tree_file_not_listed": len(unlisted),
         },
+        "tree_file_not_listed": dict(sorted(unlisted.items())),
         **groups,
     }
 

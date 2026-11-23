@@ -191,6 +191,11 @@ Run with `--residue-backlog`, it lists every row in the corpus that raises
   not one-to-one, however few duplications lie between. An "ortholog" in an extract is
   therefore never by itself a refutation of a review that disputes the family or
   subfamily a gene was placed in: the relation is read from that placement.
+- The facts are per row, that is per node and term, not per node. Two rows of one gene
+  can sit on the same PAINT node with different seeds, because each term has its own
+  seed list. Yeast DUG2 is the clearest case: at `PTN001336067` DUG2 is itself a seed and
+  inside the seed clade for `GO:0008233`, and neither for `GO:0006508`. Both statements
+  are true, and a reason must quote the sentences of its own row.
 - Identity and coverage are over the family model's columns. A domain the family model
   does not cover is invisible to both.
 - Sequences are those of the PANTHER 19.0 build. Check `same_as_uniprot_file` before
