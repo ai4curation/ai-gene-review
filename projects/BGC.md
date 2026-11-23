@@ -15,6 +15,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/JVCyoqSc6xLv4upJ5x28fH
       title: Project brief
+index_group: BACTERIA
 ---
 
 # Biosynthetic Gene Cluster (BGC) Enzyme Complexes Project

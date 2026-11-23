@@ -72,3 +72,13 @@ same gene and is reviewed separately. No ProtNLM2 file or prediction-evidence fo
 - NEW: GO:0005741 mitochondrial outer membrane and GO:0005737 cytoplasm for isoform a
   (P90794-1), from Staab 2013 / Spatola 2019. UniProt's DR GO lines show WormBase already has
   IDA rows for these; they were not in the fetched GOA set for P90794 (likely isoform-keyed).
+
+### SKN-1 target tatn-1 (2026-10-30 follow-up on description sources)
+
+- UniProt FUNCTION says WDR-23 "Inhibits the skn-1-mediated up-regulation of tatn-1"
+  (PubMed:31043480). Checked: wdr-23 RNAi raises TATN-1::GFP about 5-fold and TATN-1 enzyme
+  activity more than 2-fold, and the induction needs SKN-1
+  [PMID:31043480 "We found that treatment of these worms with wdr-23 RNAi led to a nearly 5-fold increase in the expression of TATN-1::GFP compared with the level seen in worms treated with control RNAi"].
+- tatn-1 (tyrosine aminotransferase, which also deaminates oxidised m-tyrosine) is one more
+  SKN-1 target gene repressed through WDR-23. It is covered by the existing SKN-1-repression
+  rows (e.g. GO:0000122); no new annotation.

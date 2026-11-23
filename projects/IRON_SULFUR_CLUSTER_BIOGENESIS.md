@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/5tZjqRb2tFMCKoamGFVLKA
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Iron-Sulfur Cluster Biogenesis Project

@@ -40,3 +40,11 @@ Ten verified HuRI interactions now use independently supported transcription-fac
 PNKP binding is refined to kinase binding and phosphatase binding, consistent with DNA-end chemistry rather than protein phosphorylation. GSTA4, KDM1A, EHHADH and NDOR1 retain enzyme binding because the current complete descendant set has no fitting narrower class. CDC37’s client-contact evidence supports chaperone binding without requiring DRC4 to be its folding client; GOLGA2’s established microtubule-organizing activity supports the cytoskeletal regulatory class. The [focused evidence audit](source-evidence/followup-evidence.json) records the literal pair counts, functional-class assertions, term-source hashes and public source URLs.
 
 The two mouse-derived cytoplasm assertions remain non-core at their original resolution. Positive human HPA cytosolic staining is retained as a separate, nonexclusive observation, not relabeled as the mouse donor experiment. The [source guide](DRC4-source-evidence.md) records the species, assay and access limits. Raw caches, earlier source extractions, previous notes and history remain unchanged.
+
+## 2026-11-15 ORGANELLES Golgi batch 2 (Golgi apparatus rows)
+
+- Rows: GO:0005794 EXP (PMID:16643277), IBA is_active_in (GO_REF:0000033), IDA (HPA, GO_REF:0000052), IEA (GO_REF:0000120). All stay KEEP_AS_NON_CORE.
+- PMID:16643277 (abstract-only): endogenous GAS11 juxtanuclear, overlapping the pericentrosomal Golgi; dispersed by brefeldin A, stays with Golgi fragments after nocodazole; recombinant protein binds Golgi membranes in vitro. Meets the marker test (brefeldin A dispersal of the protein itself).
+- IBA seeds (QuickGO with/from): mouse Gas8 MGI:1202386 (MGI IDA, PMID:18396146, Gas8 with Rab3B at the Golgi in NIH 3T3) and human O95995 itself. Ortholog-seeded, not paralog-seeded.
+- is_active_in: no DRC4 activity shown at the Golgi.
+- No sub-compartment row; core activity is in the axonemal dynein regulatory complex.

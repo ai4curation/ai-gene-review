@@ -10,6 +10,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/NjmYtfwPS1nDE8WcAWGBDN
       title: Project brief
+index_group: MAMMAL
 ---
 
 # NLRP3 Inflammasome Assembly Project

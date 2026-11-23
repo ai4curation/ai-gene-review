@@ -35,3 +35,35 @@ All 24 current panel reviews remain within the preservation proof (439 rows, inc
 ## 2026-10-26 — source-specific PR #5569 follow-up
 
 The remaining action-only refinement summaries and generic refinement reasons were replaced with reaction-, pathway- or assembly-specific explanations. Existing actions and replacement terms are unchanged.
+
+
+## 2026-11-01 bacterial aspartate-to-threonine audit follow-up
+
+Re-read the existing COMPLETE review and every annotation decision for the narrower bacterial route audit. Retained all annotation actions, machine-sourced payloads, standalone description, core functions and raw records. Added manual assessments and verbatim findings to existing references, distinguishing native experiments from comparative synthesis, bibliographic-only records and inference. No new annotation rows were proposed.
+
+ThrA retains separate N-terminal aspartate-kinase and C-terminal homoserine-dehydrogenase functions. The intervening Asd step remains required: the fusion neither bypasses aspartyl-phosphate reduction nor establishes channeling. PMID:4364333 identifies two functions within one polypeptide. The module may reuse that protein for steps 1 and 3, with Asd at step 2.
+
+PMID:204643 directly reports: "Both the dimeric and tetrameric forms of the enzyme possess dehydrogenase activity." This is condition-dependent assembly, not an invariant tetramer. Both domain activities are threonine-regulated. The NAD(H) reaction and NAD+ binding remain accepted as curated conserved catalytic capacity, supported by UniProt orthology to Q9SA18 rather than a native NAD/NADP preference assay. NADP-specific GO:0004412 is not a replacement for NAD-specific GO:0004022; no equal cofactor use is asserted.
+
+Acquisition and evidence limits: `just mod-description-deep-research ECOLI thrA metL lysC asd thrB thrC` completed with all six skipped because no MOD provider is configured for ECOLI. A fresh normal Falcon request for ECOLI thrA failed with the shared Edison authentication/access 403; the same failed service was not retried for the other five. Earlier actual provider attempts remain documented above. No provider report was fabricated or rewritten. Manual review used existing primary-publication and curated UniProt caches. Logs are in the ignored `.cache/module-audit-logs/bacterial-threonine-ecoli/` directory.
+
+PMID:11368768 supports the native route, but its nominal full-text HTML cache contains a duplicated abstract and PDF link rather than the full paper. The coordinating agent's normal PDF retrieval also returned an HTML interstitial. No unseen kinetic measurements or exact strain details are attributed to that abstract. Native proteomics annotations retain the caveat that individual target supplement rows were not independently reconstructed. Raw UniProt PANTHER membership and the official `interpro/panther/panther.obo` label were checked for module selectors; membership alone does not establish every family's substrate or regulatory specificity.
+
+
+## PR #5858 round 1 — cofactor definition and cross-gene evidence
+
+Live QuickGO was rechecked at 2026-11-01T21:55:53.814183+00:00:
+
+> Catalysis of the reaction: L-homoserine + NADP+ = L-aspartate-4-semialdehyde + NADPH + H+.
+
+Source: [QuickGO GO:0004412](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0004412). The same definition is committed in [the module audit GO terms](../../../analysis/module_audits/bacterial_aspartate_to_threonine_biosynthesis/go-terms.yaml); the fresh response is saved in the ignored `pr5858-hom-cofactor-followup/GO_0004412-live.json` log. GO's definition here is NADP+, not NAD(P)+. The broader EC 1.1.1.3 grouping does not override this explicit GO reaction definition.
+
+The three GO:0004022 decisions reflect different inspected evidence, not different interpretations of that definition:
+
+| Target | Evidence behind its NAD-linked RHEA:15757 reaction | Decision and limit |
+| --- | --- | --- |
+| ECOLI ThrA P00561 | Curated ECO:0000250 transfer from Q9SA18 | ACCEPT conserved NAD-linked capacity; no matched native cofactor preference assay. ECO:0000250 is sequence-similarity evidence and does not itself prove strict orthology. |
+| CORGL Hom P08499 | ECO:0000269 attached to PMID:1743520 and PMID:4394351; citation/strain/cofactor scope only partly inspectable | UNDECIDED; recovered4394351 demonstrates NADPH chemistry in B.flavum No2247, while1743520 is abstract-only and cannot exclude or establish NADH use. |
+| PSEPK Hom Q88MU8 | NAD reaction supported only by ARBA:ARBA00049031; independent RuleBase/PROSITE/PIRSR support Hom with NADP/NADPH contacts | MODIFY to GO:0004412 is an explicit target-specific cofactor correction, not a claim that this term preserves NAD chemistry or that native NAD use was disproved. |
+
+These decisions are cross-referenced in the respective review reasons. The evidence code alone does not dictate the outcome: the reaction provenance, inspected source content, independent family/cofactor features and remaining uncertainty do. No native purified NADH/NADPH preference measurements are invented.

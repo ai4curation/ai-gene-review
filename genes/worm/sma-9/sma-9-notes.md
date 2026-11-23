@@ -13,3 +13,15 @@ Deep research update: a falcon job eventually completed and wrote `sma-9-deep-re
 - Yin et al. 2010: a C-terminal isoform (D01) acts in ray patterning.
 - Baccas et al. 2025: SMA-9 restrains SEM-2 and permits LET-381 in the dorsal M lineage.
 - A review states that SMA-9 is not required for the DBL-1 antifungal AMP response.
+
+## ROS and mitochondrial UPR statements in UniProt (2026-10-30)
+
+- UniProt FUNCTION says SMA-9 is "Involved in production of reactive oxygen species (ROS)"
+  and "Plays a role in the mitochondrial unfolded protein response (mtUPR)", citing
+  PubMed:20687916. That paper is Wong et al. 2010 on mab-31 and male ray patterning; its
+  cached full text contains no ROS, mitochondrial or nanopolystyrene data.
+- The statements match a nanopolystyrene toxicology study [PMID:32758726 "intestinal SMA-9
+  activated the mitochondrial unfolded protein response by affecting ELT-2 activity"]. The
+  UniProt citation looks mis-keyed; recorded as a source defect on the UniProt reference.
+- The finding is a response to a xenobiotic exposure, from one abstract-only study, and is
+  peripheral to SMA-9's role as a Schnurri-family BMP pathway cofactor. Not annotated.

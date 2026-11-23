@@ -62,3 +62,9 @@ are built only from cached publications (`publications/PMID_*.md`) and the UniPr
   a convention). The non-essentiality of GS2 in Arabidopsis is recorded in the reason.
 - Mitochondrion kept as non-core (disputed); thylakoid, envelope, ribosome, apoplast HDA
   marked over-annotated; SA binding removed; mRNA binding marked over-annotated.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0019676 / PMID:16338958: defect withdrawn (evidence depth: ABSTRACT). QuickGO shows TAIR annotated all five GS genes by TAS from this paper on the same day, giving the four GLN1 genes nitrate assimilation and GLN2 alone ammonia assimilation cycle, which indicates a deliberate GS2-specific author statement rather than a mis-keyed reference. The defect was only a preference for a GS2-focused paper, based on the abstract. Full text not obtainable (OUP page shows abstract only); reference_review changed from MISCITED to UNVERIFIED.

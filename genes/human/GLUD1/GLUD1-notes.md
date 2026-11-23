@@ -117,3 +117,12 @@ inhibiting and ADP activating, leucine activating) and adds four points worth re
   activity, generic amino acid metabolic process) → MODIFY or KEEP_AS_NON_CORE per policy.
 </content>
 </invoke>
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095) and IDA (PMID:19448744), both located_in; no ER sub-compartment rows; no is_active_in.
+
+- UniProt: "Endoplasmic reticulum {ECO:0000269|PubMed:19448744}" with note "Mostly translocates into the mitochondria, only a small amount of the protein localizes to the endoplasmic reticulum." So the IEA and IDA rows carry one claim.
+- PMID:19448744 (abstract only, no PMC): hGDH1-EGFP overexpressed in COS 7, HeLa, CHO, HEK293, SH-SY5Y; [PMID:19448744 "colocalized with the mitochondrial marker DsRed2-Mito and to a lesser extent with the endoplasmic reticulum marker DsRed2-ER"]; the ~95 kDa full-length (unprocessed) band was in the ER-containing cytosol fraction.
+- Topology: FT TRANSIT 1..53 (mitochondrion); no ER signal peptide, TM or retention motif, so any ER pool is cytosolic-face; stays at root.
+- Outcome: both rows stay KEEP_AS_NON_CORE (precedent AHCY, ER batch 1: overexpressed fusion against an ER marker); reasons added (rows previously had none) and UniProt + abstract quotes added. Close call with MARK_AS_OVER_ANNOTATED (tagged, overexpressed, unprocessed precursor), stated in the reasons.

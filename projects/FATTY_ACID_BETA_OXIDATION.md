@@ -12,6 +12,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/CFSC1azmzHYyEFApt15dV7
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Mitochondrial Fatty Acid β-Oxidation (cross-species)

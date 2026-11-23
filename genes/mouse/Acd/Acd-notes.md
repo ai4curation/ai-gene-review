@@ -1,0 +1,57 @@
+# Acd (Q5EE38) Curation Notes — Mouse Shelterin Subunit TPP1
+
+## 1. Gene & Protein Overview
+
+- **Organism & Identifiers**: *Mus musculus* `Acd` (`MGI:87873`, `UniProtKB:Q5EE38`, sequence version 1, **416 aa**; `PANTHER:PTHR14487` / `PANTHER:PTHR14487:SF3` `ADRENOCORTICAL DYSPLASIA PROTEIN HOMOLOG`), commonly referred to in mouse telomere biology as **Tpp1** or **Acd**.
+- **Conserved Domain & Residue Architecture**:
+  - Unlike human `ACD`, which produces both a 458-aa somatic `TPP1-S` (`Q96AP0`) and a spermatid-enriched 544-aa `TPP1-L` isoform (`PMID:31216472`), mouse `Q5EE38` initiates directly at the conserved NOB (N-terminal of OB) start (`MSDSGLLALQPWIRELIL...`, 416 aa) and lacks the primate-type 86-aa basic upstream extension.
+  - **NOB motif**: `P11-W12-I13` (`LLALQPWIRELIL`, positions 11–13 in `Q5EE38` SV 1, identical 1-based coordinates to human `Q96AP0`).
+  - **TEL patch acidic loop**: `D78-W79-E80-E81-K82-E83` (`DWEEKE` at positions 78–83 in `Q5EE38` SV 1, shifted by −2 relative to `D80–E85` in human `Q96AP0`), plus `R92` and `L95`.
+  - **POT1a/POT1b-interacting domain**: `aa 156–245` (`FT REGION 156..245`). Rodents underwent duplication of *Pot1* into *Pot1a* (repressing ATR DNA damage signaling at telomeres) and *Pot1b* (preventing excessive 5' C-strand resection / regulating 3' overhang length), and mouse Acd/TPP1 is required to tether **both** POT1a and POT1b to telomeres (`PMID:17053789`, `PMID:17632522`, `PMID:22101936`).
+  - **TIN2-interacting C-terminus** & **STN1 (CST) interaction** (`PMID:19648609`).
+
+## 2. Genetics of the *acd* Hypomorphic Mutant vs. Conditional Nulls
+
+1. **Spontaneous *acd* splice-donor hypomorph (`PMID:15537664`, `PMID:18185984`, `PMID:19660449`, `PMID:22038471`)**:
+   - Positional cloning by Keegan et al. 2005 (`PMID:15537664`) identified an intronic splice-donor mutation in *Acd* as the cause of autosomal recessive *adrenocortical dysplasia* (*acd*), characterized by adrenocortical hypoplasia, urogenital ridge malformations, caudal regression/vertebral segmentation defects, and preaxial/postaxial limb anomalies.
+   - Else et al. 2008 (`PMID:18185984`) showed that *acd/acd* MEFs exhibit telomere deprotection, DNA damage foci (TIFs), and end-to-end chromosome/chromatid fusions (`GO:0016233` `telomere capping`, `GO:0031848` `protection from non-homologous end joining at telomere`).
+   - Crucially, Vlangos et al. 2009 (`PMID:19660449`) proved that the skeletal, caudal-axis, and limb malformations in *acd* embryos are caused by **p53-dependent apoptosis** downstream of telomere dysfunction and are rescued on a *Trp53*⁻/⁻ background (whereas *TAp63* loss does not rescue them, `PMID:22038471`). Thus, the MGI `IMP` annotations to `GO:0001501` (`skeletal system development`), `GO:0001655` (`urogenital system development`), `GO:0030326` (`embryonic limb morphogenesis`), and `GO:0035282` (`segmentation`) with qualifier `acts_upstream_of_or_within` represent pleiotropic downstream consequences of telomere uncapping in rapidly proliferating progenitors rather than direct morphogenetic roles (`MARK_AS_OVER_ANNOTATED`).
+
+2. **Conditional *Acd* knockdown/knockout in MEFs and stem cells (`PMID:17632522`, `PMID:22101936`, `PMID:24316971`)**:
+   - Depletion or deletion of *Acd* in MEFs (`PMID:17632522`, `PMID:22101936`, `PMID:24316971`) abolishes POT1a and POT1b localization to telomeres, unleashing ATR-dependent telomere DNA damage signaling, excess 3' G-overhang generation, and non-homologous end joining fusions.
+   - In hematopoietic stem cells (`PMID:24316971`), acute *Acd* deletion causes rapid cell-cycle arrest and stem-cell depletion that is NOT rescued by *Trp53* deletion.
+
+## 3. Key Annotation Decisions (Harmonized with `human/ACD` and `PANTHER:PTHR14487`)
+
+- **`ACCEPT` (core)**: `GO:0070187` (`shelterin complex`), `GO:0016233` (`telomere capping`), `GO:0031848` (`protection from non-homologous end joining at telomere`), `GO:0007004` (`telomere maintenance via telomerase`), `GO:0032211` (`negative regulation of telomere maintenance via telomerase`), `GO:0070198` (`protein localization to chromosome, telomeric region`), `GO:0070200` (`establishment of protein localization to telomere`), `GO:0032202` (`telomere assembly`), `GO:0070182` (`DNA polymerase binding`).
+- **`MODIFY` (refinement)**:
+  - `GO:0005515` (`protein binding` IPI with Tinf2 `MGI:MGI:1920086`, Pot1a `PR:Q91WC1` `PMID:17053789`, and Stn1 `UniProtKB:Q8K2X3` `PMID:19648609`) → `GO:0030674` (`protein-macromolecule adaptor activity`).
+  - `GO:0000781` (`chromosome, telomeric region`) & `GO:0005654` (`nucleoplasm`) → `GO:0140445` (`chromosome, telomeric repeat region`).
+  - `GO:0000783` (`nuclear telomere cap complex`) → `GO:0070187` (`shelterin complex`).
+  - `GO:0000723` (`telomere maintenance`) → `GO:0016233` (`telomere capping`) and `GO:0007004` (`telomere maintenance via telomerase`).
+  - `GO:0006886` (`intracellular protein transport`, `ISO`/`IEA` from `PMID:15181449`) → `GO:0070200` (`establishment of protein localization to telomere`).
+  - `GO:0032206` (`positive regulation of telomere maintenance`, `NAS`) → `GO:0032212` (`positive regulation of telomere maintenance via telomerase`).
+- **`TOO_GENERAL` / `KEEP_AS_NON_CORE` / `MARK_AS_OVER_ANNOTATED`**: `GO:0005634` (`nucleus` → `TOO_GENERAL`), `GO:0016604` (`nuclear body` → `KEEP_AS_NON_CORE`), `GO:0044877` (`protein-containing complex binding` → `KEEP_AS_NON_CORE`), and `acts_upstream_of_or_within` p53-dependent developmental phenotypes (`GO:0001501`, `GO:0001655`, `GO:0030326`, `GO:0035282` → `MARK_AS_OVER_ANNOTATED`).
+- **`REMOVE` (refuted / mis-propagated)**:
+  - `GO:0005697` (`telomerase holoenzyme complex`, `IEA` `IPR019437`): shelterin subunit, not a telomerase holoenzyme subunit (`PMID:35201900`).
+  - `GO:0042162` (`telomeric repeat DNA binding`, `IBA`/`IDA`/`IEA`/`ISO`): `PMID:23685356` pulled down whole shelterin from nuclear extract on ds-`TTAGGG` DNA; purified TPP1/Acd does not contact DNA (`PMID:31216472`, `PMID:35201900`), whereas POT1a/POT1b bind ssDNA (`PMID:17053789`, `PMID:17632522`).
+  - `GO:0010521` (`telomerase inhibitor activity`, `ISO`/`IEA` from human `PMID:25172512`): unsupported in source paper and opposite to Acd/TPP1's direct telomerase-stimulating activity.
+  - `GO:0070203` (`regulation of establishment of protein localization to telomere`, `ISO`/`IEA` from human `PMID:25172512`): propagated from an erroneous BHF-UCL `IDA` on `PMID:25172512` (which assayed TPP1's own localization upon deubiquitinase perturbation, whereas Acd directly mediates `GO:0070200` for POT1a/b and TERT).
+
+## 2026-11-15 follow-up: restricted developmental conclusions
+
+This entry supersedes the inclusion of urogenital development among p53-rescued phenotypes above. PMID:19660449 and PMID:22038471 support skeletal, vertebral and limb findings; they do not establish rescue or mechanism of the urogenital phenotype. The latter annotation remains UNDECIDED because the original PMID:15537664 evidence is incompletely accessible. Skeletal/limb/segmentation terms remain MARK_AS_OVER_ANNOTATED with the reasons limited to those studied outcomes.
+
+The prior GO:0010521 and GO:0070203 REMOVE recommendations are superseded by UNDECIDED. Canonical telomerase stimulation does not alone prove absence of inhibitor activity in every context. Human TPP1-L is explicitly absent in mice (PMID:31216472); its mechanism is not transferred to mouse Acd. RNF8-dependent localization in mouse experiments (PMID:22101936) differs from the negative human ubiquitination result (PMID:25172512), and regulation of TPP1 itself does not prove its participation as a regulator.
+
+The PMID:23685356 DNA-capture assay used nuclear extracts, including mouse embryonic stem-cell extracts. Human purified-protein and structural evidence (PMID:31216472, PMID:35201900) supplies the contrary direct-DNA-binding evidence, with species scope explicit. The review remains DRAFT with unresolved propagation assessments.
+
+## 2026-11-15 round-four follow-up: source queries and transfer scope
+
+The preceding entry's UNDECIDED inhibitor decisions are superseded by REMOVE for the two GO:0010521 ISO/IEA transfers. This decision rests on the weakly grounded human source plus the absence of the human long-form N-terminal extension from the retained mouse products, not on canonical stimulation proving that inhibition is impossible. The UniProt Q5EE38 canonical record and its four VAR_SEQ products delimit this sequence claim; it is not an exhaustive survey of all possible transcripts. The clipped mouse-absence statement is removed from annotation evidence. GO:0070203 remains UNDECIDED; the long-form argument concerns a different function and cannot settle this regulatory-process assignment. Mouse status remains DRAFT with three UNDECIDED contexts.
+
+PMID:22101936's Lys233/POT1 localization comparison uses human TPP1 constructs and mouse POT1a in mouse MEFs: "we co-transfected Myc-mPOT1a with either FLAG-hTPP1WT or FLAG-tagged hTPP1 mutants into wild-type MEFs.". The earlier shorthand contrasting mouse and human results must not be read as a controlled comparison of the two species' TPP1 proteins. Regulation of TPP1 itself does not settle whether it performs GO:0070203.
+
+Sequence comparison: the retained human Q96AP0 short-form, mouse Q5EE38 and rat Q4FZR5 records each place the shared PWIRELILGS anchor at residues 11-20. PMID:31216472 defines the human short form as residues 87-544 of the long form; the anchor thus maps to long-form residues 97-106, after the inhibitory-extension R43/R46/R48 region. The sequence evidence comes from the three committed *-uniprot.txt files, not from the paper's mouse-only Discussion sentence. Q5EE38 alternative products remove canonical residues 1-100 (isoform 2), 1-191 (3), 1-253 (4), or 1-158 (5), with the listed VAR_SEQ replacements; none restores the human upstream extension.
+
+The validator flags the raw UniProt sequence quotation as a sequence-evidence advisory. It is retained here to make the N-terminal comparison inspectable; the activity decision also depends on the cited human functional experiment and the explicit sequence comparison above.

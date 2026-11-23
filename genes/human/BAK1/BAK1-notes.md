@@ -64,3 +64,9 @@ Key curation decisions:
 - Left only the VDAC1 `GO:0044325 transmembrane transporter binding` row
   undecided because the cached K5/VDAC1 paper is abstract-only and does not
   expose the BAK-specific evidence.
+
+## 2026-11-04 ORGANELLES ER batch 1 (endoplasmic reticulum rows)
+
+- Rows: one GO:0005783 row, IEA GO_REF:0000107 (Ensembl projection from mouse Bak O08734), located_in. No ER sub-compartment row before this batch.
+- Source check (QuickGO): mouse Bak O08734 carries GO:0005783 IDA PMID:12847083 (MGI). Full text cached. Endogenous Bak in the ER-enriched fraction [PMID:12847083 "both Bax and Bak were found in the ER/microsome fraction"], calnexin probed [PMID:12847083 "Antibodies against Bax, Bak, calnexin, and Cox IV were used for immunoblotting"], fraction free of mitochondria [PMID:12847083 "However, the S-100 and LM fractions were not contaminated by mitochondria, as indicated by the absence of the mitochondrial inner membrane protein COX IV or mitochondrial outer membrane Tom40"]. ER-targeted Bak depletes ER Ca2+ [PMID:12847083 "ER-targeted, but not mitochondria-targeted, Bak leads to progressive depletion of ER Ca2+"].
+- Outcome: GO:0005783 row kept KEEP_AS_NON_CORE, reason extended. NEW IC GO:0005789 ER membrane added (tail-anchor TM 188-205 + endogenous light-membrane fraction + ER-face Ca2+ function; paralogs BAX and BCL2 carry GO:0005789 by IDA). MAM not asserted. core_functions unchanged.

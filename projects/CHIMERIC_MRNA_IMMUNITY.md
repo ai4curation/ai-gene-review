@@ -15,6 +15,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/DA8KLya8H2EUtc279huYwc
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Chimeric mRNA Trans-Fusions in Immunity

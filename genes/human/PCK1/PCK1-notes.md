@@ -93,3 +93,14 @@
   glycogen and the pentose phosphate pathway. This is a metabolic requirement rather
   than a regulatory role in differentiation.
   [file:human/PCK1/PCK1-uniprot.txt "The resultant phosphoenolpyruvate flows to glycogen and pentose phosphate pathway, which is essential for memory CD8(+) T-cells homeostasis"]
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IDA (PMID:32322062) and GO:0005783 IEA (GO_REF:0000120, from mouse Q9Z2V4). Both already KEEP_AS_NON_CORE.
+
+Checks:
+- Mouse Q9Z2V4 (UniProt REST, 2026-11-05) lists the ER by similarity to human P35558 (ECO:0000250), and the human line is curated from PMID:32322062 (ECO:0000269): one source.
+- PMID:32322062 is abstract-only in the cache: "Phosphorylated PCK1 translocates to the endoplasmic reticulum" [PMID:32322062]. The ER marker and fractionation controls cannot be checked.
+- PCK1 is soluble and cytosolic (no signal peptide, no TM); the pSer90 pool is recruited to the ER surface.
+
+Outcome: actions unchanged (KEEP_AS_NON_CORE on curator deference); a dated sentence added to each reason. Stays at the root. Marker-controlled fractionation of endogenous pSer90-PCK1 would settle the location.

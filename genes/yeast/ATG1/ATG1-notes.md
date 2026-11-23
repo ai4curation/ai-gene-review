@@ -98,3 +98,13 @@ the UniProt record.
   autophagy of mitochondrion) were set to MODIFY toward the specific supported
   descendants.
 - No NEW annotations were added.
+
+## Follow-up on the UniProt FUNCTION text (2026-11-01)
+
+- UniProt says ATG1 is required for glycogen storage during stationary phase. The source shows that
+  autophagy-defective mutants make glycogen but cannot keep it [PMID:11486014 "Mutants defective for
+  autophagy were able to synthesize glycogen upon approaching the stationary phase, but were unable to
+  maintain their glycogen stores"]. This is an indirect effect of losing autophagy, so it is not annotated.
+- UniProt also gives a role in regulating filamentous growth, citing PMID:17700056 ("Overexpression of
+  autophagy-related genes inhibits yeast filamentous growth"; not cached). It is an overexpression
+  phenotype and is treated as peripheral.

@@ -19,6 +19,19 @@
   primary paper beyond PMID:37968396, the broad 2023 Nature yeast interactome
   study already represented in the review.
 
+## 2026-10-05 reviewer follow-up
+
+- Re-read `interpro/panther/PTHR10615/PTHR10615-entries.csv` after PR review
+  and refined the NuA4 diagnosis: PANTHER places P40963/Sas2 in
+  `PTHR10615:SF219` with KAT5/TIP60 proteins and the three `GO:0035267` IBD
+  seeds, while Q08649/Esa1 is in `PTHR10615:SF218` and gets its own IBAs from
+  `PTN004172926`.
+- Kept the `GO:0035267 NuA4 histone acetyltransferase complex` IBA as
+  `REMOVE`, but reworded the propagation record to say the remedy is re-placing
+  Sas2 toward the KAT8/MOF subfamily or adding an IRD/NOT on the yeast Sas2
+  branch for NuA4 complex membership, not merely constraining the existing
+  `PTN007449682` KAT5/TIP60 node.
+
 ## 2026-10-10 refresh
 
 - Re-fetched `yeast/SAS2`, bringing the review to the current 25 GOA rows and
@@ -76,3 +89,8 @@
   I searched the current web/PubMed-facing index for 2024-2026 direct
   Sas2/SAS-I primary papers and did not find evidence that changes the September
   IBA review.
+- Fetched PMID:38229233 while checking recent Saccharomyces subtelomeric
+  heterochromatin papers. The paper uses IMD2 to follow GTP-dependent
+  heterochromatin fluctuations and cites Sas2-mediated H4K16 acetylation as
+  established boundary context, but it does not provide new direct Sas2
+  biochemical, localization, or SAS-complex evidence.

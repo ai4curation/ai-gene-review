@@ -5,6 +5,7 @@ tags: [BIOLOGY_DOMAIN]
 species: [BPZF4]
 genes: [AcrF8]
 autolink_gene_symbols: false
+index_group: BACTERIA
 ---
 
 # CRISPR-Cas immunity and anti-CRISPR counter-defence

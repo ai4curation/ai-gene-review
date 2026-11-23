@@ -1,5 +1,6 @@
 ---
 title: "UniPathway Unique Terms Project"
+collections: [MAPPINGS]
 maturity: MATURE
 last_reviewed: 2026-10-05
 tags: [PIPELINE, FLAGSHIP]
@@ -7,6 +8,7 @@ species: [human, PSEPK, RHOPA, CUPNH, FERPA, 9ARCH, DESPS, POLH7, BRADI]
 manifest:
   slides:
     - href: UNIPATHWAY/slides/UNIPATHWAY-slides.html
+index_group: CROSS_CUTTING
 ---
 
 # UniPathway Unique Terms Project

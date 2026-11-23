@@ -366,7 +366,8 @@ def test_scenarios_on_an_external_model_warn_and_missing_files_error() -> None:
     ]
     assert warnings == [
         f"Executable model {external['id']}: its scenarios are not checked "
-        "(only module-derived Boolean and agent-based models are simulated)"
+        "(only module-derived Boolean, agent-based and constraint-based models "
+        "are simulated)"
     ]
 
 
@@ -482,8 +483,10 @@ def test_jak_stat_negative_regulators_act_where_the_module_says() -> None:
     inhibitors = {(e.source, e.target) for e in model.edges if e.sign == "-"}
     assert ("pias_restraint", "jak_activation") not in inhibitors
     assert ("socs_feedback", "stat_transcription") not in inhibitors
+    # stat_dimerization_import is a bundle (dimerization, then nuclear import by
+    # module_ref), so its last child is what transcription waits for.
     assert model.rules["stat_transcription"] == (
-        "stat_dimerization_import & !(ptp_dephosphorylation | pias_restraint)"
+        "stat_nuclear_import & !(ptp_dephosphorylation | pias_restraint)"
     )
 
 

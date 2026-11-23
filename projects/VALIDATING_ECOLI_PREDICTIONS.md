@@ -16,6 +16,7 @@ manifest:
   slides:
     - href: VALIDATING_ECOLI_PREDICTIONS/slides/VALIDATING_ECOLI_PREDICTIONS-slides.html
       description: Validating E. coli ML predictions slides
+index_group: CROSS_CUTTING
 ---
 
 # Validating E. coli ML Predictions

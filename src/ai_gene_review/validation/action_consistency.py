@@ -446,6 +446,58 @@ def _comparable(ann_1: Dict[str, Any], ann_2: Dict[str, Any]) -> bool:
     return not (iso_1 and iso_2 and iso_1 != iso_2)
 
 
+#: Qualifiers a positive annotation entails for an ancestor term, besides its own:
+#: located in a part means located in the whole, but not active there, and an
+#: activity contributed to a complex is not one the gene enables alone. A
+#: molecular function part_of a process puts the gene in that process.
+_QUALIFIER_ENTAILS: Dict[str, FrozenSet[str]] = {
+    "is_active_in": frozenset({"located_in"}),
+    "part_of": frozenset({"located_in"}),
+    "enables": frozenset({"involved_in", "acts_upstream_of_or_within"}),
+    "contributes_to": frozenset({"involved_in", "acts_upstream_of_or_within"}),
+    "involved_in": frozenset({"acts_upstream_of_or_within"}),
+    "acts_upstream_of": frozenset({"acts_upstream_of_or_within"}),
+    "acts_upstream_of_positive_effect": frozenset(
+        {
+            "acts_upstream_of",
+            "acts_upstream_of_or_within",
+            "acts_upstream_of_or_within_positive_effect",
+        }
+    ),
+    "acts_upstream_of_negative_effect": frozenset(
+        {
+            "acts_upstream_of",
+            "acts_upstream_of_or_within",
+            "acts_upstream_of_or_within_negative_effect",
+        }
+    ),
+    "acts_upstream_of_or_within_positive_effect": frozenset(
+        {"acts_upstream_of_or_within"}
+    ),
+    "acts_upstream_of_or_within_negative_effect": frozenset(
+        {"acts_upstream_of_or_within"}
+    ),
+}
+
+
+def _qualifier_entails(specific: Dict[str, Any], general: Dict[str, Any]) -> bool:
+    """Whether the more specific row's claim carries up to the general row's qualifier.
+
+    A row without a qualifier is not narrowed by one.
+
+    >>> _qualifier_entails({"qualifier": "located_in"}, {"qualifier": "is_active_in"})
+    False
+    >>> _qualifier_entails({"qualifier": "is_active_in"}, {"qualifier": "located_in"})
+    True
+    >>> _qualifier_entails({}, {"qualifier": "is_active_in"})
+    True
+    """
+    q_spec, q_gen = specific.get("qualifier"), general.get("qualifier")
+    if not q_spec or not q_gen or q_spec == q_gen:
+        return True
+    return q_gen in _QUALIFIER_ENTAILS.get(q_spec, frozenset())
+
+
 #: (row index, annotation, action, negated)
 Row = Tuple[int, Dict[str, Any], str, bool]
 
@@ -511,7 +563,7 @@ def _iter_hierarchical_conflicts(
     for (t_spec, spec), (t_gen, gen) in permutations(rows, 2):
         if t_spec == t_gen or t_gen not in ancestors(t_spec):
             continue
-        if not _comparable(spec[1], gen[1]):
+        if not _comparable(spec[1], gen[1]) or not _qualifier_entails(spec[1], gen[1]):
             continue
         rule = _governing_hierarchical_rule(rules, spec, gen, (t_spec, t_gen))
         if rule is None or rule.severity is Severity.OK:

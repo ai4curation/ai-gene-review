@@ -25,6 +25,7 @@ from ai_gene_review.tools.pages_compaction import compact_browser_data, compact_
 from ai_gene_review.tools.pages_dependencies import TEXT_ASSETS, DependencyResolver
 from ai_gene_review.publication_links import rewrite_publication_links, restore_scientific_html_notation
 from ai_gene_review.site_provenance import collect_build_info, stamp_site_build
+from ai_gene_review.site_counts import stamp_site_counts
 
 
 # Temporary policy: permit unsupported >1 GB deployments, below the absolute
@@ -371,6 +372,7 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
     # Stamp after content transformations but before the final audit and sizing.
     # Recovery uploads the same artifact without restamping it.
     stamp_site_build(output_dir, collect_build_info(repo_root))
+    stamp_site_counts(output_dir, repo_root)
     # Check the URLs actually emitted by sharing/minification/compaction too.
     # The first audit above checks links inside panels before they are compressed.
     published_resolver = DependencyResolver(output_dir)

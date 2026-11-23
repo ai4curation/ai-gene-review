@@ -11,11 +11,13 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 import requests
 import yaml
 
-# GO experimental evidence codes: the curator inspected direct experimental
-# results (and therefore read the cited paper, often its full text).
-EXPERIMENTAL_EVIDENCE_CODES: frozenset = frozenset(
-    {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "HTP", "HDA", "HMP", "HGI", "HEP"}
+from ai_gene_review.tools.backfill_record_sections import load_marked
+
+from ai_gene_review.evidence import (
+    EXPERIMENTAL_EVIDENCE_CODES as EXPERIMENTAL_EVIDENCE_CODES,
+    source_evidence_code,
 )
+
 # Author/curator-statement codes: still backed by a specific publication.
 AUTHOR_STATEMENT_CODES: frozenset = frozenset({"TAS", "NAS"})
 
@@ -145,7 +147,12 @@ class GOAAnnotation:
             go_id=row[4] if len(row) > 4 else "",
             go_term=row[5] if len(row) > 5 else "",
             go_aspect=row[6] if len(row) > 6 else "",
-            evidence_code=row[8] if len(row) > 8 else "",  # GO EVIDENCE CODE at index 8
+            # Prefer the source's GO shorthand; if none is supplied, preserve
+            # its actual ECO identifier for seeding and strict tuple matching.
+            # The downloaded TSV still has distinct ECO and GO-code columns.
+            evidence_code=source_evidence_code(
+                row[8] if len(row) > 8 else "", row[7] if len(row) > 7 else ""
+            ),
             evidence_type=row[7] if len(row) > 7 else "",  # ECO ID at index 7
             reference=row[9] if len(row) > 9 else "",
             with_from=row[10] if len(row) > 10 else "",
@@ -1484,12 +1491,13 @@ class GOAValidator:
         if not yaml_file.exists():
             return 0, yaml_file
 
-        with open(yaml_file, "r") as f:
-            yaml_data = yaml.safe_load(f) or {}
+        text = yaml_file.read_text()
+        yaml_data = load_marked(text) or {}
 
         existing_annotations = yaml_data.get("existing_annotations", [])
 
         updated_count = 0
+        inserts: List[Tuple[int, str]] = []
         for ann in existing_annotations:
             if not isinstance(ann, dict) or "term" not in ann:
                 continue
@@ -1513,19 +1521,30 @@ class GOAValidator:
             tuple_key = (go_id, evidence, ref, negated)
 
             qualifiers = qualifiers_by_tuple.get(tuple_key)
-            if qualifiers and len(qualifiers) == 1:
-                ann["qualifier"] = next(iter(qualifiers))
-                updated_count += 1
+            if not qualifiers or len(qualifiers) != 1:
+                continue
+            # Insert one line after original_reference_id, at that key's
+            # indentation, so no existing line changes. (A row matched on GOA's
+            # reference always has that key.)
+            key_marks: Dict[Any, Tuple[int, int]] = getattr(ann, "key_marks", {})
+            if "original_reference_id" not in key_marks:
+                continue
+            line, column = key_marks["original_reference_id"]
+            qualifier = next(iter(qualifiers))
+            inserts.append((line + 1, " " * column + f"qualifier: {qualifier}"))
+            ann["qualifier"] = qualifier
+            updated_count += 1
 
         if updated_count > 0:
-            yaml_data["existing_annotations"] = existing_annotations
-            with open(yaml_file, "w") as f:
-                yaml.dump(
-                    yaml_data,
-                    f,
-                    default_flow_style=False,
-                    sort_keys=False,
-                    allow_unicode=True,
+            lines = text.split("\n")
+            for at, new_line in sorted(inserts, reverse=True):
+                lines.insert(at, new_line)
+            new_text = "\n".join(lines)
+            if yaml.safe_load(new_text) != yaml_data:
+                raise ValueError(
+                    f"{yaml_file}: inserting qualifiers would change more than the "
+                    "qualifier keys (unexpected layout); file left unchanged"
                 )
+            yaml_file.write_text(new_text)
 
         return updated_count, yaml_file

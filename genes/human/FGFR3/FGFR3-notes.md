@@ -60,3 +60,11 @@
   chondrocyte proliferation/differentiation, negative regulation of developmental growth) and
   signals to STAT1 (PLCgamma-dependent) to induce chondrocyte growth arrest/apoptosis;
   also required for inner-ear development (CATSHL hearing loss).
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IDA (GO_REF:0000052, HPA immunofluorescence) and IEA (GO_REF:0000044, SL-0095), both `located_in`; no ER sub-compartment rows.
+
+- UniProt: "[Isoform 1]: Cell membrane; Single-pass type I membrane protein. Cytoplasmic vesicle. Endoplasmic reticulum." (no evidence tag); curated PTM: "N-glycosylated in the endoplasmic reticulum. The N-glycan chains undergo further maturation to an Endo H-resistant form in the Golgi apparatus." (ECO:0000269 from PMID:11703096, 16410555, 17311277, 17509076).
+- PMID:17561467 (abstract): [PMID:17561467 "Immunofluorescence analysis showed accumulations of TDII-FGFR3, SADDAN-FGFR3, and a portion of TDI-FGFR3 in the endoplasmic reticulum (ER)."] Mutant retention, supportive only.
+- Outcome: both rows KEEP_AS_NON_CORE held (direct IF of the endogenous protein, rule 2; biosynthetic pool of the wild type). No NEW ER membrane row: a type I receptor in transit. The UniProt ER line sits under isoform 1, the displayed isoform the row is made on, so no isoform source defect.

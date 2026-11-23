@@ -57,3 +57,12 @@
 - PMID:18480409 (FGFR1 ubiquitination) IDA for FGFR4 FGFR activity / FGF binding / heparin binding / signaling. Abstract only (PMC full text not retrievable);
   UniProt cites this paper for FGFR4 catalytic activity and ubiquitination, so FGFR4 was presumably assayed in the full text. Functions are clearly correct -> ACCEPT.
 - 6 generic protein binding IPIs -> REMOVE (uninformative; interactions KLB, MMP14, FGFR1, RET, SDC2, TGFBR3 not denied).
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IDA (PMID:20683963) and IEA (GO_REF:0000044, SL-0095), both located_in; no ER sub-compartment rows; no is_active_in.
+
+- FGFR4 is a single-pass type I receptor (UniProt FT SIGNAL 1..21, TRANSMEM 370..390), with no ER retention motif. The ER is its biosynthetic route.
+- PMID:20683963 (abstract only, no PMC): [PMID:20683963 "beta-Klotho binds and directs the core glycoform of FGFR4 to the proteasome, and it allows only a terminal glycoform to reach the plasma membrane."]. Direct evidence on the gene; the abstract does not say whether the ER assays used endogenous or transfected FGFR4.
+- The UniProt location "Endoplasmic reticulum" has no evidence tag; it matches the curated IDA.
+- Outcome: both rows stay KEEP_AS_NON_CORE (transit pool with direct evidence on the gene, ER batch 1 ABCA4/BACE2 rule); reasons record the check. No NEW GO:0005789: topology does not force a sub-compartment on a transit pool. MARK_AS_OVER_ANNOTATED would apply if the pool were shown to be retention of overexpressed receptor.
