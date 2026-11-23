@@ -284,13 +284,21 @@ then edited by script. The method, the plans and a record of every row are in
 |---|---:|---:|---:|
 | Gene reviews: the 12 batches that hold every candidate gene | 278 | 217 | 59, and 2 not read |
 | Gene reviews: two further batches, as a pilot of the corrected rules | 47 | 41 | 6 |
-| Family reviews: every disputed node assessment without a tree listing | 386 | 317, two of them by hand | 69 |
+| Family reviews: every disputed node assessment without a tree listing | 386 | 318, three of them by hand | 68 |
 
 An applied row quotes its own extract or listing in `supported_by` and says in its reason
 what the tree shows. The script changed no verdict. 50 rows that had been applied were
 changed on main before this work was merged with it (26 at the first merge, 2 at the
 second, 1 at the fourth, 1 at the sixth, 17 at the eighth, 3 at the ninth); their edits
-were not carried over, and they are counted here as left for adjudication. Sixteen of the
+were not carried over, and 49 of them are counted here as left for adjudication. The
+fiftieth, a PTHR11525 assessment given up at the ninth merge, got its tree fact back by
+hand: main's text treats two terms alike that the tree files tell apart (spo9 is itself a
+seed of FPP biosynthesis at the family root and no seed of the FPPS activity there).
+Main's present text of the other 49, and of 5 rows main rewrote while they waited for a
+curator, was read against the tree file on 2026-11-23: 51 state nothing the tree file
+contradicts and leave out no fact against their present verdict, and 3 gene rows do not
+say that the gene is itself the only seed of its node
+([the rule](tree-rereview/README.md#what-the-script-will-not-do)). Sixteen of the
 17 are gene rows that main rewrote in its own re-review of every IBA row marked `REMOVE`
 ([below](#mains-re-review-of-the-rows-marked-remove)). The three of the ninth merge are
 family assessments: two reasons rewritten by a family review, and one assessment given
@@ -348,7 +356,7 @@ whole. A contradiction whose drafted correction the verifier faulted is counted 
 (`contradiction_disputed`, 12 today, below).
 
 What the re-read leaves for a curator is in
-[`needs-curator.yaml`](tree-rereview/needs-curator.yaml): the rows below, and the 335
+[`needs-curator.yaml`](tree-rereview/needs-curator.yaml): the rows below, and the 336
 applied rows on which the reader left a note, often about a verdict or failure mode that
 no longer fits.
 
@@ -393,17 +401,18 @@ Three things follow.
   More than half of the disputed node assessments make a placement argument that the tree
   bears out.
 
-134 rows are left for adjudication, each with its reason in the run records: 37 where the
+133 rows are left for adjudication, each with its reason in the run records: 37 where the
 verifier did not accept the reading or its correction (among them 1 verdict the reader
 found unsupported and 2 kept rows under a PAINT loss), 26 family rows whose node or term
 is not in the listing (all read as `CANNOT_TELL`; the run records give them as "a row
 that must be verified was not checked by the verifier", since the verifier was not asked
-about a reading with nothing to check), 55 rows that changed on main after they were
+about a reading with nothing to check), 54 rows that changed on main after they were
 read, 11 kept rows under a PAINT loss, and 5 verdicts or assessments the tree does not
-support. Two gene rows were not read: the reader returned no entry for them. Of the 55
-rows that changed on main, 50 had been applied and were not re-applied, and 5 were
+support. Two gene rows were not read: the reader returned no entry for them. Of the 54
+rows that changed on main, 49 had been applied and were not re-applied, and 5 were
 already waiting for a curator when main rewrote them. All are marked `needs_new_reading`
-in `needs-curator.yaml`: what their entries say describes the review as it was read.
+in `needs-curator.yaml`: what their entries say describes the review as it was read, and
+`main_text_read` says what main's present text was found to do with the tree file.
 
 Twelve of the 37 are readings of a contradiction (8 gene rows, 4 family rows); three more
 were among them until main rewrote those rows (SCHPO mid1 and pom1, worm gpa-12). In most

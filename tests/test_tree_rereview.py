@@ -330,7 +330,10 @@ def test_the_worklist_marks_and_counts_both_kinds_of_contradiction(tmp_path: Pat
         verifier={"agrees": False, "problem": "The finding holds; the drafted reason overstates."},
         outcome_detail="the verifier disagrees with the reading",
     )
-    moved = row(term="GO:0005682", tree_reading="REASON_CONTRADICTED", outcome="adjudicate", verifier=AGREED, outcome_detail=tr.NOT_REAPPLIED)
+    moved = row(
+        term="GO:0005682", tree_reading="REASON_CONTRADICTED", outcome="adjudicate", verifier=AGREED, outcome_detail=tr.NOT_REAPPLIED,
+        main_text_read="2026-11-23: silent: the text does not say that the gene is itself a seed",
+    )
     noted = row(term="GO:0005683", outcome="applied", note="the failure mode no longer fits")
     plain = row(term="GO:0005684", outcome="applied")
     # left for a curator like `faulted`, and then rewritten on main before anyone read it again
@@ -348,7 +351,8 @@ def test_the_worklist_marks_and_counts_both_kinds_of_contradiction(tmp_path: Pat
 
     assert worklist["counts"] == {
         "adjudicate": 4, "not_read": 0, "applied_with_note": 1, "contradicted_and_left": 1, "contradiction_disputed": 1,
-        "needs_new_reading": 2, "tree_file_not_listed": 0,
+        "needs_new_reading": 2, "main_text_unread": 1, "main_text_silent": 1, "main_text_contradicted": 0,
+        "tree_file_not_listed": 0,
     }
     by_term = {entry["term"]: entry for entry in worklist["adjudicate"]}
     assert by_term["GO:0000398"]["contradicted_and_left"] is True and "contradiction_disputed" not in by_term["GO:0000398"]
@@ -364,6 +368,11 @@ def test_the_worklist_marks_and_counts_both_kinds_of_contradiction(tmp_path: Pat
     assert by_term["GO:0005685"]["changed_on_main"] == "2026-11-22: main changed the verdict from REMOVE to MODIFY"
     assert not {"contradicted_and_left", "contradiction_disputed"} & set(by_term["GO:0005685"])
     assert not any(entry.get("needs_new_reading") for term, entry in by_term.items() if term not in ("GO:0005682", "GO:0005685"))
+    # main's present text was read against the tree file for the first of the two and not yet for the second
+    assert by_term["GO:0005682"]["main_text_read"] == "2026-11-23: silent: the text does not say that the gene is itself a seed"
+    assert by_term["GO:0005682"]["main_text_silent"] is True and "main_text_unread" not in by_term["GO:0005682"]
+    assert by_term["GO:0005685"]["main_text_unread"] is True and "main_text_read" not in by_term["GO:0005685"]
+    assert not any(key.startswith("main_text_") for term, entry in by_term.items() if term not in ("GO:0005682", "GO:0005685") for key in entry)
     assert [entry["term"] for entry in worklist["applied_with_note"]] == ["GO:0005683"]
 
 
@@ -380,6 +389,13 @@ def test_the_committed_worklist_agrees_with_its_own_counts() -> None:
     assert all(entry["outcome_detail"].startswith(tr.NOT_REAPPLIED) or entry.get("changed_on_main") for entry in moved)
     assert worklist["counts"]["tree_file_not_listed"] == len(worklist["tree_file_not_listed"])
     assert not any(entry.get("contradicted_and_left") or entry.get("contradiction_disputed") for entry in moved)
+    # no row is given up to main without main's present text being read against the tree file
+    assert worklist["counts"]["main_text_unread"] == 0
+    assert all(tr.main_text_finding(entry) for entry in moved)
+    for finding in ("silent", "contradicted"):
+        marked = [entry for entry in moved if entry.get(f"main_text_{finding}")]
+        assert worklist["counts"][f"main_text_{finding}"] == len(marked)
+        assert all(tr.main_text_finding(entry) == finding for entry in marked)
 
 
 def test_the_worklist_names_reviews_that_quote_a_tree_file_they_do_not_list(tmp_path: Path) -> None:
@@ -408,6 +424,8 @@ def test_the_worklist_says_what_its_markers_cover() -> None:
     # a row not re-applied keeps its fields as read, and so does one main rewrote while it waited for a curator
     assert "needs_new_reading" in about and "as it was read" in about
     assert "changed_on_main" in about
+    # and what main's present text does with the tree file is read before such a row is given up
+    assert "main_text_read" in about and "main_text_unread" in about
 
 
 def test_a_row_whose_review_changed_on_main_needs_a_new_reading() -> None:
@@ -425,6 +443,26 @@ def test_a_row_main_rewrote_while_it_waited_for_a_curator_needs_a_new_reading() 
     assert tr.needs_new_reading(waiting)
     # an applied row is checked against main at each merge, not here
     assert not tr.needs_new_reading(row(outcome="applied", changed_on_main="2026-11-22: main rewrote the reason"))
+
+
+@pytest.mark.parametrize(
+    ("recorded", "finding"),
+    [
+        (None, ""),
+        ("2026-11-23: agrees: the verdict is now MODIFY and the text says the gene is itself a seed", "agrees"),
+        ("2026-11-23: silent: the text does not say that the gene is itself a seed", "silent"),
+        ("2026-11-23: contradicted: the text says no seed lies in the gene's branch; the extract has one", "contradicted"),
+        # a value that does not say which of the three was found, or when, counts as not read
+        ("2026-11-23: looked fine", ""),
+        ("agrees: the verdict is now MODIFY", ""),
+        ("2026-11-23: silent:", ""),
+    ],
+)
+def test_a_row_given_up_to_main_says_what_mains_text_does_with_the_tree(recorded: str | None, finding: str) -> None:
+    given_up = row(outcome="adjudicate", outcome_detail=tr.NOT_REAPPLIED + ": the review changed on main after the reading")
+    if recorded is not None:
+        given_up["main_text_read"] = recorded
+    assert tr.main_text_finding(given_up) == finding
 
 
 def test_what_finish_reports_about_a_batch_beyond_its_outcomes() -> None:

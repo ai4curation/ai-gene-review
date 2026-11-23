@@ -43,6 +43,7 @@ import csv
 import importlib.util
 import io
 import json
+import re
 import subprocess
 import sys
 import textwrap
@@ -1250,8 +1251,8 @@ def _first_error(output: str) -> str:
 
 WORKLIST = HERE / "needs-curator.yaml"
 WORKLIST_FIELDS = (
-    "action", "tree_reading", "outcome", "outcome_detail", "changed_on_main", "proposed_action", "failure_modes_add",
-    "failure_modes_remove", "false_claims", "note", "correction",
+    "action", "tree_reading", "outcome", "outcome_detail", "changed_on_main", "main_text_read", "proposed_action",
+    "failure_modes_add", "failure_modes_remove", "false_claims", "note", "correction",
 )
 
 
@@ -1279,6 +1280,38 @@ def needs_new_reading(row: dict[str, Any]) -> bool:
     if row.get("outcome") != "adjudicate":
         return False
     return str(row.get("outcome_detail", "")).startswith(NOT_REAPPLIED) or bool(row.get("changed_on_main"))
+
+
+#: What a reading of main's present text against the tree file may find, for a row given up to main.
+MAIN_TEXT_FINDINGS = ("agrees", "silent", "contradicted")
+_MAIN_TEXT_READ = re.compile(rf"\d{{4}}-\d{{2}}-\d{{2}}: ({'|'.join(MAIN_TEXT_FINDINGS)}): \S")
+
+
+def main_text_finding(row: dict[str, Any]) -> str:
+    """What main's present text was found to do with the tree file, for a row given up to main.
+
+    A row that main changed after it was read is taken as on main, and the sentence and the
+    quotes of the re-read go. Before they go, main's text is read against the row's tree
+    file, and ``main_text_read`` records the date, the finding and what was read:
+    ``agrees`` (the text states nothing the tree file contradicts and leaves out no fact
+    that stands against its present verdict), ``silent`` (it leaves out such a fact that
+    the given-up sentence carried) or ``contradicted`` (it states something the tree file
+    contradicts; such a row is corrected by hand before the merge is pushed, as a
+    contradiction left by the script is, so that it is applied again and no longer here).
+    Returns ``""`` for a row without the record, or with one that does not say when it was
+    read and which of the three was found: the reading has not been done.
+
+    >>> main_text_finding({"main_text_read": "2026-11-23: silent: the text does not say that the gene is itself a seed"})
+    'silent'
+    >>> main_text_finding({"main_text_read": "2026-11-23: agrees: the verdict is now MODIFY"})
+    'agrees'
+    >>> main_text_finding({"main_text_read": "the text looks fine"})
+    ''
+    >>> main_text_finding({})
+    ''
+    """
+    found = _MAIN_TEXT_READ.match(str(row.get("main_text_read") or ""))
+    return found.group(1) if found else ""
 
 
 def _contradiction_left(row: dict[str, Any]) -> bool:
@@ -1334,6 +1367,7 @@ def worklist(runs: Path = RUNS) -> dict[str, Any]:
     """
     groups: dict[str, list[dict[str, Any]]] = {"adjudicate": [], "not_read": [], "applied_with_note": []}
     standing = disputed = moved = 0
+    main_text: Counter[str] = Counter()
     unlisted: dict[str, str] = {}
     for path in sorted(runs.glob("*.yaml")):
         record = load(path)
@@ -1361,6 +1395,10 @@ def worklist(runs: Path = RUNS) -> dict[str, Any]:
             if needs_new_reading(row):
                 entry["needs_new_reading"] = True
                 moved += 1
+                finding = main_text_finding(row) or "unread"
+                main_text[finding] += 1
+                if finding != "agrees":
+                    entry[f"main_text_{finding}"] = True
             for field in WORKLIST_FIELDS:
                 if row.get(field) not in (None, "", []):
                     entry[field] = row[field]
@@ -1388,7 +1426,14 @@ def worklist(runs: Path = RUNS) -> dict[str, Any]:
             "read: either its edit was not carried over at a merge, or it was already waiting for a curator "
             "when main rewrote it (changed_on_main says what changed). Its action, tree_reading and note "
             "describe the review as it was read and may no longer describe the committed one. Such a row is "
-            "in neither of the two contradiction counts. tree_file_not_listed names each review that quotes "
+            "in neither of the two contradiction counts. Before such a row is given up, main's present text is "
+            "read against the row's tree file, and main_text_read says when and what was found: agrees (the "
+            "text states nothing the tree file contradicts and leaves out no fact that stands against its "
+            "present verdict), silent (it leaves out such a fact that the given-up sentence carried; counted "
+            "as main_text_silent) or contradicted (it states something the tree file contradicts; counted as "
+            "main_text_contradicted and normally 0, because such a row is corrected by hand before the merge "
+            "is pushed and is then applied again). main_text_unread counts rows given up without that "
+            "reading and is 0 when a merge is pushed. tree_file_not_listed names each review that quotes "
             "its tree file in an applied row and does not list the file under references, with the reason "
             "the script could not add the entry; a curator adds a references list to such a review."
         ),
@@ -1397,6 +1442,9 @@ def worklist(runs: Path = RUNS) -> dict[str, Any]:
             "contradicted_and_left": standing,
             "contradiction_disputed": disputed,
             "needs_new_reading": moved,
+            "main_text_unread": main_text["unread"],
+            "main_text_silent": main_text["silent"],
+            "main_text_contradicted": main_text["contradicted"],
             "tree_file_not_listed": len(unlisted),
         },
         "tree_file_not_listed": dict(sorted(unlisted.items())),

@@ -286,6 +286,25 @@ from main got an extract or a listing. The five family reviews that quote their 
 listing without a `references` list are now named in the work list, and `docs/phylo.md`
 says that an extract's facts are per node and term, with yeast DUG2 as the example.
 
+**Review of the ninth merge (2026-11-23).** The review found that taking a row as on main
+had put a wrong statement back into a review. Before the merge, the PTHR11525 assessment
+of FPP biosynthesis at the family root ended with the re-read's sentence that S. pombe
+spo9 is itself a seed of that term. Main's rewritten reason treats the term like the FPPS
+activity on the same node, for which spo9 is no seed, and the merge gave the sentence up.
+At the eighth merge main's new text had been read before a correction was given up, but
+only for the three rows whose reading had been a contradiction; at the ninth it was not
+read at all. The fact is back, by hand, as a sentence checked against the node listing,
+spo9's extract, the PAINT row and spo9's GOA file: 576 rows applied. Main's present text
+was then read against the tree file for all 55 rows that had changed on main over the
+nine merges (50 given up, 5 rewritten while they waited for a curator). This row was the
+only one whose text states something its tree file contradicts. Three gene
+rows (E. coli kdpC, mlaB and mlaF) do not say that the gene is itself the only seed of
+its node; they state nothing the extract contradicts and wait for a new reading. The node
+ids and leaf counts that main's rewritten texts cite match the release tree, but for one
+leaf count that is off by one (yeast SSZ1). The run records now say for each of the 54
+rows what the reading found (`main_text_read`), the work list counts rows given up
+without it, and a test holds that count at 0.
+
 - **Two re-reads of the same rows ran at once without knowing of each other.** Both were
   about the tree, both edited the reason of a `REMOVE` row, and sixteen rows had to be
   given up at the merge. Work of this kind should be announced where the other can see
@@ -296,6 +315,12 @@ says that an extract's facts are per node and term, with yeast DUG2 as the examp
 - **A long-lived branch pays for every day it stays open.** Nine merges in twelve days,
   each one a re-check of every applied row against a moving base. Where a re-read can
   land in small pieces, it should.
+- **Giving a row up is an edit too.** A row taken from the other side of a merge loses
+  whatever the re-read had made it say, and the rule that the row is the other side's
+  says nothing about whether the other side's text is right. The text that replaces a
+  given-up sentence is read against the same tree file, every time, and the record says
+  so. A check made at one merge and skipped at the next was a habit, not a rule; it is a
+  rule once something fails when it is skipped.
 
 ---
 
