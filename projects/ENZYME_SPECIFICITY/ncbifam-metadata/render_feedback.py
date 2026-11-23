@@ -51,6 +51,23 @@ def go_label(db: sqlite3.Connection, go: str) -> tuple[str | None, bool]:
     return (label[0] if label else None), bool(deprecated)
 
 
+MAX_CANDIDATES = 10
+
+
+def candidate_text(row: dict, go_db: sqlite3.Connection) -> str:
+    """The machine-derived GO terms for a model's own EC, or why there are none to show.
+
+    A partial model EC can match a whole EC subclass, so long lists are summarised
+    rather than shown as if they were candidates.
+    """
+    terms, count = row.get("model_ec_terms", []), row.get("model_ec_term_count", 0)
+    if not count:
+        return "(none in GO)"
+    if count > MAX_CANDIDATES:
+        return f"({count} terms under the model's EC; too broad to list)"
+    return "; ".join(f"{t} {go_label(go_db, t)[0]}" for t in terms)
+
+
 def main() -> None:
     """Check the triage against the data, then write FEEDBACK.md."""
     check = yaml.safe_load((HERE / "release_table_check.yaml").read_text())
@@ -106,7 +123,11 @@ def main() -> None:
         "against literature: they are proposals for NCBIfam curators to confirm. "
         "RefSeq hits are the release table's `n_refseq_protein_hits`. `proposed` is a "
         "curator's replacement where one was checked; `GO terms for the model's EC` "
-        "lists, unreviewed, the terms that cross-reference the model's own EC numbers.",
+        "lists, unreviewed, the terms that cross-reference the model's own EC numbers. "
+        "`(none in GO)` there means GO has no term for the model's EC, so the fix may "
+        "need a new GO term rather than a removal. The RefSeq column is summed over the "
+        "distinct models in each verdict; a model in two verdicts counts in both, so the "
+        "rows are not additive.",
         "",
         "| verdict | entries | models | RefSeq hits |",
         "|---|---|---|---|",
@@ -125,31 +146,29 @@ def main() -> None:
         )
         lines.extend(["", f"## {TITLES[v]} ({len(entries)})", ""])
         lines.append(
-            "| models | product name | model EC | GO term | proposed | "
+            "| model, product name (EC) | GO term | proposed | "
             "GO terms for the model's EC | note |"
         )
-        lines.append("|---|---|---|---|---|---|---|")
+        lines.append("|---|---|---|---|---|")
         for t in entries:
-            f0 = families[t["models"][0]]
             go = t["go"]
             label = go_label(go_db, go)[0] if go != "various" else ""
             better = f"{t['better']} {t['better_label']}" if "better" in t else "check"
             if v == "EC_SUSPECT":
                 better = "keep the term; check the EC"
-            row = pair_of.get((t["models"][0], go), {})
-            machine = row.get("model_ec_terms", [])
-            extra = row.get("model_ec_term_count", 0) - len(machine)
-            candidates = "; ".join(
-                f"{m} {go_label(go_db, m)[0]}" for m in machine[:3]
-            ) + (
-                f" (+{extra + max(len(machine) - 3, 0)} more)"
-                if len(machine) > 3 or extra
-                else ""
-            )
+            # one line per model: grouped models can differ in name, EC and candidates
+            models, candidates = [], []
+            for m in t["models"]:
+                f = families[m]
+                models.append(
+                    f"{m} {f.product_name} ({', '.join(f.ec_numbers) or 'no EC'})"
+                )
+                candidates.append(candidate_text(pair_of.get((m, go), {}), go_db))
+            if len(set(candidates)) == 1:
+                candidates = candidates[:1]
             lines.append(
-                f"| {', '.join(t['models'])} | {f0.product_name} | "
-                f"{', '.join(f0.ec_numbers) or '(none)'} | {go} {label} | {better} | "
-                f"{candidates or '(none)'} | {t['note']} |"
+                f"| {'<br>'.join(models)} | {go} {label} | {better} | "
+                f"{'<br>'.join(candidates)} | {t['note']} |"
             )
     lines.extend(
         [

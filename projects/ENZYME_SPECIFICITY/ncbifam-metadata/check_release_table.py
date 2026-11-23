@@ -173,7 +173,8 @@ def term_data(go_ids: set[str]) -> dict[str, dict]:
     """Name, obsolescence and complete EC cross-references of each GO term, cached."""
     path = CACHE / "quickgo_term_ec.json"
     cache = json.loads(path.read_text()) if path.exists() else {}
-    missing = sorted(go_ids - cache.keys())
+    # ids QuickGO did not return last time are retried rather than trusted
+    missing = sorted(go for go in go_ids if not cache.get(go, {}).get("name"))
     for start in range(0, len(missing), 50):
         batch = missing[start : start + 50]
         ids = ",".join(batch)

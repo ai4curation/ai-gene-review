@@ -75,7 +75,8 @@ The release table also carries 112 obsolete GO terms (model, term pairs), listed
 | ACCEPTABLE | 23 | 66 | 1030292 |
 
 RefSeq hits are summed over the distinct models in each verdict, read from the release
-table, so the models without an EC number count too.
+table, so the models without an EC number count too. A model with pairs in two verdicts
+counts in both, so the rows are not additive.
 
 ### Wrong reaction
 
@@ -113,7 +114,9 @@ carries the term for another member's reaction.
 - **EC suspect.** Here the error looks like it is in the EC number:
   - 14 complex I subunit models carry EC 1.6.5.9, the non-electrogenic NDH-2 reaction,
     while their GO term is complex I's (EC 7.1.1.2). Three more complex I models (EC
-    `7.1.1.-`) show the mirror image: the NDH-2 term itself, filed as wrong reaction;
+    `7.1.1.-`) show the mirror image: the NDH-2 term itself, filed as wrong reaction.
+    TIGR01972.1 (EC `1.6.5.-`, the class complex I belonged to before EC 7.1.1.2)
+    carries the complex I term and is acceptable;
   - EntD, the phosphopantetheinyl transferase, carries EC 6.3.2.14, the
     2,3-dihydroxybenzoate--serine ligase reaction.
 - **Check.** These need family knowledge rather than names. Examples are whether
@@ -133,6 +136,11 @@ carries the term for another member's reaction.
   with no EC number cannot be checked this way at all. The four such models in the
   triage come from the sweep; a name-versus-term check over the rest would need
   curation.
+- **Partial ECs give weaker placements.** A partial model EC such as `4.1.-.-` matches
+  every GO term under it, so its placement says little, and FEEDBACK.md does not list
+  candidates when there are more than ten. Where it shows `(none in GO)`, GO has no term
+  for the model's EC (bacterial Tgt, EC 2.4.2.29, is one example). There the fix may be a
+  new GO term rather than a removal.
 - **Reach beyond PGAP is unchecked.** Whether these GO terms also reach UniProt through
   InterPro2GO depends on which models InterPro integrates and how InterPro maps them.
   That was not checked here.
