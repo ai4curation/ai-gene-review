@@ -188,6 +188,26 @@ Three further groups of values are easy to confuse:
     carry that mapping too, so repointing the one signature the explanation named
     would have left the row standing.
 
+  **When that set comes out empty**, no cited signature carries the faulted term,
+  so the row is not that mapping's output: it is GOC-derived or the term was
+  refined downstream. Record the signature the explanation names - the one whose
+  mapping produced the *upstream* row - and say in `explanation` which row that
+  is. `RHOCA/fruA` and `AZOBR/fruA1` are the worked case: their GO:1902600 rows
+  come from GO_REF:0000108, and IPR006327 is cited by the GO:0005351 row the
+  inference rests on. Never leave `record:` empty on that account, which is the
+  problem this rule exists to prevent.
+
+  Two limits on the check. The mapping file is a **committed snapshot**
+  (`!version date` at its head), so a signature added upstream since will not
+  appear in it. And the mapped set tells you which signatures are *candidates*,
+  not that all of them are faulted: where a cited signature covers a shared
+  structural domain rather than the activity, requesting a change to its mapping
+  over-reaches. Use the set to find the candidates and judge each one - six
+  records in the corpus name fewer signatures than their row maps, and
+  `9EURY/mcrA`, whose seven include sub-domain entries such as IPR009024
+  (ferredoxin-like fold), is exactly the case where widening mechanically would
+  be wrong.
+
   Where the narrow ask is deliberate - `rat/Kcnj16` disputes `enables` only for
   the Kir5 signature, not for the generic Kir one that shares the mapping - say so
   in `explanation`, since the record otherwise looks like the same omission.
