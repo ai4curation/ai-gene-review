@@ -567,7 +567,7 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 
 The last 13 human genes from the 2026-11-21 survey whose lysosome (GO:0005764) rows are
 root-only with a synthesis row (#6695). No gene gained a sub-compartment row. Lysosome rows
-changed action on 10 genes. With batch 1 this completes the human lysosome list (25 genes)
+changed action on 9 genes. With batch 1 this completes the human lysosome list (25 genes)
 and, with the 9 peroxisome genes, rule 10.
 
 | gene | outcome | evidence |
