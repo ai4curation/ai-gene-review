@@ -393,13 +393,15 @@ def compile_module(
                         expand_complexes=expand_complexes)
 
 
-def compile_module_file(path: Union[str, Path]) -> And:
+def compile_module_file(path: Union[str, Path], *, expand_complexes: bool = True) -> And:
     """Load a ModuleReview YAML file and compile its root module node.
 
-    References resolve against the file's own directory.
+    References resolve against the file's own directory. ``expand_complexes``
+    is passed to :func:`_compile_annoton`.
     """
     path = Path(path)
-    return compile_module(yaml.safe_load(path.read_text()), path.parent, path.stem)
+    return compile_module(yaml.safe_load(path.read_text()), path.parent, path.stem,
+                          expand_complexes=expand_complexes)
 
 
 def iter_atoms(circuit: Circuit) -> Iterator[Atom]:

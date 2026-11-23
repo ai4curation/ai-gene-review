@@ -848,13 +848,15 @@ def test_atoms_sharing_an_id_share_their_selector(curated_corpus):
     keys on the id. Route merging and core detection compare atoms by value,
     so a unit that inherits different functions from two complexes (RNase P
     and MRP subunits) stays two steps there; the key therefore leaves out
-    ``function_ids`` and checks only that the id names one participant.
+    ``function_ids`` and checks only that the id names one participant. It
+    includes ``label``, which is part of an atom's value: a shared unit whose
+    label differed between two complexes would otherwise stop being merged.
     """
     offenders = []
     for path, circuit in curated_corpus.items():
         selectors: dict[str, set] = {}
         for atom in iter_atoms(circuit):
-            key = (atom.gene_symbols, atom.uniprots, atom.family_ids, atom.domain_ids)
+            key = (atom.label, atom.gene_symbols, atom.uniprots, atom.family_ids, atom.domain_ids)
             selectors.setdefault(atom.node_id, set()).add(key)
         offenders += [f"{path.name}:{node_id}" for node_id, keys in selectors.items() if len(keys) > 1]
     assert offenders == [], "these atom ids name more than one selector: " + ", ".join(offenders[:10])
