@@ -844,22 +844,62 @@ def test_an_answered_query_outweighs_a_later_failure(monkeypatch):
     assert mod._snapshot_adapter_available() is True
 
 
-def test_a_hit_never_names_a_source_it_calls_unconsulted(monkeypatch):
-    """The two fields must not contradict each other in the same dict."""
-    from ai_gene_review.validation import obsolete_authored_terms as mod
+def source_kind(source: str) -> str:
+    """The consulted-level name for a detected source.
 
-    monkeypatch.setattr(mod, "_SNAPSHOT_QUERY_FAILED", True)
-    monkeypatch.setattr(mod, "_SNAPSHOT_QUERY_SUCCEEDED", True)
+    The two fields speak different vocabularies on purpose: `detected_by_sources`
+    names the specific GOA file so a reader can open it, while
+    `consulted_sources` names the kind, because "the corpus" is what was asked.
+    A raw subset assertion across them is therefore false for every GOA hit, and
+    the invariant has to be stated through this mapping.
+    """
+    return "the corpus GOA files" if source.startswith("GOA file ") else source
 
+
+def test_a_hit_never_names_a_source_it_calls_unconsulted(tmp_path):
+    """The two fields must not contradict each other in the same dict.
+
+    Hermetic and GOA-detectable by construction. An earlier version used
+    `OBSOLETE_DOC` with the real corpus, where `GO:0051082` is obsolete in no
+    GOA file at all, so only a snapshot hit was reachable -- on a runner without
+    a usable snapshot there were no hits, the loop body never ran, and the test
+    passed having asserted nothing.
+    """
+    write_goa(
+        tmp_path,
+        "human/A/A-goa.tsv",
+        [("GO:0000122", "obsolete something", "20260101")],
+    )
+    doc = {"core_functions": [{"molecular_function": {"id": "GO:0000122", "label": "s"}}]}
     report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
     check_obsolete_authored_terms(
-        OBSOLETE_DOC,
-        report,
-        build_label_lookup(
-            Path("."), use_ontology=True, snapshot_available=mod._snapshot_adapter_available
-        ),
+        doc, report, build_label_lookup(tmp_path, use_ontology=False)
     )
+
+    assert report.issues, "the fixture must actually produce a hit"
     for issue in report.issues:
-        detected = set(issue.details["detected_by_sources"])
+        detected = {source_kind(s) for s in issue.details["detected_by_sources"]}
         consulted = set(issue.details["consulted_sources"] or [])
         assert detected <= consulted, (detected, consulted)
+
+
+def test_the_two_fields_use_different_vocabularies_on_purpose(tmp_path):
+    """Pins the mismatch the invariant has to be stated through.
+
+    If these ever converge, `source_kind` above becomes a no-op and the
+    invariant test silently weakens into the raw subset assertion that was
+    wrong here.
+    """
+    write_goa(
+        tmp_path,
+        "human/A/A-goa.tsv",
+        [("GO:0000123", "obsolete something", "20260101")],
+    )
+    doc = {"core_functions": [{"molecular_function": {"id": "GO:0000123", "label": "s"}}]}
+    report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
+    check_obsolete_authored_terms(
+        doc, report, build_label_lookup(tmp_path, use_ontology=False)
+    )
+    details = report.issues[0].details
+    assert details["detected_by_sources"] == ["GOA file genes/human/A/A-goa.tsv"]
+    assert details["consulted_sources"] == ["the corpus GOA files"]
