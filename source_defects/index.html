@@ -967,8 +967,51 @@ together, as its description says.</p>
   or a PANTHER node is wrong for every protein that inherits it, so the fix is
   upstream of any gene. Use <code>INTERPRO</code> for the InterPro2GO mappings behind
   <code>GO_REF:0000002</code> and for signature descriptions, and <code>PANTHER</code> for a family or
-  ancestral-node GO association propagated by TreeGrafter (<code>GO_REF:0000118</code>).</li>
-<li><strong><code>INTERPRO</code> is not <code>GOA_EBI</code>.</strong> Ask what the fix changes. The <em>content</em> of a
+  ancestral-node GO association propagated by TreeGrafter (<code>GO_REF:0000118</code>).
+  An <code>INTERPRO</code> defect's <code>record:</code> is the signature, written <code>InterPro:IPR006108</code>
+  and joined with <code>|</code> for several, as GOA writes WITH/FROM:
+  <code>InterPro:IPR006108|InterPro:IPR006176</code>. Without <code>record:</code> the report falls
+  back to the GAF-row tuple, heading an InterPro defect with a row InterPro
+  never wrote.</li>
+</ul>
+<p><strong>Which signatures belong in it:</strong> of the ones the faulted term's GOA row cites
+  in WITH/FROM, exactly those that carry that GO term in the committed
+  <code>rules/arba/_interpro2go.txt</code>. That set is the defective record, and asking the
+  mapping file is better than reading the explanation, because it guards both
+  directions at once:</p>
+<ul>
+<li>It <em>drops</em> a signature the explanation names only to ask for its exclusion
+    from the mapping (IPR026578 for the L-carnitine dehydrogenases, IPR006277 for
+    the sarcosine oxidase alpha subunits). Those are not mapped to the faulted
+    term, so they fall out on their own.</li>
+<li>It <em>adds</em> the sibling signatures that carry the same mapping and that the
+    prose happened not to mention. This is the direction that is easy to miss:
+    <code>ECOLI/garK</code> asks for GO:0008887 to be repointed, and IPR018193 and IPR036129
+    carry that mapping too, so repointing the one signature the explanation named
+    would have left the row standing.</li>
+</ul>
+<p><strong>When that set comes out empty</strong>, no cited signature carries the faulted term,
+  so the row is not that mapping's output: it is GOC-derived or the term was
+  refined downstream. Record the signature the explanation names - the one whose
+  mapping produced the <em>upstream</em> row - and say in <code>explanation</code> which row that
+  is. <code>RHOCA/fruA</code> and <code>AZOBR/fruA1</code> are the worked case: their GO:1902600 rows
+  come from GO_REF:0000108, and IPR006327 is cited by the GO:0005351 row the
+  inference rests on. Never leave <code>record:</code> empty on that account, which is the
+  problem this rule exists to prevent.</p>
+<p>Two limits on the check. The mapping file is a <strong>committed snapshot</strong>
+  (<code>!version date</code> at its head), so a signature added upstream since will not
+  appear in it. And the mapped set tells you which signatures are <em>candidates</em>,
+  not that all of them are faulted: where a cited signature covers a shared
+  structural domain rather than the activity, requesting a change to its mapping
+  over-reaches. Use the set to find the candidates and judge each one - six
+  records in the corpus name fewer signatures than their row maps, and
+  <code>9EURY/mcrA</code>, whose seven include sub-domain entries such as IPR009024
+  (ferredoxin-like fold), is exactly the case where widening mechanically would
+  be wrong.</p>
+<p>Where the narrow ask is deliberate - <code>rat/Kcnj16</code> disputes <code>enables</code> only for
+  the Kir5 signature, not for the generic Kir one that shares the mapping - say so
+  in <code>explanation</code>, since the record otherwise looks like the same omission.
+- <strong><code>INTERPRO</code> is not <code>GOA_EBI</code>.</strong> Ask what the fix changes. The <em>content</em> of a
   mapping - its GO term, its qualifier, the signatures it covers - or the
   signature's own description is <code>INTERPRO</code>, and stays <code>INTERPRO</code> however the
   row reached the gene: a defect that says "check the IPRnnnnnn mapping" is an
@@ -983,27 +1026,27 @@ together, as its description says.</p>
   to the pipeline - also GOA's, and also not the mapping's content.) This split
   is easy to reopen. It was closed corpus-wide in #6027, and reopened twice
   while that PR waited to merge, in reviews that had carried no defects at all.
-  As of <code>485113c854</code>: <code>ECOLI/pssA</code> and <code>PSEPK/pssA</code> each file two <code>GOA_EBI</code>
-  defects asking that the IPR016270 PGS1 mapping be suppressed for the type-I
-  PssA members - that is mapping scope, so <code>INTERPRO</code> - and none of the four
-  names the mapping in <code>record:</code>. The same shape sits on IPR006327, filed
-  <code>INTERPRO</code> with a <code>record:</code> in <code>XANCP/fruA</code> but <code>GOA_EBI</code> with none in
-  <code>RHOCA/fruA</code> and <code>AZOBR/fruA1</code>, each of which also carries a correctly-filed
-  <code>INTERPRO</code> defect on that very mapping. So check the filing whenever a
-  defect's fix is a mapping, whatever the row's <code>assigned_by</code> says.</li>
-<li><strong><code>PANTHER</code> is not <code>GO_CENTRAL</code>.</strong> <code>GO_CENTRAL</code> is PAINT's own IBD/IBA
+  The worked examples this paragraph used to carry - the IPR016270 PGS1 mapping
+  in <code>ECOLI/pssA</code> and <code>PSEPK/pssA</code>, and IPR006327 across <code>XANCP/fruA</code>,
+  <code>RHOCA/fruA</code> and <code>AZOBR/fruA1</code> - were pinned to commit <code>485113c854</code>, where
+  they were filed <code>GOA_EBI</code> and named no mapping in <code>record:</code>. All of them are
+  now filed <code>INTERPRO</code> and carry one, so the examples are gone rather than
+  rewritten: a passage that describes the corpus goes stale the moment the
+  corpus moves, and these had. The rule they illustrated stands on its own:
+  check the filing whenever a defect's fix is a mapping, whatever the row's
+  <code>assigned_by</code> says.
+- <strong><code>PANTHER</code> is not <code>GO_CENTRAL</code>.</strong> <code>GO_CENTRAL</code> is PAINT's own IBD/IBA
   curation. A term can sit on a PANTHER node without PAINT ever asserting it,
-  and the two are fixed in different places; a gene can carry rows from both.</li>
-<li><strong><code>SYNGO</code> is not <code>GO_CENTRAL</code>.</strong> A row SynGO curated from a paper is
+  and the two are fixed in different places; a gene can carry rows from both.
+- <strong><code>SYNGO</code> is not <code>GO_CENTRAL</code>.</strong> A row SynGO curated from a paper is
   <code>SYNGO</code>. SynGO annotations were also used as seeds in GO Phylogenetic
   Annotation (PMID:31171447), so an IBA that PAINT propagated from a SynGO seed
   is <code>GO_CENTRAL</code>, even when the seed it rests on is the defect. File the seed
   as <code>SYNGO</code> and the propagated rows as <code>GO_CENTRAL</code>, and say in each
-  explanation that the other exists.</li>
-<li><strong><code>GOC</code> is for the ontology, not an annotation.</strong> When the defect is in a term
+  explanation that the other exists.
+- <strong><code>GOC</code> is for the ontology, not an annotation.</strong> When the defect is in a term
   itself - its label, definition, or placement in the graph - the annotations
-  using it may all be reasonable. That is a <code>GOC</code> defect.</li>
-</ul>
+  using it may all be reasonable. That is a <code>GOC</code> defect.</p>
 <p><code>OTHER</code> remains correct for a resource with no value, and the explanation must
 then name it. It is <em>not</em> the right choice for a resource that does have a
 value: a defect filed as <code>OTHER</code> when <code>CACAO</code> or <code>ECOLIWIKI</code> would have fit is
