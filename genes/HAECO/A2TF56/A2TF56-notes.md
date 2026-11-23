@@ -32,7 +32,7 @@
 - Added a reproducible alignment under `A2TF56-bioinformatics/` to check the
   benzimidazole-resistance codons. A2TF56 maps without indels to the Geary
   tub8-9 cDNA and maps the partial susceptible isotype-1 fragment MF034043.1 to
-  residues 152-245; A2TF56 retains Phe167 and Glu198 and carries Tyr200 where
+  residues 152-237; A2TF56 retains Phe167 and Glu198 and carries Tyr200 where
   the susceptible fragment and tub8-9 encode Phe. This makes A2TF56 an F200Y
   resistant-isolate allele by sequence, although direct benzimidazole binding
   or polymerization assays on this exact submitted allele were not reported.
