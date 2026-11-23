@@ -10,7 +10,10 @@ import copy
 import hashlib
 import re
 import yaml
+import functools
 from ai_gene_review.module_logic import compile_module, is_satisfied
+# This audit expands protein_complex active_units itself, so it compiles one atom per complex annoton.
+compile_module = functools.partial(compile_module, expand_complexes=False)
 
 ROOT = Path(__file__).resolve().parents[2]
 M = "bacterial_groel_groes_chaperonin_folding"

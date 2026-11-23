@@ -606,10 +606,12 @@ def _participant_slots(document: dict) -> dict[str, dict[str, bool]]:
                 for slot in ENTITY_GROUNDING_SLOTS
                 if participant.get(slot)
             }
-            # Each active unit compiles to an atom under its own id.
-            for unit in as_list((participant.get("protein_complex") or {}).get("active_units")):
+            # Each active unit compiles to an atom under its own id, named as
+            # the engine names a unit without one.
+            units = as_list((participant.get("protein_complex") or {}).get("active_units"))
+            for index, unit in enumerate(units, start=1):
                 unit_participant = unit.get("participant") or {}
-                slots[str(unit.get("id"))] = {
+                slots[str(unit.get("id") or f"{annoton.get('id', '?')}_unit{index}")] = {
                     slot: _descriptor_is_usable(slot, unit_participant[slot])
                     for slot in ENTITY_GROUNDING_SLOTS
                     if unit_participant.get(slot)
@@ -787,6 +789,34 @@ def test_complex_without_units_stays_one_atom():
     assert [atom.node_id for atom in iter_atoms(compile_module(doc))] == ["cx"]
 
 
+def test_shared_unit_with_different_functions_stays_two_steps():
+    """One subunit in two complexes with different functions is two core steps."""
+    unit = {"id": "pop1", "participant": {"gene": {"term": {"id": "UniProtKB:P1"}}}}
+    doc = {"module": {"id": "m", "annotons": [
+        {"id": "rnase_p", "function": {"term": {"id": "GO:0004526"}},
+         "participant": {"protein_complex": {"active_units": [unit]}}},
+        {"id": "rnase_mrp", "function": {"term": {"id": "GO:0000171"}},
+         "participant": {"protein_complex": {"active_units": [unit]}}}]}}
+    circuit = compile_module(doc)
+    assert sorted(a.function_ids for a in core_atoms(circuit)) == [("GO:0000171",), ("GO:0004526",)]
+    assert [len(route) for route in enumerate_routes(circuit)] == [2]
+
+
+def test_complex_can_compile_to_one_atom_for_step_level_oracles():
+    """``expand_complexes=False`` keeps one atom per complex annoton, under its id.
+
+    Committed audit scripts written before units became atoms expand
+    ``active_units`` themselves and key their oracles on the annoton id.
+    """
+    doc = {"module": {"id": "m", "parts": [{"node": {"id": "step", "annotons": [
+        {"id": "cx", "participant": {"protein_complex": {"active_units": [
+            {"id": "u1", "participant": {"gene": {"term": {"id": "UniProtKB:P1"}}}},
+            {"id": "u2", "participant": {"gene": {"term": {"id": "UniProtKB:P2"}}}}]}}}
+    ]}}]}}
+    assert [a.node_id for a in iter_atoms(compile_module(doc))] == ["u1", "u2"]
+    assert [a.node_id for a in iter_atoms(compile_module(doc, expand_complexes=False))] == ["cx"]
+
+
 def test_complex_units_carry_their_own_or_the_complex_function():
     """A unit atom carries the unit's own function, else the complex annoton's.
 
@@ -814,7 +844,11 @@ def test_atoms_sharing_an_id_share_their_selector(curated_corpus):
     complexes of a module, and route merging, core-atom detection, the organelle
     census and context detectors all key atoms on ``node_id``. That is safe only
     while every atom with a given id names the same participant; two different
-    selectors under one id would be silently merged into one step.
+    selectors under one id would be read as one step by every consumer that
+    keys on the id. Route merging and core detection compare atoms by value,
+    so a unit that inherits different functions from two complexes (RNase P
+    and MRP subunits) stays two steps there; the key therefore leaves out
+    ``function_ids`` and checks only that the id names one participant.
     """
     offenders = []
     for path, circuit in curated_corpus.items():

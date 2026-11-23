@@ -12,7 +12,8 @@ is that organism's own protein by UniProt's organism name, fetched once and cach
 ``.cache/panther/uniprot-organisms.json``; ``accession_steps`` lists these steps with the organism of
 each accession, and ``gaps_on_accession_steps`` names, per organism, the unsatisfied gaps whose absent
 steps include an accession step from another organism, which cannot hold there by construction, so such
-a gap is not an observed absence either. The ``unsatisfied_gaps`` of an organism are the engine's
+a gap is not an observed absence either. An accession whose organism UniProt did not resolve counts as
+another organism's; ``accession_steps`` shows it with a null organism. The ``unsatisfied_gaps`` of an organism are the engine's
 innermost gaps. Every step of
 the compiled module is classified once, before any organism is evaluated: ``unevaluable_steps`` lists
 the steps this oracle cannot evaluate at all (a step with neither a PANTHER id nor an accession), which
