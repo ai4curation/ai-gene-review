@@ -20,6 +20,8 @@ curl -sSfL -o "$DATA_DIR/omnipath_intercell.tsv" \
   "https://omnipathdb.org/intercell?categories=ligand,receptor&scope=generic&aspect=functional&source=composite"
 date -u +%Y-%m-%d > "$DATA_DIR/OMNIPATH_RETRIEVED"
 echo "fetched OmniPath interactions and intercell roles"
+curl -sSfL -o "$DATA_DIR/HOM_MouseHumanSequence.rpt" https://www.informatics.jax.org/downloads/reports/HOM_MouseHumanSequence.rpt
+echo "fetched MGI human-mouse homology report"
 curl -sSfL -o "$DATA_DIR/goa_human.gaf.gz" https://current.geneontology.org/annotations/goa_human.gaf.gz
 curl -sSfL -o "$DATA_DIR/go-basic.obo" https://purl.obolibrary.org/obo/go/go-basic.obo
 echo "fetched goa_human.gaf.gz and go-basic.obo ($(grep -m1 '^data-version' "$DATA_DIR/go-basic.obo"))"

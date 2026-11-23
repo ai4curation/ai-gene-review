@@ -13,7 +13,8 @@ Q2  shared_pathway: is some ligand subunit and some receptor subunit involved_in
     ancestor of the other? "Specific" means a strict descendant of GO:0007165
     signal transduction other than the generic GO:0007166 / GO:0007186 roots.
 Q3  gocam: do a ligand subunit and a receptor subunit appear in the same
-    production GO-CAM model (gocams/index.tsv)? If so, does the model have a
+    production GO-CAM model (gocams/index.tsv)? Human models match by UniProt;
+    mouse models match through MGI human-mouse homology classes. If so, does the model have a
     direct causal edge from an activity enabled by a ligand subunit to one
     enabled by a receptor subunit (gocams/<id>/<id>-src.yaml), and is the
     ligand's MF in that edge receptor ligand activity or a descendant?
@@ -155,8 +156,10 @@ def load_gocams(path: Path):
     for row in csv.DictReader(open(path), delimiter="\t"):
         gp = row["gene_product"]
         titles[row["model_id"]] = row["model_title"]
-        if gp.startswith("UniProtKB:"):
-            models[gp.split(":", 1)[1].split("-")[0]].add(row["model_id"])
+        MODEL_TAXON[row["model_id"]] = row["taxon"]
+        if gp.startswith(("UniProtKB:", "MGI:")):
+            for acc in _human(gp):
+                models[acc].add(row["model_id"])
         elif gp.startswith(("GO:", "ComplexPortal:")):
             with_complexes.add(row["model_id"])
     for m in with_complexes:
@@ -166,12 +169,41 @@ def load_gocams(path: Path):
     return models, titles
 
 
+#: mouse MGI id (as written in GO-CAMs, "MGI:MGI:nnn") -> human UniProt accessions,
+#: from MGI's HOM_MouseHumanSequence.rpt; filled by load_orthology().
+MOUSE_TO_HUMAN: dict[str, set[str]] = {}
+MODEL_TAXON: dict[str, str] = {}
+
+
+def load_orthology(path: Path) -> None:
+    """Map each mouse MGI id to the human Swiss-Prot accessions in its homology class."""
+    groups: dict[str, dict[str, set[str]]] = collections.defaultdict(lambda: {"mgi": set(), "human": set()})
+    for row in csv.DictReader(open(path), delimiter="\t"):
+        g = groups[row["DB Class Key"]]
+        if row["NCBI Taxon ID"] == "10090" and row["Mouse MGI ID"]:
+            g["mgi"].add("MGI:" + row["Mouse MGI ID"])
+        elif row["NCBI Taxon ID"] == "9606":
+            g["human"] |= {a for a in row["SWISS_PROT IDs"].split(",") if a}
+    for g in groups.values():
+        for m in g["mgi"]:
+            MOUSE_TO_HUMAN.setdefault(m, set()).update(g["human"])
+
+
+def _human(tid: str) -> set[str]:
+    """Human UniProt accessions for a GO-CAM gene-product id (UniProtKB, or mouse MGI via orthology)."""
+    if tid.startswith("UniProtKB:"):
+        return {tid.split(":", 1)[1].split("-")[0]}
+    if tid.startswith("MGI:"):
+        return MOUSE_TO_HUMAN.get(tid, set())
+    return set()
+
+
 def _enablers(enabled_by: dict) -> set[str]:
     """UniProt accessions enabling an activity: the gene product, or complex parts (has_part)."""
     out = set()
     for tid in [enabled_by.get("term", "")] + [(p or {}).get("term", "") for p in enabled_by.get("has_part") or []]:
-        if isinstance(tid, str) and tid.startswith("UniProtKB:"):
-            out.add(tid.split(":", 1)[1].split("-")[0])
+        if isinstance(tid, str):
+            out |= _human(tid)
     return out
 
 
@@ -381,7 +413,9 @@ def render_results(summary: dict, records: list[dict], module_only: list[dict], 
         f"- Q2, ligand and receptor share a specific signaling pathway term: {summary['q2_shared_pathway_true']}.",
         f"- Q3, ligand and receptor in the same production GO-CAM: {summary['q3_in_same_gocam']}; "
         f"with a direct causal edge from the ligand's activity to the receptor's: {summary['q3_gocam_direct_link']}; "
-        f"edges whose ligand MF is not receptor ligand activity: {summary['q3_gocam_link_ligand_mf_not_ligand_activity']}.",
+        f"edges whose ligand MF is not receptor ligand activity: {summary['q3_gocam_link_ligand_mf_not_ligand_activity']}. "
+        f"Pair-model links by model taxon: {', '.join(f'{t} {n}' for t, n in summary['q3_gocam_direct_link_by_model_taxon'])} "
+        "(mouse models matched through MGI human-mouse homology).",
         f"- Q3, in a curated module (ligand step and receptor-side step): {summary['q3_in_module']}.",
         "",
         "### Receptor-binding MFs carried by ligands that lack a ligand-activity MF",
@@ -437,6 +471,7 @@ def main() -> None:
     gaf_date = next((l.split(":", 1)[1].strip() for l in gzip.open(args.data / "goa_human.gaf.gz", "rt")
                      if l.startswith("!date-generated")), "unknown")
     rows, subunits = load_cpdb(args.data / "cellphonedb")
+    load_orthology(args.data / "HOM_MouseHumanSequence.rpt")
     gocam_models, gocam_titles = load_gocams(REPO / "gocams/index.tsv")
     modules, module_failures = load_modules(go, REPO / "modules")
     reviews = index_reviews(REPO / "genes/human")
@@ -568,6 +603,8 @@ def main() -> None:
         "q2_shared_pathway_true": sum(bool(x["q2_shared_pathways"]) for x in records),
         "q3_in_same_gocam": sum(bool(x["q3_gocam_models"]) for x in records),
         "q3_gocam_direct_link": sum(bool(x["q3_gocam_linked"]) for x in records),
+        "q3_gocam_direct_link_by_model_taxon": collections.Counter(
+            MODEL_TAXON.get(m, "?") for x in records for m in x["q3_gocam_linked"].split(";") if m).most_common(),
         "q3_gocam_link_ligand_mf_counts": collections.Counter(
             t for x in records for t in x["q3_gocam_ligand_mf"].split(";") if t).most_common(),
         "q3_gocam_link_ligand_mf_not_ligand_activity": sum(x["q3_gocam_ligand_mf_is_ligand_activity"] is False

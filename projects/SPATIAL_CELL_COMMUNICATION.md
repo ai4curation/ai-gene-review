@@ -1,6 +1,6 @@
 ---
 title: "Spatial cell-cell communication: curated ligand modules meet spatial omics"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [PIPELINE]
 description: Audit ligand-receptor databases against GO and curated modules, and evaluate two-cell signaling modules on spatial omics data.
 species: [human]
@@ -10,9 +10,10 @@ index_group: CROSS_CUTTING
 
 # Spatial cell-cell communication
 
-**Status: scoping.** Nothing has been run yet. This page sets out the plan, what
-already exists in the repository to build on, and the
-[design decisions](#decisions-2026-11-23) taken before work starts.
+**Status: in progress.** The first pass of the resource audit (Track A) is done,
+the two lymph-node modules are curated, and GO-CAM coverage has been checked; see
+[Results so far](#results-so-far). Track B has not started. The
+[design decisions](#decisions-2026-11-23) were taken before work began.
 
 **Bottom line:** cell-cell communication (CCC) tools such as CellPhoneDB, CellChat,
 NicheNet and LIANA infer signaling between cell types or spots by asking whether a
@@ -37,6 +38,111 @@ in two tracks:
 A third, smaller deliverable follows from both: export the curated modules in a
 format CCC tools can consume, keeping complex subunits and alternative ligands or
 receptors intact.
+
+## Results so far
+
+### Track A: CellPhoneDB audit, first pass (2026-11-23)
+
+Script: [scripts/ccc_resource_audit.py](SPATIAL_CELL_COMMUNICATION/scripts/ccc_resource_audit.py);
+inputs fetched by [scripts/fetch_data.sh](SPATIAL_CELL_COMMUNICATION/scripts/fetch_data.sh).
+Full generated output:
+[results/RESULTS.md](SPATIAL_CELL_COMMUNICATION/results/RESULTS.md), with per-pair
+tables in `results/`. Inputs: CellPhoneDB data v5.0.0, OmniPath (retrieved
+2026-11-23), goa_human.gaf generated 2026-05-21, GO release 2026-07-26, and the
+repository's modules, gene reviews and production GO-CAMs.
+
+CellPhoneDB v5.0.0 has 2,911 interactions. The audit covers its 1,475 protein
+ligand-receptor interactions. It skips 1,033 non-protein ones, where CellPhoneDB
+stands a small molecule in by its biosynthetic enzymes (decision 4).
+
+| Category | Interactions | Meaning |
+|---|---:|---|
+| concordant | 64 | In a curated module, and GOA has the ligand activity and a shared pathway |
+| go_gap | 29 | In a module, but GOA lacks the ligand activity or a shared pathway |
+| go_supported | 858 | No module, but GOA supports the pair (module candidates) |
+| partial_go | 256 | No module, and GOA supports only one of the two |
+| resource_only | 266 | No module and no GOA support |
+| review_flag | 2 | The ligand's gene review removes its ligand-activity rows and keeps none |
+
+Findings:
+
+- **The go_gap list reproduces the LIGANDS_IN_SIGNALING gaps from an independent
+  source.** KITLG-KIT, NTN1 with DCC and the UNC5 receptors, IL21, IL22, IL34-CSF1R,
+  EFNB1, SLIT1-ROBO1, GALP, CRH, UCN, AVP and EDN3 all fall here. Each lacks either
+  the ligand-activity MF or a pathway term shared with its receptor in GOA.
+- **177 interactions have a ligand with only a receptor-binding MF.** The commonest
+  terms are generic *signaling receptor binding* (76 interactions), *ephrin receptor
+  binding* (34), *integrin binding* (30) and *neurexin family protein binding* (22).
+  This is the binding-term problem of LIGANDS_IN_SIGNALING (its next step 3), now
+  with a pair list attached.
+- **The two review_flag rows are C5 with C5AR1 and C5AR2.** The C5 review rightly
+  removes the TAS row for *chemokine activity*, since C5a is not a chemokine. But it
+  keeps C5's core function as *G protein-coupled receptor binding*, not a
+  ligand-activity term, so C5a's anaphylatoxin activity is not captured as ligand
+  activity. This belongs in the binding-term MODIFY batch, and the pair itself is not
+  in doubt.
+- **CellPhoneDB lacks some well-established curated pairs.** These ligands are absent
+  from CellPhoneDB altogether: MIF and DDT (with the CD74-CD44 receptor complex), the
+  collagens with DDR1 and DDR2, NTN3 and SLIT3 (`results/module_only_pairs.tsv`).
+  They are candidates to report to CellPhoneDB.
+- **OmniPath is broader.** It has 5,072 ligand-receptor protein pairs, of which 1,237
+  are also CellPhoneDB pairs (1,484 once complexes are split into subunit pairs). Of
+  the 3,835 OmniPath-only pairs, 707 have GOA support for both the ligand activity and
+  a shared pathway.
+
+### GO-CAM check
+
+Production GO-CAMs (`gocams/`) were checked for every audited pair. A pair counts as
+linked when a model has a direct causal edge from the ligand's activity to the
+receptor's. Complex subunits are included, and mouse models are matched through MGI
+human-mouse homology.
+
+- **227 of the 1,475 interactions are linked** in at least one model, and 38 more
+  co-occur in a model without a direct edge. In 221 of the 227, the ligand's MF on
+  the edge is receptor ligand activity or a child, mostly *cytokine activity*,
+  *hormone activity*, *growth factor activity* and *chemokine activity*. The
+  exceptions are AGRP and ASIP (*receptor antagonist activity*, which GO does not
+  place under ligand activity), TF-TFRC, THBS1-CD36 and F2-F2RL2.
+- **GO-CAM coverage is uneven by pathway.** Linked interactions per CellPhoneDB
+  class: interleukins 21 of 45, BMP 21 of 52, chemokines 14 of 93, ephrins 4 of 55,
+  and none for Wnt (355), Notch (26) or FGF (26). The only production Wnt and Notch
+  ligand-receptor models are for fly and zebrafish.
+- **No production GO-CAM contains CCL19, CCL21, CCR7, CXCL13 or CXCR5.** Both module
+  curators queried the GO-CAM index and the cached model files by UniProt and MGI
+  ids, symbols and GO term ids. The same queries return CXCL8 and CXCR2, and other
+  CC chemokine pairs (CCL2-CCR2, CCL17/CCL22-CCR4, CCL1-CCR8) are modelled, so the
+  absence is a GO-CAM curation gap, not a convention. The two new modules record it
+  in their notes.
+- 704 of the 858 go_supported interactions have no GO-CAM link. Together with the
+  module-only pairs, this is a ranked list of candidates for GO-CAM models.
+
+### Lymph-node modules (plan step 4)
+
+Both modules are drafts, and their GO-CAM checks are described above.
+
+- [`modules/ccr7_chemokine_signaling.yaml`](../modules/ccr7_chemokine_signaling.yaml):
+  CCL19 or CCL21 (a variant set) acting on CCR7. Ligands carry *chemokine activity*;
+  CCR7 carries *C-C chemokine receptor activity*. The pathway is GO:0038118 *C-C
+  chemokine receptor CCR7 signaling pathway*, with the ligand-specific children
+  GO:0038119 and GO:0038120 on the variants. Scope is Euteleostomi, from the CCR7
+  PAINT node PTN002573880.
+- [`modules/cxcr5_chemokine_signaling.yaml`](../modules/cxcr5_chemokine_signaling.yaml):
+  CXCL13 acting on CXCR5. GO has no CXCL13- or CXCR5-specific pathway term, so the
+  module uses *chemokine-mediated signaling pathway* and proposes a new child term,
+  "chemokine (C-X-C motif) ligand 13 signaling pathway". The sender (follicular
+  dendritic cell) and receiver (B cell) are recorded in `cell_types` (decision 6).
+  Scope is Mammalia.
+- **Both pairs are now concordant in the audit.** CCL19-CCR7, CCL21-CCR7 and
+  CXCL13-CXCR5 moved from go_supported once the modules existed. The pairs with
+  the atypical receptors ACKR4 and CCRL2 stay go_supported, because the modules
+  include only the signaling receptors.
+- **Follow-ups the curators found:**
+  - No gene reviews exist yet for CCL19, CCL21, CCR7, CXCL13 or CXCR5.
+  - PAINT node PTN001628461 propagates *C-C chemokine receptor activity* and *C-C
+    chemokine binding* to the CXC receptor CXCR5 by IBA, which looks like
+    over-propagation. It is noted for a future PTHR10489 family review.
+  - The PTHR10489 family review has no entry for the receptor-activity terms both
+    modules use, so the module validator warns.
 
 ## Why this is worth doing
 
@@ -163,14 +269,13 @@ from the module YAML, do not commit hand-edited tables.
 ## Plan
 
 1. ~~Decide the open questions.~~ Done; see [Decisions](#decisions-2026-11-23).
-2. Track A, first pass: fetch CellPhoneDB v5 and the OmniPath intercellular
-   collection, map to UniProt, and run the four questions over the human protein
-   pairs. Write the result to `projects/SPATIAL_CELL_COMMUNICATION/results/` with a
-   generated `RESULTS.md`.
-3. Triage the *GO gap* and *Contradicted* categories for the pathways that already
-   have modules. Route gene-level fixes to gene-review PRs.
-4. Curate the CCL19/CCL21-CCR7 and CXCL13-CXCR5 modules, ligand step first, under
-   the LIGANDS_IN_SIGNALING decisions. These go in their own content PRs.
+2. ~~Track A, first pass.~~ Done 2026-11-23; see
+   [Results so far](#results-so-far).
+3. Triage the go_gap and review_flag categories for the pathways that already have
+   modules, and the binding-only ligands with LIGANDS_IN_SIGNALING step 3. Route
+   gene-level fixes to gene-review PRs. Also review CCL19, CCL21, CCR7, CXCL13 and
+   CXCR5.
+4. ~~Curate the CCL19/CCL21-CCR7 and CXCL13-CXCR5 modules.~~ Done 2026-11-23 (drafts).
 5. Track B: add the sender/receiver split and spot adjacency to `module_logic.py`,
    with doctests on a two-step module (MIF), before touching real data.
 6. Build the Visium lymph node oracle. Outline the T-cell zone and the follicles
