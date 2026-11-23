@@ -169,3 +169,10 @@ receptor internalization) are all already present in the existing set.
 #### Provenance for existing_annotations references
 Deep research: genes/human/GRB2/GRB2-deep-research-falcon.md (Wang 2024
 Biomolecules review; Malagrino 2024; Nocka 2023 eLife BTK; Qiu 2024 PNAS).
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- Rows: GO:0005794 IEA (GO_REF:0000044, SL-0132) and ISS (GO_REF:0000024, from mouse Q60631). Both changed KEEP_AS_NON_CORE -> UNDECIDED.
+- The human UniProt Golgi item is ECO:0000250 by similarity to mouse Grb2; the mouse item is curated (ECO:0000269) from PMID:11571277 (QuickGO: mouse EXP row, assigned by UniProt). That paper (PrPC yeast two-hybrid interactors) is abstract-only in the cache, Europe PMC lists no PMC copy (subscription), and doi.org/jbc.org returned 403 on 2026-11-18. The abstract does not mention the Golgi.
+- PMID:17276458 (full text in cache, PMC1861842), the source the earlier reason used, shows Grb2/PLD2 in the "perinuclear Golgi region" and "Golgi-like structures" after EGF, but no Golgi marker (GM130, giantin, TGN46 etc.) or brefeldin A test appears in the text: not the Golgi by the CABP2 standard.
+- Unreadable donor plus unmarked human data -> UNDECIDED (CD247 line). Either reading is non-core: GRB2 acts at activated receptors at the plasma membrane and on endosomes. No sub-compartment row.

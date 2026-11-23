@@ -7,8 +7,9 @@ PAINT loss whose node lies on the path from the PANTHER family root to the gene'
 and lists the review's own rows on each blocked term, so the review can agree with the
 loss or argue against it explicitly.
 
-Data: PAINT ``IBD.gaf`` (cached under ``.cache/paint/``) and the family tree from the
-PANTHER API (cached under ``.cache/panther_trees/``). Terms are matched exactly; a
+Data: PAINT ``IBD.gaf`` from the pinned snapshot (cached under
+``.cache/paint/paint-<release>-<snapshot>/``) and the family tree from the PANTHER API
+(cached under ``.cache/panther_trees/<release>/``). Terms are matched exactly; a
 review row on a descendant of the blocked term is not reported.
 
 Usage:

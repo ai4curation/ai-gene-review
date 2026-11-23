@@ -110,3 +110,21 @@ transmembrane transport only; the osteoarthropathy etc. are not core functions.
 - GO:0005737 cytoplasm, GO:0005764 lysosome (ISS/IEA, By similarity) → KEEP_AS_NON_CORE.
 - GO:0016020 membrane, GO:0022857 transmembrane transporter activity, GO:0055085 transmembrane
   transport → TOO_GENERAL (root terms; specific terms asserted).
+
+## 2026-11-22 ORGANELLES lysosome batch 2
+
+- Correction: the by-similarity donor Q9EPT5 is MOUSE Slco2a1 (SO2A1_MOUSE, looked up at UniProt
+  REST on 2026-11-22), not the rat ortholog as stated above and in earlier review text. Its
+  Cytoplasm and Lysosome items are ECO:0000269 to PMID:26474801 (Shimada et al. 2015, fetched;
+  abstract-only, no PMC record).
+- PMID:26474801 abstract: endogenous Oatp2a1 in RAW264 cells and peritoneal macrophages partly
+  co-localizes with Lamp1 and LysoTracker; PGE2 uptake by a light-lysosome fraction is reduced by an
+  OATP inhibitor and in Slco2a1(+/-) cells; proposed role in loading PGE2 into acidic compartments
+  for exocytotic secretion.
+- Verdict: both lysosome rows (IEA, ISS) stay KEEP_AS_NON_CORE, reasons rewritten: a functional,
+  endogenous, unperturbed pool (not degradation cargo, not biosynthetic transit), non-core relative
+  to plasma-membrane uptake for clearance. Positive readable donor abstract keeps the projection
+  (TKT precedent) instead of UNDECIDED. No GO:0005765 row: one mouse abstract, partial
+  co-localization with markers that do not separate late endosome from lysosome.
+- Species corrected (rat -> mouse) in the text of the cytoplasm rows and the GO:0015132 IEA row;
+  actions unchanged.

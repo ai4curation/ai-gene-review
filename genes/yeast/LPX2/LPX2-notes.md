@@ -36,12 +36,10 @@ UniProt: **P35736** (YKF0_YEAST); systematic name **YKL050C**; SGD standard name
   direct enzymatic assignment.
 
 - **Reported lipase activity.** Yifrach 2022 attribute "clear lipase activity" of Ykl050c to
-  Ploier et al. 2013 [PMID:24187129]. **Caveat:** the Ploier 2013 abstract (all we can access
-  — `full_text_available: false`) names **Ayr1p** as the novel triacylglycerol lipase and
-  confirms **Lpx1p**; it does NOT mention Ykl050c in the abstract. Ykl050c was one of the
-  GXSXG-motif candidate hydrolases screened; the specific "clear lipase activity" statement
-  lives in the Ploier full text / supplement, which is not in our cache. So the biochemical
-  lipase claim for LPX2 is second-hand and NOT directly verifiable from cached text.
+  Ploier et al. 2013 [PMID:24187129]. **Caveat:** the Ploier full text names Ykl050cp as one
+  of the GXSXG-motif candidate hydrolases screened, but explicitly reports that only Lpx1p
+  and Ayr1p showed in-vivo lipase activity and that all other candidates did not. So the
+  biochemical lipase claim for LPX2 is contradicted by its cited primary source.
 
 - **Regulation.** Expression is induced by the AZF1 transcription factor
   [UniProt CC INDUCTION, ECO:0000269|PubMed:16467472; PMID:16467472 Slattery 2006]. AZF1

@@ -27,3 +27,10 @@
 ## Additional points from deep research (falcon)
 - Deep research states "RP2 is selective for ARL3 over the closely related ARL2." and stresses that RP2 is not itself a lipid-cargo carrier; its task is terminating ARL3-GTP so the trafficking machinery can cycle. This is the basis for flagging the NEW GO:1903441 annotation as debatable.
 - Rp2-null mouse photoreceptors mislocalize PDE6 and GRK1 (prenylated cargo), with transducin largely preserved (Zhang et al. 2015; not cached). Mouse immuno-EM found RP2 at the basal-body region but not in the connecting cilium itself (Evans et al. 2010).
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- The single GO:0005794 row (IEA GO_REF:0000107, Ensembl projection from mouse Q9EPK2) stays KEEP_AS_NON_CORE; reason extended.
+- Donor trace: the only Golgi annotation on mouse Rp2 in QuickGO (queried 2026-11-18) is an MGI IDA from PMID:20106869. That paper is abstract-only in the cache and has no PMC record (PubMed ID conversion, 2026-11-18), so the marker and figures cannot be read. The abstract states it directly [PMID:20106869 "RP2 also localized to the Golgi and periciliary ridge of photoreceptors"].
+- RP2 is a soluble N-myristoylated (Gly-2) and palmitoylated (Cys-3) protein with no signal peptide, so a Golgi signal is not biosynthetic transit. Kept on curator deference (DYNLT1/APC2 pattern) rather than UNDECIDED. Golgi fragmentation after depletion is perturbation evidence and is not counted as location. The ARL3 GAP activity acts at the ciliary base and plasma membrane, so non-core; no sub-compartment row.
+- The falcon deep-research file names no Golgi marker for this paper, so it does not settle the figure reading.

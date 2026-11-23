@@ -34,3 +34,18 @@ The YAML `description` field was revised to keep it as a standalone biological s
 - A 2026 bioRxiv preprint (PMID:42845427) reports that the Rubicon PIKBD binds PI3KC3-C2 only via the BECN1 BARA domain [PMID:42845427 "Rubicon binds directly to PI3KC3-C2 only via the BARA domain of the BECN1 subunit"]; context only (preprint).
 - Martinez et al. 2015 (PMID:26098576, LAP/NOX2) and 2016 (PMID:27096368, lupus-like disease) are retracted (PMID:38438803, PMID:36045298); not used as evidence. LAP/NOX2 involvement rests on other work (e.g. [PMID:22423966 "Rubicon is also an essential, positive regulator of the NADPH oxidase complex"]) and is treated as non-core; no NEW annotation proposed.
 - Mouse ortholog reviewed in genes/mouse/Rubcn/.
+
+## 2026-11-22 ORGANELLES lysosome batch 2
+
+- Two GO:0005764 rows: EXP (PMID:19270696) and IEA (UniProt SL-0158, whose Lysosome item cites the
+  same paper). PMID:19270696 is abstract-only: "GFP-Rubicon was localized at the endosome/lysosome".
+- Companion paper PMID:19270693 (full text cached): overexpressed Rubicon-EGFP puncta "primarily
+  co-localized with the late endosomal/lysosomal marker Lamp1", partly LBPA-positive (MVB), on
+  enlarged aberrant vacuoles produced by the overexpression; no endogenous localization.
+- Verdict: both rows ACCEPT -> KEEP_AS_NON_CORE (curated line from an unreadable paper keeps the
+  root; activity not shown on lysosomes as distinct from late endosomes); lysosome dropped from the
+  first core function's locations (late endosome and early endosome kept). Rab7 binding is a GTPase
+  cycle, so no GO:0098574 tethering row.
+- Out of scope but on the same evidence: the late endosome IDA and early endosome IDA rows
+  (PMID:19270696) and the endosome IEA rows rest on the same GFP-Rubicon data; left unchanged for
+  the endosome series.

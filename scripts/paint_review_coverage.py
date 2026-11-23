@@ -8,7 +8,8 @@ Three levels of coverage, by evidence code (IBD gains; IRD/IKR losses):
 * **leaf IBAs** (``--leaf``): leaf IBA rows in PAINT's leaf GAF whose source node+term
   has been assessed. This weights coverage by how many gene annotations a node produces.
 
-Uses the cached PAINT release files in ``.cache/paint/`` (downloaded if missing).
+Uses the pinned PAINT snapshot's files, cached in ``.cache/paint/paint-<release>-<snapshot>/``
+(downloaded if missing).
 Prints a markdown summary; writes no files.
 
 Usage:

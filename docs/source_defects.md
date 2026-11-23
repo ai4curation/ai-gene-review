@@ -23,6 +23,11 @@ should fix, in a form from which a report to that resource can be generated.
   activity id.
 - Functional isoforms: `functional_isoforms[].source_defects`, for a defect in
   the source's record of that isoform. Set `record` to the UniProt accession.
+- Rule reviews: top-level `source_defects` in `rules/**/<ID>-review.yaml`, for a
+  defect in an annotation record the review cites as a receipt (a curated GOA
+  row whose reference looks mis-keyed). Set `record` to the row: subject, term,
+  evidence code and reference. A defect of the rule itself is the review's
+  verdict, not a source defect.
 - Cited source text: `references[].reference_review.source_defects`, for an
   error in a source's own curated text: a MOD gene description (cited as its
   `-deep-research-<mod>.md` file) or a UniProt FUNCTION or other comment (cited
@@ -129,7 +134,32 @@ manual step. When it is done, set `report_status: REPORTED` and
 ## Choosing a resource
 
 `resource` names who must fix the defect, which for a GOA row is normally the
-`assigned_by` group. Three groups of values are easy to confuse:
+`assigned_by` group.
+
+**Not every defect is in a GOA row.** Two values name resources that assign no
+GOA rows at all, and both were added because defects against them had nowhere
+to go:
+
+- **`AFFINAGE`** is an Affinage gene record - the LLM synthesis served at
+  `affinage.wi.mit.edu` and cached here as `GENE-deep-research-affinage.md`.
+  `CLAUDE.md` directs you to record errors in a provider's text as source
+  defects, and these are those: a wrong grounding, an omitted complex, a
+  malformed citation. Put the record's URL in `record:` and the field within it
+  in `slot:` (`molecular_activity`, `localization`, `citations`), which is
+  better evidence of the responsible resource than any prose.
+- **`PROSITE`** is a pattern or its ProRule placing a name, EC number or
+  feature on every match of a motif too broad to support it (`PS00161` /
+  `PRU10119` assigning "Isocitrate lyase" and EC 4.1.3.1 to a superfamily
+  catalytic cysteine). The fix is the rule's scope - not `UNIPROT`, which only
+  applies the rule, and not `INTERPRO`, whose InterPro2GO mappings are a
+  different mechanism.
+
+**A shared institution is not a shared curation group.** `ARUK_UCL`,
+`HGNC_UCL` and `PARKINSONSUK_UCL` are three values, because a report has to
+reach the team that made the row. `ARUK_UCL` covers ARUK-UCL and BHF-UCL
+together, as its description says.
+
+Three further groups of values are easy to confuse:
 
 - **Pipelines, not annotations.** A term that is wrong on an InterPro signature
   or a PANTHER node is wrong for every protein that inherits it, so the fix is

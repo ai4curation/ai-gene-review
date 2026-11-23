@@ -1,0 +1,58 @@
+# ACTC1 curation notes
+
+## 2026-11-18: primary-source review
+
+Human ACTC1 is HGNC:143 / UniProt P68032. Native fetch seeded 54 annotation contexts. The review preserves their identifiers, evidence codes, references, donor entities and annotation flags. Falcon research failed authentication and its Perplexity-lite fallback returned insufficient quota. These notes document manual research; no provider-generated report was produced.
+
+The [source guide](ACTC1-source-guide.md) records article sections, assay materials and external inspection links. Final decisions are 32 ACCEPT, 4 KEEP_AS_NON_CORE, 2 TOO_GENERAL, 1 REMOVE and 15 UNDECIDED, with no NEW annotations. The unresolved entries are finished assessments of current evidence limits, not unreviewed PENDING stubs. The standing ClinGen user instruction retains the adjudicated BioPlex cofilin association as non-core; the separate XL-MS row remains unresolved.
+
+### Biological synthesis
+
+Cardiac alpha-actin forms the structural filament that interacts with myosin in the cardiac sarcomere. In the reconstituted human ACTC1 experiments, the filaments are propelled by rabbit cardiac myosin, with bovine troponin and tropomyosin supplying regulatory components [PMID:19799913, "The velocities of unregulated and regulated thin filaments propelled by β-cardiac myosin"]. ACTC1 therefore participates directly in filament sliding as a structural component. This is distinct from myosin's ATP-driven movement along the filament.
+
+Human cardiac alpha-actin is not restricted to adult heart: expression analysis identifies it as the predominant sarcomeric isoform in donor hearts and early fetal skeletal muscle [PMID:16288873, "alpha-cardiac actin is the predominant"]. Transgenic human ACTC expression also restores substantial skeletal-muscle structure and function in Acta1-null mice [PMID:19468071]. This supports a contextual skeletal role without making all actin isoforms interchangeable.
+
+Actin binds and hydrolyzes its own nucleotide. Direct human recombinant ACTC experiments examine nucleotide exchange, filament assembly and intrinsic F-actin ATPase [PMID:22590617, "nucleotide exchange, polymerization and intrinsic F-actin ATPase activities"]. Q137A separates rapid polymerization from slow cleavage of bound ATP [PMID:18515362, "Q137A polymerized 4-fold faster,"]. This intrinsic actin chemistry must not be confused with actin-stimulated myosin ATPase. The core-function synthesis separates structural filament formation, myosin binding and intrinsic ATP hydrolysis. ATP binding is included in the intrinsic nucleotide-chemistry description and supporting assays rather than duplicated as a separate core unit; no new process annotations are introduced.
+
+### Constructs, numbering and assay limits
+
+- UniProt's 377-residue precursor has mature-chain coordinates 3–377. Mature E99K, R312H and E361G correspond to precursor E101K, R314H and E363G. PMID:22590617 explicitly discusses processing; do not mechanically shift positions in papers using another convention.
+- PMID:18515362 remains abstract-only in the native cache. The externally read PMC3258932 Methods describe recombinant human WT/Q137A with a retained 16-residue N-terminal extension; bovine cardiac and rabbit skeletal actins are tissue comparators. A native full-text warming attempt recovered no usable body text.
+- PMID:37009486 uses recombinant human cardiac actin and Physarum fragmin F1 to stabilize F-form actin without polymerization. These structures are not all native human filaments. The retained tag, crystallization context and model-based interpretation of catalytic water dynamics constrain mechanistic claims.
+- PMID:35457283 uses tag-free recombinant cardiac actin from Sf21 cells and rabbit skeletal myosin-S1 ATPase. Its Results describe R312H/E361G calcium sensitivity as similar or slightly lower, with weak between-mutant statistical separation. PMID:19799913 uses rabbit cardiac myosin motility and laser trapping. Their calcium responses cannot be treated as a controlled same-assay contradiction or a universal cardiomyopathy rule. Calcium-dependent behavior of a reconstituted thin filament does not make actin the troponin calcium sensor.
+- PMID:17611253 and PMID:9563954 provide human genetic/clinical evidence. PMID:17947298 combines human family evidence with a separate chick-embryo perturbation. Developmental necessity and disease association do not establish dedicated signaling, apoptosis-regulatory or septation activities.
+
+### Transfer and source assessment
+
+The original PMID:16611632 article was inspected through its [public full-text copy](https://www.researchgate.net/publication/7167824_Functional_Consequences_of_a_Mutation_in_an_Expressed_Human_-Cardiac_Actin_at_a_Site_Implicated_in_Familial_Hypertrophic_Cardiomyopathy). Methods specify rabbit cardiac myosin on nitrocellulose flow cells; Results describe myosin moving the WT/mutant filaments. Figure 6 states, "Average isometric force generated by myosin against the various actins." [GO:0000146](https://amigo.geneontology.org/amigo/term/GO:0000146) describes ATP-driven motor movement along a microfilament. The motor annotation is therefore rejected for this experimentally inspected row, while actin-filament movement and myosin binding remain supported. PMID:17765196 could not be inspected in full and its separate motor row remains UNDECIDED. Both native caches remain abstract-only; their access histories differ.
+
+UniProt P08023 is chicken ACTA2, an aortic smooth-muscle actin; it is not a cardiac-actin ortholog. Its transferred mesenchymal localization and gene-expression annotations trace to PMID:10633868. The accessible abstract concerns smooth-muscle-alpha-actin-specific antisense and chick endocardial-cushion mesenchyme. These donor observations do not by themselves establish the corresponding human ACTC1 roles. Unresolved transfers are retained as UNDECIDED, without asserting that the donor annotations are erroneous.
+
+UniProt P68033 is mouse Actc1, the corresponding cardiac-actin ortholog. PMID:16481394 directly places cardiac alpha-actin in sarcomeric I-bands. PMID:24413018 supplies mouse cortical synaptosome proteomics, but its accessible body directs protein identities to supplementary tables; the ACTC1-specific identifications were not independently recovered. Synaptic transfers therefore retain explicit access/isoform limits. Porcine P68137 is ACTA1; direct human ACTC1 nucleotide assays independently support intrinsic ATP hydrolysis rather than relying solely on that donor.
+
+Native PAINT lineage analysis used the release-19.0 tree and 2026-08-28 IBD snapshot. ACTC1 was present in the tree and no IRD/IKR loss was reported on its lineage. This does not constitute a fresh experimental audit of every ancestral node. A short donor list or ACTC1's appearance among an IBA's descendant evidences is not circularity.
+
+High-throughput extracellular, membrane and synaptic observations are assessed as localization evidence, not as secretion mechanisms or separate core functions. Missing isoform-discriminating peptides or inaccessible supplements are recorded as limits, not evidence that the curator chose the wrong gene. Likewise, generic cofilin interaction does not establish an actin-specific adapter, regulator or enzyme activity.
+
+### Reproducibility and access
+
+All primary sources cited by annotation decisions are native cached publications or explicitly identified external inspections. Quoted `supporting_text` is checked against the cached source; an abstract-only cache is not relabeled as full text merely because an external page was readable. PMID:18515362 remained abstract-only after native full-text warming. PMID:17765196 remained inaccessible in full text. Exact pre-warm bytes and the original seed are retained in `refs/recovery/clingen-actc1-20261118/native-seed-and-pre-warm-v1`; earlier tracked source versions remain in the branch base.
+
+The source regression audit found that native intake replaced PMID:30021884's retained Abstract/Discussion excerpts with an abstract-only cache and altered two Reactome summaries used by existing ACTB quotations. Exact branch-base versions of those three files were restored, and the fetched versions were retained in `refs/recovery/clingen-actc1-20261118/fetched-source-versions-v1`. PMID:30021884's restored cache declares full text available, but contains only Abstract/Discussion excerpts: this review does not claim access to the complete Methods or ACTC1-specific crosslink table. Cache metadata alone is not evidence of complete article access.
+
+The work uses one registered sparse checkout and the retained shared runtime. No repository copies, new environments, full API payload archives, or per-review source snapshots were created. Three read-only helpers supplied proposals; ROOT is the sole curated-file and Git writer. Validation and final decisions are recorded in the matching history entry.
+
+
+## 2026-11-18: repository review follow-up
+
+The review expanded the core synthesis to represent myosin binding and intrinsic ATP hydrolysis explicitly. I-band localization is attached to the structural thin filament; it is not assigned to the myosin-binding activity, because I-band thin filaments do not overlap myosin-containing thick filaments.
+
+The two motor rows share a mechanistic concern. Their different decisions record different source access: the original PMID:16611632 assays were read and put myosin on the motility surface; PMID:17765196 remains inaccessible in full. Its UNDECIDED action follows the explicit inaccessible-publication instruction and does not assert a contrary motor function. A blanket removal would imply an adjudication of evidence that was not read.
+
+All eight Reactome cytosol rows remain ACCEPT consistently because each asserts the same location. Their reaction names do not add pathway participation assertions to these GOA rows. In particular, the epithelial and dystroglycan summaries do not establish ACTC1-specific functions in those pathways. The chicken ACTA2 transfers remain UNDECIDED: nonorthology alone neither invalidates an ISS transfer nor demonstrates target-specific loss, and the complete donor evidence and ACTC1 transfer basis remain unresolved.
+
+All 15 shared source/cache files selected for restoration were restored byte-for-byte to the branch base, including the existing PMID:24413018 PDF-derived full text, both PTHR11937 files and both remaining Reactome files. Their fetched versions remain recoverable from the published first commit and refs/recovery/clingen-actc1-20261118/published-source-versions-v1. Two expanded publication caches remain: PMID:16481394 supplies the directly quoted I-band Results absent from the old excerpt, and PMID:33961781 supplies the inspected and quoted BioPlex Methods absent from the old excerpt. The other newly introduced publication caches remain available. The earlier repair paragraph refers specifically to PMID:30021884, R-HSA-9934294 and R-HSA-9934410, not R-HSA-9934486.
+
+The claimed alpha-catenin/α-catenin regression in R-HSA-9934486 did not reproduce: the canonical normalizer maps both spellings to the same text, and the cited ACTA1 and ACTB quotations passed against both versions. R-HSA-9934486 was nevertheless restored with the other shared files, and the ACTC1 quotation now uses its restored spelling. Existing pre-publication source-regression repairs are unchanged.
+
+The ClinGen checklist remains unticked until the PR is merged and delivery is verified. No new gene, worktree or environment was started for this follow-up.

@@ -310,6 +310,13 @@ gocam-index *args="":
 export-source-defects *args="":
     uv run python -m ai_gene_review.tools.export_source_defects {{args}}
 
+# Writes reports/paint-change-requests.tsv and reports/paint-change-requests/<PTHR>.md
+# from node_assessments[].proposed_action; exits 1 on conflicting requests for one
+# PAINT row. See the IBA section of CLAUDE.md.
+# Collect PAINT change requests from family reviews, one report per family.
+export-paint-change-requests *args="":
+    uv run python -m ai_gene_review.tools.export_paint_change_requests {{args}}
+
 # Collect proposed ontology changes (top-level proposed_ontology_changes on gene
 # and module reviews, and in project-page frontmatter) into
 # reports/ontology-changes.tsv plus one Markdown report
@@ -1434,6 +1441,12 @@ validate-changed *files:
 validate-quotes *args:
     uv run python -m ai_gene_review.validation.quote_check {{args}}
 
+# Validate incoming supporting_text quotes affected by changed local source files.
+# Example: just validate-incoming-quotes HEAD^ HEAD
+[group('QC')]
+validate-incoming-quotes *args:
+    uv run python -m ai_gene_review.validation.incoming_quote_dependencies {{args}}
+
 # Example: just local-quote-baseline --prune
 #          just local-quote-baseline --report reports/local-quote-failures.yaml
 # Measure or shrink the baseline of known non-verbatim file:/Reactome: quotes
@@ -2059,6 +2072,13 @@ export-annotations output_file="exports/exported_annotations.csv":
 export-annotations-tsv output_file="exports/exported_annotations.tsv":
     @mkdir -p exports
     uv run python -c "from ai_gene_review.export import TabularExporter; from pathlib import Path; exporter = TabularExporter(); files = list(Path('genes').glob('**/*-ai-review.yaml')); print(f'Found {len(files)} files'); exporter.export_to_tsv(files, '{{output_file}}'); print(f'Exported to {{output_file}}')"
+
+# Export reviews as a GOA change set (one row per reviewed annotation + NEW rows),
+# consumed by the genesets enrichment eval (evals/aigr_changeset in monarch-initiative/genesets)
+export-goa-changeset organism="human" output_file="":
+    @mkdir -p exports
+    uv run python scripts/export_goa_changeset.py --organism {{organism}} \
+        -o {{ if output_file == "" { "exports/goa_changeset_" + organism + ".tsv" } else { output_file } }}
 
 # Export existing_annotations to JSON format (for linkml-browser)
 export-annotations-json output_file="exports/exported_annotations.json":
