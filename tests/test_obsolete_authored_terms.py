@@ -737,12 +737,21 @@ def test_a_configured_but_unloadable_snapshot_is_not_reported_as_consulted(tmp_p
     assert lookup.consulted_sources() == ["the corpus GOA files"]  # type: ignore[attr-defined]
 
 
-def test_consulted_sources_is_not_resolved_until_a_hit(tmp_path):
-    """Probing at build time would reload the snapshot for every clean review.
+def test_the_probe_is_not_called_at_build_time(tmp_path):
+    """`build_label_lookup` runs per file, so probing there would reload the
+    snapshot once for every document, including those with no authored GO ids.
 
-    The name claims more than "not at build time", so the hitless lookup is
-    exercised too: a term that is consulted and produces no hit must not probe
-    either, which is the common case across the corpus.
+    `use_ontology=True` is load-bearing: `consulted_sources` gates the probe as
+    `use_ontology and snapshot_available()`, so with the flag false the probe is
+    short-circuited and every assertion here holds vacuously. An earlier version
+    of this test passed `False` and therefore survived the very regression it
+    names -- verified by mutation, moving the resolution into the builder body
+    left it green.
+
+    Only the build-time property is asserted. "A hitless lookup does not probe"
+    reads well and cannot fail: `lookup` has no reference to `snapshot_available`
+    on any path, so no argument makes it false. An unfalsifiable assertion is
+    the thing this file deleted a test for in round 3.
     """
     write_goa(tmp_path, "human/A/A-goa.tsv", [("GO:0000121", "live", "20260101")])
     probes = []
@@ -751,13 +760,11 @@ def test_consulted_sources_is_not_resolved_until_a_hit(tmp_path):
         probes.append(1)
         return True
 
-    lookup = build_label_lookup(tmp_path, use_ontology=False, snapshot_available=probe)
+    lookup = build_label_lookup(tmp_path, use_ontology=True, snapshot_available=probe)
     assert probes == [], "built without probing"
 
-    assert lookup("GO:0000121") == [], "a consulted term with no obsolete label"
-    assert probes == [], "a hitless lookup must not probe either"
-
-    assert lookup.consulted_sources() == ["the corpus GOA files"]  # type: ignore[attr-defined]
+    lookup.consulted_sources()  # type: ignore[attr-defined]
+    assert probes == [1], "and the probe is reached when the field is resolved"
 
 
 def test_consulted_sources_is_none_for_an_injected_lookup():
