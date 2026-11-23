@@ -276,13 +276,13 @@ The 12 `broader` pairs (ancestors of the model's own GO term) and the 20 `broad_
 
 ## Class term inside the model's partial EC (3)
 
-Not triaged: the model's EC is partial and the GO term's partial EC lies inside it, so the term is more specific than the EC. It is right only if every member of the family has that specificity.
+Not triaged, and product names not checked: the model's EC is partial and the GO term's partial EC lies inside it. Either the term really is more specific than the model's EC (oxidoreductase acting on CH-OH donors on the mycofactocin dehydrogenase MftG, EC 1.-.-.-), or only the term's cross-reference is: endopeptidase activity is cross-referenced only to EC 3.4.99.- but covers all of EC 3.4. `GO ancestor` says whether the term is also a GO ancestor of a term for the model's EC.
 
-| model | product name | family type | model EC | GO term | term EC | RefSeq hits |
-|---|---|---|---|---|---|---|
-| TIGR01879.1 | hydantoinase/carbamoylase family amidase | subfamily | 3.5.-.- | GO:0016813 hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds, in linear amidines | 3.5.3.- | 93458 |
-| NF053624.1 | peptidoglycan L,D-endopeptidase MepK | equivalog | 3.4.-.- | GO:0004175 endopeptidase activity | 3.4.99.- | 8305 |
-| TIGR03970.1 | mycofactocin dehydrogenase MftG | equivalog | 1.-.-.- | GO:0016614 oxidoreductase activity, acting on CH-OH group of donors | 1.1.-.- | 2940 |
+| model | product name | family type | model EC | GO term | term EC | GO ancestor | RefSeq hits |
+|---|---|---|---|---|---|---|---|
+| TIGR01879.1 | hydantoinase/carbamoylase family amidase | subfamily | 3.5.-.- | GO:0016813 hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds, in linear amidines | 3.5.3.- | yes | 93458 |
+| NF053624.1 | peptidoglycan L,D-endopeptidase MepK | equivalog | 3.4.-.- | GO:0004175 endopeptidase activity | 3.4.99.- | yes | 8305 |
+| TIGR03970.1 | mycofactocin dehydrogenase MftG | equivalog | 1.-.-.- | GO:0016614 oxidoreductase activity, acting on CH-OH group of donors | 1.1.-.- | yes | 2940 |
 
 ## Class term outside the model's EC class (81)
 

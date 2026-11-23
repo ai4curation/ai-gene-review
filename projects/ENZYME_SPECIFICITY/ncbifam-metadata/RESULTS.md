@@ -159,10 +159,14 @@ carries the term for another member's reaction.
   bullet) would be missed. Another 779 join it to a class term that carries only a
   partial EC, such as oxidoreductase activity (EC 1.-.-.-):
   - in 691 the term's EC class contains the model's EC, so the term is true but broad;
-  - in 3 the term's EC class lies inside the model's partial EC, so the term is more
-    specific than the EC. CANDIDATES.md lists them under "Class term inside the
-    model's partial EC" without triage. Each matches its product name, for example
-    endopeptidase activity on the L,D-endopeptidase MepK (EC 3.4.-.-);
+  - in 3 the term's EC class lies inside the model's partial EC. CANDIDATES.md
+    lists them under "Class term inside the model's partial EC" without triage, and
+    their product names were not checked. The term may really be more specific than
+    the model's EC, as oxidoreductase acting on CH-OH donors is on the mycofactocin
+    dehydrogenase MftG (EC 1.-.-.-), or only its cross-reference may be: endopeptidase
+    activity, on the L,D-endopeptidase MepK, is cross-referenced to EC 3.4.99.- alone
+    but covers all of EC 3.4. The table says whether each term is also a GO ancestor
+    of a term for the model's EC;
   - in 4 the term's partial EC does not contain the model's EC, but the term is a GO
     ancestor of a term for that EC, so it is broad too. EC classes are compared
     before GO ancestry, so these 4 are not narrower. For a partial model EC the

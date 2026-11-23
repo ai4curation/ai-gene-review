@@ -298,61 +298,48 @@ def main() -> None:
                     relations = {
                         ec_class_relation(m, pe) for m in f.ec_numbers for pe in partial
                     }
-                    model_terms = {
-                        mt for m in f.ec_numbers for mt in hierarchy.terms_for_ec(m)
-                    }
                     # EC-class relations are tested before GO ancestry, so each
                     # counter means what it says whatever the later tests find
                     if "contains" in relations:
                         skipped["mf_term_partial_ec_contains_model"] += 1
-                    elif "within" in relations:
-                        skipped["mf_term_partial_ec_within_model"] += 1
-                        class_within.append(
-                            {
-                                "model": f.accession,
-                                "product_name": f.product_name,
-                                "family_type": f.family_type,
-                                "ec_numbers": f.ec_numbers,
-                                "go": go,
-                                "go_name": t["name"],
-                                "go_partial_ec": partial,
-                                "refseq_hits": hits.get(f.accession, 0),
-                            }
-                        )
-                    elif any(
+                        continue
+                    model_terms = {
+                        mt for m in f.ec_numbers for mt in hierarchy.terms_for_ec(m)
+                    }
+                    go_ancestor = any(
                         go == mt or go in hierarchy.ancestors(mt) for mt in model_terms
-                    ):
+                    )
+                    record = {
+                        "model": f.accession,
+                        "product_name": f.product_name,
+                        "family_type": f.family_type,
+                        "ec_numbers": f.ec_numbers,
+                        "go": go,
+                        "go_name": t["name"],
+                        "go_partial_ec": partial,
+                        "refseq_hits": hits.get(f.accession, 0),
+                    }
+                    if "within" in relations:
+                        skipped["mf_term_partial_ec_within_model"] += 1
+                        # a GO ancestor too, the narrowing may be only the term's
+                        # cross-reference (endopeptidase activity: EC:3.4.99.- only)
+                        class_within.append(record | {"also_go_ancestor": go_ancestor})
+                    elif go_ancestor:
                         # the term's own EC xref is narrower than its scope
-                        # (endopeptidase activity carries only EC:3.4.99.-)
                         skipped["mf_term_ancestor_of_model_term"] += 1
                         class_ancestor.append(
-                            {
-                                "model": f.accession,
-                                "ec_numbers": f.ec_numbers,
-                                "go": go,
-                                "go_name": t["name"],
-                                "go_partial_ec": partial,
-                                # the term is itself a term for the model's EC in the GO
-                                # database, though QuickGO gave it no complete EC
-                                "term_is_model_ec_term": go in model_terms,
-                            }
+                            record
+                            # the term is itself a term for the model's EC in the GO
+                            # database, though QuickGO gave it no complete EC
+                            | {"term_is_model_ec_term": go in model_terms}
                         )
                     else:
                         skipped["mf_term_partial_ec_outside_model"] += 1
+                        # without a GO term for the model's EC, ancestry is untested
                         class_mismatch.append(
-                            {
-                                "model": f.accession,
-                                "product_name": f.product_name,
-                                "family_type": f.family_type,
-                                "ec_numbers": f.ec_numbers,
-                                "go": go,
-                                "go_name": t["name"],
-                                "go_partial_ec": partial,
-                                # without a GO term for the model's EC, ancestry is untested
-                                "ancestry_tested": bool(model_terms),
-                                "refseq_hits": hits.get(f.accession, 0),
-                            }
+                            record | {"ancestry_tested": bool(model_terms)}
                         )
+                    continue
                 else:
                     skipped["mf_term_has_no_ec"] += 1
                 continue
@@ -501,18 +488,24 @@ def render(
             "",
             f"## Class term inside the model's partial EC ({len(class_within)})",
             "",
-            "Not triaged: the model's EC is partial and the GO term's partial EC lies "
-            "inside it, so the term is more specific than the EC. It is right only if "
-            "every member of the family has that specificity.",
+            "Not triaged, and product names not checked: the model's EC is partial and "
+            "the GO term's partial EC lies inside it. Either the term really is more "
+            "specific than the model's EC (oxidoreductase acting on CH-OH donors on "
+            "the mycofactocin dehydrogenase MftG, EC 1.-.-.-), or only the term's "
+            "cross-reference is: endopeptidase activity is cross-referenced only to EC "
+            "3.4.99.- but covers all of EC 3.4. `GO ancestor` says whether the term is "
+            "also a GO ancestor of a term for the model's EC.",
             "",
-            "| model | product name | family type | model EC | GO term | term EC | RefSeq hits |",
-            "|---|---|---|---|---|---|---|",
+            "| model | product name | family type | model EC | GO term | term EC | "
+            "GO ancestor | RefSeq hits |",
+            "|---|---|---|---|---|---|---|---|",
         ]
     )
     lines.extend(
         f"| {r['model']} | {r['product_name']} | {r['family_type']} | "
         f"{', '.join(r['ec_numbers'])} | {r['go']} {r['go_name']} | "
-        f"{', '.join(r['go_partial_ec'])} | {r['refseq_hits']} |"
+        f"{', '.join(r['go_partial_ec'])} | {'yes' if r['also_go_ancestor'] else 'no'} | "
+        f"{r['refseq_hits']} |"
         for r in sorted(class_within, key=lambda r: (-r["refseq_hits"], r["model"]))
     )
     lines.extend(
