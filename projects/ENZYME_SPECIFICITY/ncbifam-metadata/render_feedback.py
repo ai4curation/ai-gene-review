@@ -82,7 +82,9 @@ def candidate_text(
     >>> candidate_text(["3.5.4.4"], Hierarchy(), db)
     '(no GO term cross-references EC 3.5.4.4)'
     >>> candidate_text(["3.4.16.4", "3.4.21.-"], Hierarchy(), db)
-    'GO:0009002 x; partial EC 3.4.21.- not listed'
+    'GO:0009002 x (partial EC 3.4.21.- not listed)'
+    >>> candidate_text(["3.4.16.4", "3.5.4.4"], Hierarchy(), db)
+    'EC 3.4.16.4: GO:0009002 x / EC 3.5.4.4: (no GO term cross-references it)'
     """
     if not ec_numbers:
         return "(model has no EC)"
@@ -90,15 +92,22 @@ def candidate_text(
     complete = [ec for ec in ec_numbers if is_complete_ec(ec)]
     if not complete:
         return f"(partial EC {', '.join(partial)}; not listed)"
-    terms = sorted(set().union(*(hierarchy.terms_for_ec(ec) for ec in complete)))
-    if not terms:
-        text = f"(no GO term cross-references EC {', '.join(complete)})"
-    elif len(terms) > MAX_CANDIDATES:
-        text = f"({len(terms)} terms under the model's EC; too broad to list)"
+
+    def describe(ec: str, name: str) -> str:
+        terms = sorted(hierarchy.terms_for_ec(ec))
+        if not terms:
+            return f"(no GO term cross-references {name})"
+        if len(terms) > MAX_CANDIDATES:
+            return f"({len(terms)} terms under EC {ec}; too broad to list)"
+        return "; ".join(f"{t} {go_label(go_db, t)[0]}" for t in terms)
+
+    # with several ECs, each EC's terms are labelled, so a suspect EC can be told apart
+    if len(complete) == 1:
+        text = describe(complete[0], f"EC {complete[0]}")
     else:
-        text = "; ".join(f"{t} {go_label(go_db, t)[0]}" for t in terms)
+        text = " / ".join(f"EC {ec}: {describe(ec, 'it')}" for ec in complete)
     if partial:
-        text += f"; partial EC {', '.join(partial)} not listed"
+        text += f" (partial EC {', '.join(partial)} not listed)"
     return text
 
 
@@ -172,8 +181,9 @@ def main() -> None:
         "`no GO term cross-references EC …` means no GO term carries that EC as a "
         "cross-reference; GO often has a term for the reaction all the same, "
         "cross-referenced only to Rhea, as `proposed` shows for adenosine deaminase. "
-        "A partial EC would match a whole subclass, so its terms are not listed. In the EC_SUSPECT section these "
-        "are the terms the verdict does not propose adopting. The RefSeq column is summed over the "
+        "A partial EC would match a whole subclass, so its terms are not listed. A model with several ECs has each EC's "
+        "terms labelled. In the EC_SUSPECT section the suspect EC's terms are evidence "
+        "for the verdict, not proposals. The RefSeq column is summed over the "
         "distinct models in each verdict; a model in two verdicts counts in both, so the "
         "rows are not additive.",
         "",

@@ -156,8 +156,8 @@ groups.
   GO:0043815, purT's GO:0043815 row gets `NO_MODEL`. These six models are candidates for
   feedback to NCBI's PGAP curators. They are release-table errors, not defects behind a
   particular GOA row, so they do not fit a review's `source_defects`. The
-  [release-table check](../../ncbifam-metadata/RESULTS.md) now covers the whole table and
-  lists them with the rest of the class. The GOA rows on glgA and nrdG came from
+  [release-table check](../../ncbifam-metadata/RESULTS.md) now checks every pair in the table with EC
+  numbers on both sides and lists them with the rest of the class. The GOA rows on glgA and nrdG came from
   InterPro2GO, which the reviews already flag, so a fix at NCBIfam alone would not reach
   them. For catB, PP_2528 and pycB, the family's GO
   terms span related reactions its members share, and the reviews judged the protein's

@@ -3,7 +3,8 @@
 The [cutoff-check sweep](../cutoff-check/sweep/RESULTS.md) turned up six NCBIfam models
 whose GO term names a sister reaction rather than the model's own. One example is the
 formate-dependent PurT models, which carry PurN's 10-formyltetrahydrofolate term. This
-page checks the whole release table for that class of error. The output is a change list
+page checks every (model, GO term) pair in the release table that has EC numbers on
+both sides for that class of error. The output is a change list
 for NCBIfam curators, [FEEDBACK.md](FEEDBACK.md).
 
 PGAP annotates RefSeq proteins with these GO terms, so a wrong term on a model reaches
@@ -55,6 +56,10 @@ that reach, and the lists rank by it.
 
 | step | pairs |
 |---|---|
+| (model, GO term) pairs in the release table | 18691 |
+| skipped: model has no EC number | 8790 |
+| skipped: biological process or cellular component term | 4095 |
+| skipped: molecular function term with no EC cross-reference | 2959 |
 | EC on both sides | 2847 |
 | consistent | 2584 |
 | not consistent | 263 |
@@ -143,12 +148,21 @@ carries the term for another member's reaction.
   terms for each model's own EC from the model itself. It does not list them for a
   partial EC, which would offer a whole subclass, or when a complete EC has more than
   ten. It says `(model has no EC)` for the sweep models without one.
+- **Function terms without an EC cross-reference are never compared.** 2959 pairs
+  join a model that has an EC number to a molecular function term with no EC
+  cross-reference. Many are binding or transporter terms with no EC, but a
+  sister-reaction error on a term that lost its EC cross-reference (see the next
+  bullet) would be missed.
 - **GO's EC cross-references are incomplete.** EC-to-GO lookups use the
   cross-references on GO terms, and many terms carry only a Rhea one. Adenosine
   deaminase (EC 3.5.4.4) is an example: GO:0004000 exists, but no GO term
   cross-references the EC, so its models are placed `no_go_for_model_ec`. FEEDBACK.md
   says "no GO term cross-references EC …" rather than "GO has no term", and a curator
-  should look for a term by name before asking GO for a new one.
+  should look for a term by name before asking GO for a new one. GO sometimes records
+  the EC on a synonym instead: GO:0004000's related synonym "adenosine aminohydrolase
+  activity" carries EC:3.5.4.4. Synonym cross-references are not used here, because a
+  narrow synonym's EC (GO:0046961's "ATP synthase activity", EC 7.1.2.2) is not the
+  term's own reaction.
 - **Reach beyond PGAP is unchecked.** Whether these GO terms also reach UniProt through
   InterPro2GO depends on which models InterPro integrates and how InterPro maps them.
   That was not checked here.

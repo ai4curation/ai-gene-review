@@ -53,6 +53,11 @@ GO_DB = (
     Path.home() / ".data" / "oaklib" / "go.db"
 )  # semsql GO, as used by `just validate`
 CACHE = Path(".cache")
+SKIP_LABELS = {
+    "model_has_no_ec": "where the model has no EC number",
+    "non_mf_term": "with a biological process or cellular component term",
+    "mf_term_has_no_ec": "with a molecular function term that has no EC cross-reference",
+}
 QUICKGO = "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{ids}"
 
 
@@ -235,6 +240,7 @@ def main() -> None:
             if not terms[go]["name"]
         }
     )
+    skipped: Counter = Counter()
     for f in db.families:
         for go in f.go_terms:
             t = terms[go]
@@ -248,7 +254,13 @@ def main() -> None:
                         "refseq_hits": hits.get(f.accession, 0),
                     }
                 )
-            if not t["ec"] or not f.ec_numbers:
+            if not f.ec_numbers:
+                skipped["model_has_no_ec"] += 1
+                continue
+            if not t["ec"]:
+                # an MF term with no EC xref is never compared; BP and CC terms never are
+                mf = t.get("aspect") == "molecular_function"
+                skipped["mf_term_has_no_ec" if mf else "non_mf_term"] += 1
                 continue
             rows.append(
                 {
@@ -275,6 +287,8 @@ def main() -> None:
         "ncbifam_release": db.release(),
         "models": len(db.families),
         "models_with_go": sum(1 for f in db.families if f.go_terms),
+        "model_go_pairs": sum(len(f.go_terms) for f in db.families),
+        "pairs_skipped": dict(skipped),
         "pairs_checked": len(rows),
         "relations": dict(Counter(r["relation"] for r in rows)),
         "placements": dict(Counter(r["placement"] for r in rows if r["placement"])),
@@ -305,7 +319,10 @@ def render(meta: dict, rows: list[dict], obsolete: list[dict]) -> str:
         "`release_table_check.yaml`.",
         f"NCBIfam release {meta['ncbifam_release']}: {meta['models']} models, "
         f"{meta['models_with_go']} with GO terms; {meta['pairs_checked']} (model, GO term) "
-        "pairs where both sides carry EC numbers.",
+        "pairs where both sides carry EC numbers, out of "
+        f"{meta['model_go_pairs']}. Skipped: "
+        + ", ".join(f"{n} {SKIP_LABELS[k]}" for k, n in meta["pairs_skipped"].items())
+        + ".",
         "",
         "| relation | pairs |",
         "|---|---|",
