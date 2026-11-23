@@ -388,7 +388,7 @@ def build_label_lookup(
         return pairs
 
     def consulted_sources() -> List[str]:
-        """The sources that can actually answer, resolved lazily on first use.
+        """The sources that can actually answer, re-resolved on every call.
 
         Deliberately NOT computed from configuration alone. **Both** sources
         have a systemic-mute state, and the first fix here covered only the
