@@ -64,6 +64,7 @@ genes:
   - "human/PLK1"
   - "human/KIF2A"
   - "human/DYNLT1"
+index_group: CROSS_CUTTING
 ---
 
 # Human Protein Atlas: Primary Cilium Life Cycle Module

@@ -88,3 +88,18 @@ Two earlier statements in this file are superseded:
   citation was dropped in review, because the GO:0043754 row it was added to is already
   carried by primary evidence and the provider quote added nothing to it. The provider file
   was read; it is simply not cited as support.
+
+## 2026-11-11 — completion pass (bacterial pyruvate metabolism campaign)
+
+Curated by Claude (AI-assisted). DBT is the reference protein of the PTHR43178 family review used
+by `modules/bacterial_pyruvate_metabolism.yaml`, so it was brought to COMPLETE.
+
+- 38 rows cited references without any verbatim quote. Each now carries quotes from the
+  Swiss-Prot record (FUNCTION, SUBUNIT, SUBCELLULAR LOCATION, InterPro classification),
+  PMID:3593587, PMID:34800366, PMID:22291014, PMID:18063578 or the cached Reactome summaries.
+  No verdict on those rows changed.
+- The four GO:0005739 mitochondrion rows were TOO_GENERAL; under the root-organelle policy
+  (projects/ORGANELLES.md) the organelle term is informative and is never TOO_GENERAL, so they are
+  now ACCEPT beside the matrix rows.
+- The falcon report is cited once, on the Reactome BCAA catabolism row, for the MSUD type II
+  genetic link, which the UniProt DISEASE text and Reactome R-HSA-9865115 corroborate.

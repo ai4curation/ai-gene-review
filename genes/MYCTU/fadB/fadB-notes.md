@@ -1,0 +1,9 @@
+# MYCTU fadB review notes
+
+2026-11-06. Applied annotation-reviewer and core-function synthesis guidance. Normal fetch preceded review; the pristine seed and raw hashes are frozen in the structural-review baseline. Every machine row is retained. Default Falcon was genuinely attempted and failed 403 authentication; no provider report was fabricated. This manual assessment is based on primary literature, official sequence records and PDB mapping.
+
+See [primary-scope.md](../fadB/fadB-source-analysis/primary-scope.md) and its sequence-identity.json for exact strain/accession/construct distinctions. The current standard symbol is fadB; the pair is H37Rv Rv0860/Rv0859, not FadA2 or FadA5. The two chains cover the final three reactions, not all four steps of a native oxidation route. Native strain physiology, isolated chains, assembled catalytic activity and structure-derived channeling are treated separately.
+
+Mtb 2021 shows C10/C16 thiolysis but no acetoacetyl-CoA activity detected; the C4-specific IBA on beta is generalized to the broader supported thiolase MF, not labeled an evolutionary loss. The qualitative assay has no stated numerical LOD. The membrane HDA rows remain UNDECIDED because full proteomic evidence is inaccessible and soluble enzyme activity alone does not rule out membrane association. The reported 3E→2E isomerase is a documented secondary lead; the primary 2015 detailed assay remains inaccessible despite publisher and institutional searches.
+
+Current QuickGO definitions and ancestors were checked:0018812 is the 2E-specific descendant of0004300;0003985 is the acetoacetyl-specific child of0003988;0016509 covers 13–22 carbon chains and descends from0003857/0016491/0016616. Reverse-written reactions are not evidence against catabolic direction. Existing annotations are never used as supported_by evidence. NEW process rationale records the actual catalytic participant, same-role comparison, parents and nonredundancy.

@@ -10,6 +10,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/9qccr18p9kHwufWPqF1tjh
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # COSCIENTIST

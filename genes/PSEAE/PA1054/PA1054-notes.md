@@ -89,3 +89,12 @@ pages not retrievable). The two WRONG_QUALIFIER defects rest on positive
 statements in other Mrp papers (no antiport with MrpA alone; complex
 required) and stay PROBABLE. Wording that PA1054 is the only sha gene
 mutated is now limited to what the abstract reports. No action changes.
+
+## Full-text check of PMID:16030218 (2026-11-05)
+
+The full text of Kosono et al. 2005 was supplied by the user and read. It
+supersedes the earlier notes above that describe this paper as abstract-only.
+The only sha mutant the paper constructs is the PA1054 insertion; the
+cluster-level evidence comes from expressing the whole PA1054-PA1059 cluster,
+or the cluster with PA1054 disrupted, in an antiporter-deficient E. coli
+strain. So the IMP rows on PA1054 are supported; only the qualifier is in question.

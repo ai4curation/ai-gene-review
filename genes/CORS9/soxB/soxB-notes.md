@@ -29,3 +29,27 @@
   from IPR001041) was REMOVEd on this basis.
 - NEW rows: part_of GO:0032921 for all four; NAD+ binding (SoxA); FAD and FMN
   binding (SoxB); zinc ion binding (SoxD).
+
+
+## 2026-11-06 comparative module audit
+
+Persistent marker DMG-CORS9-soxB-20261106. Reviewed every original row, inherited proposal, core and cited source. Default Falcon was attempted normally because no provider artifact existed; HTTP403 authentication/access failure is logged. These are manual notes, not a fabricated provider report.
+
+- Retained all original actions and inherited NEW rows, including SoxA Fe-S rejection.
+- Moved the full-complex proposed THF reaction out of autonomous subunit core MF; retained its top-level term proposal and represented conserved oxidative contribution with GO0016647.
+- Confirmed PDB chain/accession/construct boundaries independently via PDBe/SIFTS.
+- Corrected inhibitor/analogue binding versus turnover and flagged the standalone enables qualifier for review.
+
+Original machine payloads, inherited NEW rows and raw files are protected by original-members-baseline.json. Source limitations are explicit: many original primary citations remain abstract-only, with curated UniProt evidence and direct deposited structure mappings used for corroboration. No inaccessible experimental annotation was rejected merely for missing full text.
+
+Full PMID15914915 was subsequently acquired by the PSEPK reviewer from the official J-STAGE publisher PDF. Its scoped assembly-evidence.md excerpt documents flavin-free, unstable isolated beta/beta-delta constructs. This supports complex-level contributions without proving all possible isolated-beta preparations inactive.
+
+
+## PR #6122 round-1 gene follow-up (2026-11-06)
+
+- Replace the FAD-binding-only beta core (where present) with proposed sarcosine oxidase (imine-forming) activity, retaining complex contribution and all inherited cofactor NEW rows. This is beta-localized catalysis within the assembled enzyme, not autonomous full THF-coupled turnover.
+- Record provenance-specific WRONG_QUALIFIER correction queries (enables to contributes_to) on original sarcosine-oxidase rows; keep all original qualifiers and actions unchanged.
+
+Schema compatibility does not establish an isolated-subunit reaction. The common convention preserves supported catalytic, structural, and cofactor distinctions and marks ortholog transfers explicitly. All historical non-review payloads, inherited NEW actions, and raw/provider bytes remain unchanged; no annotation rows were added or deleted and no publication cache was refreshed.
+
+Existing qualifier defects were consolidated with the refined provenance-specific assessment (one correction per source row). Legacy OTHER resource labels on direct InterPro2GO defects were corrected to INTERPRO after checking ASSIGNED BY; original assertions and biological judgments were preserved.

@@ -45,3 +45,10 @@
   KEEP_AS_NON_CORE.
 - Not reviewed here (not cached): ErpA/A-type carrier literature (Vinella 2009,
   Loiseau 2007) on IscA as a [4Fe-4S] carrier; worth adding on a future pass.
+
+
+## 2026-11-07 ISC whole-gene re-review
+
+Retained directly demonstrated iron donation and Fe-S cluster transfer while qualifying their relative native roles. Protein maturation is core delivery work, not an incidental consequence. The exact cluster-transfer-complex annotation from abstract-only PMID15050828 remains unresolved; homooligomeric composition is not itself a reason to reject it.
+
+All original ordered annotation payloads and historical NEW actions were preserved. Existing raw/provider/publication files were not refreshed. A genuine new default Falcon attempt returned HTTP 403; no provider report was fabricated. Manual source review is recorded here and in `analysis/module_audits/bacterial_isc_iron_sulfur_cluster_assembly/ecoli-consultation/`. The normal PAINT lineage-loss check found no IRD or IKR; donor-list length and target self-inclusion were not used as evidence against the ancestral assertion. Focused validation, render, and append-only helper-history results are recorded in the final handoff.

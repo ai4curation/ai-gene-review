@@ -302,3 +302,63 @@ Checked via the OLS MCP on 2026-11-03:
    here, per the task's scope restriction.
 4. Consider raising the LhaT MF term and the archaeal-type-lipid process term
    with GO.
+
+
+## 2026-11-07 — comparative audit and source limits
+
+This audit corrects several statements above. The native carrier pathway is
+demonstrated principally in *B. subtilis*. The taxon Caryophanales bounds the
+PcrB comparison; it is not a whole-order capacity claim. Q5L3C1 (GEOKA,
+PDB 4NAE/4NAF) and A7X435 (STAA1 Mu3, PDB 3W01/3W02) add independently
+identified prenyltransferase exemplars. FLAJ1 A5FJK8 (PDB 4JEJ) is C20 GGGPS,
+an excluded chemistry comparator. PDB 4MM1 is archaeal O26652 and must not be
+assigned to any of those bacterial proteins.
+
+The 2022 structural review (PMID:35976526) distinguishes C35 PcrB group Ib
+from C20 GGGPS; a shared fold or G1P pocket is insufficient to transfer the
+C35 function. The 2021 membrane review (PMID:34046426) describes upstream
+HepPP use in multiple branches and PcrB/phosphatase/YvoF processing. Its
+unknown-function wording describes the state before the 2025 carrier work,
+not a disagreement with it. Both reviews are cached with full text and mined
+into module references and step evidence. The broad 2023 terpenome review
+(PMID:36941124) has a correction (PMID:37455337); only cached abstract and
+correction metadata are used, with no step or phylogenetic inference from
+unread corrected figures. Direct retrieval failures are recorded in ignored
+audit logs, not treated as evidence.
+
+**Reconstitution correction.** PMID:40626731 explicitly substituted C20
+geranylgeranyl diphosphate for native C35 heptaprenyl diphosphate. G1P was
+supplied, the phosphatase was calf intestinal alkaline phosphatase, and LhaT
+was produced in *E. coli* membranes. Thus this experiment demonstrates the
+downstream reaction sequence using an analogue; it does not test EgsA, identify
+the native phosphatase, resolve donor regioisomer preference, or demonstrate
+transbilayer transport. Native genetics and earlier native lipid chemistry
+provide the complementary C35 pathway evidence. The earlier statement that
+all five steps were reconstituted in one tube was too strong.
+
+**G1P supply correction.** Km asymmetry does not establish physiological
+direction or flux. Purified EgsA is a demonstrated G1PDH; its dedicated supply
+to native PcrB remains unresolved. PMID:42286214 cites engineered *E. coli*
+lipid production without AraM and infers another supply mechanism; it does not
+identify that mechanism or establish it in *B. subtilis*. Existing PANTHER
+review PTHR43622 explicitly describes SF1 as heterogeneous, so the module now
+requires G1PDH activity in addition to family membership. No ancestral node
+is newly asserted.
+
+**Terminal-step scope correction.** Inactive LhaT alleles are documented in
+*B. anthracis*, but the paper leaves the precise cause of absent acetylated
+lipoprotein in other *B. cereus*-group species unresolved. Family membership
+cannot establish this activity. The optional consumer is retained, with an
+explicit lipid-donor-dependent activity requirement; absence of that consumer
+does not itself prove that the complete carrier-synthesis route is present.
+
+Seven gene reviews are being audited: BACSU egsA, pcrB, yvoF and ypjA;
+GEOKA pcrB; STAA1 pcrB; and the FLAJ1 Fjoh_1584 comparator. Source files and
+ordered original annotation payloads are frozen before review. The native
+phosphatase remains an activity-only gap rather than an invented family node.
+
+The configured module Falcon retrieval was attempted on 2026-11-07 and failed
+with HTTP403 authentication. No provider report was fabricated. Literature
+curation above uses directly read primary/review sources and documented access
+limits. YvoF is located at the plasma membrane on activity-fractionation
+evidence; cytoplasmic-side loading remains a separate mechanistic inference.

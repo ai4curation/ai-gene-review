@@ -55,7 +55,17 @@ cover (see "Do not add what curators deliberately declined to add" in CLAUDE.md)
   and my gene does not", name two or three other gene products in the **same role**
   relative to the same kind of process and query whether they carry it. A systematic
   absence across species and MODs is a convention you have not identified yet, not a
-  curation lapse. Check the term's parents too: a process under `GO:0006508 proteolysis`
+  curation lapse. **A negative result is the fragile one, because it is the one that
+  licenses the strong conclusion, so confirm the query can return a positive before you
+  trust it** — query the term id directly, or run it against a gene you know carries the
+  term. A malformed query returns a clean, confident, false absence and does not look
+  like an error; a result too tidy to be curation usually is not curation. (This has
+  happened: a GZMB review declined `GO:0042742` on a reported absence across all four
+  granule effectors, from a query that filtered on a field it returned empty. GNLY
+  carries that term by IDA.) A positive result does not compel the annotation either:
+  comparators show whether a convention exists, never that your gene does the work, and
+  the participation test still governs. Check the term's parents too: a process under
+  `GO:0006508 proteolysis`
   names whatever does the cleaving, which is the substrate itself in the autoprocessing
   case (`GO:0016540`) and otherwise is not.
 
@@ -245,6 +255,14 @@ experimental annotations whose full text you have not read.
      Apply this policy to new reviews and to annotations touched during re-review.
      Older untouched reviews may retain legacy actions; migrate those when they
      are re-reviewed rather than treating their presence as an exception.
+   - **High-throughput knockout screens (IMPC/KOMP/EUCOMM, Sanger MGP) report
+     organism-level phenotypes.** Such a result supports at most an organism-level
+     process row, usually `KEEP_AS_NON_CORE`, and never a molecular-function or
+     `core_functions` claim without a separate assay of the product. Lethality alone
+     says the gene is required, not what it does. The converse also holds: a screen
+     with no significant call across many tests is a tested absence of phenotype
+     for those systems, usable when downgrading process rows (as `human/ARHGAP4`
+     does), but not evidence against a molecular function. See `projects/IMPC.md`.
    - Consider specificity - terms that are too general should be modified to more specific functions
    - Watch for overly specific or contorted terms that might need generalization
    - Evaluate whether annotations truly represent core vs. peripheral functions

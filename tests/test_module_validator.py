@@ -29,6 +29,7 @@ from ai_gene_review.validation.module_validator import (
     validate_family_members,
     validate_paint_ptns,
     validate_go_branches,
+    validate_leaf_grounding_completeness,
     validate_taxon_context,
     validate_terms,
     validate_module_file,
@@ -806,11 +807,31 @@ def _skip_label_resolver(curie):
     return ("unavailable", None, set())
 
 
-def test_validate_module_file_passes_conformant_module():
-    # erk_cascade's erk_relay bundle conforms EXACTly to mapk_relay, so with
-    # label checking skipped the file should validate with no errors.
+def test_validate_module_file_passes_conformant_module(tmp_path):
+    # Keep the smoke test focused on conformance instead of any optional
+    # executable models declared by a full repository module.
+    template_doc = yaml.safe_load((MODULES_DIR / "mapk_relay.yaml").read_text())
+    (tmp_path / "mapk_relay.yaml").write_text(
+        yaml.safe_dump(template_doc), encoding="utf-8"
+    )
+
+    conformant_doc = yaml.safe_load(yaml.safe_dump(template_doc))
+    conformant_doc["id"] = "MODULE:conformant_mapk_relay"
+    conformant_doc["title"] = "Conformant MAPK relay"
+    conformant_doc["module"]["id"] = "conformant_mapk_relay"
+    conformant_doc["module"]["conforms_to"] = [
+        {"template": "mapk_relay", "status": "EXACT"}
+    ]
+    path = tmp_path / "conformant_mapk_relay.yaml"
+    path.write_text(yaml.safe_dump(conformant_doc), encoding="utf-8")
+
+    result = validate_module_file(path, resolver=_skip_label_resolver)
+    assert result.errors == [], "\n".join(result.errors)
+
+
+def test_validate_module_file_passes_repository_module():
     result = validate_module_file(
-        MODULES_DIR / "erk_cascade.yaml", resolver=_skip_label_resolver
+        MODULES_DIR / "bbsome.yaml", resolver=_skip_label_resolver
     )
     assert result.errors == [], "\n".join(result.errors)
 
@@ -901,41 +922,184 @@ def test_validate_module_file_flags_bad_module_ref(tmp_path, module_ref, message
 
 
 # --------------------------------------------------------------------------- #
+# Completed module completeness
+# --------------------------------------------------------------------------- #
+
+
+def test_validate_leaf_grounding_completeness_blocks_complete_uniprotless_leaf():
+    doc = {
+        "status": "COMPLETE",
+        "module": {
+            "id": "root",
+            "label": "Root",
+            "annotons": [
+                {
+                    "id": "a",
+                    "participant": {
+                        "selector_type": "ANY_WITH_FUNCTION",
+                        "required_function": {
+                            "term": {
+                                "id": "GO:0004672",
+                                "label": "protein kinase activity",
+                            }
+                        },
+                    },
+                }
+            ],
+        },
+    }
+
+    errors = validate_leaf_grounding_completeness(doc)
+
+    assert len(errors) == 1
+    assert "COMPLETE concrete modules" in errors[0]
+    assert "'root'" in errors[0]
+    assert "ANY_WITH_FUNCTION" in errors[0]
+
+
+@pytest.mark.parametrize(
+    "patch",
+    [
+        {"status": "DRAFT"},
+        {"status": "COMPLETE", "scope": "ABSTRACT"},
+    ],
+)
+def test_validate_leaf_grounding_completeness_allows_draft_or_abstract(patch):
+    doc = {
+        **patch,
+        "module": {
+            "id": "root",
+            "label": "Root",
+            "annotons": [
+                {
+                    "id": "a",
+                    "participant": {
+                        "selector_type": "ANY_PARTICIPANT",
+                        "description": "abstract participant",
+                    },
+                }
+            ],
+        },
+    }
+
+    assert validate_leaf_grounding_completeness(doc) == []
+
+
+def test_validate_leaf_grounding_completeness_allows_intentionally_ungrounded_leaf():
+    doc = {
+        "status": "COMPLETE",
+        "module": {
+            "id": "root",
+            "label": "Root",
+            "annotons": [
+                {
+                    "id": "a",
+                    "participant": {
+                        "selector_type": "ANY_WITH_FUNCTION",
+                        "required_function": {
+                            "term": {
+                                "id": "GO:0008757",
+                                "label": "S-adenosylmethionine-dependent methyltransferase activity",
+                            }
+                        },
+                    },
+                }
+            ],
+            "intentionally_ungrounded": True,
+        },
+    }
+
+    assert validate_leaf_grounding_completeness(doc) == []
+
+
+def test_validate_leaf_grounding_completeness_allows_annotonless_outcome_leaf():
+    doc = {
+        "status": "COMPLETE",
+        "module": {
+            "id": "motility",
+            "label": "Motility",
+            "parts": [
+                {
+                    "node": {
+                        "id": "flagellar_motor_rotation_output",
+                        "label": "Flagellum-dependent motility output",
+                        "module_type": "BIOLOGICAL_PROCESS",
+                        "concepts": [
+                            {
+                                "preferred_term": "bacterial-type flagellum-dependent cell motility",
+                                "term": {
+                                    "id": "GO:0071973",
+                                    "label": "bacterial-type flagellum-dependent cell motility",
+                                },
+                            }
+                        ],
+                    }
+                }
+            ],
+        },
+    }
+
+    assert validate_leaf_grounding_completeness(doc) == []
+
+
+# --------------------------------------------------------------------------- #
 # supporting_text snippet validation
 # --------------------------------------------------------------------------- #
 
 from ai_gene_review.validation.module_validator import (  # noqa: E402
-    iter_evidence_snippets,
     validate_supporting_text,
 )
 
 PUBLICATIONS_DIR = PROJECT_ROOT / "publications"
 
 
-def test_iter_evidence_snippets_only_literature_with_text():
-    """Only PMID/DOI EvidenceItems carrying a non-empty quote are yielded."""
+def test_validate_supporting_text_reports_unreadable_sources_as_unchecked():
+    """A quote citing a source with no readable text is reported, not silently passed (#6021)."""
     doc = {
         "module": {
-            "annotons": [
-                {
-                    "evidence": [
-                        {"source_id": "PMID:123", "supporting_text": "a real quote"},
-                        {"source_id": "GO:0001", "supporting_text": "grounding, skip"},
-                        {"source_id": "PMID:999", "statement": "no quote here"},
-                        {"source_id": "DOI:10.1/x", "supporting_text": "doi quote"},
-                    ]
-                }
+            "evidence": [
+                {"source_id": "GO:1", "supporting_text": "x"},
+                {"source_id": "url:https://example.org", "supporting_text": "y"},
             ]
         }
     }
-    got = sorted(iter_evidence_snippets(doc))
-    assert got == [("DOI:10.1/x", "doi quote"), ("PMID:123", "a real quote")]
-
-
-def test_validate_supporting_text_no_literature_is_noop():
-    doc = {"module": {"evidence": [{"source_id": "GO:1", "supporting_text": "x"}]}}
     errors, warnings = validate_supporting_text(doc)
-    assert errors == [] and warnings == []
+    assert errors == []
+    assert len(warnings) == 1
+    assert "2 supporting_text quote(s)" in warnings[0] and "not verified" in warnings[0]
+
+
+TP53_UNIPROT = "file:human/TP53/TP53-uniprot.txt"
+BDH1_REACTION = "Reactome:R-HSA-73912"
+
+
+@pytest.mark.parametrize(
+    "location",
+    [
+        # EvidenceItem.source_id, the slot #6021 found unchecked for local sources.
+        lambda item: {"module": {"evidence": [{"source_id": item[0], "supporting_text": item[1]}]}},
+        # knowledge_gaps[].provenance uses reference_id, which was never read at all.
+        lambda item: {"module": {"knowledge_gaps": [{"provenance": [
+            {"reference_id": item[0], "supporting_text": item[1]}]}]}},
+        # references[].findings inherit the reference id.
+        lambda item: {"references": [{"id": item[0], "findings": [{"supporting_text": item[1]}]}]},
+    ],
+    ids=["source_id", "reference_id", "findings"],
+)
+@pytest.mark.parametrize(
+    "reference_id,quote,ok",
+    [
+        (TP53_UNIPROT, "Nucleus. Cytoplasm. Note=Predominantly nuclear but localizes to the cytoplasm", True),
+        (TP53_UNIPROT, "TP53 is a fabricated sentence that is in no UniProt record", False),
+        (BDH1_REACTION, "catalyzes the reversible reaction of acetoacetate with NADH + H+ to form", True),
+        (BDH1_REACTION, "an invented Reactome summary", False),
+        ("file:human/NO_SUCH_GENE/NO_SUCH_GENE-uniprot.txt", "anything", False),
+    ],
+)
+def test_validate_supporting_text_checks_local_sources_in_modules(location, reference_id, quote, ok):
+    """file:/Reactome: quotes in modules are checked in every slot that can carry one."""
+    errors, _ = validate_supporting_text(location((reference_id, quote)))
+    assert (errors == []) is ok, errors
 
 
 def test_validate_supporting_text_fetch_exception_is_an_error(monkeypatch):
@@ -1166,6 +1330,31 @@ def test_validate_family_members_rejects_member_in_a_different_family():
     assert len(errors) == 1
     assert "PANTHER:PTHR11375" in errors[0]
     assert "O14521 is in PANTHER:PTHR13337:SF6" in errors[0]
+
+
+def test_validate_family_members_previous_release_match_is_a_warning_during_a_switch():
+    """During a PANTHER switch, a family the members left in the bump is a warning."""
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR11375", "O14521")))
+    current = {"O14521": "PTHR13337:SF6"}
+
+    errors, _ = validate_family_members(uses, current)
+    assert len(errors) == 1
+
+    errors, warnings = validate_family_members(
+        uses, current, previous=("19.0", {"O14521": "PTHR11375:SF2"})
+    )
+    assert errors == []
+    assert len(warnings) == 1 and "PANTHER 19.0" in warnings[0]
+
+
+def test_validate_family_members_switch_does_not_excuse_a_family_wrong_in_both():
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR11375", "O14521")))
+
+    errors, _ = validate_family_members(
+        uses, {"O14521": "PTHR13337:SF6"}, previous=("19.0", {"O14521": "PTHR13337:SF6"})
+    )
+
+    assert len(errors) == 1
 
 
 def test_validate_family_members_matches_on_family_when_declared_as_subfamily():

@@ -75,3 +75,25 @@ PseudoCAP seed supports the imidazolonepropionase IBAs on mammals too.
 ## Full-text check of PMID:4290562 (2026-11-05)
 
 The full text of Lessie and Neidhardt 1967 (J Bacteriol 93, 1800-1810) was supplied by the user and read. Its mutants are a urocanase-deficient strain, a histidine auxotroph and regulatory mutants with altered repression. Steps I, II and IV are assayed; imidazolonepropionase (step III) is never assayed and there is no hutI mutant. Both WRONG_REFERENCE defects on the IMP rows are now CONFIRMED and the reference is marked MISCITED.
+
+## PANTHER tree check (2026-11-05)
+
+Topology fetched with `projects/PSEUDOCAP/panther_tree.py node PTN000505272 --depth 2
+--leaves` (PTHR42752).
+
+| Child node | Event / taxon | Leaves | Subfamilies | Verdict |
+|---|---|---|---|---|
+| PTN000505273 | SPECIATION, Archaea-Eukaryota | 36 (AMDHD1 orthologues plus Halobacterium Q9HQD6 hutI) | SF1:36 | Homogeneous; term applies |
+| PTN000505310 | SPECIATION, Eubacteria | 16 (hutI of B. subtilis P42084, Deinococcus, Bacteroides, Proteobacteria incl. Q9HU91) | SF1:16 | Homogeneous; term applies |
+
+All 52 leaves sit in one subfamily (PTHR42752:SF1) and every one is named
+imidazolonepropionase or probable imidazolonepropionase. There is no heterogeneous
+child clade and no leaf that lacks the family signature, so the earlier worry about the
+breadth of a LUCA-level node does not hold: GO:0050480 and GO:0006548 are right for the
+whole clade. What the tree cannot fix is the IBD's evidential anchor, and the full text
+of PMID:4290562 (read 2026-11-05) settles that separately: it assays no step III and has
+no hutI mutant. The GO_CENTRAL defect is therefore kept, narrowed explicitly to the
+citation, and raised SUSPECTED -> CONFIRMED. The tree also supplies the remedy: P42084
+(B. subtilis HutI, solved structure) and Q96NU7 (human AMDHD1) are leaves of this node,
+so a properly grounded IBD is available without moving the node. Annotation actions in
+this review are unchanged (the IBA rows stay ACCEPT).

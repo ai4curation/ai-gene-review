@@ -7,10 +7,13 @@ import subprocess
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 
 import typer
-from typing_extensions import Annotated
+from typing_extensions import Annotated, assert_never
+
+if TYPE_CHECKING:
+    from ai_gene_review.etl.arba_match import RuleMatch
 
 from ai_gene_review.etl.gene import fetch_gene_data, fetch_gene_data_ncRNA, expand_organism_name
 from ai_gene_review.etl.publication import (
@@ -40,10 +43,12 @@ from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.validator import get_project_root, get_schema_path
 from ai_gene_review.draw import ReviewVisualizer
 from ai_gene_review.litscan.cli import litscan_app
+from ai_gene_review.shadow_issues.cli import shadow_issues_app
 from ai_gene_review.tools.audit_fulltext_flags import audit as audit_flags
 
 app = typer.Typer(help="ai-gene-review: Gene data ETL and review tool.")
 app.add_typer(litscan_app, name="litscan")
+app.add_typer(shadow_issues_app, name="shadow-issues")
 
 
 @app.command()
@@ -693,8 +698,12 @@ def _validate_gene_review_cli(
 def _validate_rule_review_cli(
     yaml_file: Path,
     schema_path: Path,
+    online: bool = False,
 ) -> ValidationReport:
-    """Validate one rule review with the standard LinkML CLI tools."""
+    """Validate one rule review: LinkML schema, then receipt checks.
+
+    ``online`` adds the receipt checks that query UniProt and QuickGO.
+    """
     yaml_file = yaml_file.resolve()
     schema_path = schema_path.resolve()
     report = ValidationReport(file_path=yaml_file, is_valid=True)
@@ -725,6 +734,10 @@ def _validate_rule_review_cli(
         "linkml_validate",
         cwd=project_root,
     )
+
+    from ai_gene_review.validation.rule_review_receipts import validate_rule_review_receipts
+
+    validate_rule_review_receipts(yaml_file, report, online=online)
 
     return report
 
@@ -2703,6 +2716,101 @@ def arba_lookup(
                 typer.echo(f"  {ann.comment_type}: {ann.text}")
 
 
+def _echo_rule_match(match: "RuleMatch") -> None:
+    """Print one rule's verdict and, when it fails, its closest condition sets."""
+    if match.matched:
+        sets = ", ".join(str(i) for i in match.matching_sets)
+        typer.echo(f"  {match.rule_id} (modified {match.rule_modified}): matches via set {sets}")
+        return
+    typer.echo(
+        f"  {match.rule_id} (modified {match.rule_modified}): no set matches; "
+        f"closest failure {match.closest_failure}"
+    )
+    for cs in match.closest_sets[:3]:
+        typer.echo(f"    set {cs.index}:")
+        for c in cs.conditions:
+            mark = "ok  " if c.holds else "FAIL"
+            neg = "NOT " if c.condition.is_negative else ""
+            values = ", ".join(cv.value for cv in c.condition.values)
+            typer.echo(f"      {mark} {neg}{c.condition.condition_type}: {values}")
+    if len(match.closest_sets) > 3:
+        typer.echo(f"    ... {len(match.closest_sets) - 3} more sets of this kind")
+
+
+@app.command()
+def arba_check(
+    accession: Annotated[str, typer.Argument(help="UniProtKB accession (e.g., Q88KS6)")],
+    rule_ids: Annotated[List[str], typer.Argument(help="One or more ARBA rule IDs")],
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Scratch cache for fetched rules"),
+    ] = Path(".cache/arba"),
+):
+    """Check whether ARBA rules fire on a protein, using current UniProt data.
+
+    Rules are always fetched fresh, since ARBA serves only the current version.
+
+    Examples:
+        ai-gene-review arba-check Q88KS6 ARBA00086692
+        ai-gene-review arba-check Q88KS6 ARBA00086692 ARBA00028620
+    """
+    from ai_gene_review.etl.arba import ARBAClient
+    from ai_gene_review.etl.arba_match import UniProtFeatureClient, evaluate_rule
+
+    protein = UniProtFeatureClient().proteins([accession]).get(accession)
+    if protein is None:
+        typer.echo(f"{accession} not found in UniProtKB", err=True)
+        raise typer.Exit(code=1)
+    typer.echo(f"{accession} (taxon {protein.taxon_id}, UniProt {protein.uniprot_release})")
+    client = ARBAClient(cache_dir=cache_dir)
+    for rule_id in rule_ids:
+        rule = client.fetch_rule(rule_id, use_cache=False)
+        if rule is None:
+            typer.echo(f"  {rule_id}: not found in ARBA")
+            continue
+        _echo_rule_match(evaluate_rule(rule, protein.features))
+
+
+@app.command()
+def arba_check_goa(
+    goa_file: Annotated[Path, typer.Argument(help="GOA TSV, e.g. genes/PSEPK/PP_2213/PP_2213-goa.tsv")],
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", "-d", help="Scratch cache for fetched rules"),
+    ] = Path(".cache/arba"),
+    verbose: Annotated[
+        bool,
+        typer.Option("--verbose", "-v", help="Show condition detail for matching rows too"),
+    ] = False,
+):
+    """Check each ARBA row (GO_REF:0000117) of a GOA file against the rule it cites.
+
+    A row whose rule no longer matches is reported as RULE_EDITED_SINCE_LOAD
+    when the rule's modifiedDate is later than the row's GOA date, since ARBA
+    serves only the current rule version; only MISMATCH rows are candidates
+    for a misapplied rule.
+
+    Examples:
+        ai-gene-review arba-check-goa genes/PSEPK/PP_2213/PP_2213-goa.tsv
+    """
+    from collections import Counter
+
+    from ai_gene_review.etl.arba import ARBAClient
+    from ai_gene_review.etl.arba_match import UniProtFeatureClient, check_goa_file
+
+    checks = check_goa_file(goa_file, ARBAClient(cache_dir=cache_dir), UniProtFeatureClient())
+    if not checks:
+        typer.echo(f"No ARBA rows in {goa_file}")
+        return
+    for check in checks:
+        typer.echo(f"{check.status}  {check.accession}  {check.go_id} {check.go_name}  (loaded {check.load_date})")
+        if verbose or check.status != "MATCH":
+            for match in check.matches:
+                _echo_rule_match(match)
+    counts = Counter(c.status for c in checks)
+    typer.echo("\n" + ", ".join(f"{k}: {v}" for k, v in sorted(counts.items())))
+
+
 @app.command()
 def arba_search(
     query: Annotated[
@@ -3154,10 +3262,20 @@ def rules_validate(
         bool,
         typer.Option("--verbose", "-v", help="Show detailed messages including warnings"),
     ] = False,
+    online: Annotated[
+        bool,
+        typer.Option(
+            "--online",
+            help="Also check receipts against UniProt and QuickGO (alleged false positives, stale rules)",
+        ),
+    ] = False,
 ):
-    """Validate rule review YAML files against the LinkML schema.
+    """Validate rule review YAML files: schema, then receipt checks.
 
-    Validates RuleReview files for schema compliance with the RuleReview class.
+    Validates RuleReview files for schema compliance, then checks that the
+    verdict carries receipts (see docs/rule_review_receipts.md): recorded
+    condition sets, identifier labels that match the official names, sources
+    that exist, and a named wrongly annotated protein behind a DEPRECATE.
 
     Examples:
         # Validate a specific review
@@ -3192,7 +3310,7 @@ def rules_validate(
     schema_path = get_schema_path()
 
     for yaml_file in all_files:
-        report = _validate_rule_review_cli(yaml_file, schema_path)
+        report = _validate_rule_review_cli(yaml_file, schema_path, online=online)
 
         if report.is_valid:
             valid_count += 1
@@ -3427,6 +3545,65 @@ def render_projects(
     else:
         typer.echo("Please specify file(s) or use --all to render all projects", err=True)
         raise typer.Exit(code=1)
+
+
+@app.command()
+def render_hubs(
+    root: Annotated[
+        Path, typer.Option("--root", help="Repository root to read reviews from")
+    ] = Path("."),
+    pages_dir: Annotated[
+        Path, typer.Option("--pages-dir", help="Site pages directory to write into")
+    ] = Path("pages"),
+):
+    """Render the feedback-to-resources and annotation-rules landing pages.
+
+    Writes pages/feedback/ (ontology changes, proposed new terms, source defects,
+    mapping and rule reviews, with TSV downloads) and pages/rules/index.html.
+
+    Examples:
+        ai-gene-review render-hubs
+    """
+    from ai_gene_review.render_hubs import render_feedback, render_rules
+
+    feedback = render_feedback(root=root, output_dir=pages_dir / "feedback")
+    rules = render_rules(root=root, output_dir=pages_dir / "rules")
+    typer.echo(f"Rendered {len(feedback)} feedback page(s) and {rules}")
+
+
+@app.command()
+def render_gocams(
+    gocams_dir: Annotated[
+        Path,
+        typer.Option("--gocams-dir", help="Directory of cached GO-CAM models and reviews"),
+    ] = Path("gocams"),
+    output_dir: Annotated[
+        Path,
+        typer.Option("--output-dir", "-o", help="Output directory for GO-CAM review pages"),
+    ] = Path("pages/gocams"),
+    genes_dir: Annotated[
+        Path,
+        typer.Option("--genes-dir", help="Directory of gene reviews, for links"),
+    ] = Path("genes"),
+    modules_dir: Annotated[
+        Path,
+        typer.Option("--modules-dir", help="Directory of module YAML, for links"),
+    ] = Path("modules"),
+):
+    """Render every GO-CAM review (gocams/<id>/<id>-review.yaml) plus an index page.
+
+    Examples:
+        ai-gene-review render-gocams
+    """
+    from ai_gene_review.render_gocams import render_all_gocams
+
+    written = render_all_gocams(
+        gocams_dir=gocams_dir,
+        output_dir=output_dir,
+        genes_dir=genes_dir,
+        modules_dir=modules_dir,
+    )
+    typer.echo(f"Rendered {len(written) - 1} GO-CAM review page(s) and an index to {output_dir}")
 
 
 @app.command()
@@ -3960,7 +4137,7 @@ def fetch_panther_paint(
         Optional[Path],
         typer.Option(
             "--cache-dir",
-            help="Where to cache the downloaded PAINT GAFs (default: <repo>/.cache/panther).",
+            help="Where to cache the downloaded PAINT GAFs (default: <repo>/.cache/panther/paint-<release>-<snapshot>).",
         ),
     ] = None,
     extra_uniprot: Annotated[
@@ -3992,13 +4169,14 @@ def fetch_panther_paint(
         ai-gene-review fetch-panther-paint PTHR35730 --extra-uniprot Q67XT3
         ai-gene-review fetch-panther-paint --all
     """
+    from ai_gene_review.etl.panther_families import paint_cache_dir
     from ai_gene_review.etl.panther_paint import (
         fetch_family_paint,
         fetch_all_family_paint,
     )
 
     repo_root = output_dir or Path.cwd()
-    cache = cache_dir or (repo_root / ".cache" / "panther")
+    cache = cache_dir or paint_cache_dir(repo_root / ".cache" / "panther")
     panther_root = repo_root / "interpro" / "panther"
 
     if all_families:
@@ -4188,6 +4366,216 @@ def gocam_index(
     index = build_gene_index(cache_dir=cache_dir)
     n_rows = len(index.read_text().strip().splitlines()) - 1
     typer.echo(f"✓ Wrote {index} ({n_rows} activity rows)")
+
+
+@app.command()
+def gocam_compartments(
+    model_ids: Annotated[
+        Optional[List[str]],
+        typer.Argument(help="GO-CAM model ids (default: every cached model)"),
+    ] = None,
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+    ontology: Annotated[
+        str,
+        typer.Option("--ontology", help="oaklib handle for GO (e.g. sqlite:obo:go, simpleobo:go-basic.obo)"),
+    ] = "sqlite:obo:go",
+    output: Annotated[
+        Optional[Path],
+        typer.Option("--output", "-o", help="Write the YAML report here instead of stdout"),
+    ] = None,
+    all_rows: Annotated[
+        bool,
+        typer.Option("--all-rows", help="Report every location and edge, not only problems"),
+    ] = False,
+    modules_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--modules-dir",
+            help="Modules whose gocam_associations pins can explain non-adjacent edges ('' to skip)",
+        ),
+    ] = Path("modules"),
+    genes_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--genes-dir",
+            help="Gene folders giving known protein locations for regulation edges ('' to skip)",
+        ),
+    ] = Path("genes"),
+):
+    """Check GO-CAM activity locations against a disjoint compartment model.
+
+    Flags `occurs_in` terms that no is_a/part_of path places in a distinct
+    compartment (e.g. chromatin), and causal edges between activities in
+    compartments that share no boundary (e.g. cytosol -> extracellular region).
+    A non-adjacent edge is EXPLAINED when a module pinned to both activities has
+    a path through a transport step, and RELOCATING when it regulates a protein
+    known (from its gene folder) to sit next to the regulator.
+    The compartment set and adjacency live in
+    src/ai_gene_review/data/gocam_compartments.yaml; see
+    projects/GOCAM_COMPARTMENTS.md.
+
+    Examples:
+        ai-gene-review gocam-compartments 59cc772c00000000 600ced8500002343
+        ai-gene-review gocam-compartments -o reports/gocam-compartments.yaml
+    """
+    import yaml as _yaml
+
+    from ai_gene_review.etl.gocam import normalize_gocam_id
+    from ai_gene_review.gocam_compartments import (
+        CompartmentModel,
+        ProteinLocationIndex,
+        check_cached_models,
+        iter_cached_models,
+        oak_ancestor_fn,
+        summarize,
+    )
+    from ai_gene_review.gocam_module_bridges import ModuleBridgeIndex
+
+    if model_ids:
+        paths = []
+        for mid in model_ids:
+            bare = normalize_gocam_id(mid)
+            p = cache_dir / bare / f"{bare}-src.yaml"
+            if not p.exists():
+                raise typer.BadParameter(f"model not cached: {p} (run fetch-gocam first)")
+            paths.append(p)
+    else:
+        paths = list(iter_cached_models(cache_dir))
+    ancestors = oak_ancestor_fn(ontology)
+    cm = CompartmentModel.load()
+    explainer = (
+        ModuleBridgeIndex.from_dir(modules_dir).explain
+        if modules_dir and str(modules_dir) not in ("", ".")
+        else None
+    )
+    protein_locations = (
+        ProteinLocationIndex(genes_dir, cm, ancestors)
+        if genes_dir and str(genes_dir) not in ("", ".")
+        else None
+    )
+    reports = check_cached_models(paths, ancestors, cm, explainer, protein_locations)
+    doc = {
+        "summary": summarize(reports),
+        "models": [
+            r.to_dict(all_rows=all_rows)
+            for r in reports
+            if all_rows or r.unresolved or r.nonadjacent or r.relocating or r.explained
+        ],
+    }
+    text = _yaml.safe_dump(doc, sort_keys=False, allow_unicode=True, width=120)
+    if output:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(text)
+        s = doc["summary"]
+        typer.echo(
+            f"✓ Wrote {output}: {s['n_models']} models, "
+            f"{s['n_models_with_unresolved']} with unresolved locations, "
+            f"{s['n_models_with_nonadjacent']} with unexplained non-adjacent causal edges, "
+            f"{s['n_models_with_relocating']} with relocating, "
+            f"{s['n_models_with_explained']} with module-explained"
+        )
+    else:
+        typer.echo(text)
+
+
+@app.command()
+def gocam_lint(
+    model_ids: Annotated[
+        Optional[List[str]],
+        typer.Argument(help="GO-CAM model ids to lint (default: every cached model)"),
+    ] = None,
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+    rule_ids: Annotated[
+        Optional[List[str]],
+        typer.Option("--rule", "-r", help="Only run these rules (repeatable)"),
+    ] = None,
+    no_ontology: Annotated[
+        bool,
+        typer.Option("--no-ontology", help="Skip rules that need GO (no download)"),
+    ] = False,
+    min_severity: Annotated[
+        str,
+        typer.Option("--min-severity", help="ERROR, WARNING or INFO"),
+    ] = "INFO",
+    output: Annotated[
+        Optional[Path],
+        typer.Option("--output", "-o", help="Write findings as TSV to this file"),
+    ] = None,
+    list_rules: Annotated[
+        bool,
+        typer.Option("--list-rules", help="List the available rules and exit"),
+    ] = False,
+):
+    """Report structural anomalies in cached GO-CAM models.
+
+    Rules cover impossible compartment crossings on direct causal edges,
+    same-gene chains, duplicate activities, opposite-sign fan-out, transcription
+    factors with direct edges, ligands as receptor inputs, generic or binding
+    MFs, orphans, disconnected components and near-duplicate models. See
+    docs/gocam_lint.md. Ontology rules use the oaklib GO SQLite build
+    (downloaded on first use).
+
+    Examples:
+        ai-gene-review gocam-lint 59cc772c00000000
+        ai-gene-review gocam-lint --min-severity WARNING -o reports/gocam-lint.tsv
+    """
+    from ai_gene_review.etl.gocam import normalize_gocam_id, src_path
+    from ai_gene_review.gocam_lint import (
+        CORPUS_RULES,
+        RULES,
+        SEVERITY_ORDER,
+        OakOracle,
+        check_rule_ids,
+        lint_paths,
+        write_findings_tsv,
+    )
+
+    if list_rules:
+        for r in RULES.values():
+            tag = " [GO]" if r.needs_ontology else ""
+            typer.echo(f"{r.id}{tag}: {r.description}")
+        for rid, desc in CORPUS_RULES.items():
+            typer.echo(f"{rid} [corpus]: {desc}")
+        return
+    severity = min_severity.upper()
+    if severity not in SEVERITY_ORDER:
+        raise typer.BadParameter(
+            f"--min-severity must be one of {', '.join(SEVERITY_ORDER)}, not {min_severity!r}"
+        )
+    if rule_ids:
+        try:
+            check_rule_ids(rule_ids)
+        except ValueError as exc:
+            raise typer.BadParameter(f"{exc}; see --list-rules") from exc
+    if model_ids:
+        paths = [src_path(normalize_gocam_id(m), cache_dir) for m in model_ids]
+        missing = [p for p in paths if not p.exists()]
+        if missing:
+            raise typer.BadParameter(f"not cached: {', '.join(map(str, missing))}")
+    else:
+        paths = sorted(cache_dir.glob("*/*-src.yaml"))
+    oracle = None if no_ontology else OakOracle()
+    findings = lint_paths(paths, oracle, rule_ids, corpus=len(paths) > 1)
+    cutoff = SEVERITY_ORDER[severity]
+    findings = [f for f in findings if SEVERITY_ORDER[f.severity] <= cutoff]
+    findings.sort(key=lambda f: (f.model_id, SEVERITY_ORDER[f.severity], f.rule))
+    if output:
+        write_findings_tsv(findings, output)
+        typer.echo(f"✓ Wrote {len(findings)} findings for {len(paths)} models to {output}")
+    else:
+        for f in findings:
+            typer.echo(f"{f.model_id}\t{f.severity}\t{f.rule}\t{f.message}")
+    counts: dict[tuple[str, str], int] = {}
+    for f in findings:
+        counts[(f.severity, f.rule)] = counts.get((f.severity, f.rule), 0) + 1
+    for (sev, rid), n in sorted(counts.items(), key=lambda kv: (SEVERITY_ORDER[kv[0][0]], -kv[1])):
+        typer.echo(f"{sev:8} {rid:28} {n}", err=True)
 
 
 @app.command()
@@ -4614,8 +5002,25 @@ def refresh_panther_members(
     from ai_gene_review.validation.prose_panther_scan import collect_claims
 
     repo_root = output_dir or Path.cwd()
-    cache = cache_dir or (repo_root / ".cache" / "panther")
+    from ai_gene_review.etl.panther_families import (
+        fetch_hmm_classifications,
+        hmm_url,
+        panther_cache_dir,
+        switch_release,
+    )
+
+    cache = cache_dir or panther_cache_dir(repo_root)
     organisms = list(organism) if organism else list(DEFAULT_ORGANISMS)
+
+    # During a PANTHER switch, validators read the previous release's names and
+    # memberships from this cache without downloading anything; warm it here. Only the
+    # default organisms: they are what the validators read, whatever --organism says.
+    previous = switch_release()  # raises on a misconfigured switch
+    if previous is not None:
+        fetch_hmm_classifications(cache, url=hmm_url(previous))
+        for slug in DEFAULT_ORGANISMS:
+            fetch_sequence_classification(slug, cache, release=previous)
+        typer.echo(f"cached PANTHER {previous} classifications for the switch allowance")
 
     # Every representative member, grounded or not -- an ungrounded descriptor's
     # members are the ones whose real family most needs resolving -- plus the
@@ -4684,6 +5089,18 @@ def refresh_panther_members(
             # files miss: for some proteins the two sources disagree, and neither
             # is privileged, so the UniProt value is recorded as an alternate that
             # membership checks also accept (reporting the disagreement).
+            #
+            # One gap, left open deliberately: a cited chain or isoform id
+            # (P57764-PRO_0000437526, Q14114-4) can never appear in the
+            # classification files, which key on bare accessions, so it always
+            # takes UniProt's value with nothing to conflict against. Where the
+            # two sources disagree about the parent entry, the index can hold the
+            # file value for the entry beside the UniProt value for its chain with
+            # no alternate recorded. Closing it means asking the files about each
+            # cited id's parent and fanning the answer back out, which changes
+            # which source wins for those ids -- a data change to the index, and
+            # to what validate-families accepts for them, so it belongs in its own
+            # change rather than riding along with the resolver fix.
             typer.echo(f"checking {len(needed)} accession(s) against UniProt...")
             from_uniprot = fetch_panther_from_uniprot(needed)
             for accession, family_sf in from_uniprot.items():
@@ -4733,6 +5150,155 @@ def refresh_panther_members(
 
 
 @app.command()
+def check_panther_release():
+    """Report whether PANTHER has moved past the pinned release or PAINT snapshot.
+
+    Compares PANTHER_RELEASE and PAINT_SNAPSHOT (etl/panther_families.py) with
+    PANTHER's FTP site and API. Exits 1 when the pinned PAINT snapshot or tree
+    release is no longer what PANTHER serves; a newer library release that PAINT
+    and the API do not serve yet is only reported. Needs the network.
+
+    Example:
+        ai-gene-review check-panther-release
+    """
+    from ai_gene_review.etl.panther_families import (
+        PAINT_SNAPSHOT,
+        PANTHER_RELEASE,
+        panther_release_drift,
+    )
+
+    stale, notices = panther_release_drift()
+    typer.echo(f"pinned: PANTHER {PANTHER_RELEASE}, PAINT snapshot {PAINT_SNAPSHOT}")
+    for notice in notices:
+        typer.echo(f"ℹ️  {notice}")
+    for problem in stale:
+        typer.echo(f"⚠️  {problem}")
+    if stale:
+        typer.echo("See docs/panther_node_anchoring_plan.md (Phase 2) before bumping.")
+        raise typer.Exit(code=1)
+    typer.echo("✓ PAINT and the tree API still serve the pinned release and snapshot.")
+
+
+@app.command()
+def panther_release_diff(
+    target_release: Annotated[
+        str, typer.Argument(help="PANTHER release to compare with, e.g. 20.0.")
+    ],
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    output: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output",
+            help="Report path (default: <repo>/reports/panther-release-diff-<current>-to-<target>.yaml).",
+        ),
+    ] = None,
+    organism: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--organism",
+            help="PANTHER organism slug to classify members with (repeatable). Defaults "
+            "to the set covering species curated in this repository.",
+        ),
+    ] = None,
+):
+    """Dry-run report of what bumping PANTHER_RELEASE to TARGET_RELEASE would change.
+
+    Lists cited PANTHER family and subfamily ids that are gone or renamed in the
+    target release, and, for every module family descriptor and family-review
+    subfamily that names representative members, the id those members fall into
+    in the target release, and the quotes of interpro/panther/panther.obo that the
+    rebuilt artifact would break. Edits nothing; proposals are for curators to
+    check. Downloads both releases' classification files into <repo>/.cache/panther
+    and renders the target release's OBO there.
+
+    Example:
+        ai-gene-review panther-release-diff 20.0
+    """
+    import yaml
+
+    from ai_gene_review.etl.panther_families import (
+        DEFAULT_ORGANISMS,
+        PANTHER_RELEASE,
+        build_member_index,
+        fetch_hmm_classifications,
+        fetch_sequence_classification,
+        hmm_url,
+        parse_hmm_classifications,
+        write_panther_obo,
+    )
+    from ai_gene_review.etl.panther_release_diff import (
+        DEFAULT_SCAN_GLOBS,
+        broken_obo_quotes,
+        build_report,
+        cited_ids,
+        collect_anchors,
+    )
+    from ai_gene_review.validation.quote_check import default_files
+
+    if target_release == PANTHER_RELEASE:
+        raise typer.BadParameter(
+            f"{target_release} is the pinned release; give the release to compare with"
+        )
+    repo_root = output_dir or Path.cwd()
+    cache = repo_root / ".cache" / "panther"
+    anchors = collect_anchors(repo_root)
+    accessions = {accession for anchor in anchors for accession in anchor.members}
+    organisms = list(organism or DEFAULT_ORGANISMS)
+
+    parsed: dict = {}
+
+    def entries(release: str) -> list:
+        if release not in parsed:
+            path = fetch_hmm_classifications(cache, url=hmm_url(release))
+            parsed[release] = parse_hmm_classifications(path.read_text(errors="replace").splitlines())
+        return parsed[release]
+
+    def names(release: str) -> dict:
+        return {entry.accession: entry.name for entry in entries(release)}
+
+    def member_index(release: str) -> dict:
+        paths = []
+        for slug in organisms:
+            path = fetch_sequence_classification(slug, cache, release=release)
+            if path is None:
+                typer.echo(f"⚠️  no PANTHER {release} classification for organism '{slug}'")
+            else:
+                paths.append(path)
+        return build_member_index(accessions, paths)
+
+    files = sorted({path for pattern in DEFAULT_SCAN_GLOBS for path in repo_root.glob(pattern)})
+    report = build_report(
+        PANTHER_RELEASE,
+        target_release,
+        cited_ids(files, repo_root),
+        names(PANTHER_RELEASE),
+        names(target_release),
+        anchors,
+        member_index(PANTHER_RELEASE),
+        member_index(target_release),
+        broken_obo_quotes(
+            # validate-quotes' files, plus gene reviews, whose quotes `just validate` checks.
+            sorted(set(default_files(repo_root)) | set(repo_root.glob("genes/*/*/*-ai-review.yaml"))),
+            repo_root,
+            repo_root / "interpro" / "panther" / "panther.obo",
+            write_panther_obo(
+                entries(target_release), cache / f"panther-{target_release}.obo", release=target_release
+            ),
+        ),
+    )
+    out = output or (
+        repo_root / "reports" / f"panther-release-diff-{PANTHER_RELEASE}-to-{target_release}.yaml"
+    )
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(yaml.safe_dump(report, sort_keys=False, allow_unicode=True, width=120))
+    typer.echo(yaml.safe_dump({"summary": report["summary"]}, sort_keys=False).rstrip())
+    typer.echo(f"✓ Wrote {out}")
+
+
+@app.command()
 def verify_panther_paint(
     output_dir: Annotated[
         Optional[Path],
@@ -4741,7 +5307,7 @@ def verify_panther_paint(
     cache_dir: Annotated[
         Optional[Path],
         typer.Option(
-            help="Where to cache the download (default: <repo>/.cache/panther)."
+            help="Where to cache the download (default: <repo>/.cache/panther/paint-<release>-<snapshot>)."
         ),
     ] = None,
 ):
@@ -4764,11 +5330,12 @@ def verify_panther_paint(
         fetch_ibd_gaf,
         find_pruned_paint_rows,
         load_committed_paint_rows,
+        paint_cache_dir,
         parse_ibd_row_keys,
     )
 
     repo_root = output_dir or Path.cwd()
-    cache = cache_dir or (repo_root / ".cache" / "panther")
+    cache = cache_dir or paint_cache_dir(repo_root / ".cache" / "panther")
     upstream = parse_ibd_row_keys(fetch_ibd_gaf(cache).read_text().splitlines())
     committed = load_committed_paint_rows(repo_root / "interpro" / "panther")
 
@@ -4835,7 +5402,9 @@ def fix_panther_labels(
             "--allow-divergent",
             help="Also rewrite labels that describe a different protein than the "
             "id's official name. Held back by default because that pattern "
-            "usually means the ID is wrong; only pass this after checking.",
+            "usually means the ID is wrong; only pass this after checking. "
+            "During a PANTHER switch it does not apply to ids renamed since the "
+            "previous release: those are remapped, never relabelled.",
         ),
     ] = False,
 ):
@@ -4845,7 +5414,19 @@ def fix_panther_labels(
     verified; the curator's readable description belongs in `preferred_term`.
     Descriptors whose declared family does not contain their representative
     member are deliberately SKIPPED -- relabelling those would hide a wrong
-    family id behind an authoritative-looking name. Fix the id first.
+    family id behind an authoritative-looking name. Fix the id first. So are
+    descriptors none of whose representative members has been looked up yet:
+    their id can be neither confirmed nor disputed until the index is refreshed.
+    A label on an id that no member can ever confirm (PANTHER has no family for
+    its members, or it names none) is rewritten, since no refresh would change
+    that, and listed for a check by hand.
+
+    The guards read cached data (the member index and, during a PANTHER switch,
+    the previous release's names). When that data is missing a guard cannot
+    act, so --apply refuses to run; a dry run reports the same and continues.
+    `just fix-panther-labels` builds the caches first with
+    `just ensure-panther-members`; when calling this command directly, run that
+    recipe yourself.
 
     Example:
         ai-gene-review fix-panther-labels --apply
@@ -4853,8 +5434,20 @@ def fix_panther_labels(
     import yaml
 
     from ai_gene_review.etl.panther_families import (
+        load_member_index_alternates,
+        load_member_index_gaps,
         load_obo_names,
+        MEMBERS_INDEXED,
+        MEMBERS_NO_FAMILY,
+        MEMBERS_NONE,
+        MEMBERS_NOT_LOOKED_UP,
+        DeferralReason,
+        member_corroboration,
+        member_index_path,
+        panther_cache_dir,
+        previous_release_labels,
         rewrite_panther_labels,
+        switch_release,
     )
     from ai_gene_review.validation.module_validator import (
         iter_family_member_uses,
@@ -4865,12 +5458,44 @@ def fix_panther_labels(
 
     repo_root = output_dir or Path.cwd()
     names = load_obo_names(repo_root / "interpro" / "panther" / "panther.obo")
-    from ai_gene_review.etl.panther_families import member_index_path
-
-    from ai_gene_review.etl.panther_families import load_member_index_alternates
-
+    # During a PANTHER switch, a label still carrying the previous release's name is
+    # held back for remapping rather than relabelled (see rewrite_panther_labels).
+    previous = previous_release_labels(repo_root / "interpro" / "panther")
     member_index = load_member_index(member_index_path(repo_root))
     member_alternates = load_member_index_alternates(member_index_path(repo_root))
+    member_gaps = load_member_index_gaps(member_index_path(repo_root))
+
+    # Without their cached data the guards are silently off: never relabel unguarded.
+    # An empty index refuses outright; a partial one skips, per descriptor, the ids
+    # none of whose members has been looked up (see member_corroboration below).
+    # `just fix-panther-labels` runs ensure-panther-members first, which only warns
+    # when the build fails; calling this command directly runs nothing first.
+    refresh_log = panther_cache_dir(repo_root) / "refresh.log"
+    build_hint = (
+        "`just ensure-panther-members` builds the member index and the switch caches. "
+        "`just fix-panther-labels` runs it first: if it ran and failed, see "
+        f"{refresh_log}; if you called `ai-gene-review fix-panther-labels` directly, "
+        "run it yourself."
+    )
+    unguarded: list[str] = []
+    switch = switch_release()
+    if switch is not None and previous is None:
+        unguarded.append(
+            f"PANTHER {switch} names are not cached, so labels on ids renamed in the "
+            "switch cannot be held back"
+        )
+    if not member_index:
+        unguarded.append(
+            "the PANTHER member index is empty, so descriptors whose representative "
+            "members contradict their family id cannot be skipped"
+        )
+    for reason in unguarded:
+        typer.echo(f"⚠  {reason}.", err=True)
+    if unguarded:
+        typer.echo(build_hint, err=True)
+        if apply:
+            typer.echo("Refusing --apply until they are built.", err=True)
+            raise typer.Exit(1)
     # Same PAINT-corroboration rule the validator applies, so a grounding the
     # validator merely warns about is not treated here as disputed.
     paint_index = load_paint_index(repo_root / "interpro" / "panther")
@@ -4878,26 +5503,88 @@ def fix_panther_labels(
 
     total = 0
     held_back: list[tuple[Path, str, str, str, bool]] = []
+    renamed: list[tuple[Path, str, str, str]] = []
+    not_looked_up: list[tuple[Path, str, str, str, str]] = []
+    uncorroborated_changes: list[tuple[Path, str, str, str, str]] = []
+
+    def also_deferred(reason: DeferralReason) -> str:
+        """Why a withheld label would also have been deferred had its id been confirmed."""
+        if reason == "divergent":
+            return "the label also describes a different protein than the id's name"
+        if reason == "renamed_in_switch":
+            return "the id was also renamed in the PANTHER switch"
+        assert_never(reason)
+
     for path in targets:
         text = path.read_text()
         doc = yaml.safe_load(text)
         skip: set[str] = set()
+        unconfirmed: set[str] = set()
         corroborated: set[str] = set()
+        no_family: set[str] = set()
         for use in iter_family_member_uses(doc):
             errors, _ = validate_family_members(
                 [use], member_index, paint_index, alternates=member_alternates
             )
+            corroboration = member_corroboration(
+                use.representative_accessions, member_index, member_gaps
+            )
             if errors:
                 skip.update(use.declared_family_curies)
-            elif any(a in member_index for a in use.representative_accessions):
+            elif corroboration == MEMBERS_NOT_LOOKED_UP:
+                unconfirmed.update(use.declared_family_curies)
+            elif corroboration == MEMBERS_INDEXED:
                 corroborated.update(use.declared_family_curies)
+            elif corroboration == MEMBERS_NO_FAMILY:
+                no_family.update(use.declared_family_curies)
+            elif corroboration == MEMBERS_NONE:
+                pass  # never yielded: iter_family_member_uses requires members
+            else:
+                assert_never(corroboration)
+        previous_names = None if previous is None else previous.labels
         new_text, changes, deferred = rewrite_panther_labels(
-            text, names, skip, allow_divergent=allow_divergent
+            text,
+            names,
+            skip | unconfirmed,
+            allow_divergent=allow_divergent,
+            previous_names=previous_names,
         )
-        held_back.extend(
-            (path, curie, old, new, curie in corroborated)
-            for curie, old, new in deferred
-        )
+        if unconfirmed - skip:
+            # Report every label the skip withheld, including those the rewrite would
+            # also have deferred: a skipped id is never deferred, so it would otherwise
+            # be listed nowhere.
+            _, would_change, would_defer = rewrite_panther_labels(
+                text, names, skip, allow_divergent=allow_divergent, previous_names=previous_names
+            )
+            withheld = unconfirmed - skip
+            not_looked_up.extend(
+                (path, curie, old, new, "") for curie, old, new in would_change if curie in withheld
+            )
+            not_looked_up.extend(
+                (path, item.curie, item.old, item.new, also_deferred(item.reason))
+                for item in would_defer
+                if item.curie in withheld
+            )
+        # Relabelled although no member corroborates the id: PANTHER has no family for
+        # any of its members, or it names no UniProtKB member at all. No refresh will
+        # change either, so the label is rewritten; it is listed because the risk the
+        # skip guards against (a wrong id behind an official name) is the same.
+        for curie, old, new in changes:
+            if curie in corroborated:
+                continue
+            why = (
+                "PANTHER has no family for any representative member"
+                if curie in no_family
+                else "no UniProtKB representative member names the id"
+            )
+            uncorroborated_changes.append((path, curie, old, new, why))
+        for item in deferred:
+            if item.reason == "renamed_in_switch":
+                renamed.append((path, item.curie, item.old, item.new))
+            elif item.reason == "divergent":
+                held_back.append((path, item.curie, item.old, item.new, item.curie in corroborated))
+            else:
+                assert_never(item.reason)
         if not changes:
             continue
         total += len(changes)
@@ -4908,6 +5595,39 @@ def fix_panther_labels(
             typer.echo(f"  (skipped {len(skip)} id(s) with disputed grounding)")
         if apply:
             path.write_text(new_text)
+
+    if renamed and previous is not None:
+        typer.echo(
+            f"\n⚠  {len(renamed)} label(s) NOT rewritten: they are on ids whose name "
+            f"changed since PANTHER {previous.release}, so the id may now "
+            "name something else. Remap them from `just panther-release-diff`; "
+            "--allow-divergent does not apply to these."
+        )
+        for path, curie, old, new in renamed:
+            typer.echo(f"  {path.name}: {curie}  {old!r} -> now {new!r}")
+
+    if not_looked_up:
+        typer.echo(
+            f"\n⚠  {len(not_looked_up)} label(s) NOT rewritten: no representative "
+            "member of the id has been looked up in the member index yet, so the id "
+            f"can be neither confirmed nor disputed. {build_hint} --allow-divergent "
+            "does not override this skip."
+        )
+        for path, curie, old, new, note in not_looked_up:
+            typer.echo(f"  {path.name}: {curie}  {old!r} -> {new!r}")
+            if note:
+                typer.echo(f"      ({note}; check the id once its members are looked up)")
+
+    if uncorroborated_changes:
+        verb = "rewritten" if apply else "to be rewritten"
+        typer.echo(
+            f"\nℹ  {len(uncorroborated_changes)} label(s) {verb} without member "
+            "corroboration: no representative member can confirm the id itself, and no "
+            "refresh will change that. Check these ids by hand."
+        )
+        for path, curie, old, new, why in uncorroborated_changes:
+            typer.echo(f"  {path.name}: {curie}  {old!r} -> {new!r}")
+            typer.echo(f"      ({why})")
 
     if held_back:
         typer.echo(

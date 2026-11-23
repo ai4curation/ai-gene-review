@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [human, ECOLI]
 genes: [LIAS, RSAD2, MOCS1, CDKAL1, CDK5RAP1, ELP3, TYW1, TYW1B, RSAD1, bioB, lipA, moaA, nrdG, pflA, rlmN, miaB, rimO, thiH, hemN, hemW, queE, epmB, pflC, ybiY, yjjW, aslB, ydeM, ygiQ, yhcC]
+index_group: MAMMAL
 ---
 
 # Radical SAM Enzymes
@@ -554,8 +555,10 @@ pflC/ybiY, and a query on an *L. lactis* donor), 4 against InterPro2GO mappings
 and 1 against an EcoliWiki GOA row. The InterPro defects sit on just **three
 distinct entries** (IPR004559 carries two wrong mappings), and each propagates to
 every member of its signature, so correcting three entries fixes far more genes
-than the 29 here. `SourceResourceEnum` has no `INTERPRO` value, so those four are
-filed as `resource: OTHER` with InterPro named in each explanation.
+than the 29 here. Those four are filed `resource: INTERPRO`, so they route to
+`reports/source-defects/INTERPRO.md`; they were `resource: OTHER` with InterPro
+named in the explanation until the enum gained an `INTERPRO` value (#5984) and
+they were re-filed onto it (#6027).
 
 `just export-source-defects` turns them into per-resource reports.
 

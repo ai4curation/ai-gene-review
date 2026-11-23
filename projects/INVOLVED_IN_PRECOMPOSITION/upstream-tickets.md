@@ -124,3 +124,41 @@ Why it matters: precomposed "X involved in Y" terms are being retired in
 favour of GO-CAM. Labels like these look precomposed, but there is no Y to
 move into a model and no broader term to replace them with. In our corpus,
 56 reviewer-authored uses and 10 GOA rows were on these terms.
+
+## 6. Two "involved in" terms that name a process: rename, don't obsolete
+
+Both terms are the right grain for the genes that carry them, but their
+labels put them in the "X involved in Y" set that is being retired. A rename
+would take them out of it without moving any annotation.
+
+**GO:0106074 *aminoacyl-tRNA metabolism involved in translational fidelity*.**
+The definition ("Any process which detects an amino-acid acetylated tRNA is
+charged with the correct amino acid, or removes incorrect amino acids from a
+charged tRNA") is aminoacyl-tRNA editing. GO has no other term for it, and
+GO:0002161 *aminoacyl-tRNA deacylase activity* is `part_of` it. There is no
+logical definition: "aminoacyl-tRNA metabolism" is not a GO class, and the
+nearest genus, GO:0006399 *tRNA metabolic process*, is far broader.
+
+Requests:
+
+1. Relabel to *aminoacyl-tRNA editing* (or *aminoacyl-tRNA proofreading*),
+   keeping the current label as an EXACT synonym.
+2. Fix the synonym typo "aminoacyl-tRNA editin" → "aminoacyl-tRNA editing",
+   and consider making it EXACT.
+3. Fix "amino-acid acetylated tRNA" in the definition, which presumably means
+   "aminoacylated tRNA".
+
+**GO:0006271 *DNA strand elongation involved in DNA replication*.** The term
+names the elongation stage of replication: its EXACT synonym is "DNA
+replication elongation", it xrefs Reactome R-HSA-69190 "DNA strand
+elongation", and GO:0006272 *leading strand elongation* and GO:0006273
+*lagging strand elongation* are `is_a` it. Obsoleting it in favour of
+GO:0022616 *DNA strand elongation* would leave those stages under a genus
+that also covers strand extension outside replication.
+
+Request: relabel to *DNA replication elongation*, keeping the current label
+as an EXACT synonym. The logical definition (`GO:0022616 and part_of
+GO:0006260`) can stay.
+
+In our corpus, 49 reviewer-authored uses and 41 GOA rows are on these two
+terms.

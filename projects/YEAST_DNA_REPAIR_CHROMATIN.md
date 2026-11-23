@@ -9,6 +9,7 @@ manifest:
   slides:
     - href: YEAST_DNA_REPAIR_CHROMATIN/slides/YEAST_DNA_REPAIR_CHROMATIN-slides.html
       description: Yeast DNA repair and chromatin slides
+index_group: YEAST
 ---
 
 # Yeast DNA Repair & Chromatin Dynamics

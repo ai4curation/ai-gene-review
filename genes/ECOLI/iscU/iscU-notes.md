@@ -47,3 +47,10 @@
   L-cysteine catabolic process: MARK_AS_OVER_ANNOTATED.
 - cytoplasm (IBA, IEA): MODIFY to cytosol. Fe-S cluster binding (IEA): MODIFY to
   2Fe-2S / 4Fe-4S binding and Fe-S cluster chaperone activity.
+
+
+## 2026-11-07 ISC whole-gene re-review
+
+New primary PMID32131593 and PMID36605734 explicitly assay E. coli proteins and support Fe(II) binding; older negative conditions cannot establish a universal absence. The papers differ on reaction order, so no obligatory iron-first/native-donor claim is made. PMID38452854 combines MC4100 genetics with purified-component Fur assembly and Fur-box binding; existing iron-homeostasis is retained as peripheral, specific client-maturation work. Its inability to re-purify Fur cleanly from the reconstitution mixture is acknowledged. The existing cysteine-catabolism row reflects coupled sulfur acceptance and IscS turnover contribution (PMID11972033), not autonomous desulfurase activity. [4Fe-4S] binding is retained as measured reconstitution chemistry without universal native delivery claims.
+
+All original ordered annotation payloads and historical NEW actions were preserved. Existing raw/provider/publication files were not refreshed. A genuine new default Falcon attempt returned HTTP 403; no provider report was fabricated. Manual source review is recorded here and in `analysis/module_audits/bacterial_isc_iron_sulfur_cluster_assembly/ecoli-consultation/`. The normal PAINT lineage-loss check found no IRD or IKR; donor-list length and target self-inclusion were not used as evidence against the ancestral assertion. Focused validation, render, and append-only helper-history results are recorded in the final handoff.

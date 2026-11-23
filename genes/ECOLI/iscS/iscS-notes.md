@@ -47,3 +47,20 @@ PMID:22194618, PMID:24561554 and PMID:18304323.
 - Removed: detection of UV (NAS; s4U-tRNA, not IscS, is the near-UV chromophore);
   bare protein-binding rows from interactome screens. Sulfur compound transport
   marked over-annotated: persulfide relay between proteins is not transport.
+
+
+## 2026-11-07 ISC whole-gene re-review
+
+Retained the independent thiamine and tRNA sulfur-delivery branches as core work. Sulfur-compound transport includes intracellular directed transfer and is supported by persulfide handoff, not restricted to a pore. The electronic [2Fe-2S] binding claim is unresolved: the structural intermediate highlighted in PMID36605734 derives from Archaeoglobus IscS–IscU(D35A), while native E. coli ligand occupancy is not established. No claim that transient binding cannot be a molecular function.
+
+All original ordered annotation payloads and historical NEW actions were preserved. Existing raw/provider/publication files were not refreshed. A genuine new default Falcon attempt returned HTTP 403; no provider report was fabricated. Manual source review is recorded here and in `analysis/module_audits/bacterial_isc_iron_sulfur_cluster_assembly/ecoli-consultation/`. Focused validation, render, and append-only helper-history results are recorded in the final handoff.
+
+
+## 2026-11-07 PR6175 evidence-specific follow-up
+
+Reviewed the disputed folding, oligomerization and sulfur-transport interpretations against fresh official GO definitions and primary assay context. See `analysis/module_audits/bacterial_isc_iron_sulfur_cluster_assembly/round1/ecoli-psepk-consultation/evidence.md` and source-provenance.json for exact access limits and the newly read full9852006 negative luciferase assay. Original ordered source payloads, all historical NEW rows and immutable sources are preserved. E. coli negative folding assays are not relabeled as KT2440 experiments; HscB structured-state stabilization remains distinct from HscA holdase behavior. The PSEPK HscA retired proposal lifecycle is deliberately untouched pending parent adjudication. No new annotation is added.
+
+## 2026-11-12 resolution of the two remaining UNDECIDED rows (thiamine diphosphate batch)
+
+- GO:0051537 2 iron, 2 sulfur cluster binding (IEA GO_REF:0000104, UniRule UR000084057): MARK_AS_OVER_ANNOTATED. The rule rests on the HAMAP MF_00331 Cys328 shared-ligand feature (ECO:0000255 only), whose structural precedent is the altered Archaeoglobus fulgidus IscS-IscU(D35A) complex. Native E. coli IscSU builds the cluster on IscU [PMID:36605734 "The IscS-mediated assembly of a cluster on IscU is the starting point of a process by which Fe–S cluster proteins are matured."], with [PMID:36605734 "no significant accumulation of intermediates"]. Not removed (a transient shared ligand is not demonstrably false); same action on P. putida KT2440 IscS (Q88PK8).
+- GO:0072348 sulfur compound transport (IDA PMID:10739946, ComplexPortal): MARK_AS_OVER_ANNOTATED. The cached paper is abstract-only, but the abstract outlines a purified-enzyme kinetic/mutational study [PMID:10739946 "All three homologs catalyze the elimination of Se and S from L-selenocysteine and L-cysteine, respectively, to form L-alanine."]; such a design supports desulfurase activity, not a directed-movement process. The protein-to-protein persulfide relay is captured by GO:0097163 sulfur carrier activity and the downstream biosynthetic processes. Not removed, because the full text the curator read was not available.

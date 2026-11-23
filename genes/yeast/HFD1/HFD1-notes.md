@@ -27,3 +27,13 @@
 ## GO term issues
 - GO:0047770 carboxylate reductase activity (IMP, PMID:22633490): GO:0047770 is EC 1.2.99.6 with an unspecified acceptor; HFD1 is NAD+-dependent, so the correct term is GO:0050061 long-chain fatty aldehyde dehydrogenase (NAD+) activity (or GO:0004029). MODIFY.
 - GO:0005743 mitochondrial inner membrane (Reactome TAS): MODIFY to outer membrane.
+
+## Audit to COMPLETE (2026-11-11)
+
+- Deep research: no provider deep-research file is available (no API keys in this session).
+- membrane (IBA) changed from ACCEPT to TOO_GENERAL (entailed by the accepted mitochondrial outer membrane).
+- Oxidoreductase (IEA) MODIFY now lists both supported descendants (GO:0018484, GO:0050061).
+- Reasons rewritten so that ACCEPT rows no longer argue over-generality; reference reviews added.
+- Module note: the module's Hfd1 annoton uses GO:0018484 (NAD+), matching the in vitro cofactor
+  [PMID:27669165 "WT Hfd1p catalyzes NAD+-dependent dehydrogenation of 4-HBz"]; the module lists NAD(P)+
+  as substrate, which could be tightened to NAD+.

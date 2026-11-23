@@ -21,6 +21,10 @@ from ai_gene_review.validation.validation_report import (
 
 INVOLVED_IN = " involved in "
 CATEGORY = "Decomposition"
+#: actions that say a claim is not one the review would accept
+NOT_ACCEPTABLE = frozenset({"KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED", "REMOVE"})
+#: actions that assert a claim the review accepts
+ACCEPTING = frozenset({"ACCEPT", "NEW"})
 
 #: term id -> its is_a ancestors (not part_of: the context Y is a part_of ancestor)
 IsAAncestors = Callable[[str], frozenset[str]]
@@ -168,8 +172,23 @@ def check_decomposition(
       ``decomposed_into`` drops Y silently (warning). "Exactly X" is judged by
       :func:`is_genus_replacement`, using GO when ``is_a_ancestors``/``names``
       are given (as ``just validate`` does) and the label alone otherwise.
+    * a decomposition MODIFY (one with ``decomposed_into``, or one to the genus)
+      proposes a term the same review keeps elsewhere as non-core,
+      over-annotated or removed (warning). A MODIFY's replacement is a claim
+      the review would accept; a non-core claim on a precomposed term stays
+      KEEP_AS_NON_CORE on that term. Ordinary refinements are out of scope.
     """
-    for i, ann in enumerate(data.get("existing_annotations") or []):
+    anns = data.get("existing_annotations") or []
+    actions_by_term: dict[str, set[str]] = {}
+    for ann in anns:
+        if not isinstance(ann, dict) or not isinstance(ann.get("review"), dict):
+            continue
+        tid = (ann.get("term") or {}).get("id")
+        if tid:
+            actions_by_term.setdefault(str(tid), set()).add(
+                str(ann["review"].get("action"))
+            )
+    for i, ann in enumerate(anns):
         if not isinstance(ann, dict) or not isinstance(ann.get("review"), dict):
             continue
         review = ann["review"]
@@ -283,3 +302,22 @@ def check_decomposition(
                 "in_core_functions, or context_dropped with a reason",
                 "decomposition_context_dropped_silently",
             )
+
+        if action == "MODIFY" and (dec or to_genus):
+            for t in review.get("proposed_replacement_terms") or []:
+                if not isinstance(t, dict):
+                    continue
+                acts = actions_by_term.get(str(t.get("id")), set())
+                held = ", ".join(sorted(acts & NOT_ACCEPTABLE))
+                if held and not acts & ACCEPTING:
+                    _issue(
+                        report,
+                        ValidationSeverity.WARNING,
+                        f"Decomposition MODIFY proposes {t.get('id')}, which this review "
+                        f"marks {held} on another row",
+                        base,
+                        "A MODIFY's replacement must be a claim the review would accept. "
+                        "Keep a non-core claim as KEEP_AS_NON_CORE on the precomposed term "
+                        "(MARK_AS_OVER_ANNOTATED if that term is obsolete)",
+                        "decomposition_replacement_not_acceptable",
+                    )

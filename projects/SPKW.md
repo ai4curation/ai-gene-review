@@ -1,5 +1,6 @@
 ---
 title: "SwissProt Keywords (SPKW) Unique Terms Project"
+collections: [MAPPINGS]
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP, EVALUATION]
 species: [human, SCHPO, ANOGA, DROME, PSEPK, ARATH, BPT4, ECO57]
@@ -8,6 +9,7 @@ last_reviewed: 2026-10-05
 manifest:
   slides:
     - href: SPKW/slides/SPKW-slides.html
+index_group: CROSS_CUTTING
 ---
 
 # SwissProt Keywords (SPKW) Unique Terms Project

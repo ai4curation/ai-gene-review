@@ -20,3 +20,13 @@ Caulobacter crescentus ImuA, first gene of the SOS-regulated imuA-imuB-dnaE2 ope
   (Inducible mutagenesis protein A) and has no PANTHER assignment, unlike P. putida ImuA
   (Q88I84), which InterPro places in IPR047610 and PANTHER PTHR35369:SF3. The two ImuA
   InterPro families are distinct entries; this is recorded in the PTHR35369 family review.
+
+## 2026-11-07 comparative consultation
+
+The statements above that no ImuA molecular activity is known are now scoped to Caulobacter. PMID:38591662 directly demonstrates DNA-stimulated ATP hydrolysis, DNA binding and ImuB interaction for purified Myxococcus ImuA. The ImuB construct in that study is N-terminally truncated. Those experiments establish a testable mechanism in a comparator; they do not identify the Caulobacter catalytic residues or demonstrate these activities in Q9A3J1. The target retains a process-only core synthesis with an explicit molecular-function knowledge gap. No ATPase, DNA-binding, recombinase or nucleotide-binding annotation is manufactured from the P-loop fold.
+
+PMID:15886391 uses NA1000, a CB15 derivative. Its in-frame imuA deletion and complementation support a genuine protein requirement rather than an untested polar effect. The mutagenesis and survival assays place ImuA in the accessory machinery, but do not identify which physical step it performs. The historical NEW TLS row remains present and active; its reason now distinguishes genetic pathway inference from a direct lesion-bypass assay.
+
+The SOS-response row is ACCEPT: its role is not merely being expressed by an SOS promoter. GO:0009432 describes an error-prone microbial damage response, and the independent genetic evidence establishes ImuA as a core effector in that response. PMID:18083815 is still abstract-only in the unchanged local cache; the quoted promoter evidence is flagged accordingly.
+
+A genuine Falcon deep-research request failed with HTTP403 authentication on this date. No provider report was fabricated. Sources were the full cached 2005 primary, cached 2008 abstract, full 2024 comparator and frozen UniProt record. There are no IBA rows in this three-gene panel; no PAINT node placement or lineage loss is inferred. The lack of a PANTHER cross-reference on this ImuA is a family-mapping gap, not justification to reuse the Pseudomonas ImuA selector.

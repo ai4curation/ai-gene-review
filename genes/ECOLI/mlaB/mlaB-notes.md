@@ -65,3 +65,12 @@
   "membrane"; full text has no mention of Mla genes - miscited.
 - GO:1990531 is defined as a P-type ATPase (P4 flippase) complex; MlaFEDB is an ABC
   transporter: GO:0043190 is the correct complex term.
+
+
+## 2026-11-07 Mla comparative re-review
+
+- Refine cytoplasm to supported locations; retain genotoxic-stress participation as unresolved rather than infer absence from the envelope role.
+- Narrow full-carrier activity overannotation rationale to the exact GO definition; retain collective contribution and positive subunit function without universal alone-inactivity logic.
+- Every original annotation row, source payload, qualifier, historical NEW action and lifecycle state is retained in order; no additional rows were proposed.
+- Genuine default Falcon attempt failed with HTTP403 authentication; no provider report was generated. Manual consultation used cached primary papers and current ontology snapshots.
+- Source scope and official API provenance: `analysis/module_audits/bacterial_mla_intermembrane_phospholipid_transport/existing-review-consultation/evidence.md`. Existing notes above are historical; this dated entry supersedes narrower claims corrected here.
