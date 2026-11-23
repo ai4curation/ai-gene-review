@@ -10,6 +10,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/Lfky9QLttPtNhYWCDnYQyx
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Integrated Stress Response (ISR) Project

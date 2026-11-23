@@ -99,3 +99,37 @@ phenazine IBD from the Proteobacteria node.
 | PTN node | node term | n_seeds | leaf IBAs | seed annotation (term, evidence, PMID) | verdict | rationale |
 |---|---|---|---|---|---|---|
 | PTN000481936 | GO:0002047 phenazine biosynthetic process | 1 (sole) | 5 GO_Central (5 GOA rows; no TreeGrafter) | GO:0002047, IDA, PMID:11591691 | SOUND seed, WRONG node | The seed is right: PhzC is the phz-operon DAH7PS, it is kinetically characterised and allosterically unregulated, which marks it as a secondary-metabolism enzyme, and deleting the orthologue in P. chlororaphis collapses phenazine production. The caveat on the evidence code is that Mavrodi et al. tested whole operons, so the IDA is operon-level. The node, however, is a generic Proteobacteria DAHP synthase clade: besides phzC1 it contains Helicobacter pylori HP_0134, Xanthomonas dhs1, Bradyrhizobium blr3778 and - revealingly - P. aeruginosa's own housekeeping DAHP synthase PA2843, which structural work explicitly contrasts with the phz enzyme. All four now carry phenazine biosynthetic process by IBA. The term should sit on the phz-cluster enzymes only, not on this node. |
+
+## Leaf evidence check (2026-11-06)
+
+Audit of the `GO_CENTRAL` defect on PTN000481936. The load-bearing claim was
+that leaf PA2843 (Q9I000) is P. aeruginosa's housekeeping type II DAH7PS,
+distinguished from the phz-cluster enzyme by structural work. That claim is
+backed by a real publication, not by a name, and the citation has been made
+explicit. Leaf membership confirmed with `panther_tree.py node PTN000481936
+--leaves`: 5 leaves, all PTHR21337:SF0.
+
+| Leaf | Name and its evidence | Experimental annotations found | Verdict |
+|---|---|---|---|
+| Q9I000 (P. aeruginosa PA2843, 448 aa) | `RecName` + EC 2.5.1.54 from UniRule RuleBase RU363071 (ECO:0000256) — i.e. a rule-derived name, **not** the basis of our claim; PE 1 (evidence at protein level) | No experimental GO rows (`GO:0003849` IBA, `GO:0002047` IBA, `GO:0009073` IEA). The structural/functional evidence is in the literature, not the GAF: PMID:30242059 names PA2843 by locus tag as `PaeDAH7PSPA2843`, states it "is not found within the phzA–G PCA biosynthetic cluster", reports its solved structure (PDB 5UXM, its ref 33) with the inserted alpha2a/alpha2b helices and Tyr/Trp inhibition, and concludes the type II enzymes "diverged to deliver type II enzymes that function within either primary or secondary metabolism" | **SURVIVES, strengthened.** Independent sequence check: Q7DC82 is 405 aa and Q9I000 448 aa, exactly the 43-residue difference the paper reports between the two, and Q7DC82 is the merged entry for both PA1901 and PA4212, so the characterised `PaeDAH7PSPA1901` *is* the seed protein |
+| O24947 (Helicobacter pylori HP_0134, 449 aa) | `RecName` + EC from RuleBase RU363071; PE 3 | None (IBA/IEA only) | Name not used as evidence. Retained facts: full-length type II by sequence length; no `phz` gene in H. pylori 26695 (UniProt gene query, 2026-11-06) |
+| Q8PC31 (Xanthomonas campestris dhs1, 478 aa) | `RecName` + EC from RuleBase RU363071; PE 3 | None (IBA/IEA only) | As above (ATCC 33913) |
+| Q89NQ6 (Bradyrhizobium diazoefficiens blr3778, 462 aa) | `RecName` + EC from RuleBase RU363071; PE 3 | None (IBA/IEA only) | As above (USDA 110) |
+| Q7DC82 (phzC1 = PA4212/PA1901, 405 aa, the seed) | `RecName` + EC from RuleBase RU363071; gene names ECO:0000313|EMBL | PseudoCAP IDA (PMID:11591691); kinetics and structure in PMID:30242059 | Seed sound, unchanged |
+
+`phz` gene query (`rest.uniprot.org`, 2026-11-06, gene names
+`phzB/D/E/F/G/M/S`): 0 hits in H. pylori 26695 (85962), 0 in X. campestris pv.
+campestris ATCC 33913 (190485), 0 in B. diazoefficiens USDA 110 (224911),
+against 6 in P. aeruginosa PAO1 (208964: `phzD1`, `phzD2`, `phzF1`, `phzF2`,
+`phzM`, `phzS`). This is a gene-name query, so it is suggestive of cluster
+absence rather than proof, and the entry says so.
+
+Note that the RuleBase RecNames here are legitimate *family* evidence under the
+repository's UniProt-quoting rules (UniRule is a curated system), which is why
+membership in the type II DAH7PS family is accepted for all five leaves; what
+is not taken from them is any statement about which pathway an individual
+enzyme serves.
+
+Confidence raised PROBABLE -> CONFIRMED: PMID:30242059 is cached full text, it
+states the decisive facts outright, and the 43-residue length difference was
+checked here against the two sequences.

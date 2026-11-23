@@ -1,5 +1,6 @@
 ---
 title: "Antimicrobial Resistance (AMR) Project"
+collections: [MAPPINGS]
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [ECOLX, ECO8N, ENTCL, SALSP, AERME, KLEPN, AERER, BACFG, BACAN, BACSP, STAAU, BACSU, PSEAI, PRORE, ACIBZ, ACIBA, SPHSM, STAAT, MYCSM, STAHA, STAWA]
@@ -17,6 +18,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/96q6dgRv3WdTTC6pcCoT4z
       title: Project brief
+index_group: BACTERIA
 ---
 
 # Antimicrobial Resistance (AMR) Project

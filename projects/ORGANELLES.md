@@ -3,6 +3,9 @@ title: "Organelles"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60, TPR, TIM22, Ca2, CA2, SERCA]
+species: [human, yeast]
+index_group: CROSS_CUTTING
+description: When is a root organelle term (e.g. mitochondrion) informative, versus its membrane or lumen?
 ---
 
 # Organelles
@@ -203,6 +206,35 @@ plastids come later.
      does not. A soluble signal-peptide protein that is retained, by a
      KDEL-type motif or shown by protease protection, supports `GO:0005788`.
      The ER exit site (`GO:0070971`) needs a marker of transitional ER.
+   - **Stable tethering by an integral partner** (added 2026-11-11, UFSP2) is
+     a third route to a sub-compartment row, for a soluble protein with no TM
+     or signal peptide. It needs (a) direct evidence that the endogenous
+     protein is at the organelle, (b) a named integral membrane protein of the
+     organelle that binds it, (c) dependence on that partner: losing it
+     (knockout or a binding mutant) releases the protein or destabilises it,
+     and (d) cytosolic synthesis with no signal peptide and no organelle
+     targeting or transit sequence, so the cytoplasmic leaflet is the only face
+     it can reach. Check (d) against the literature as well as UniProt
+     features: non-cleavable import signals (PTS1/PTS2, internal carrier
+     signals, twin-CX9C motifs) have no transit feature. (a) carries the location and (b) names what holds it
+     there; stability alone shows only an obligate partnership. A protein that
+     fails (d), such as a mitochondrial matrix protein held by an inner-membrane
+     partner, gets the side term for its own compartment instead (e.g.
+     `GO:0099617` matrix side of mitochondrial inner membrane). Add the
+     cytoplasmic-side term as a `NEW` IC row beside the root: `GO:0098554` for
+     the ER, whose definition includes peripherally associated proteins. `GO:0098554` is `part_of` `GO:0005789`, so it is the
+     more specific statement, not an alternative to it. A `NEW` `GO:0005789`
+     row that we author still needs the protein's own TM or tail anchor; an
+     existing direct-evidence `GO:0005789` row on a tethered protein (UFL1,
+     CDK5RAP3) stays `ACCEPT` and can be refined by adding the cytoplasmic-side
+     row. Brief or regulated recruitment (signalling, stress, autophagy,
+     Rab-dependent docking, a cycling complex such as SRP) is not tethering.
+     The same test will apply to the other organelles, but GO has no
+     cytoplasmic-side term for the Golgi stack or the peroxisome (only the
+     trans-Golgi network, `GO:0160281`, the lysosome, `GO:0098574`, and the
+     mitochondrial outer membrane, `GO:0032473`). A Golgi or peroxisome case
+     raises a `proposed_new_terms` entry rather than being forced onto a
+     narrower term.
    - **Recruited cytosolic pools stay at the root**, core only when the
      function is shown at the ER. Membership of an ER-acting complex supports
      the organelle root for an obligate subunit but never localises it to a
@@ -216,7 +248,169 @@ plastids come later.
      entry.
    - **Unreadable sources:** a curated human `ECO:0000269` line from a paper
      we cannot read is kept on curator deference; a projection whose donor
-     paper is also unreadable is `UNDECIDED`.
+     paper is also unreadable is `UNDECIDED`. Rule 9 sets out the full ladder.
+8. **Golgi apparatus rows** (settled in Golgi batches 1-4, 2026-11-13 to
+   2026-11-19, 73 human genes). Rule 7's transit, recruitment, refinement and
+   isoform bullets apply to the Golgi unchanged; these are the Golgi-specific
+   points.
+   - **A Golgi claim needs a Golgi line.** That is a Golgi marker (GM130/GOLGA2,
+     GRASP65, giantin/GOLGB1, TGN46, golgin-97, mannosidase II, or p58 or
+     beta-COP with a Golgi counterpart, since neither separates the ERGIC from
+     the cis-Golgi on its own) or brefeldin A dispersal of the protein itself.
+     Immuno-EM ultrastructure counts without a marker (KIFAP3). "Perinuclear",
+     "juxtanuclear" or "resembling the Golgi" alone is not the Golgi, and
+     brefeldin A sensitivity of a coat shows ARF-dependent binding, not Golgi
+     dispersal. Human Protein Atlas Golgi IDA rows are endogenous but
+     pattern-based: a line for the root, never for a sub-compartment.
+   - **Four kinds of non-resident Golgi pool**, all real and none core when
+     the activity acts elsewhere: biosynthetic transit (LYN, PCSK9, VEGFA);
+     retrograde or ligand-driven pools reached from the plasma membrane,
+     including palmitoylation cycling (ADRB2, GNAQ, TLR1, TLR6); adaptor- or
+     partner-recruited stops (CUL3, SYNE1, UBA5); and a resident of another
+     organelle escaping in one cell type (GANAB). A transit pool counts only
+     with direct evidence on the gene or the endogenous protein in its native
+     cell (SUN5); a soluble cytosolic protein has no transit pool, so marker
+     data must decide (SYN1). Acting on a Golgi substrate is not a Golgi
+     location (MAPK1/ERK2 acting on GORASP2/GRASP55).
+   - **Recruited Golgi proteins** (golgins, coats, adaptors, ARF and RAB
+     regulators, motors) stay at the root, core only when the activity is
+     shown at the Golgi (BICD2, TBC1D14). Markers that span cis, medial and
+     trans compartments keep such a protein at the root.
+   - **Sub-compartments are rare.** None of the 73 genes gained one. A Golgi
+     membrane row (`GO:0000139`) needs the protein's own TM plus a
+     marker-controlled assay on the endogenous protein (the type II
+     glycosyltransferase pattern). A TGN row (`GO:0005802`) needs unperturbed,
+     marker-resolved lines that agree; perturbation-only evidence (BST2), a
+     virus-induced pool, COG-depletion vesicle proteomics (SFT2D3) and
+     unreadable donors do not count, and lines that disagree by cell type keep
+     the gene at the root. `GO:0005793` ER-Golgi intermediate compartment is
+     not part of the Golgi, and `GO:0030140` trans-Golgi network transport
+     vesicle is not part of `GO:0005794` (SPG21): neither refines a Golgi
+     row. GO has no cytoplasmic-side term for the Golgi stack (only the TGN,
+     `GO:0160281`), so a stack tethering case raises `proposed_new_terms`.
+   - **Read the source behind every synthesis row.** Read the ECO tag per
+     location item in a UniProt SUBCELLULAR LOCATION line (an untagged item
+     is an uncited assertion), trace a by-similarity item to the donor entry's
+     own tag (SYN1), trace Ensembl projections to the donor annotation and
+     paper, and check which protein the donor's marker data are on (CHRNA3,
+     FGF7). ARBA Golgi rules (ARBA00028708) and rule-propagated single
+     observations (COQ6) are unvetted. A PAINT IBD seeded only by a paralog
+     lineage is `MARK_AS_OVER_ANNOTATED` when the target's own data place it
+     elsewhere (CEPT1), and stands when they agree (SELENOI).
+   - **`is_active_in` Golgi rows** whose activity is not shown at the Golgi
+     keep their qualifier and get a `WRONG_QUALIFIER` `CHECK` source defect
+     (SELENOI). Splice-form-restricted Golgi pools keep the root as non-core
+     with an isoform source defect (MAPK3, HCK); a UniProt isoform qualifier
+     narrower than the literature is the reverse query (SYNE1).
+9. **Evidence depth: what an unread or readable source can carry** (all
+   organelles; from ER batches 1-4 and Golgi batches 1-4). Judge each row by
+   the deepest source actually read, and say in `reason` which depth the call
+   rests on.
+   - **A readable source decides.** Curator deference stops at a paper we can
+     read: a curated `ECO:0000269` location from a readable paper that shows
+     no organelle line is `MARK_AS_OVER_ANNOTATED`, even on a direct-evidence
+     row (CABP2). A readable paper that reports a negative, or whose authors
+     disown the signal, does the same and carries any PAINT IBD seeded only
+     by that row (MS4A4A, PICALM). If the same negative covers another
+     organelle row of the gene, its description and `core_functions` must not
+     keep asserting that location either.
+   - **An unreadable source with a curated line gets deference.** A curated
+     human line, or an abstract that states the location positively, keeps
+     the row (`KEEP_AS_NON_CORE` unless the activity is shown there). Readable
+     human evidence can rescue an unreadable donor for the root (MYH9), never
+     for a sub-compartment. Paralogs citing one unreadable paper get the same
+     call and say so (TLR1, TLR6, CD14).
+   - **An unreadable donor behind a projection is `UNDECIDED`** (CD247): an
+     ISS, ISO or Ensembl IEA whose donor paper cannot be read, set out with
+     both readings. A later abstract that implies the donor was wrong without
+     disowning it leaves the row `UNDECIDED` (TCP1); only an explicit negative
+     from a readable paper moves it to `MARK_AS_OVER_ANNOTATED`.
+   - **Never rely on a figure reading you cannot verify** from the cache or a
+     full text you read. A deep-research sentence that summarises an unread
+     paper is not a second line (STC2), and a reason that cites one is
+     re-read when the paper cannot be.
+   - **`reference_review.correctness`** judges whether the identifier
+     resolves to the intended paper: an abstract-only paper whose organelle
+     content cannot be read is `VERIFIED`, with `full_text_unavailable: true`
+     on the reference and the unreadability in `review_notes`, so the rows
+     waiting on a reading can be found by query.
+   - **Record what the source got wrong as structured `source_defects`**, not
+     prose, with `CHECK` unless the paper was read (CLAUDE.md, wrong gene and
+     wrong reference). Fix the attribution before the qualifier.
+   - **When new evidence contradicts a sentence elsewhere in the file**, fix
+     the sentence even if its row is out of scope: record the re-reading in
+     that row's text and leave the action for its own pass (SELENOI, STC2,
+     SPG21).
+10. **Peroxisome and lysosome rows** (settled in peroxisome/lysosome batch 1 and lysosome
+    batch 2, 2026-11-21 to 2026-11-22: all 9 human root-only peroxisome genes and all 25
+    lysosome genes with a synthesis row). Rules 7-9 apply; these are the points specific to
+    the two organelles.
+    - **Degradation is not a lysosome location unless the pool exists in an unperturbed
+      cell.** A pool present without blocking the protein's own destruction, reached under
+      its physiological trigger (the endogenous receptor after its own agonist), is the
+      ligand-driven pool of rule 8: real and non-core (CXCR4). A pool seen only when
+      lysosomal degradation is inhibited, with a mutant, after depleting a deubiquitinase,
+      with overexpression in a foreign cell, or that the source itself frames as the place of
+      degradation, is `MARK_AS_OVER_ANNOTATED` on every row of the term (BACE1, GRIN2B,
+      NBR1, SOD1). This sits beside rule 2 rather than against it: rule 2 says a
+      direct-evidence row that cannot resolve the sub-compartment keeps the organelle;
+      here the row is over-annotated because the organelle claim itself does not hold in an
+      unperturbed cell, as with rule 8's perturbation-only evidence. The same holds for a
+      receptor whose cargo, not itself, is degraded (SORL1). Degradation cargo never enters
+      `core_functions` and gets no sub-compartment row, even with its own TM. A function is
+      not part of the test (`located_in` needs none); it decides only whether a kept pool
+      could be core.
+    - **A function at the organelle makes a pool more than cargo**, and can make it core:
+      an activity measured in purified lysosomes (ADA, PLD4), a transport activity in a
+      lysosome fraction (SLCO2A1, non-core because its core activity is at the plasma
+      membrane), FLCN sequestration (GABARAP), organelle transport (ANK2), podosome
+      rosettes (HCK), a client released in the compartment (UNC93B1).
+    - **Lysosome lines.** LAMP1, LAMP2 and LysoTracker do not separate late endosome or
+      endolysosome from lysosome: they carry the root, never a sub-compartment, and when the
+      core activity is shown elsewhere they keep the pool non-core (UNC93B1, RAB9A). An
+      endocytosed cargo marker (LDL) traces the cargo (ARRDC3); a
+      "lysosome-associated" or "lysosome-interacting" compartment that the authors keep
+      distinct is not the lysosome (TNFAIP3); overexpression that enlarges the compartment
+      it is seen on is a perturbed line (RUBCN).
+    - **Recruited and regulated pools are not tethering**: RAB GTPases in a GTPase cycle
+      (RAB7B, RAB8A, RAB9A, RAB9B), PI3P binding (ANK2), a peripheral V-ATPase subunit or
+      mTORC1-regulated binding (CRYAB, UVRAG), regulated ATG8 conjugation (GABARAP), a
+      stress-induced LRRK2-dependent pool (RAB8A). A RAB whose activity acts elsewhere (as
+      for RAB7B and RAB9A, at late endosomes and the TGN) has a lysosome pool that is a
+      recruited stop: `KEEP_AS_NON_CORE`, and a `WRONG_QUALIFIER` `CHECK` on any IBA
+      `is_active_in`; a RAB whose activity is itself shown at the lysosome (RAB7A is the
+      obvious candidate) can be core. A GTPase cycle is recruitment, so no `GO:0098574`
+      unless rule 7's tethering route is met. A prenyl anchor settles membrane versus lumen,
+      but compartment identity is still the weak link (LAMP1 does not separate late
+      endosome from lysosome), so no `GO:0005765` on that evidence.
+    - **Sub-compartments.** None of the 33 genes gained one (34 organelle lists; SOD1
+      was on both). `GO:0005765` needs the
+      protein's own TM plus a lysosome-specific assay on the endogenous protein; a lysosomal
+      pool shown only for overexpressed protein in a non-expressing cell does not count,
+      even for a resident type II enzyme (PLD4). `GO:0043202` needs a signal-peptide
+      protein with a sorting route and a lysosome assay. For the peroxisome, `GO:0005782`
+      needs a PTS plus an import or matrix assay, and `GO:0005778` the protein's own TM or
+      tail anchor plus the endogenous protein at the peroxisome (MFF).
+    - **Peroxisome lines.** Read the PTS1 off the sequence: a UniProt "Microbody targeting
+      signal" MOTIF on a non-canonical tripeptide (IDI1 YRM, IDI2 HRV) is one line at most,
+      and a regex PTS2 match without import data is weak (TKT). Enzyme activity
+      histochemistry is not protein-specific: a protein-specific readable negative wins
+      (XDH); without one, a positive donor abstract gets deference (TKT). Piggyback import
+      (SOD1 on CCS) supports the root with endogenous data, and a co-overexpression import
+      assay licenses no matrix row. A readable result that the activity works without
+      functional peroxisomes makes an accepted pool non-core (IDI1, IDI2).
+    - **Source tracing.** Trace by-similarity donors to the right species with a lookup of
+      the donor accession: three reviews named the wrong species (IDI1, TKT, SLCO2A1), and a
+      by-similarity chain can be circular, with the real ground a separate GO IDA
+      (UNC93B1). An inter-ontology inference (`GO_REF:0000108`) from a lysosomal process to a
+      lysosome location must be traced to the process row behind it (SORL1). A cached
+      "full text" can lack the results (TRIM17).
+    - **Rule 9 refinements.** Curator deference stops at a readable paper only when the
+      claim has no other support: an IDA whose readable paper shows nothing, while the claim
+      has a readable line elsewhere, keeps the claim (all rows on the term alike) and gets a
+      `WRONG_EVIDENCE_CODE` or `WRONG_REFERENCE` `CHECK` defect (RAB9A). Readable evidence
+      in the donor species can rescue an unreadable donor for the root (UNC93B1), as human
+      evidence does (MYH9).
 
 ## Survey under this policy
 
@@ -265,7 +459,10 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
   are mechanical, using the script's ancestor test.
 - How should we say "peripheral, cytosolic face" now that intrinsic-component
   terms are obsolete? Is the bare membrane term enough, or is this a
-  `proposed_new_terms` or GO-ticket question?
+  `proposed_new_terms` or GO-ticket question? *Answered 2026-11-11 for stably
+  tethered proteins:* the "cytoplasmic side of X membrane" terms (e.g.
+  `GO:0098554` for the ER) include peripherally associated proteins; see the
+  tethering bullet in rule 7. Briefly recruited proteins stay at the root.
 - For IBA red flags with a consistent pattern (a PAINT node at the root term
   whose experimental descendants all show the same sub-compartment), should
   we raise this with PAINT rather than fixing gene by gene?
@@ -307,9 +504,512 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
         distinct)
   - [x] ER batch 4: the last 19 human genes (2026-11-06); human root-only ER
         list done except GBA, a duplicate folder of GBA1
+  - [x] Golgi batch 1: 20 human genes (2026-11-13); 53 human genes remain on
+        the root-only Golgi list with a synthesis row (73 at the 2026-11-13
+        survey; 118 human genes are root-only for GO:0005794)
+  - [x] Golgi batch 2: 20 human genes (2026-11-15); 33 human genes remain on
+        the root-only Golgi list with a synthesis row
+  - [x] Golgi batch 3: 20 human genes (2026-11-18); 13 human genes remain on
+        the root-only Golgi list with a synthesis row
+  - [x] Golgi batch 4: the last 13 human genes (2026-11-19); human root-only
+        Golgi list with a synthesis row done
+  - [x] Follow-ups to #6297 and #6353 (2026-11-15): abstract-only sweep of ER
+        batch 1 (AIMP1 reworded), UFSP2 caveat, UFL1 tethering row; CDK5RAP3
+        checked and left without one
+  - [ ] Sweep ER batches 2-4 and Golgi batches 1-4 for reasons that rest on a
+        figure reading from an abstract-only cached paper (only ER batch 1 was
+        swept, 2026-11-15)
+  - [ ] Retry the AIMP1 full text (PMID:17525271, PMC1899434): restore the Figure 2
+        marker reading or move its ER and Golgi rows to MARK_AS_OVER_ANNOTATED
+  - [ ] Revisit organelle rows that Golgi batch 4 left out of scope: SPG21's
+        GO:0030140 rows (same 2001 observation as its Golgi row; reasons now record
+        the readable negative), STC2's ER rows (same unread donor), SELENOI's ER rows
+        (PMID:32576654 places EPT1 in the Golgi; reasons now say so), TCP1's acrosomal
+        vesicle projection, STC2's perinuclear IDA (its reason uses the transit argument),
+        and SFT2D3's GO:0042147 core function, which rests on the same paralog and
+        ortholog papers the Golgi row no longer relies on
+  - [x] Golgi rule written as rule 8, and the evidence-depth ladder as rule 9
+        (2026-11-21), including "curator deference stops at a readable paper"
+        and the TCP1 tier
+  - [x] Peroxisome and lysosome batch 1 (2026-11-21): all 9 human genes on the
+        root-only peroxisome list with a synthesis row, and 12 of the 25 on the
+        lysosome list (survey regenerated 2026-11-21); 13 lysosome genes remain
+        (PLD4 RAB7B RAB8A RAB9A RAB9B RTL9 RUBCN SLCO2A1 SORL1 TNFAIP3 TRIM17
+        UNC93B1 UVRAG)
+  - [x] Lysosome batch 2: the last 13 human genes (2026-11-22, #6695); human
+        root-only lysosome list done (25 genes)
+  - [x] Peroxisome and lysosome rule written as rule 10 (2026-11-23), from both
+        batches; it says how the degradation test sits beside rule 2 (the earlier
+        status item named rule 3 by mistake)
+  - [ ] Endosome series follow-ups: late and early endosome rows that rest on the
+        same evidence as a lysosome row changed in the batches. GRIN2B (SEP-NR2B
+        figure), BACE1 (LAMP2 imaging that cannot separate late endosome from
+        lysosome), RUBCN (overexpressed GFP-Rubicon), RAB9A (late endosome IDA on the
+        same background sentence as its lysosome IDA), UNC93B1 (endosome rows on the
+        same mouse donor chain), UVRAG (late and early endosome rows on the same unread
+        papers)
+  - [ ] UVRAG's GO:0000323 lytic vacuole MODIFY lists lysosome as a replacement while
+        the lysosome row is KEEP_AS_NON_CORE, the shape CLAUDE.md's "replacement must be
+        a claim you would ACCEPT" rule targets; fix ahead of the rest of the vacuole
+        series (likely KEEP_AS_NON_CORE on GO:0000323, or drop lysosome from the
+        replacement list)
+  - [ ] SORL1's GO:1905146 lysosomal protein catabolic process row needs the
+        participation test (sorLA sorts the cargo; it does not degrade it)
+  - [ ] At the next `just local-quote-baseline --prune`, check the RAB7B and RAB9A
+        keys (quotes rewritten in #6695)
+  - [ ] MFF's two mitochondrion rows are MODIFY to GO:0005741 from an earlier
+        non-ORGANELLES pass, against rule 1; fix in a mitochondrion follow-up
 - [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
 
 # NOTES
+
+## 2026-11-22 (lysosome batch 2: the last 13 human genes)
+
+The last 13 human genes from the 2026-11-21 survey whose lysosome (GO:0005764) rows are
+root-only with a synthesis row (#6695). No gene gained a sub-compartment row. Lysosome rows
+changed action on 9 genes. With batch 1 this completes the human lysosome list (25 genes)
+and, with the 9 peroxisome genes, rule 10.
+
+| gene | outcome | evidence |
+|---|---|---|
+| PLD4 | root; IEA stays ACCEPT (core) | BMP synthase activity in affinity-isolated lysosomes, catalytic mutants inactive but lysosomal, Pld4 KO loses spleen BMP (PMID:39423811); acid pH optimum (PMID:30111894); no GO:0005765, the lysosomal pool is shown only for overexpressed protein |
+| RAB7B | root; IBA, IEA and IDA ACCEPT to KEEP_AS_NON_CORE; lysosome out of core_functions; WRONG_QUALIFIER CHECK on the IBA | two abstract-only papers call it lysosome-associated (PMID:15144907, PMID:20375062); its activity is late endosome-to-TGN transport |
+| RAB8A | root; IEA stays KEEP_AS_NON_CORE | endogenous Rab8a on LRRK2-positive lysosomes after chloroquine, recruiting EHBP1/EHBP1L1 (PMID:30209220): a stress-induced pool with a function |
+| RAB9A | root; IBA and IDA ACCEPT to KEEP_AS_NON_CORE; WRONG_QUALIFIER CHECK on the IBA; WRONG_EVIDENCE_CODE CHECK on the MGI IDA | the IDA paper's only lysosome statement cites a review (PMID:15078902); EGFP-Rab9A on LAMP1 lysosomes (PMID:20937701); activity at late endosomes |
+| RAB9B | root; IBA ACCEPT to KEEP_AS_NON_CORE; WRONG_QUALIFIER CHECK | no data of its own; same PAINT node and evidence as RAB9A |
+| RTL9 | root; the review's own NEW row kept | an RTL9-mCherry knock-in is in microglial lysosomes and needed for zymosan degradation (PMID:37834332); LysoTracker only, so no sub-compartment |
+| RUBCN | root; EXP and IEA ACCEPT to KEEP_AS_NON_CORE; lysosome out of core_functions | the curated line is from an abstract-only paper (PMID:19270696); the readable data are overexpressed Rubicon on compartments the overexpression enlarges (PMID:19270693) |
+| SLCO2A1 | root; IEA and ISS stay KEEP_AS_NON_CORE | the mouse donor (not rat): endogenous Oatp2a1 with Lamp1, and PGE2 uptake by a light-lysosome fraction (PMID:26474801); core activity at the plasma membrane |
+| SORL1 | root; IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | an inter-ontology inference from a lysosomal-catabolism process row; the cargo, not sorLA, is degraded, and only seen when hydrolases are inhibited (PMID:26858303); UniProt has no lysosome item |
+| TNFAIP3 | root; IEA ACCEPT to MARK_AS_OVER_ANNOTATED; UniProt CHECK defect | the authors place A20 in a "lysosome-interacting" compartment they keep distinct (PMID:18952128, PMID:18329387) |
+| TRIM17 | root; EXP and IEA ACCEPT to KEEP_AS_NON_CORE; lysosome out of core_functions | curator deference: the cached paper (PMID:27562068) holds no results |
+| UNC93B1 | root; IBA, IEA and ISS ACCEPT to KEEP_AS_NON_CORE | mouse full text: Unc93b1 releases TLR9 in Lamp1+ endosomes (PMID:31546247); LAMP1 alone does not separate them from lysosomes, and the core activity is at the ER |
+| UVRAG | root; IDA and IEA ACCEPT to KEEP_AS_NON_CORE; lysosome out of core_functions | curator deference to two unreadable papers whose abstract leans to Rab9-positive endosomes (PMID:18843052, PMID:19270696) |
+
+Lessons are folded into rule 10.
+
+## 2026-11-21 (peroxisome and lysosome batch 1: 20 human genes)
+
+The first batch for both organelles, from a survey regenerated on 2026-11-21: all 9
+human genes whose peroxisome (GO:0005777) rows are root-only with a synthesis row, and
+the first 12 of 25 such genes for the lysosome (GO:0005764), alphabetically, with SOD1
+on both lists. No gene gained a sub-compartment row. Peroxisome rows changed action on
+6 genes, lysosome rows on 6 (BACE1's moved again after review).
+
+Peroxisome:
+
+| gene | outcome | evidence |
+|---|---|---|
+| CD33 | root; EXP and IEA stay KEEP_AS_NON_CORE; isoform source defect | endogenous CD33m in neutrophils, monocytes and microglia with a CD33m-specific antibody (PMID:28747436, abstract-only); UniProt restricts the item to CD33m; its C-terminus is not a canonical PTS1 |
+| IDI1 | root; five rows ACCEPT to KEEP_AS_NON_CORE; peroxisome out of core_functions; WRONG_QUALIFIER CHECK on the IBA (after review) | three abstract-only papers place it in peroxisomes (PTS1-dependent, PMID:17202134); the C-terminus YRM is a non-canonical PTS1; enzyme fully active and cholesterol synthesis normal in PEX-deficient fibroblasts (PMID:14680974); ISS donor is hamster, not rat |
+| IDI2 | root; three rows ACCEPT to KEEP_AS_NON_CORE; peroxisome out of core_functions; WRONG_QUALIFIER CHECK on the IBA (after review) | one abstract-only localization paper (PMID:17202134); C-terminus HRV; same counter-evidence as IDI1 |
+| MFF | root; four rows stay ACCEPT (core) | endogenous MFF knockdown elongates catalase- or PMP70-stained peroxisomes (PMID:18353969, PMID:21149567); the peroxisomal pool itself is shown only for tagged overexpressed Mff, so no GO:0005778 row despite the tail anchor |
+| PIK3C3 | root; IBA UNDECIDED to KEEP_AS_NON_CORE | the single PAINT seed, yeast Vps34, has a readable positive abstract (PtdIns3P synthesis at peroxisomes, PMID:21121900); no human loss and no readable negative |
+| SOD1 | root; four rows MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE; WRONG_QUALIFIER CHECK on the IBA | the earlier call misread PMID:1332049, whose immuno-EM shows peroxisome labelling "slightly less than that of cytoplasm"; rat liver peroxisome proteomics and piggyback import on PTS1-bearing CCS (PMID:19686298); no matrix row, the import assay is co-overexpression |
+| STING1 | root; IEA MARK_AS_OVER_ANNOTATED to UNDECIDED | Ensembl projection of a mouse IDA from PMID:22745163, abstract-only, which states the location only in a clause |
+| TKT | root; ISS MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE | the donor is rat (not yeast, as the review said): an RGD IDA from enzyme histochemistry in rat liver (PMID:16116031, readable positive abstract); C-terminus TKA, a PTS2-like match without import data; MARK_AS_OVER_ANNOTATED is the close alternative |
+| XDH | root; IEA stays MARK_AS_OVER_ANNOTATED; UniProt CHECK defect | the rat line rests on an activity stain (PMID:11993848); immunogold with anti-XO found no label over peroxisomes (PMID:1619276) |
+
+Lysosome:
+
+| gene | outcome | evidence |
+|---|---|---|
+| ADA | root; IDA and IEA stay KEEP_AS_NON_CORE | ADA activity measured in Percoll-purified lysosomes with ADA1 properties, and a function proposed (PMID:8452534); no lumen row: no signal peptide or M6P route |
+| ANK2 | root; IEA and ISS stay ACCEPT | mouse full texts: AnkB with LAMP1 lysosomes and needed for their axonal retrograde transport (PMID:27718357, PMID:25533844); PI3P binding, no integral partner, so no GO:0098574 |
+| ARRDC3 | root; two EXP and IEA stay KEEP_AS_NON_CORE; UniProt CHECK defect | both sources abstract-only; "lysosome-associated" rests on LDL colocalization, a cargo marker; the readable full text places ARRDC3 in endosomes only (PMID:26490116) |
+| BACE1 | root; IEA and four IDA ACCEPT to MARK_AS_OVER_ANNOTATED; lysosome out of core_functions | turnover studies: the lysosome is where BACE1 is degraded, not where it cleaves APP; the endogenous LAMP2 signal appears only when lysosomal hydrolases are inhibited (PMID:16033761), the rest with mutants or USP8 depletion |
+| CRYAB | root; IEA ACCEPT to KEEP_AS_NON_CORE | mouse abstract: "localizes partially in the lysosome" by fractionation (PMID:31786107); bound to the peripheral V1 subunit ATP6V1A and released by rapamycin, so not tethering |
+| CXCR4 | root; two IDA and IEA stay KEEP_AS_NON_CORE | degradation cargo, but the endogenous receptor colocalizes with LAMP2 after its own agonist in unperturbed HeLa cells (PMID:24790097; HA-CXCR4 in HEK293, PMID:21540189): a ligand-driven pool |
+| GABARAP | root; IEA stays KEEP_AS_NON_CORE | the mouse donor is abstract-only with no lysosome; readable human CASM data (PMID:34597140) show ATG8 conjugation to LAMP1-positive lysosomes and GABARAP holding FLCN-FNIP there, a regulated pool with a function |
+| GRIN2B | root; IEA and ISS KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED; UniProt CHECK defect | the mouse donor (PMID:31424425, full text read in PMC) shows only overexpressed SEP-NR2B with LAMP2 in HEK293 cells, as the place NR2B is degraded |
+| HCK | root; IDA and IEA stay KEEP_AS_NON_CORE; isoform CHECK defect | abstracts: p61Hck at lysosomes drives podosome rosettes (PMID:15998323); UniProt's p59Hck lysosome item cites a paper placing p59Hck at the plasma membrane |
+| IL4I1 | root; IEA ACCEPT to UNDECIDED | by similarity to mouse, from an abstract-only RFP-fusion study (PMID:15383589); a later paper reports IL4I1 secreted with a physiological pH optimum (PMID:17356132) |
+| NBR1 | root; EXP and IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | UniProt's curated note on the same paper: "Is targeted to lysosomes for degradation"; an autophagy receptor consumed with its cargo |
+| SOD1 | root; IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | the rat donor (PMID:7096343) derives the lysosomal pool from cytosolic SOD1 by autophagy, 2% fed and 8% fasted |
+
+Lessons (first batch for both organelles; to become rules once the lysosome list is done):
+
+- **Degradation is not a lysosome location unless the pool exists in an unperturbed
+  cell** (restated after review; the first wording tracked source readability, not
+  biology). A pool present without blocking the protein's own destruction, reached under
+  its physiological trigger (the endogenous receptor after its own agonist), is the
+  ligand-driven pool of rule 8: real and non-core (CXCR4, like TLR1, TLR6 and ADRB2). A
+  pool seen only when lysosomal degradation is inhibited, with a mutant, after depleting a
+  deubiquitinase, with overexpression in a foreign cell, or that the source itself frames
+  as the place of degradation, is MARK_AS_OVER_ANNOTATED on every row of the term,
+  direct-evidence rows included (BACE1, GRIN2B, NBR1, SOD1). Either way the lysosome
+  stays out of core_functions, and degradation cargo gets no sub-compartment row even with
+  its own TM. GO's `located_in` does not require a function, so a function is not part of
+  the test; it decides only whether a kept pool could be core.
+- **A function at the lysosome makes a pool more than cargo**: an activity measured in
+  purified lysosomes (ADA), FLCN sequestration on CASM-conjugated lysosomes (GABARAP),
+  organelle transport (ANK2), podosome rosettes (HCK).
+- **Weak lysosome lines**: LAMP2 and LysoTracker do not separate late endosome from
+  lysosome; colocalization with an endocytosed cargo (LDL, transferrin) traces the cargo,
+  not the organelle (ARRDC3). A lysosome item can record a partner's destination (ARRDC3).
+- **Not tethering**: PI3P lipid binding (ANK2), a peripheral V-ATPase V1 subunit or
+  mTORC1-regulated binding (CRYAB), regulated ATG8 conjugation (GABARAP).
+- **Read the PTS1 off the sequence.** UniProt labels IDI1's YRM and IDI2's HRV
+  "Microbody targeting signal", but both are non-canonical; a MOTIF feature is one line at
+  most, and a regex PTS2 match without import data is weak (TKT).
+- **Necessity versus presence.** A readable result that the activity works without
+  functional peroxisomes (PEX-deficient cells) makes an accepted peroxisomal pool non-core
+  (IDI1, IDI2).
+- **Enzyme activity histochemistry is not a protein-specific line.** A protein-specific
+  readable negative wins (XDH, immunogold); without one, a positive donor abstract gets
+  deference (TKT).
+- **Piggyback import** (SOD1 on CCS) supports the root as non-core with endogenous
+  peroxisome data; a co-overexpression import assay is perturbed and licenses no matrix row.
+- **Tail-anchored dual-targeted fission proteins** (MFF): the root is core when fission
+  is a core process, but GO:0005778 needs the endogenous protein at the peroxisome, not
+  only a tagged pool.
+- **A single seed at a deep PAINT node** with a readable positive seed and no target loss
+  keeps the IBA (PIK3C3), and a misread "near background" claim can flip several rows
+  (SOD1): re-read the abstract.
+- **Trace by-similarity donors to the right species** with a UniProt lookup of the donor
+  accession: two reviews named the wrong species (IDI1 hamster, TKT rat).
+- **Gene review summaries are quoted by family reviews.** Changing SOD1's and PIK3C3's
+  summaries broke two `PTHR*-review.yaml` quotes; run `just validate-quotes` after any
+  summary edit and update the node assessment reasons too.
+
+## 2026-11-19 (Golgi batch 4: the last 13 human genes)
+
+The last 13 human genes on the root-only Golgi list with a synthesis row (SELENOI to
+VEGFA), from the 2026-11-15 survey. No gene gained a sub-compartment row. Five Golgi
+rows on five genes changed action, and SFT2D3's own NEW row was re-based on a paper
+about SFT2D3 itself.
+
+| gene | outcome | evidence |
+|---|---|---|
+| SELENOI | root; IBA MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE | the PAINT IBD is seeded only by the CHPT1 lineage (CEPT1 pattern), but the one study imaging EPT1 beside CEPT1 in human cells puts EPT1 in the Golgi and CEPT1 in the ER (PMID:32576654, abstract-only, deference); the old "established ER enzyme" premise rested on a curator inference and yeast fractionation |
+| SFT2D3 | root; NEW row re-based from ISS (paralog paper) to IC on PMID:40397568 | endogenous SFT2D3 rises in GS15-positive Golgi-derived vesicles after COG4 depletion (perturbation, control data in an unread supplement), plus family conservation (yeast Sft2p, human SFT2D2 at the late Golgi); not GOA drift: GOA never had the row |
+| SPG21 | root; IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | the curated TGN item cites an abstract-only paper; endogenous maspardin overlaps GM130 only slightly (PMID:19184135) and live imaging shows late endosomes and lysosomes, not the TGN (PMID:40833810); UNDECIDED is the close alternative |
+| STC2 | root; IEA ACCEPT to UNDECIDED | Ensembl projection of an MGI IDA from an abstract-only paper with no localization data (PMID:15485913); the earlier ACCEPT also leaned on a deep-research summary of that paper |
+| SUN5 | root; IEA and ISS stay KEEP_AS_NON_CORE | endogenous mouse Sun5 sits with GM130 in round spermatids and leaves it by the elongating stage (PMID:25775128, full text); transit pool in the native cell |
+| SYN1 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | by similarity to mouse, whose item cites a yeast two-hybrid paper (PMID:11571277, abstract-only, no Golgi); a cytosolic protein has no biosynthetic transit pool, so the old reason fails |
+| SYNE1 | root; IDA and IEA stay KEEP_AS_NON_CORE | endogenous Syne-1 with p58 and beta-COP, dispersed by brefeldin A (PMID:12808039, full text); recruited pool, core at the nuclear envelope; SUSPECTED isoform source defect (CHECK) because UniProt limits the item to GSRP-56 |
+| TBC1D14 | root; IDA and IEA stay ACCEPT | endogenous TBC1D14 with GM130 and TGN46 (PMID:22613832); it works with TRAPPII and RAB1B at the Golgi (PMID:26711178); markers span compartments, so no sub-compartment row |
+| TCP1 | root; IEA MARK_AS_OVER_ANNOTATED to UNDECIDED | Ensembl projection of a mouse IDA from PMID:2655925 (abstract-only, claims the cytoplasmic face of the TGN); a later same-lab abstract calls native TCP1 cytosolic without addressing the Golgi (PMID:1630492) |
+| TLR1 | root; IDA and IEA stay KEEP_AS_NON_CORE | abstract-only: ligand-recruited TLR2 clusters "are targeted to the Golgi apparatus" (PMID:16880211); curator deference; same paper and call as CD14 (batch 1) and TLR6 |
+| TLR6 | root; IDA and IEA stay KEEP_AS_NON_CORE | as TLR1 |
+| UBA5 | root; IEA and EXP stay KEEP_AS_NON_CORE | endogenous UBA5 with GM130 beside a mainly cytoplasmic signal (PMID:26872069, full text); no UFMylation step shown at the Golgi; consistent with UFL1, UFSP2 and DDRGK1 |
+| VEGFA | root; IEA stays KEEP_AS_NON_CORE | curated L-VEGF189 item from an abstract-only paper (PMID:11731620, deference); tagged VEGF165 shows "clear Golgi localization" with no named marker (PMID:24501421); biosynthetic transit; matches its ER row |
+
+Lessons, adding to batches 1-3:
+
+- **A paralog-seeded IBD is not wrong by itself.** CEPT1's rule (paralog-only seeds,
+  so MARK_AS_OVER_ANNOTATED) holds when the target's own data place it elsewhere. For
+  SELENOI the target's own study points to the Golgi, so that study decides.
+- **Read the ECO tags behind an "established elsewhere" premise** before using it
+  against a row (SELENOI's ER rested on ECO:0000305).
+- **A soluble cytosolic protein has no biosynthetic transit pool** (SYN1); marker data
+  must decide.
+- **Trace a by-similarity UniProt line to the donor entry's own tag**: SYN1's human,
+  mouse and rat Golgi items all rest on one two-hybrid paper about PrPC.
+- **A UniProt isoform qualifier can be narrower than the literature** (SYNE1), the
+  reverse of the ABCA7 pattern; record it as a CHECK.
+- **Only an explicit negative from a readable paper overrides an unreadable donor.** A
+  later abstract that implies an earlier claim was wrong (TCP1) leaves the row UNDECIDED.
+- **Golgi-vesicle proteomics after COG depletion** is an endogenous line for the root,
+  never for a sub-compartment (SFT2D3).
+- **A deep-research sentence that summarises an unread donor is not a second line**
+  (STC2).
+- **Check GO structure before calling a Golgi row a parent**: GO:0030140 trans-Golgi
+  network transport vesicle is not part of GO:0005794 (SPG21).
+- **Paralogous receptors citing one unreadable paper get the same call** and say so,
+  so a later reading changes them together (TLR1, TLR6, CD14).
+- **When new evidence contradicts a sentence elsewhere in the file, fix the sentence even
+  if its row is out of scope** (from the review): record the re-reading in that row's
+  text and leave the action for its own pass (SELENOI's and STC2's ER rows, SPG21's
+  GO:0030140 rows). A reason that says an `is_active_in` activity is not shown gets a
+  WRONG_QUALIFIER CHECK defect, so the query is machine-readable (SELENOI).
+
+## 2026-11-18 (Golgi batch 3: 20 human genes)
+
+The next 20 human genes on the root-only Golgi list with a synthesis row (GRB2 to
+RSAD2), from the 2026-11-15 survey. No gene gained a sub-compartment row. Seventeen
+Golgi rows on nine genes changed action; four went to UNDECIDED because the donor paper
+could not be read.
+
+| gene | outcome | evidence |
+|---|---|---|
+| GRB2 | root; IEA and ISS KEEP_AS_NON_CORE to UNDECIDED | by similarity to mouse, curated from a yeast two-hybrid PrP paper (PMID:11571277) that is unreadable and never mentions the Golgi; the readable human paper (PMID:17276458) shows only a "perinuclear Golgi region" without a marker |
+| HCK | root; IEA stays KEEP_AS_NON_CORE | the Golgi item is on isoform p59Hck only, curated from PMID:11904303 (unreadable; overexpressed active GFP fusion); curator deference, with an isoform source defect (ABCA7 pattern) |
+| KIFAP3 | root; IEA stays KEEP_AS_NON_CORE | Ensembl projection of a mouse IDA: immuno-EM of endogenous KAP3 along ER and Golgi membranes in photoreceptors (PMID:19384852); recruited kinesin-II adaptor |
+| LDLR | root; IDA and IEA stay KEEP_AS_NON_CORE | PMID:17461796 (abstract-only): PCSK9 sorts to the Golgi in hepatocytes and colocalizes with LDLR; biosynthetic and PCSK9-routing pool |
+| LRP2 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | the only donor is the unreadable cubilin paper (PMID:15616221) behind the LRP2 ER row, already UNDECIDED |
+| LYN | root; three IDA and one IEA ACCEPT to KEEP_AS_NON_CORE | endogenous LYN with GalT, dispersed by brefeldin A; cycloheximide and FRAP show newly made LYN in transit to the plasma membrane (PMID:15173188) |
+| MAPK1 | root; IEA and TAS stay MARK_AS_OVER_ANNOTATED, reasons rewritten | the marker study says ERK1/2 "were not found to be associated with the fragmented Golgi" (PMID:16533948); phosphorylating GRASP55 is a Golgi substrate, not a location |
+| MAPK3 | root; IEA and TAS MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE | endogenous ERK1c, an ERK1 splice form, sits with GM130 and p58 in mitotic HeLa cells (isoform-specific antibody, lost on siRNA; PMID:16533948); canonical ERK1 is absent; isoform source defect (CHECK) |
+| MS4A4A | root; IBA and IDA ACCEPT to MARK_AS_OVER_ANNOTATED; Golgi and ER out of core_functions and description; the ER IDA from the same paper also moved | the cited paper says TREM2 partly colocalizes with KDEL and giantin, "In contrast, MS4A4A did not colocalize with these intracellular markers" (PMID:31413141); WRONG_GENE_PRODUCT query (CHECK, candidate TREM2); the IBD's only seed is this row |
+| MSLN | root; IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | untagged UniProt item; no Golgi marker or brefeldin A data for mesothelin; transit only, matching its ER lumen row |
+| MYH9 | root; IEA stays KEEP_AS_NON_CORE | the mouse donor (PMID:14617807, TGN) is unreadable, but a readable human paper puts endogenous NMIIA at giantin-marked stacks and needs it for Golgi-to-ER return (PMID:22525330); recruited motor |
+| NEDD9 | root; EXP and IEA stay KEEP_AS_NON_CORE | curated item from PMID:8668148 (abstract-only, mentions only periphery and nucleus); curator deference |
+| NTN3 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | Ensembl projection of a mouse IDA from PMID:10381568, unreadable and silent on the Golgi; no UniProt Golgi item |
+| P3H2 | root; two IDA and one IEA stay KEEP_AS_NON_CORE | curated item from an abstract-only paper titled "ER and Golgi resident" (PMID:15063763), plus HPA endogenous staining (pattern-based, no Golgi marker) |
+| PCSK9 | root; IDA and IEA ACCEPT to KEEP_AS_NON_CORE | immunogold EM of endogenous PCSK9 in human hepatocyte Golgi and golgin-97 colocalization in HepG2 (PMID:27280970); a biosynthetic and sorting pool of a secreted protein; no TGN row (one laboratory, one paper) |
+| PICALM | root; IEA and EXP ACCEPT to MARK_AS_OVER_ANNOTATED; Golgi out of core_functions and description | full text: only highly overexpressed GFP-CALM appears in a clathrin-defined "Golgi area", and the authors write "Endogenous CALM is located only in endocytic-coated pits" (PMID:10436022) |
+| PRAME | root; EXP and IEA stay KEEP_AS_NON_CORE | endogenous PRAME with the 58K Golgi marker in HL60 cells only after LPS or PGN with IFN-gamma (PMID:23460923); regulated recruited pool |
+| PRNP | root; IEA and ISS stay KEEP_AS_NON_CORE | by similarity to mouse (donor PMID:11756421 unreadable); copper and zinc move surface PrPC to early endosomes and Golgi compartments (PMID:14511113, abstract); a ligand-driven retrograde pool |
+| RP2 | root; IEA stays KEEP_AS_NON_CORE | mouse IDA from an abstract that says RP2 "also localized to the Golgi" (PMID:20106869); a lipidated soluble protein cannot be in transit; curator deference |
+| RSAD2 | root; three EXP and one IEA stay KEEP_AS_NON_CORE | EGFP-viperin alone is not with a Golgi marker and reaches the Golgi only with HSV-1 gD (PMID:31921110); HCMV moves endogenous viperin from ER to Golgi (PMID:11752458); kept as an infection-induced pool of an antiviral effector |
+
+Lessons, adding to batches 1 and 2:
+
+- **Check that the cited paper is not reporting a negative.** MS4A4A's IDA cites a
+  marker-controlled sentence saying the protein is not in the Golgi; PICALM's authors say
+  their overexpression signal is probably not physiological. A readable source that
+  disowns the signal makes even a curated EXP or IDA row MARK_AS_OVER_ANNOTATED, and a
+  PAINT IBD seeded only by such a row inherits the error.
+- **Golgi pools restricted to one splice form** (ERK1c of MAPK3; p59Hck of HCK): keep the
+  root as non-core with an isoform source defect (ABCA7 pattern); the same paper can then
+  argue against the paralog's rows (MAPK1).
+- **Acting on a Golgi substrate is not a Golgi location** (ERK2 and GRASP55).
+- **An ARBA Golgi rule is unvetted**: ARBA00028708 gives MAPK1 and MAPK3 the same row, and
+  marker data decide them differently.
+- **Readable human evidence can rescue an unreadable donor for the root** (MYH9), but a
+  sub-compartment claim from the unreadable donor still counts as no line.
+- **HPA Golgi IDA rows** are endogenous whole-organelle evidence, but the call is
+  pattern-based (no Golgi counterstain): a line for the root, never for a sub-compartment.
+- **Immuno-EM ultrastructure counts as a Golgi line without a marker** (KIFAP3).
+- **Open question for the Golgi rule:** whether a virus-induced pool of an antiviral
+  effector counts for the root (RSAD2 kept it; BST2 already excludes such pools from
+  sub-compartments), and whether a second abstract-level line lifts the unreadable-donor
+  rule (PRNP kept, RP2 and NEDD9 on deference).
+- **MS4A4A's ER IDA** rests on the same negative sentence, so it moved to
+  MARK_AS_OVER_ANNOTATED with the Golgi rows (after review), and the ER left its
+  description and core functions.
+
+## 2026-11-17 (UFSP2 core function; review follow-ups from #6432)
+
+- **UFSP2's core functions now name the ER, not its cytoplasmic face.** The
+  60S-recycling core function listed GO:0098554 beside GO:0005783 (2026-11-11
+  entry below). By the standard UFL1 uses (#6432), a face-level location belongs in
+  `core_functions` only when an assay places the activity itself there, and no
+  assay places UFSP2's deUFMylation on the cytoplasmic leaflet: the face is an IC
+  inference from topology and the partner, as UFSP2's own row says. The
+  GO:0098554 IC row stays. The core function names the ER root, not the ER
+  membrane as UFL1's does, because UFSP2's curated location evidence is
+  root-level. Rule of thumb for the tethering route: the row records
+  where the protein sits; the core function names the face only when the activity
+  is shown there.
+- **Open item updated:** the abstract-only sweep still owed now covers ER batches
+  2-4 and Golgi batches 1-2.
+- **History note.** The GFRA1 record added in #6432 cites `a8f60d2418`, a branch
+  commit squashed away when #6433 merged; the change it describes is in #6433.
+  The SHA was accurate when written (it existed on the branch), which is the
+  append case in `docs/history.md`, so the record stays as written; prose that
+  was never true is corrected in place instead.
+
+## 2026-11-15 (follow-ups to the tethering and Golgi batch 1 PRs)
+
+Items promised in the reviews of #6297 and #6353.
+
+- **Abstract-only readings swept.** The ER batch 1 GO:0005783 rows were scanned
+  for reasons that rest on a figure from a paper whose cached copy is
+  abstract-only. One case was left: AIMP1, whose ER reason and propagation
+  comment read Figure 2 of PMID:17525271 (endogenous AIMP1 with calnexin). They
+  now say what the Golgi row already said: the UniProt ER item is by similarity to
+  mouse P31230, curated (ECO:0000269) from that paper, and the root is kept on
+  curator deference; the figure reading is not relied on. The action is unchanged
+  (KEEP_AS_NON_CORE). An attempt to read the full text (PMC1899434) got only the
+  abstract from PMC and an HTTP 500 from Europe PMC on 2026-11-15, so the figure has
+  not been re-read. AHCY also cites a figure from an abstract-only cache, but its
+  reason says the figure was read in an externally recovered author manuscript, which
+  the policy allows; BRSK2 cites no figure.
+- **UFSP2.** The caveat now names both the release and the localisation tests as
+  overexpressed worm proteins in HeLa cells, and the notes record the literature
+  half of condition (d) (worm ODR-8 diffusely cytosolic without ODR-4, PMID:24603482
+  Fig 8E).
+- **UFL1 gains the tethering row.** A NEW GO:0098554 IC row beside its ER and ER
+  membrane rows, which all stay as they were. (a) Seven curated ECO:0000269 ER
+  membrane citations; (b) DDRGK1 has an N-terminal transmembrane domain
+  (PMID:38383785) and binds UFL1 directly (PMID:36543799); (c) two dependence tests
+  from two laboratories: GFP-UFL1 spreads through the cytoplasm in UFBP1 knockout
+  cells and returns to KDEL-positive ER on re-expression (PMID:36543799), and
+  deleting the DDRGK1 TM keeps the interaction but makes both proteins cytoplasmic
+  (PMID:32160526); (d) no TM, signal or transit feature, and cytoplasmic whenever
+  DDRGK1 is absent or unanchored. A pre-existing UFL1 quote that was not in its
+  UniProt file (listed in `conf/local_quote_baseline.yaml`) now quotes PMID:32160526,
+  and the baseline was pruned.
+- **CDK5RAP3 does not.** Its stability depends on UFL1 (PMID:20228063), which is
+  soluble, and no cached paper shows CDK5RAP3 released or destabilised when DDRGK1
+  is lost, so condition (c) on an integral partner is not met. Its GO:0005789 IDA
+  rows stay ACCEPT. This is the first case where the route separates two subunits of
+  one complex: being a subunit of a membrane-held complex is not enough unless the
+  subunit's own dependence on the integral partner is shown.
+
+## 2026-11-15 (Golgi batch 2: 20 human genes)
+
+The next 20 human genes on the root-only Golgi list with a synthesis row (CERKL to
+GNAQ), from the survey regenerated on 2026-11-15. No gene gained a sub-compartment
+row. Eleven Golgi rows on ten genes changed action; six of those changes are
+to UNDECIDED, because the donor or source paper could not be read.
+
+| gene | outcome | evidence |
+|---|---|---|
+| CERKL | root; IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | the UniProt item is untagged and isoform-2 only; overexpressed CERKL overlaps GM130 (PMID:19158957), but a later marker-controlled overexpression study finds it absent from cis and trans Golgi (PMID:24498393); endogenous CERKL shows no Golgi marker (PMID:21151604) |
+| CHIC2 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | Ensembl projection of a mouse IDA from an abstract-only paper (PMID:11257495) that says "vesicular structures and the plasma membrane"; the UniProt "Golgi-like" note is untagged |
+| CHRNA3 | root; IEA and ISS ACCEPT to UNDECIDED | by similarity to rat, whose EXP row is from PMID:19474315 (unreadable); its abstract puts the partner UBXD4, not alpha3, in ER and cis-Golgi; the channel acts at the plasma membrane either way |
+| CLU | root; ISS ACCEPT to UNDECIDED | the dog donor IDA (PMID:10837345, abstract-only) does not mention the Golgi; the "probably within the Golgi lumen" cleavage note cites a plasma purification |
+| COQ6 | root; IEA MARK_AS_OVER_ANNOTATED kept, reason rewritten | a HAMAP rule spreads one rat podocyte staining (PMID:21540551) to every COQ6; COQ6 has a transit peptide and sits in the inner membrane with the CoQ complex (PMID:27499296) |
+| CSNK1D | root; IEA and IDA stay ACCEPT | abstract-only IDA: CK1delta "specifically interacts with the trans Golgi network" (PMID:10826492); CK1delta and its AKAP450 binding site are needed for Golgi microtubule nucleation and Golgi integrity (PMID:24648492); one line for the TGN, so no TGN row |
+| CUL3 | root; IEA and IDA stay KEEP_AS_NON_CORE | FLAG-CUL3 reaches the Golgi with GCC185 only when RhoBTB3 is co-transfected (PMID:24145166); the UniProt item cites an abstract-only paper (PMID:10500095); an adaptor-recruited pool |
+| DNM1L | root; EXP UNDECIDED to KEEP_AS_NON_CORE, three rows stay | the Golgi claim rests on PMID:20688057 ("in some but not all cell lines") and PMID:9570752, both abstract-only and kept on deference; PMID:9348079's abstract says tagged DVLP was not on Golgi markers, recorded as a SUSPECTED WRONG_REFERENCE defect (CHECK) |
+| DPAGT1 | root; IEA UNDECIDED to MARK_AS_OVER_ANNOTATED | the Ensembl projection traces to an MGI IPI with Lyset from PMID:36074821, a paper about GNPTAB that never names Dpagt1; the shared old symbol Gnpta suggests a mix-up, recorded as a PROBABLE WRONG_GENE_PRODUCT defect for MGI (candidate Q69ZN6); DPAGT1 acts on the ER membrane |
+| DRC4 | root; EXP, IBA, IDA and IEA stay KEEP_AS_NON_CORE | endogenous GAS11 is dispersed by brefeldin A and binds Golgi membranes (PMID:16643277); the PAINT IBD is seeded by orthologs; core activity in the axonemal dynein regulatory complex |
+| DYNC2LI1 | root; EXP and IEA stay KEEP_AS_NON_CORE | endogenous D2LIC co-stains with p58 and leaves the Golgi on brefeldin A (PMID:11907264); p58 cannot separate ERGIC from cis-Golgi, so no sub-compartment |
+| DYNLT1 | root; IEA stays KEEP_AS_NON_CORE | every ortholog's item is ECO:0000250 except bovine Tctex-1 (identical sequence), curated from PMID:9677391, whose abstract reports marker co-staining, drug redistribution and co-fractionation; curator deference |
+| FBXW8 | root; IDA and IEA stay ACCEPT | endogenous Fbxw8 overlaps GM130 and TGN38 in neurons, signal lost on RNAi; loss disperses the Golgi via Grasp65 (PMID:21572988, read in PMC) |
+| FGD1 | root; IEA and ISS stay KEEP_AS_NON_CORE | GFP-FGD1 overlaps TGN46 more than GM130 and FGD1 siRNA cuts post-Golgi carrier formation (PMID:19261807, read in PMC, newly cited); all localisation on a tagged protein, recruited GEF |
+| FGD4 | root; ISS UNDECIDED to MARK_AS_OVER_ANNOTATED | the donor is mouse Fgd1, a paralog in another PANTHER subfamily; FGD4's own data put it in actin microspikes (PMID:17564959) and its UniProt location line has no Golgi item; the CEPT1 pattern |
+| FGF7 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | Ensembl projection of an MGI IDA from PMID:12837279, an abstract-only paper on FGF22 (MGI made the same row on Fgf22 the same day) |
+| FGFR2 | root; IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | the UniProt item is untagged; the papers show "immature forms" of transfected receptors trapping STAT1 on Golgi membranes (PMID:17311277) and retention of mutant receptors (PMID:16844695); transit or retention only |
+| GANAB | root; ISS and IEA stay KEEP_AS_NON_CORE | immuno-EM of endogenous glucosidase II in pig kidney labels ER, Golgi and endocytic structures, but not hepatocyte Golgi (PMID:2404989, read in PMC); a cell-type-specific escape pool of an ER enzyme |
+| GFRA1 | root; IEA KEEP_AS_NON_CORE to UNDECIDED | the TGN item is by similarity to rat, from PMID:23333276 (unreadable), and only "in the presence of SORL1": a recycling stop or a co-transfection artefact |
+| GNAQ | root; EXP and IEA stay KEEP_AS_NON_CORE | tagged wild-type Galpha(q) mainly at the plasma membrane with a GM130 and GalT-marked Golgi pool, cycling back for repalmitoylation (PMID:19001095, read in PMC) |
+
+Lessons, adding to batch 1:
+
+- **A fourth non-resident pool.** Besides transit, retrograde and recycling stops,
+  an ER-resident enzyme can escape to the Golgi in one cell type (GANAB). Endogenous
+  immuno-EM makes it real; it is non-core. Palmitoylation cycling (GNAQ) is a
+  retrograde pool, not tethering.
+- **Check which protein the marker data are on.** Donor papers about a partner
+  (CHRNA3 and UBXD4) or a paralog (FGF7 and FGF22; DPAGT1 and GNPTAB through the
+  shared symbol Gnpta) carry over the wrong protein's location. When the paper
+  never names the gene, record a source defect at the depth the reading supports.
+- **Rule-propagated single observations.** A HAMAP line that turns one tissue
+  staining into an unqualified location for the whole family (COQ6) is
+  MARK_AS_OVER_ANNOTATED even when the paper is unreadable, because no figure could
+  make the unqualified claim true. Still a judgement call against the strict
+  unreadable-donor line.
+- **Adaptor-dependent pools of overexpressed proteins** (CUL3 with RhoBTB3) sit
+  between the wild-type tagged rule and the perturbation rule; kept non-core here.
+- **UNDECIDED is now the most common change.** Six of the eleven changes are
+  unreadable donors. That is the policy working, but it argues for a later pass
+  that retrieves these papers rather than for loosening the line.
+- **reference_review convention.** `correctness` judges whether the identifier
+  resolves to the intended paper, so an abstract-only source whose Golgi content
+  cannot be read is VERIFIED, with the unreadability in `review_notes` (GFRA1
+  aligned after review; COQ6, CLU and DPAGT1 already followed it).
+- **Source defects, not prose.** A finding about the source (a stale paralog
+  transfer, a qualifier the evidence does not support) goes into
+  `source_defects` so `just export-source-defects` reports it: FGD4
+  (WRONG_WITH_FROM), DRC4 and CUL3 (WRONG_QUALIFIER, CHECK), added after review.
+- **Fix the attribution before the qualifier.** When a row's gene product is
+  itself disputed (DPAGT1, probably Gnptab's row), record that defect alone; a
+  qualifier correction on the same row would be moot, and two requests on one row
+  cannot both be actioned.
+- **Judgement calls to revisit:** FGD1 (ACCEPT is close: the TGN export role is
+  shown in human cells), DYNLT1 and DNM1L (deference to abstracts that name
+  markers), CSNK1D (ACCEPT, with the Golgi function from perturbation), CERKL
+  (Golgi over-annotated while its ER row on the same data stays non-core).
+
+## 2026-11-13 (Golgi batch 1: 20 human genes)
+
+The first Golgi apparatus (GO:0005794) batch: the first 20 human genes on the
+root-only list with a synthesis row (ABCA1 to CEPT1), from the survey regenerated
+on 2026-11-13. Rule 7's ER logic carried over almost unchanged. No gene gained a
+sub-compartment term (a BST2 trans-Golgi network row was withdrawn in review), and
+ten Golgi rows on seven genes changed action.
+
+| gene | outcome | evidence |
+|---|---|---|
+| ABCA1 | root; IEA stays KEEP_AS_NON_CORE | stably transduced wild-type HA-ABCA1 in HEK293H has a minor intracellular pool with giantin, and brefeldin A cuts surface ABCA1 by about 60% (PMID:20025763); the mouse donor (PMID:10878804) is abstract-only and never mentions the Golgi |
+| ACTL7A | root; IEA and two ISS rows stay KEEP_AS_NON_CORE | endogenous mouse Arp7A co-stains with GM130 in testis (PMID:21278383); soluble, light microscopy only |
+| ADRB2 | root; IEA and IDA stay KEEP_AS_NON_CORE | isoproterenol sends surface receptor to the Golgi, where it meets zDHHC9/14/18; brefeldin A blocks Cys-265 palmitoylation (PMID:27481942); a regulated retrograde pool |
+| AIMP1 | root; IEA stays KEEP_AS_NON_CORE | by similarity to mouse, curated from PMID:17525271, which is abstract-only here; kept on curator deference (an earlier figure reading is not relied on); consistent with its ER rows |
+| ANGPTL3 | root; IEA stays KEEP_AS_NON_CORE | the mouse IDA rests on transient ANGPTL3-V5 with GM130, data not shown (PMID:23918928); tagged human ANGPTL3 sits with YFP-GalT (PMID:37634084) |
+| AP3B1 | root; IEA and TAS ACCEPT to KEEP_AS_NON_CORE; Golgi out of core_functions | endogenous AP-3 in the Golgi region, brefeldin A-sensitive but distinct from TGN markers (PMID:9151686); neuronal AP-3 on TGN buds by immuno-EM (PMID:8666661); no AP-3 on the TGN in HepG2, where it acts on early-endosome tubules (PMID:15051738) |
+| AP3B2 | root; IEA ACCEPT to KEEP_AS_NON_CORE | by similarity; the neuronal TGN immuno-EM (PMID:8666661) is contradicted by the marker and HepG2 EM data, so no TGN row |
+| AP3S1 | root; KEEP_AS_NON_CORE confirmed | same sources as AP3B1, plus "in the area of the TGN" (PMID:9118953) |
+| AP3S2 | root; IEA ACCEPT to KEEP_AS_NON_CORE; Golgi out of core_functions | the old reason read the vesicle items' ECO:0000250 tag as the Golgi item's; same sources as AP3S1 |
+| APC2 | root; IDA and IEA stay KEEP_AS_NON_CORE | abstract-only: endogenous APC2 "colocalizes with both the Golgi apparatus" (PMID:11691822); curator deference |
+| APLP1 | root; IBA and IEA stay KEEP_AS_NON_CORE | both rows rest on a 1992 mouse IDA describing "a pattern reminiscent of Golgi staining" without a marker (PMID:1279693); live imaging puts APLP1 mainly at the surface (PMID:19126676) |
+| ATP1A1 | root; ISS KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | the same rat source as the ER row measures ER-to-Golgi transit with reporters; alpha1 is never shown in a marker-defined Golgi compartment (PMID:18768923); matches the ER batch 1 call |
+| BICD2 | root; all five rows stay ACCEPT | endogenous BICD2 enriched at the Golgi with p230 and MG160 in fibroblasts (PMID:23664116); stabilises RAB6-GTP on Golgi membranes (PMID:25962623); Rab-dependent docking, so no sub-compartment |
+| BST2 | root; rows ACCEPT to KEEP_AS_NON_CORE | AP1 returns internalised CD317 to the TGN (PMID:17940069, abstract only); the TGN46 co-stain (PMID:19244337) was in cells carrying a Vpu-encoding provirus, which traps tetherin in the TGN, and the UniProt shuttling note is untagged, so no TGN row (one unperturbed line); tethering acts at the plasma membrane |
+| CABP2 | root; IDA and IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | full text: overexpressed CaBP2 only "resembling the Golgi apparatus"; all marker work was on CaBP7/8 (PMID:19338761) |
+| CBL | root; IDA and IEA stay KEEP_AS_NON_CORE | GFP-c-Cbl and endogenous c-Cbl with GM130 in NIH3T3 cells (PMID:29237719); soluble recruited E3 ligase, no activity shown at the Golgi |
+| CD14 | root; IDA and IEA stay KEEP_AS_NON_CORE | abstract-only: CD14-containing TLR2 clusters are targeted to the Golgi after ligand (PMID:16880211); curator deference; GPI-anchored, so a trafficking destination |
+| CD247 | root; IEA stays UNDECIDED | the mouse donor paper is abstract-only (PMID:24638062): newly synthesised CD3 zeta and a Golgi-localising mutant suggest transit, but LAPTM5 targeting zeta in the Golgi is a sorting step there; rule 7's unreadable-donor line applies |
+| CEP83 | root; IBA and IDA stay KEEP_AS_NON_CORE | abstract-only: "a pool of CCDC41 colocalizes with ... IFT20 ... at the Golgi complex" (PMID:23530209); activity at the mother centriole |
+| CEPT1 | root; IBA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | the PAINT Golgi IBD is seeded only by the CHPT1 lineage; brefeldin A moves CPT1 but not CEPT1, which sits in the ER and nuclear membranes (PMID:12221122); the ZDHHC23 pattern |
+
+Lessons for a Golgi rule (to write up after more batches):
+
+- **Three kinds of non-resident pool.** Besides biosynthetic transit, there are
+  retrograde or ligand-driven pools reached from the plasma membrane (ADRB2, CD14)
+  and adaptor-dependent recycling stops (BST2). All are real; none is core when
+  the activity acts elsewhere. A recycling stop could earn a sub-compartment row,
+  but only from unperturbed, marker-resolved lines: a pool seen only under a viral
+  or other perturbation (BST2 with Vpu) does not count.
+- **Wild-type tagged proteins.** A minor, marker-confirmed Golgi pool beside a
+  mainly surface signal counts as direct evidence (ABCA1, ANGPTL3); a mainly
+  perinuclear overexpression signal does not (CABP2).
+- **Curator deference stops at a readable paper.** A curated ECO:0000269 line
+  from a paper that can be read and shows no marker is MARK_AS_OVER_ANNOTATED
+  (CABP2); deference is for papers that cannot be read (APC2, CD14).
+- **Coats.** Brefeldin A sensitivity of a coat shows ARF-dependent binding, not
+  Golgi dispersal of the protein. Early light microscopy of adaptors is often
+  overturned by later immuno-EM; sub-compartment lines that disagree by cell type
+  keep the gene at the root (AP-3).
+- **Read the ECO tag per location item** in a UniProt SUBCELLULAR LOCATION line
+  (AP3S2), and look for sub-locations the IEA mapping dropped (BST2, the Golgi
+  version of the "fix the IEA upstream" question).
+- **Paralog-seeded IBDs** at a node shared by ER and Golgi paralogs are
+  MARK_AS_OVER_ANNOTATED when the target's own data place it elsewhere (CEPT1,
+  as ZDHHC23 for the ER).
+- **Trace Ensembl projections** (GO_REF:0000107) to the donor paper: several
+  rest on an unmarked staining pattern or "data not shown" (ABCA1, ANGPTL3, APLP1).
+- **Settled in review:** the BST2 TGN row was withdrawn (two of its three lines
+  were Vpu-perturbation results) and CD247 stayed UNDECIDED under the
+  unreadable-donor line. Still a judgement call: AP-3 rows are non-core rather
+  than over-annotated because of the neuronal TGN data.
+
+## 2026-11-11 (tethering route added to rule 7)
+
+Settled the open question from ER batch 4: should a soluble protein stably held
+on the organelle by an integral-membrane partner get a sub-compartment row? Yes,
+the cytoplasmic-side term, under a new bullet in rule 7. GO:0098554 cytoplasmic
+side of endoplasmic reticulum membrane is defined to include proteins
+"peripherally associated with" the cytoplasmic leaflet (GO definition: "The leaflet
+of the endoplasmic reticulum membrane that faces the cytoplasm, including any
+protein embedded in, attached to, or peripherally associated with it."). It is
+`part_of` GO:0005789,
+so it says more than the bare membrane term (which side, and that the attachment
+is peripheral) rather than avoiding it. The route needs direct evidence that the
+protein is at the organelle, a named integral partner, dependence on it, and
+cytosolic synthesis with no signal or targeting sequence (which fixes the side),
+checked both in the UniProt features and in the literature (for UFSP2, worm ODR-8 is
+diffusely cytosolic without its partner); a
+stability result alone shows an obligate partnership, not a location.
+
+- **UFSP2** gains a NEW GO:0098554 IC row. It has no TM or signal peptide; its
+  partner ODR4 is a transmembrane ER protein; endogenous UFSP2 is lost in ODR4
+  knockout cells, which phenocopy UFSP2 loss (PMID:35926457); and it deUFMylates
+  uL24 on membrane-bound 60S subunits (PMID:38383785). The ODR4-UFSP2 complex at
+  the ER membrane was first shown in worm and human proteins by Chen et al.
+  (PMID:24603482), including a partner-dependent release test: worm ODR-8 washes
+  out of digitonin-permeabilised HeLa cells alone but is partly retained with
+  ODR-4, which also places it on the cytosolic face. The 2022 and 2024 papers cite
+  that work for the anchoring. The
+  location itself rests on the curated IDA row (PMID:35926457). The three root
+  rows stay ACCEPT and the second core function names the cytoplasmic side.
+- **What this means for the UFMylation machinery.** UFL1 and CDK5RAP3 are also
+  soluble and held at the ER by DDRGK1, and both already carry direct-evidence
+  GO:0005789 rows ACCEPTed in their reviews. Those rows stay: they are true,
+  because the cytoplasmic side is part of the ER membrane, and an assay on the
+  endogenous protein cannot be second-guessed by topology. A cytoplasmic-side row
+  would refine them and is left for a later pass. DDRGK1 has its own TM segment,
+  so GO:0005789 is the right term for it.
+- **Checked and left at the root.** The other ER-batch reviews whose reasons
+  mention tethering or peripheral pools do not meet the test. UVRAG reaches the ER
+  through PtdIns(3)P and RINT-1, a peripheral complex, and leaves on autophagy;
+  USO1 is Rab1-recruited; the TRAPP subunits and SRP72 belong to complexes that
+  cycle on and off the membrane; UFM1 is a modifier whose ER pool is its
+  conjugates; KIFAP3, CAVIN1 and DLG4 have no named integral ER partner.
 
 ## 2026-11-06 (ER batch 4: the last 19 human genes)
 

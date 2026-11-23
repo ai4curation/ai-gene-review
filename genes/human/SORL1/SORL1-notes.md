@@ -50,3 +50,10 @@ VPS10P domain, and lysosomal routing of amyloid-beta peptides. Other cargoes
 remain important but are best treated as non-core cargo-specific extensions of
 the same sorting-receptor biology unless the review question is about that tissue
 or pathway.
+
+## 2026-11-22 ORGANELLES lysosome batch 2
+
+- One GO:0005764 row: IEA GO_REF:0000108, a GO inter-ontology inference from the IDA row to GO:1905146 lysosomal protein catabolic process (PMID:26858303). No sub-compartment rows; review and GOA agree.
+- PMID:26858303 (cached full text) shows sorLA-mediated uptake of CNTFR-alpha and its lysosomal degradation, with CNTFR-alpha in LAMP-1-positive vesicles when lysosomal hydrolases are inhibited [PMID:26858303 "Thus, our data demonstrate that CNTFRα, following endocytosis in complex with CLC:CLF-1 and sorLA, is directed toward degradation in lysosomes rather than recycled to the surface membrane."]. No sorLA is placed in lysosomes.
+- UniProt's curated location list (ten papers) has no lysosome item.
+- Call: KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED. The lysosome is where SorLA's cargo goes, not where SorLA is shown. REMOVE is the close alternative (an automated inference), but SorLA's own turnover route was not examined by any source here.

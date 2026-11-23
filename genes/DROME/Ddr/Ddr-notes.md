@@ -109,3 +109,24 @@ result; it says nothing about the normal function of Ddr and is not used for ann
   Htl) as ErbB3-type pseudokinase receptors do?
 - Does Multiplexin (or collagen IV) bind the Ddr DS domain? Which surface?
 - What does the short 380-aa extracellular isoform do?
+
+## Family-level follow-up (2026-11-11)
+
+- PANTHER tree placement (interpro/panther/PTHR24416/PTHR24416-review.yaml and
+  PTHR24416-bioinformatics/RESULTS.md): the catalytic-triad loss is confined to the dipteran
+  node PTN002400510 (Drosophila Ddr and Anopheles DDR); the sister Tribolium paralog clade
+  keeps the triad in at least one paralog. The DDR2 collagen pocket (Trp52, Asp69) is kept
+  only in the vertebrate DDR node PTN007801558. Recommended PAINT actions: an IKR for
+  GO:0004714 at PTN002400510, and moving the GO:0038062 and GO:0005518 IBDs from
+  PTN002400507 (Eumetazoa) to PTN007801558.
+- OpenScientist was run on "Ddr has protein tyrosine kinase collagen receptor activity
+  (GO:0038062)" with the local bioinformatics held out
+  (Ddr-hypotheses/function-hypothesis-go-0038062/openscientist.md). It concluded
+  "Verdict: Supported — retain GO:0038062 (IBA).", but its two decisive premises do not
+  hold on the sequence. It reports "a VAIK-type catalytic lysine"; Q59DZ7 contains no
+  VA[IV]K motif and no DFG anywhere (the beta3 strand reads VAVA; checked 2026-11-11). It
+  calls the KWIRWRS segment the "collagen-contacting RWxxWR loop", but the aligned DDR2
+  segment (residues 128-134) is not among the collagen-contact residues of the DDR2
+  DS domain-collagen structure (PMID:20004161: Trp52, Thr56, Asp69, Arg105, Glu113, His110,
+  Ile112, Asn175), and Q59DZ7 has His128 at the Trp52 position. The run agrees with the
+  local analysis that the HRD aspartate is present. The review's actions are unchanged.

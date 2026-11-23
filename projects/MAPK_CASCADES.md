@@ -3,6 +3,7 @@ title: "MAPK Cascades: Module and Gene Review Coverage"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [human, mouse, rat, yeast, SCHPO, worm, DROME]
+index_group: CROSS_CUTTING
 ---
 
 # MAPK Cascades: Module and Gene Review Coverage

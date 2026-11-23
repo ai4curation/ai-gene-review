@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export top-level proposed_new_terms from ai-gene-review YAML to TSV."""
+"""Export top-level proposed_new_terms from gene review and module YAML to TSV."""
 
 from __future__ import annotations
 
@@ -61,14 +61,46 @@ def clean_nested(value: Any) -> Any:
     return value
 
 
+DEFAULT_INPUTS = (Path("genes"), Path("modules"))
+
+
+def review_glob(directory: Path) -> str:
+    """Return the filename pattern for review documents under a directory.
+
+    Gene reviews are ``*-ai-review.yaml`` (which skips side files such as
+    ``*-ai-review-clean.yaml``); module reviews are the ``*.yaml`` files under
+    ``modules/``. The tree is decided by whichever of ``genes`` or ``modules``
+    occurs last in the resolved path, so a directory that merely sits below
+    some other folder named ``modules`` is still treated as its own tree. Not
+    every YAML file under ``modules/`` is a ModuleReview (imported GapMind
+    definitions live there too); files without a top-level
+    ``proposed_new_terms`` list are skipped later.
+
+    >>> review_glob(Path("genes/human"))
+    '*-ai-review.yaml'
+    >>> review_glob(Path("modules"))
+    '*.yaml'
+    >>> review_glob(Path("/work/modules/checkout/genes/yeast"))
+    '*-ai-review.yaml'
+    >>> review_glob(Path("/work/genes/checkout/modules"))
+    '*.yaml'
+    """
+    parts = directory.resolve().parts
+    last_tree = None
+    for part in parts:
+        if part in ("genes", "modules"):
+            last_tree = part
+    return "*.yaml" if last_tree == "modules" else "*-ai-review.yaml"
+
+
 def expand_inputs(inputs: list[Path]) -> list[Path]:
     if not inputs:
-        inputs = [Path("genes")]
+        inputs = [path for path in DEFAULT_INPUTS if path.is_dir()]
 
     paths: set[Path] = set()
     for input_path in inputs:
         if input_path.is_dir():
-            paths.update(input_path.rglob("*-ai-review.yaml"))
+            paths.update(input_path.rglob(review_glob(input_path)))
         elif input_path.is_file():
             paths.add(input_path)
         else:
@@ -184,7 +216,7 @@ def main() -> None:
         "reviews",
         nargs="*",
         type=Path,
-        help="Review YAML files or directories to scan. Defaults to genes/.",
+        help="Review YAML files or directories to scan. Defaults to genes/ and modules/.",
     )
     parser.add_argument(
         "-o",

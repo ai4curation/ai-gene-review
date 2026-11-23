@@ -23,6 +23,19 @@ autolink_gene_symbols: false
 > exclude that unresolved row from the downgraded population; keeping a row in
 > that population is not a biological reason to retain an over-annotation call.
 
+> **Later curation (2026-11-01).** The PSEPK PP_2213 `GO:0004321`
+> fatty-acyl-CoA synthase row was filed here as `GRANULARITY` ("broad acyl-CoA
+> synthetase family term"). It is not broad: `GO:0004321` is the fatty acid
+> synthase reaction (EC 2.3.1.86), and PP_2213 is an acyl-CoA synthetase (EC
+> 6.2.1). The review now removes it, and `failure_mode_curated.tsv` refiles it
+> as `MISPLACEMENT`, the closest mode. The placement in PTHR43605 is right; the
+> defect is the family-root IBD PTN001944787, whose only seed is an RGD IDA on
+> rat Acsm4 that confuses synthase with synthetase. The `ec_contradiction` rule
+> above had already flagged this row. The `ec_class_conflict` warning in
+> `just validate` (`src/ai_gene_review/validation/ec_class_consistency.py`) now
+> raises the same signal while the review is written. As with the note above,
+> the counts below are the dated `f81b9f300` snapshot.
+
 This sub-page drills into the **283 down-graded** TreeGrafter annotations
 (`REMOVE` / `MARK_AS_OVER_ANNOTATED` / `MODIFY` from the
 [main evaluation](../TREEGRAFTER.md)) and asks the question directly: **does it

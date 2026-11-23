@@ -14,6 +14,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/5BmmH5Vkxba1QVEiczUKnU
       title: Project brief
+index_group: PLANT
 ---
 
 # Ent-Kaurene Oxidation to Kaurenoic Acid — Obsoletion & Replacement

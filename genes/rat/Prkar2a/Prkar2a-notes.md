@@ -33,3 +33,9 @@
 - beta-2 adrenergic receptor binding IPI (PMID:20395454): abstract describes a
   multiprotein complex with AKAP150, not direct RII-receptor contact; UNDECIDED.
 - Bare protein binding rows removed per policy.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0036094 / PMID:21177871: defect retyped (evidence depth: FULL_TEXT). Right gene (orthologue) and right paper; the cached full text says SPR used "human PKA regulatory subunit RIIalpha" and full-length RIIalpha is "amino acids 1-404" (human P13861 is 404 aa, rat P12368 401 aa, both verified). This is a human-protein assay under a direct-assay code on the rat gene, so retyped to WRONG_EVIDENCE_CODE (IDA -> ISO with human PRKAR2A, CHECK); slot and cause added.

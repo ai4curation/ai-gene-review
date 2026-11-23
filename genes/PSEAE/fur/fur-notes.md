@@ -52,3 +52,27 @@ seed; the other three PTN002112386 terms are multi-seeded from CollecTF and othe
 
 GO_CENTRAL defects for PTN002112483 and PTN002112386 are recorded on the GO:1900705 rows (the gene
 carries no GO:1900376 IBA row because it has the more specific term).
+
+## PANTHER tree check (2026-11-05)
+
+Topology fetched with `projects/PSEUDOCAP/panther_tree.py node PTN002112483 --depth 3
+--leaves` (PTHR33202) plus a `--contains` query for the siderophore producers. The node
+is a Proteobacteria SPECIATION node, 12 leaves, all PTHR33202:SF2, all Fur orthologues.
+
+| Child node | Event / taxon | Leaves | Subfamilies | Verdict |
+|---|---|---|---|---|
+| PTN002848967 | LEAF, Helicobacter pylori | 1 (O25671) | SF2 | Fur, but no siderophore biosynthesis in the organism |
+| PTN002848968 | LEAF, Neisseria meningitidis | 1 (P0A0S8) | SF2 | Same |
+| PTN002112491 | LEAF, Geobacter sulfurreducens | 1 (Q74DD7) | SF2 | Same |
+| PTN002112492 | SPECIATION, Gammaproteobacteria | 9 (Q83C33 Coxiella, P44561 Haemophilus, Q8EFN3, P0C6C8, Q8PAL3, Q03456, and PTN002112501 Enterobacteriaceae: Q7CQY3, P33086, P0A9A9) | SF2:9 | Mixed: producers plus Coxiella and Haemophilus |
+
+`--contains P0A9A9,P33086,P0C6C8,Q8EFN3,Q8PAL3,Q03456` returns PTN002112492 (9 leaves),
+i.e. the smallest clade holding the siderophore producers still contains two
+non-producers, and the other three non-producers are separate basal children rather than
+one clade. The earlier concern is confirmed, with the diagnosis sharpened: this is not a
+mis-rooted family (every leaf is a real Fur) but a term that encodes an organism trait
+which does not track the phylogeny, so no "move the IBD" target exists. The remedy is to
+retype the node-level IBD (negative regulation of DNA-templated transcription, or a
+regulation-of-iron-import term) and leave GO:1900705 to leaf-level evidence in producers.
+Confidence raised SUSPECTED -> CONFIRMED. The P. aeruginosa rows are unchanged: Fur
+genuinely represses pvdS and pchR, so the IMP and the leaf IBA stay ACCEPT.

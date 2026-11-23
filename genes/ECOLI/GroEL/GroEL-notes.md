@@ -14,3 +14,12 @@
 - Experimental-curator restraint was applied. Most cached records are abstract-only; only PMID:18304323, PMID:18568038, and PMID:24561554 contain full text. No experimental annotation was removed because assay detail was inaccessible. The yeast TRiC/GimC paper with a heterologous chaperonin trap remains non-core rather than being rejected [PMID:9878052].
 - Broad electronic terms were made actionable where appropriate: GO:0000166 nucleotide binding is `MODIFY` to GO:0005524 ATP binding, and GO:0016853 isomerase activity is `MODIFY` to GO:0140662. Radiation survival, virion assembly, and membrane association remain valid non-core contexts; the cytosolic chaperonin function remains core.
 - Final actions: 27 `ACCEPT`, 22 `MODIFY`, 12 `KEEP_AS_NON_CORE`, 1 `MARK_AS_OVER_ANNOTATED`, and no `REMOVE`, `UNDECIDED`, or `PENDING`. Status is `COMPLETE` because every current signature has a qualifier-aware evidence decision and every IBA has current PTN/source provenance.
+
+
+## 2026-11-07 UTC — comparative GroEL-system evidence audit
+
+The estimate for all assisted clients was incorrectly described as the fraction of obligate substrates; removed that conflation. Replaced title-only quotations by actual mechanistic abstract text. PMID39169181 uses BL21(DE3), explicitly comparative to the K-12 record. All assembly, nucleotide, folding, heat, regulatory-interaction, client-interaction and phage/radiation rows were reviewed. Genuine non-native physical interactions are not called artifacts merely because they lack a native role. The membrane-complexomics row is UNDECIDED: the accessible abstract of PMID16858726 does not expose the target-resolved table/control; cytosolic function does not disprove peripheral association. This supersedes earlier notes' categorical membrane rationale and historical action counts.
+
+All original ordered annotation payloads, historical NEW actions and protected source/provider bytes were retained. No NEW rows were added. Existing provider research was used as a lead, with primary/curated evidence checked independently. PAINT-loss check completed: no IRD/IKR found on the mapped target lineage.
+
+Current actions: 27 ACCEPT, 2 KEEP_AS_NON_CORE, 22 MODIFY, 10 REMOVE, 1 UNDECIDED. Status COMPLETE reflects completed adjudication, including explicit uncertainty, not proof of every tested proposition. Focused validation/render/history results and source preservation are recorded in the existing-member consultation proof.

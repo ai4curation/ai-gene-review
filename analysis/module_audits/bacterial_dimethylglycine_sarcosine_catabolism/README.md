@@ -1,0 +1,42 @@
+# Bacterial dimethylglycine and sarcosine catabolism audit
+
+The abstract bacterial module retains two sequential demethylations, DMG to sarcosine and sarcosine to glycine. It models the experimentally supported variation in electron acceptors, folate chemistry and enzyme assembly instead of assuming one universal bacterial route. Upstream betaine demethylation and downstream glycine cleavage remain separate mechanisms.
+
+The first stage has two architectures. DgcA/DdhC has measured artificial-dye-linked activity and genetically implicated DgcB/ETF companions; its physiological electron acceptor and ordered relay remain proposed. Arthrobacter globiformis DMGO uses oxygen and couples the intermediate to THF, with formaldehyde formation under uncoupled/THF-absent conditions. DMGO does not oxidize sarcosine. The 2020 DdhC paper's background sentence assigning ETF to DMGO conflicts with stronger direct primary evidence and is explicitly rejected at finding level.
+
+The second stage distinguishes the THF-coupled SoxABDG heterotetramer, monomeric sarcosine oxidase, and a historical C-83 dehydrogenase. Complete Sox activity belongs to the assembled complex; a beta catalytic site does not establish an autonomous complete enzyme. The covalent cofactor of heterotetrameric SoxB is FMN, not the covalent FAD of monomeric sarcosine oxidases.
+
+## Coverage and unresolved identity
+
+Twenty-two COMPLETE gene reviews cover PSEPK, CHRI1, CORS9, ARTST and ARTGO. The expanded CHRI1 Sox panel has specific domain and locus support; accessible 2017 figures do not demonstrate four independent subunit knockouts. PA14 experiments reported with PAO1 locus numbering support the Pseudomonas comparison. Exact DdhC and U-96 PDB mappings and the ARTGO native-CDS/WT-structure identity distinguish reference proteins from assay constructs. Q9AGP8 is not the 3GSI D552A mutant, and the Arthrobacter sp.1-IN Sox operon does not establish matched downstream partners in NRRL B-2979.
+
+A native approximately170-kDa sarcosine dehydrogenase from P. putida var. naraensis C-83 is experimentally characterized, but no defensible sequence, gene, evolutionary-family or PAINT mapping was found. C-83 is not equated with strain77/AKU875 or KT2440. This biochemical alternative is modeled as ANY_WITH_FUNCTION with explicit missing molecular identity, rather than an invented family or accession. It never satisfies a genome-panel prediction from a generic oxidoreductase term. This known gene/family coverage gap keeps the module DRAFT; the audit does not claim all requested grounding is complete.
+
+DgcA and DgcB retain family descriptors without falsely specific PANTHER identifiers. Sox subunits use NCBIfam TIGR01372–TIGR01375. DMGO has verified PTHR43757:SF11 membership despite its official SARCOSINE DEHYDROGENASE label. The seven existing family reviews were inspected; four were refined. All25 original node assessments and17 term verdicts in those four remain unchanged. No new PAINT placement is inferred from family names.
+
+## Evidence and validation
+
+Nineteen curated references contain23 findings, including comparative review articles and explicit source-access limits. Evidence is attached to both stages and individual characterized activities. Abstract-only sources support only what their abstracts state; exact short excerpts and identity provenance retain full-text findings where acquired. Full downloaded PDFs/article extracts remain in ignored cache.
+
+The frozen baseline holds96 rows:84 from the original17 reviews and12 from five freshly fetched genes. All28 inherited NEW rows remain NEW; no additional annotation rows were authored. All44 raw UniProt/GOA files and six existing provider artifacts are unchanged. Failed Falcon attempts are documented without fabricating provider output.
+
+The production logic engine passes125 capacity, identity, taxon, core-function, family, assembly and chemistry cases. The oracle uses independently curated member roles and current supported cores; changing a substrate/product or substituting an unrelated function fails. Removal of a required subunit, live core, family support or correct taxon prevents the corresponding panel capacity. Cross-species pooling does not create a native ARTGO route. A negative result means insufficient evidence in the curated panel, not native genomic absence or lack of physiological flux.
+
+All22 focused gene validations and histories pass. Module schema and semantic validation pass; the two remaining semantic advisories concern the exact THF-coupled DMGO activity lacking a GO id. All59 module quotations and74 family quotations match their sources. Four-family schema/term checks pass, with146 grounding checks passing and no conflicts in the family/gene cross-check. Full-corpus validation of science commit `8bde501e2ff0646446a2e4deda82fad8b4b1192c` is terminal: 10,553 reviews, 17 reference errors in 16 unrelated yeast reviews, and all 22 relevant inputs identical to the pinned base. Schema, ontology and best practices have no blocking errors. The run reports 52 reference advisories, 115 ontology advisories and 27,708 best-practice warnings; all 54 PMID-bearing pathway files pass. Exact error tuples and source hashes are in `fullrun-terminal.json`. [PR #6122](https://github.com/ai4curation/ai-gene-review/pull/6122) is open; external review, CI and actual merge remain pending. The C-83 identity gap remains explicit beyond publication.
+
+The comparative-reference catalog was moved into this audit directory byte-for-byte after the full run. Recursive module schema validation is checked separately; the historical full-run manifest records its original path.
+
+## PR #6122 review follow-up
+
+The misplaced sarcosine-oxidase quote is removed from PuuB and retained on SoxB.
+SoxB cores identify beta-localized oxidation to the imine alongside complex
+contribution, without claiming isolated beta performs the full THF reaction.
+All twelve Sox records distinguish subunit-specific catalysis or supported
+cofactor roles from complex activity. DdhC FMN binding is removed on extracted-
+flavin evidence; correction queries preserve source qualifiers and payloads.
+
+Thirteen focused gene checks, two family follow-ups and 125 capacity cases pass.
+All 96 annotation rows, 44 raw files and six provider files remain intact. The
+prior full-corpus result is historical: fresh validation of these corrections,
+publication, renewed review/CI and actual merge remain pending. The historical
+C-83 identity gap remains explicit, and the module remains DRAFT.
