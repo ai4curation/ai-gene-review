@@ -155,12 +155,11 @@ groups.
   reason. Because both PurT models carry the folate-dependent term rather than
   GO:0043815, purT's GO:0043815 row gets `NO_MODEL`. These six models are candidates for
   feedback to NCBI's PGAP curators. They are release-table errors, not defects behind a
-  particular GOA row, so they do not fit a review's `source_defects`. They are recorded
-  here until a route for NCBIfam feedback exists. The GOA rows on glgA and nrdG came from
+  particular GOA row, so they do not fit a review's `source_defects`. The
+  [release-table check](../../ncbifam-metadata/RESULTS.md) now checks every pair in the table with EC
+  numbers on both sides and lists them with the rest of the class. The GOA rows on glgA and nrdG came from
   InterPro2GO, which the reviews already flag, so a fix at NCBIfam alone would not reach
-  them. A pass comparing each model's EC numbers with the EC cross-references of its GO
-  terms over the whole release table would find the rest of this class; this sweep only
-  finds models that a swept row lands on. For catB, PP_2528 and pycB, the family's GO
+  them. For catB, PP_2528 and pycB, the family's GO
   terms span related reactions its members share, and the reviews judged the protein's
   own specificity. NF011685.0 is named "peptidoglycan glycosyltransferase FtsI", so for
   ftsI it is the review, which treats FtsI as the cross-linking partner of FtsW, that
@@ -173,7 +172,7 @@ groups.
 - Do not read a passing score as support for a removed row without checking the family
   type. Subunit models carry the complex's EC number, and a pseudoenzyme passes its
   active relatives' family.
-- Check `go_only` targets against the family's name. The four families above would
+- Check `go_only` targets against the family's name. The six models above would
   otherwise make the check endorse a wrong activity.
 
 ## Limitations
@@ -183,5 +182,8 @@ groups.
   but the target-family verdicts are unaffected.
 - Only function-level families (equivalog, subfamily, exception and their variants, as in
   the check) are reported as competitors. A domain-level model never counts against a row.
+- The library scan keeps each protein's five closest families. A protein passing more
+  than five competitors has the rest left out of `better_fitting_families`, though its
+  verdict is unchanged.
 - The UniProt-record test reads `EC=` lines from the cached record, so an EC stated only
   in free text is missed.
