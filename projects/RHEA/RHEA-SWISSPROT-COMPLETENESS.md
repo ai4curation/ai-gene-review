@@ -80,15 +80,25 @@ the GO definition subsumes the reaction's participants.
 | Batch | Scope | Reactions | Notes |
 |---|---|---:|---|
 | 9 | edge cases: untyped, broadMatch-only, directional-only | 37 | includes 3 predicate corrections |
-| 10 | top 200 unmapped by Swiss-Prot entry count | 200 | 77 also flagged `NoTermFound` (new-term proposals); partial reactions mapped by their own chemistry |
+| 10 | top 200 unmapped by Swiss-Prot entry count | 200 | 80 also flagged `NoTermFound` (new-term proposals); partial reactions mapped by their own chemistry |
 
-With the staged rows counted ([`projected_coverage.py`](completeness/projected_coverage.py)):
+**`none` versus `broad`.** A batch row is `none` (it also writes a `sssom:NoTermFound` row, plus a
+`broadMatch` to the best broader term when one exists) whenever we judge that GO should have a
+specific term for the reaction. A `broad` row whose comment notes that no more specific term exists
+means the broader term is judged adequate, for example a generic rRNA (uridine-C5-)-methyltransferase
+for a position-specific reaction. 107 staged reactions carry a `NoTermFound` row.
+
+With the staged rows counted ([`projected_coverage.py`](completeness/projected_coverage.py), run
+separately from `run_all.sh` because it also needs the SSSOM path), on go-ontology HEAD 2026-11-23:
 
 | | Reactions | Entry–reaction pairs |
 |---|---:|---:|
-| covered in GO | 6,516 | 257,678 |
-| staged here | 353 | 48,163 |
-| still open | 7,294 | 28,972 |
+| covered in GO | 6,556 | 258,486 |
+| staged here | 347 | 47,454 |
+| still open | 7,260 | 28,873 |
+
+"Staged" counts any staged exact or broad row to a GO id, including the few whose only GO target is
+a transport root (`GO:0005215`, `GO:0022857`); those reactions also carry a `NoTermFound` row.
 
 The open set is a long tail averaging about 4 entries per reaction. Problems found in GO and
 in the mappings that feed it are recorded in [`completeness/GO-FOLLOWUPS.md`](completeness/GO-FOLLOWUPS.md).
@@ -133,7 +143,13 @@ are generated from these mappings and the EC bridge. Closure uses go-basic `is_a
 | disjoint | has catalytic/transporter terms, none in *g*'s lineage | 6,852 | 24,054 |
 | none | no catalytic/transporter MF | 184,093 | 32,019 |
 
-Of the 6,518 mappings checked, 1,552 have at least one disjoint entry, and 373 (with at least 3
+**How independent is the agreement?** Over entries with any catalytic or transporter MF, the
+all-sources column gives about 87% consistent and the curated-only column about 83%. Only the
+curated column is a real test of the mapping. GO rows from UniRule, HAMAP and PIRNR are emitted by
+the same rules that attach the catalytic activity, and so the RHEA id, to the entry, so their
+agreement counts the same assertion twice.
+
+This consistency check was run on the 2026-11-04 base. Of the 6,518 mappings checked, 1,552 have at least one disjoint entry, and 373 (with at least 3
 entries) are majority-disjoint. Thirty-four of those 373 point at `GO:777xxxx` terms that exist only
 on go-ontology HEAD. Native annotations cannot use those yet (release lag, not conflict).
 Per-mapping detail, with example accessions and the conflicting terms, is in

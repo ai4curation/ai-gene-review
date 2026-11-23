@@ -23,7 +23,7 @@ for t in T.values():
     if t["obs"] or t["ns"]!="molecular_function": continue
     d=t["def"]
     for m in re.finditer(r"[Cc]atalysis of the reactions?: (.+?)(?:\.\"| \[|\.\s*\[|\"\s*\[)",d):
-        for eq in re.split(r"(?<!\w)\.? (?:and|or) (?=\S)",m.group(1).rstrip(".")) if False else [m.group(1)]:
+        for eq in [m.group(1)]:
             for part in re.split(r"\.\s+|; ", eq):
                 k=key(part)
                 if k: idx[k].add(t["id"])
