@@ -599,6 +599,12 @@ def test_unreviewed_own_entry_is_down_weighted():
         # An author statement may rest on the ortholog; it is not an assay claim.
         ([CitingEntry("P47758", "Srprb", "10090", frozenset())], "TAS", "wrong_gene"),
         ([CitingEntry("P08240", "SRPRA", "9606", frozenset())], "EXP", "wrong_gene"),
+        # A combinatorial manual assertion with an experimental component counts as EXP.
+        (
+            [CitingEntry("P47758", "Srprb", "10090", frozenset())],
+            "ECO:0007744",
+            "evidence_code",
+        ),
     ],
 )
 def test_lead_kind(others, evidence, expected):
@@ -646,9 +652,9 @@ def test_paralog_share_needs_a_shared_family(tmp_path):
     )
     shared = shared_annotation_carriers([a, b])
     key = ("PMID:1", "GO:0003674", "UniProt")
-    assert sorted((c.accession, sorted(c.families)) for c in shared[key]) == [
-        ("P00001", ["PTHR1"]),
-        ("P00002", ["PTHR2"]),
+    assert sorted((c.accession, sorted(c.families), c.taxon) for c in shared[key]) == [
+        ("P00001", ["PTHR1"], "9606"),
+        ("P00002", ["PTHR2"], "9606"),
     ]
     citing = {"1": [CitingEntry("P9", "X", "9606", frozenset({"PTHR1"}))]}
     (lead,) = find_leads([a, b], citing=citing, publications_dir=tmp_path)[:1]
@@ -667,3 +673,21 @@ def test_copy_on_the_citing_paralog_keeps_the_lead():
     cngb3 = [r for r in leads if r["gene"] == "human/CNGB3"]
     assert cngb3
     assert not any("shared_with_local_paralog" in r["reasons"] for r in cngb3)
+
+
+def test_same_family_ortholog_folder_is_not_a_paralog(tmp_path):
+    """A same-family carrier in another species is an ortholog, not a family annotation."""
+    human = _gene_folder(
+        tmp_path / "a",
+        "AC   P00001;\nOX   NCBI_TaxID=9606;\nDR   PANTHER; PTHR1; X; 1.\n",
+    )
+    mouse = _gene_folder(
+        tmp_path / "b",
+        "AC   P00002;\nOX   NCBI_TaxID=10090;\nDR   PANTHER; PTHR1; X; 1.\n",
+        acc="P00002",
+        taxon="10090",
+    )
+    citing = {"1": [CitingEntry("P9", "X", "9606", frozenset({"PTHR1"}))]}
+    leads = find_leads([human, mouse], citing=citing, publications_dir=tmp_path)
+    assert leads
+    assert not any("shared_with_local_paralog" in r["reasons"] for r in leads)

@@ -68,7 +68,7 @@ protein *can* do what it is annotated with, this asks whether the cited paper wa
    | The cached title and abstract do not name the annotated gene | +2 |
    | The cached title or abstract names the annotated gene | −3 |
    | The same term from the same paper and source is on 4 or more local gene folders | −2 |
-   | Otherwise, it is on a local paralog (same PANTHER family) that does not cite the paper | −2 |
+   | Otherwise, it is on a local paralog (same PANTHER family and species) that does not cite the paper | −2 |
    | The annotated protein's own UniProt entry is unreviewed | −3 |
 
    The name check matters because papers often study several members of a family; a
@@ -441,20 +441,22 @@ carries a `WRONG_GENE_PRODUCT` or `WRONG_EVIDENCE_CODE` source defect.
 
 | | Before | After |
 |---|---|---|
-| Top-tier rows (score 6 or more) | 389 | 289 |
-| Top-tier genes | 210 | 177 |
+| Top-tier rows (score 6 or more) | 389 | 293 |
+| Top-tier genes | 210 | 180 |
 | Recorded wrong-gene or evidence-code rows leaving the top tier | | 1 of 127 |
 
 - The one recorded row to leave is DROME/EloC's `WRONG_EVIDENCE_CODE` query (`SUSPECTED`),
   whose own entry is unreviewed. All 90 recorded `WRONG_GENE_PRODUCT` rows stay.
-- Of the 100 rows that leave, 86 are on genes not yet checked. Of the other 14, 8 are on
+- Of the 96 rows that leave, 82 are on genes not yet checked. Of the other 14, 8 are on
   genes earlier batches found to be false positives (Dusp21, GstO1, GstO2, Prx4, JAK2,
   PARD6B), 1 is EloC's query, and 5 are other rows of CHRNB4 and JAK1, whose recorded
   defects sit on rows that stay.
 - A first version applied the paralog penalty to any local paralog carrying the row. It
   pushed 8 recorded wrong-gene rows out of the top tier (CNGB3, CNGA1, CHRNB1, CHD4,
   ADAM17, DLG3), all cases where the right gene carries the same row and cites the
-  paper. The penalty now skips a paralog that cites the paper.
+  paper. The penalty now skips a paralog that cites the paper, and counts only a carrier
+  in the same species: a same-family folder in another species is an ortholog, whose
+  copy of the row is the `evidence_code` case.
 - 594 leads are `evidence_code`, 28 of them in the top tier. Of the recorded defects, 12
   `WRONG_EVIDENCE_CODE` rows are labelled `evidence_code` and 24 are not: those are
   mostly family-level conclusions applied to a paralog (COQ8B) or rows whose ortholog

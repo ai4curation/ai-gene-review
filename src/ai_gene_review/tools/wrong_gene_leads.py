@@ -52,6 +52,7 @@ import yaml
 
 from ai_gene_review.evidence import (
     LITERATURE_EVIDENCE_CODES as LITERATURE_CODES,
+    evidence_matches,
     source_evidence_code,
 )
 
@@ -745,7 +746,9 @@ def lead_kind(own: GeneRecord, citing: list[CitingEntry], evidence: str) -> str:
         for c in citing
     )
     return (
-        "evidence_code" if ortholog and evidence in DIRECT_ASSAY_CODES else "wrong_gene"
+        "evidence_code"
+        if ortholog and evidence_matches(evidence, DIRECT_ASSAY_CODES)
+        else "wrong_gene"
     )
 
 
@@ -758,24 +761,29 @@ def _share_key(row: dict[str, str]) -> ShareKey:
 
 
 class Carrier(NamedTuple):
-    """A local gene folder carrying a shared row: its accession and PANTHER families."""
+    """A local gene folder carrying a shared row: its accession, PANTHER families and taxon."""
 
     accession: str
     families: frozenset[str]
+    taxon: str = ""
 
 
 def _folder_carrier(gene_dir: Path) -> Carrier:
-    """Accession and PANTHER families from a gene folder's UniProt file (empty if none)."""
+    """Accession, PANTHER families and taxon from a gene folder's UniProt file (empty if none)."""
     accession = ""
+    taxon = ""
     families: set[str] = set()
     for uniprot in gene_dir.glob("*-uniprot.txt"):
         with uniprot.open(errors="replace") as fh:
             for line in fh:
                 if line.startswith("AC   ") and not accession:
                     accession = line[5:].split(";")[0].strip()
+                elif line.startswith("OX   ") and not taxon:
+                    m = re.search(r"NCBI_TaxID=(\d+)", line)
+                    taxon = m.group(1) if m else ""
                 elif line.startswith("DR   PANTHER; "):
                     families.add(line.split(";")[1].strip().split(":")[0])
-    return Carrier(accession, frozenset(families))
+    return Carrier(accession, frozenset(families), taxon)
 
 
 def shared_annotation_carriers(
@@ -816,14 +824,21 @@ def shared_with_local_paralog(
 ) -> bool:
     """Whether a local paralog carries the same row without itself citing the paper.
 
+    A paralog is a gene of the same PANTHER family in the same species; a carrier in
+    another species is an ortholog, whose copy of the row is the evidence-code case
+    (``lead_kind``), not a family annotation.
+
     That is a family-wide annotation, as for the Omega GSTs, whose paper is cited
     by a third gene. A paralog that does cite the paper is the opposite case: the
     row's copy on the right gene, which is evidence for a wrong-gene lead (CNGA3
     beside CNGB3), so it does not count.
 
     >>> own = GeneRecord("P1", "1", frozenset({"PTHR1"}), frozenset(), frozenset())
-    >>> mine, para = Carrier("P1", frozenset({"PTHR1"})), Carrier("P2", frozenset({"PTHR1"}))
-    >>> other_family = Carrier("P3", frozenset({"PTHR2"}))
+    >>> mine, para = Carrier("P1", frozenset({"PTHR1"}), "1"), Carrier("P2", frozenset({"PTHR1"}), "1")
+    >>> other_family = Carrier("P3", frozenset({"PTHR2"}), "1")
+    >>> ortholog = Carrier("P4", frozenset({"PTHR1"}), "2")
+    >>> shared_with_local_paralog([mine, ortholog], own, [])
+    False
     >>> cites_p2 = [CitingEntry("P2", "B", "1", frozenset({"PTHR1"}))]
     >>> shared_with_local_paralog([mine, para], own, [])
     True
@@ -835,6 +850,7 @@ def shared_with_local_paralog(
     citing_accessions = {c.accession for c in citing}
     return any(
         c.accession != own.accession
+        and c.taxon == own.taxon
         and c.families & own.panther_families
         and c.accession not in citing_accessions
         for c in carriers
@@ -1080,7 +1096,13 @@ def find_leads(
                     "reference": row["REFERENCE"],
                     "assigned_by": row["ASSIGNED BY"],
                     "score": score,
-                    "lead_kind": lead_kind(own, others, row["GO EVIDENCE CODE"]),
+                    "lead_kind": lead_kind(
+                        own,
+                        others,
+                        source_evidence_code(
+                            row["GO EVIDENCE CODE"], row.get("ECO ID")
+                        ),
+                    ),
                     "reasons": reasons,
                     "citing_entries": ";".join(
                         f"{c.accession}:{c.gene}" for c in others
