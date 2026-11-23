@@ -16,3 +16,9 @@
 - iMM904 repeats the YeastPathways stereochemistry error: all 12 3-hydroxyacyl-CoA participants on FOX2 reactions are (S), with ECs 4.2.1.17 and 1.1.1.35.
 - yeast-GEM is mostly right (28 R) but six participants are (S) (C14, C16, C26: r_2250/r_0057, r_2251/r_2268, r_2253/r_2270) and two are unspecified, although those reactions carry EC 4.2.1.119 / 1.1.1.n12.
 - Both models keep FOX2 peroxisomal only. yeast-GEM has the C4 steps (r_2254, r_2271) with (R)-3-hydroxybutanoyl-CoA. Candidate defects to report to the model maintainers; no change to this review.
+
+## Source defects filed (2026-11-23)
+- Filed the (3S)-for-(3R) stereochemistry error on the four GO:0003857 rows as `source_defects`, all `REPOINT` to GO:0106386. The IDA (PMID:1551874) and both YeastPathways RCA rows (PWY-5177, YEAST-FAO-PWY) are filed as `SGD`. The PAINT IBA, whose only seed is that IDA, is filed as `GO_CENTRAL`. Actions are unchanged (MODIFY).
+- Filed the two YeastPathways RCA cytosol rows as `SGD` `DELETE_ROW` (PROBABLE); both are REMOVE in this review.
+- GO:0004300 and GO:0018812 are defined without stereochemistry, so their rows are general rather than wrong, and no defect is filed for them. The (S) EC 4.2.1.17 step behind the YEAST-FAO-PWY GO:0004300 RCA row is described in the GO:0003857 YEAST-FAO-PWY defect.
+- GEM-side errors (iMM904 and yeast-GEM) have no source-defect home. They are summarised in projects/YEAST_METABOLIC_ENGINEERING/RESULTS.md section 6.
