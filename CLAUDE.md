@@ -626,6 +626,22 @@ Validation deliberately treats the two sources of GO term ids differently:
 Rule of thumb: machine-sourced ids are trusted (other deterministic steps guarantee they
 are real GOA terms); author-supplied ids are checked hard.
 
+**Neither check catches an obsolete id you wrote**, because the dynamic enums test branch
+*reachability* and a retired term is still reachable. `just validate` therefore warns
+(`obsolete_authored_term`,
+`src/ai_gene_review/validation/obsolete_authored_terms.py`) on every author-supplied GO
+id — a `NEW` row's term, `core_functions`, `proposed_replacement_terms`, a
+`proposed_parent` — that an offline signal marks obsolete; `just obsolete-term-audit`
+lists them. Detection combines the GO sqlite snapshot's `obsolete ` label prefix with the
+same prefix in the corpus' own `GENE-goa.tsv` files, which are refetched per gene and so
+catch obsoletions the snapshot has not picked up (this is how `GO:0098734` was found while
+CPT1C's own GOA file still carried the live label). **A hit is informative; a clean result
+proves nothing** — the two signals together caught four of eight known cases, and a
+*merged* id, which QuickGO resolves silently to a different term, is invisible to both. So
+check a replacement term against a live service when it matters, and do not read silence
+as confirmation. Do not repoint to GO's `replaced_by` without checking it against the gene:
+the mapping is automated and has been wrong here (see `genes/human/FYB1`).
+
 When a core activity has **no GO term yet** (e.g. in-situ holdases after GO:0051082 was
 obsoleted without a replacement), do not put an obsolete or ill-fitting id in
 `core_functions.molecular_function`. Instead set `proposed_molecular_function` to the

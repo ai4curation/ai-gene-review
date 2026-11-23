@@ -64,6 +64,10 @@ from ai_gene_review.validation.uniprot_quote_source import (
     validate_uniprot_quote_sources,
 )
 from ai_gene_review.validation.goa_support import validate_goa_support
+from ai_gene_review.validation.obsolete_authored_terms import (
+    build_label_lookup,
+    check_obsolete_authored_terms,
+)
 from ai_gene_review.validation.source_statement_defects import validate_statement_defects
 from ai_gene_review.mod_providers import is_mod_description_file
 from ai_gene_review.taxon import is_ncbitaxon_curie
@@ -511,6 +515,14 @@ def check_best_practices_rules(
     check_protein_binding_policy(data, report)
     check_nd_policy(data, report, yaml_file)
     check_ontology_change_policy(data, report)
+    # Author-supplied GO ids are checked for obsoletion here because neither the
+    # (deliberately absent) existing-annotation id check nor the core_functions
+    # dynamic enums reach it: an obsoleted term is still branch-reachable.
+    check_obsolete_authored_terms(
+        data,
+        report,
+        build_label_lookup(get_project_root(), use_ontology=check_ontology),
+    )
     check_decomposition(
         data,
         report,
