@@ -354,10 +354,11 @@ plastids come later.
       clauses). A pool seen only when lysosomal degradation is inhibited, with a mutant,
       after depleting a deubiquitinase, with overexpression in a foreign cell, or that the
       source itself frames as the place of degradation, is `MARK_AS_OVER_ANNOTATED` on
-      every row of the term (BACE1, GRIN2B, NBR1, SOD1). This sits beside rule 2 rather than against it: rule 2 says a
-      direct-evidence row that cannot resolve the sub-compartment keeps the organelle;
-      here the row is over-annotated because the organelle claim itself does not hold in an
-      unperturbed cell, as with rule 8's perturbation-only evidence. The same holds for a
+      every row of the term (BACE1, GRIN2B, NBR1, SOD1). This sits beside rule 2 rather
+      than against it: rule 2 says a direct-evidence row that cannot resolve the
+      sub-compartment keeps the organelle; here the row is over-annotated because the
+      organelle claim itself does not hold in an unperturbed cell, as with rule 8's
+      perturbation-only evidence. The same holds for a
       receptor whose cargo, not itself, is degraded (SORL1). Degradation cargo never enters
       `core_functions` and gets no sub-compartment row, even with its own TM. A function is
       not part of the test (`located_in` needs none); it decides only whether a kept pool
