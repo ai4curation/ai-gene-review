@@ -12,7 +12,9 @@ rest are listed below for fixing. Second, the lineages with reduced or absent or
 mitosome-bearing *Giardia* and *Entamoeba*, the hydrogenosome-bearing *Trichomonas*, the non-ciliated
 lineages for the cilium, the lineages without VTC for the acidocalcisome) fail as expected, so the rules
 discriminate. Third, a protein complex is evaluated as one step per active unit, all of which must
-hold, so a failing complex is reported by the unit it lacks.
+hold, so a failing complex is reported by the unit it lacks. The descriptive modules (phagosome, synaptic
+vesicle and contractile vacuole) are evaluated too, but they are not rules: their parts are not specific to
+the organelle.
 
 ## Method
 
@@ -38,6 +40,7 @@ uv run python projects/ORGANELLE_LIFECYCLES/selector_census.py \
     intraflagellar_transport_core golgi_copi_vesicle_coat nuclear_pore_transport_core \
     lipid_droplet_neutral_lipid_storage acidocalcisome_polyphosphate_storage \
     lysosome_related_organelle_biogenesis phagosome_maturation synaptic_vesicle_cycle \
+    contractile_vacuole_complex \
     -o projects/ORGANELLE_LIFECYCLES/selector-census.yaml
 ```
 
@@ -71,6 +74,7 @@ disagreement between the two sources rather than a wrong selector.
 | `lysosome_related_organelle_biogenesis` | ✓ | ✓ | ✓ | 2 | ✓ | 2 | 3 | 5 | 3 | 5 | 5 | 5 | 2 | 4 | 4 | 5 | 5 | 3 | 3 | 5 | 5 | 4 | 1 | 3 |
 | `phagosome_maturation` | 3 | 1 | 1 | 1 | 2 | 1 | 2 | 3 | 3 | 4 | 4 | 9 | 3 | 4 | 4 | 4 | 6 | 5 | 4 | 2 | 4 | 2 | 3 | 5 |
 | `synaptic_vesicle_cycle` | ✓ | ✓ | ✓ | ✓ | 1 | 4 | 3 | 2 | 3 | 5 | 5 | 5 | 5 | 3 | 4 | 4 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 4 |
+| `contractile_vacuole_complex` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 1 | 1 | 1 | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 Key: Hs *Homo sapiens*; Dm *Drosophila melanogaster*; Ce *Caenorhabditis elegans*; Nv *Nematostella vectensis*; Ta *Trichoplax adhaerens*; Mb *Monosiga brevicollis*; Bd *Batrachochytrium dendrobatidis*; Cr *Chlamydomonas reinhardtii*; Pp *Physcomitrium patens*; Tb *Trypanosoma brucei*; Lm *Leishmania major*; Gi *Giardia intestinalis*; Tv *Trichomonas vaginalis*; Pt *Paramecium tetraurelia*; Ph *Phytophthora ramorum*; Pf *Plasmodium falciparum*; Tp *Thalassiosira pseudonana*; At *Arabidopsis thaliana*; Os *Oryza sativa*; Sc *Saccharomyces cerevisiae*; Sp *Schizosaccharomyces pombe*; Nc *Neurospora crassa*; Dd *Dictyostelium discoideum*; Eh *Entamoeba histolytica*.
 
@@ -205,6 +209,19 @@ Using the mitochondrial subfamilies rather than the whole families matters: PTHR
 subunits. In plastid-bearing lineages the plastid DnaK-type Hsp70 may still fall in `SF184`, so the Hsp70
 step alone does not show a mitochondrion there. The count of 7 `SF184` proteins in *Entamoeba* is a
 subfamily count, not checked orthologues.
+
+## The contractile vacuole module
+
+`contractile_vacuole_complex` is descriptive, not a rule. It needs the V-ATPase (the
+`vacuolar_atpase_acidification` rule) and a Rab11-family GTPase (`PTHR47979:SF33`, or `SF110`/`SF41` for
+human RAB11A and RAB11B), the two parts of the Dictyostelium complex with the clearest evidence
+(PMID:24016530, PMID:11686306). It is met in 21 of the 24 organisms, including human, the fly, the worm and
+both yeasts, none of which has a contractile vacuole. That is the expected result: both parts run
+membrane traffic in every eukaryote, so meeting the module shows that a genome has the parts the complex
+uses, not that it has the organelle. It fails in three organisms: in Arabidopsis and rice, whose RabA proteins sit
+in other subfamilies of PTHR47979, which the module does not select; and in Thalassiosira, which fails the
+V-ATPase rule itself on the V1 G subunit. A rule for the organelle would need a part found only where
+contractile vacuoles are, and none of the organelle's known components is such a part.
 
 ## Expected failures
 
@@ -350,3 +367,6 @@ Every step that fails in at least one organism, with the organisms it fails in (
   - `cycle_vamp2` (10): Mb, Pp, Tb, Lm, Gi, Tv, Ph, Pf, At, Os
   - `cycle_snap25` (7): Mb, Tb, Lm, Gi, Tv, Ph, Tp
   - `cycle_clathrin_coat` (1): Eh
+- `contractile_vacuole_complex`
+  - `cvc_rab11_gtpase` (2): At, Os
+  - `vacuolar_atpase_acidification#v1_g_stator` (1): Tp
