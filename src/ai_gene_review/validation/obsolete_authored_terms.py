@@ -280,10 +280,16 @@ def _goa_corpus_available(project_root: Path) -> bool:
     return next((project_root / "genes").rglob("*-goa.tsv"), None) is not None
 
 
-#: Set once a snapshot query has actually raised. ``_get_cached_adapter``
-#: only catches *construction* failures, so a build that loads but whose
-#: queries raise would otherwise be reported as available while mute.
+#: Set once a snapshot query has raised. ``_get_cached_adapter`` only catches
+#: *construction* failures, so a build that loads but whose queries raise
+#: would otherwise be reported as available while mute.
 _SNAPSHOT_QUERY_FAILED = False
+
+#: Set once a snapshot query has returned a label. This outweighs a later
+#: failure: the ``except`` below is explicitly for TRANSIENT errors, and one
+#: answered query is positive proof the build can answer, where a raised query
+#: is only evidence about that query.
+_SNAPSHOT_QUERY_SUCCEEDED = False
 
 
 def _snapshot_adapter_available() -> bool:
@@ -295,14 +301,25 @@ def _snapshot_adapter_available() -> bool:
     answered" are indistinguishable.
 
     Loading is not the only way to be mute, so an observed query failure counts
-    too. **The residual limit is real and is not papered over:** a build whose
-    queries raise is reported available until the first such query, because
+    too -- but **only while no query has ever answered.** A latch that ignored
+    successes was strictly worse than the problem it fixed: the ``except`` it
+    keys on is documented as transient, `lookup` keeps querying regardless of
+    this probe, and `_get_cached_adapter` keeps the adapter cached, so after one
+    hiccup a hit could name the snapshot in ``detected_by_sources`` while
+    omitting it from ``consulted_sources`` in the same dict -- asserting both
+    that it answered and that it was never asked. Since `validate-all` runs one
+    process over 12,281 reviews, a single hiccup poisoned every later hit.
+    One answered query is positive proof the build answers; a raised query is
+    only evidence about that query.
+
+    **The residual limit is real and is not papered over:** a build whose
+    queries always raise is reported available until the first of them, because
     nothing can know a query will fail before it does. This narrows the claim
     to what is observable; it does not make it total.
     """
     from ai_gene_review.validation.module_validator import _get_cached_adapter
 
-    if _SNAPSHOT_QUERY_FAILED:
+    if _SNAPSHOT_QUERY_FAILED and not _SNAPSHOT_QUERY_SUCCEEDED:
         return False
     return _get_cached_adapter("sqlite:obo:go") is not None
 
@@ -319,14 +336,21 @@ def _snapshot_label(curie: str) -> Optional[str]:
     adapter = _get_cached_adapter("sqlite:obo:go")
     if adapter is None:
         return None
+    global _SNAPSHOT_QUERY_SUCCEEDED, _SNAPSHOT_QUERY_FAILED
     try:  # external system: ontology query may fail transiently
-        return adapter.label(curie)
+        label = adapter.label(curie)
     except Exception:  # noqa: BLE001 - external system
-        # Record it: a loaded-but-unqueryable build is mute, and the
-        # availability probe would otherwise keep reporting it as consulted.
-        global _SNAPSHOT_QUERY_FAILED
+        # A loaded-but-unqueryable build is mute, and the availability probe
+        # would otherwise keep reporting it as consulted. Recorded, but it does
+        # not outweigh a query that has already answered -- see the probe.
         _SNAPSHOT_QUERY_FAILED = True
         return None
+    # A returned label (even None, meaning "no such term") is proof the build
+    # answers; only a non-None one proves it answers usefully, which is the
+    # stronger evidence and the one worth latching.
+    if label is not None:
+        _SNAPSHOT_QUERY_SUCCEEDED = True
+    return label
 
 
 def build_label_lookup(

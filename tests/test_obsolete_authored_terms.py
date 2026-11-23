@@ -810,18 +810,56 @@ def test_availability_is_probed_once(tmp_path):
     assert calls == [1]
 
 
-def test_an_observed_query_failure_makes_the_snapshot_unavailable():
+def test_an_observed_query_failure_makes_the_snapshot_unavailable(monkeypatch):
     """Loading is not the only way to be mute.
 
     `_get_cached_adapter` catches construction failures only; `_snapshot_label`
     separately swallows per-curie query exceptions. A build that loads but
     whose queries raise would otherwise be reported as consulted while mute.
+
+    `monkeypatch` rather than a hand-rolled try/finally: the restore is then
+    guaranteed even if the assertion raises, and a leaked module global would
+    silently change every later test in the process.
     """
     from ai_gene_review.validation import obsolete_authored_terms as mod
 
-    original = mod._SNAPSHOT_QUERY_FAILED
-    try:
-        mod._SNAPSHOT_QUERY_FAILED = True
-        assert mod._snapshot_adapter_available() is False
-    finally:
-        mod._SNAPSHOT_QUERY_FAILED = original
+    monkeypatch.setattr(mod, "_SNAPSHOT_QUERY_FAILED", True)
+    monkeypatch.setattr(mod, "_SNAPSHOT_QUERY_SUCCEEDED", False)
+    assert mod._snapshot_adapter_available() is False
+
+
+def test_an_answered_query_outweighs_a_later_failure(monkeypatch):
+    """Positive proof beats a transient error, and the inverse is incoherent.
+
+    The `except` this latches on is documented as transient, `lookup` keeps
+    querying regardless of the probe, and the adapter stays cached -- so a
+    latch that ignored successes let a hit name the snapshot in
+    `detected_by_sources` while omitting it from `consulted_sources` in the
+    same dict, asserting both that it answered and that it was never asked.
+    """
+    from ai_gene_review.validation import obsolete_authored_terms as mod
+
+    monkeypatch.setattr(mod, "_SNAPSHOT_QUERY_FAILED", True)
+    monkeypatch.setattr(mod, "_SNAPSHOT_QUERY_SUCCEEDED", True)
+    assert mod._snapshot_adapter_available() is True
+
+
+def test_a_hit_never_names_a_source_it_calls_unconsulted(monkeypatch):
+    """The two fields must not contradict each other in the same dict."""
+    from ai_gene_review.validation import obsolete_authored_terms as mod
+
+    monkeypatch.setattr(mod, "_SNAPSHOT_QUERY_FAILED", True)
+    monkeypatch.setattr(mod, "_SNAPSHOT_QUERY_SUCCEEDED", True)
+
+    report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
+    check_obsolete_authored_terms(
+        OBSOLETE_DOC,
+        report,
+        build_label_lookup(
+            Path("."), use_ontology=True, snapshot_available=mod._snapshot_adapter_available
+        ),
+    )
+    for issue in report.issues:
+        detected = set(issue.details["detected_by_sources"])
+        consulted = set(issue.details["consulted_sources"] or [])
+        assert detected <= consulted, (detected, consulted)
