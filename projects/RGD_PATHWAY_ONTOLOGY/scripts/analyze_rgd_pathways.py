@@ -343,19 +343,109 @@ def write_sssom(mappings: list[dict], path: Path) -> None:
         yaml.safe_dump(doc, fh, sort_keys=False, width=100, allow_unicode=True)
 
 
+def _term_ids(obj) -> set[str]:
+    """Every ``term.id`` in a parsed YAML subtree (structured fields only, never prose)."""
+    out: set[str] = set()
+    if isinstance(obj, dict):
+        term = obj.get("term")
+        if isinstance(term, dict) and isinstance(term.get("id"), str):
+            out.add(term["id"].strip())
+        for v in obj.values():
+            out |= _term_ids(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            out |= _term_ids(v)
+    return out
+
+
+def _module_refs(obj) -> set[str]:
+    """Every ``module_ref`` value in a parsed YAML subtree."""
+    out: set[str] = set()
+    if isinstance(obj, dict):
+        ref = obj.get("module_ref")
+        if isinstance(ref, str):
+            out.add(ref.strip())
+        for v in obj.values():
+            out |= _module_refs(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            out |= _module_refs(v)
+    return out
+
+
+def _find_by_id(obj, node_id: str):
+    """The first dict in a subtree whose ``id`` is ``node_id`` (nodes, parts, variants, annotons)."""
+    if isinstance(obj, dict):
+        if obj.get("id") == node_id:
+            return obj
+        for v in obj.values():
+            hit = _find_by_id(v, node_id)
+            if hit is not None:
+                return hit
+    elif isinstance(obj, list):
+        for v in obj:
+            hit = _find_by_id(v, node_id)
+            if hit is not None:
+                return hit
+    return None
+
+
+def _uniprot_ids(ids: set[str]) -> set[str]:
+    return {i.split(":", 1)[1].split("-")[0] for i in ids if i.startswith("UniProtKB:")}
+
+
 def load_modules(mod_dir: Path, up2sym: dict[str, str]) -> list[dict]:
-    mods = []
+    """Index modules by the ids in their structured fields.
+
+    GO terms and UniProtKB members are read from ``term.id`` fields of the parsed
+    ``module`` tree, so ids named only in notes or descriptions no longer count
+    (ai4curation/ai-gene-review#6006). Members reached through a node-level
+    ``module_ref`` (``slug#node``) count for the referencing module: the referenced
+    node's own members, and theirs in turn, are added (cycle-safe). A bare-slug
+    reference names a separate whole module and adds nothing.
+    """
+    docs: dict[str, dict] = {}
     for f in sorted(mod_dir.glob("*.yaml")):
-        txt = f.read_text(errors="ignore")
-        title_m = re.search(r"^title:\s*(.+)$", txt, flags=re.M)
-        ups = set(re.findall(r"UniProtKB:([A-Z0-9]{6,10})", txt))
+        try:
+            doc = yaml.safe_load(f.read_text(errors="ignore")) or {}
+        except yaml.YAMLError:
+            continue
+        if isinstance(doc, dict):
+            docs[f.stem] = doc
+
+    def subtree_members(slug: str, node_id: str | None, seen: set[tuple]) -> set[str]:
+        key = (slug, node_id)
+        if key in seen or slug not in docs:
+            return set()
+        seen = seen | {key}
+        root = docs[slug].get("module", docs[slug])
+        sub = _find_by_id(root, node_id) if node_id else root
+        if sub is None:
+            sub = root
+        ups = _uniprot_ids(_term_ids(sub))
+        for ref in _module_refs(sub):
+            ref_slug, _, ref_node = ref.partition("#")
+            # Only node-level references (slug#node) bring the referenced step's members
+            # in; a bare slug points at a separate whole mechanism (a dependency), whose
+            # members are not this module's.
+            if ref_node:
+                ups |= subtree_members(ref_slug, ref_node, seen)
+        return ups
+
+    mods = []
+    for slug, doc in docs.items():
+        tree = doc.get("module", {})
+        ids = _term_ids(tree)
+        ups = subtree_members(slug, None, set())
+        title = doc.get("title") or slug
         mods.append({
-            "id": f.stem,
-            "title": (title_m.group(1).strip().strip("'\"") if title_m else f.stem),
-            "go": set(re.findall(r"GO:\d{7}", txt)),
+            "id": slug,
+            "title": str(title).strip(),
+            "go": {i for i in ids if re.fullmatch(r"GO:\d{7}", i)},
             # Only PW ids a module declares as its evidence sources count as "cites PW id";
             # a PW id named in notes (often as an out-of-scope neighbour) does not.
-            "pw": set(re.findall(r"source_id:\s*['\"]?(PW:\d{7})", txt)),
+            "pw": {e.get("source_id") for e in (doc.get("evidence") or [])
+                   if isinstance(e, dict) and str(e.get("source_id", "")).startswith("PW:")},
             "symbols": {up2sym[u] for u in ups if u in up2sym},
         })
     return mods
