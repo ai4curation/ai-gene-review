@@ -103,9 +103,11 @@ def iba_rows(accessions: list[str]) -> list[dict]:
         batch = ",".join(accessions[i:i + 100])
         page = 1
         while True:
-            url = (f"{QUICKGO}?geneProductId={batch}&goEvidence=IBA&limit=200&page={page}")
+            # QuickGO ignores goEvidence; filter by the IBA ECO code, and check again below.
+            url = (f"{QUICKGO}?geneProductId={batch}&evidenceCode=ECO:0000318"
+                   f"&evidenceCodeUsage=exact&limit=200&page={page}")
             data = json.loads(_get(url))
-            rows.extend(data.get("results", []))
+            rows.extend(r for r in data.get("results", []) if r.get("goEvidence") == "IBA")
             info = data.get("pageInfo") or {}
             if page >= (info.get("total") or 1):
                 break
