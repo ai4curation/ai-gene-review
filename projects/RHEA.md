@@ -2,7 +2,7 @@
 title: "RHEA → GO Contribution & Gap Project"
 collections: [MAPPINGS]
 maturity: IN_PROGRESS
-last_reviewed: 2026-10-05
+last_reviewed: 2026-11-23
 tags: [PIPELINE]
 sidecars:
   slide_charts:
@@ -241,8 +241,8 @@ same protein.
 Target: every RHEA reaction used by a Swiss-Prot entry has an `exactMatch` or `narrowMatch` xref on a
 GO term. At go-ontology HEAD (2026-11-23), 6,556 of 14,163 such reactions are covered, 347 more have
 a call staged in [`rhea2go.sssom.yaml`](RHEA/rhea2go.sssom.yaml), and 7,260 are open. For mapped
-reactions, Swiss-Prot entries agree with their native GO MF annotations in about 83% of cases when
-only curated annotations are counted. The disagreements sort into partial reactions,
+reactions, Swiss-Prot entries agree with their native GO MF annotations in about 83% of the entry–mapping
+pairs where the entry has any catalytic or transporter MF annotation, counting curated annotations only. The disagreements sort into partial reactions,
 sibling-chemistry disagreements and ontology-structure gaps. See
 [RHEA-SWISSPROT-COMPLETENESS.md](RHEA/RHEA-SWISSPROT-COMPLETENESS.md); problems found in GO are
 recorded in [GO-FOLLOWUPS.md](RHEA/completeness/GO-FOLLOWUPS.md). No further issues or PRs go to

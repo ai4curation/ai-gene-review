@@ -23,9 +23,9 @@ Swiss-Prot reactions.
   genes/SHESA/thiI, which record it as a `source_defects` entry on the GO:0004810 row.
 
 **Later (2026-11-21):** go-ontology 32998, a PR adding 14 `narrowMatch` xrefs for single-solute
-uniporter and channel reactions, each backed by two gene reviews here. The reaction figures used in its description are kept in `figures/`, for example the potassium uniporter reaction:
+uniporter and channel reactions, each backed by two gene reviews here. The reaction figures used in its description are kept in `figures/`, for example the D-glucose uniporter reaction:
 
-![RHEA:29463 K+(in) = K+(out)](figures/RHEA_29463.svg)
+![RHEA:60376 D-glucose(out) = D-glucose(in)](figures/RHEA_60376.svg)
 
 **Policy (2026-11-23):** no further issues or PRs are to be opened on the go-ontology tracker from this
 project. The remaining items below are kept as a record of the problems found; new mappings are staged
