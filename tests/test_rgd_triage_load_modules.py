@@ -108,3 +108,24 @@ def test_reference_cycle_terminates(tmp_path):
     by_id = {m["id"]: m for m in analyze.load_modules(mods, {"P00001": "X", "P00002": "Y"})}
     assert by_id["x"]["symbols"] == {"X", "Y"}
     assert by_id["y"]["symbols"] == {"X", "Y"}
+
+
+def test_unresolved_node_ref_adds_nothing(tmp_path, capsys):
+    analyze = _load_script()
+    mods = tmp_path / "modules"
+    mods.mkdir()
+    _write(
+        mods / "big.yaml",
+        {"id": "MODULE:big", "title": "Big",
+         "module": {"id": "big", "annotons": [_gene("P00005"), _gene("P00006")]}},
+    )
+    _write(
+        mods / "a.yaml",
+        {"id": "MODULE:a", "title": "A",
+         "module": {"id": "a", "annotons": [_gene("P00004")],
+                    "parts": [{"node": {"id": "r", "module_ref": "big#no_such_node"}}]}},
+    )
+    by_id = {m["id"]: m for m in analyze.load_modules(
+        mods, {"P00004": "G4", "P00005": "G5", "P00006": "G6"})}
+    assert by_id["a"]["symbols"] == {"G4"}
+    assert "unresolved module_ref big#no_such_node" in capsys.readouterr().err

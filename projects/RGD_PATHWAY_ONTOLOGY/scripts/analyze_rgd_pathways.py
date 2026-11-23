@@ -402,26 +402,39 @@ def load_modules(mod_dir: Path, up2sym: dict[str, str]) -> list[dict]:
     (ai4curation/ai-gene-review#6006). Members reached through a node-level
     ``module_ref`` (``slug#node``) count for the referencing module: the referenced
     node's own members, and theirs in turn, are added (cycle-safe). A bare-slug
-    reference names a separate whole module and adds nothing.
+    reference names a separate whole module and adds nothing, and a node-level
+    reference that does not resolve adds nothing and is reported on stderr.
+    GO ids under ``about_node``, ``subject`` or ``proposed_parent`` (ontology change
+    requests) are not ``term.id`` fields and do not count. PW ids count only from the
+    top-level ``evidence`` list, where every module declares them.
     """
     docs: dict[str, dict] = {}
     for f in sorted(mod_dir.glob("*.yaml")):
         try:
             doc = yaml.safe_load(f.read_text(errors="ignore")) or {}
-        except yaml.YAMLError:
+        except yaml.YAMLError as exc:
+            print(f"warning: {f.name} is not valid YAML and is skipped: {exc}", file=sys.stderr)
             continue
         if isinstance(doc, dict):
             docs[f.stem] = doc
 
-    def subtree_members(slug: str, node_id: str | None, seen: set[tuple]) -> set[str]:
+    def module_root(slug: str) -> dict:
+        return docs[slug].get("module") or {}
+
+    def subtree_members(slug: str, node_id: str | None, seen: set[tuple],
+                        referrer: str | None = None) -> set[str]:
         key = (slug, node_id)
-        if key in seen or slug not in docs:
+        if key in seen:
+            return set()
+        if slug not in docs:
+            print(f"warning: {referrer}: module_ref to missing module {slug!r}", file=sys.stderr)
             return set()
         seen = seen | {key}
-        root = docs[slug].get("module", docs[slug])
+        root = module_root(slug)
         sub = _find_by_id(root, node_id) if node_id else root
         if sub is None:
-            sub = root
+            print(f"warning: {referrer}: unresolved module_ref {slug}#{node_id}", file=sys.stderr)
+            return set()
         ups = _uniprot_ids(_term_ids(sub))
         for ref in _module_refs(sub):
             ref_slug, _, ref_node = ref.partition("#")
@@ -429,13 +442,12 @@ def load_modules(mod_dir: Path, up2sym: dict[str, str]) -> list[dict]:
             # in; a bare slug points at a separate whole mechanism (a dependency), whose
             # members are not this module's.
             if ref_node:
-                ups |= subtree_members(ref_slug, ref_node, seen)
+                ups |= subtree_members(ref_slug, ref_node, seen, referrer=slug)
         return ups
 
     mods = []
     for slug, doc in docs.items():
-        tree = doc.get("module", {})
-        ids = _term_ids(tree)
+        ids = _term_ids(module_root(slug))
         ups = subtree_members(slug, None, set())
         title = doc.get("title") or slug
         mods.append({
