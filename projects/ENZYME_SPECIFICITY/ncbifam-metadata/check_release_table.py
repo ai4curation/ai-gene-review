@@ -57,8 +57,8 @@ SKIP_LABELS = {  # in reporting order; each test applies only to pairs the ones 
     "model_has_no_ec": "where the model has no EC number",
     "non_mf_term": "with a biological process or cellular component term",
     "mf_term_partial_ec_contains_model": "with a class term whose partial EC contains the model's EC",
-    "mf_term_ancestor_of_model_term": "with a class term that is a GO ancestor of a term for the model's EC, though its partial EC does not contain it",
     "mf_term_partial_ec_within_model": "with a class term whose partial EC lies inside the model's partial EC (narrower)",
+    "mf_term_ancestor_of_model_term": "with a class term that is a GO ancestor of a term for the model's EC, though its partial EC does not contain it",
     "mf_term_partial_ec_outside_model": "with a class term unrelated to the model's EC by EC class or GO ancestry",
     "mf_term_has_no_ec": "with a molecular function term that has no EC cross-reference at all",
 }
@@ -262,7 +262,7 @@ def main() -> None:
     hierarchy = GoHierarchy(GO_DB)
     hits = refseq_hits(db.cache_dir)
     terms = term_data({go for f in db.families for go in f.go_terms})
-    rows, obsolete, class_mismatch = [], [], []
+    rows, obsolete, class_mismatch, class_within, class_ancestor = [], [], [], [], []
     # GO ids in the release table that QuickGO does not return (merged or invalid ids)
     unresolved = sorted(
         {
@@ -301,16 +301,42 @@ def main() -> None:
                     model_terms = {
                         mt for m in f.ec_numbers for mt in hierarchy.terms_for_ec(m)
                     }
+                    # EC-class relations are tested before GO ancestry, so each
+                    # counter means what it says whatever the later tests find
                     if "contains" in relations:
                         skipped["mf_term_partial_ec_contains_model"] += 1
+                    elif "within" in relations:
+                        skipped["mf_term_partial_ec_within_model"] += 1
+                        class_within.append(
+                            {
+                                "model": f.accession,
+                                "product_name": f.product_name,
+                                "family_type": f.family_type,
+                                "ec_numbers": f.ec_numbers,
+                                "go": go,
+                                "go_name": t["name"],
+                                "go_partial_ec": partial,
+                                "refseq_hits": hits.get(f.accession, 0),
+                            }
+                        )
                     elif any(
                         go == mt or go in hierarchy.ancestors(mt) for mt in model_terms
                     ):
                         # the term's own EC xref is narrower than its scope
                         # (endopeptidase activity carries only EC:3.4.99.-)
                         skipped["mf_term_ancestor_of_model_term"] += 1
-                    elif "within" in relations:
-                        skipped["mf_term_partial_ec_within_model"] += 1
+                        class_ancestor.append(
+                            {
+                                "model": f.accession,
+                                "ec_numbers": f.ec_numbers,
+                                "go": go,
+                                "go_name": t["name"],
+                                "go_partial_ec": partial,
+                                # the term is itself a term for the model's EC in the GO
+                                # database, though QuickGO gave it no complete EC
+                                "term_is_model_ec_term": go in model_terms,
+                            }
+                        )
                     else:
                         skipped["mf_term_partial_ec_outside_model"] += 1
                         class_mismatch.append(
@@ -371,16 +397,24 @@ def main() -> None:
                 "pairs": [r for r in rows if r["relation"] != "consistent"],
                 "obsolete_go": obsolete,
                 "class_term_outside_model_ec": class_mismatch,
+                "class_term_within_model_ec": class_within,
+                "class_term_ancestor_of_model_ec_term": class_ancestor,
             },
             sort_keys=False,
             width=120,
         )
     )
-    (HERE / "CANDIDATES.md").write_text(render(meta, rows, obsolete, class_mismatch))
+    (HERE / "CANDIDATES.md").write_text(
+        render(meta, rows, obsolete, class_mismatch, class_within)
+    )
 
 
 def render(
-    meta: dict, rows: list[dict], obsolete: list[dict], class_mismatch: list[dict]
+    meta: dict,
+    rows: list[dict],
+    obsolete: list[dict],
+    class_mismatch: list[dict],
+    class_within: list[dict],
 ) -> str:
     """CANDIDATES.md, built only from the computed results."""
     lines = [
@@ -465,13 +499,34 @@ def render(
     lines.extend(
         [
             "",
+            f"## Class term inside the model's partial EC ({len(class_within)})",
+            "",
+            "Not triaged: the model's EC is partial and the GO term's partial EC lies "
+            "inside it, so the term is more specific than the EC. It is right only if "
+            "every member of the family has that specificity.",
+            "",
+            "| model | product name | family type | model EC | GO term | term EC | RefSeq hits |",
+            "|---|---|---|---|---|---|---|",
+        ]
+    )
+    lines.extend(
+        f"| {r['model']} | {r['product_name']} | {r['family_type']} | "
+        f"{', '.join(r['ec_numbers'])} | {r['go']} {r['go_name']} | "
+        f"{', '.join(r['go_partial_ec'])} | {r['refseq_hits']} |"
+        for r in sorted(class_within, key=lambda r: (-r["refseq_hits"], r["model"]))
+    )
+    lines.extend(
+        [
+            "",
             f"## Class term outside the model's EC class ({len(class_mismatch)})",
             "",
             "Not compared above and not triaged: the GO term carries only a partial EC, "
             "neither EC class contains the other, and the term is not a GO ancestor of "
             "any term for the model's EC (a glycoside hydrolase term on the branching "
-            "enzyme GlgB, say). Some are wrong-class terms; others follow an EC "
-            "reclassification or a term whose partial EC is narrower than its scope.",
+            "enzyme GlgB, say, which may instead be a family-level mapping, since GlgB "
+            "belongs to glycoside hydrolase family 13). Candidate causes: a wrong-class "
+            "term, a wrong EC on the model, an EC reclassification, or a term whose "
+            "partial EC is narrower than its scope.",
             "",
             "`ancestry tested` is `no` where GO has no term cross-referencing the "
             "model's EC, so the GO-ancestor test could not run; endopeptidase activity "

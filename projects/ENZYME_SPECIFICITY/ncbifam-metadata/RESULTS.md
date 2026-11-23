@@ -60,8 +60,8 @@ that reach, and the lists rank by it.
 | skipped: model has no EC number | 8790 |
 | skipped, of the rest: biological process or cellular component term | 4095 |
 | skipped: class term whose partial EC contains the model's EC (true, broader) | 691 |
-| skipped: class term that is a GO ancestor of a term for the model's EC | 7 |
-| skipped: class term whose partial EC lies inside the model's partial EC (narrower) | 0 |
+| not compared: class term whose partial EC lies inside the model's partial EC (narrower; listed, not triaged) | 3 |
+| skipped: class term that is a GO ancestor of a term for the model's EC | 4 |
 | not compared: class term unrelated by EC class or GO ancestry (listed, not triaged) | 81 |
 | skipped: molecular function term with no EC cross-reference at all | 2180 |
 | EC on both sides | 2847 |
@@ -159,13 +159,22 @@ carries the term for another member's reaction.
   bullet) would be missed. Another 779 join it to a class term that carries only a
   partial EC, such as oxidoreductase activity (EC 1.-.-.-):
   - in 691 the term's EC class contains the model's EC, so the term is true but broad;
-  - in 7 the term's partial EC does not contain the model's EC, but the term is a GO
-    ancestor of a term for that EC, so it is broad too;
-  - none has a term class inside a partial model EC, which would be over-specific;
+  - in 3 the term's EC class lies inside the model's partial EC, so the term is more
+    specific than the EC. CANDIDATES.md lists them under "Class term inside the
+    model's partial EC" without triage. Each matches its product name, for example
+    endopeptidase activity on the L,D-endopeptidase MepK (EC 3.4.-.-);
+  - in 4 the term's partial EC does not contain the model's EC, but the term is a GO
+    ancestor of a term for that EC, so it is broad too. EC classes are compared
+    before GO ancestry, so these 4 are not narrower. For a partial model EC the
+    ancestry test is weaker, since it matches any GO term under that EC class.
+    `release_table_check.yaml` records each of the 4;
   - the other 81 are listed in CANDIDATES.md under "Class term outside the model's
-    EC class", without triage. Some are wrong-class terms, such as a glycoside
-    hydrolase term on the branching enzyme GlgB (a glycosyltransferase). Others
-    follow an EC reclassification, such as transporters moved from EC 3.6 to EC 7, or
+    EC class", without triage. Candidates include wrong-class terms, though even the
+    clearest-looking needs checking: a glycoside hydrolase term on the branching
+    enzyme GlgB (a glycosyltransferase) may be a family-level mapping, since GlgB
+    belongs to glycoside hydrolase family 13. Others look like a wrong EC on the
+    model (TIGR01412.1, named a peroxidase, carries ferrochelatase EC 4.98.1.1 and
+    the peroxidase term), follow an EC reclassification, such as transporters moved from EC 3.6 to EC 7, or
     carry a term whose own partial EC is narrower than its scope: endopeptidase
     activity is cross-referenced only to EC 3.4.99.-. The GO-ancestor test cannot
     run for 35 of the 81, where no GO term cross-references the model's EC, and the
