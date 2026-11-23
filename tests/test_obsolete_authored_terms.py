@@ -702,18 +702,49 @@ def test_consulted_sources_distinguishes_silence_from_not_asking(tmp_path):
 
     offline = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
     check_obsolete_authored_terms(
-        doc, offline, build_label_lookup(tmp_path, use_ontology=False)
+        doc,
+        offline,
+        build_label_lookup(tmp_path, use_ontology=False, snapshot_available=lambda: True),
     )
     assert offline.issues[0].details["consulted_sources"] == ["the corpus GOA files"]
     assert offline.issues[0].details["live_according_to"] == []
 
 
-def test_consulted_sources_lists_the_snapshot_when_it_is_consulted(tmp_path):
-    lookup = build_label_lookup(tmp_path, use_ontology=True)
-    assert lookup.consulted_sources == [  # type: ignore[attr-defined]
+def test_consulted_sources_lists_the_snapshot_when_it_can_answer(tmp_path):
+    lookup = build_label_lookup(
+        tmp_path, use_ontology=True, snapshot_available=lambda: True
+    )
+    assert lookup.consulted_sources() == [  # type: ignore[attr-defined]
         "the corpus GOA files",
         "the GO snapshot",
     ]
+
+
+def test_a_configured_but_unloadable_snapshot_is_not_reported_as_consulted(tmp_path):
+    """Configured is not consulted, and the difference is observable.
+
+    `_get_cached_adapter` returns None when the OAK build cannot load and
+    remembers the failure, so every snapshot lookup then returns None. Reporting
+    it as consulted would recreate, one level down, the ambiguity this field
+    exists to remove -- the reader could not tell "asked, nothing to say" from
+    "never loaded".
+    """
+    lookup = build_label_lookup(
+        tmp_path, use_ontology=True, snapshot_available=lambda: False
+    )
+    assert lookup.consulted_sources() == ["the corpus GOA files"]  # type: ignore[attr-defined]
+
+
+def test_consulted_sources_is_not_resolved_until_a_hit(tmp_path):
+    """Probing at build time would reload the snapshot for every clean review."""
+    probes = []
+
+    def probe():
+        probes.append(1)
+        return True
+
+    build_label_lookup(tmp_path, use_ontology=True, snapshot_available=probe)
+    assert probes == []
 
 
 def test_consulted_sources_is_none_for_an_injected_lookup():

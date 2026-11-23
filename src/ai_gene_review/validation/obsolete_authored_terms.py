@@ -267,6 +267,19 @@ def _cached_goa_obsolete_labels(project_root: Path) -> Mapping[str, Tuple[str, s
     return MappingProxyType(goa_obsolete_labels(project_root))
 
 
+def _snapshot_adapter_available() -> bool:
+    """Whether the GO snapshot can actually answer, not merely whether it is configured.
+
+    ``_get_cached_adapter`` returns None when the OAK build cannot load and
+    remembers the failure, so every snapshot lookup then returns None. Without
+    this probe, "configured to consult the snapshot" and "the snapshot answered"
+    are indistinguishable.
+    """
+    from ai_gene_review.validation.module_validator import _get_cached_adapter
+
+    return _get_cached_adapter("sqlite:obo:go") is not None
+
+
 @lru_cache(maxsize=None)
 def _snapshot_label(curie: str) -> Optional[str]:
     """The GO sqlite snapshot's primary label for ``curie``, or None.
@@ -291,6 +304,7 @@ def build_label_lookup(
     goa_index_loader: Callable[
         [Path], Mapping[str, Tuple[str, str]]
     ] = _cached_goa_obsolete_labels,
+    snapshot_available: Callable[[], bool] = _snapshot_adapter_available,
 ) -> LabelLookup:
     """A lookup over the offline signals: the corpus GOA labels and GO's snapshot.
 
@@ -316,15 +330,31 @@ def build_label_lookup(
                 pairs.append(("the GO snapshot", snapshot))
         return pairs
 
-    # What this lookup CAN consult, which a caller cannot otherwise infer: a
-    # source that was asked and had nothing to say is indistinguishable, in the
-    # returned pairs, from one that was never asked.
-    lookup.consulted_sources = (  # type: ignore[attr-defined]
-        ["the corpus GOA files", "the GO snapshot"]
-        if use_ontology
-        else ["the corpus GOA files"]
-    )
+    def consulted_sources() -> List[str]:
+        """The sources that can actually answer, resolved lazily on first use.
+
+        Deliberately NOT computed from ``use_ontology`` alone. The snapshot is
+        configured but mute when its OAK build cannot load -- which is the
+        state of any runner without the GO sqlite -- and reporting it as
+        consulted there would recreate, one level down, the very ambiguity
+        ``live_according_to`` and this field exist to remove.
+
+        Resolved on first use rather than at build time so a review with no
+        authored GO ids still never pays for loading the snapshot.
+        """
+        names = ["the corpus GOA files"]
+        if use_ontology and snapshot_available():
+            names.append("the GO snapshot")
+        return names
+
+    lookup.consulted_sources = consulted_sources  # type: ignore[attr-defined]
     return lookup
+
+
+def _consulted(lookup: LabelLookup) -> Optional[List[str]]:
+    """The lookup's consultable sources, or None for an injected test double."""
+    reporter = getattr(lookup, "consulted_sources", None)
+    return reporter() if callable(reporter) else None
 
 
 def check_obsolete_authored_terms(
@@ -399,7 +429,7 @@ def check_obsolete_authored_terms(
                 # otherwise read as "nothing disagreed" rather than "nothing
                 # was asked". That is the same ambiguity this field exists to
                 # remove, so leaving it in place here would be self-defeating.
-                "consulted_sources": getattr(lookup, "consulted_sources", None),
+                "consulted_sources": _consulted(lookup),
             },
             suggestion=(
                 "Repoint to a live term that the evidence on this row supports -- check "
