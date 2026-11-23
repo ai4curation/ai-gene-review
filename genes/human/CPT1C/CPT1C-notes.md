@@ -150,3 +150,25 @@ rewritten by this review; the obsoletion is upstream GOA's to propagate. Its
 read oddly for a BP-aspect row, and is arguably the same aspect confusion GO
 obsoleted the term for — worth revisiting in a review of that row, which is out of
 scope for this correction.
+
+## Review follow-up (2026-11-23, PR #6790 round 2)
+
+Reviewer suggestion 7: two rows whose `reason` argued against their own action. Only the
+action and reason are the review's own; neither GOA-sourced term id was touched.
+
+- `GO:0003824 catalytic activity` (IEA, GO_REF:0000117) was `ACCEPT` with a reason reading
+  "this is a root-level term that provides minimal information". CLAUDE.md forbids
+  accepting a term while arguing that it is too general. The action is now `TOO_GENERAL`,
+  which is exactly the case the enum describes: the term is true of the gene but
+  uninformative because a more specific term asserted elsewhere in this review already
+  entails it — `GO:0008474 palmitoyl-(protein) hydrolase activity`, which CPT1C carries by
+  IDA from PMID:30135643 (`CPT1C-goa.tsv`, ECO:0000314). `MODIFY` is not used: this row's
+  own evidence is an ARBA electronic call that reaches only the root of the
+  molecular-function branch, and CLAUDE.md requires a MODIFY to rest on this row's own
+  evidence for the deeper term. The action judges the term, not the evidence; the claim is
+  not called false.
+- `GO:0098734 macromolecule depalmitoylation` (IEA, GO_REF:0000108) is a biological-process
+  row whose reason called it "the core molecular function of CPT1C". It stays `ACCEPT` —
+  the claim and the aspect are right — and the reason now calls it the core biological
+  process, points at `GO:0008474` for the molecular function, and records the earlier
+  mislabelling.

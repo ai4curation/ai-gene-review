@@ -119,3 +119,11 @@ synonym and the current label became "negative regulation of endosome to plasma 
 transport" (QuickGO term history, checked 2026-11-23). The label written here is GO's current
 one; the stale cache is deliberately not touched, since shared single-file caches are refreshed
 in dedicated refresh PRs.
+
+## Review follow-up (2026-11-23, PR #6790 round 2)
+
+The label-vs-cache convention used here — write GO's current label and accept the transient
+`Label mismatch` warning until the shared `cache/go/terms.csv` is refreshed in its own PR —
+was adopted as the convention for the whole PR. `genes/GLUOX/gdh` had taken the opposite
+line for `GO:0008876` and was changed to match; see the round-2 note in `gdh-notes.md`.
+Nothing in this review changed.

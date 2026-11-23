@@ -90,3 +90,42 @@ measured in PMID:16980616 is inside-out; the two are kept distinct in the review
 combination is not claimed to be an exact substitute for the obsoleted precomposed term.
 Nothing in `supported_by`, the references or the evidence was changed.
 
+
+## Review follow-up (2026-11-23, PR #6790 round 2)
+
+The first round took `GO:0045785 positive regulation of cell adhesion` straight from GO's
+`replaced_by` for the obsoleted `GO:0033630`. CLAUDE.md says `replaced_by` is an automated
+mapping that should not be trusted by default, and for an author-written `NEW` row the
+standard is the most specific **live** term the evidence supports. The three live
+descendants named in review were checked against QuickGO on 2026-11-23 (all three confirmed
+non-obsolete, `GO:1903039 is_a ... GO:0022409 is_a GO:0045785`, and `GO:0010811 is_a
+GO:0045785` but **not** under `GO:0022409`):
+
+- `GO:0010811 positive regulation of cell-substrate adhesion` — **adopted**. The assay in
+  PMID:16980616 is adhesion of Jurkat T cells to fibronectin- or ICAM-1-coated dishes
+  ("prior to the adhesion on fibronectin- or ICAM-1-coated dishes"), that is, attachment to
+  an immobilized ligand. That is cell-substrate adhesion as performed, and the term is live
+  and more specific than the root.
+- `GO:0022409 positive regulation of cell-cell adhesion` — **rejected**. Neither cited paper
+  measures a cell-cell adhesion endpoint for FYB1. PMID:16980616 runs coated-dish assays
+  only. PMID:17403904 does contain a T-cell/APC conjugate assay, but it perturbs the
+  SKAP-55/RIAM interaction with GFP-RA and GFP-PH RIAM domain fragments, not ADAP, and that
+  paper attributes the published conjugation defect to SKAP-55 knockdown ("the knockdown of
+  SKAP-55 by small interfering RNA (siRNA) decreases T-cell-APC conjugation"). The
+  T-cell/APC claim is left to the literature rather than asserted on FYB1.
+- `GO:1903039 positive regulation of leukocyte cell-cell adhesion` — **rejected** for the
+  same reason, and it would in any case entail `GO:0022409`, so only one of that pair could
+  be asserted even if the evidence were there.
+
+Neither adopted nor rejected term reintroduces what GO obsoleted `GO:0033630` for: these
+classify by adhesion type (substrate vs cell), not by the mediating molecule.
+
+Changed in `FYB1-ai-review.yaml`: the `NEW` row term and `core_functions[0].directly_involved_in`
+now read `GO:0010811`; the row `reason` records the descendant check and the two rejections;
+a second verbatim quote was added ("overexpression of wild-type FADAP augmented adhesion of
+Jurkat T cells to ICAM-1 or fibronectin") so the row's primary quote is the wild-type ADAP
+result rather than only the engineered LAT-chimera result. `FYB1-source-guide.md` updated to
+the new id. This also closes the gap the earlier note conceded: `GO:0007229` is outside-in
+while the assay is inside-out, and `GO:0010811` now names the adhesion the inside-out assay
+actually measures, so the integrin-signalling rows are no longer carrying that load alone.
+`GO:0010811` is absent from `FYB1-goa.tsv`, so the row remains non-redundant.

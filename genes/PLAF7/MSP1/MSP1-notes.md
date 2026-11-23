@@ -199,3 +199,19 @@ enzymatic and chemical treatments) and PMID:18769730 (p19 "still attached to the
 merozoite via its GPI-anchor"). No evidence, `supported_by` quote or reference was
 removed; `core_functions` was unaffected, since all three core functions already use
 `GO:0005886` as their location.
+
+## Review follow-up (2026-11-23, PR #6790 round 2)
+
+Reviewer suggestion 5: after the `GO:0031362` -> `GO:0009897` swap, the surviving claim on
+that `NEW` row is sidedness (outer leaflet), while both `supported_by` quotes established
+GPI anchoring, leaving the sidedness argument in `summary` — surface-protease and antibody
+accessibility — with no quote behind it. The reviewer offered either `IC` or a
+surface-accessibility quote.
+
+`IDA` is kept and two verbatim quotes from PMID:18769730 were added, because the sidedness
+is observed and not merely inferred from the anchor: MSP1 "is processed into four fragments
+on the parasite surface" and, on invasion, "most of the protein is shed from the surface
+except for the C-terminal 19-kDa fragment". Both require the bulk of the protein to be
+exposed outside the intact merozoite, which is the external-side claim; the GPI anchor then
+says which leaflet carries it. The `reason` now states this explicitly and says why `IC`
+was not used. No term, qualifier or reference was changed.

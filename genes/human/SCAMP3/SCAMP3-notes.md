@@ -56,3 +56,49 @@ wrong.
   `NEW` rows extends to `core_functions` as well. After the change,
   `just validate human SCAMP3` is clean (one pre-existing warning about missing
   `propagation_review` on the IBA MODIFY row).
+
+## Review follow-up (2026-11-23, PR #6790 round 2)
+
+**The GO:0032509 NEW row now cites the paper, not the deep-research file.** CLAUDE.md:
+"Your notes and deep-research files are not literature. Cite the paper or record they
+point to." The row's `original_reference_id` was
+`file:human/SCAMP3/SCAMP3-deep-research-falcon.md` and its primary `supporting_text` was a
+cell from a machine-generated table in that file.
+
+`uv run ai-gene-review fetch-pmid 21951651` was run on 2026-11-23 and cached
+`publications/PMID_21951651.md`. It is the right paper: Falguieres T, Castle D, Gruenberg
+J, "Regulation of the MVB pathway by SCAMP3", Traffic 13(1):131-42, 2012,
+doi:10.1111/j.1600-0854.2011.01291.x — the work the notes had already identified. It is
+abstract-only (`full_text_available: false`; no PMC record), and the abstract states the
+annotated claim directly: "We find that SCAMP3 plays a role in EGF receptor sorting into
+multivesicular endosomes and in the formation of intralumenal vesicles within these
+endosomes in vitro and thus also controls EGF receptor targeting to lysosomes."
+
+Changes: `original_reference_id: PMID:21951651`; that verbatim abstract sentence is the
+row's first `supported_by` quote; the Falcon file moved to `additional_reference_ids` as
+the route by which the paper was found, not as support; a `references` entry for
+PMID:21951651 was added with two findings and a `reference_review`
+(`relevance: HIGH`, `correctness: VERIFIED`) recording the verification and the
+abstract-only limitation; and the `reason` now says what depth the claim rests on (the
+abstract, not the figures). Evidence code stays `IMP` — the abstract's result is a
+SCAMP3-perturbation result.
+
+Also removed from the `GO:0006887` exocytosis MODIFY row: a `supported_by` entry quoting
+`model: Edison Scientific Literature` from the Falcon file. That is a table header, not a
+quotation of anything that supports the claim, and CLAUDE.md requires `supporting_text` to
+be actual source text asserting support. The row keeps its PMID:19158374 support.
+
+**GO:0006887 MODIFY replacement (reviewer suggestion 8).** The replacement was
+`GO:0016197 endosomal transport`; it is now `GO:0032509 endosome transport via
+multivesicular body sorting pathway`, which this review already asserts as a NEW row on
+PMID:21951651. CLAUDE.md prefers a replacement term the gene already carries, and
+GO:0032509 is the more specific of the two (GO:0032509 is a descendant of GO:0016197,
+which is why GO:0016197 had already been dropped from `core_functions`). The `reason`
+prose was updated to say so.
+
+**Not changed:** the `GO:0005770` late-endosome NEW row still carries
+`original_reference_id: file:human/SCAMP3/SCAMP3-deep-research-falcon.md` and a summary
+attributing a "~30% of late endosomes" quantification to the same 2012 paper. That figure
+is not in the cached abstract and cannot be checked without the full text, so the row was
+left alone rather than re-pointed on an unverifiable basis; it is flagged here for a
+follow-up that has the full text.
