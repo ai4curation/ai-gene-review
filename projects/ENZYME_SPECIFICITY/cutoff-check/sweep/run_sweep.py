@@ -481,7 +481,11 @@ def render(meta: dict, results: list[dict]) -> str:
 
 
 def rerender() -> None:
-    """Re-derive the lists and DISAGREEMENTS.md from saved scores, without rescanning."""
+    """Re-derive the lists and DISAGREEMENTS.md from saved scores, without rescanning.
+
+    For NCBIfam- or UniProt-side changes only: review actions, conflicting actions and
+    duplicate folders come from the saved results, so a review edit needs a full rescan.
+    """
     saved = yaml.safe_load((HERE / "sweep_results.yaml").read_text())
     db = NCBIfam(CACHE / "ncbifam")
     if saved["meta"]["ncbifam_release"] != db.release():

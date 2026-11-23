@@ -132,7 +132,7 @@ def main() -> None:
                 donors = collections.defaultdict(list)
                 for porg, pr in passing.items():
                     if LINEAGE[porg] == lineage:
-                        for s in pr["ligand_genes"]:
+                        for s in pr["donor_genes"]:
                             donors[s.upper()].append(porg)
                 for s in expected.get(lineage, {}).get(term, []):
                     donors[s.upper()].append("expected_ligands.yaml")
