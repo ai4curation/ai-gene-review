@@ -168,13 +168,29 @@ Three further groups of values are easy to confuse:
   ancestral-node GO association propagated by TreeGrafter (`GO_REF:0000118`).
   An `INTERPRO` defect's `record:` is the signature, written `InterPro:IPR006108`
   and joined with `|` for several, as GOA writes WITH/FROM:
-  `InterPro:IPR006108|InterPro:IPR006176`. Take the ids from the GOA row's own
-  WITH/FROM for the faulted term, keeping those the explanation also names. That
-  intersection matters: an explanation often names a further signature as the one
-  that should be *excluded* from the mapping (IPR026578 for the L-carnitine
-  dehydrogenases), and that signature is not the defective record. Without
-  `record:` the report falls back to the GAF-row tuple, heading an InterPro
-  defect with a row InterPro never wrote.
+  `InterPro:IPR006108|InterPro:IPR006176`. Without `record:` the report falls
+  back to the GAF-row tuple, heading an InterPro defect with a row InterPro
+  never wrote.
+
+  **Which signatures belong in it:** of the ones the faulted term's GOA row cites
+  in WITH/FROM, exactly those that carry that GO term in the committed
+  `rules/arba/_interpro2go.txt`. That set is the defective record, and asking the
+  mapping file is better than reading the explanation, because it guards both
+  directions at once:
+
+  - It *drops* a signature the explanation names only to ask for its exclusion
+    from the mapping (IPR026578 for the L-carnitine dehydrogenases, IPR006277 for
+    the sarcosine oxidase alpha subunits). Those are not mapped to the faulted
+    term, so they fall out on their own.
+  - It *adds* the sibling signatures that carry the same mapping and that the
+    prose happened not to mention. This is the direction that is easy to miss:
+    `ECOLI/garK` asks for GO:0008887 to be repointed, and IPR018193 and IPR036129
+    carry that mapping too, so repointing the one signature the explanation named
+    would have left the row standing.
+
+  Where the narrow ask is deliberate - `rat/Kcnj16` disputes `enables` only for
+  the Kir5 signature, not for the generic Kir one that shares the mapping - say so
+  in `explanation`, since the record otherwise looks like the same omission.
 - **`INTERPRO` is not `GOA_EBI`.** Ask what the fix changes. The *content* of a
   mapping - its GO term, its qualifier, the signatures it covers - or the
   signature's own description is `INTERPRO`, and stays `INTERPRO` however the
