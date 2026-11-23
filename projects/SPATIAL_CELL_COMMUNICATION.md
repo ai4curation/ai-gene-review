@@ -11,7 +11,8 @@ index_group: CROSS_CUTTING
 # Spatial cell-cell communication
 
 **Status: scoping.** Nothing has been run yet. This page sets out the plan, what
-already exists in the repository to build on, and the open decisions.
+already exists in the repository to build on, and the
+[design decisions](#decisions-2026-11-23) taken before work starts.
 
 **Bottom line:** cell-cell communication (CCC) tools such as CellPhoneDB, CellChat,
 NicheNet and LIANA infer signaling between cell types or spots by asking whether a
@@ -137,15 +138,13 @@ explicit threshold, built from a public dataset with a documented download. Foll
 the satisfiability project, report results across a threshold sweep rather than at
 one cut-off.
 
-**Validation.** Pick modules whose spatial pattern is known independently of
-expression, so that the result is a derivation rather than a restatement. Candidates
-to choose from in the first run:
-
-- Chemokine gradients and their receptor-bearing immune cells in lymph node or tonsil
-  (the chemokine module).
-- The liver lobule, which the gluconeogenesis work already oriented. A human liver
-  spatial atlas (GEO GSE239480) is noted there as the open validation target.
-- Notch lateral signaling, where sender and receiver are adjacent by definition.
+**Validation.** Use modules whose spatial pattern is known independently of their
+own genes' expression, so that the result is a derivation rather than a
+restatement. The first run uses lymph node (decision 1): the CCR7 module should be
+satisfied in the T-cell zone, the CXCR5 module in the follicles, and modules for
+signals the tissue does not use should fail. The liver lobule is second. Notch
+signaling between neighbouring cells is a later case, since sender and receiver are
+adjacent by definition.
 
 **Comparison.** Run LIANA or CellPhoneDB on the same data, restricted to the pairs
 the modules cover, and compare the calls. Expect differences where a module requires a
@@ -163,37 +162,84 @@ from the module YAML, do not commit hand-edited tables.
 
 ## Plan
 
-1. Decide the open questions below.
+1. ~~Decide the open questions.~~ Done; see [Decisions](#decisions-2026-11-23).
 2. Track A, first pass: fetch CellPhoneDB v5 and the OmniPath intercellular
-   collection, map to UniProt, and run the four questions over the human pairs. Write
-   the result to `projects/SPATIAL_CELL_COMMUNICATION/results/` with a generated
-   `RESULTS.md`.
+   collection, map to UniProt, and run the four questions over the human protein
+   pairs. Write the result to `projects/SPATIAL_CELL_COMMUNICATION/results/` with a
+   generated `RESULTS.md`.
 3. Triage the *GO gap* and *Contradicted* categories for the pathways that already
    have modules. Route gene-level fixes to gene-review PRs.
-4. Track B: add the sender/receiver split and adjacency to `module_logic.py`, with
-   doctests on a two-step module (MIF), before touching real data.
-5. Build one spatial oracle on the chosen dataset and run the ligand modules over it,
-   with a threshold sweep and the LIANA or CellPhoneDB comparison.
-6. Module export, once the module set used in steps 3 to 5 is stable.
+4. Curate the CCL19/CCL21-CCR7 and CXCL13-CXCR5 modules, ligand step first, under
+   the LIGANDS_IN_SIGNALING decisions. These go in their own content PRs.
+5. Track B: add the sender/receiver split and spot adjacency to `module_logic.py`,
+   with doctests on a two-step module (MIF), before touching real data.
+6. Build the Visium lymph node oracle. Outline the T-cell zone and the follicles
+   from marker genes that are not module members. Run the two homing modules, the
+   other ligand modules, and modules not expected in lymph node as negative
+   controls (for example TSH and galanin), with a threshold sweep and the
+   CellPhoneDB comparison on the same pairs.
+7. Module export, once the module set used in steps 3 to 6 is stable.
 
-## Open questions
+## Decisions (2026-11-23)
 
-- **Which spatial dataset first?** It needs to be public, human, with a stable
-  download and a known spatial pattern for at least two of our modules. Spot-based
-  (Visium) data needs deconvolution, while imaging-based single-cell data (Xenium,
-  MERFISH, CosMx) has small gene panels that may miss module members.
-- **Which resource is the primary comparator?** CellPhoneDB is complex-aware and
-  curated. The OmniPath intercellular collection is broader and already aggregates
-  several resources, including CellPhoneDB.
-- **Small-molecule ligands.** CellPhoneDB v5 added about 1,000 interactions mediated
-  by nonpeptidic ligands [PMID:40133495]. Our modules represent a small-molecule
-  ligand by its biosynthetic enzymes, if at all. Should Track B treat the synthesising
-  enzyme as the sender atom? This overlaps with the X category of the ligand gap check.
-- **Species scope.** The modules are pan-species and the resources are mainly human
-  and mouse. Start with human only.
-- **Where does sender/receiver assignment live?** An inferred split from the ligand MF
-  may be enough. Otherwise each signaling module would need an explicit side on each
-  part, which is a schema question.
+Taken by the agent at C. Mungall's request ("you decide"). Each can be reopened, and
+the reason is given so that it is clear what would change it.
+
+1. **First spatial dataset: the 10x Genomics Visium human lymph node sample
+   (`V1_Human_Lymph_Node`, Space Ranger 1.1.0 public dataset).** Reasons:
+   - It is public, human, and downloads directly from the 10x CDN. The download
+     was checked from this environment on 2026-11-23.
+   - It is a whole-transcriptome assay, so no module member is missing from a
+     gene panel, as it could be on Xenium, MERFISH or CosMx.
+   - Lymph node has two well-known compartments, each organised by one
+     chemokine-receptor pair: the T-cell zone (CCL19 and CCL21 from stromal
+     reticular cells, CCR7 on T cells and dendritic cells) and the B-cell follicles
+     (CXCL13 from follicular dendritic cells, CXCR5 on B cells). The zones can be
+     outlined from cell-type marker genes that are not module members, so a
+     module result can be checked against them without circularity. This is the
+     same safeguard as orienting the liver lobule with landmark genes in the
+     gluconeogenesis work.
+   - It is widely used as a benchmark for spot deconvolution, so other methods'
+     results on it can be compared.
+
+   The cost is that the repository's chemokine module covers CXCL8 with
+   CXCR1/CXCR2 and CCR5, not the homing chemokines. So Track B needs two new
+   ligand-first modules, CCL19/CCL21-CCR7 and CXCL13-CXCR5. CCL19 signaling
+   is already in the LIGANDS_IN_SIGNALING queue, so that curation is useful on
+   its own. The human liver atlas (GSE239480) remains the second dataset, once
+   a zonation pipeline exists for it.
+2. **Spots, not deconvolved cell types, for version 1.** The engine evaluates
+   modules on normalised per-spot expression, with a threshold sweep. Neighbours
+   are the spot itself plus its first ring of adjacent spots on the hexagonal grid.
+   Visium spots are 55 µm across, so one spot already mixes several cells, and the
+   same-spot case cannot tell autocrine signaling from neighbour signaling. The
+   page will state that limit and not claim cell-level resolution. Deconvolution
+   is a later refinement, added only if spot-level results are too noisy to read.
+3. **Primary comparator: CellPhoneDB v5.** It is curated and complex-aware, and it
+   matches the module model best (heteromeric receptors as AND, alternative
+   ligands as separate interactions). The OmniPath intercellular collection is
+   used in Track A only, as a breadth check: pairs it has and CellPhoneDB lacks
+   are reported as a separate group. Both sources were reachable from this
+   environment on 2026-11-23: CellPhoneDB data via `raw.githubusercontent.com`
+   (the GitHub API for that repository is not enabled here) and OmniPath via its
+   web service.
+4. **Small-molecule ligands are out of scope for version 1.** Track A counts
+   CellPhoneDB's nonpeptidic interactions [PMID:40133495] but does not audit them,
+   and Track B does not model them. Treating a biosynthetic enzyme as the sender
+   would put a metabolic route inside the sender side. That is a separate
+   design, and it overlaps the X category of the ligand gap check, which deals
+   with pathways that have no protein ligand.
+5. **Human only.** The resources are human-first and the dataset is human. The
+   modules stay pan-species. A mouse run would map the human modules to mouse
+   orthologs and state that it does so, as the zonation run did.
+6. **Ligand and receptor sides are inferred, with no schema change.** The sender
+   side is the annotons whose molecular function is `GO:0048018` or a descendant;
+   everything else is the receiver side. A module can override this with the
+   existing `ModuleContext.cell_types` slot. The run reports every module where
+   inference gives an empty side, or puts the same annoton on both sides.
+   Bidirectional ephrin signaling and membrane-bound Notch ligands are the
+   expected cases. If more than a handful of modules need overrides, an explicit
+   side field becomes a schema proposal in a separate PR.
 
 ## References
 
