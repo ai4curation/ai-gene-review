@@ -176,12 +176,12 @@ OBSOLETE_DOC = {
 
 def lookup_obsolete(curie: str):
     if curie == "GO:0051082":
-        return [("GO snapshot", "obsolete unfolded protein binding")]
+        return [("the GO snapshot", "obsolete unfolded protein binding")]
     return []
 
 
 def lookup_live(curie: str):
-    return [("GO snapshot", "unfolded protein binding")]
+    return [("the GO snapshot", "unfolded protein binding")]
 
 
 def test_obsolete_term_is_reported_as_a_warning():
@@ -199,7 +199,7 @@ def test_warning_names_the_source_that_detected_the_obsoletion():
     """Which signal fired matters: the snapshot and the GOA files disagree."""
     report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
     check_obsolete_authored_terms(OBSOLETE_DOC, report, lookup_obsolete)
-    assert "GO snapshot" in report.issues[0].message
+    assert "the GO snapshot" in report.issues[0].message
 
 
 def test_warning_does_not_invalidate_the_file():
@@ -473,7 +473,7 @@ def test_issue_details_record_the_written_and_detected_labels():
     assert details is not None
     assert details["written_label"] == "unfolded protein binding"
     assert details["detected_label"] == "obsolete unfolded protein binding"
-    assert details["detected_by"] == "GO snapshot"
+    assert details["detected_by"] == "the GO snapshot"
 
 
 def test_lookup_does_not_scan_the_corpus_until_a_term_is_looked_up(tmp_path):
@@ -533,7 +533,7 @@ def test_single_signal_reports_one_source():
     report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
     check_obsolete_authored_terms(OBSOLETE_DOC, report, lookup_obsolete)
     assert report.issues[0].details["signal_count"] == 1
-    assert report.issues[0].details["detected_by"] == "GO snapshot"
+    assert report.issues[0].details["detected_by"] == "the GO snapshot"
 
 
 def test_a_live_signal_alongside_an_obsolete_one_is_not_counted():
@@ -555,13 +555,91 @@ def test_a_live_signal_alongside_an_obsolete_one_is_not_counted():
     assert "the GO snapshot" not in report.issues[0].message
 
 
-def test_cached_index_is_read_only():
+def test_cached_index_is_read_only(tmp_path):
     """The cached dict is process-wide; handing out the mutable original makes
-    "nothing mutates it" an observed invariant rather than an enforced one."""
+    "nothing mutates it" an observed invariant rather than an enforced one.
+
+    Keyed on ``tmp_path``, so this asserts the property without scanning the
+    real 12,281-file corpus and without depending on pytest's cwd.
+    """
     from ai_gene_review.validation.obsolete_authored_terms import (
         _cached_goa_obsolete_labels,
     )
 
-    index = _cached_goa_obsolete_labels(Path(".").resolve())
+    write_goa(tmp_path, "human/A/A-goa.tsv", [("GO:0000115", "obsolete q", "20260101")])
+    index = _cached_goa_obsolete_labels(tmp_path.resolve())
+    assert "GO:0000115" in index
     with pytest.raises(TypeError):
         index["GO:0000001"] = ("x", "y")  # type: ignore[index]
+
+
+# --------------------------------------------------------------------------
+# Review round 5: per-source labels and the live-signal trace
+# --------------------------------------------------------------------------
+
+
+def test_divergent_labels_are_attributed_per_source():
+    """Independent fetches can word the same obsoletion differently.
+
+    Showing one label for both sources would assert something neither said.
+    """
+
+    def divergent(curie: str):
+        return [
+            ("GOA file genes/human/X/X-goa.tsv", "obsolete unfolded protein binding"),
+            ("the GO snapshot", "obsolete chaperone binding"),
+        ]
+
+    report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
+    check_obsolete_authored_terms(OBSOLETE_DOC, report, divergent)
+    message = report.issues[0].message
+    assert "genes/human/X/X-goa.tsv ('obsolete unfolded protein binding')" in message
+    assert "the GO snapshot ('obsolete chaperone binding')" in message
+    assert report.issues[0].details["detected_labels"] == [
+        "obsolete unfolded protein binding",
+        "obsolete chaperone binding",
+    ]
+
+
+def test_agreeing_labels_are_not_repeated():
+    """When the sources agree, the label is stated once, not per source."""
+    report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
+    check_obsolete_authored_terms(OBSOLETE_DOC, report, lookup_both_signals)
+    message = report.issues[0].message
+    assert message.count("obsolete unfolded protein binding") == 1
+    assert (
+        "GOA file genes/human/X/X-goa.tsv and the GO snapshot "
+        "('obsolete unfolded protein binding')" in message
+    )
+
+
+def test_sources_are_queryable_as_a_list():
+    """``details`` is JSON-serialised, so consumers should not split a string."""
+    report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
+    check_obsolete_authored_terms(OBSOLETE_DOC, report, lookup_both_signals)
+    assert report.issues[0].details["detected_by_sources"] == [
+        "GOA file genes/human/X/X-goa.tsv",
+        "the GO snapshot",
+    ]
+
+
+def test_a_live_signal_is_recorded_not_discarded():
+    """The stale-snapshot disagreement is kept, without counting as a hit."""
+
+    def mixed(curie: str):
+        return [
+            ("GOA file genes/human/X/X-goa.tsv", "obsolete unfolded protein binding"),
+            ("the GO snapshot", "unfolded protein binding"),
+        ]
+
+    report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
+    check_obsolete_authored_terms(OBSOLETE_DOC, report, mixed)
+    details = report.issues[0].details
+    assert details["signal_count"] == 1
+    assert details["live_according_to"] == ["the GO snapshot"]
+
+
+def test_no_live_signal_leaves_an_empty_trace():
+    report = ValidationReport(file_path=Path("x.yaml"), is_valid=True)
+    check_obsolete_authored_terms(OBSOLETE_DOC, report, lookup_both_signals)
+    assert report.issues[0].details["live_according_to"] == []

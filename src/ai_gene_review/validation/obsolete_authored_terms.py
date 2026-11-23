@@ -332,26 +332,39 @@ def check_obsolete_authored_terms(
     is the strongest case the check can make and must not read like a
     single-signal hit. Sources are reported in the lookup's own order, so the
     message stays deterministic.
+
+    Each source is shown with *its own* label rather than one label attributed
+    to all of them: the sources are independent fetches and can legitimately
+    disagree about the wording, and silently picking the first would hide that.
+    A source reporting the term as still **live** is not a hit -- a stale
+    snapshot beside a freshly fetched GOA file is the normal case, not
+    agreement -- but it is recorded in ``live_according_to`` so the hit carries
+    the disagreement instead of discarding it.
     """
     for term in iter_authored_go_terms(data):
-        hits = [
-            (source, label) for source, label in lookup(term.curie) if is_obsolete_label(label)
-        ]
+        signals = list(lookup(term.curie))
+        hits = [(source, label) for source, label in signals if is_obsolete_label(label)]
         if not hits:
             continue
-        sources = " and ".join(source for source, _ in hits)
-        label = hits[0][1]
+        live = [source for source, label in signals if not is_obsolete_label(label)]
+        if len({label for _, label in hits}) == 1:
+            attribution = f"{' and '.join(s for s, _ in hits)} ('{hits[0][1]}')"
+        else:
+            attribution = " and ".join(f"{source} ('{label}')" for source, label in hits)
         report.add_issue(
             ValidationSeverity.WARNING,
-            f"{term.curie} is obsolete according to {sources} ('{label}'), but it is "
+            f"{term.curie} is obsolete according to {attribution}, but it is "
             f"written here as an author-supplied term",
             path=term.path,
             details={
                 "term_id": term.curie,
                 "written_label": term.label,
-                "detected_label": label,
-                "detected_by": sources,
+                "detected_label": hits[0][1],
+                "detected_by": " and ".join(source for source, _ in hits),
+                "detected_by_sources": [source for source, _ in hits],
+                "detected_labels": [label for _, label in hits],
                 "signal_count": len(hits),
+                "live_according_to": live,
             },
             suggestion=(
                 "Repoint to a live term that the evidence on this row supports -- check "
