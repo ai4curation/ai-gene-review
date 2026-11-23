@@ -12,9 +12,9 @@
 - The live UniProt PTHR11588 search for T. canis returned many alpha-, beta-
   and gamma-tubulin entries plus fragments. A0A0B2V7F6 is one of the
   near-full-length beta-tubulin candidates and is encoded on the same WGS
-  scaffold as the merged A0A0B2VD78/Tcan_18889 beta-tubulin. I kept this
-  review accession-scoped and did not infer a one-to-one BEN-1 relationship
-  for the generic `TBB` gene name.
+  scaffold as the A0A0B2VD78/tbb-4/Tcan_18889 beta-tubulin. I kept this review
+  accession-scoped and did not infer a one-to-one BEN-1 relationship for the
+  generic `TBB` gene name.
 - `just deep-research-falcon TOXCA A0A0B2V7F6 --fallback perplexity-lite`
   could not generate a provider report because only `claude_code` was
   available, so this review uses the seeded GOA rows, live-matching UniProt
