@@ -95,9 +95,10 @@ ShareKey = tuple[str, str, str]
 # top-tier lead (rat Dusp21, fly GstO1, GstO2, Prx4) was a false positive.
 UNREVIEWED_PENALTY = 3
 # The same term from the same paper and source on a local gene of the same
-# PANTHER family is a family-wide annotation (the Omega GSTs, the fly
-# peroxiredoxins), even when too few genes carry it to reach
-# SHARED_ANNOTATION_GENES.
+# PANTHER family, when that gene does not itself cite the paper, is a family-wide
+# annotation (the Omega GSTs), even when too few genes carry it to reach
+# SHARED_ANNOTATION_GENES. When the paralog does cite the paper, its copy is the
+# row on the right gene and the lead stands (CNGA3 beside CNGB3).
 PARALOG_SHARE_PENALTY = 2
 # Evidence codes that claim an assay of the annotated protein itself. A row with
 # one of these, from a paper the ortholog's entry cites, is first a question of
@@ -687,7 +688,7 @@ def score_lead(
     same-named gene in another species +2, three or fewer citing entries +1, and an
     abstract that does not name the annotated gene +2 (or -3 if it does). A row
     whose source gave it to ``SHARED_ANNOTATION_GENES`` or more local genes -2, or
-    else to a local gene of the same PANTHER family ``-PARALOG_SHARE_PENALTY``. An
+    else to a local paralog that does not cite the paper ``-PARALOG_SHARE_PENALTY``. An
     unreviewed own entry ``-UNREVIEWED_PENALTY``.
     """
     reasons = []
@@ -756,28 +757,38 @@ def _share_key(row: dict[str, str]) -> ShareKey:
     )
 
 
-def _folder_families(gene_dir: Path) -> frozenset[str]:
-    """PANTHER families from a gene folder's UniProt file, or none if it has no file."""
+class Carrier(NamedTuple):
+    """A local gene folder carrying a shared row: its accession and PANTHER families."""
+
+    accession: str
+    families: frozenset[str]
+
+
+def _folder_carrier(gene_dir: Path) -> Carrier:
+    """Accession and PANTHER families from a gene folder's UniProt file (empty if none)."""
+    accession = ""
     families: set[str] = set()
     for uniprot in gene_dir.glob("*-uniprot.txt"):
         with uniprot.open(errors="replace") as fh:
             for line in fh:
-                if line.startswith("DR   PANTHER; "):
+                if line.startswith("AC   ") and not accession:
+                    accession = line[5:].split(";")[0].strip()
+                elif line.startswith("DR   PANTHER; "):
                     families.add(line.split(";")[1].strip().split(":")[0])
-    return frozenset(families)
+    return Carrier(accession, frozenset(families))
 
 
-def shared_annotation_families(
+def shared_annotation_carriers(
     gene_dirs: Iterable[Path],
-) -> dict[ShareKey, list[frozenset[str]]]:
-    """For each (reference, GO term, assigned-by) row, the PANTHER families of the folders carrying it.
+) -> dict[ShareKey, list[Carrier]]:
+    """For each (reference, GO term, assigned-by) row, the gene folders carrying it.
 
     One entry per carrying folder, so the list length is the number of folders.
     Only the folders passed in are counted, so a sweep of one species or one gene
     sees fewer shared rows than the default sweep of every folder. Only literature
     references are counted; GO_REF rows are shared by design.
     """
-    shared: dict[ShareKey, list[frozenset[str]]] = {}
+    shared: dict[ShareKey, list[Carrier]] = {}
     for gene_dir in gene_dirs:
         keys: set[ShareKey] = set()
         for goa in gene_dir.glob("*-goa.tsv"):
@@ -787,34 +798,47 @@ def shared_annotation_families(
                     if key[0].startswith("PMID:"):
                         keys.add(key)
         if keys:
-            families = _folder_families(gene_dir)
+            carrier = _folder_carrier(gene_dir)
             for key in keys:
-                shared.setdefault(key, []).append(families)
+                shared.setdefault(key, []).append(carrier)
     return shared
 
 
 def shared_annotation_counts(gene_dirs: Iterable[Path]) -> Counter[ShareKey]:
     """How many of the given gene folders carry each (reference, GO term, assigned-by) row."""
     return Counter(
-        {k: len(v) for k, v in shared_annotation_families(gene_dirs).items()}
+        {k: len(v) for k, v in shared_annotation_carriers(gene_dirs).items()}
     )
 
 
-def shared_with_local_paralog(families: list[frozenset[str]], own: GeneRecord) -> bool:
-    """Whether another carrying folder shares a PANTHER family with the annotated gene.
+def shared_with_local_paralog(
+    carriers: list[Carrier], own: GeneRecord, citing: Iterable[CitingEntry]
+) -> bool:
+    """Whether a local paralog carries the same row without itself citing the paper.
 
-    The annotated gene's own folder is one of the carriers, so a family needs to
-    appear on at least two of them.
+    That is a family-wide annotation, as for the Omega GSTs, whose paper is cited
+    by a third gene. A paralog that does cite the paper is the opposite case: the
+    row's copy on the right gene, which is evidence for a wrong-gene lead (CNGA3
+    beside CNGB3), so it does not count.
 
     >>> own = GeneRecord("P1", "1", frozenset({"PTHR1"}), frozenset(), frozenset())
-    >>> shared_with_local_paralog([frozenset({"PTHR1"})], own)
-    False
-    >>> shared_with_local_paralog([frozenset({"PTHR1"}), frozenset({"PTHR1"})], own)
+    >>> mine, para = Carrier("P1", frozenset({"PTHR1"})), Carrier("P2", frozenset({"PTHR1"}))
+    >>> other_family = Carrier("P3", frozenset({"PTHR2"}))
+    >>> cites_p2 = [CitingEntry("P2", "B", "1", frozenset({"PTHR1"}))]
+    >>> shared_with_local_paralog([mine, para], own, [])
     True
-    >>> shared_with_local_paralog([frozenset({"PTHR1"}), frozenset({"PTHR2"})], own)
+    >>> shared_with_local_paralog([mine, para], own, cites_p2)
+    False
+    >>> shared_with_local_paralog([mine, other_family], own, [])
     False
     """
-    return sum(1 for f in families if f & own.panther_families) >= 2
+    citing_accessions = {c.accession for c in citing}
+    return any(
+        c.accession != own.accession
+        and c.families & own.panther_families
+        and c.accession not in citing_accessions
+        for c in carriers
+    )
 
 
 @cache
@@ -1004,7 +1028,7 @@ def find_leads(
     from UniProt for every candidate PMID.
     """
     gene_dirs = sorted(gene_dirs)
-    shared = shared_annotation_families(gene_dirs)
+    shared = shared_annotation_carriers(gene_dirs)
     candidates = [(d, c) for d in gene_dirs if (c := candidate_rows(d)) and c[1]]
     if citing is None:
         citing = fetch_citing_entries(
@@ -1044,7 +1068,7 @@ def find_leads(
                     gene_specific_names(own, others),
                 ),
                 len(shared.get(_share_key(row), [])),
-                shared_with_local_paralog(shared.get(_share_key(row), []), own),
+                shared_with_local_paralog(shared.get(_share_key(row), []), own, others),
             )
             leads.append(
                 {

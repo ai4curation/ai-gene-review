@@ -27,7 +27,7 @@ from ai_gene_review.tools.wrong_gene_leads import (
     pombase_names,
     score_lead,
     shared_annotation_counts,
-    shared_annotation_families,
+    shared_annotation_carriers,
     token_forms,
 )
 
@@ -644,9 +644,26 @@ def test_paralog_share_needs_a_shared_family(tmp_path):
         "AC   P00002;\nOX   NCBI_TaxID=9606;\nDR   PANTHER; PTHR2; X; 1.\n",
         acc="P00002",
     )
-    shared = shared_annotation_families([a, b])
+    shared = shared_annotation_carriers([a, b])
     key = ("PMID:1", "GO:0003674", "UniProt")
-    assert sorted(sorted(f) for f in shared[key]) == [["PTHR1"], ["PTHR2"]]
+    assert sorted((c.accession, sorted(c.families)) for c in shared[key]) == [
+        ("P00001", ["PTHR1"]),
+        ("P00002", ["PTHR2"]),
+    ]
     citing = {"1": [CitingEntry("P9", "X", "9606", frozenset({"PTHR1"}))]}
     (lead,) = find_leads([a, b], citing=citing, publications_dir=tmp_path)[:1]
     assert "shared_with_local_paralog" not in lead["reasons"]
+
+
+def test_copy_on_the_citing_paralog_keeps_the_lead():
+    """CNGB3's row from the CNGA3 screen sits beside CNGA3's own copy of it.
+
+    CNGA3 cites the paper, so its copy is the row on the right gene: evidence
+    for the wrong-gene lead, not a family-wide annotation.
+    """
+    cnga3 = CitingEntry("Q16281", "CNGA3", "9606", frozenset({"PTHR45638"}))
+    dirs = [GENES / "human" / "CNGB3", GENES / "human" / "CNGA3"]
+    leads = find_leads(dirs, citing={"11536077": [cnga3]})
+    cngb3 = [r for r in leads if r["gene"] == "human/CNGB3"]
+    assert cngb3
+    assert not any("shared_with_local_paralog" in r["reasons"] for r in cngb3)
