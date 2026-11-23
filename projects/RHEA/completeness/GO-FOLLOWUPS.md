@@ -23,7 +23,9 @@ Swiss-Prot reactions.
   genes/SHESA/thiI, which record it as a `source_defects` entry on the GO:0004810 row.
 
 **Later (2026-11-21):** go-ontology 32998, a PR adding 14 `narrowMatch` xrefs for single-solute
-uniporter and channel reactions, each backed by two gene reviews here. The reaction figures used in its description are kept in [`figures/`](figures/).
+uniporter and channel reactions, each backed by two gene reviews here. The reaction figures used in its description are kept in `figures/`, for example the D-glucose uniporter reaction:
+
+![RHEA:60376 D-glucose(out) = D-glucose(in)](figures/RHEA_60376.svg)
 
 **Policy (2026-11-23):** no further issues or PRs are to be opened on the go-ontology tracker from this
 project. The remaining items below are kept as a record of the problems found; new mappings are staged
@@ -85,7 +87,7 @@ The GO edits themselves are staged as rows in [`../rhea2go.sssom.yaml`](../rhea2
 8. **DONE (2026-11-09).** The preQ1 Tgt term requested in
    go-ontology 32883
    exists as **GO:7770158** tRNA-guanosine(34) preQ1 transglycosylase activity
-   (go-ontology PR #32911), with `xref: RHEA:24104 {source="skos:exactMatch"}` and EC:2.4.2.29.
+   (go-ontology 32911), with `xref: RHEA:24104 {source="skos:exactMatch"}` and EC:2.4.2.29.
    RHEA:24104 (461 Swiss-Prot entries) is therefore mapped in GO, and its staged
    NoTermFound/broadMatch rows were removed from `rhea2go.sssom.yaml` (the term is not yet
    in a GO release, so the term validator cannot check a row pointing at it). The
