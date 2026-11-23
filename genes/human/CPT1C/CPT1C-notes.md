@@ -172,3 +172,9 @@ action and reason are the review's own; neither GOA-sourced term id was touched.
   the claim and the aspect are right — and the reason now calls it the core biological
   process, points at `GO:0008474` for the molecular function, and records the earlier
   mislabelling.
+
+**Addendum (2026-11-23, PR #6790 review).** The retained GOA IEA row on
+`GO:0098734` now records in its own `reason` that the term is obsolete as of the
+2026-11-21 release, so a reader of that row alone does not have to re-derive it.
+The id itself is unchanged: it is GOA-sourced, and propagating the obsoletion is
+upstream GOA's to do.
