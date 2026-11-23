@@ -275,9 +275,22 @@ were covered.
   Other KEEP_AS_NON_CORE rows that carry the same generic reason are worth a
   second look.
 
+- **2026-11-14, REMOVE rows of mouse and rat.** Every `REMOVE` row in the mouse
+  and rat reviews (1,098 rows in 452 review files) was read again under the
+  rules of the human REMOVE re-review. 108 of the 469 substantive rows no
+  longer say REMOVE, and 16 source defects were recorded; the 629 bare protein
+  binding rows are unchanged. The largest group is orthology transfers that had
+  been removed although the review of the donor ortholog keeps the source row,
+  or although the donor experiment shows the claim. See
+  [Re-review of REMOVE actions in mouse and rat](MOUSE_GENES_RE_REVIEW/REMOVE_RE_REVIEW.md)
+  and the row-level record
+  [`remove_rereview_changes.yaml`](MOUSE_GENES_RE_REVIEW/remove_rereview_changes.yaml).
+
 ## Related
 
 - [Human Genes Annotation Re-Review](HUMAN_GENES_RE_REVIEW.md) — method and
   calibration.
+- [Re-review of REMOVE actions in mouse and rat](MOUSE_GENES_RE_REVIEW/REMOVE_RE_REVIEW.md)
+  — the November 2026 pass over every REMOVE row.
 - [IBA Review](IBA_REVIEW.md) — the September 2026 propagation re-review that
   already covered Bcl2 and other mouse genes in depth.

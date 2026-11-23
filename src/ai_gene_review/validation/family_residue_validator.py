@@ -48,7 +48,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable, NamedTuple
 from enum import Enum
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Mapping
 
 import yaml
 
@@ -457,10 +457,10 @@ def _iter_panther_terms(review: dict):
 
 def check_panther_ids(
     review: dict,
-    labels: dict[str, str],
-    members: dict[str, str],
+    labels: Mapping[str, str],
+    members: Mapping[str, str],
     gaps: "MemberIndexGaps | None" = None,
-    alternates: "dict[str, str] | None" = None,
+    alternates: "Mapping[str, str] | None" = None,
     previous: "PreviousRelease | None" = None,
 ) -> list[ResidueCheck]:
     """Check every PANTHER family/subfamily id resolves, and that labels are verbatim.
@@ -691,7 +691,7 @@ def check_panther_ids(
     return results
 
 
-GAIN_VERDICTS = frozenset({"SOUND", "TOO_DEEP", "WRONG_NODE", "NEEDS_PRUNING"})
+GAIN_VERDICTS = frozenset({"SOUND", "TOO_DEEP", "WRONG_NODE", "NEEDS_PRUNING", "TERM_SUPERSEDED"})
 LOSS_VERDICTS = frozenset({"LOSS_SUPPORTED", "LOSS_CONTRADICTED", "LOSS_TOO_BROAD", "LOSS_STALE"})
 
 
@@ -753,6 +753,7 @@ ALLOWED_PAINT_ACTIONS: dict[str, frozenset[str]] = {
     "TOO_DEEP": frozenset({"MOVE_IBD", "REMOVE_IBD"}),
     "WRONG_NODE": frozenset({"MOVE_IBD", "REMOVE_IBD"}),
     "NEEDS_PRUNING": frozenset({"ADD_IRD", "ADD_IKR"}),
+    "TERM_SUPERSEDED": frozenset({"REMOVE_IBD"}),
     "LOSS_CONTRADICTED": frozenset({"REMOVE_LOSS"}),
     "LOSS_STALE": frozenset({"REMOVE_LOSS"}),
     "LOSS_TOO_BROAD": frozenset({"MOVE_LOSS"}),

@@ -23,6 +23,11 @@ should fix, in a form from which a report to that resource can be generated.
   activity id.
 - Functional isoforms: `functional_isoforms[].source_defects`, for a defect in
   the source's record of that isoform. Set `record` to the UniProt accession.
+- Rule reviews: top-level `source_defects` in `rules/**/<ID>-review.yaml`, for a
+  defect in an annotation record the review cites as a receipt (a curated GOA
+  row whose reference looks mis-keyed). Set `record` to the row: subject, term,
+  evidence code and reference. A defect of the rule itself is the review's
+  verdict, not a source defect.
 - Cited source text: `references[].reference_review.source_defects`, for an
   error in a source's own curated text: a MOD gene description (cited as its
   `-deep-research-<mod>.md` file) or a UniProt FUNCTION or other comment (cited

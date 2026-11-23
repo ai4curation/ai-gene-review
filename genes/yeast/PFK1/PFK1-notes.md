@@ -6,3 +6,9 @@
 - RNA binding shared with Pfk2 [PMID:41816908 "Both Pfk1p and Pkf2p directly bind to short GA-, UC-, AU-, and U-rich motifs"], but NOT ribosome-bound [PMID:41816908 "Pfk1p is not directly associated with translating ribosomes in the absence of Pfk2p"].
 
 Decisions: REMOVE ribosome binding IDA+IEA (contradicted in full text of the cited paper), protein binding x6, bifid n/a; contributes_to proton-transporting ATPase and proton transport MARK_AS_OVER_ANNOTATED; RNA-binding rows KEEP_AS_NON_CORE.
+
+## QA pass 2026-11-19
+- mitochondrial outer membrane (IEA SubCell) KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED: single line of evidence (enzyme activity in isolated mitochondria, PMID:16962558) cannot resolve a sub-compartment; organelle policy keeps the root mitochondrion rows only.
+- obsolete canonical glycolysis IBA: added propagation_review (PTN000344216; seeds MGI:MGI:97548, PomBase:SPBC16H5.02 annotated to the now-obsolete term).
+- IEA enables 6-phosphofructokinase activity: reason added reconciling it with the contributes_to IMP/IGI rows.
+- mRNA 3'-UTR binding (IDA PMID:41816908 and ARBA IEA) consistently KEEP_AS_NON_CORE; ribosome binding stays REMOVE (PMID:41816908 "a specific dynamic and reversible association of Pfk2p - but not of Pfk1p - with translating ribosomes").

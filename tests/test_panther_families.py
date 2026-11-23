@@ -735,6 +735,9 @@ def test_fix_panther_labels_refuses_apply_with_a_cold_member_index(tmp_path: Pat
     dry_run = CliRunner().invoke(app, args)
     assert dry_run.exit_code == 0
     assert "member index is empty" in dry_run.output
+    # The hint is right whichever way the command was reached.
+    assert "`just fix-panther-labels` runs it first" in dry_run.output
+    assert "run it yourself" in dry_run.output
     assert "Would apply 1 label correction(s)" in dry_run.output
 
 
@@ -822,3 +825,116 @@ def test_fix_panther_labels_holds_back_a_renamed_id_during_a_switch(
     assert "changed since PANTHER 18.0" in result.output
     assert "Applied 0 label correction(s)" in result.output
     assert module.read_text() == before
+
+
+def test_fix_panther_labels_skips_ids_whose_members_were_never_looked_up(tmp_path: Path) -> None:
+    """With a partial index, an id no member confirms yet is held back, not relabelled."""
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = _label_fix_repo(tmp_path, with_member_index=True)  # index knows only P00001
+    (repo / "interpro" / "panther" / "panther.obo").write_text(
+        "[Term]\nid: PANTHER:PTHR00001\nname: REAL NAME\n\n"
+        "[Term]\nid: PANTHER:PTHR00002\nname: OTHER NAME\n"
+    )
+    module = repo / "modules" / "m.yaml"
+    module.write_text(
+        "id: m\nparts:\n"
+        "- family:\n    preferred_term: confirmed\n    term:\n"
+        "      id: PANTHER:PTHR00001\n      label: REAL NAMES\n"
+        "    representative_members:\n    - preferred_term: a\n      term:\n"
+        "        id: UniProtKB:P00001\n"
+        "- family:\n    preferred_term: not looked up\n    term:\n"
+        "      id: PANTHER:PTHR00002\n      label: OTHER NAMES\n"
+        "    representative_members:\n    - preferred_term: b\n      term:\n"
+        "        id: UniProtKB:Q99999\n"
+    )
+
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+
+    assert result.exit_code == 0, result.output
+    assert "Applied 1 label correction(s)" in result.output
+    assert "1 label(s) NOT rewritten: no representative member" in result.output
+    assert "PANTHER:PTHR00002  'OTHER NAMES' -> 'OTHER NAME'" in result.output
+    assert "refresh.log" in result.output  # the recipe already ran the build
+    assert "--allow-divergent does not override this skip" in result.output
+    text = module.read_text()
+    assert "label: REAL NAME\n" in text and "label: OTHER NAMES\n" in text
+
+
+def test_fix_panther_labels_reports_an_unconfirmed_id_whose_label_diverges(tmp_path: Path) -> None:
+    """An id no member confirms yet, whose label names another protein, is still listed."""
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = _label_fix_repo(tmp_path, with_member_index=True)  # index knows only P00001
+    (repo / "interpro" / "panther" / "panther.obo").write_text(
+        "[Term]\nid: PANTHER:PTHR00002\nname: OTHER NAME\n"
+    )
+    module = repo / "modules" / "m.yaml"
+    module.write_text(
+        "id: m\nparts:\n- family:\n    preferred_term: x\n    term:\n"
+        "      id: PANTHER:PTHR00002\n      label: SUCCINATE DEHYDROGENASE\n"
+        "    representative_members:\n    - preferred_term: b\n      term:\n"
+        "        id: UniProtKB:Q99999\n"
+    )
+    before = module.read_text()
+
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+
+    assert result.exit_code == 0, result.output
+    assert "PANTHER:PTHR00002  'SUCCINATE DEHYDROGENASE' -> 'OTHER NAME'" in result.output
+    assert "describes a different protein" in result.output
+    assert module.read_text() == before
+
+
+def test_fix_panther_labels_relabels_but_lists_ids_panther_has_no_family_for(
+    tmp_path: Path,
+) -> None:
+    """Members looked up with no PANTHER family: relabelled (no refresh will help), but listed."""
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+    from ai_gene_review.etl.panther_families import member_index_path
+
+    repo = _label_fix_repo(tmp_path, with_member_index=True)
+    index = member_index_path(repo)
+    index.write_text(index.read_text() + "\n# unresolved: Q99999\n")
+    (repo / "interpro" / "panther" / "panther.obo").write_text(
+        "[Term]\nid: PANTHER:PTHR00002\nname: OTHER NAME\n"
+    )
+    module = repo / "modules" / "m.yaml"
+    module.write_text(
+        "id: m\nparts:\n- family:\n    preferred_term: x\n    term:\n"
+        "      id: PANTHER:PTHR00002\n      label: OTHER NAMES\n"
+        "    representative_members:\n    - preferred_term: b\n      term:\n"
+        "        id: UniProtKB:Q99999\n"
+    )
+
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+
+    assert result.exit_code == 0, result.output
+    assert "Applied 1 label correction(s)" in result.output
+    assert "1 label(s) rewritten without member corroboration" in result.output
+    assert "PANTHER:PTHR00002  'OTHER NAMES' -> 'OTHER NAME'" in result.output
+    assert "(PANTHER has no family for any representative member)" in result.output
+    assert "NOT rewritten" not in result.output
+    assert "label: OTHER NAME\n" in module.read_text()
+
+
+def test_fix_panther_labels_lists_a_relabel_on_an_id_no_member_names(tmp_path: Path) -> None:
+    """A descriptor naming no UniProtKB member can never be confirmed: rewritten, and listed."""
+    from typer.testing import CliRunner
+
+    from ai_gene_review.cli import app
+
+    repo = _label_fix_repo(tmp_path, with_member_index=True)  # descriptor has no members
+    result = CliRunner().invoke(app, ["fix-panther-labels", "--output-dir", str(repo), "--apply"])
+
+    assert result.exit_code == 0, result.output
+    assert "Applied 1 label correction(s)" in result.output
+    assert "1 label(s) rewritten without member corroboration" in result.output
+    assert "(no UniProtKB representative member names the id)" in result.output
+    assert "label: REAL NAME\n" in (repo / "modules" / "m.yaml").read_text()

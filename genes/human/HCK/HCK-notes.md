@@ -47,3 +47,13 @@ cached publications, and Reactome.
 - The UniProt Golgi item is only in the isoform 2 (p59Hck) location line, ECO:0000269 from PMID:11904303 (abstract-only; Europe PMC lists no PMC copy; publisher page 403 on 2026-11-18). The abstract describes overexpressed constitutively active GFP-p59Hck in HeLa cells and does not mention the Golgi.
 - Kept on curator deference (rule 7: curated human line, unreadable paper). MARK_AS_OVER_ANNOTATED would follow if the figure shows only unmarked perinuclear signal.
 - Added a source_defects entry (OTHER, Gene_Product_Form_ID, ADD P08631-2, PROBABLE) for the isoform restriction, as in ABCA7. No sub-compartment row.
+
+## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
+
+- Lysosome (GO:0005764) IDA (PMID:15998323) and IEA (SL-0158) rows kept KEEP_AS_NON_CORE. Abstracts
+  (15998323, 11904303; both abstract-only, no full text read) state p61Hck (isoform 1) is at
+  lysosomes, and rerouting active p61Hck off lysosomes abolishes podosome rosettes: a lipid-anchored
+  functional pool, not cargo. Curator deference for the root; no GO:0098574 row because the lysosome
+  evidence is unread (rule 9). UniProt's isoform 2 (p59Hck) Lysosome item cites 11904303, whose
+  abstract puts p59Hck at the plasma membrane: recorded as a CHECK source defect. Golgi rows from
+  Golgi batch 3 untouched.

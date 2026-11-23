@@ -257,6 +257,34 @@ def test_collect_reads_reference_review_defects(tmp_path: Path) -> None:
     assert 'revise "LGG-2 has no obvious function in RNAi assays" in MOD_provided_gene_description' in report
 
 
+RULE_REVIEW_DEFECT = """
+id: ARBA00089174
+source_defects:
+- defect_type: WRONG_REFERENCE
+  resource: MGI
+  record: UniProtKB:Q704Y3 GO:0002024 IMP PMID:12161756
+  slot: reference
+  requested_change: CHECK
+  asserted_value: PMID:12161756
+  corrected_value: PMID:18503767
+  confidence: PROBABLE
+  explanation: The cited paper is on bladder function.
+"""
+
+
+def test_collect_reads_rule_review_defects(tmp_path: Path) -> None:
+    """A defect in an annotation row that a rule review cites is exported for its resource."""
+    rule = tmp_path / "rules" / "arba" / "ARBA00089174"
+    rule.mkdir(parents=True)
+    (rule / "ARBA00089174-review.yaml").write_text(RULE_REVIEW_DEFECT, encoding="utf-8")
+    (row,) = collect(tmp_path)
+    assert row["resource"] == "MGI"
+    assert row["record"] == "UniProtKB:Q704Y3 GO:0002024 IMP PMID:12161756"
+    assert row["requested_change"] == "CHECK"
+    assert row["source_path"] == "rules/arba/ARBA00089174/ARBA00089174-review.yaml"
+    assert "check PMID:12161756" in render_report("MGI", [row])
+
+
 def test_missing_statement_add_renders_without_corrected_value() -> None:
     """An ADD for missing free text has no corrected value; the explanation carries it."""
     row = {"asserted_value": "WB:WBGene1", "corrected_value": "", "corrected_label": "",
