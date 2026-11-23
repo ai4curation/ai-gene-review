@@ -107,3 +107,8 @@ the core review with recent (2021-2024) literature and adds nuance:
 3. Biological process: ABA-activated signaling controlling seed maturation, dormancy,
    negative regulation of germination, postgermination growth arrest — GO:0009737,
    GO:0010187, GO:0048316.
+
+
+## 2026-10-25 ABA module source audit
+
+Reviewed all 45 rows against source-specific evidence. Changed general signal transduction and oxygen-containing-compound response from over-annotation to supported ABA-specific refinements. DNA-binding activity from different Y1H screens is the same core molecular function; refined all three cis-regulatory-region-binding rows to the precise existing sequence-specific term instead of calling them non-core based on paper context. General transcription regulation is refined to both activation (RD29B, PMID:16463099) and repression (ABR, PMID:27095403), avoiding an exclusively activating model. Consolidated duplicate core functions. The abstracts for PMID:15642716 and PMID:19207209 foreground other bZIPs; they do not justify rejecting experimental ABI5 annotations. Independent direct evidence supports nucleus and activation, while the original per-assay assignments remain explicitly unverified in reference reviews.

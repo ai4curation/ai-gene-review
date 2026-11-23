@@ -106,3 +106,33 @@ question remains explicit in the review.
 Rechecked the four GO:0005515 IPI rows against their accessible primary-source statements: ETP1/ETP2-dependent turnover (PMID:19196655), ER-localized ETR1 interaction (PMID:19769567), ECIP1 interaction with yeast two-hybrid and pull-down support (PMID:21631530), and ENAP1-dependent chromatin regulation (PMID:27694846). Changed MARK_AS_OVER_ANNOTATED to REMOVE for the uninformative generic MF annotation and retained all four actual interaction findings/snippets. Removal does not deny the experimental associations. These interactions do not independently establish a distinct molecular activity for their particular rows: being a degradation substrate is not ubiquitin ligase activity, ETR1/ECIP1 binding alone does not establish adaptor mechanism, and ENAP1 association does not confer histone acetyltransferase activity. Existing specific signaling/RNA/chromatin functions remain intact.
 
 Preserved all 63 original annotation identities. No new research jobs, cache refreshes, or renders were run.
+
+## 2026-10-06 — Resolution of three UNDECIDED rows (PR #4389)
+
+The original sources for three acts_upstream_of_or_within rows are abstract-only in the
+cache. Each row was resolved with independent primary literature (found via Europe PMC,
+cached with `just fetch-gene-pmids ARATH EIN2`; all quotes checked against the cache):
+
+- GO:0009926 auxin polar transport (IMP, PMID:9032965) → KEEP_AS_NON_CORE. Negi et al. 2008
+  measured radiolabelled IAA transport directly [PMID:18363780 "ein2-5 and etr1-3 have less
+  acropetal IAA transport, and transport is no longer regulated by ACC."], with the effect
+  attributed to "ethylene altering AUX1-mediated IAA uptake". EIN2 is not a transporter. The
+  Fujita & Syono abstract itself argues the NPA root effect is not due to transport blockage
+  [PMID:9032965 "the hypothesis that the inhibitory effect of NPA on root elongation is due to
+  high-level accumulation of auxin as a result of blockage of auxin transport is not applicable
+  to A. thaliana"].
+- GO:0010182 sugar mediated signaling pathway (TAS, PMID:12663220) → KEEP_AS_NON_CORE.
+  [PMID:14523448 "The ethylene-insensitive etr1 and ein2 mutants have glo phenotypes"];
+  [PMID:33658715 "Glucose-activated TOR kinase directly phosphorylates EIN2 to prevent its
+  nuclear localization."], with glucose-TOR transcriptional reprogramming "largely compromised
+  in the ein2-5 mutant". Glucose-TOR-EIN2 is decoupled from canonical ethylene signalling.
+- GO:0031348 negative regulation of defense response (IMP, PMID:16732289) → KEEP_AS_NON_CORE,
+  deferring to the curator's full-text experiment. The cached Consonni abstract says mlo
+  resistance "does not involve the signaling molecules ethylene, jasmonic acid or salicylic
+  acid", so the IMP evidence must be in the uncached full text. Corroboration: [PMID:31819723
+  "both ein2-1 and ein3-1 mutants showed enhanced disease resistance against F. graminearum"]
+  and, downstream of EIN2, [PMID:19717619 "our data provide evidence that EIN3/EIL1 directly
+  target SID2 to downregulate PAMP defenses"]. EIN2 also positively regulates necrotroph
+  defence and ISR, so the role is context-dependent and non-core.
+
+No UNDECIDED or PENDING rows remain in the EIN2 review.

@@ -147,3 +147,22 @@ The dedicated primary study [PMID:30045857](https://doi.org/10.1534/genetics.118
 The authored NEW response-to-xenobiotic-stimulus row was withdrawn under the user's participation requirement: necessity, rescue and dosage do not identify the step Ilt1 performs in the response. Its evidence remains in the description and questions; the inferred amino-acid homeostasis role provides an independently supported core. No matching GO-CAM target entry was found. The direct tolerance mechanism and relation to native amino-acid transport remain experimental questions.
 
 The complete Falcon report was incorporated critically. Its comparative PQ-loop/cystinosin/Ypq/PQLC2 architecture and transport synthesis is useful, but it missed the 2018 ILT1 paper, claimed no target localization existed, and offered an inaccurate naming account. Primary target microscopy corrects that omission; it does not itself overturn inherited vacuolar functions. Exact cache searches found no OpenScientist report for ILT1/YDR090C/Q03193. Description, core and gaps distinguish the directly observed PM pool from inferred vacuolar transport, while keeping the exact target substrate and tolerance mechanism open.
+
+## 2026-10-01 current GOA refresh
+
+Refreshed UniProt/GOA and kept exact 9-row parity. The four IBA rows remain on the same
+PTN001044753 ancestor that was inspected in the September lineage note; current PTHR16201 has 11
+node-level PAINT assertions, with additional descendant refinements for other clades but no loss or
+contradictory assertion on ILT1's reviewed path. Copied the current `WITH/FROM` strings into
+`supporting_entities` for the four IBA rows and the two UniProt IEA rows.
+
+UniProt advanced Q03193 from entry version 138 to 139 and now exposes the PAINT-derived vacuolar
+membrane/basic-amino-acid-transporter xrefs in its record; the GOA row set itself is unchanged except
+for the UniProt date advancing from `20260616` to `20260727` on the two electronic location rows.
+
+Searched newer `ILT1`, `YDR090C`, and `Q03193` literature. Reed et al. 2019 (PMID:31428944) is a
+real follow-up that compared overexpressed endogenous `ScILT1/YDR090C` with a Yarrowia lipolytica
+homolog and then evolved the Yarrowia copy for EMIM acetate tolerance. It supports the
+ionic-liquid-tolerance engineering context but still does not identify Ilt1's direct substrate,
+transport direction, or relationship between the directly observed plasma-membrane pool and the
+inherited vacuolar amino-acid transport/homeostasis role, so no annotation action changed.

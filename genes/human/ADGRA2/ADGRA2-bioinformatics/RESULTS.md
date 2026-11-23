@@ -1,5 +1,16 @@
 # ADGRA2 bioinformatics — index
 
+## Audit Note
+
+This report is retained as a mixed bioinformatics provenance and review-QA
+index for `ADGRA2-ai-review.yaml`. It lists the small guard scripts and cached
+JSON outputs used to check PANTHER reach, PDZ partners, GDB projection status,
+InterPro mappings, correction status, GOA coverage, and action-prose consistency
+during the finished ADGRA2 review. `resolve_partners.py` and
+`projection_test.py` produced findings used by specific review verdicts; the
+remaining scripts are invariants and regression guards around the curated YAML,
+notes, GOA rows, and cited primary literature.
+
 Hand-written index only. It deliberately **does not restate any number**: the numbers live in
 the JSON outputs each script writes, and the interpretation lives in `../ADGRA2-notes.md`.
 Duplicating figures here would create a fourth surface to drift, which is the failure this

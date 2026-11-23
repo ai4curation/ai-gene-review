@@ -10,6 +10,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/NFR4zX8oqgzvQhqZF1aQ28
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Protein Complex Functions Project

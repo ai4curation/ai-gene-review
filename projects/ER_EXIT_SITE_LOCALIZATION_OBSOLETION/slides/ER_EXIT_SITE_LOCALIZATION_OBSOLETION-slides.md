@@ -47,7 +47,7 @@ GO:0070973 → five destinations, chosen per annotation
 - The name says **where a protein ends up**, not what process it takes part in.
 - It was applied to COPII scaffolds, cargo receptors, a kinase regulator and ER quality-control chaperones.
 - OLS obsoletion note: replacements "depend on the specific biological context".
-- One UniRule mapping (`UR001349783`) propagated it to **~14,414 annotations**, mostly IEA and IBA.
+- TreeGrafter/PAINT and UniProt automatic pipelines propagated it to **~14,414 May 2026 annotations**.
 
 ---
 
@@ -79,9 +79,9 @@ GO:0070973 → five destinations, chosen per annotation
 
 ## Repo impact
 
-| Review | GO:0070973 rows | Current action | Needed |
+| Review | GO:0070973 rows | Post-#3241 action | Needed |
 |---|---|---|---|
-| `genes/human/LRRK2` | IEA (GO_REF:0000120), IMP (PMID:25201882) | ACCEPT → MODIFY ×2 | **→ GO:0060628**, fixed in #3241 (merged) |
+| `genes/human/LRRK2` | IEA (GO_REF:0000120), IMP (PMID:25201882) | MODIFY ×2 → GO:0060628 | none |
 | `genes/human/BCAP31` | IBA (GO_REF:0000033) | MARK_AS_OVER_ANNOTATED | none |
 | `genes/yeast/YET2` | IBA, cached UniProt record only (not in GOA file) | not reviewed | none; same PTN000294723 node |
 

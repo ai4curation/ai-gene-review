@@ -10,21 +10,23 @@ title: "TCDB -> GO Methodology Notes"
 
 Two separate things are easy to conflate:
 
-1. **TC references on GO terms — these exist, but are neglected leads.** GO
-   carries TC references on molecular-function terms, as term-level `xref: TC:`
-   clauses and as definition dbxrefs (`def: "…" [TC:…]`). These are largely
-   neglected and the term-vs-definition distinction is not meaningful, so treat
-   both alike, as **sources**. Extract them from `go-basic.obo`:
+### TC references on GO terms
 
-   ```bash
-   uv run python extract_go_tc_xrefs.py --stats
-   # 202 TC references on 170 non-obsolete MF terms / 185 TC systems / 63 families
-   uv run python extract_go_tc_xrefs.py -o tc2go.from_go.sssom.yaml
-   ```
+These exist, but are neglected leads. GO carries TC references on
+molecular-function terms, as term-level `xref: TC:` clauses and as definition
+dbxrefs (`def: "…" [TC:…]`). These are largely neglected and the
+term-vs-definition distinction is not meaningful, so treat both alike, as
+**sources**. Extract them from `go-basic.obo`:
 
-   Every emitted row is `skos:relatedMatch` + `semapv:UnspecifiedMatching` — an
-   unreviewed lead. Whether it is safe to **propagate** (a protein with the TC id
-   inheriting the GO term) is scored next.
+```bash
+uv run python extract_go_tc_xrefs.py --stats
+# 202 TC references on 170 non-obsolete MF terms / 185 TC systems / 63 families
+uv run python extract_go_tc_xrefs.py -o tc2go.from_go.sssom.yaml
+```
+
+Every emitted row is `skos:relatedMatch` + `semapv:UnspecifiedMatching` — an
+unreviewed lead. Whether it is safe to **propagate** (a protein with the TC id
+inheriting the GO term) is scored next.
 
 ### Propagation scoring (evidence, not assertion)
 
@@ -52,10 +54,11 @@ The fraction `k/n` drives the verdict, encoded as the SSSOM predicate:
 - `narrowMatch` **NOT JUSTIFIED at this level** — `n≥3, k/n<0.5`: the GO term is a
   minority/subfamily property; wholesale propagation would over-annotate. **18**.
 
-  These two are listed in **evaluation order**, and the order is load-bearing: `k=0`
-  also satisfies `k/n<0.5`, so GAP_CANDIDATE must be tested first or every specific
-  system with zero carrying members would be filed as narrow — inverting the reading
-  of the evidence and hiding the lead from the gap harvest.
+These two are listed in **evaluation order**, and the order is load-bearing: `k=0`
+also satisfies `k/n<0.5`, so GAP_CANDIDATE must be tested first or every specific
+system with zero carrying members would be filed as narrow — inverting the reading
+of the evidence and hiding the lead from the gap harvest.
+
 - `broadMatch` **CLASS_LEVEL** — a whole TC class/subclass (level ≤2): broad by
   construction, out of scope for substrate-level propagation. **12**.
 - `relatedMatch` **NO_REVIEWED_MEMBER** — `n=0`: only TrEMBL members, or the
@@ -70,15 +73,16 @@ the (specific) term. Re-score without re-querying via
 hand-curated `tc2go.sssom.yaml` is a deeper, individually read-through pass over a
 handful of exemplars.
 
-2. **An `external2go` *annotation pipeline* — this does not exist.** Every other
-   source-audit project here hangs off a public mapping file (`ec2go`, `rhea2go`,
-   `interpro2go`, …); TCDB has none:
+### Missing external2go annotation pipeline
 
-   ```bash
-   # ec2go, rhea2go, ... are present; tc2go is not
-   curl -sL http://current.geneontology.org/ontology/external2go/ | grep -o 'external2go/[a-z0-9_]*' | sort -u
-   curl -sIL http://current.geneontology.org/ontology/external2go/tc2go   # no such file
-   ```
+Every other source-audit project here hangs off a public mapping file (`ec2go`,
+`rhea2go`, `interpro2go`, …); TCDB has none:
+
+```bash
+# ec2go, rhea2go, ... are present; tc2go is not
+curl -sL http://current.geneontology.org/ontology/external2go/ | grep -o 'external2go/[a-z0-9_]*' | sort -u
+curl -sIL http://current.geneontology.org/ontology/external2go/tc2go   # no such file
+```
 
 So GO's curated term-xrefs are **never propagated to the proteins** that carry a
 `DR TCDB;` cross-reference — there is no forward `GO_REF` volume (as there is for

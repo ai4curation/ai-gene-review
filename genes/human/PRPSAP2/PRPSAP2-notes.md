@@ -1,0 +1,7 @@
+# PRPSAP2 notes
+
+PRPSAP2 encodes PAP41, the 41-kDa PRPP synthase-associated paralog of PAP39/PRPSAP1. Rat liver PRPP synthetase was isolated as aggregates of the 34-kDa catalytic PRS I/II subunits with 39- and 41-kDa associated proteins, and removal of the associated PAP proteins increased catalytic-subunit activity [PMID:8132556, "the enzyme activity of the remaining catalytic subunits increased"]. Human PAP41 was then cloned as a 369 aa protein that is nearly identical to rat PAP41, related to human PAP39 and PRS I/II, and specifically lacks the PRPP-binding site [PMID:9545573, "but lacks the PRPP binding site."].
+
+PTHR10210 places PRPSAP2 in `PTHR10210:SF29`, together with PRPSAP1/SF28 below PAINT node `PTN008303105`. The reviewed family tree already captures the key split: the PRPSAP node has an IRD blocking ancestral `GO:0004749 ribose phosphate diphosphokinase activity`, and a replacement IBD to the broader but correct `GO:0030234 enzyme regulator activity`.
+
+The seeded PRPSAP2 review therefore needs the same split as PRPSAP1. Enzyme-regulator and inhibitor assertions are retained; catalytic PRPP-synthase process and InterPro magnesium/nucleotide rows are removed as projections from the catalytic family; proteome-scale `GO:0005515 protein binding` rows are removed as uninformative; and the real association with PRPS catalytic subunits is represented by ribose phosphate diphosphokinase complex membership.

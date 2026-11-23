@@ -5,14 +5,20 @@ This module computes the derived stats surfaced on rendered module pages:
 
 1. ``run_data_qc`` -- LinkML recommended-field compliance (via ``linkml-data-qc``)
 2. ``leaf_nodes_missing_representatives`` -- terminal nodes in concrete modules
-   that do not ground to any concrete protein (a "representative member")
-3. ``conformance_violations`` -- for every node declaring ``conforms_to`` a
+   that do not ground to any concrete protein representative or concrete
+   non-protein participant unless explicitly marked as intentionally
+   distributed/open-ended
+3. ``intentionally_ungrounded_leaf_nodes`` -- leaf nodes explicitly left
+   distributed/open-ended after curator review
+4. ``conformance_violations`` -- for every node declaring ``conforms_to`` a
    template motif, whether the bundle's tiers and connection topology match it
-4. ``module_gene_review_summary`` -- for every ``UniProtKB`` grounding in a module,
+5. ``module_gene_review_summary`` -- for every ``UniProtKB`` grounding in a module,
    whether the gene has a review, whether that review is complete, and whether it
    has deep research
-5. ``module_deep_research`` -- whether the module document as a whole has an
+6. ``module_deep_research`` -- whether the module document as a whole has an
    associated deep-research report
+7. ``function_conformance`` -- whether annoton molecular functions agree with
+   gene reviews/core functions and curated family-level function assessments
 
 The functions are deliberately pure (apart from the filesystem-scanning helpers)
 so they can be unit-tested directly against the YAML documents in ``modules/``.
@@ -36,8 +42,11 @@ DEFAULT_MODULES_DIR = Path("modules")
 # than the template's. Default is identity (exact-term) matching only.
 SubclassPredicate = Callable[[str, str], bool]
 
-# Selector types whose participant can ground to a concrete protein.
-_GROUNDED_TERM_PREFIXES = ("UniProtKB:",)
+# Selector descriptor term IDs that identify a concrete protein.
+_UNIPROT_TERM_PREFIXES = ("UniProtKB:",)
+
+# Concrete non-protein participants that intentionally have no UniProtKB entry.
+_CONCRETE_NONPROTEIN_TERM_PREFIXES = ("FB:FBgn", "NCBIGene:")
 
 # Action values that mean an annotation has not actually been adjudicated yet.
 _UNREVIEWED_ACTIONS = {"PENDING", "UNDECIDED", "", None}
@@ -110,14 +119,34 @@ def iter_nodes(data: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def is_leaf_node(node: dict[str, Any]) -> bool:
-    """Return True when a node has no child parts and no variant sets.
+    """Return True when a node has no child parts, no variant sets and no module_ref.
+
+    A ``module_ref`` node is not terminal: the referenced module supplies its
+    content (and its grounding).
 
     >>> is_leaf_node({"id": "a"})
     True
     >>> is_leaf_node({"id": "a", "parts": [{"node": {"id": "b"}}]})
     False
+    >>> is_leaf_node({"id": "a", "module_ref": "mitophagy"})
+    False
     """
-    return not as_list(node.get("parts")) and not as_list(node.get("variant_sets"))
+    return (
+        not as_list(node.get("parts"))
+        and not as_list(node.get("variant_sets"))
+        and not node.get("module_ref")
+    )
+
+
+def is_intentionally_ungrounded_node(node: dict[str, Any]) -> bool:
+    """Return True when a terminal node deliberately has no representative.
+
+    >>> is_intentionally_ungrounded_node({"intentionally_ungrounded": True})
+    True
+    >>> is_intentionally_ungrounded_node({})
+    False
+    """
+    return bool(node.get("intentionally_ungrounded"))
 
 
 def module_scope(data: dict[str, Any]) -> Optional[str]:
@@ -135,14 +164,27 @@ def is_abstract_module(data: dict[str, Any]) -> bool:
     return module_scope(data) == "ABSTRACT"
 
 
-def _selector_representative_groundings(selector: Any) -> list[dict[str, Any]]:
-    """Return concrete protein groundings (representative members) for a selector.
+def _is_uniprot_term_id(term_id: str) -> bool:
+    """Return True when a term id is a concrete UniProtKB protein accession."""
+    return term_id.startswith(_UNIPROT_TERM_PREFIXES)
 
-    A grounding is a concrete protein example: a ``gene``/``gene_product``,
-    ``ortholog_of``/``homolog_of`` anchor carrying a ``UniProtKB`` term, a
-    ``protein_complex`` active unit that resolves the same way, or a ``family``'s
-    ``representative_members``. Abstract selectors (``FAMILY`` with no
-    representatives, ``ANY_WITH_FUNCTION``, etc.) return [].
+
+def _is_concrete_nonprotein_term_id(term_id: str) -> bool:
+    """Return True when a term id can ground a concrete non-protein participant."""
+    return term_id.startswith(_CONCRETE_NONPROTEIN_TERM_PREFIXES)
+
+
+def _selector_groundings(
+    selector: Any, term_id_filter: Callable[[str], bool]
+) -> list[dict[str, Any]]:
+    """Return concrete selector groundings accepted by ``term_id_filter``.
+
+    Only concrete participant descriptors are scanned: ``gene``/
+    ``gene_product``, ``ortholog_of``/``homolog_of`` anchors,
+    ``protein_complex`` active units that resolve the same way, and a
+    ``family``'s ``representative_members``. The ``family.term`` itself is not a
+    representative grounding; it can be a PANTHER, RFAM, or other family-level
+    identifier.
     """
     if not isinstance(selector, dict):
         return []
@@ -154,6 +196,8 @@ def _selector_representative_groundings(selector: Any) -> list[dict[str, Any]]:
             return
         term = descriptor.get("term")
         term_id = term.get("id") if isinstance(term, dict) else None
+        if not isinstance(term_id, str) or not term_id_filter(term_id):
+            return
         label = (
             descriptor.get("preferred_term")
             or (term.get("label") if isinstance(term, dict) else None)
@@ -173,7 +217,7 @@ def _selector_representative_groundings(selector: Any) -> list[dict[str, Any]]:
         for unit in as_list(complex_descriptor.get("active_units")):
             if isinstance(unit, dict):
                 groundings.extend(
-                    _selector_representative_groundings(unit.get("participant"))
+                    _selector_groundings(unit.get("participant"), term_id_filter)
                 )
 
     # Family: representative members are the concrete examples.
@@ -185,8 +229,30 @@ def _selector_representative_groundings(selector: Any) -> list[dict[str, Any]]:
     return groundings
 
 
+def _selector_representative_groundings(selector: Any) -> list[dict[str, Any]]:
+    """Return concrete UniProtKB protein groundings for a selector.
+
+    This deliberately excludes descriptors that only name a protein in free
+    text. Abstract selectors (``FAMILY`` with no ``representative_members``,
+    ``ANY_WITH_FUNCTION``, etc.) also return [].
+    """
+    return _selector_groundings(selector, _is_uniprot_term_id)
+
+
+def _selector_concrete_nonprotein_groundings(selector: Any) -> list[dict[str, Any]]:
+    """Return concrete non-protein groundings for a selector.
+
+    ncRNAs and other non-protein participants intentionally have no UniProtKB
+    accession. When such a role carries a concrete gene identifier (for example
+    an NCBIGene id for bacterial SRP RNA or an FBgn id for a Drosophila ncRNA),
+    the leaf is fully specified and should not be reported as a missing protein
+    representative.
+    """
+    return _selector_groundings(selector, _is_concrete_nonprotein_term_id)
+
+
 def node_representative_groundings(node: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return all concrete protein groundings declared by a node's annotons."""
+    """Return all concrete UniProtKB protein groundings in a node's annotons."""
     groundings: list[dict[str, Any]] = []
     for annoton in as_list(node.get("annotons")):
         if isinstance(annoton, dict):
@@ -196,16 +262,69 @@ def node_representative_groundings(node: dict[str, Any]) -> list[dict[str, Any]]
     return groundings
 
 
+def node_concrete_nonprotein_groundings(
+    node: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Return all concrete non-protein groundings in a node's annotons."""
+    groundings: list[dict[str, Any]] = []
+    for annoton in as_list(node.get("annotons")):
+        if isinstance(annoton, dict):
+            groundings.extend(
+                _selector_concrete_nonprotein_groundings(annoton.get("participant"))
+            )
+    return groundings
+
+
+def _leaf_grounding_summary(node: dict[str, Any]) -> dict[str, Any]:
+    selector_types = sorted(
+        {
+            str(annoton.get("participant", {}).get("selector_type"))
+            for annoton in as_list(node.get("annotons"))
+            if isinstance(annoton, dict)
+            and isinstance(annoton.get("participant"), dict)
+        }
+    )
+    return {
+        "id": node.get("id"),
+        "label": node.get("label") or node.get("id"),
+        "annoton_count": len(as_list(node.get("annotons"))),
+        "selector_types": selector_types,
+    }
+
+
+def intentionally_ungrounded_leaf_nodes(
+    data: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Return terminal nodes deliberately left without concrete groundings."""
+    if is_abstract_module(data):
+        return []
+
+    flagged: list[dict[str, Any]] = []
+    for node in iter_nodes(data):
+        if not is_leaf_node(node):
+            continue
+        if not as_list(node.get("annotons")):
+            continue
+        if is_intentionally_ungrounded_node(node):
+            flagged.append(_leaf_grounding_summary(node))
+    return flagged
+
+
 def leaf_nodes_missing_representatives(
     data: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    """Return leaf nodes that do not ground to any representative protein member.
+    """Return leaves lacking a representative protein or non-protein grounding.
 
     A leaf node (no parts, no variant sets) is flagged when none of its annotons'
-    participants resolve to a concrete protein -- e.g. abstract ``FAMILY`` or
-    ``ANY_WITH_FUNCTION`` selectors with no ``representative_members``. Documents
-    declared as ``scope: ABSTRACT`` are reusable motifs and skip this grounding
-    completeness check.
+    participants resolve to a concrete grounding -- e.g. abstract ``FAMILY`` or
+    ``ANY_WITH_FUNCTION`` selectors with no ``representative_members``.
+    UniProtKB grounds proteins; concrete non-protein gene ids ground ncRNAs and
+    similar participants that cannot carry UniProtKB accessions. Documents
+    declared as ``scope: ABSTRACT`` are reusable motifs and skip this
+    completeness check. Individual leaf nodes marked ``intentionally_ungrounded``
+    are also skipped when a concrete module needs a distributed or open-ended
+    role instead of a false single exemplar. Annoton-less leaf nodes are process
+    or outcome endpoints, not participant roles, so they are outside this check.
     """
     if is_abstract_module(data):
         return []
@@ -214,24 +333,14 @@ def leaf_nodes_missing_representatives(
     for node in iter_nodes(data):
         if not is_leaf_node(node):
             continue
-        groundings = node_representative_groundings(node)
-        if not groundings:
-            selector_types = sorted(
-                {
-                    str(annoton.get("participant", {}).get("selector_type"))
-                    for annoton in as_list(node.get("annotons"))
-                    if isinstance(annoton, dict)
-                    and isinstance(annoton.get("participant"), dict)
-                }
-            )
-            flagged.append(
-                {
-                    "id": node.get("id"),
-                    "label": node.get("label") or node.get("id"),
-                    "annoton_count": len(as_list(node.get("annotons"))),
-                    "selector_types": selector_types,
-                }
-            )
+        if not as_list(node.get("annotons")):
+            continue
+        if is_intentionally_ungrounded_node(node):
+            continue
+        has_protein_grounding = bool(node_representative_groundings(node))
+        has_nonprotein_grounding = bool(node_concrete_nonprotein_groundings(node))
+        if not has_protein_grounding and not has_nonprotein_grounding:
+            flagged.append(_leaf_grounding_summary(node))
     return flagged
 
 
@@ -248,7 +357,7 @@ def collect_uniprot_groundings(data: dict[str, Any]) -> list[dict[str, Any]]:
         if isinstance(obj, dict):
             term = obj.get("term")
             term_id = term.get("id") if isinstance(term, dict) else None
-            if isinstance(term_id, str) and term_id.startswith(_GROUNDED_TERM_PREFIXES):
+            if isinstance(term_id, str) and term_id.startswith(_UNIPROT_TERM_PREFIXES):
                 acc = base_accession(term_id)
                 if acc and acc not in found:
                     found[acc] = {
@@ -357,7 +466,7 @@ def resolve_template_node(
     template_ref: str,
     modules_dir: Path = DEFAULT_MODULES_DIR,
 ) -> Optional[dict[str, Any]]:
-    """Resolve a conformance ``template`` reference to its module node.
+    """Resolve a conformance ``template`` (or a ``module_ref``) to its module node.
 
     The reference is ``<stem>`` (the module file ``<stem>.yaml``, whose root
     ``module`` node is the motif) or ``<stem>#<node_id>`` to select a nested
@@ -507,6 +616,82 @@ def conformance_violations(
                         node, conformance, Path(modules_dir), subclass_of
                     )
                 )
+    return violations
+
+
+# A reference node is a pure stand-in for the module it names.
+_MODULE_REF_EXCLUSIVE_SLOTS = ("annotons", "parts", "variant_sets")
+
+
+def module_ref_cycle(
+    module_ref: str,
+    modules_dir: Path = DEFAULT_MODULES_DIR,
+    chain: tuple[str, ...] = (),
+) -> Optional[list[str]]:
+    """Return the reference chain closing a cycle through ``module_ref``, if any.
+
+    ``chain`` holds the references already being expanded (seed it with the
+    referencing document's own file stem). References that do not resolve are
+    not followed; they are reported against the document that makes them.
+    """
+    if module_ref in chain:
+        return [*chain, module_ref]
+    target = resolve_template_node(module_ref, modules_dir)
+    if target is None:
+        return None
+    for node in iter_nodes({"module": target}):
+        nested = node.get("module_ref")
+        if nested:
+            cycle = module_ref_cycle(str(nested), modules_dir, (*chain, module_ref))
+            if cycle:
+                return cycle
+    return None
+
+
+def module_ref_violations(
+    data: dict[str, Any],
+    modules_dir: Path = DEFAULT_MODULES_DIR,
+    self_stem: Optional[str] = None,
+) -> list[dict[str, Any]]:
+    """Return ``module_ref`` problems across a module document.
+
+    Each referencing node must resolve, must not carry its own annotons, parts
+    or variant sets, and must not lead back to itself through other
+    references. ``self_stem`` (the document's file stem) lets a reference back
+    to this document be recognised as a cycle.
+
+    >>> module_ref_violations({"module": {"id": "u", "parts": [
+    ...     {"node": {"id": "x", "module_ref": "no_such_module"}}]}})[0]["message"]
+    "module_ref 'no_such_module' not found"
+    """
+    violations: list[dict[str, Any]] = []
+    for node in iter_nodes(data):
+        module_ref = node.get("module_ref")
+        if not module_ref:
+            continue
+        module_ref = str(module_ref)
+
+        def violation(message: str) -> dict[str, Any]:
+            return {
+                "node_id": node.get("id"),
+                "module_ref": module_ref,
+                "message": message,
+                "severity": "error",
+            }
+
+        for slot in _MODULE_REF_EXCLUSIVE_SLOTS:
+            if as_list(node.get(slot)):
+                violations.append(violation(
+                    f"module_ref node also carries {slot}; a reference node "
+                    "must be a pure stand-in for the referenced module"
+                ))
+        if resolve_template_node(module_ref, Path(modules_dir)) is None:
+            violations.append(violation(f"module_ref '{module_ref}' not found"))
+            continue
+        seed = (self_stem,) if self_stem else ()
+        cycle = module_ref_cycle(module_ref, Path(modules_dir), seed)
+        if cycle:
+            violations.append(violation("module_ref cycle: " + " -> ".join(cycle)))
     return violations
 
 
@@ -804,6 +989,7 @@ def _step_coa_species(
     data: dict[str, Any],
     mf_to_reactions: MFToReactions,
     reaction_equation: ReactionEquation,
+    needed_steps: Optional[set[str]] = None,
 ) -> dict[str, set[str]]:
     """Map each step id to the union of CoA species across its reaction annotons.
 
@@ -812,6 +998,8 @@ def _step_coa_species(
     """
     species: dict[str, set[str]] = {}
     for step_id, _order, ann in _iter_reaction_annotons(data):
+        if needed_steps is not None and step_id not in needed_steps:
+            continue
         term = (ann.get("function") or {}).get("term") or {}
         go_id = term.get("id")
         if not go_id:
@@ -895,23 +1083,28 @@ def reaction_chaining_findings(
     >>> f[0]["severity"], sorted(f[0]["shared"])
     ('info', ['2eenoylcoa'])
     """
+    module = data.get("module", {})
+    connections = [
+        conn for conn in as_list(module.get("connections"))
+        if conn.get("connection_type") == "PRECEDES"
+    ]
+    if not connections:
+        return []
     if mf_to_reactions is None or reaction_equation is None:
         resolvers = _default_chaining_resolvers()
         if resolvers is None:
             return []
         mf_to_reactions, reaction_equation = resolvers
 
-    module = data.get("module", {})
-    species = _step_coa_species(data, mf_to_reactions, reaction_equation)
+    needed_steps = {conn.get(key) for conn in connections for key in ("source", "target")}
+    species = _step_coa_species(data, mf_to_reactions, reaction_equation, needed_steps)
     order_of = {
         part.get("node", {}).get("id"): part.get("order")
         for part in as_list(module.get("parts"))
     }
 
     findings: list[dict[str, Any]] = []
-    for conn in as_list(module.get("connections")):
-        if conn.get("connection_type") != "PRECEDES":
-            continue
+    for conn in connections:
         src, tgt = conn.get("source"), conn.get("target")
         override = conn.get("chaining_status")
         note = conn.get("chaining_note")
@@ -1184,6 +1377,10 @@ def collect_module_qc(
     genes_dir: Path = Path("genes"),
 ) -> dict[str, Any]:
     """Collect all derived QC stats for a module document in one structure."""
+    from ai_gene_review.module_function_conformance import module_function_conformance
+
+    if gene_index is None:
+        gene_index = index_gene_reviews(genes_dir)
     try:
         data_qc = run_data_qc(yaml_path, schema_path=schema_path)
     except Exception as error:  # external tool: degrade gracefully, never crash render
@@ -1192,8 +1389,14 @@ def collect_module_qc(
     return {
         "data_qc": data_qc,
         "leaf_nodes_missing_representatives": leaf_nodes_missing_representatives(data),
+        "intentionally_ungrounded_leaf_nodes": intentionally_ungrounded_leaf_nodes(
+            data
+        ),
         "conformance_violations": conformance_violations(
             data, modules_dir=yaml_path.parent
+        ),
+        "module_ref_violations": module_ref_violations(
+            data, modules_dir=yaml_path.parent, self_stem=yaml_path.stem
         ),
         "reaction_chaining": reaction_chaining_findings(data),
         "feedback_loops": feedback_loop_findings(data),
@@ -1201,4 +1404,7 @@ def collect_module_qc(
             data, gene_index=gene_index, genes_dir=genes_dir
         ),
         "module_deep_research": module_deep_research(yaml_path),
+        "function_conformance": module_function_conformance(
+            data, gene_index=gene_index, genes_dir=genes_dir
+        ),
     }

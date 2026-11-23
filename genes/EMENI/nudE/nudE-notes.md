@@ -28,3 +28,7 @@ Deep research: no falcon report present at time of review.
 - The report's mention of NudE/NudF binding dynein/dynactin subunits and tubulins derives from the RETRACTED PMID:11509576; excluded.
 - The report calls NudE's early-endosome role unproven; this is incomplete retrieval - PMID:31562232 shows early endosomes accumulate at the hyphal tip in DeltanudE, so the IBA GO:0047496 ACCEPT stands.
 - Deep-research quote added to the core function.
+
+## 2026-10-01 re-review (GOA refresh)
+
+- No new (PENDING) or vanished GOA rows after the refresh. Existing judgments re-audited against current guidelines (IBA reasoning, NEW participation/comparator tests, protein-binding handling, verbatim supporting text); no changes needed.

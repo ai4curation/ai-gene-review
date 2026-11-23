@@ -6,24 +6,25 @@ title: "PANTHER IBA Annotation Error Report: NTN1/NTN3 Incorrectly Annotated as 
 
 ## Summary
 
-Netrin-1 (NTN1, O95631) and Netrin-3 (NTN3, O00634) have erroneous IBA (Inferred from Biological Ancestor) annotations to DNA-binding transcription factor activity (GO:0000981). These annotations should be removed.
+Netrin-1 (NTN1, O95631) and Netrin-3 (NTN3, O00634) have POU-seeded IBA (Inferred from Biological Ancestor) annotations to DNA-binding transcription factor activity (GO:0000981) and RNA polymerase II cis-regulatory region sequence-specific DNA binding (GO:0000978). Those two DNA-recognition annotations should be removed; the broader IBA to regulation of transcription by RNA polymerase II (GO:0006357) remains undecided pending target-specific evidence review.
 
 ## The Error
 
 ### Affected Annotations
 
-| Gene | UniProt | GO Term | Evidence | Source Node |
-|------|---------|---------|----------|-------------|
-| NTN1 | O95631 | GO:0000981 (dbTF activity, RNAP II-specific) | IBA | PTN000180816 |
-| NTN1 | O95631 | GO:0006357 (regulation of transcription by RNAP II) | IBA | PTN000180816 |
-| NTN1 | O95631 | GO:0000978 (cis-regulatory region sequence-specific DNA binding) | IBA | PTN000180816 |
-| NTN3 | O00634 | GO:0000981 (dbTF activity, RNAP II-specific) | IBA | PTN000180816 |
-| NTN3 | O00634 | GO:0006357 (regulation of transcription by RNAP II) | IBA | PTN000180816 |
-| NTN3 | O00634 | GO:0000978 (cis-regulatory region sequence-specific DNA binding) | IBA | PTN000180816 |
+| Gene | UniProt | GO Term | Evidence | Source Node | Review action |
+|------|---------|---------|----------|-------------|---------------|
+| NTN1 | O95631 | GO:0000981 (dbTF activity, RNAP II-specific) | IBA | PTN000180816 | REMOVE |
+| NTN1 | O95631 | GO:0006357 (regulation of transcription by RNAP II) | IBA | PTN000180816 | UNDECIDED |
+| NTN1 | O95631 | GO:0000978 (cis-regulatory region sequence-specific DNA binding) | IBA | PTN000180816 | REMOVE |
+| NTN3 | O00634 | GO:0000981 (dbTF activity, RNAP II-specific) | IBA | PTN000180816 | REMOVE |
+| NTN3 | O00634 | GO:0006357 (regulation of transcription by RNAP II) | IBA | PTN000180816 | UNDECIDED |
+| NTN3 | O00634 | GO:0000978 (cis-regulatory region sequence-specific DNA binding) | IBA | PTN000180816 | REMOVE |
 
 ### Evidence Used (WITH/FROM field)
 
 The IBA annotations cite the following proteins as evidence:
+
 - **UniProtKB:P14859** - POU2F1 (OCT1) - POU domain TF
 - **UniProtKB:P28069** - POU1F1 (Pit-1) - POU domain TF
 - **UniProtKB:Q01851** - POU4F1 - POU domain TF
@@ -39,13 +40,12 @@ The IBA annotations cite the following proteins as evidence:
 ### 1. Different PANTHER Families
 
 | Protein | PANTHER Family | Family Name |
-|---------|---------------|-------------|
+|---------|----------------|-------------|
 | NTN1 | **PTHR10574** | NETRIN/LAMININ-RELATED |
 | NTN3 | **PTHR10574** | NETRIN/LAMININ-RELATED |
-| POU2F1 | **PTHR11636** | POU DOMAIN |
-| POU1F1 | **PTHR11636** | POU DOMAIN |
+| POU5F1 | **PTHR11636:SF86** | POU5F1 |
 
-These proteins belong to **completely different PANTHER families**. There is no phylogenetic relationship that would justify propagating POU TF annotations to netrins.
+Human netrins and at least one named POU seed, POU5F1, are indexed in **different PANTHER families**. That mismatch does not by itself establish the exact PAINT provenance failure, but POU-specific DNA-recognition activity is not supported for the netrin target architecture.
 
 ### 2. Different Domain Architecture
 
@@ -69,26 +69,30 @@ PMID:28945198 states: *"Netrin-1 is a secreted protein that was first identified
 
 There is **no literature evidence** that netrins bind DNA or regulate transcription as transcription factors.
 
-## Root Cause Analysis
+## Provenance Discrepancy
 
-The PANTHER node **PTN000180816** appears to be an erroneous ancestral node in the GO-PAINT phylogenetic tree that incorrectly groups:
-- Netrins (PTHR10574 - extracellular guidance cues)
-- POU domain TFs (PTHR11636 - nuclear transcription factors)
+The cached PTHR10574 PAINT export contains POU-seeded IBD rows at **PTN000180816**, even though POU5F1 is independently indexed under PTHR11636:SF86 and human NTN1/NTN3 are indexed under PTHR10574 subfamilies. This is a real upstream provenance discrepancy, but the current cache does not establish which step introduced it. The remaining candidates are:
 
-This violates the fundamental principle of phylogenetic annotation inference: proteins should share function only if they share evolutionary ancestry of the functional domains.
+- tree placement
+- identifier mapping
+- export assembly
 
 ## Recommended Actions
 
-### 1. Remove Erroneous Annotations
+### 1. Remove Erroneous DNA-Recognition Annotations
 The following annotations should be removed from GOA:
-- NTN1: GO:0000981, GO:0006357, GO:0000978 (IBA)
-- NTN3: GO:0000981, GO:0006357, GO:0000978 (IBA)
 
-### 2. Review PANTHER Node PTN000180816
-The GO Consortium/PANTHER team should review node PTN000180816 to:
-- Determine why netrins were grouped with POU TFs
-- Correct the phylogenetic tree structure
-- Prevent similar errors in future IBA propagation
+- NTN1: GO:0000981, GO:0000978 (IBA)
+- NTN3: GO:0000981, GO:0000978 (IBA)
+
+The broader GO:0006357 IBA should stay under review rather than being removed solely from the failed POU trace.
+
+### 2. Trace PTN000180816 Upstream
+The GO Consortium/PANTHER team should trace the PTN000180816 rows to:
+
+- determine where the POU-to-netrin association entered the PAINT export
+- correct the responsible tree-placement, identifier-mapping, or export-assembly step
+- prevent similar errors in future IBA propagation
 
 ### 3. Other PTHR10574 Members Checked
 

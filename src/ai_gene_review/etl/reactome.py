@@ -1,12 +1,14 @@
 """ETL for fetching and caching Reactome pathway information."""
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
 import requests
 import yaml
+
+PARTICIPANTS_HEADING = "## Participants"
 
 
 @dataclass
@@ -27,6 +29,11 @@ class ReactomePathway:
     display_name: str
     species: Optional[str] = None
     summary: Optional[str] = None
+    # Reference entities of every participant (inputs, outputs, catalysts and
+    # the members of their complexes and sets), as "UniProt:P11346 Raf". The
+    # event summary often names only some of them, so a review that says a gene
+    # is or is not a participant needs this list to be checkable offline.
+    participants: list[str] = field(default_factory=list)
 
     def to_frontmatter_dict(self) -> dict:
         """Convert to dictionary for YAML frontmatter."""
@@ -62,6 +69,15 @@ class ReactomePathway:
 
         if self.summary:
             body_parts.append(f"\n## Summary\n\n{self.summary}\n")
+
+        if self.participants:
+            lines = "\n".join(f"- {name}" for name in self.participants)
+            body_parts.append(
+                f"\n{PARTICIPANTS_HEADING}\n\n"
+                "Reference entities of all participants, including members of "
+                "complexes and sets (Reactome ContentService).\n\n"
+                f"{lines}\n"
+            )
 
         markdown = f"---\n{frontmatter}---\n\n{''.join(body_parts)}"
         # Reactome summaries are API text, not authored Markdown: discard
@@ -114,8 +130,45 @@ def get_cached_title(
     return None
 
 
+def fetch_reactome_participants(reactome_id: str) -> list[str]:
+    """Fetch the reference entities of an event's participants.
+
+    Returns sorted display names such as ``UniProt:P11346 Raf``, covering
+    inputs, outputs, catalysts and the members of their complexes and sets.
+    Returns an empty list when the event has none or the request fails; the
+    participants section is then simply left out of the cached entry.
+
+    Example:
+        >>> # This would require network access
+        >>> # "UniProt:P11346 Raf" in fetch_reactome_participants("R-DME-432535")
+    """
+    reactome_id = extract_reactome_id(reactome_id)
+    url = (
+        "https://reactome.org/ContentService/data/participants/"
+        f"{reactome_id}/referenceEntities"
+    )
+    try:
+        response = requests.get(url, timeout=30)
+        if response.status_code != 200:
+            return []
+        data = response.json()
+    except Exception:
+        return []
+    if not isinstance(data, list):
+        return []
+    names = {
+        entity["displayName"].strip()
+        for entity in data
+        if isinstance(entity, dict) and entity.get("displayName")
+    }
+    return sorted(names)
+
+
 def fetch_reactome_data(
-    reactome_id: str, use_cache: bool = True, cache_dir: Path = Path("reactome")
+    reactome_id: str,
+    use_cache: bool = True,
+    cache_dir: Path = Path("reactome"),
+    include_participants: bool = False,
 ) -> Optional[ReactomePathway]:
     """Fetch pathway data from Reactome API, using cache if available.
 
@@ -123,6 +176,7 @@ def fetch_reactome_data(
         reactome_id: Reactome stable ID (e.g., R-HSA-6785807)
         use_cache: Whether to use cached data if available
         cache_dir: Directory for caching pathways
+        include_participants: Also fetch the participants' reference entities
 
     Returns:
         ReactomePathway object, or None if not found
@@ -179,6 +233,9 @@ def fetch_reactome_data(
             display_name=display_name,
             species=species_name,
             summary=summary_text,
+            participants=(
+                fetch_reactome_participants(reactome_id) if include_participants else []
+            ),
         )
 
         # Cache the pathway if we fetched it
@@ -199,7 +256,10 @@ def fetch_reactome_data(
 
 
 def cache_reactome_pathway(
-    reactome_id: str, output_dir: Path = Path("reactome"), force: bool = False
+    reactome_id: str,
+    output_dir: Path = Path("reactome"),
+    force: bool = False,
+    include_participants: Optional[bool] = None,
 ) -> bool:
     """Cache a single Reactome pathway to the filesystem.
 
@@ -207,6 +267,11 @@ def cache_reactome_pathway(
         reactome_id: Reactome stable ID (with or without Reactome: prefix)
         output_dir: Directory to save cached pathway
         force: Force re-download even if already cached
+        include_participants: Also cache the participants' reference
+            entities, for events where a review depends on who takes part.
+            Left unset, an entry that already has a Participants section
+            keeps one, so a forced re-download cannot silently drop text
+            that reviews quote.
 
     Returns:
         True if successfully cached, False otherwise
@@ -229,9 +294,16 @@ def cache_reactome_pathway(
         print(f"Reactome {reactome_id} already cached (use force=True to re-download)")
         return True
 
+    if include_participants is None:
+        include_participants = (
+            output_file.exists() and PARTICIPANTS_HEADING in output_file.read_text()
+        )
+
     # Fetch pathway data
     print(f"Fetching Reactome {reactome_id}...")
-    pathway = fetch_reactome_data(reactome_id, use_cache=False)
+    pathway = fetch_reactome_data(
+        reactome_id, use_cache=False, include_participants=include_participants
+    )
 
     if not pathway:
         print(f"Failed to fetch Reactome {reactome_id}")

@@ -1,0 +1,24 @@
+# cI (P03034) - Curation Notes
+
+## Overview
+- **Gene symbol**: `cI`
+- **UniProt ID**: `P03034` (`RPC1_LAMBD`)
+- **Protein name**: Repressor protein cI (Lambda repressor, 237 AA)
+- **Organism**: Escherichia phage lambda (`NCBITaxon:2681611`)
+
+## Function & Biological Context
+- **Master regulator of lysogeny**: The cI repressor maintains the lysogenic (prophage) state of bacteriophage lambda in *Escherichia coli* by repressing the early lytic promoters `PR` and `PL` while simultaneously regulating its own synthesis from the lysogenic maintenance promoter `PRM` [PMID:17908932, "In the immune (CI-dominant) state, the CI protein is expressed from the lysogenic promoter P RM and binds cooperatively to two operators, O R 1 and O R 2, to repress the P R lytic promoter and thus block transcription of the cro gene."].
+- **Domain architecture and dimerization**: Contains an N-terminal helix-turn-helix (HTH) DNA-binding domain (residues 1-92) connected via a flexible linker containing the cleavage site (Ala111-Gly112) to a C-terminal oligomerization and LexA/Signal peptidase-like catalytic domain (residues 132-236). CI binds operator DNA as a homodimer [PMID:18432246, "Here we present the X-ray crystal structure of the intact lambda cI repressor dimer bound to a DNA operator site."].
+- **Cooperative binding and octamer-mediated DNA looping**: Pairs of CI dimers bind cooperatively to adjacent operator subsites (`OR1`-`OR2` and `OL1`-`OL2`) to form tetramers, and further associate across a 3.8 kb distance to form an octamer bridging `OR` and `OL` via a DNA loop [PMID:11711436, "Pairs of CI dimers interact to cooperatively occupy adjacent operator sites at O(R) and at O(L). These CI tetramers repress the lytic promoters and activate transcription of the cI gene from P(RM). CI is also able to octamerize, forming a large DNA loop between O(R) and O(L)"; PMID:21943085, "Forms octamer that links OR to OL"].
+- **Positive and negative autoregulation at PRM**: Binding of a CI dimer at `OR2` activates transcription of `cI` from `PRM` via direct contact with RNA polymerase sigma70 [PMID:17908932, "CI simultaneously activates transcription of its own gene from P RM ."]. Octamer-mediated DNA looping brings `OL3` and `OR3` into proximity so that an additional pair of CI dimers can bind cooperatively at `OR3` and `OL3` at higher lysogenic CI concentrations, repressing `PRM` to prevent excessive CI accumulation that would hinder prophage induction [PMID:11711436, "Here we show that repression of P(RM) at lysogenic CI concentrations is absolutely dependent on O(L), in this case 3.8 kb away."; PMID:21873207, "Our results confirm that DNA loops in prophage λ are likely to contain, in the absence of mutations, four CI dimers (two CI at O R 1 ∼ O R 2 and two at O L 1 ∼ O L 2 forming an octamer) or six CI dimers (an additional dimer pair connecting O R 3 and O L 3)."].
+- **Prophage induction via RecA*-stimulated autocleavage**: Upon host DNA damage (e.g., UV irradiation), activated RecA filaments (RecA*) stimulate the intrinsic serine peptidase activity (Ser150/Lys193 dyad) of CI, cleaving the Ala111-Gly112 bond and preventing dimerization and cooperative operator binding, which derepresses `PR` and `PL` and triggers lytic development.
+
+## Review of Existing GO Annotations
+- `GO:0001046` (core promoter sequence-specific DNA binding, IDA, `PMID:17908932`): **ACCEPT**. Directly captures sequence-specific binding to the `OR` and `OL` operator sites overlapping the `PR`, `PL`, and `PRM` core promoters.
+- `GO:0003677` (DNA binding, IEA, `GO_REF:0000120`): **MODIFY** to `GO:0001046` (core promoter sequence-specific DNA binding), which is already experimentally annotated and more specific.
+- `GO:0019042` (viral latency, IEA, `GO_REF:0000043`): **MODIFY** to `GO:0019044` (maintenance of viral latency), which more specifically describes CI's role in maintaining prophage quiescence.
+- `GO:0019044` (maintenance of viral latency, IMP, `PMID:17908932`): **ACCEPT**. Core biological process of CI.
+- `GO:0042802` (identical protein binding, IPI, `PMID:18432246` and `PMID:21943085`): **ACCEPT** (both rows). CI forms homodimers, tetramers, and octamers essential for cooperative operator binding and DNA looping.
+- `GO:0045892` (negative regulation of DNA-templated transcription, IDA, `PMID:17908932`): **ACCEPT**. CI represses both the lytic promoters (`PR`, `PL`) and its own promoter (`PRM`) at high concentrations.
+- `GO:0050434` (positive regulation of viral transcription, IDA, `PMID:17908932`): **ACCEPT**. CI bound at `OR2` directly activates transcription from `PRM`.
+- `GO:0098689` (latency-replication decision, IEA, `GO_REF:0000043`): **ACCEPT**. Together with Cro and CII, CI is a central component of the bistable genetic switch governing the lysis-lysogeny decision.

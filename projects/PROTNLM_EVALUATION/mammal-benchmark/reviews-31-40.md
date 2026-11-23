@@ -1,5 +1,7 @@
 # Horse benchmark review: pairs 31–40
 
+> **Working notes from the initial pass.** ProtNLM2 verdicts here predate the 2026-10-23 gene re-review and the 2026-10-24 rescoring; the current calls are in each gene's `*-protnlm-predictions-review.yaml` and are summarised in [horse40-review-findings.md](../horse40-review-findings.md).
+
 All ten pairs have human research, GOA assessments, exact-sequence comparisons and ProtNLM claim assessments. UNDECIDED/UNC identifies unresolved evidence rather than an assumed biological error.
 
 | Pair | Human annotation rows | Horse annotation rows | GO verdicts |

@@ -1,0 +1,25 @@
+# RSP_0332 annotation review notes
+
+## 2026-11-06 complete gene review
+
+Seeded using `just fetch-gene CERS4 RSP_0332 --uniprot-id Q3J126`. The standard symbol is the locus name and was preserved. The pristine review, all source row payloads and both raw hashes were captured in `.cache/module-audit-logs/cellulose-20261105/rhodobacter-baseline.json` before editing. Current UniProt species code CERS4 refers to Cereibacter sphaeroides 2.4.1, historically Rhodobacter sphaeroides.
+
+Applied the annotation-reviewer/core-function guidance. The normal Falcon command `just deep-research CERS4 RSP_0332 --provider falcon` failed with HTTP 403 authentication/access error. No provider report was fabricated; these are manual fallback notes.
+
+PMID:23222542 methods explicitly state the genomic DNA source was Rhodobacter sphaeroides 2.4.1. BcsA was expressed with a C-terminal 12-His tag. The BcsB construct replaced its native signal peptide with PelB and retained residues 21-725, with an additional Met-Gly dipeptide after cleavage. Unmodified PDBe SIFTS responses for 4HG6 and 4P00 are stored with provenance in the RSP_0333 source-analysis directory. 4HG6 maps Q3J125 residues 1-788 and Q3J126 residues 21-725 with identity 1.0. Raw UniProt PDB cross-references independently support this mapping. Construct residue numbering is distinguished from native numbering.
+
+PMID:24704788 directly identifies the BcsA PilZ c-di-GMP switch. PMID:26958837 was initially abstract-only after a 429 fetch failure; normal force-fetch recovered full text, permitting review of all three original IPI sources. Its in-crystal and engineered-mutant experiments identify polymerization/translocation mechanisms, not native-cell ecological phenotypes. PMID:24127606 was normally fetched but remained abstract-only after the publisher XML/HTML/PDF fallbacks failed. Its authoritative PMC article was consulted externally for functional reconstitution; quotes use the unchanged cached abstract. This paper directly assays separately and jointly expressed subunits, not only gene-deletion necessity.
+
+QuickGO term definitions were checked: GO:0016760 describes the UDP-glucose-dependent glucan extension reaction. GO:0010330 cellulose synthase complex explicitly specifies a rosette for the plant cell wall, so it was not assigned to bacterial BcsAB. Neither gene has an IBA row; no PAINT loss judgment is required.
+
+All six seed rows were reviewed and preserved. The three bare protein-binding IPI rows are REMOVE solely because the generic term is uninformative; the real BcsA interaction is explicitly retained. BcsB has no glycosyltransferase active site. One qualified NEW row records `contributes_to` GO:0016760, supported by purified-component reconstitution and truncation of the membrane-associated BcsB region. This preserves the original enables payloads and does not misleadingly assign independent synthase activity to BcsB. The core uses `contributes_to_molecular_function`. Cellulose process participation is already represented by refinement of the original UDP-glucose process row, so no redundant NEW process was added.
+
+The RuleBase-derived direct c-di-GMP binding name/function is flagged as a probable UniProt source defect; the same complex places the direct sensor on BcsA. No BcsB ligand-binding row is proposed. Mg-binding sites derived from crystal structures were inspected in the raw record but do not independently establish a distinct biological molecular function. Native export geometry and the physiological importance of the large periplasmic region beyond the minimal active membrane region remain open.
+
+## PR2143 round17: bacterial process specificity
+
+The purified BcsAB experiment supports BcsB structural participation, without assigning BcsA catalysis to BcsB. Refine its replacement/core process to the bacterial subtype; native organism output remains unestablished.
+
+QuickGO definitions checked on 2026-11-06 establish GO:0090540 as an is_a subtype of GO:0030244 with bacterial context. The parent and child share the cellulose chemistry criteria. Native output, intact-cell synthesis, crystallinity and fibrils are independent evidence questions, not extra requirements introduced by the bacterial subtype.
+
+Original source/provider bytes and machine payloads are preserved. Supporting sources and target-specific limits are recorded in the reviewed annotation; no new annotation row is introduced in this follow-up.

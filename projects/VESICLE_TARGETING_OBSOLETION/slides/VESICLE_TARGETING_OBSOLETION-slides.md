@@ -72,7 +72,7 @@ GO:0006903 and 9 descendants → existing vesicle transport processes
 | WIPI1 (Q5MNZ9) | IDA, GO:0048203 | GO:0006895 | none |
 | AP1AR (Q63HQ0) | IDA, GO:0048203 | GO:0006895 | none |
 | GLTP (Q9NZD2) | IMP, GO:0048207 (preprint) | GO:0006888 | none |
-| yeast SPA2 | NAS, GO:0006903 (ComplexPortal) | GO:0016192 | KEEP_AS_NON_CORE |
+| yeast SPA2 | retired NAS, GO:0006903 | none in current GOA | KEEP_AS_NON_CORE |
 
 ---
 
@@ -80,7 +80,7 @@ GO:0006903 and 9 descendants → existing vesicle transport processes
 
 1. `just fetch-gene human YKT6`; expect MODIFY toward the SNARE MF rather than a bare transport BP.
 2. Then **CLASP1/CLASP2** as a pair, **WIPI1**, **AP1AR**; defer GLTP until the preprint is published.
-3. Refresh **SPA2** once GOA moves its polarisome row to GO:0016192.
+3. Watch future **SPA2** pulls for a successor ComplexPortal transport row.
 
 **Siblings:** `VESICLE_TETHERING_OBSOLETION` (#6375) · `VESICLE_DOCKING_OBSOLETION` (#6379) · `SYNAPTIC_VESICLE_DOCKING_OBSOLETION` (#6415)
 **Upstream:** go-annotation#6424 · go-ontology#31865 (closed)

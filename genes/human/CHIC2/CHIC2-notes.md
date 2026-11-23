@@ -51,3 +51,9 @@ Palmitoylated, membrane/vesicle-associated small protein localized to the plasma
   adaptor/complex-membership level because CHIC2 is the adapter while STUB1 carries the U-box E3
   catalytic activity.
 - Updated the review description, references, core functions, and suggested questions/experiments to remove the stale "molecular function unknown" framing and capture the IFRPD-dependent STUB1-adapter role.
+
+## 2026-11-15 ORGANELLES Golgi batch 2 (Golgi apparatus rows)
+
+- One GO:0005794 row: IEA GO_REF:0000107, an Ensembl projection from mouse Chic2 (Q9D9G3). QuickGO shows the mouse donor is an MGI IDA from PMID:11257495 (Cools et al. 2001), which is also UniProt's source for human CHIC2's membrane and vesicle items.
+- PMID:11257495 is abstract-only. Europe PMC has no PMC record, and the publisher copy is subscription-only (fetch refused). The abstract says only "associated with vesicular structures and the plasma membrane". The UniProt "Golgi-like vesicular compartment" note is untagged and describes a resemblance, not a marker. PMID:40796662 (full text) does not mention the Golgi.
+- Action KEEP_AS_NON_CORE -> UNDECIDED (unreadable donor, the CD247 line). The two readings are set out in the reason. The Golgi-associated vesicle rows were not part of this check.

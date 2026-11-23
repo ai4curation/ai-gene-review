@@ -218,8 +218,8 @@ def fetch_artifacts(
     """Fetch artifacts for trajectory_id and update report_file."""
     from deep_research_client.models import ProviderConfig  # type: ignore[import-untyped]
     from deep_research_client.providers.falcon import FalconProvider  # type: ignore[import-untyped]
-    from edison_client import EdisonClient
-    from edison_client.models.app import TaskResponseVerbose
+    from edison_client import EdisonClient  # type: ignore[import-not-found]  # optional `edison` extra
+    from edison_client.models.app import TaskResponseVerbose  # type: ignore[import-not-found]
 
     api_key = _load_api_key()
     client = EdisonClient(api_key=api_key)

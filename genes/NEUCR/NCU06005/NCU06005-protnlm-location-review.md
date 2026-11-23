@@ -38,9 +38,9 @@ Original evidence:
 ]
 ```
 
-Assessment: **UNC** (confidence score 1).
+Assessment: **LSP** (confidence score 2).
 
-Cytoplasm is plausible from the glycerol-kinase-specific target family and classical N. crassa enzymology identifying cytosolic glycerokinase in glycerol dissimilation (PMID:6284716). However, glycerol-kinase localization varies among homologs, and the experiment predates mapping to NCU06005. The frozen target annotation is mitochondrion, with no equivalent cytoplasm annotation. Because the locus correspondence is not established, this evidence does not decisively validate or refute the target location. The historical glp-4-to-NCU06005 mapping remains incomplete, so an exclusive cytosolic location and absence of a mitochondrial pool are not claimed. The source evidence hydrates Cytoplasm from GO:0005739, which denotes mitochondrion; that mismatch is retained as a provenance issue and is not treated as biological validation.
+Cytoplasm is supported by the glycerol-kinase-specific target family and by classical N. crassa enzymology identifying a cytosolic glycerokinase in glycerol dissimilation, distinct from mitochondrial glycerol-3-phosphate dehydrogenase (PMID:6284716). NCU06005 is the sole glycerol kinase gene in the reference proteome, so that cytosolic activity is attributable to this locus. Q7S2F2 is the only product of the gene and carries both FGGY kinase domains, so no feature is missing. The curated gene review already carries the more specific cytosol for this gene, and GOA carries mitochondrion (IBA) as a minor inherited location; the emitted Cytoplasm is therefore correct but less precise than the established cytosol location. An exclusive cytosolic location and absence of a mitochondrial pool are not claimed. The source evidence hydrates Cytoplasm from GO:0005739, which denotes mitochondrion; that mismatch is retained as a provenance issue and is not treated as biological validation.
 
 Evidence:
 
@@ -49,5 +49,6 @@ Evidence:
 mutants indicated that glp-2 and glp-4 were the structural genes encoding the
 mitochondrial glycerol-3-phosphate dehydrogenase and cytosolic glycerokinase,
 respectively.”
+- [file:NEUCR/NCU06005/NCU06005-bioinformatics/RESULTS-rereview.md](NCU06005-bioinformatics/RESULTS-rereview.md): “NCU06005 is therefore the sole glycerol kinase gene in the reference proteome.”
 
 COR denotes a biologically supported location newly specified relative to the frozen target annotation snapshot. LSP denotes a less precise location than an established target annotation. Neither category establishes model training-set membership.
