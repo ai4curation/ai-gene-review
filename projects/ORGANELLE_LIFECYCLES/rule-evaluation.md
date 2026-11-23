@@ -11,16 +11,18 @@ two largest, MPP and Pex2, are fixed (#6416, #6418) and the results below are re
 rest are listed below for fixing. Second, the lineages with reduced or absent organelles (the
 mitosome-bearing *Giardia* and *Entamoeba*, the hydrogenosome-bearing *Trichomonas*, the non-ciliated
 lineages for the cilium, the lineages without VTC for the acidocalcisome) fail as expected, so the rules
-discriminate. Third, the engine cannot evaluate
-a protein-complex step from family selectors, because it compiles the complex into one atom without its
-units; the census supplies the units itself.
+discriminate. Third, a protein complex is evaluated as one step per active unit, all of which must
+hold, so a failing complex is reported by the unit it lacks.
 
 ## Method
 
 [selector_census.py](selector_census.py) compiles each module with `ai_gene_review.module_logic`, so
 optional parts, variant sets and module references count as the engine reads them. A step holds in an
 organism when one of its PANTHER family or subfamily ids selects a protein in that organism's
-classification file; a protein-complex step holds when every active unit's ids do. A step that also
+classification file; the engine compiles a protein complex into one step per active unit, and the complex
+holds when every unit does. A step selected only by UniProt accession holds where the organism's file
+lists the accession or where the accession is that organism's own protein by UniProt's organism name
+(`accession_steps` in the census). A step that also
 requires an InterPro domain holds only when a selected protein carries that domain in UniProt's InterPro
 cross-references, which the script fetches once and caches. The per-organism
 counts, the verdicts and the engine's innermost gaps are in
@@ -52,7 +54,7 @@ disagreement between the two sources rather than a wrong selector.
 
 | Module | Hs | Dm | Ce | Nv | Ta | Mb | Bd | Cr | Pp | Tb | Lm | Gi | Tv | Pt | Ph | Pf | Tp | At | Os | Sc | Sp | Nc | Dd | Eh |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `mitochondrial_protein_import` | ✓ | ✓ | ✓ | 3 | 1 | 2 | ✓ | ✓ | ✓ | 4 | 4 | 9 | 5 | 1 | ✓ | ✓ | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | 1 | 9 |
+| `mitochondrial_protein_import` | ✓ | ✓ | ✓ | 3 | 1 | 2 | 1 | ✓ | ✓ | 5 | 5 | 10 | 6 | 1 | ✓ | ✓ | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | 1 | 10 |
 | `mitochondrial_iron_sulfur_cluster_assembly` | ✓ | ✓ | ✓ | ✓ | 1 | 1 | 1 | 1 | 1 | ✓ | ✓ | 2 | 2 | ✓ | 2 | 1 | 3 | 1 | 1 | ✓ | ✓ | ✓ | ✓ | 4 |
 | `mitochondrion_related_organelle_core` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | `peroxisomal_protein_import` | ✓ | ✓ | 2 | 4 | 3 | 7 | 1 | ✓ | ✓ | 2 | 2 | 10 | 8 | 4 | 1 | 10 | 8 | ✓ | 1 | 1 | 1 | ✓ | ✓ | 9 |
@@ -66,9 +68,9 @@ disagreement between the two sources rather than a wrong selector.
 | `nuclear_pore_transport_core` | ✓ | ✓ | 1 | 2 | 2 | 1 | ✓ | ✓ | ✓ | 1 | 1 | 2 | 3 | 2 | ✓ | 3 | ✓ | 1 | 1 | ✓ | ✓ | ✓ | ✓ | 3 |
 | `lipid_droplet_neutral_lipid_storage` | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 1 | 1 | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 1 |
 | `acidocalcisome_polyphosphate_storage` | 1 | 1 | 1 | 1 | 1 | 1 | ✓ | ✓ | 1 | ✓ | ✓ | 1 | 1 | 1 | 1 | ✓ | ✓ | 1 | 1 | ✓ | ✓ | ✓ | 1 | 1 |
-| `lysosome_related_organelle_biogenesis` | ✓ | ✓ | 1 | 2 | ✓ | 2 | 3 | 4 | 3 | 3 | 3 | 3 | 2 | 2 | 2 | 3 | 3 | 3 | 3 | 3 | 3 | 3 | 1 | 2 |
-| `phagosome_maturation` | 3 | 1 | 1 | 1 | 2 | 1 | 2 | 3 | 3 | 4 | 4 | 7 | 3 | 3 | 4 | 3 | 5 | 5 | 4 | 2 | 4 | 2 | 3 | 4 |
-| `synaptic_vesicle_cycle` | ✓ | ✓ | ✓ | ✓ | 1 | 3 | 3 | 2 | 3 | 4 | 4 | 4 | 4 | 3 | 3 | 4 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 4 |
+| `lysosome_related_organelle_biogenesis` | ✓ | ✓ | ✓ | 2 | ✓ | 2 | 3 | 5 | 3 | 5 | 5 | 5 | 2 | 4 | 4 | 5 | 5 | 3 | 3 | 5 | 5 | 4 | 1 | 3 |
+| `phagosome_maturation` | 3 | 1 | 1 | 1 | 2 | 1 | 2 | 3 | 3 | 4 | 4 | 9 | 3 | 4 | 4 | 4 | 6 | 5 | 4 | 2 | 4 | 2 | 3 | 5 |
+| `synaptic_vesicle_cycle` | ✓ | ✓ | ✓ | ✓ | 1 | 4 | 3 | 2 | 3 | 5 | 5 | 5 | 5 | 3 | 4 | 4 | 3 | 3 | 3 | 3 | 3 | 3 | 2 | 4 |
 
 Key: Hs *Homo sapiens*; Dm *Drosophila melanogaster*; Ce *Caenorhabditis elegans*; Nv *Nematostella vectensis*; Ta *Trichoplax adhaerens*; Mb *Monosiga brevicollis*; Bd *Batrachochytrium dendrobatidis*; Cr *Chlamydomonas reinhardtii*; Pp *Physcomitrium patens*; Tb *Trypanosoma brucei*; Lm *Leishmania major*; Gi *Giardia intestinalis*; Tv *Trichomonas vaginalis*; Pt *Paramecium tetraurelia*; Ph *Phytophthora ramorum*; Pf *Plasmodium falciparum*; Tp *Thalassiosira pseudonana*; At *Arabidopsis thaliana*; Os *Oryza sativa*; Sc *Saccharomyces cerevisiae*; Sp *Schizosaccharomyces pombe*; Nc *Neurospora crassa*; Dd *Dictyostelium discoideum*; Eh *Entamoeba histolytica*.
 
@@ -171,12 +173,11 @@ pass on their polyphosphate-filled vacuole, which the rule does not distinguish 
 `lysosome_related_organelle_biogenesis` takes Metazoa as its context. It needs AP-3 (evaluated on the delta subunit,
 `PTHR22781:SF12`), BLOC-1 (BLOC1S1, BLOC1S2 and Snapin), a Rab32/38-family GTPase (`PTHR24073:SF839` or
 `SF862`) and an exchange factor for it: BLOC-3 (HPS1 `PTHR12761:SF1` and HPS4 `PTHR14407:SF9`) or the
-nematode GLO-3. It is met in human, *Drosophila* and Trichoplax. *C. elegans* fails on the exchange factor
-alone: it has no HPS1 or HPS4 (PMID:30419011), and GLO-3 (Q21045), which with CCZ-1 activates the worm
-Rab32 GLO-1, has no PANTHER classification in the worm file, so the census cannot evaluate that step and lists it
-under `unevaluable_steps`. Every exchange-factor gap is also listed under `gaps_on_unevaluable_steps`,
-because the census cannot check GLO-3 in any genome; outside the worm that mark only says the gap is not
-fully checked, since the organisms that lack BLOC-3 are not nematodes. Nematostella
+nematode GLO-3. It is met in human, *Drosophila*, *C. elegans* and Trichoplax. The worm has no HPS1 or HPS4
+(PMID:30419011); it passes on GLO-3 (Q21045), which with CCZ-1 activates the worm Rab32 GLO-1. GLO-3 has
+no PANTHER classification, so the step is selected by its accession and holds in the worm because UniProt
+names *C. elegans* as its organism; it is the module's only accession step. Elsewhere it does not hold, so
+the exchange-factor gaps of the other organisms read as the absence of BLOC-3 in PANTHER's files. Nematostella
 fails on both Rab32/38 and the exchange factor: PANTHER's file has no Rab32/38-subfamily protein for it, and
 an HPS4 but no HPS1. Outside animals the rule's parts are older than the organelles it describes.
 Dictyostelium has AP-3, BLOC-1, a Rab32 and HPS1, and fails only on HPS4. Monosiga has a Rab32 and HPS1 and
@@ -206,14 +207,14 @@ subfamily count, not checked orthologues.
 ## Expected failures
 
 - **Reduced mitochondria.** *Giardia* and *Entamoeba* (mitosomes) and *Trichomonas* (hydrogenosomes)
-  fail `mitochondrial_protein_import` on 5 to 9 steps and the iron-sulfur rule on 2 to 4. That fits
+  fail `mitochondrial_protein_import` on 6 to 10 steps and the iron-sulfur rule on 2 to 4. That fits
   reduced import machinery. With the MPP selectors fixed the counts no longer include that defect: the
   census finds an MPP beta but no MPP alpha in *Giardia* and *Entamoeba*, and both in *Trichomonas*.
   Other selector defects may still be among these gaps, so the counts are not yet a clean description
   of what these organelles keep. What they do keep is tested by `mitochondrion_related_organelle_core`, which all
   three pass (see the section above).
-- **Kinetoplastids.** *Trypanosoma* and *Leishmania* fail the import rule on TOM40, TIM23, Tim17 and
-  Tim44. As `coverage.yaml` records, kinetoplastids replace the TIM23/TIM22 pair with a single
+- **Kinetoplastids.** *Trypanosoma* and *Leishmania* fail the import rule on TOM40, Tim50, TIM23, Tim17
+  and Tim44. As `coverage.yaml` records, kinetoplastids replace the TIM23/TIM22 pair with a single
   Tim17-family translocase, so the rule needs a lineage variant set before it can be read there.
 - **Peroxisomes.** The same three lineages and *Plasmodium* fail `peroxisomal_protein_import` on 8 to 10
   steps.
@@ -221,15 +222,17 @@ subfamily count, not checked orthologues.
   Entamoeba) fails `intraflagellar_transport_core` on all 14 required steps. *Plasmodium* fails on all 14
   as well, although its male gametes are flagellated: the census finds no IFT subunit in it.
 
-## Engine limitation
+## Protein complexes
 
-`module_logic` compiles a protein-complex annoton into one atom from the participant's `gene`,
-`gene_product` or `family` slots, and its `active_units` are not read. A family-keyed oracle therefore
-sees no selector for the complex, and the step can never hold. The census works around this by reading
-the units itself. It also reports, per module, any complex whose units mix family-keyed and gene-keyed
-selectors (`mixed_complex_steps` in the census), because such a complex is evaluated on its family-keyed
-units alone; none of the 17 modules has one. A fix in the engine, compiling a complex into an AND over
-its units, would let any oracle evaluate these steps.
+`module_logic` compiles a protein-complex annoton that lists `active_units` into an AND over one step
+per unit, each grounded through that unit's own selector, so any oracle can evaluate a complex and a
+gap names the missing unit (`bloc1_complex/snapin_unit`, not `bloc1_complex`). Before this, the engine
+compiled a complex into a single step with no selector and the census read the units itself; the
+verdicts are the same either way, except that a unit selected by accession is now evaluated, which is
+how the worm's GLO-3 step holds. The Tim50 step that the import rule gained in #6736
+(`PTHR12210:SF3`) fails in chytrid, both kinetoplastids, *Giardia*, *Trichomonas* and *Entamoeba*;
+the chytrid miss is the one not explained by reduced import machinery and is worth checking as a
+selector defect.
 
 ## Full gap list
 
@@ -237,6 +240,7 @@ Every step that fails in at least one organism, with the organisms it fails in (
 
 - `mitochondrial_protein_import`
   - `tim44_tether` (7): Nv, Tb, Lm, Gi, Tp, Dd, Eh
+  - `tim50_presequence_receptor` (6): Bd, Tb, Lm, Gi, Tv, Eh
   - `tim17_subunit` (5): Tb, Lm, Gi, Tv, Eh
   - `tim23_channel` (5): Tb, Lm, Gi, Tv, Eh
   - `sam50_insertase` (4): Nv, Gi, Pt, Eh
@@ -319,22 +323,27 @@ Every step that fails in at least one organism, with the organisms it fails in (
 - `acidocalcisome_polyphosphate_storage`
   - `vtc4_catalytic_subunit` (15): Hs, Dm, Ce, Nv, Ta, Mb, Pp, Gi, Tv, Pt, Ph, At, Os, Dd, Eh
 - `lysosome_related_organelle_biogenesis`
-  - `rab32_38_gef` (21): Ce, Nv, Mb, Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh
-  - `bloc1_complex` (18): Mb, Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Eh
+  - `rab32_38_gef` (20): Nv, Mb, Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh
+  - `bloc1s2_unit` (16): Bd, Cr, Pp, Tb, Lm, Gi, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Eh
   - `rab32_38_gtpase` (13): Nv, Bd, Cr, Pp, Tb, Lm, Pf, Tp, At, Os, Sc, Sp, Nc
-  - `ap3_complex` (2): Cr, Gi
+  - `snapin_unit` (13): Cr, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, Sc, Sp, Nc, Eh
+  - `bloc1s1_unit` (10): Mb, Tb, Lm, Gi, Pt, Ph, Pf, Tp, Sc, Sp
+  - `ap3_delta_unit` (2): Cr, Gi
 - `phagosome_maturation`
   - `rilp_rab7_effector` (23): Dm, Ce, Nv, Ta, Mb, Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh
   - `lamp_proteins` (18): Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh
-  - `hops_tether` (14): Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Dd, Eh
-  - `mon1_ccz1_rab7_gef` (6): Tb, Lm, Gi, Ph, Tp, Sp
+  - `vps39_unit` (14): Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Dd, Eh
+  - `ccz1_unit` (6): Tb, Lm, Gi, Ph, Tp, Sp
   - `pikfyve_pi35p2` (6): Hs, Ta, Gi, Tp, Os, Eh
   - `rab5_gtpase` (4): Hs, Gi, At, Sp
-  - `v_atpase` (2): Hs, At
+  - `vps41_unit` (4): Gi, Pt, Pf, Eh
+  - `mon1_unit` (2): Gi, Tp
+  - `v0a_unit` (2): Hs, At
   - `rab7_gtpase` (1): Gi
 - `synaptic_vesicle_cycle`
   - `synapsin_vesicle_tether` (20): Ta, Mb, Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh
   - `cycle_synaptotagmin` (19): Mb, Bd, Cr, Pp, Tb, Lm, Gi, Tv, Pt, Ph, Pf, Tp, At, Os, Sc, Sp, Nc, Dd, Eh
-  - `cycle_snare_complex` (11): Mb, Pp, Tb, Lm, Gi, Tv, Ph, Pf, Tp, At, Os
   - `cycle_vesicular_transporter` (11): Bd, Tb, Lm, Gi, Tv, Pt, Pf, Sc, Sp, Nc, Eh
+  - `cycle_vamp2` (10): Mb, Pp, Tb, Lm, Gi, Tv, Ph, Pf, At, Os
+  - `cycle_snap25` (7): Mb, Tb, Lm, Gi, Tv, Ph, Tp
   - `cycle_clathrin_coat` (1): Eh

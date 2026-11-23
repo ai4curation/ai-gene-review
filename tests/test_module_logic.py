@@ -32,6 +32,7 @@ from ai_gene_review.module_logic import (
     step_id,
     unsatisfied_steps,
     abduce,
+    gap_report,
 )
 
 #: Anchor module paths to the repository, not the invoking cwd, so the
@@ -521,20 +522,19 @@ def test_apoptotic_execution_requires_a_principal_executioner(
 #: Participant slots `_atom_from_annoton` reads for a symbol or accession. An
 #: ungrounded atom whose participant carries a *usable* descriptor in one of
 #: these is an engine defect: the grounding was there to be read and was not.
-READ_GROUNDING_SLOTS = ("gene", "gene_product", "family")
+READ_GROUNDING_SLOTS = ("gene", "gene_product", "family", "protein_complex")
 
 #: Slots the engine knowingly does not read, so an atom grounded only through
 #: one of them is expected to come out ungrounded until that is fixed.
-#: `protein_complex` holds its subunits one level deeper, at
-#: ``active_units[].participant.gene_product``, and reading them raises an
-#: any-of versus all-of question (a complex needs every subunit, while the
-#: representative slots are any-of) that wants a curator's decision.
+#: (`protein_complex` used to be listed here. The engine now compiles a complex
+#: with ``active_units`` into an AND over one atom per unit, settling the
+#: any-of versus all-of question as all-of: a complex needs every subunit.)
 #: `ortholog_of`/`homolog_of` name a reference gene rather than the ortholog
 #: actually required in context, so grounding on it would assert the presence
 #: of the wrong gene. `domain` names a region, not a gene product. A
 #: participant with none of these slots, such as a descriptor-less
 #: ANY_WITH_FUNCTION step, needs an activity-keyed oracle.
-UNREAD_GROUNDING_SLOTS = ("protein_complex", "ortholog_of", "homolog_of", "domain")
+UNREAD_GROUNDING_SLOTS = ("ortholog_of", "homolog_of", "domain")
 
 #: Every entity-grounding slot on `ParticipantSelector`, i.e. those whose range
 #: is a Descriptor naming *what plays the role* rather than constraining it
@@ -558,13 +558,22 @@ def _descriptor_is_usable(slot: str, descriptor: dict) -> bool:
     grounding, which is why `family` reads its `representative_members` rather
     than the family descriptor itself. **Any slot moved into
     `READ_GROUNDING_SLOTS` needs its case added here in the same change.**
-    A `protein_complex` descriptor, for instance, usually carries a
-    non-symbol-first `preferred_term` and no `term`, so it evaluates False;
-    that is harmless only while the slot is unread. Reclassify it without
-    adding an `active_units` case and every complex whose subunits are
-    perfectly groundable reports as "unusable descriptor" instead of as the
-    dropped grounding it is -- silencing the population this guard exists for.
+    A `protein_complex` descriptor usually carries a non-symbol-first
+    `preferred_term` and no `term`, so read as a plain descriptor it would
+    evaluate False and every complex with groundable subunits would report as
+    "unusable descriptor" instead of as a dropped grounding. Its case therefore
+    reads `active_units`, as the engine does.
     """
+    if slot == "protein_complex":
+        # A complex grounds through its units, each compiled to its own atom and
+        # checked under its own id (see `_participant_slots`); the complex is
+        # usable when any unit carries a usable descriptor in a read slot.
+        return any(
+            _descriptor_is_usable(unit_slot, (unit.get("participant") or {})[unit_slot])
+            for unit in as_list(descriptor.get("active_units"))
+            for unit_slot in ("gene", "gene_product", "family")
+            if (unit.get("participant") or {}).get(unit_slot)
+        )
     candidates = (
         as_list(descriptor.get("representative_members"))
         if slot == "family"
@@ -594,6 +603,14 @@ def _participant_slots(document: dict) -> dict[str, dict[str, bool]]:
                 for slot in ENTITY_GROUNDING_SLOTS
                 if participant.get(slot)
             }
+            # Each active unit compiles to an atom under its own id.
+            for unit in as_list((participant.get("protein_complex") or {}).get("active_units")):
+                unit_participant = unit.get("participant") or {}
+                slots[str(unit.get("id"))] = {
+                    slot: _descriptor_is_usable(slot, unit_participant[slot])
+                    for slot in ENTITY_GROUNDING_SLOTS
+                    if unit_participant.get(slot)
+                }
         for part in as_list(node.get("parts")):
             walk(part["node"])
         for variant_set in as_list(node.get("variant_sets")):
@@ -713,3 +730,55 @@ def test_report_corpus_grounding_counts(curated_corpus, capsys):
             f"{len(dead)} of {len(curated_corpus)} modules unsatisfiable in "
             "every context"
         )
+
+
+# --------------------------------------------------------------------------- #
+# Protein complexes compile to an AND over their active units                 #
+# --------------------------------------------------------------------------- #
+
+COMPLEX_DOC = {
+    "module": {
+        "id": "m",
+        "parts": [{"node": {"id": "step", "annotons": [{
+            "id": "cx",
+            "participant": {"protein_complex": {"active_units": [
+                {"id": "u1", "participant": {"gene_product": {"term": {"id": "UniProtKB:P11111"}}}},
+                {"id": "u2", "participant": {"family": {"term": {"id": "PANTHER:PTHR9"}}}},
+            ]}},
+        }]}}],
+    }
+}
+
+
+@pytest.mark.parametrize(
+    "present, expected",
+    [
+        ({"u1", "u2"}, True),
+        ({"u1"}, False),
+        ({"u2"}, False),
+        (set(), False),
+    ],
+)
+def test_complex_needs_every_active_unit(present, expected):
+    """A complex holds only when every active unit holds (all-of, not any-of)."""
+    circuit = compile_module(COMPLEX_DOC)
+    assert is_satisfied(circuit, lambda atom: atom.node_id in present) is expected
+
+
+def test_complex_units_are_atoms_and_gaps_name_the_unit():
+    """Each unit is its own grounded atom, and a missing unit is the reported gap."""
+    circuit = compile_module(COMPLEX_DOC)
+    atoms = {atom.node_id: atom for atom in iter_atoms(circuit)}
+    assert set(atoms) == {"u1", "u2"}
+    assert atoms["u1"].uniprot == "P11111"
+    assert atoms["u2"].family_ids == ("PANTHER:PTHR9",)
+    gaps = gap_report(circuit, lambda atom: atom.node_id == "u1")
+    assert [g.path for g in gaps] == [("step", "cx", "u2")]
+
+
+def test_complex_without_units_stays_one_atom():
+    """A complex that lists no active units keeps compiling to a single atom."""
+    doc = {"module": {"id": "m", "parts": [{"node": {"id": "step", "annotons": [
+        {"id": "cx", "participant": {"protein_complex": {"preferred_term": "some complex"}}}
+    ]}}]}}
+    assert [atom.node_id for atom in iter_atoms(compile_module(doc))] == ["cx"]

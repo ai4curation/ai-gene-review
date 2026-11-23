@@ -4,23 +4,25 @@ For each module named on the command line, every family descriptor (an annoton p
 protein-complex unit) is read from the module YAML, and the number of proteins its PANTHER family or
 subfamily ids select is counted in each organism's PANTHER release-pinned sequence classification file.
 Satisfiability comes from the module engine (``ai_gene_review.module_logic``), so optional parts,
-variant sets and module references count as the engine reads them: a step holds in an organism when one
-of its PANTHER family or subfamily ids selects a protein there (a step with no PANTHER id falls back to its
-UniProt accessions, and a protein-complex step holds when every active unit's PANTHER ids do, because
-the engine's atom for a complex carries no unit selectors). The ``unsatisfied_gaps`` of an organism are
-the engine's innermost gaps. Every step of the compiled module is classified once, before any organism
-is evaluated: ``unevaluable_steps`` lists the steps this oracle cannot evaluate at all (a step with
-neither a PANTHER id nor an accession), which never hold; ``gaps_on_unevaluable_steps`` names, per
-organism, the unsatisfied gaps whose absent steps include one of those, so they are not read as
-observed absences (when the unevaluable step is a whole alternative, as in a variant set, it could
-fill the gap); and ``mixed_complex_steps`` the complexes whose units mix PANTHER-keyed and
-gene-keyed selectors, which are evaluated on their PANTHER-keyed units alone. A family step that also names an InterPro domain (``domain`` or ``required_domain``) holds only
-when a selected protein carries that domain in UniProt's InterPro cross-references, fetched once and
-cached in ``.cache/panther/uniprot-interpro.json``; such rows also report
-``proteins_with_required_domains_per_organism``. A domain on a step selected only by UniProt
-accession is not checked. Annoton functions are not checked. Each descriptor row's ``required`` flag marks only whether its top-level part
-is ``optional``; it is a reading aid, not the verdict. Classification rows with an empty
-accession column are skipped, so they cannot turn a zero count into a hit.
+variant sets and module references count as the engine reads them, and a protein complex counts as
+one step per active unit, all of which must hold: a step holds in an organism when one of its PANTHER
+family or subfamily ids selects a protein there. A step with no PANTHER id falls back to its UniProt
+accessions and holds where the organism's classification file lists one of them or where one of them
+is that organism's own protein by UniProt's organism name, fetched once and cached in
+``.cache/panther/uniprot-organisms.json``; ``accession_steps`` lists these steps with the organism of
+each accession. The ``unsatisfied_gaps`` of an organism are the engine's innermost gaps. Every step of
+the compiled module is classified once, before any organism is evaluated: ``unevaluable_steps`` lists
+the steps this oracle cannot evaluate at all (a step with neither a PANTHER id nor an accession), which
+never hold; and ``gaps_on_unevaluable_steps`` names, per organism, the unsatisfied gaps whose absent
+steps include one of those, so they are not read as observed absences (when the unevaluable step is a
+whole alternative, as in a variant set, it could fill the gap). A family step that also names an
+InterPro domain (``domain`` or ``required_domain``) holds only when a selected protein carries that
+domain in UniProt's InterPro cross-references, fetched once and cached in
+``.cache/panther/uniprot-interpro.json``; such rows also report
+``proteins_with_required_domains_per_organism``. A domain on a step selected only by UniProt accession
+is not checked. Annoton functions are not checked. Each descriptor row's ``required`` flag marks only
+whether its top-level part is ``optional``; it is a reading aid, not the verdict. Classification rows
+with an empty accession column are skipped, so they cannot turn a zero count into a hit.
 
 Usage (from the repository root)::
 
@@ -205,14 +207,32 @@ def parse_interpro_tsv(text: str) -> dict[str, list[str]]:
     return found
 
 
-def fetch_interpro_domains(accessions: set[str], cache_file: Path) -> DomainLookup:
-    """Look up the InterPro entries of UniProt accessions, caching answers in ``cache_file``.
+def parse_organism_tsv(text: str) -> dict[str, str]:
+    r"""Parse UniProt's ``accession,organism_name`` TSV into accession -> organism name.
 
-    Only accessions UniProt actually returned are cached, each with the UniProt release it came
-    from, so an accession missing from a response (obsolete, merged, or a failed request) is asked
-    again on the next run instead of being remembered as having no domains. Accessions still
-    unanswered are reported in :attr:`DomainLookup.unanswered`; a step needing a domain does not
-    hold for them.
+    >>> parse_organism_tsv("Entry\tOrganism\nQ21045\tCaenorhabditis elegans\n")
+    {'Q21045': 'Caenorhabditis elegans'}
+    """
+    found = {}
+    for row in text.splitlines()[1:]:
+        acc, _, organism = row.partition("\t")
+        found[acc] = organism
+    return found
+
+
+def _cached_uniprot_lookup(
+    accessions: set[str],
+    cache_file: Path,
+    field: str,
+    key: str,
+    parse: Callable[[str], dict[str, object]],
+) -> dict[str, dict]:
+    """Fetch one UniProt ``field`` per accession, caching each answer under ``key`` in ``cache_file``.
+
+    Only accessions UniProt actually returned are cached, each with the UniProt release it came from,
+    so an accession missing from a response (obsolete, merged, or a failed request) is asked again on
+    the next run. The cache is written after every batch, to a temporary file then renamed, so a
+    failure in a later batch keeps the earlier answers and an interrupted write cannot corrupt it.
     """
     cached = json.loads(cache_file.read_text()) if cache_file.exists() else {}
     entries: dict[str, dict] = cached.get("accessions", {})
@@ -222,26 +242,48 @@ def fetch_interpro_domains(accessions: set[str], cache_file: Path) -> DomainLook
         query = urllib.parse.urlencode(
             {
                 "accessions": ",".join(batch),
-                "fields": "accession,xref_interpro",
+                "fields": f"accession,{field}",
                 "format": "tsv",
             }
         )
         with urllib.request.urlopen(f"{UNIPROT_ACCESSIONS_URL}?{query}") as response:
             release = response.headers.get("X-UniProt-Release", "unknown")
-            found = parse_interpro_tsv(response.read().decode())
+            found = parse(response.read().decode())
         entries.update(
             {
-                acc: {"interpro": found[acc], "uniprot_release": release}
+                acc: {key: found[acc], "uniprot_release": release}
                 for acc in batch
                 if acc in found
             }
         )
-        # Written after every batch, so a failure in a later batch keeps the earlier answers;
-        # written to a temporary file and renamed, so an interrupted write cannot corrupt it.
         cache_file.parent.mkdir(parents=True, exist_ok=True)
         tmp = cache_file.with_name(cache_file.name + ".tmp")
         tmp.write_text(json.dumps({"accessions": entries}, sort_keys=True, indent=0))
         tmp.replace(cache_file)
+    return entries
+
+
+def fetch_uniprot_organisms(accessions: set[str], cache_file: Path) -> dict[str, str]:
+    """Look up the source organism of UniProt accessions, caching answers in ``cache_file``.
+
+    Accessions UniProt does not answer are left out, so a step selected by one of them holds only
+    where the organism's classification file lists it.
+    """
+    entries = _cached_uniprot_lookup(
+        accessions, cache_file, "organism_name", "organism", parse_organism_tsv
+    )
+    return {acc: entries[acc]["organism"] for acc in accessions if acc in entries}
+
+
+def fetch_interpro_domains(accessions: set[str], cache_file: Path) -> DomainLookup:
+    """Look up the InterPro entries of UniProt accessions, caching answers in ``cache_file``.
+
+    Accessions still unanswered (see :func:`_cached_uniprot_lookup`) are reported in
+    :attr:`DomainLookup.unanswered`; a step needing a domain does not hold for them.
+    """
+    entries = _cached_uniprot_lookup(
+        accessions, cache_file, "xref_interpro", "interpro", parse_interpro_tsv
+    )
     answered = accessions & set(entries)
     return DomainLookup(
         domains={acc: set(entries[acc]["interpro"]) for acc in answered},
@@ -269,40 +311,6 @@ def load_classification(path: Path, mnemonic: str | None) -> dict[str, set[str]]
     return index
 
 
-def complex_units(module: dict) -> dict[str, list[tuple[str, ...]]]:
-    """Map each protein-complex annoton id to the PANTHER ids of its active units, one tuple per unit.
-
-    The module engine compiles a protein-complex annoton into one atom without its units' selectors,
-    so a family-keyed oracle needs them supplied separately.
-
-    >>> complex_units({"parts": [{"node": {"id": "n", "annotons": [{"id": "c", "participant": {
-    ...     "protein_complex": {"active_units": [
-    ...         {"participant": {"family": {"term": {"id": "PANTHER:PTHR1"}}}},
-    ...         {"participant": {"family": {"term": {"id": "PANTHER:PTHR2"}}}}]}}}]}}]})
-    {'c': [('PTHR1',), ('PTHR2',)]}
-    """
-    out: dict[str, list[tuple[str, ...]]] = {}
-
-    def walk(obj: object) -> None:
-        if isinstance(obj, dict):
-            units = ((obj.get("participant") or {}).get("protein_complex") or {}).get(
-                "active_units"
-            )
-            if units and isinstance(obj.get("id"), str):
-                out[obj["id"]] = [
-                    family_ids((u.get("participant") or {}).get("family") or {})
-                    for u in units
-                ]
-            for value in obj.values():
-                walk(value)
-        elif isinstance(obj, list):
-            for value in obj:
-                walk(value)
-
-    walk(module)
-    return out
-
-
 def panther_ids(atom: Atom) -> list[str]:
     """PANTHER family and subfamily ids of a step, without the ``PANTHER:`` prefix.
 
@@ -316,37 +324,46 @@ def panther_ids(atom: Atom) -> list[str]:
     ]
 
 
-StepKind = Literal["family", "complex", "mixed_complex", "accession", "unevaluable"]
+StepKind = Literal["family", "accession", "unevaluable"]
 
 
-def step_kind(atom: Atom, units: dict[str, list[tuple[str, ...]]]) -> StepKind:
+def step_kind(atom: Atom) -> StepKind:
     """How :func:`atom_holds` evaluates a step, independent of organism.
 
-    ``family`` (the step's own PANTHER ids), ``complex`` (every active unit has PANTHER ids),
-    ``mixed_complex`` (some units have PANTHER ids and some do not, so only the family-keyed units are
-    evaluated), ``accession`` (UniProt accessions only) or ``unevaluable`` (nothing this oracle reads).
+    ``family`` (the step's own PANTHER ids), ``accession`` (UniProt accessions only) or ``unevaluable``
+    (nothing this oracle reads). The engine compiles a protein complex into one step per active unit,
+    so each unit is classified on its own selector.
 
-    >>> units = {"cx": [("PTHR1",), ("PTHR2",)], "mx": [("PTHR1",), ()], "gx": [(), ()]}
-    >>> [step_kind(Atom(i, i, None, None), units) for i in ("cx", "mx", "gx")]
-    ['complex', 'mixed_complex', 'unevaluable']
-    >>> step_kind(Atom("a", "a", None, None, family_ids=("PANTHER:PTHR1",)), units)
+    >>> step_kind(Atom("a", "a", None, None, family_ids=("PANTHER:PTHR1",)))
     'family'
-    >>> step_kind(Atom("b", "b", None, "P1"), units)
+    >>> step_kind(Atom("b", "b", None, "P1"))
     'accession'
+    >>> step_kind(Atom("c", "c", None, None))
+    'unevaluable'
     """
     if panther_ids(atom):
         return "family"
-    unit_ids = units.get(atom.node_id, [])
-    if any(unit_ids):
-        return "complex" if all(unit_ids) else "mixed_complex"
     return "accession" if atom.uniprots else "unevaluable"
+
+
+def same_species(organism_name: str, label: str) -> bool:
+    """True when a UniProt organism name is the census organism, compared on genus and species.
+
+    >>> same_species("Caenorhabditis elegans", "Caenorhabditis elegans")
+    True
+    >>> same_species("Oryza sativa subsp. japonica (Rice)", "Oryza sativa")
+    True
+    >>> same_species("Caenorhabditis briggsae", "Caenorhabditis elegans")
+    False
+    """
+    return organism_name.split()[:2] == label.split()[:2]
 
 
 def atom_holds(
     index: dict[str, set[str]],
-    units: dict[str, list[tuple[str, ...]]] | None = None,
     accessions: set[str] | None = None,
     domains: dict[str, set[str]] | None = None,
+    native: set[str] | None = None,
 ) -> Callable[[Atom], bool]:
     """Oracle for one organism: a step holds when its PANTHER family ids select a protein.
 
@@ -354,22 +371,24 @@ def atom_holds(
     one selected protein carries every such domain in ``domains``, which maps accessions to their
     InterPro entries (see :func:`fetch_interpro_domains`).
 
-    A protein-complex step (its id in ``units``, keyed as the engine names atoms) holds when every
-    active unit that has PANTHER ids selects a protein; units without PANTHER ids are not evaluated
-    (:func:`step_kind` reports such complexes as ``mixed_complex``). A step with neither falls back to
-    its UniProt accessions, which hold when the organism's classification file lists one of them. A
-    step this oracle cannot evaluate at all does not hold (:func:`step_kind` reports it as
-    ``unevaluable``, so it is listed rather than read as an absence).
+    A step with no PANTHER id falls back to its UniProt accessions. It holds when the organism's
+    classification file lists one of them, or when one of them is a protein of this organism
+    (``native``, from UniProt's organism names; see :func:`fetch_uniprot_organisms`), since a named
+    protein of the organism is present in it whether or not PANTHER classifies it. A step this
+    oracle cannot evaluate at all does not hold (:func:`step_kind` reports it as ``unevaluable``, so
+    it is listed rather than read as an absence).
 
-    >>> holds = atom_holds({"PTHR1": {"P1"}, "PTHR2:SF3": {"P2"}}, {"cx": [("PTHR1",), ("PTHR9",)]})
+    >>> holds = atom_holds({"PTHR1": {"P1"}, "PTHR2:SF3": {"P2"}})
     >>> holds(Atom("a", "a", None, None, family_ids=("PANTHER:PTHR1",)))
     True
     >>> holds(Atom("b", "b", None, None, family_ids=("PANTHER:PTHR9",)))
     False
     >>> holds(Atom("c", "c", None, "P2"))
     True
-    >>> holds(Atom("cx", "cx", None, None))
+    >>> holds(Atom("g", "g", None, "Q9"))
     False
+    >>> atom_holds({}, native={"Q9"})(Atom("g", "g", None, "Q9"))
+    True
     >>> atom_holds({})(Atom("f", "f", None, None, function_ids=("GO:1",)))
     False
     >>> vtc = Atom("v", "v", None, None, family_ids=("PANTHER:PTHR1",), domain_ids=("InterPro:IPR9",))
@@ -380,22 +399,18 @@ def atom_holds(
     """
     if accessions is None:
         accessions = set().union(*index.values()) if index else set()
-    units = units or {}
+    native = native or set()
 
     def holds(atom: Atom) -> bool:
-        kind = step_kind(atom, units)
+        kind = step_kind(atom)
         if kind == "family":
             selected = set().union(*(index.get(f, set()) for f in panther_ids(atom)))
             needed = set(interpro_ids([{"term": {"id": d}} for d in atom.domain_ids]))
             if not needed:
                 return bool(selected)
             return any(needed <= (domains or {}).get(acc, set()) for acc in selected)
-        if kind in ("complex", "mixed_complex"):
-            return all(
-                any(index.get(f) for f in unit) for unit in units[atom.node_id] if unit
-            )
         if kind == "accession":
-            return any(acc in accessions for acc in atom.uniprots)
+            return any(acc in accessions or acc in native for acc in atom.uniprots)
         return False
 
     return holds
@@ -468,24 +483,22 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
                     for k, v in selected.items()
                 }
             rows.append(row)
-        units = dict(complex_units(doc["module"]))
-        for ref in sorted(
-            {
-                a.node_id.rpartition("#")[0]
-                for a in iter_atoms(circuit)
-                if "#" in a.node_id
-            }
-        ):
-            ref_doc = yaml.safe_load(
-                (repo_root / "modules" / f"{ref}.yaml").read_text()
-            )
-            units.update(
-                {f"{ref}#{k}": v for k, v in complex_units(ref_doc["module"]).items()}
-            )
-        kinds = {a.node_id: step_kind(a, units) for a in iter_atoms(circuit)}
+        kinds = {a.node_id: step_kind(a) for a in iter_atoms(circuit)}
+        accession_steps = [
+            a for a in iter_atoms(circuit) if kinds[a.node_id] == "accession"
+        ]
+        organisms_of = fetch_uniprot_organisms(
+            {acc for a in accession_steps for acc in a.uniprots},
+            cache / "uniprot-organisms.json",
+        )
         met, gaps, undetermined = {}, {}, {}
         for o in ORGANISMS:
-            holds = atom_holds(data[o.slug], units, all_accessions[o.slug], domains)
+            native = {
+                acc
+                for acc, organism in organisms_of.items()
+                if same_species(organism, o.label)
+            }
+            holds = atom_holds(data[o.slug], all_accessions[o.slug], domains, native)
             met[o.slug] = is_satisfied(circuit, holds)
             if not met[o.slug]:
                 report = gap_report(circuit, holds)
@@ -513,9 +526,10 @@ def census(module_names: list[str], repo_root: Path, cache: Path) -> dict:
                 "unevaluable_steps": sorted(
                     k for k, v in kinds.items() if v == "unevaluable"
                 ),
-                "mixed_complex_steps": sorted(
-                    k for k, v in kinds.items() if v == "mixed_complex"
-                ),
+                "accession_steps": {
+                    a.node_id: {acc: organisms_of.get(acc) for acc in a.uniprots}
+                    for a in accession_steps
+                },
                 **(
                     {
                         "domain_lookup": {
