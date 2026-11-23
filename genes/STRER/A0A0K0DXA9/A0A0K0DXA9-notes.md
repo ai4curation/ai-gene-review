@@ -29,3 +29,14 @@
   only a WormBaseParasite identification reference in UniProt. I therefore
   treated its relationship to the benzimidazole-engaged beta-tubulin isotype
   pool and to cloned Strongyloides BTUB/Q4KS25 as unresolved.
+- After AI review, I compared the A0A0K0DXA9 and Q4KS25 UniProt sequences
+  directly. A0A0K0DXA9 is 444 aa and Q4KS25 is 447 aa; over residues 1-420
+  they align one-to-one with 17 substitutions at positions 32, 37, 39, 41, 42,
+  43, 65, 79, 219, 222, 224, 329, 332, 348, 358, 360 and 378. After their
+  shared `AEYQQYQEA` at positions 421-429, their acidic C-terminal tails
+  diverge completely (`GIEDGTGEEYEADAE` in A0A0K0DXA9 versus
+  `TADDYDDAEYEGEVAEEE` in Q4KS25), supporting treatment as two distinct
+  S. stercoralis beta-tubulin isotypes. The candidate benzimidazole-binding
+  pocket from residues 121-210 is identical, including Ser167/Phe168,
+  Asp198/Glu199 and Thr200/Phe201; the literature's F167, E198 and F200
+  positions therefore sit one residue later in both A0A0K0DXA9 and Q4KS25.
