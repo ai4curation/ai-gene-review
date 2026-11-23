@@ -63,3 +63,8 @@ Report errors / caveats:
 - LAT Y171/Y191 given in short-isoform numbering without the canonical O43561-1 equivalents (Y200/Y220).
 - Mast-cell phenotype attributed to the Yablonski review; the primary Gads-/- mast cell paper is PMID:18664516 (used instead).
 - No outright factual errors found in the claims checked.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Two GO:0005768 rows (IDA PMID:21179510; IEA SL-0101 tagged ECO:0000269 to the same paper). Full text read: the only endosome data are transfected Myc-GrpL co-expressed with EGFP-HD-PTP constructs in HeLa cells (which do not express GADS), on "large endosomes" defined by the overexpressed EGFP-HD-PTP with no independent marker; GrpL relocates only with a construct carrying both the GrpL-binding histidine domain and the endosome-targeting V-domain [PMID:21179510 "led to the relocation of most of the cytosolic Grb2 and GrpL to endosomes labeled by the presence of EGFP-VHD"]. In the discussion the authors call the same structures "cytosolic vesicles".
+- Verdict: partner-driven, overexpressed, foreign-cell pool; no other line places endogenous GADS in endosomes. Both rows KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED. No source defect recorded: the GO and UniProt rows report the paper faithfully; the problem is that the observation is perturbed.

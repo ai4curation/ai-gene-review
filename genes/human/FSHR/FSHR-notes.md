@@ -194,3 +194,9 @@ review of FSH biology states that "FSHR1 transcript contains all the ten exons a
 known as the major isoform that actively participates in steroidogenesis, follicular
 development, and spermatogenesis" [PMID:35002517]. No GOA row is isoform-scoped, and the
 shorter forms lack transmembrane exons, so no isoform-specific annotation was made.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- One GO:0005768 row: Ensembl projection (GO_REF:0000107) from rat P20395. QuickGO (2026-11-23) shows the donor is an RGD IDA from PMID:12907758 (abstract-only, no PMC). Its abstract states endosome accumulation and recycling and says the pathway was seen with human FSHR in 293T cells, so the donor gets deference.
+- Re-read PMID:24375413 (full text cached): FSHR (FLAG-tagged, transfected HEK293, FSH-stimulated, antibody-fed) internalised into endosomes that were assigned to the small "LHR-like" class by diameter only (Fig. 10A); the APPL1/EEA1 marker experiments are on LHR. The earlier reason's "APPL1-type endosomes" for FSHR is withdrawn in the row text and the reference review.
+- Action unchanged: KEEP_AS_NON_CORE (agonist-driven pool of a plasma-membrane GPCR). No stage row (no stage marker on FSHR; size is one line).
