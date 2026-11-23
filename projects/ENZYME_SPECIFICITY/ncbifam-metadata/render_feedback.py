@@ -98,7 +98,7 @@ def candidate_text(
         if not terms:
             return f"(no GO term cross-references {name})"
         if len(terms) > MAX_CANDIDATES:
-            return f"({len(terms)} terms under EC {ec}; too broad to list)"
+            return f"({len(terms)} terms under {name}; too broad to list)"
         return "; ".join(f"{t} {go_label(go_db, t)[0]}" for t in terms)
 
     # with several ECs, each EC's terms are labelled, so a suspect EC can be told apart
@@ -118,6 +118,7 @@ def main() -> None:
     families = {f.accession: f for f in NCBIfam(CACHE / "ncbifam").families}
     go_db = sqlite3.connect(GO_DB)
     hierarchy = GoHierarchy(GO_DB)
+    candidate_cache: dict[tuple[str, ...], str] = {}
     hits = refseq_hits(CACHE / "ncbifam")
     flagged = [r for r in check["pairs"] if r["placement"] in TRIAGED]
     pair_of = {(r["model"], r["go"]): r for r in flagged}
@@ -205,7 +206,7 @@ def main() -> None:
         lines.extend(["", f"## {TITLES[v]} ({len(entries)})", ""])
         # in EC_SUSPECT the model's EC is the suspect, so its terms are evidence, not proposals
         ec_column = (
-            "GO terms for the (suspect) EC"
+            "GO terms for each EC (one is suspect)"
             if v == "EC_SUSPECT"
             else "GO terms for the model's EC"
         )
@@ -226,7 +227,12 @@ def main() -> None:
                 models.append(
                     f"{m} {f.product_name} ({', '.join(f.ec_numbers) or 'no EC'})"
                 )
-                candidates.append(candidate_text(f.ec_numbers, hierarchy, go_db))
+                key = tuple(f.ec_numbers)
+                if key not in candidate_cache:
+                    candidate_cache[key] = candidate_text(
+                        f.ec_numbers, hierarchy, go_db
+                    )
+                candidates.append(candidate_cache[key])
             if len(set(candidates)) == 1:
                 prefix = "(all models) " if len(candidates) > 1 else ""
                 candidates = [prefix + candidates[0]]

@@ -58,8 +58,10 @@ that reach, and the lists rank by it.
 |---|---|
 | (model, GO term) pairs in the release table | 18691 |
 | skipped: model has no EC number | 8790 |
-| skipped: biological process or cellular component term | 4095 |
-| skipped: molecular function term with no EC cross-reference | 2959 |
+| skipped, of the rest: biological process or cellular component term | 4095 |
+| skipped: class term whose partial EC covers the model's EC or lies within it | 694 |
+| not compared: class term whose partial EC is unrelated to the model's EC (listed, not triaged) | 85 |
+| skipped: molecular function term with no EC cross-reference at all | 2180 |
 | EC on both sides | 2847 |
 | consistent | 2584 |
 | not consistent | 263 |
@@ -68,8 +70,8 @@ that reach, and the lists rank by it.
 | `no_go_for_model_ec`, triaged | 57 |
 | `unrelated`, triaged | 165 |
 
-The release table also carries 112 obsolete GO terms (model, term pairs), listed in
-[CANDIDATES.md](CANDIDATES.md). Every GO id in the table resolves in QuickGO.
+Separately, 112 of these pairs carry an obsolete GO term, listed in
+[CANDIDATES.md](CANDIDATES.md); each also falls in one of the rows above. Every GO id in the table resolves in QuickGO.
 
 ## Triage result
 
@@ -148,11 +150,17 @@ carries the term for another member's reaction.
   terms for each model's own EC from the model itself. It does not list them for a
   partial EC, which would offer a whole subclass, or when a complete EC has more than
   ten. It says `(model has no EC)` for the sweep models without one.
-- **Function terms without an EC cross-reference are never compared.** 2959 pairs
-  join a model that has an EC number to a molecular function term with no EC
-  cross-reference. Many are binding or transporter terms with no EC, but a
+- **Function terms without a complete EC cross-reference are never compared.** 2180
+  pairs join a model that has an EC number to a molecular function term with no EC
+  cross-reference at all. Many are binding or transporter terms, but a
   sister-reaction error on a term that lost its EC cross-reference (see the next
-  bullet) would be missed.
+  bullet) would be missed. Another 779 join it to a class term that carries only a
+  partial EC, such as oxidoreductase activity (EC 1.-.-.-). In 694 of them one EC
+  class contains the other, so the term is at worst broad. In the other 85 neither
+  does. CANDIDATES.md lists those 85 under "Class term outside the model's EC
+  class" without triage: some are wrong-class terms, such as oxidoreductase activity
+  on an aminotransferase or hydrolase activity on a ligase, and others follow an EC
+  reclassification, such as transporters moved from EC 3.6 to EC 7.
 - **GO's EC cross-references are incomplete.** EC-to-GO lookups use the
   cross-references on GO terms, and many terms carry only a Rhea one. Adenosine
   deaminase (EC 3.5.4.4) is an example: GO:0004000 exists, but no GO term

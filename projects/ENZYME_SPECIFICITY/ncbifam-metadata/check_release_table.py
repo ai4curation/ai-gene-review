@@ -53,10 +53,12 @@ GO_DB = (
     Path.home() / ".data" / "oaklib" / "go.db"
 )  # semsql GO, as used by `just validate`
 CACHE = Path(".cache")
-SKIP_LABELS = {
+SKIP_LABELS = {  # in reporting order; each test applies only to pairs the ones above passed
     "model_has_no_ec": "where the model has no EC number",
     "non_mf_term": "with a biological process or cellular component term",
-    "mf_term_has_no_ec": "with a molecular function term that has no EC cross-reference",
+    "mf_term_partial_ec_covers_model": "with a class term whose partial EC covers the model's EC or lies within it",
+    "mf_term_partial_ec_outside_model": "with a class term whose partial EC is unrelated to the model's EC",
+    "mf_term_has_no_ec": "with a molecular function term that has no EC cross-reference at all",
 }
 QUICKGO = "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{ids}"
 
@@ -121,6 +123,16 @@ class GoHierarchy:
             (arg,),
         )
         return {r[0] for r in rows if r[0].startswith("GO:")}
+
+    def partial_ecs(self, term: str) -> list[str]:
+        """The partial EC cross-references (``1.8.-.-``) on a GO term, which a class
+        term often has instead of a complete one."""
+        rows = self.db.execute(
+            "SELECT value FROM statements WHERE subject=? AND predicate='oio:hasDbXref' "
+            "AND value LIKE 'EC:%'",
+            (term,),
+        )
+        return sorted(r[0][3:] for r in rows if not is_complete_ec(r[0][3:]))
 
     def ancestors(self, term: str) -> set[str]:
         """Proper GO ancestors of a term over rdfs:subClassOf."""
@@ -230,7 +242,7 @@ def main() -> None:
     hierarchy = GoHierarchy(GO_DB)
     hits = refseq_hits(db.cache_dir)
     terms = term_data({go for f in db.families for go in f.go_terms})
-    rows, obsolete = [], []
+    rows, obsolete, class_mismatch = [], [], []
     # GO ids in the release table that QuickGO does not return (merged or invalid ids)
     unresolved = sorted(
         {
@@ -258,9 +270,33 @@ def main() -> None:
                 skipped["model_has_no_ec"] += 1
                 continue
             if not t["ec"]:
-                # an MF term with no EC xref is never compared; BP and CC terms never are
-                mf = t.get("aspect") == "molecular_function"
-                skipped["mf_term_has_no_ec" if mf else "non_mf_term"] += 1
+                # the term has no complete EC: BP and CC terms, class terms with only a
+                # partial EC, and MF terms with none are counted, not compared
+                if t["aspect"] != "molecular_function":
+                    skipped["non_mf_term"] += 1
+                elif partial := hierarchy.partial_ecs(go):
+                    # related when either EC class contains the other
+                    if any(
+                        ec_under(m, pe) or ec_under(pe, m)
+                        for m in f.ec_numbers
+                        for pe in partial
+                    ):
+                        skipped["mf_term_partial_ec_covers_model"] += 1
+                    else:
+                        skipped["mf_term_partial_ec_outside_model"] += 1
+                        class_mismatch.append(
+                            {
+                                "model": f.accession,
+                                "product_name": f.product_name,
+                                "ec_numbers": f.ec_numbers,
+                                "go": go,
+                                "go_name": t["name"],
+                                "go_partial_ec": partial,
+                                "refseq_hits": hits.get(f.accession, 0),
+                            }
+                        )
+                else:
+                    skipped["mf_term_has_no_ec"] += 1
                 continue
             rows.append(
                 {
@@ -288,7 +324,7 @@ def main() -> None:
         "models": len(db.families),
         "models_with_go": sum(1 for f in db.families if f.go_terms),
         "model_go_pairs": sum(len(f.go_terms) for f in db.families),
-        "pairs_skipped": dict(skipped),
+        "pairs_skipped": {k: skipped[k] for k in SKIP_LABELS},
         "pairs_checked": len(rows),
         "relations": dict(Counter(r["relation"] for r in rows)),
         "placements": dict(Counter(r["placement"] for r in rows if r["placement"])),
@@ -302,15 +338,18 @@ def main() -> None:
                 # consistent pairs are only counted in meta, to keep the file small
                 "pairs": [r for r in rows if r["relation"] != "consistent"],
                 "obsolete_go": obsolete,
+                "class_term_outside_model_ec": class_mismatch,
             },
             sort_keys=False,
             width=120,
         )
     )
-    (HERE / "CANDIDATES.md").write_text(render(meta, rows, obsolete))
+    (HERE / "CANDIDATES.md").write_text(render(meta, rows, obsolete, class_mismatch))
 
 
-def render(meta: dict, rows: list[dict], obsolete: list[dict]) -> str:
+def render(
+    meta: dict, rows: list[dict], obsolete: list[dict], class_mismatch: list[dict]
+) -> str:
     """CANDIDATES.md, built only from the computed results."""
     lines = [
         "# NCBIfam release-table check: candidate GO metadata errors",
@@ -390,6 +429,25 @@ def render(meta: dict, rows: list[dict], obsolete: list[dict]) -> str:
             "activity) are true but less specific. They are listed in "
             "`release_table_check.yaml` only.",
         ]
+    )
+    lines.extend(
+        [
+            "",
+            f"## Class term outside the model's EC class ({len(class_mismatch)})",
+            "",
+            "Not compared above and not triaged: the GO term carries only a partial EC, "
+            "and neither it nor the model's EC lies within the other (an oxidoreductase term on an "
+            "aminotransferase, say). Some are wrong-class terms; others follow an EC "
+            "reclassification, such as transporters moved from EC 3.6 to EC 7.",
+            "",
+            "| model | product name | model EC | GO term | term EC | RefSeq hits |",
+            "|---|---|---|---|---|---|",
+        ]
+    )
+    lines.extend(
+        f"| {r['model']} | {r['product_name']} | {', '.join(r['ec_numbers'])} | "
+        f"{r['go']} {r['go_name']} | {', '.join(r['go_partial_ec'])} | {r['refseq_hits']} |"
+        for r in sorted(class_mismatch, key=lambda r: (-r["refseq_hits"], r["model"]))
     )
     lines.extend(
         ["", f"## Obsolete GO terms in the release table ({len(obsolete)})", ""]
