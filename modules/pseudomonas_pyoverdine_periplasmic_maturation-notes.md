@@ -121,6 +121,22 @@ nothing outside this file referenced the old id. Identifiers are machine-readabl
 and this one had been contradicting the prose beside it since the module was written, through
 three rounds of review of exactly that pattern.
 
+A fifth, with the polarity reversed, and in the field a reader sees first. The top-level
+`description` said PvdO "carries out the second oxidation" — the single claim the rest of the
+module is organised around declining. The part label says "PvdO-dependent", the annoton label
+says "oxidation factor", `function` has no `term`, `role_description` says the catalyst question
+is unsettled, gap 1 makes it a knowledge gap, and this file says asserting a catalytic term
+would assert what the assay failed to show. The source says "the final oxidation depends on
+PvdO" and never that PvdO performs it. So the description was stronger than the evidence, the
+source, and five of the module's own fields.
+
+The first four instances were machine-readable fields overstating what the prose hedged; this
+one is prose overstating what the fields hedge. The "quote it in the slot's own evidence" rule
+does not catch it, because a description has no slot to hold evidence. What catches it is
+reading the description against the parts it summarises and asking whether any verb in it claims
+more than the part does. Worth doing before publishing any module, since the description is what
+gets read without the apparatus around it.
+
 ## Open questions for a reader with more sources
 
 1. Ground the PtaA variant from the primary paper (the review's ref 74).
