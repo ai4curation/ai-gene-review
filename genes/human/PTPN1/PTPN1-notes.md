@@ -13,8 +13,16 @@ for the PTPN1 review.
   side of the ER membrane.
 - Frangioni et al. 1992 established the topology of PTP1B: it is tightly
   associated with microsomal membranes and its phosphatase domain faces the
-  cytoplasm. This supports `GO:0098554 cytoplasmic side of endoplasmic reticulum
-  membrane` and the ER/ER-membrane rows.
+  cytoplasm [PMID:1739967, "phosphatase domain oriented towards the
+  cytoplasm"]. This supports `GO:0098554 cytoplasmic side of endoplasmic
+  reticulum membrane` and the ER/ER-membrane rows.
+- Salmeen et al. 2000 and Wu et al. 2011 support PTP1B as a negative regulator
+  of insulin receptor signaling: PTP1B dephosphorylates the insulin receptor
+  kinase activation segment [PMID:11163213, "dephosphorylating the
+  phosphotyrosine residues of the insulin receptor kinase"], and Nck helps
+  recruit the mammalian Nck/PTP1B complex to the insulin receptor for signal
+  attenuation [PMID:21707536, "attenuates insulin signalling by recruiting
+  PTP61F/PTP1B to its substrate, the IR"].
 - PTP1B contacts and dephosphorylates activated receptor tyrosine kinases as
   they pass ER-endosome or peripheral ER contacts. Wimmer-Kleikamp et al. 2011
   show that PTP1B governs EphA3 phosphorylation, direct EphA3/PTP1B contacts
@@ -33,6 +41,10 @@ for the PTPN1 review.
   catalytic cysteine and inhibits its ability to dephosphorylate PERK; the same
   paper establishes a direct enzyme-substrate interaction between PTP1B and
   pTyr619-PERK.
+- Gu et al. 2004 show that mouse Ptpn1 is required for full IRE1-arm signaling
+  after ER stress, including XBP1 splicing, JNK activation and EDEM induction
+  [PMID:15465829, "The absence of PTP-1B caused impaired ER stress-induced
+  IRE1 signaling"].
 
 ## Propagation and non-core rows
 
@@ -59,9 +71,11 @@ for the PTPN1 review.
   conflict with the established ER-membrane topology of full-length PTPN1. PTP1B
   reaches receptors on the cytoplasmic face of ER, plasma and endosomal
   membranes; it is not a soluble matrix, crista or luminal endosomal protein.
-- High-throughput `RNA binding`, `cadherin binding` and generic
-  `protein-containing complex` rows record screen hits or proximity data but do
-  not identify an RNA-binding or complex-membership function for PTPN1.
+- High-throughput `RNA binding` and generic `protein-containing complex` rows
+  record screen hits or proximity data but do not identify an RNA-binding or
+  complex-membership function for PTPN1; the `cadherin binding` row is supported
+  by direct N-cadherin binding evidence from Rhee et al. 2001 [PMID:11106648,
+  "PTP1B interacts directly with the cytoplasmic domain of N-cadherin"].
 - `GO:0005515 protein binding` is an uninformative umbrella term for the many
   PTPN1 substrate-trap and interactome rows. Those interactions are useful
   evidence for specific receptor, kinase and ephrin-receptor rows, but the bare
@@ -69,4 +83,3 @@ for the PTPN1 review.
 - PMID:18074158 argues against zinc as a cofactor: it states that PTP1B is not
   classified as a zinc enzyme and is instead strongly inhibited by Zn(II), so the
   zinc-binding row overstates inhibitory metal binding as a molecular function.
-
