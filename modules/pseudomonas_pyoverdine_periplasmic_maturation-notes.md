@@ -176,6 +176,35 @@ is different too: when the same entity appears in more than one slot, make sure 
 about what it is. Here part 1's `substrates`, the scope line and two prose passages were
 describing one molecule, and two of the four disagreed with the other two.
 
+## A fix can overcorrect, and taking a reviewer's reading on trust is how
+
+Round 5 suggested that the cyclisation is "promoted" rather than catalysed, since the review's
+body text says PvdP catalyses the hydroxylation and oxidation and "thereby also promotes the
+cyclization". I took it as a seventh instance of the overstatement pattern and reworded
+accordingly — and wrote "The verbs are the review's", which was false. The pathway-figure legend
+of the same paper says "PvdP catalyzes the oxidative cyclization". The review uses both verbs;
+the original wording was supported by one of them, and my replacement asserted a
+promotes-versus-catalyses distinction the paper does not maintain, attributed to the paper.
+
+Two things to carry forward.
+
+**Check the source yourself even when the reviewer quotes it.** The quoted sentence was real and
+verbatim; what I did not do was look for the paper's *other* statements about the same step. Five
+rounds of being right had made the reviewer's readings feel like findings rather than claims, and
+this is the one round where deferring produced a worse file than ignoring would have.
+
+**By then I was pattern-matching rather than reading.** "Unhedged verb, source hedges it" fit the
+shape of five previous findings so well that I applied the fix without asking whether the source
+was consistent. A named pattern makes the next instance cheaper to fix and easier to see where it
+is not.
+
+What the module says now: the review is inconsistent on the verb, part 1 uses the weaker reading
+because it is in the discursive text rather than a summary legend and because nothing in the part
+turns on it, and the mechanistic gloss is labelled as this review's inference rather than the
+paper's claim. The same figure legend also says "PvdO, possibly in conjunction with other
+proteins, facilitates the final oxidation", which independently supports the PvdO hedging and is
+now quoted on gap 1.
+
 ## Open questions for a reader with more sources
 
 1. Ground the PtaA variant from the primary paper (the review's ref 74).
