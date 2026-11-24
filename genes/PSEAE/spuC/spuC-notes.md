@@ -56,7 +56,10 @@ where conversion of agmatine into putrescine was blocked, putrescine or spermidi
 agmatine, serves as the inducer molecule of the spuA-spuI divergent promoters."] The agmatine
 effect is indirect, and the second real inducer is spermidine, which the line omits. Filed as
 `WRONG_STATEMENT` against UniProt at `CONFIRMED` — the statement contradicts the publication it
-itself cites, which no unread text can change.
+itself cites, which no unread text can change. `requested_change` is `CHECK`, which
+`docs/source_defects.md` prescribes for a wrong claim in a source's own curated text: the
+correction belongs in the explanation rather than in a repointed value, because what is being
+asked for is a rewritten sentence, not a swapped identifier.
 
 ## The transaminase IMP cites a paper that does not mention the gene
 
