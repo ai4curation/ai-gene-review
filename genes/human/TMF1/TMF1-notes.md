@@ -60,3 +60,13 @@ A molecular-function counterpart of GO:0099022 ("vesicle tethering" — currentl
 ## Update 2026-09-26: GO:7770062 minted
 
 GO:7770062 vesicle membrane tethering activity now exists in GO (it is used as the MF of GARP, exocyst and Dsl1/NZR annotons in cached production GO-CAMs, e.g. `gocams/index.tsv`), and GO:0099041 vesicle tethering to Golgi was obsoleted in the 2026-07-26 release. The review now uses GO:7770062 as TMF1's core MF and the `proposed_new_terms` entry has been retired (PR #3237). The 404 noted above is historical.
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IBA (GO_REF:0000033, is_active_in) and IEA (GO_REF:0000107, Ensembl from mouse B9EKI3). Both were already MARK_AS_OVER_ANNOTATED; kept.
+
+- PAINT (interpro/panther/PTHR46515/PTHR46515-paint.tsv): PTN000786303 GO:0005783 IBD, single seed MGI:MGI:2684999 (2019); the Golgi IBD on the same node is seeded by FB:FBgn0029912, MGI:MGI:2684999 and UniProtKB:P82094. The earlier summary's claim that the ER IBA reflects yeast/fungal data was wrong; removed.
+- QuickGO (2026-11-06): mouse B9EKI3 GO:0005783 = MGI IDA, PMID:23000399 (both rows rest on it). Abstract-only; [PMID:23000399 "TMF/ARA160 is a Golgi-associated protein, which is essential for spermiogenesis."] No ER result in the abstract.
+- Human: [PMID:17698061 "TMF signal surrounded Rab6-positive Golgi structures and immunoelectron microscopy revealed that TMF is concentrated at the budding structures localized at the tips of cisternae."] Golgi-to-ER retrograde role is exerted at the Golgi; is_active_in not supported.
+- No signal peptide or TM (UniProt has only COILED features): no ER membrane/lumen row.
+- Close alternative: UNDECIDED, if the mouse full text shows an ER pool in testis cells. Added propagation_review to the IBA row.

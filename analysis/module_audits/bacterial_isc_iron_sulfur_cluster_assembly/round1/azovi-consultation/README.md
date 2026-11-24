@@ -1,0 +1,11 @@
+# AZOVI round1 consultation release
+
+Six reviews were reassessed against the actual primary scope, publication-linked UniProt statements and fresh ontology definitions. All 33 ordered source payloads remain identical to the published root baseline. There are no new, deleted or retired rows.
+
+The only action reversals are IscA cytoplasm MODIFY to ACCEPT and cytosol ACCEPT to UNDECIDED, reflecting uncertainty of localization specificity. IscU's existing cluster-binding MODIFY now proposes both supported cluster-binding descendants, GO:0051537 and GO:0051539, rather than the separate carrier activity GO:0140132. IscU's carrier core is unchanged. IscA's aconitase phenotype is described as modest. Each annotation and core has source-specific support instead of a recycled off-topic quote.
+
+AZOVI HscA/B folding remains UNDECIDED because cluster transfer does not itself establish tertiary-fold recovery; direct E. coli model-substrate results are kept species-scoped. HscB chaperone binding is compatible with the current definition including transport, while oligomerization remains an overextended domain-to-process mapping. No canonical module role changes are required by these edits. All six PAINT target leaves remain unavailable; successful command exit is not evidence of a loss-free lineage.
+
+Reproduce preservation with `uv run python analysis/module_audits/bacterial_isc_iron_sulfur_cluster_assembly/round1/azovi-consultation/check_preservation.py`. It checks both independent baselines, all protected sources and three corruption controls. Run `just validate AZOVI <gene>`, `just render AZOVI <gene>`, and `just validate-history <path>` for the six listed targets. All passed; file-scoped Ruff and diff whitespace checks passed. The initial render inspection incorrectly required every gene to contain UNDECIDED; that inspection was corrected to check each actual row action and then passed. No source or biological claim was changed because of that inspection error.
+
+Immutable source files and previous published receipts were not changed. Existing genuine Falcon failure records were reused. No full-corpus run, commit or push was performed. Ownership is released with handoff.yaml; any subsequent correction requires an additive versioned receipt.

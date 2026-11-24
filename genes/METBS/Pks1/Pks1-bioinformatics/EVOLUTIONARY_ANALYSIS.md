@@ -1,5 +1,19 @@
 # PKS1 Evolutionary and Phylogenetic Analysis
 
+## Audit Note
+
+This report is retained as a stale fabricated analysis artifact, not as curated
+evidence for `Pks1-ai-review.yaml`. The homolog identity matrix, the product-class
+averages, the `Selection Analysis` section, the 2-3 fold catalytic-efficiency
+claims, and the `<50 MYA` divergence date were hard-coded in
+`phylogenetic_analysis.py` rather than computed from an alignment, codeml/PAML
+run, dated tree, or turnover analysis. Use the cached UniProt record and
+PMID:29958281 for curated support. The table below also falsely lists several
+Metarhizium species as carrying only a single Pks1 copy and cites PMID:29958281
+for a recent Metarhizium-only duplication; PMID:29958281 instead reports Pks1
+and Pks2 paralogs across the non-basal Metarhizium species and places the
+duplication before the Metarhizium-Trichoderma split.
+
 ## Phylogenetic Context
 PKS1 belongs to the Type I iterative non-reducing polyketide synthase (NR-PKS) family, specifically within the anthraquinone/pigment biosynthesis clade.
 

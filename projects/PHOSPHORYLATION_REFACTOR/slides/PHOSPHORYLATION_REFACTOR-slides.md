@@ -37,7 +37,7 @@ Finding genes annotated to "protein phosphorylation" that are not kinases
 ## Bottom line
 
 - Query: genes with a **phosphorylation process** term (GO:0016310 branch) but **no protein kinase activity** (GO:0004672), across **9 MODs**.
-- **60 mouse and human genes** reviewed; of **68** flagged rows, **34 REMOVE** and **26 MODIFY** (mostly to GO:0045859 regulation of protein kinase activity).
+- **60 mouse and human genes** reviewed; of **68** flagged rows, **36 REMOVE** and **26 MODIFY** (mostly to GO:0045859 regulation of protein kinase activity).
 - Errors cluster: **substrates** called enzymes, **regulators** called catalysts, **phosphatases** on the opposite reaction. SGD, PomBase and WormBase had **none**.
 
 ---
@@ -88,7 +88,7 @@ Finding genes annotated to "protein phosphorylation" that are not kinases
 ## Status and next steps
 
 - ✅ Mouse (15 genes) and human (45 genes) reviews in `genes/mouse/`, `genes/human/`.
-- ⚠️ The page's per-gene lists predate later edits: Ang2, BIRC6 now **UNDECIDED**; ADM2 **REMOVE**; Egf, Ednra **over-annotated**; Drd1 **non-core**.
+- ⚠️ The page's per-gene lists predate later edits: Ang2 now **REMOVE**; Ccne1 (PMID:12124778), BIRC6 still **UNDECIDED**; ADM2 **REMOVE**; Egf, Ednra **over-annotated**; Drd1 **non-core**.
 - ⬜ Fly, zebrafish, Arabidopsis, rat findings are **query-level only**; no reviews yet (e.g. TAIR TOPP4, RGD Ppp3cb, 29 TAIR IEA rows).
 - ⬜ Feed the taxonomy back to GO as ISS-transfer and training guidance.
 

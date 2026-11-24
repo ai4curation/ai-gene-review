@@ -14,7 +14,7 @@ Selected horse accession: [A0A9L0S5Z5](https://www.uniprot.org/uniprotkb/A0A9L0S
 
 ### Maintenance/refolding of client polypeptides
 
-**Supported at broad level.** Apg2/HSPA4 supports Hsc70-dependent aggregate reactivation as a nucleotide-exchange factor. This validates broad chaperone biology, not the particular ribosome-bound mechanism or direct nascent-chain-binding role asserted by the paragraph. [PMID:30521813](https://pubmed.ncbi.nlm.nih.gov/30521813/); [DOI:10.1016/j.jmb.2018.11.026](https://doi.org/10.1016/j.jmb.2018.11.026).
+**UNC for this selected sequence.** Apg2/HSPA4 supports Hsc70-dependent aggregate reactivation as a nucleotide-exchange factor. This validates broad chaperone biology, not the particular ribosome-bound mechanism or direct nascent-chain-binding role asserted by the paragraph. At that broad level the claim is not novel for the horse gene: the full-length horse HSPA4 product F6YZJ4 already carries protein folding (GO:0006457) in GOA. A0A9L0S5Z5 is an exon-skipping isoform that lacks human residues 679–718 in the conserved alpha-helical C-terminal region, while retaining the nucleotide-binding domain [(gene-model comparison)](HSPA4-bioinformatics/RESULTS-rereview.md). HSPA4 takes part in refolding through its exchange activity on Hsc70, and the distinctive C-terminal extension of Apg2 interacts with the Hsc70 nucleotide-binding domain and tunes this activity. No study has tested whether a form lacking this segment keeps exchange activity, so the contribution of this exact sequence is unresolved. [PMID:30521813](https://pubmed.ncbi.nlm.nih.gov/30521813/); [DOI:10.1016/j.jmb.2018.11.026](https://doi.org/10.1016/j.jmb.2018.11.026); [PMID:36167183](https://pubmed.ncbi.nlm.nih.gov/36167183/).
 
 ## Evidence scope and limits
 

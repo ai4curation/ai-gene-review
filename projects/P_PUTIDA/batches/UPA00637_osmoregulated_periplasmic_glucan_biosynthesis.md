@@ -9,6 +9,7 @@ autolink_gene_symbols: false
 # PSEPK UPA00637: Osmoregulated Periplasmic Glucan Biosynthesis
 
 - Module seed: `osmoregulated_periplasmic_glucan_biosynthesis`
+- Pull request: https://github.com/ai4curation/ai-gene-review/pull/2142
 - Candidate genes from membership table: 2
 - Primary bucket genes: 2
 - Existing review files: 2
@@ -24,7 +25,7 @@ autolink_gene_symbols: false
 - [x] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
-- [ ] Open one PR for this module/pathway.
+- [x] Open one PR for this module/pathway.
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
@@ -36,6 +37,18 @@ autolink_gene_symbols: false
 
 ## Notes
 
-Curated scope: treat UPA00637 as the compact OpgH/OpgG osmoregulated periplasmic glucan backbone module. OpgH supplies UDP-glucose-dependent inner-membrane glucosyltransferase activity; OpgG is curated as a Sec-exported periplasmic GH186 beta-1,2-glucanase inferred from characterized orthologs. Generic carbohydrate/glucan GO process terms are modified to the specific OPG biosynthesis term where supported. Accessory OPG decoration, chain-length-control, Ndv/Chv cyclic-glucan routes, and the distinct BcsA-like cyclic beta-1,3-glucan system are kept outside this module.
+The KT2440 OpgH/OpgG pair supports a qualified inference of OPG-associated biosynthesis. OpgH supplies the inferred membrane glucosyltransferase activity; OpgG participates in the pathway, but its native required chemistry is unresolved. Its inherited hydrolase annotation is retained with explicit ortholog-based evidence limits and is not imposed as the native pathway reaction.
+
+The comparative module represents OpgH-associated synthesis and distinct processing roles across sampled Pseudomonadota. E. coli requires a compatible ACP in its membrane assay; Rhodobacter strain 2.4.1 requires OpgI alongside OpgG/OpgH, with the molecular role of OpgI unresolved. E. coli OpgD hydrolysis and Xanthomonas OpgD alpha-1,6 cyclization are separate reactions. Caulobacter OpgH is a comparative homolog with unresolved native glucan chemistry. Rhodobacter 2.4.1 genetics does not establish the precise product measured in strain WS8. Distinct Ndv/Chv/Cgs routes remain outside the represented mechanism; cyclic product topology alone is not the boundary.
+
 
 Generated UTC: 2026-07-11T22:11:45.660422+00:00
+
+
+## 2026-11-06 — comparative audit
+
+The comparative OPG audit now covers 11 COMPLETE gene reviews across five species in Alphaproteobacteria and Gammaproteobacteria. All 91 original annotation payloads and 28 raw/provider sources are preserved; five supported additions yield 96 current rows. Thirteen curated literature references, including two comparative reviews, supply 18 findings. Seven parts and eight annotons distinguish OpgH-associated synthesis, OpgG participation with unresolved native chemistry, conditional OpgI and compatible ACP dependencies, E. coli OpgD hydrolysis, Xanthomonas OpgD cyclization, and the Caulobacter unresolved-product comparator. Two family reviews retain their mixed-function and PAINT-scope limitations. The executable checker passes 24 evidence-scoped cases and ten mutation cases. Full-corpus validation, publication to adopted PR #2142, renewed independent review, CI and actual merge remain pending.
+
+## 2026-11-06 — validation result
+
+Comparative OPG science and focused validation are complete: 11 COMPLETE gene reviews, 91 original annotation payloads preserved, 96 current rows, 28 unchanged raw/provider sources, 13 literature references including two reviews, 18 findings, seven parts and eight annotons, two family reviews, 24 endpoint cases and ten mutation cases. The full-corpus run completed on science commit 074427cc8340be71f9fbdeea8440f551bdbea6b0 with schema, term, best-practice and pathway checks passing. Its 17 blocking reference errors in 16 unrelated yeast reviews exactly match the known baseline; all 22 relevant inputs are identical to the pinned base. These are addressed separately in PR #6134. Publication of this comparative revision to adopted PR #2142, renewed review, CI and actual merge remain pending.

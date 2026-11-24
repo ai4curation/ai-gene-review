@@ -34,3 +34,11 @@ Decisions
   [PMID:39013853 "we observed that telomere association with the NE is rare in sun1 sun2, even if not wholly absent"];
   rapid prophase chromosome movements abolished in sun1 sun2. Strengthens the GO:0070197 IMP/IEA rows and meiotic core function.
 - Deep research also notes OPENER recruitment by SUN1/2 and CDC48/PUX-regulated SUN1 turnover (not added; not GOA-cited, not verified here).
+
+## 2026-10-15 journal: spindle row resolved (PR #5026 follow-up)
+
+Supersedes the "Spindle HDA (SUN2 only) -> UNDECIDED" line above.
+
+- GO:0005819 spindle HDA (PMID:15469496, Van Damme et al. 2004 BY-2 GFP survey) is KEEP_AS_NON_CORE: a transient mitotic location of the SUN2 fusion, consistent with NE/ER membranes surrounding the spindle during open mitosis (Oda & Fukuda 2011), handled like the phragmoplast (GO:0009524) rows. No role in spindle microtubule function is implied.
+- Query (re-run 2026-10-15): QuickGO REST, `https://www.ebi.ac.uk/QuickGO/services/annotation/search?reference=PMID:15469496&limit=200` returned 136 annotations on 54 UniProtKB entries, all HDA located_in, all assigned by TAIR. SUN2 (Q9SG79): GO:0005635 nuclear envelope, GO:0005819 spindle, GO:0009524 phragmoplast. SUN1 (Q9FF75): GO:0005635 only. 16 entries carry GO:0005819.
+- Full text: `fetch-pmid PMID:15469496 --force` on 2026-10-15 cached abstract only (no PMC record); Europe PMC lists no PMCID and isOpenAccess N. The survey's images were not inspected.

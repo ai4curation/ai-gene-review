@@ -32,8 +32,9 @@ PROVIDERS = (
     "codex",
     "asta",
     "openscientist",
+    "claude-code",
 )
-DEFAULT_DRC_PACKAGE = "deep-research-client[cyberian]==0.2.7rc1"
+DEFAULT_DRC_PACKAGE = "deep-research-client[cyberian]==0.2.12"
 DEFAULT_OPENSCIENTIST_TIMEOUT = 7200
 UNRESOLVED_PLACEHOLDER_PATTERNS = (
     "{module_title}",
@@ -380,6 +381,8 @@ def build_deep_research_command(
         actual_provider = "perplexity"
     elif provider == "codex":
         actual_provider = "cyberian"
+    elif provider == "claude-code":
+        actual_provider = "claude_code"
     else:
         actual_provider = provider
     module = data.get("module") if isinstance(data.get("module"), dict) else {}

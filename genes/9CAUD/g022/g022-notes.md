@@ -1,11 +1,11 @@
-# g022 Tequatrovirus DNA Polymerase Gene Reference Enhancement Notes
+# g022 Yersinia phage phiR8-01 DNA Polymerase Gene Reference Enhancement Notes
 
 ## Status: ENHANCED ✅
 
 ### Initial State
 - **Literature references**: 0 PMIDs/PMCs
 - **Total references**: 5 (GO_REF only)
-- **Gene context**: Bacteriophage DNA polymerase I from Tequatrovirus (Yersinia phage phiR8-01)
+- **Gene context**: Bacteriophage DNA polymerase I (family A) from Yersinia phage phiR8-01 (NCBITaxon:1206556; Autographivirales, Autonotataviridae, Pienvirus). Earlier versions of these notes said Tequatrovirus; see the 2026-10-01 correction below.
 
 ### Enhancements Made (2025-09-13)
 
@@ -65,3 +65,30 @@ g022 represents a DNA polymerase from the Tequatrovirus genus:
 - Comprehensive coverage of family A DNA polymerase properties
 - Strong mechanistic and biochemical insights
 - Direct relevance to viral genome replication established
+## 2026-10-01 correction (GOA refresh, PR #3503)
+
+- **Taxon.** g022 (I7J3R9) is from Yersinia phage phiR8-01, NCBITaxon:1206556
+  (UniProt OC: Autographivirales; Autonotataviridae; Melnykvirinae; Pienvirus). It
+  is **not** a Tequatrovirus (T4-like, NCBITaxon:10663), so the "Tequatrovirus
+  Context" section above is wrong and is superseded. The review YAML taxon and
+  gene_symbol were corrected to match GOA/UniProt.
+- **PMID:35357498 is homolog evidence only.** It characterises DNAP01 of the
+  jumbo phage YerA41 (polymerase domain at residues 946-1306), not g022 (815 aa).
+  This is now recorded in a `reference_review` (relevance MEDIUM, VERIFIED, homolog
+  caveat). Its quotes stay as explicitly comparative evidence; the accepted g022
+  terms rest on family-level InterPro/EC/keyword inference.
+- **3'-5' exonuclease withdrawn.** The NEW proposal for GO:0008296 has been
+  removed from existing_annotations and core_functions. It never had a GOA row,
+  so it cannot stay there under UNDECIDED (the GOA check exempts only NEW and
+  retired rows). It is now a suggested_question plus a suggested_experiment. The
+  basis is the domain evidence: UniProt shows only the palm domain (483-738)
+  and a Gene3D 5'-3' exo subdomain, with no 3'-5' exo (DnaQ/DEDDy) domain at
+  815 aa, and the deep research only inferred the activity from family A
+  membership. PANTHER PTHR10133:SF27 does not settle it either way. Despite its
+  "DNA polymerase nu" name it contains proofreading E. coli Pol I (P00582) and
+  T7 gene 5 (P00581), so membership is uninformative. (An earlier version of
+  this note wrongly called SF27 a proofreading-deficient clade.)
+- **Follow-up.** The deep-research file was generated under the wrong taxon
+  framing; regenerate it (`just deep-research 9CAUD g022 ...`) rather than
+  hand-editing it. g022-pathway.md also mentions Tequatrovirus once and
+  should be regenerated after the deep research is.

@@ -56,3 +56,64 @@ The annotation and prediction assessments are complete. UNC/UNDECIDED record del
 Read the cached full texts for PMID:24675716, PMID:35916241, and PMID:42009678 and rechecked the sole CG10359 IBA against `interpro/panther/PTHR19143/PTHR19143-paint.tsv`. The `GO:0031012` row traces to `PANTHER:PTN000441162`, a taxon-unrestricted PAINT matrix-localization node. Because current target evidence supports secretion and extracellular interaction but not matrix retention, and because the PAINT row itself is not refuted by branch-length or target-loss evidence, the IBA is now a `MODIFY` to the broader GO:0005576 extracellular region with `TERM_SCOPING_PROBLEM`.
 
 No `NEW` annotations were added. The 2022 dFibcd1 paper is perturbational and compares the fly FReD structurally to vertebrate FIBCD1, but the CS-4S/GAG binding assays are on vertebrate FIBCD1. The 2026 secretome map identifies CG10359/B7Z0B2 as a circulating larval blood protein and argues for secretion, which is still broader and less specific than the extracellular-matrix component propagated by PAINT.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Scope: every existing GOA row, the description and core functions were re-examined against the cached
+literature (PMID:24675716, PMID:35916241, PMID:42009678; donor papers PMID:19710473 for FIBCD1 (already cached) and newly cached
+PMID:21037097 for FCN1), the PANTHER 19.0 classification and the PTHR19143 PAINT file. No ProtNLM2 output was
+opened or used.
+
+### Identity of the benchmark accession
+
+B7Z0B2 is one of four unreviewed UniProt entries for FBgn0035452; there is no Swiss-Prot entry. It is the longest
+product (485 aa). B7Z0B3 (459 aa), Q9VZN7 (460 aa) and Q95S38 (460 aa, cDNA) lack a 26-residue internal segment
+(B7Z0B2 residues 144-169) upstream of the FReD; all keep the signal peptide and the single FReD, and none has a
+transmembrane segment [file:DROME/CG10359/CG10359-bioinformatics/RESULTS-rereview.md, "B7Z0B2 is therefore a
+full-length isoform of the gene, not a fragment;"]. B7Z0B2 is the PANTHER/GOA representative and is the isoform
+detected in the larval secretome [PMID:42009678 "We removed B7Z0B3 (CG10359) from muscle, because B7Z0B2 (CG10359)
+was identified from muscle/heart/wingdisc/neurons."]. Not a fragment or problematic gene model.
+
+### Evolutionary placement
+
+- PANTHER: PTHR19143:SF327 "FI21813P1-RELATED", members 8 fly paralogs + 1 C. elegans protein, none characterised.
+- Human FIBCD1 (Q8N539) is in SF45 (vertebrate only); human FCN1 (O00602) is in SF377.
+- FReD-only MAFFT/NJ tree (`CG10359-bioinformatics/fred_tree_rereview.py`, new files only; nothing pre-existing
+  overwritten): CG10359 groups with fly SF327 paralogs Q8IRM2/Q9W302; FReD identity to FIBCD1 41%, about the same
+  as MFAP4/FGL1 (40%), FCN1 38%. No ortholog-level link to FIBCD1 or ficolins. Tree has no bootstrap; deep order
+  unresolved.
+- PAINT: only IBD reaching CG10359 is the root ECM node PTN000441162. The signaling-receptor-binding IBD
+  (PTN000441539) is chordate-restricted and the cell-matrix adhesion IBD (PTN009036378) does not reach CG10359;
+  treated as deliberate.
+- PMID:35916241 calls CG10359 a "potential orthologue" of FIBCD1, based on InterPro domain similarity and AlphaFold
+  fold comparison, not a phylogeny. This disagrees with PANTHER, which separates them; the subfamily split was
+  followed.
+
+### Annotation decisions (changes from the 2026-09-28 state)
+
+- GO:0001664 GPCR binding (ISS from FCN1): UNDECIDED -> REMOVE. Donor function is M-ficolin docking on GPR43
+  [PMID:21037097]; ficolin-specific, cross-subfamily, CG10359 lacks the collagen-like region.
+- GO:0007186 GPCR signaling pathway (ISS from FCN1): UNDECIDED -> REMOVE. Same donor/basis; the only receptor
+  proposed from fly data is integrin alpha Mew [PMID:42009678]; Tie-ligand test negative [PMID:24675716].
+- GO:0008061 chitin binding (ISS from FIBCD1): UNDECIDED -> MARK_AS_OVER_ANNOTATED. Plausible in insects but
+  only a cross-subfamily domain transfer; no binding assay on CG10359; pocket not examined.
+- GO:0016020 membrane (ISS from FIBCD1): UNDECIDED -> REMOVE. FIBCD1 membrane location comes from its type II TM
+  anchor [PMID:19710473], which no CG10359 isoform has; CG10359 is a secreted hemolymph protein.
+- GO:0031012 ECM (IBA, PTN000441162): MODIFY -> GO:0005576 extracellular region retained (TERM_SCOPING_PROBLEM).
+- Core function: added a location-only entry (extracellular region) with no molecular_function, since no activity
+  is established. RNAi NMJ/climbing phenotypes [PMID:35916241] are organismal and are not used for process terms.
+- No NEW annotations. The Mew interaction is a FlyPhoneDB2 prediction and does not justify an integrin-binding term.
+
+### Relative to review next
+
+Not a fragment, so the canonical-product rule does not apply. SF327 has no characterised member, and no fly
+paralog in PTHR19143 other than scabrous (SF444, distant) has experimental data. The closest characterised
+relative that has been explicitly proposed as the ortholog and is the donor of the chitin/membrane transfers is
+human FIBCD1 (Q8N539, SF45): a family member, not a PANTHER-supported ortholog. No FIBCD1 review exists in the repo.
+
+### Family review and modules
+
+`interpro/panther/PTHR19143/PTHR19143-review.yaml` lists B7Z0B2 under SF327; placement agrees with PANTHER. Its
+SF327 text discusses only the angiopoietin-like framing (PMID:24675716) and does not mention the FIBCD1-orthology
+claim of PMID:35916241 or the secretome data. modules/ contains no module for CG10359 (`fibrinolysis.yaml` and
+`coagulation_cascade.yaml` mention fibrinogen but concern the vertebrate clotting proteins and do not apply).

@@ -5,7 +5,9 @@ title: ProtNLM cross-cohort results
 
 [Project overview](../PROTNLM_EVALUATION.md) · [Source counts](benchmark-summary.json) · [Summary generator](build_benchmark_summary.py) · [Narrative category index](narrative-review-index.yaml)
 
-Counts are a dated snapshot: as of 2026-09-27 (commit `c7551cb3db`). The scope contains **282 distinct protein records**, including **242 prediction targets** and 40 paired human reference records. Overlapping selections are counted once in the combined totals. These purposive, retrospective cohorts test informative biological distinctions; their proportions do not estimate proteome-wide accuracy.
+Counts are a dated snapshot: as of 2026-10-29 (commit `ac95c69686`). The scope contains **282 distinct protein records**, including **242 prediction targets** and 40 paired human reference records. Overlapping selections are counted once in the combined totals. These purposive, retrospective cohorts test informative biological distinctions; their proportions do not estimate proteome-wide accuracy.
+
+**186 of the 242 prediction targets have been assessed** at the time of this build: 162 have a GO prediction-review YAML (including 17 reviewed empty GO outputs) and 24 have only a narrative function review. The remaining 56 are selected but not yet reviewed and contribute nothing to any count below.
 
 ## GO-term assessments
 
@@ -13,14 +15,31 @@ Each row counted here is one emitted GO term. Narrative functions, protein names
 
 | Category | GO claims |
 |---|---:|
-| COR | 52 |
-| CNN | 32 |
-| LSP | 84 |
-| UNC | 98 |
-| NPI | 20 |
+| COR | 35 |
+| CNN | 48 |
+| LSP | 83 |
+| UNC | 78 |
+| NPI | 42 |
 | PLI | 2 |
 | REP | 0 |
 | **Total** | **288** |
+
+### GO assessments by cohort
+
+**COR here means "biologically supported and absent from the target's cached GOA/UniProt record"**, not novelty with respect to the model's training data (the VDCL sense). COR is only available when the target record lacks the term, so a cohort's COR rate reflects its records' existing annotation, which terms its predictions emit, and how its reviewers drew the LSP/COR line, as much as the model. Model-organism cohorts, where a supported prediction is usually already present (CNN) or less specific than an existing annotation (LSP), have almost no COR. Annotation density alone does not explain the split (compare the median GOA column), so per-cohort COR rates should not be read as a property of the model. Cohort rows overlap, so they are not summed. The median cached-GOA column counts non-NOT rows in each GO-assessed target's `*-goa.tsv`.
+
+Latest annotation date in each target's cached GOA file (a lower bound on when the file was fetched): 2006: 2, 2022: 1, 2023: 1, 2026: 134, no annotations: 24. ProtNLM2 was trained on UniProt 2023_04, so COR/CNN are judged against a GOA state that post-dates training, and a COR term may still have been learnable from annotated orthologs in the training release.
+
+| Cohort | GO claims | COR | CNN | LSP | UNC | NPI | PLI | REP | COR share | Median cached GOA rows per target |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| ARGO50 | 77 | 16 | 10 | 10 | 25 | 15 | 1 | 0 | 21% | 4 |
+| HORSE40 | 89 | 16 | 21 | 10 | 28 | 13 | 1 | 0 | 18% | 6 |
+| FLY41 | 50 | 2 | 7 | 19 | 14 | 8 | 0 | 0 | 4% | 9 |
+| POMBE20 | 32 | 1 | 3 | 25 | 3 | 0 | 0 | 0 | 3% | 12.5 |
+| NEUROSPORA20 | 21 | 0 | 6 | 14 | 1 | 0 | 0 | 0 | 0% | 8.5 |
+| MOD_EVOLUTION20 | 19 | 0 | 1 | 5 | 7 | 6 | 0 | 0 | 0% | 1 |
+
+A mechanical is_a/part_of check of all 35 COR calls against each target's cached GOA ([`cor_goa_entailment.py`](cor_goa_entailment.py), [TSV](cor-goa-entailment.tsv)) finds DESCENDANT: 4, NONE: 31. 0 COR calls are entailed by an existing target annotation and are candidates for LSP/CNN re-review. Entailment by an existing MF through relations outside go-basic, or by an InterPro2GO domain mapping, is not checked.
 
 ## Reviewed records with no GO predictions
 
@@ -52,14 +71,14 @@ The 162 prediction-review YAML files include 17 records with zero emitted GO pre
 
 | Category present in function review | Review records |
 |---|---:|
-| COR | 1 |
-| CNN | 19 |
-| LSP | 1 |
-| UNC | 25 |
-| NPI | 14 |
+| COR | 4 |
+| CNN | 24 |
+| LSP | 2 |
+| UNC | 26 |
+| NPI | 16 |
 | PLI | 13 |
 | REP | 0 |
-| SUPPORTED | 8 |
+| SUPPORTED | 1 |
 
 SUPPORTED records contain an explicitly supported claim whose review does not assign a novelty-specific COR/CNN/LSP category. They are preserved as such. References to separate GO judgments, hypothetical corrections, and claims explicitly not emitted are excluded.
 
@@ -70,35 +89,35 @@ SUPPORTED records contain an explicitly supported claim whose review does not as
 | ARATH/DRS1 | Q9SAI7 | UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/ARATH/DRS1/DRS1-protnlm-function-review.md) |
 | ARATH/FTSH12 | A0A1P8ARD2 | UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/ARATH/FTSH12/FTSH12-protnlm-function-review.md) |
 | DANRE/dcxr | Q567K5 | PLI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DANRE/dcxr/dcxr-protnlm-function-review.md) |
-| DROME/CG32706 | Q8IRM9 | CNN, UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/CG32706/CG32706-protnlm-function-review.md) |
+| DROME/CG32706 | Q8IRM9 | CNN | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/CG32706/CG32706-protnlm-function-review.md) |
 | DROME/CG5565 | Q9VQ04 | UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/CG5565/CG5565-protnlm-function-review.md) |
 | DROME/CG5611 | Q9VB17 | UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/CG5611/CG5611-protnlm-function-review.md) |
 | DROME/CycA | M9NFR3 | CNN | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/CycA/CycA-protnlm-function-review.md) |
 | DROME/Dic4 | Q9VVS1 | UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/Dic4/Dic4-protnlm-function-review.md) |
 | DROME/Gfat1 | A8Y5A1 | NPI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/Gfat1/Gfat1-protnlm-function-review.md) |
-| DROME/Lcp3 | A0A0B4KEF3 | LSP, UNC, NPI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/Lcp3/Lcp3-protnlm-function-review.md) |
+| DROME/Lcp3 | A0A0B4KEF3 | CNN, UNC, NPI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/Lcp3/Lcp3-protnlm-function-review.md) |
 | DROME/TyrRS | Q9VV60 | CNN | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/TyrRS/TyrRS-protnlm-function-review.md) |
 | DROME/awd | A0A0B4LHX6 | CNN | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/awd/awd-protnlm-function-review.md) |
-| DROME/dati | Q9V4C9 | CNN | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/dati/dati-protnlm-function-review.md) |
-| DROME/ftz-f1 | M9NFK2 | PLI, SUPPORTED | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/ftz-f1/ftz-f1-protnlm-function-review.md) |
+| DROME/dati | Q9V4C9 | LSP | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/dati/dati-protnlm-function-review.md) |
+| DROME/ftz-f1 | M9NFK2 | COR, CNN, PLI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/ftz-f1/ftz-f1-protnlm-function-review.md) |
 | DROME/loqs | X2J5X6 | CNN, NPI, UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/loqs/loqs-protnlm-function-review.md) |
 | DROME/qkr58E-1 | Q9W255 | CNN, UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/qkr58E-1/qkr58E-1-protnlm-function-review.md) |
 | HORSE/ALG5 | A0A5F5PM72 | PLI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/ALG5/ALG5-protnlm-function-review.md) |
-| HORSE/BCAT2 | A0A9L0TSN4 | SUPPORTED | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/BCAT2/BCAT2-protnlm-function-review.md) |
+| HORSE/BCAT2 | A0A9L0TSN4 | CNN | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/BCAT2/BCAT2-protnlm-function-review.md) |
 | HORSE/CAPSL | A0A3Q2I3U9 | NPI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/CAPSL/CAPSL-protnlm-function-review.md) |
-| HORSE/CXCR3 | A0A9L0T1D1 | PLI, UNC, SUPPORTED | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/CXCR3/CXCR3-protnlm-function-review.md) |
-| HORSE/DARS2 | A0A9L0SB67 | UNC, SUPPORTED | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/DARS2/DARS2-protnlm-function-review.md) |
+| HORSE/CXCR3 | A0A9L0T1D1 | COR, CNN, UNC, PLI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/CXCR3/CXCR3-protnlm-function-review.md) |
+| HORSE/DARS2 | A0A9L0SB67 | UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/DARS2/DARS2-protnlm-function-review.md) |
 | HORSE/DUOX1 | A0A9L0SQG9 | NPI, UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/DUOX1/DUOX1-protnlm-function-review.md) |
-| HORSE/GHSR | F6QF00 | PLI, SUPPORTED | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/GHSR/GHSR-protnlm-function-review.md) |
-| HORSE/GPAM | A0A9L0TTC1 | PLI, SUPPORTED | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/GPAM/GPAM-protnlm-function-review.md) |
-| HORSE/HSPA4 | A0A9L0S5Z5 | PLI, SUPPORTED | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/HSPA4/HSPA4-protnlm-function-review.md) |
+| HORSE/GHSR | F6QF00 | COR, CNN, PLI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/GHSR/GHSR-protnlm-function-review.md) |
+| HORSE/GPAM | A0A9L0TTC1 | UNC, PLI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/GPAM/GPAM-protnlm-function-review.md) |
+| HORSE/HSPA4 | A0A9L0S5Z5 | UNC, PLI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/HSPA4/HSPA4-protnlm-function-review.md) |
 | HORSE/HSPD1 | F6Z587 | PLI, UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/HSPD1/HSPD1-protnlm-function-review.md) |
 | HORSE/IRAK3 | A0A3Q2HDT6 | UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/IRAK3/IRAK3-protnlm-function-review.md) |
 | HORSE/KRIT1 | A0A9L0SR44 | NPI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/KRIT1/KRIT1-protnlm-function-review.md) |
 | HORSE/MYL10 | A0A9L0TJE1 | NPI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/MYL10/MYL10-protnlm-function-review.md) |
 | HORSE/SHLD2 | A0A9L0RGD6 | COR, UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/SHLD2/SHLD2-protnlm-function-review.md) |
-| HORSE/SIRT5 | F6S899 | UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/SIRT5/SIRT5-protnlm-function-review.md) |
-| HORSE/USP8 | A0A9L0T7K6 | SUPPORTED | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/USP8/USP8-protnlm-function-review.md) |
+| HORSE/SIRT5 | F6S899 | UNC, NPI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/SIRT5/SIRT5-protnlm-function-review.md) |
+| HORSE/USP8 | A0A9L0T7K6 | CNN, SUPPORTED | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/USP8/USP8-protnlm-function-review.md) |
 | HORSE/VAPA | A0A3Q2H1L9 | PLI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/HORSE/VAPA/VAPA-protnlm-function-review.md) |
 | NEUCR/NCU04302 | Q1K772 | PLI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/NEUCR/NCU04302/NCU04302-protnlm-function-review.md) |
 | NEUCR/NCU04637 | Q7S3B9 | NPI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/NEUCR/NCU04637/NCU04637-protnlm-function-review.md) |
@@ -108,7 +127,7 @@ SUPPORTED records contain an explicitly supported claim whose review does not as
 | SCHPO/rfc3 | O14003 | CNN | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/SCHPO/rfc3/rfc3-protnlm-function-review.md) |
 | SCHPO/rpa49 | O14086 | CNN | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/SCHPO/rpa49/rpa49-protnlm-function-review.md) |
 | SCHPO/rpo41 | O13993 | CNN | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/SCHPO/rpo41/rpo41-protnlm-function-review.md) |
-| SCHPO/rrp36 | Q9P6P2 | CNN | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/SCHPO/rrp36/rrp36-protnlm-function-review.md) |
+| SCHPO/rrp36 | Q9P6P2 | CNN, LSP | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/SCHPO/rrp36/rrp36-protnlm-function-review.md) |
 | SCHPO/spt16 | O94267 | CNN, UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/SCHPO/spt16/spt16-protnlm-function-review.md) |
 | SCHPO/sws2 | O59772 | CNN, UNC, NPI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/SCHPO/sws2/sws2-protnlm-function-review.md) |
 | SCHPO/vas2 | Q9P7N2 | CNN | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/SCHPO/vas2/vas2-protnlm-function-review.md) |
@@ -116,7 +135,7 @@ SUPPORTED records contain an explicitly supported claim whose review does not as
 | XENLA/uap1.S | Q6DCZ6 | PLI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/XENLA/uap1.S/uap1.S-protnlm-function-review.md) |
 | human/DTD1 | A0A2R8YCT7 | NPI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/DTD1/DTD1-protnlm-function-review.md) |
 | human/NARF | J3KS48 | PLI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/NARF/NARF-protnlm-function-review.md) |
-| human/RHOJ | G3V4H1 | UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/RHOJ/RHOJ-protnlm-function-review.md) |
+| human/RHOJ | G3V4H1 | UNC, NPI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/human/RHOJ/RHOJ-protnlm-function-review.md) |
 | mouse/Sdhaf2 | A0A494B8X4 | UNC | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/mouse/Sdhaf2/Sdhaf2-protnlm-function-review.md) |
 | mouse/Vmn2r73 | A0A3B2WCZ5 | NPI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/mouse/Vmn2r73/Vmn2r73-protnlm-function-review.md) |
 | rat/Pnkd | B4F7D2 | PLI | [Function review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/rat/Pnkd/Pnkd-protnlm-function-review.md) |
@@ -129,18 +148,20 @@ SUPPORTED records contain an explicitly supported claim whose review does not as
 
 The cohort rows retain overlapping selections, including six fly targets selected twice. Paired reference records provide evidence and contribute no extra prediction assessments. Use the deduplicated totals above for the combined corpus.
 
-| Cohort | Records | Records with GO assessments | Reviewed zero GO output | GO claims | Narrative review records |
-|---|---:|---:|---:|---:|---:|
-| ARGO50 | 50 | 41 | 9 | 77 | 0 |
-| HORSE40 | 40 | 27 | 0 | 89 | 17 |
-| HORSE40_HUMAN_PAIR | 40 | 0 | 0 | 0 | 0 |
-| FLY41 | 41 | 33 | 8 | 50 | 13 |
-| FLY_LOCATION_KEYWORD | 29 | 0 | 0 | 0 | 0 |
-| FLY_NEXT20 | 20 | 0 | 0 | 0 | 0 |
-| POMBE20 | 20 | 18 | 0 | 32 | 10 |
-| POMBE_REMAINING8 | 8 | 0 | 0 | 0 | 0 |
-| NEUROSPORA20 | 20 | 16 | 0 | 21 | 3 |
-| MOD_EVOLUTION20 | 20 | 10 | 0 | 19 | 14 |
+| Cohort | Records | Records with GO assessments | Reviewed zero GO output | Narrative review only | Not yet reviewed | GO claims | Narrative review records |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| ARGO50 | 50 | 41 | 9 | 0 | 0 | 77 | 0 |
+| HORSE40 | 40 | 27 | 0 | 13 | 0 | 89 | 17 |
+| HORSE40_HUMAN_PAIR | 40 | 0 | 0 | 0 | 0 | 0 | 0 |
+| FLY41 | 41 | 33 | 8 | 0 | 0 | 50 | 13 |
+| FLY_LOCATION_KEYWORD | 29 | 0 | 0 | 0 | 29 | 0 | 0 |
+| FLY_NEXT20 | 20 | 0 | 0 | 0 | 20 | 0 | 0 |
+| POMBE20 | 20 | 18 | 0 | 2 | 0 | 32 | 10 |
+| POMBE_REMAINING8 | 8 | 0 | 0 | 0 | 8 | 0 | 0 |
+| NEUROSPORA20 | 20 | 16 | 0 | 0 | 4 | 21 | 3 |
+| MOD_EVOLUTION20 | 20 | 10 | 0 | 9 | 1 | 19 | 14 |
+
+Reference-pair rows (HORSE40_HUMAN_PAIR) are evidence records, not prediction targets, so their "not yet reviewed" count is zero by construction.
 
 ## Source metadata
 
