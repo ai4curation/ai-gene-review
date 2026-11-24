@@ -74,3 +74,10 @@ transmembrane protein amnionless (AMN), forming the **cubam** endocytic receptor
 ## References
 Grounded in CUBN-uniprot.txt (O60494), CUBN-goa.tsv, and cached publications/PMID_*.md.
 No falcon deep research (provider out of credits, HTTP 402).
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Rows: GO:0005768 IEA (GO_REF:0000044) and EXP (PMID:14576052, PMID:29402915); no sub-compartment row. GOA and review agree. UniProt Endosome item: ECO:0000269 PubMed:14576052 and PubMed:29402915.
+- PMID:14576052 (abstract-only): [PMID:14576052 "cubilin trafficked to the cell surface and endosomes, and the cells exhibited IF-cobalamin endocytosis and lysosomal degradation of IF"].
+- PMID:29402915 (full text): only internalisation of surface-labelled, overexpressed mini-cubilin into vesicles, with no endosome marker [PMID:29402915 "cells double-transfected with wildtype cubilin and amnionless exhibited strong vesicular labelling, indicating that mini-cubilin was internalised from the apical surface"].
+- Outcome: all three rows stay ACCEPT: the endosome is on the receptor-mediated endocytosis route that is cubilin's core process (endocytic-receptor case). KEEP_AS_NON_CORE was the close alternative, since no readable source measures ligand release or recycling there. No stage row.

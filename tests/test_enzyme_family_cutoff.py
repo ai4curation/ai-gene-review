@@ -1,12 +1,23 @@
 """Tests for the Schnoes-style trusted-cutoff check of enzyme annotations."""
 
+import threading
+import urllib.error
+import urllib.request
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
+
 import pytest
 
+from ai_gene_review.validation import enzyme_family_cutoff
 from ai_gene_review.validation.enzyme_family_cutoff import (
     FamilyScore,
+    NCBIfam,
+    _read_with_retry,
     check,
     classify_hit,
     is_complete_ec,
+    rank_closest,
+    scan_library,
     verdict_for,
 )
 
@@ -129,3 +140,102 @@ def test_prpb_isocitrate_lyase_is_below_cutoff(cache_dir):
     report = check("Q88KF6", [], ["GO:0004451"], cache_dir)
     assert report.verdict == "BTC"
     assert any("methylisocitrate lyase" in f for f in report.better_fitting_families)
+
+
+def test_rank_closest_orders_by_score_over_cutoff_and_drops_domains():
+    """Families are ranked by score/TC; domain models and non-hits are left out."""
+    near = score(290.0, target=False, acc="NF000001.1")  # 0.97 of TC
+    passes = score(330.0, target=False, acc="NF000002.1")  # 1.10 of TC
+    domain = score(900.0, target=False, family_type="domain", acc="PF000003.1")
+    miss = score(None, target=False, acc="NF000004.1")
+    ranked = rank_closest([near, domain, miss, passes], top=5)
+    assert [s.accession for s in ranked] == ["NF000002.1", "NF000001.1"]
+    assert rank_closest([near, passes], top=1) == [passes]
+
+
+def serve(statuses: list[tuple[int, dict[str, str]]]) -> tuple[HTTPServer, list[str]]:
+    """A real local HTTP server answering each request with the next status in turn."""
+    seen: list[str] = []
+
+    class Handler(BaseHTTPRequestHandler):
+        def do_GET(self) -> None:  # noqa: N802 (http.server naming)
+            code, headers = statuses[min(len(seen), len(statuses) - 1)]
+            seen.append(self.path)
+            self.send_response(code)
+            for key, value in headers.items():
+                self.send_header(key, value)
+            self.end_headers()
+            self.wfile.write(b"ok" if code == 200 else b"")
+
+        def log_message(self, *args: object) -> None:
+            pass
+
+    server = HTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return server, seen
+
+
+def local_request(server: HTTPServer) -> urllib.request.Request:
+    """A request to the local server that bypasses any configured HTTP proxy."""
+    return urllib.request.Request(f"http://127.0.0.1:{server.server_port}/x")
+
+
+@pytest.fixture
+def no_proxy(monkeypatch):
+    """Route localhost requests directly even when the environment sets a proxy."""
+    monkeypatch.setenv("no_proxy", "127.0.0.1,localhost")
+    monkeypatch.setenv("NO_PROXY", "127.0.0.1,localhost")
+
+
+def test_read_with_retry_waits_out_rate_limit(no_proxy):
+    """Two 429 answers with Retry-After: 0, then success: the body comes back."""
+    server, seen = serve(
+        [(429, {"Retry-After": "0"}), (429, {"Retry-After": "0"}), (200, {})]
+    )
+    try:
+        assert _read_with_retry(local_request(server)) == b"ok"
+    finally:
+        server.shutdown()
+    assert len(seen) == 3
+
+
+def test_read_with_retry_gives_up_after_limit(no_proxy):
+    """A server that always answers 429 gets RATE_LIMIT_RETRIES attempts, then the error."""
+    server, seen = serve([(429, {"Retry-After": "0"})])
+    try:
+        with pytest.raises(urllib.error.HTTPError) as exc:
+            _read_with_retry(local_request(server))
+    finally:
+        server.shutdown()
+    assert exc.value.code == 429
+    assert len(seen) == enzyme_family_cutoff.RATE_LIMIT_RETRIES
+
+
+def test_read_with_retry_does_not_retry_other_errors(no_proxy):
+    """A 500 is raised at once: only rate limiting is retried."""
+    server, seen = serve([(500, {})])
+    try:
+        with pytest.raises(urllib.error.HTTPError) as exc:
+            _read_with_retry(local_request(server))
+    finally:
+        server.shutdown()
+    assert exc.value.code == 500
+    assert len(seen) == 1
+
+
+@pytest.mark.integration
+@pytest.mark.vcr_skip
+def test_library_scan_finds_ghrb_sister_family_for_ptxd():
+    """ptxD's closest family is GhrB, a model with no EC that targeted scoring never sees.
+
+    Uses the persistent ``.cache/ncbifam`` store: the first run downloads the full
+    NCBIfam HMM archive (about 450 MB) and presses the function-level library.
+    """
+    db = NCBIfam(Path(".cache") / "ncbifam")
+    sequence = enzyme_family_cutoff.SequenceCache(Path(".cache") / "uniprot_seq").get(
+        "Q88HI1"
+    )
+    closest = scan_library({"Q88HI1": sequence}, db)["Q88HI1"]
+    assert closest[0].accession == "NF011938.0"
+    assert closest[0].seq_score < closest[0].tc[0]  # near the family but outside it
+    assert not closest[0].ec_numbers

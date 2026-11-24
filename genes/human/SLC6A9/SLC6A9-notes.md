@@ -107,3 +107,20 @@ plasma membrane. The paralog distinction is mechanistic/pharmacological — GlyT
 sarcosine-SENSITIVE; GlyT2 is 3:1:1 and sarcosine-INsensitive — not a difference in whether glycine is transported.
 So the IBA node placements are sound for GlyT1; the stoichiometry/pharmacology difference is recorded in
 propagation_review rather than used to challenge the node.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- IEA (Ensembl) and ISS endosome rows both trace to rat GlyT1 P28572 (looked up; no Endosome item),
+  whose endosome row is an ARUK-UCL IDA from PMID:12091465 (abstract-only), the same paper as the
+  SLC6A5 donor. Its abstract places GFP-GLYT1 mainly at the plasma membrane in PC12 cells; the
+  endosomes are named for GFP-GLYT2. No defect claimed (full text unread).
+- Readable rescue: PMID:26418248 (Barrera et al. 2015, PLoS One, PMC4587969, DOI
+  10.1371/journal.pone.0138897, full text cached and read): endogenous GlyT1 colocalizes with EEA1
+  in a few puncta in untreated mouse retinal sections and vehicle-treated amacrine cultures
+  ["Interestingly, a few discrete puncta showed co-localization between GlyT1 and EEA1"].
+  Supporting abstracts: PMID:19473961 (constitutive endocytosis of transfected GLYT1b into
+  transferrin-containing endosomes; PMC2740574 served no text) and PMID:26200505 (BDNF increases
+  GlyT staining in endosomes of rat astrocytes, GlyT1 vs GlyT2 not separated).
+- KEEP_AS_NON_CORE on both rows. No early-endosome row: the unperturbed EEA1 data are one study
+  and one antibody; PMA-driven EEA1 data are perturbed; the transferrin line is overexpressed with
+  no chase or stage marker stated. Same call as SLC6A5.

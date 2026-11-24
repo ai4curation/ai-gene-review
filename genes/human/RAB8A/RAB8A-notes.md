@@ -66,3 +66,15 @@ The re-run `just deep-research-falcon human RAB8A --timeout 2400` succeeded and 
 `RAB8A-deep-research-falcon.md` (2026-10-03). I read it after drafting the review. Its summary agrees with the
 cached primary literature used here and changes none of the curation decisions. Annotation-level supporting quotes come
 from the cached publications. The first core function also cites one sentence from the deep-research file.
+
+## 2026-11-22 ORGANELLES lysosome batch 2
+
+- Lysosome (GO:0005764) IEA row (UniProt SL-0158) stays KEEP_AS_NON_CORE; reason extended.
+- The UniProt lysosome item rests on PMID:30209220 (Eguchi et al. 2018 PNAS), fetched into the
+  cache with full text and read. Endogenous Rab8a appears on enlarged LRRK2-positive lysosomes in
+  RAW264.7 cells after chloroquine, and endogenous Rab8a rises in magnetically purified lysosomes of
+  LRRK2-expressing HEK293 cells after chloroquine; recruitment needs LRRK2 kinase activity and Thr72.
+  [PMID:30209220 "These results suggest that lysosomal overload stress induces translocation of Rab8a and Rab10 onto enlarged lysosomes in an LRRK2 kinase activity-dependent manner."]
+- Stress-induced, phosphorylation-regulated pool with a homeostatic function (EHBP1/EHBP1L1
+  recruitment, limits lysosomal enlargement): more than cargo, but not core, and not tethering
+  (LRRK2 is not an integral lysosomal membrane protein; GTPase cycle). No GO:0098574 row.

@@ -42,6 +42,7 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 | `PTHR10572` 3-HYDROXY-3-METHYLGLUTARYL-COENZYME A REDUCTASE | root HMGR/isoprenoid node, eukaryotic ER-membrane node, and fungal ergosterol node | `HMG1`/`HMG2`/`hmg1`/`ASPFU/hmg1`/`ASPFU/hmg2`/`EMENI/AN1593` |
 | `PTHR19855` WD40 REPEAT PROTEIN 12, 37 | Ascomycota WDR12/Ytm1 node | `YTM1`/`ytm1`/`YTM1`/`ytm1` |
 | `PTHR10969` MICROTUBULE-ASSOCIATED PROTEINS 1A/1B LIGHT CHAIN 3-RELATED | eukaryotic ATG8 node and fungal vacuole-membrane node | `ATG8`/`atg8`/`apg-6` |
+| `PTHR11227` WIPI/PROPPIN phosphoinositide adaptors | root lipid-binding/adaptor nodes and fungal vacuole-membrane node | `ATG18`/`atg18`/`apg-10` |
 | `PTHR10806` SIGNAL PEPTIDASE COMPLEX CATALYTIC SUBUNIT SEC11 | PTHR10806 root peptidase node and eukaryotic Sec11/SPC node | `SEC11`/`sec11`/`SEC11`/`sec11` |
 | `PTHR11671` V-TYPE ATP SYNTHASE SUBUNIT D | fungal V-ATPase subunit D node | `VMA8`/`vma8`/`VMA8`/`vma-8` |
 | `PTHR43607` V-TYPE PROTON ATPASE CATALYTIC SUBUNIT A | conserved A-subunit and fungal vacuole-membrane nodes | `VMA1`/`vma1`/`TFP1`/`vma-1` |
@@ -686,6 +687,42 @@ separate MSL-complex placement and an IRD blocking NuA4 complex inheritance.
 - [x] `EMENI/eaf3` - *Aspergillus nidulans* Eaf3-family chromatin subunit;
   aligned before this family review
 
+## Family 30: WIPI/PROPPIN Atg18 Phosphoinositide Adaptors
+
+`PTHR11227` contains the eukaryotic WIPI/PROPPIN beta-propeller
+phosphoinositide-binding family. The compact fungal Atg18 tranche keeps
+the root PI3P, PI(3,5)P2, and adaptor calls, retains the fungal-type
+vacuole membrane node, and marks root-level pexophagy, mitophagy,
+nucleophagy, and glycophagy rows as too broad for every Atg18/Atg21/WIPI
+paralog. The Saccharomycotina Atg21/Hsv2 sibling branch is reviewed
+separately because its Cvt, Atg8-lipidation, Hsv2 microautophagy and
+retromer-vacuole-fission roles diverged from the Atg18 branch.
+
+- [x] `yeast/ATG18` - budding-yeast Atg18 anchor with direct Cvt,
+  PAS, lipid-binding, vacuole, Atg2, CROP and 2026 Atg8-AIM evidence
+- [x] `SCHPO/atg18` - fission-yeast Atg18 seed with PomBase PAS,
+  endosome and vacuole evidence
+- [x] `CANAL/ATG18` - C. albicans ATG18 with direct DNA damage-induced
+  autophagy and macroautophagy evidence
+- [x] `CANGA/ATG18` - C. glabrata Atg18 ortholog with CGD electronic
+  transfers pruned to conserved PROPPIN activities and locations
+- [x] `NEUCR/apg-10` - N. crassa Atg18-family ortholog
+- [x] `ASPFU/atg18` - A. fumigatus Atg18-family ortholog
+- [x] `yeast/ATG21` - budding-yeast Atg21 sibling PROPPIN with direct
+  PI3P/PI(3,5)P2, Cvt, Atg8-lipidation, PMN, mitophagy and 2026
+  Atg21-retromer evidence
+- [x] `yeast/HSV2` - budding-yeast Hsv2 sibling PROPPIN with direct
+  PI3P/PI(3,5)P2, phagophore, microautophagy, large-cargo autophagy
+  and 2026 Atg18-retromer vacuole-fission evidence
+- [x] `CANAL/ATG21` - C. albicans ATG21 with PTHR11227 root PAINT
+  rows pruned to conserved PROPPIN activities and locations
+- [x] `CANAL/HSV2` - C. albicans HSV2 with PTHR11227 root PAINT rows
+  pruned to conserved PROPPIN activities and locations
+- [x] `CANGA/ATG21` - C. glabrata ATG21 with SGD orthology transfers
+  limited to the Atg21 lipid-binding, PAS and Cvt profile
+- [x] `CANGA/HSV2` - C. glabrata HSV2 with SGD orthology transfers
+  limited to the Hsv2 lipid-binding and phagophore/endosome profile
+
 ---
 
 # NOTES
@@ -699,6 +736,8 @@ separate MSL-complex placement and an IRD blocking NuA4 complex inheritance.
   transfers such as Cvt, nucleophagy, ER-phagy, VICS, lipid-droplet, and
   heat-induced vacuole-invagination annotations remain over-specific for
   *Candida glabrata* until directly assayed there.
+
+- Added the `PTHR11227` WIPI/PROPPIN Atg18 tranche across `yeast/ATG18`, `SCHPO/atg18`, `CANAL/ATG18`, `CANGA/ATG18`, `NEUCR/apg-10`, and `ASPFU/atg18`. The family review accepts the root lipid-binding/adaptor PAINT rows and fungal vacuole-membrane node while flagging root-level cargo-selective autophagy terms as too broad for every Atg18/Atg21/WIPI paralog.
 
 - Added the compact `PTHR10880` Eaf3/MRG chromatin-subunit family after
   checking the existing *S. cerevisiae*, *S. pombe*, *Candida*, and

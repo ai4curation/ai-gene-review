@@ -17,6 +17,7 @@ auditable record, and names the external source it replaces.
 | [CR-0008](CR-0008.yaml) | GO:0007219 Notch signaling pathway | IPR039398 AND Metazoa | interpro2go IPR039398 (Notch signaling pathway) | PROPOSED |
 | [CR-0009](CR-0009.yaml) | GO:0005540 hyaluronic acid binding | IPR026203 AND (Vertebrata OR Cephalochordata) | interpro2go IPR026203 | PROPOSED |
 | [CR-0010](CR-0010.yaml) | GO:0070823 HDA1 complex | IPR021006 AND Fungi | interpro2go IPR021006 | PROPOSED |
+| [CR-0011](CR-0011.yaml) | GO:0016705 oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen | (IPR011251 OR IPR036661) AND NOT 18 F420-dependent family entries | interpro2go IPR011251, IPR036661 | PROPOSED |
 
 ## Semantics
 

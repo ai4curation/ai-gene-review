@@ -137,12 +137,13 @@ def test_pruning_conflict_fires_for_affected_subfamily(tmp_path):
     "verdict,fires",
     [
         ("LOSS_SUPPORTED", True),  # a correct IRD/IKR: the clade should not keep the term
+        ("TERM_SUPERSEDED", True),  # the stale term is false for the clade: drop it
         ("LOSS_CONTRADICTED", False),  # the loss is wrong: keeping the term is right
         ("LOSS_TOO_BROAD", False),
     ],
 )
-def test_pruning_conflict_for_loss_verdicts(tmp_path, verdict, fires):
-    """Only a supported loss tells genes below it to drop the term."""
+def test_pruning_conflict_for_verdicts(tmp_path, verdict, fires):
+    """A supported loss or a superseded term tells genes below it to drop the term."""
     gene = _write_gene(tmp_path, "PGRPLC", RECEPTOR_SF, "ACCEPT")
     results = check_pruning_conflicts(
         _family_review(node_affects=(RECEPTOR_SF,), node_verdict=verdict), {FAMILY: [gene]}
