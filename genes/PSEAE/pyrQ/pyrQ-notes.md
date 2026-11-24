@@ -71,9 +71,15 @@ confirmations that this is the real position rather than a cached-GOA artefact:
 
 This matters for what is asked of PAINT. The fix is **not** a re-rooting of the leaf: it is an
 **added loss (`ADD_IRD`) on pyrQ's branch**, extending to `PTN002462798` the pruning already done
-at `PTN000182407`. That is now encoded in the family review's node assessment as
-`paint_action: ADD_IRD` with `target_node_id: PANTHER:PTN002462798`, so
-`just export-paint-change-requests` emits it as a change request rather than leaving it in prose.
+at `PTN000182407`. That is now encoded in the family review's node assessments as
+`paint_action: ADD_IRD` with `target_node_id: PANTHER:PTN002462798`, on `GO:0004038` and on
+`GO:0006145` separately — PAINT prunes per annotation, so each term needs its own request — and
+`just export-paint-change-requests` emits both rather than leaving the ask in prose.
+
+**The target has to be the leaf, not a clade above it.** `PTN002462789`, pyrQ's parent, holds 34
+leaves, and one of them is *E. coli* AllB (P77671) — a genuine allantoinase, and one of the seeds
+of the very IBD being pruned. A loss at the parent would strip the term from a member that
+supports it, so leaf-level is a derivation rather than a conservative choice.
 
 Whether pyrQ represents a second, independent acquisition of dihydroorotase activity inside the
 allantoinase clade, or whether PANTHER's tree simply places it badly, is not settled here and
