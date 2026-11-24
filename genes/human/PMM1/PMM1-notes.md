@@ -28,6 +28,11 @@ Core sources:
 - PMID:16540464 solved PMM1 structures with magnesium and
   alpha-D-mannose 1-phosphate, mapped the conserved active site, and reported
   similar kinetic properties for alpha-PMM1 and alpha-PMM2.
+- UniProt also records a qualified PMM1 glucose-1,6-bisphosphatase activity in
+  ischemic brain and IMP-enhanced glucose-1,6-bisphosphatase activity by
+  mouse-orthology inference. A local `cache/go/terms.csv` lookup found no exact
+  glucose-1,6-bisphosphate phosphatase term, so the gene review records this
+  as a physiological knowledge gap instead of proposing a guessed MF term.
 - Reactome R-HSA-446201 directly states that cytosolic PMM1 and PMM2 catalyse
   Man6P to Man1P, and R-HSA-446205 places that reaction in synthesis of
   GDP-mannose.
@@ -46,13 +51,16 @@ Annotation decisions:
 - `GO:0006487` protein N-linked glycosylation: KEEP_AS_NON_CORE. PMM1 acts
   upstream by supplying mannose 1-phosphate for GDP-mannose and
   dolichol-phosphate-mannose; it does not catalyse a glycan transfer to protein.
+  The inherited IBA is at `PTN000049281` with fly and zebrafish PMM seeds, and
+  no PAINT IRD/IKR blocks the human PMM1 lineage.
 - `GO:0005829` cytosol: ACCEPT. PAINT, HPA, and Reactome all converge on a
   soluble cytosolic PMM reaction.
 - `GO:0005737` cytoplasm: TOO_GENERAL. Cytoplasm is true, but the review
   already keeps cytosol as the precise compartment.
 - `GO:0043025` neuronal cell body: MARK_AS_OVER_ANNOTATED. The row is a
-  cell-region-specific Ensembl orthology transfer from mouse PMM1 and adds no
-  functional information beyond soluble cytosol for human PMM1.
+  cell-region-specific Ensembl orthology transfer from mouse PMM1. Human PMM1
+  has strong brain expression, but the donor resolves only neuronal cytosol and
+  is over-specific for the conserved soluble PMM1 reaction.
 - All four `GO:0005515` protein-binding rows are REMOVE under the generic
   protein-binding policy. The action does not dispute the reported RAB6A/RAB6B
   high-throughput interactions; it removes only the bare, uninformative GO
