@@ -33,3 +33,7 @@
   lack Rmi1 per PMID:22511792.
 - No NEW terms proposed. A double Holliday junction dissolution process term does not
   exist in GO (OLS search empty); noted as a suggested question rather than a NEW row.
+
+## 2026-11-24 re-review of the cytoplasm IBA against the PAINT tree
+
+The cytoplasm IBA (GO:0005737, IBD at the family root PTN000344873) was moved from MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE. The earlier note said the seeds were E. coli RecQ and RECQL5. One of the six seeds, MGI:1328362, is mouse Blm (located_in IDA, PMID:17982445, MGI), which sits in the animal BLM clade PTN000345005 with fly Blm, so the target is inside a seeded clade. Nothing on fly Blm shows that a cytoplasmic pool is absent. Human BLM carries the same IBA as KEEP_AS_NON_CORE. PMID:17982445 was checked as a PubMed abstract only, and the abstract does not mention Blm.
