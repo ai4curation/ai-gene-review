@@ -20,16 +20,19 @@ No IRD or IKR loss on this gene's lineage.
 
 ## GO-CAM 6796b94c00004996 context
 
-The TMPRSS2 activity in `gocams/6796b94c00004996` is locally sound:
-UniProtKB:O15393 enables `GO:0004252` serine-type endopeptidase activity, has
-SARS-CoV-2 spike as input, occurs at the plasma membrane, and participates in
-ACE2-dependent virion entry. The model-level inconsistency is the downstream
-edge: TMPRSS2 at the plasma membrane points to a single S2 fusogenic activity
-placed in the endosome and `part_of GO:0039654`, thereby conflating the
-TMPRSS2-primed plasma membrane route with the cathepsin-dependent endosomal
-route. A separate GO-CAM PR should mark the TMPRSS2 activity as consistent with
-this gene review once it exists, while retaining the existing
-`NONADJACENT_COMPARTMENTS` concern for its edge to the endosomal S2 node.
+The TMPRSS2 activity in `gocams/6796b94c00004996` has the right catalyst,
+activity, substrate, and plasma-membrane location: UniProtKB:O15393 enables
+`GO:0004252` serine-type endopeptidase activity and has SARS-CoV-2 spike as
+input. The model's `part_of GO:0098670` edge should be narrowed, though. The
+GO-CAM review currently endorses it, but ACE2 is the SARS-CoV-2 receptor that
+mediates virion attachment; TMPRSS2 primes SARS-CoV-2 spike downstream of
+attachment. TMPRSS2 does support `GO:0098670` for the HKU1 receptor-binding
+context, and the SARS-CoV-2 entry model should instead connect the TMPRSS2
+activity to positive regulation of viral entry or a spike-S2 priming process.
+The model also has a downstream compartment inconsistency: TMPRSS2 at the plasma
+membrane points to a single S2 fusogenic activity placed in the endosome and
+`part_of GO:0039654`, thereby conflating the TMPRSS2-primed plasma-membrane
+route with the cathepsin-dependent endosomal route.
 
 ## Evidence accessibility
 
