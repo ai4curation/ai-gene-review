@@ -221,6 +221,29 @@ give. A paraphrase would at least have been honest about being a paraphrase. Bot
 now `supporting_text` on gap 5, which is where the rule two sections up already said they
 belonged — the rule was written and then not applied to the next thing it covered.
 
+### "Unsourced" is a claim about the tree, and the tree changes
+
+Round 6 removed "a di-copper centre is the canonical tyrosinase active site" as general enzymology
+rather than anything the sources state. The two premises were correct — the pathway review says
+only "copper-containing", and `PMID_24816606.md` is abstract-only and never mentions copper — and
+the conclusion was still wrong, because neither of us checked UniProt. `genes/PSEAE/pvdP/pvdP-uniprot.txt`
+carries `DR   InterPro; IPR008922; Di-copper_centre_dom_sf.`, the SUPFAM equivalent, a 2.11 Å
+structure `IN COMPLEX WITH CU(2+)`, and six Cu(2+) `FT BINDING` residues — three per copper, with
+structure-derived `ECO:0007829` evidence, which CLAUDE.md lists as good support.
+
+Two separate mistakes, worth keeping apart:
+
+- **Checking two sources and concluding "unsourced".** The claim was about the whole available
+  evidence; the check covered the review and one abstract. The record was never consulted.
+- **Not revisiting after the tree changed.** At the time, pvdP's record was not on `main`, so it
+  genuinely could not have been cited — the same constraint that deferred the PDB 5HHA citation.
+  But 5HHA was *recorded as deferred* and came back when the sibling PR merged; the copper claim
+  was deleted outright, so nothing brought it back. A deletion justified by what the tree contains
+  should be recorded as conditional, the way a deferral is.
+
+The restored version is stronger than the one deleted: the deleted sentence asserted a general
+fact about tyrosinases, where the record shows two copper sites resolved **on this protein**.
+
 ### One claim per evidence item
 
 The 5HHA citation landed as a single evidence item whose `statement` said it grounded PvdO's
