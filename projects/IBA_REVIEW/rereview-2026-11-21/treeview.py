@@ -81,8 +81,8 @@ def main() -> None:
     review = yaml.safe_load((folder / f"{a.gene}-ai-review.yaml").read_text())
     acc = str(review["id"])
     fams = panther_families((folder / f"{a.gene}-uniprot.txt").read_text())
-    inv = Path(__file__).parent / "inventory.tsv"
-    if inv.exists():  # the family PAINT actually propagates from can differ from the UniProt cross-reference
+    # the family PAINT actually propagates from can differ from the UniProt cross-reference
+    for inv in sorted(Path(__file__).parent.parent.glob("*/inventory.tsv")):
         for line in inv.read_text().splitlines()[1:]:
             c = line.split("\t")
             if c[0] == str(folder / f"{a.gene}-ai-review.yaml") and c[7] and c[7] not in fams:
