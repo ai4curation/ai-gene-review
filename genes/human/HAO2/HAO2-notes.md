@@ -16,7 +16,7 @@
   catabolic process or glyoxylate oxidase activity rows at `PANTHER:PTN008948292`.
 - The two Reactome cytosol TAS rows come from PEX5 cargo binding/translocation events,
   as in HAO1. They describe the transient cytosolic cargo pool for a matrix enzyme,
-  so they are true but non-core.
+  so they over-annotate transit rather than a mature cytosolic HAO2 function.
 - No HAO2 production GO-CAM is indexed in `gocams/index.tsv`; Reactome covers the
   single HAO2 2-hydroxypalmitate oxidation reaction. The existing
   `glyoxylate_oxalate_metabolism` module is intentionally HAO1/glyoxylate-specific,
