@@ -8,12 +8,12 @@ membership and multiple TOM-mediated import routes.
 
 The conserved Tom20 activity is recognition of N-terminal mitochondrial
 presequences at the cytosolic face of the TOM translocase. Yamamoto et al.
-tested budding-yeast Tom20 and found that a long mitochondrial presequence
-contains two Tom20-binding elements; the N-terminal element was essential for
-mitochondrial targeting, while a C-terminal element increased import efficiency
-before inner-membrane translocation. Their summary is explicit: Tom20 recognizes
-the presequence targeting signal and tethers it to the TOM40 complex to
-increase import efficiency [PMID:21173275].
+tested Tom20 and found that a long mitochondrial presequence contains two
+Tom20-binding elements; the N-terminal element was essential for mitochondrial
+targeting, while a C-terminal element increased import efficiency before
+inner-membrane translocation. Their summary is explicit: Tom20 recognizes the
+presequence targeting signal and tethers it to the TOM40 complex to increase
+import efficiency [PMID:21173275].
 
 Dekker et al. separated the budding-yeast TOM architecture into a Tom40/Tom22
 general import pore and more peripheral receptors. They found that Tom22 is

@@ -11,10 +11,11 @@
   was not logged in), so I recorded a manual TOM-focused literature summary in
   `tom40-deep-research-manual.md`.
 - Reviewed all 15 fetched GOA rows. I accepted `GO:0008320 protein
-  transmembrane transporter activity`, TOM complex, and mitochondrial outer
-  membrane annotations; kept matrix/IMS/TIM22/TIM23-SORT/beta-barrel TOM routes
-  as non-core; and marked generic `GO:0055085 transmembrane transport` plus the
-  ARBA mitochondrial membrane organization row as over-annotated.
+  transmembrane transporter activity`, TOM complex, mitochondrial outer
+  membrane, and matrix-import annotations; kept IMS/TIM22/TIM23-SORT/beta-barrel
+  TOM routes as non-core; marked generic `GO:0055085 transmembrane transport` as
+  too general; and marked the ARBA mitochondrial membrane organization row as
+  over-annotated.
 - 69729a3800007453 consistency: no disagreement for tom40. The GO-CAM already
   models PomBase:SPBC27B12.13 with `GO:0008320`, TOM-complex membership,
   mitochondrial outer membrane occurrence, and `GO:0030150`.

@@ -16,11 +16,12 @@ whose activity is organized by receptor and small-Tom subunits [PMID:10519552].
 
 Annotation decisions: `GO:0008320 protein transmembrane transporter activity` is
 the core Tom40 molecular function and is accepted for both PAINT and InterPro
-rows. The TOM complex and outer membrane component terms are accepted. Matrix,
-IMS, TIM22, TIM23-SORT, and beta-barrel outer-membrane route rows are correct
-but non-core because Tom40 is the general TOM pore used by all of them. Generic
-`GO:0055085 transmembrane transport` and the ARBA mitochondrial membrane
-organization row are over-broad.
+rows. The TOM complex and outer membrane component terms are accepted. Matrix
+import is core in the GO-CAM-reviewed TOM context; IMS, TIM22, TIM23-SORT, and
+beta-barrel outer-membrane route rows are correct but non-core because Tom40 is
+the general TOM pore used by all of them. Generic `GO:0055085 transmembrane
+transport` is too general, and the ARBA mitochondrial membrane organization row
+is over-broad.
 
 GO-CAM consistency notes for 69729a3800007453: the model's tom40 activity uses
 `GO:0008320 protein transmembrane transporter activity`, occurs in
