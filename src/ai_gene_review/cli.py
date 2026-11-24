@@ -3924,6 +3924,15 @@ def compare_module_sbml(
             help="Key under modules: in the mapping (default: module file stem)",
         ),
     ] = None,
+    seed: Annotated[
+        int, typer.Option("--seed", help="Seed for the derivative-sign sampling")
+    ] = 0,
+    samples: Annotated[
+        int,
+        typer.Option(
+            "--samples", min=1, help="Sample points per effector for the sign check"
+        ),
+    ] = 64,
 ):
     """Diff a curated module's signed causal graph against an SBML kinetic model.
 
@@ -3931,7 +3940,8 @@ def compare_module_sbml(
     derivative of each rate with respect to each effector, times the reaction's
     effect on its target's activity) and compared with the module's signed edges
     through the reviewed mapping. The model is evidence, not truth; nothing is
-    written to the module.
+    written to the module. Re-run with another --seed or more --samples to check
+    whether an undetermined (?) model sign is robust.
 
     Example:
         ai-gene-review compare-module-sbml \\
@@ -3946,7 +3956,12 @@ def compare_module_sbml(
             typer.echo(f"Error: file not found: {path}", err=True)
             raise typer.Exit(code=1)
     comparison = compare_module_to_sbml(
-        module_file, sbml_file, mapping, module_key=module_key
+        module_file,
+        sbml_file,
+        mapping,
+        module_key=module_key,
+        seed=seed,
+        samples=samples,
     )
     typer.echo(format_comparison(comparison))
 

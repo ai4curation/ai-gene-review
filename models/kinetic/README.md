@@ -18,8 +18,20 @@ models/kinetic/
   README.md
   biomd0000000010/              # one folder per model, named by its BioModels id
     model.xml                   # verbatim SBML from BioModels (DO NOT EDIT)
+    README.md                   # provenance: source, retrieval date, checksum, licence, results
     mapping_to_modules.yaml     # reviewed bridge: module elements <-> model species
 ```
+
+`model.xml` is pinned by the checksum in its folder's README and is excluded from
+the whitespace-fixing pre-commit hooks so that it stays byte-identical to the
+download.
+
+## Requirements
+
+The reader needs `python-libsbml` and `sympy`. They are not core dependencies of
+`ai_gene_review`; in this repository they come with `cobra` in the dev group, so
+`uv sync --group dev` installs them. Without them the command stops with a
+message naming the missing packages.
 
 ## How signed edges are read from a kinetic model
 
@@ -34,9 +46,12 @@ For each reaction:
    minus the same over its reactants. MEK → MEK-P raises MEK activity (`+`);
    MEK-P → MEK lowers it (`-`). Entities whose activity does not change are not
    targets.
-2. **Sign of each effector.** Every other species in the rate law, or listed as a
-   modifier, is an effector. Its sign is the sign of the partial derivative of
-   the rate with respect to it. The derivative is evaluated at the model's own
+2. **Sign of each effector.** Every species in the rate law, or listed as a
+   modifier, whose entity is not a target is an effector. That includes an
+   enzyme written on both sides of a one-step catalysis (`E + S → E + P`): its
+   activity does not change, so it is not a target, but it drives the
+   conversion. An effector's sign is the sign of the partial derivative of the
+   rate with respect to it. The derivative is evaluated at the model's own
    parameter values, over a log-uniform sample of species concentrations
    (10⁻³–10³). If the derivative is positive at some points and negative at
    others, the sign is `?`.
@@ -45,8 +60,14 @@ For each reaction:
    inhibitor of the target.
 
 An inactive form (level 0) in a rate law is listed in the extraction notes, not
-counted. Rules, events, unparsable rate laws and reactions that change no
-entity's activity are listed there too, so nothing is dropped silently.
+counted. Rules, events, unparsable rate laws, reactions that change no entity's
+activity and effectors whose derivative could not be evaluated at any sample
+point are listed there too, so nothing is dropped silently.
+
+A `?` model sign still counts as agreement with the module's sign in the diff
+(the same rule the Boolean comparison uses), so the report marks such rows
+`model sign undetermined`. The report also prints the sampling seed and sample
+count; re-run with `--seed` or `--samples` to check whether a `?` is robust.
 
 ## Mapping file format
 
@@ -81,36 +102,14 @@ ai-gene-review compare-module-sbml \
     -m models/kinetic/biomd0000000010/mapping_to_modules.yaml
 ```
 
+Options: `--module-key` (the mapping's `modules:` key, default the module file
+stem), `--seed` and `--samples` (derivative sampling).
+
 ## Models
 
-### biomd0000000010: Kholodenko 2000 MAPK cascade
-
-- **Source:** BioModels [BIOMD0000000010](https://www.ebi.ac.uk/biomodels/BIOMD0000000010),
-  "Kholodenko2000 - Ultrasensitivity and negative feedback bring oscillations in
-  MAPK cascade"; curated BioModels entry. Publication PMID:10712587.
-- **Retrieved:** 2026-11-23 from
-  `https://www.ebi.ac.uk/biomodels/model/download/BIOMD0000000010?filename=BIOMD0000000010_url.xml`.
-- **SHA-256:** `906964e07ffd570ad94a03c1222e230b54b913cd536b008392bfb6155930a966`
-- **Licence:** CC0 1.0 (BioModels public domain dedication).
-- **Species:** annotated to *Xenopus laevis* RAF1 (P09560), MEK1 (Q05116) and
-  MAPK1 (P26696). The MAPKKK species are named "Mos" in the SBML but annotated
-  to RAF1; the mapping follows the annotation.
-- **Compared with:** `modules/erk_cascade.yaml`, on the RAF (MAP3K), MEK and ERK
-  tiers.
-
-Result: all three edges the model asserts on those tiers agree with the module,
-with no sign conflicts and nothing on either side alone. In particular, the
-module's ERK ⊣ RAF feedback appears in the model as MAPK-PP in the
-MAPKKK-activation rate law (reaction J0):
-
-```
-= ERK -| RAF   (model reactions: J0)
-= MEK -> ERK   (model reactions: J6, J7)
-= RAF -> MEK   (model reactions: J2, J3)
-```
-
-The module's other edges (adaptor, SOS, RAS, DUSP, ERK output) involve entities
-the model does not contain, so they fall outside the comparison.
+| Folder | Model | Compared with | Result |
+|---|---|---|---|
+| [`biomd0000000010`](biomd0000000010/README.md) | Kholodenko 2000 MAPK cascade | `erk_cascade` | 3 agree, 0 conflicts |
 
 ## Limits of the current reader
 
@@ -129,3 +128,10 @@ the model does not contain, so they fall outside the comparison.
 - **Only signs are compared.** Strengths, delays and the quantitative
   behaviour the model was built to show (Kholodenko's oscillations) are not
   part of the comparison.
+- **Rate laws are parsed as text.** libsbml writes each rate law as an L3 infix
+  string, which is parsed with sympy's `parse_expr`. That function evaluates
+  Python, so a formula containing anything other than identifier characters,
+  digits, whitespace and arithmetic, comparison and grouping symbols is refused
+  and noted. Piecewise and boolean functions are not translated and end up in
+  the extraction notes as unparsable. `log` follows the SBML L3 convention
+  (`log10(x)`, and `log(b, x)` for log base *b* of *x*), not sympy's.

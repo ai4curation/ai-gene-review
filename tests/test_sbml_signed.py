@@ -8,6 +8,7 @@ path used for BioModels files.
 from pathlib import Path
 
 import pytest
+import yaml
 
 libsbml = pytest.importorskip("libsbml")
 
@@ -15,11 +16,20 @@ from ai_gene_review.module_boolean import SignedEdge  # noqa: E402
 from ai_gene_review.sbml_signed import (  # noqa: E402
     SbmlEntityMap,
     compare_module_to_sbml,
+    format_comparison,
+    require_sbml_dependencies,
     sbml_signed_edges,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
 KHOLODENKO = ROOT / "models" / "kinetic" / "biomd0000000010"
+
+
+def test_missing_dependency_names_the_package_and_install_command():
+    """A plain install without libsbml/sympy must fail with an actionable message."""
+    with pytest.raises(RuntimeError, match="no_such_module_xyz.*install"):
+        require_sbml_dependencies(modules={"no_such_module_xyz": "no-such-package"})
+    require_sbml_dependencies()  # the real dependencies are present in this environment
 
 
 def _write_model(
@@ -172,6 +182,106 @@ def test_reaction_that_changes_no_activity_yields_no_edge(tmp_path: Path):
     result = sbml_signed_edges(model, entity_map)
     assert result.edges == set()
     assert any("move" in note for note in result.notes)
+
+
+def test_enzyme_written_on_both_sides_is_an_effector(tmp_path: Path):
+    """One-step catalysis E + S -> E + P: the enzyme's activity is unchanged, so it
+    is not a target, but it drives the conversion and must yield E -> SUB."""
+    model = _write_model(
+        tmp_path / "catalysis.xml",
+        species=["E", "S", "S_P"],
+        parameters={"k": 1.0},
+        reactions=[("cat", ["E", "S"], ["E", "S_P"], [], "cell * k * E * S")],
+    )
+    entity_map = SbmlEntityMap(
+        entity_of={"E": "ENZ", "S": "SUB", "S_P": "SUB"}, level_of={"S": 0, "S_P": 1}
+    )
+    assert sbml_signed_edges(model, entity_map).edges == {SignedEdge("ENZ", "SUB", "+")}
+
+
+@pytest.mark.parametrize("base", [2, 10])
+def test_two_argument_log_is_base_then_value(tmp_path: Path, base: int):
+    """SBML L3 log(b, x) is log base b of x, increasing in x for b > 1.
+
+    libsbml writes base 10 back as ``log10(x)`` and keeps other bases as
+    ``log(b, x)``, so the two cases exercise different parsing paths.
+    """
+    model = _write_model(
+        tmp_path / "log.xml",
+        species=["S", "S_P", "X"],
+        parameters={"k": 1.0},
+        reactions=[
+            ("phos", ["S"], ["S_P"], ["X"], f"cell * k * S * log({base}, 1 + X)")
+        ],
+    )
+    entity_map = SbmlEntityMap(
+        entity_of={"S": "SUB", "S_P": "SUB", "X": "EFF"}, level_of={"S": 0, "S_P": 1}
+    )
+    assert sbml_signed_edges(model, entity_map).edges == {SignedEdge("EFF", "SUB", "+")}
+
+
+def test_effector_whose_derivative_never_evaluates_is_reported(tmp_path: Path):
+    """If every sample fails, the effector is noted rather than silently dropped."""
+    model = _write_model(
+        tmp_path / "unevaluable.xml",
+        species=["S", "S_P", "X"],
+        parameters={"k": 1.0},
+        reactions=[("phos", ["S"], ["S_P"], ["X"], "cell * k * S * sqrt(-X)")],
+    )
+    entity_map = SbmlEntityMap(
+        entity_of={"S": "SUB", "S_P": "SUB", "X": "EFF"}, level_of={"S": 0, "S_P": 1}
+    )
+    result = sbml_signed_edges(model, entity_map)
+    assert result.edges == set()
+    assert any(
+        "X" in note and "could not be evaluated" in note for note in result.notes
+    )
+
+
+def test_undetermined_model_sign_is_flagged_in_the_report(tmp_path: Path):
+    """A sampled '?' counts as agreement in the diff, so the report must say so."""
+    model = _write_model(
+        tmp_path / "biphasic.xml",
+        species=["S", "S_P", "X"],
+        parameters={"k": 1.0},
+        reactions=[("phos", ["S"], ["S_P"], ["X"], "cell * k * S * X / (1 + X^2)")],
+    )
+    module = tmp_path / "toy.yaml"
+    module.write_text(
+        yaml.safe_dump(
+            {
+                "module": {
+                    "id": "toy",
+                    "parts": [
+                        {"node": {"id": "x_node", "label": "Effector"}},
+                        {"node": {"id": "s_node", "label": "Substrate"}},
+                    ],
+                    "connections": [
+                        {
+                            "source": "x_node",
+                            "target": "s_node",
+                            "connection_type": "CAUSES",
+                        }
+                    ],
+                }
+            }
+        )
+    )
+    mapping = tmp_path / "mapping.yaml"
+    mapping.write_text(
+        yaml.safe_dump(
+            {
+                "modules": {"toy": {"EFF": "x_node", "SUB": "s_node"}},
+                "external": {"EFF": "X", "SUB": ["S", "S_P"]},
+                "activity_levels": {"S": 0, "S_P": 1},
+            }
+        )
+    )
+    comparison = compare_module_to_sbml(module, model, mapping, seed=3, samples=32)
+    assert {str(e) for e in comparison.diff.agree} == {"EFF -> SUB"}
+    report = format_comparison(comparison)
+    assert "model sign undetermined" in report
+    assert "seed=3" in report and "samples=32" in report
 
 
 # ---------------------------------------------------------------------------
