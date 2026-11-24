@@ -113,6 +113,14 @@ thinner than the prose beside it. The rule to carry forward: when a structural s
 because of something a source says, quote that sentence in the slot's own `evidence`, not in a
 note nearby.
 
+A fourth instance turned up in the same round and is worth recording because it is the cheapest
+kind to miss. The PvdO annoton was `id: pvdo_chromophore_oxidase` while its label said
+"oxidation factor" and the module asserts no molecular function for it — an identifier naming an
+enzyme class the module declines to claim. Renamed to `pvdo_chromophore_oxidation_factor`;
+nothing outside this file referenced the old id. Identifiers are machine-readable fields too,
+and this one had been contradicting the prose beside it since the module was written, through
+three rounds of review of exactly that pattern.
+
 ## Open questions for a reader with more sources
 
 1. Ground the PtaA variant from the primary paper (the review's ref 74).
