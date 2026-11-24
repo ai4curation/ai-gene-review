@@ -239,7 +239,7 @@ an `evidence[].statement` explaining what had been missing from the module rathe
 source establishes. That is this file's job, and the history records', and neither belongs in a
 published module that someone else will read without any of this context. An
 `evidence[].statement` should say what the source supports; a `description` should describe the
-biology; the editorial trail goes here. Cleaned out in `ebc052bb0c`'s successor — worth watching
+biology; the editorial trail goes here. Cleaned out in `e5fc71b771` — worth watching
 for, because each instance arrived as a reasonable-looking act of transparency.
 
 ## Open questions for a reader with more sources
