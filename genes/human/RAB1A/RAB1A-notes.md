@@ -16,6 +16,8 @@ RAB1A also contributes to early autophagy. VirA-mediated Rab1 inactivation helps
 
 Secondary routes include Kifc1-dependent minus-end motility of early endocytic vesicles [PMID:21303926, "Rab1a regulates minus-end-directed motility largely by recruiting Kifc1"], integrin beta1 recycling during cell spreading and migration [PMID:20639577, "decreased recycling of integrin beta1 to the plasma membrane"], and ER export of HSV-1 glycoproteins to post-ER assembly compartments during secondary envelopment [PMID:21680502, "In the absence of Rab1a/b, the viral glycoproteins are unable to traffic"].
 
+PMID:25446900 identifies a signaling role rather than another ER-to-Golgi cargo route: amino acids stimulate RAB1A GTP binding and interaction with mTORC1/RAPTOR at the Golgi, and Rab1A overexpression increases mTORC1 signaling and oncogenic growth in a Golgi- and GTP-dependent manner [PMID:25446900, "AA stimulates Rab1A GTP binding and interaction with mTORC1 and Rheb-mTORC1 interaction in the Golgi"]. The current GOA row for MTOR/RPTOR is only bare `GO:0005515 protein binding`, so this review removes the generic binding rows and tracks the mTORC1 biology as a secondary signaling output needing a precise GO modeling decision.
+
 RNF115 restrains a TLR-specific RAB1A route. In that model, RAB1A carries TLR cargoes from the ER to the Golgi; RNF115 K11-ubiquitinates RAB1A and RAB13 near their switch regions and impairs GDI1 recruitment, thereby limiting reuse of the two Rabs [PMID:35343654, "Specifically, RAB1A promotes the trafficking of TLRs from the ER to the Golgi apparatus"].
 
 ## GO-CAM 65692e7e00001822 consistency notes
