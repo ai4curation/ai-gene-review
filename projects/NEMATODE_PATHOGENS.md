@@ -58,6 +58,8 @@ genes:
   - ONCVO/O61359
   - BRUMA/far-1
   - worm/far-1
+  - worm/far-2
+  - ONCVO/far-1
   - BRUMA/cpi-2
   - worm/cpi-2
   - BRUMA/mf1
@@ -219,7 +221,10 @@ broader host lipid-scavenging module.
 
 - [x] `BRUMA` `far-1` / Q93142 - cross-checked the existing review
 - [x] `worm` `far-1` / P34382 - fetched and reviewed the same PANTHER subfamily exemplar
-- [ ] `worm` `far-2` / P34383 - fetch only if needed for paralog-specific comparison
+- [x] `worm` `far-2` / P34383 - fetched and reviewed as a C. elegans FAR
+  paralog outside the FAR-1 PANTHER subfamily
+- [x] `ONCVO` `far-1` / Q25619 - fetched and reviewed as the O. volvulus
+  FAR-1/Ov20 filarial FAR exemplar
 
 ### 4. Secreted immune modulators and exsheathment enzymes
 
@@ -299,18 +304,23 @@ the extracellular oxidant-detoxification boundary is clear.
   `unc-50`, `worm` `unc-74`, `worm` `acr-8`, and `HAECO` `acr-8`
 - [x] Check off the merged GluCl module lane, including six C. elegans GluCl
   reviews and HAECO, BRUMA, and ONCVO parasite exemplars
+- [x] Record the merged GluCl parasite-exemplar module cross-check (#6858)
 - [x] Check off the beta-tubulin/benzimidazole target-family reviews through
   the ONCVO `O61359` review
-- [x] Check off the merged FAR, cystatin/chitinase/astacin, and surface-GPX
-  host-interface reviews through STECR `nas-8`
+- [x] Check off the merged FAR reviews through `worm` `far-2` and `ONCVO`
+  `far-1`
+- [x] Check off the merged cystatin/chitinase/astacin and surface-GPX
+  host-interface reviews through `STECR` `nas-8`
 
 # NOTES
 
 ## 2026-11-24
 
-- `worm` `far-2` remains optional: BRUMA FAR-1 and worm FAR-1 stayed a
-  two-member ligand-binding comparison, and FAR-1 has not yet been joined to a
-  broader multi-part host lipid-scavenging module.
+- The FAR reviews stayed split as ligand-binding gene-family curation: BRUMA
+  and ONCVO FAR-1 plus worm FAR-1 share PANTHER subfamily `PTHR31418:SF7`,
+  while worm FAR-2 is a distinct C. elegans paralog in `PTHR31418:SF19`.
+  These FAR proteins have not yet been joined to a broader multi-part host
+  lipid-scavenging module.
 - The beta-tubulin/benzimidazole target set behaved as a conserved
   target-family lane rather than a reusable multi-step module. The completed
   reviews now cover the C. elegans BEN-1 anchor plus BRUMA, HAECO, TRITR,
