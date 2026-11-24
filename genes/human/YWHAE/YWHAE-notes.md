@@ -22,11 +22,18 @@
   representing hundreds of IntAct client rows as independent molecular functions.
 - Client-specific rows were kept when the paper assayed an interpretable 14-3-3
   mechanism: RIG-I translocon assembly, RNF115 recruitment to ER/Golgi, HSF1 and TAZ
-  sequestration, hnRNP C export, HDAC4/5 binding, HERG/KCNH2 channel regulation, and
-  PMCA1/PMCA3 pump regulation.
+  sequestration, hnRNP C export, HDAC4/5 binding, CDC25C inhibition, NDEL1/LIS1
+  neuronal migration control, HERG/KCNH2 channel regulation, and PMCA1/PMCA3 pump
+  regulation.
 - The two PMCA molecular-function rows were changed from calcium-channel regulation to
-  `GO:0060590 ATPase regulator activity`: PMCA1 and PMCA3 are plasma-membrane
-  Ca2+-transporting P-type ATPases, not calcium channels.
+  `GO:0042030 ATPase inhibitor activity`: PMCA1 and PMCA3 are plasma-membrane
+  Ca2+-transporting P-type ATPases, not calcium channels, and 14-3-3 epsilon inhibits
+  both pumps.
+- Two imported UniProt GOA rows carry wrong references. PMID:1266503 is a 1976
+  anti-brain-antibody paper and does not support the YWHAE-NRIP1 protein-binding row;
+  PMID:12042314 is a p27Kip1 paper and does not support the YWHAE melanosome row.
+  These are recorded as `WRONG_REFERENCE` source defects while the duplicate
+  PMID:17081065 melanosome row remains supported.
 - Rows from broad high-throughput surveys were marked over-annotated when the source was
   only recovery in an mRNA-binding, exosome, focal-adhesion, cadherin, Parkin AP-MS, or
   substantia-nigra proteomics dataset.

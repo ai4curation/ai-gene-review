@@ -23,6 +23,11 @@ from the cached UniProt record, GO-CAM 65692e7e00001822, and cached publications
 - A 2023 study adds hnRNP C as a nuclear client exported by 14-3-3 epsilon to the cytoplasm,
   where it is degraded by the ubiquitin-proteasome system
   [PMID:37599448 "Taken together, these data demonstrated that hnRNP C protein is exported from the nucleus by 14-3-3ε and was ubiquitinated and degraded by proteasomes in the cytoplasm."].
+- 14-3-3 epsilon also has a neurodevelopmental NDEL1/LIS1 arm. The Miller-Dieker
+  syndrome paper showed Ywhae-dependent neuronal-migration defects in mice and connected
+  them to binding of CDK5/p35-phosphorylated NUDEL/NDEL1, maintenance of NUDEL
+  phosphorylation and proper NUDEL/LIS1 localization
+  [PMID:12796778 "14-3-3epsilon binds to CDK5/p35-phosphorylated NUDEL and this binding maintains NUDEL phosphorylation. Similar to LIS1, deficiency of 14-3-3epsilon results in mislocalization of NUDEL and LIS1, consistent with reduction of cytoplasmic dynein function."].
 
 ## Innate immune client pathways
 
@@ -48,7 +53,7 @@ from the cached UniProt record, GO-CAM 65692e7e00001822, and cached publications
   calcium channels. 14-3-3 epsilon binds and inhibits both pumps
   [PMID:18029012 "The effect of the interaction on the activity of the two pumps, and thus on the homeostasis of Ca(2+), was investigated by co-expressing the 14-3-3epsilon protein and PMCA3 or PMCA1 in CHO cells"].
   The existing `calcium channel` molecular-function rows should therefore be replaced by
-  `ATPase regulator activity`.
+  `ATPase inhibitor activity`.
 - 14-3-3 epsilon binds HDAC4 and HDAC5 at phosphorylation sites and holds these class II
   histone deacetylases in the cytoplasm
   [PMID:10869435 "Both HDACs were found to interact with14-3-3 proteins at three phosphorylation sites."].
