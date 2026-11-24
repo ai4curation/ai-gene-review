@@ -33,6 +33,11 @@ Core sources:
   mouse-orthology inference. A local `cache/go/terms.csv` lookup found no exact
   glucose-1,6-bisphosphate phosphatase term, so the gene review records this
   as a physiological knowledge gap instead of proposing a guessed MF term.
+- PMID:29695157 then solved human PMM1 in complex with Mg(2+) and IMP and
+  showed that Arg180/Arg183 support IMP binding and activation of the
+  glucose-1,6-bisphosphate phosphatase switch. This sharpens the open point to
+  whether the structurally supported switch is physiologically relevant in
+  ischemic brain cells.
 - Reactome R-HSA-446201 directly states that cytosolic PMM1 and PMM2 catalyse
   Man6P to Man1P, and R-HSA-446205 places that reaction in synthesis of
   GDP-mannose.
