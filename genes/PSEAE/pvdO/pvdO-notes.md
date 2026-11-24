@@ -1,4 +1,4 @@
-# pvdO (PA2390, Q9I185) — review notes
+# pvdO (PA2395, Q9I185) — review notes
 
 Reviewed alongside `pvdN` and `pvdP` to fill the periplasmic-maturation segment of the
 pyoverdine pathway.
@@ -7,7 +7,7 @@ pyoverdine pathway.
 
 284 residues, `PE   1: Evidence at protein level`, and a genuine formylglycine-generating-enzyme
 fold: `Pfam PF03781 FGE-sulfatase`, `IPR005532 SUMF_dom`, `IPR051043
-Sulfatase_Mod_Factor_Kinase`, with six `FT BINDING` features whose ligand is `Ca(2+)` — the
+Sulfatase_Mod_Factor_Kinase`, with five `FT BINDING` features whose ligand is `Ca(2+)` — the
 metal site of that fold. There is also a dedicated NCBIfam,
 `[file:PSEAE/pvdO/pvdO-uniprot.txt "DR   NCBIfam; NF051459; pyoverdine_PvdO; 1."]`
 

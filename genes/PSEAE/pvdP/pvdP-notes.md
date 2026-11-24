@@ -1,4 +1,4 @@
-# pvdP (PA2386, Q9I188) — review notes
+# pvdP (PA2392, Q9I188) — review notes
 
 Reviewed to fill the pyoverdine periplasmic-maturation segment, which the
 `pseudomonas_pyoverdine_precursor_supply` module explicitly scopes out and which blocks
