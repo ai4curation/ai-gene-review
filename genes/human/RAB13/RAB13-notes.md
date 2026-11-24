@@ -54,8 +54,9 @@ activity, `GO:0006893` Golgi to plasma membrane transport, and `GO:0005794`
 Golgi apparatus. The GTPase and post-Golgi trafficking roles agree with the
 gene-level review. `GO:0005794` is a coarse but acceptable GO-CAM location for
 the Golgi/TGN transport step: the gene review accepts the more specific
-trans-Golgi network row and removes only the historical NOT Golgi row that was
-superseded by later positive TGN localization.
+trans-Golgi-network row and refines the same paper's historical NOT Golgi row
+to a negated cis-Golgi-network statement because PMID:18779367 excluded GM130
+colocalization while positively localizing RAB13 to TGN38/TfnR compartments.
 
 The remaining GO-CAM issues are model evidence and edge semantics, not the RAB13
 annotation itself. RAB13 is relevant to TLR trafficking in PMID:35343654, whereas
