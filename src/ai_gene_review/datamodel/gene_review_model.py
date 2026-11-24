@@ -4412,7 +4412,7 @@ class ProteinComplexDescriptor(CellularComponentDescriptor):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
-    active_units: Optional[list[ComplexUnit]] = Field(default=None, description="""Active units or role-bearing components of the complex. This is used to avoid leaving functionally important complex structure as prose.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProteinComplexDescriptor']} })
+    active_units: Optional[list[ComplexUnit]] = Field(default=None, description="""Active units or role-bearing components of the complex. This is used to avoid leaving functionally important complex structure as prose. The module engine (module_logic) evaluates a complex with active units as a conjunction: the complex step holds in a context only when every listed unit holds, each through its own participant selector. List the units that must all be present, which can be a discriminating subset of the subunits; a unit that is common to unrelated complexes or is not required belongs in prose, not in this list.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProteinComplexDescriptor']} })
     preferred_term: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Descriptor']} })
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['GeneReview',
                        'AlternativeRecordEvidence',

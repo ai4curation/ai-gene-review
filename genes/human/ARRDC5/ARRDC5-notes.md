@@ -22,3 +22,9 @@
 - ARRDC5 lacks PY motifs [PMID:23236378 "With the exception of ARRDC5, all mammalian aArrs have a pair of PY motifs."]. Location IBAs seeded only by ARRDC3 are UNDECIDED.
 - Mouse Arrdc5 membrane (UniProt IDA PMID:37069147, EXP PMID:37997706): the full text of 37069147 has no ARRDC5 membrane statement, and 37997706 is abstract-only. UNDECIDED.
 - ZDHHC19 S-palmitoylates ARRDC5 (PMID:40030029, not cached). This is ZDHHC19 activity, so there is no ARRDC5 annotation.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Endosome IBA (is_active_in, PTN008513893, seeded only by ARRDC3): UNDECIDED kept, dated reason added.
+- ARRDC5 has no localisation data: UniProt only "Membrane" by similarity to mouse Q497K5; PMID:37069147 (full text) could not detect the protein reliably with antibodies and used Arrdc5-eGfp mice for cell-type expression only.
+- Added a WRONG_QUALIFIER CHECK source defect (GO_CENTRAL): no ARRDC5 activity shown in endosomes.

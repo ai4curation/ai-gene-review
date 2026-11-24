@@ -3,6 +3,7 @@ title: "Organelles"
 maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 autolink_exclude: [SUR2, sur2, ACC1, "1.6", old, HSP60, TPR, TIM22, Ca2, CA2, SERCA]
+species: [human, yeast]
 index_group: CROSS_CUTTING
 description: When is a root organelle term (e.g. mitochondrion) informative, versus its membrane or lumen?
 ---
@@ -90,7 +91,8 @@ root organelle terms, and asks whether the same review also has a more specific
 part of that organelle (an `is_a`/`part_of` descendant, from GO via OAK). The
 descendant can be another kept annotation, a proposed replacement or a
 `core_functions` location. Run of 2026-10-18 (after merging main; the
-generated files are authoritative):
+generated files are authoritative; later batch entries in NOTES cite their own
+regenerated runs, human only, so their counts differ from this all-organism table):
 
 | organelle | rows | genes | genes also given a sub-compartment | rows with only the root |
 |---|---|---|---|---|
@@ -340,6 +342,165 @@ plastids come later.
      the sentence even if its row is out of scope: record the re-reading in
      that row's text and leave the action for its own pass (SELENOI, STC2,
      SPG21).
+10. **Peroxisome and lysosome rows** (settled in peroxisome/lysosome batch 1 and lysosome
+    batch 2, 2026-11-21 to 2026-11-22: all 9 human root-only peroxisome genes and all 25
+    lysosome genes with a synthesis row). Rules 7-9 apply; these are the points specific to
+    the two organelles.
+    - **Degradation is not a lysosome location unless the pool exists in an unperturbed
+      cell.** A pool present without blocking the protein's own destruction, reached under
+      its physiological trigger (the endogenous receptor after its own agonist), is the
+      ligand-driven pool of rule 8: real and non-core (CXCR4; for endocytosed surface
+      proteins at the endosome, rule 11 narrows the endogenous-receptor and foreign-cell
+      clauses). A pool seen only when lysosomal degradation is inhibited, with a mutant,
+      after depleting a deubiquitinase, with overexpression in a foreign cell, or that the
+      source itself frames as the place of degradation, is `MARK_AS_OVER_ANNOTATED` on
+      every row of the term (BACE1, GRIN2B, NBR1, SOD1). This sits beside rule 2 rather
+      than against it: rule 2 says a direct-evidence row that cannot resolve the
+      sub-compartment keeps the organelle; here the row is over-annotated because the
+      organelle claim itself does not hold in an unperturbed cell, as with rule 8's
+      perturbation-only evidence. The same holds for a
+      receptor whose cargo, not itself, is degraded (SORL1). Degradation cargo never enters
+      `core_functions` and gets no sub-compartment row, even with its own TM. A function is
+      not part of the test (`located_in` needs none); it decides only whether a kept pool
+      could be core.
+    - **A function at the organelle makes a pool more than cargo**, and can make it core:
+      an activity measured in purified lysosomes (ADA, PLD4), a transport activity in a
+      lysosome fraction (SLCO2A1, non-core because its core activity is at the plasma
+      membrane), FLCN sequestration (GABARAP), organelle transport (ANK2), podosome
+      rosettes (HCK), a client released in the compartment (UNC93B1).
+    - **Lysosome lines.** LAMP1, LAMP2 and LysoTracker do not separate late endosome or
+      endolysosome from lysosome: they carry the root, never a sub-compartment, and when the
+      core activity is shown elsewhere they keep the pool non-core (UNC93B1, RAB9A). An
+      endocytosed cargo marker (LDL) traces the cargo (ARRDC3); a
+      "lysosome-associated" or "lysosome-interacting" compartment that the authors keep
+      distinct is not the lysosome (TNFAIP3); overexpression that enlarges the compartment
+      it is seen on is a perturbed line (RUBCN).
+    - **Recruited and regulated pools are not tethering**: RAB GTPases in a GTPase cycle
+      (RAB7B, RAB8A, RAB9A, RAB9B), PI3P binding (ANK2), a peripheral V-ATPase subunit or
+      mTORC1-regulated binding (CRYAB, UVRAG), regulated ATG8 conjugation (GABARAP), a
+      stress-induced LRRK2-dependent pool (RAB8A). A RAB whose activity acts elsewhere (as
+      for RAB7B and RAB9A, at late endosomes and the TGN) has a lysosome pool that is a
+      recruited stop: `KEEP_AS_NON_CORE`, and a `WRONG_QUALIFIER` `CHECK` on any IBA
+      `is_active_in`; a RAB whose activity is itself shown at the lysosome (RAB7A is the
+      obvious candidate) can be core. A GTPase cycle is recruitment, so no `GO:0098574`
+      unless rule 7's tethering route is met. A prenyl anchor settles membrane versus lumen,
+      but compartment identity is still the weak link (LAMP1 does not separate late
+      endosome from lysosome), so no `GO:0005765` on that evidence.
+    - **Sub-compartments.** None of the 33 genes gained one (34 organelle lists; SOD1
+      was on both). `GO:0005765` needs the protein's own TM plus a lysosome-specific
+      assay on the endogenous protein; a lysosomal pool shown only for overexpressed
+      protein in a non-expressing cell does not count, even for a resident type II enzyme
+      (PLD4). `GO:0043202` needs a signal-peptide protein with a sorting route and a
+      lysosome assay. For the peroxisome, `GO:0005782` needs a PTS plus an import or
+      matrix assay, and `GO:0005778` the protein's own TM or tail anchor plus the
+      endogenous protein at the peroxisome (MFF).
+    - **Peroxisome lines.** Read the PTS1 off the sequence: a UniProt "Microbody targeting
+      signal" MOTIF on a non-canonical tripeptide (IDI1 YRM, IDI2 HRV) is one line at most,
+      and a regex PTS2 match without import data is weak (TKT). Enzyme activity
+      histochemistry is not protein-specific: a protein-specific readable negative wins
+      (XDH); without one, a positive donor abstract gets deference (TKT). Piggyback import
+      (SOD1 on CCS) supports the root with endogenous data, and a co-overexpression import
+      assay licenses no matrix row. A readable result that the activity works without
+      functional peroxisomes makes an accepted pool non-core (IDI1, IDI2).
+    - **Source tracing.** Trace by-similarity donors to the right species with a lookup of
+      the donor accession: three reviews named the wrong species (IDI1, TKT, SLCO2A1), and a
+      by-similarity chain can be circular, with the real ground a separate GO IDA
+      (UNC93B1). An inter-ontology inference (`GO_REF:0000108`) from a lysosomal process to a
+      lysosome location must be traced to the process row behind it (SORL1). A cached
+      "full text" can lack the results (TRIM17).
+    - **Rule 9 refinements.** Curator deference stops at a readable paper only when the
+      claim has no other support: an IDA whose readable paper shows nothing, while the claim
+      has a readable line elsewhere, keeps the claim (all rows on the term alike) and gets a
+      `WRONG_EVIDENCE_CODE` or `WRONG_REFERENCE` `CHECK` defect (RAB9A). Readable evidence
+      in the donor species can rescue an unreadable donor for the root (UNC93B1), as human
+      evidence does (MYH9).
+11. **Endosome rows** (settled in endosome batch 1, 2026-11-23: all 28 human genes whose
+    endosome rows are root-only with a synthesis row). This is the first series organelle
+    (case 4 above). The maintainer extended CLAUDE.md's root-organelle exception to the
+    endosome for this series on 2026-11-23: the root `GO:0005768` is informative and is
+    never `TOO_GENERAL` or `MODIFY`ed to a stage, and a maturation stage (early, late,
+    recycling or sorting endosome, multivesicular body) or a membrane or lumen term is
+    added beside it as a `NEW` row only on two independent unperturbed lines. Rules 7-10
+    apply; these points are specific to the endosome.
+    - **Markers.** Stage lines are EEA1, RAB5 or APPL1 (early); RAB7, LBPA, CD63, RAB9 or
+      M6PR (late or multivesicular); RAB11, RAB4 or internalised transferrin at a stated
+      recycling chase (recycling). LAMP1 and LAMP2 do not separate late endosome from
+      lysosome (rule 10). An internalised tracer (transferrin, EGF, BSA-gold, dextran) is an
+      endosome marker here, unlike for the lysosome where it traces the cargo, but a stage
+      line only with a chase time and a stage marker. A broad marker such as GFP-RhoB that
+      spans early and late endosomes supports the root and no stage. A clathrin marker
+      shows coated pits and vesicles, not endosomes: read what a section heading claims
+      against the marker actually used (ASTN1). Biochemical endosome fractions with no
+      stated marker or controls get deference at most (ATP1A2, CDK2).
+    - **Independent lines.** Two lines are independent when they come from different
+      studies, or from different methods with different reagents. Two preparations in one
+      paper with one antibody and one marker are one line (SLC6A9), and so are four papers
+      from one group on one ectopic system (FGFR4). Lines that disagree by cell type or
+      condition keep the gene at the root (C9orf72: early endosomes in iPSC motor neurons,
+      not in HEK293FT; ABCA1: early in one cell line, late in another). An endogenous GPCR
+      antibody checked only against its blocking peptide was counted, beside a wild-type
+      tagged receptor from another lab (LPAR1 `GO:0005769`).
+    - **Endocytosed surface proteins are the typical pool.** A wild-type receptor or
+      transporter that reaches marked endosomes under its own ligand or by constitutive
+      internalisation is a real, ligand-driven or recycling pool, `KEEP_AS_NON_CORE` when
+      the core activity is at the plasma membrane (CXCR4 precedent), even when the cells
+      are transfected (FGFR4, LPAR1). This narrows rule 10's "endogenous receptor" and
+      "overexpression in a foreign cell" clauses for endocytosed surface proteins: a
+      wild-type receptor, untagged or with a small epitope tag, moved by its own ligand
+      along a route traced with endosome markers counts even in a non-expressing host,
+      because what is observed is the route the ligand drives, not a pool the expression
+      level creates. A large fusion (GFP), a mutant, constitutive overexpression with no
+      ligand trigger, or a compartment seen only beside an overexpressed partner stays
+      under rule 10's clauses. For FGFR4, whose every line is ectopic, MARK_AS_OVER_ANNOTATED
+      was weighed and not taken. Recruited cytosolic proteins get the stricter test:
+      a pool that exists only beside an overexpressed partner is perturbed (GRAP2), and an
+      adaptor or kinase needs a line on the protein itself (GRB2 and JAK1 have one, JAK3 an
+      abstract-level one, JAK2 none). Overexpression of a partner that enlarges endosomes
+      is a perturbed line even for the endogenous protein (BIN1 on RIN3-enlarged vesicles,
+      the RUBCN case applied to a partner).
+    - **Degradation route.** The unperturbed-pool test of rule 10 applies unchanged; what
+      does not carry over is its clause that a pool the source itself frames as the place
+      of degradation is over-annotated. An endosome pool on the normal route to lysosomal
+      degradation is a real pool when seen in unperturbed cells, because passage through
+      endosomes is normal and the early endosome is a sorting station (SLC34A1 after PTH,
+      CDKN1B). Seen only with degradation blocked, it does not count.
+    - **When the endosome is core.** An endocytic receptor whose activity includes ligand
+      release or recycling in the endosome (FOLR1, CUBN), a delivery chaperone that
+      releases its client there (UNC93B1), and the subunit of an endosome-acting complex
+      (ANKRD50 in retromer-WASH, ATP6V1E1 in the V-ATPase) can be core. Membership plus a
+      function at the endosome carries the root without a direct location line, but never
+      a stage or membrane row. An adaptor that sorts cargo to endosomes is not thereby an
+      endosome protein: the endosome may be the cargo's destination, and a marker negative
+      settles it (AP4E1 at the TGN). A cargo phenotype on loss of function (BACE1 trapped
+      in early-endosome tubules without BIN1) shows a site of activity, not a marker for
+      the gene product. The endosome and lysosome rows of one gene can differ in action
+      when the activity is shown in the endosome and only the lysosome's identity is
+      unresolved (UNC93B1).
+    - **Sub-compartments.** Two rows in 28 genes. `GO:0005769` on two independent EEA1
+      lines (LPAR1). `GO:0010008` on the protein's own GPI anchor, an endogenous endosome
+      assay with a tracer, and demonstrated recycling (FOLR1): a GPI anchor sits on the
+      exoplasmic leaflet and sorts to intraluminal vesicles, so anchor plus endosome assay
+      alone would not reach the limiting membrane, and recycling is what places the pool
+      there. This anchor-plus-recycling route is its own route, not the TM or tail-anchor
+      route of rules 7 and 10. A recruited protein needs rule 7's tethering route for
+      `GO:0010009` cytoplasmic side of endosome membrane (or `GO:0098559` cytoplasmic side
+      of early endosome membrane; both checked against GO with OAK, 2026-11-23); none met
+      it.
+    - **Source tracing.** Trace by-similarity and ISS chains to the donor's own row: four
+      of five ended at one experimental row on a rodent ortholog, and paralogs can share
+      one donor study (SLC6A5 and SLC6A9, PMID:12091465), which then needs one shared call.
+      Readable donor-species endogenous evidence rescues a weak donor for the root (OPRM1,
+      SLC6A5, SLC6A9), as rule 9 allows. A stale donor, whose record no longer carries the
+      term, is a different case from an unreadable one (ATP6V1E1). UniProt Endosome items
+      are often untagged; do not read a neighbouring item's tag onto them (BACE2, CDK2,
+      FGFR4). ARBA rules (`ARBA00028568`) and Reactome complex-level endosome events do not
+      put a cytosolic subunit in the endosome. Reactome places such subunits in the
+      endosome lumen (AP4E1, JAK2): those rows are `REMOVE`, and a `WRONG_TERM` `CHECK`
+      records the fix (JAK2).
+    - **Reagents.** An antibody that fails a readable knockout test removes that line but
+      is not a location negative; a later knockdown-checked reagent restores the claim on
+      every row of the term, with a `WRONG_REFERENCE` `CHECK` naming the better paper as a
+      candidate (C9orf72, the RAB9A pattern).
 
 ## Survey under this policy
 
@@ -465,20 +626,126 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
         lysosome list (survey regenerated 2026-11-21); 13 lysosome genes remain
         (PLD4 RAB7B RAB8A RAB9A RAB9B RTL9 RUBCN SLCO2A1 SORL1 TNFAIP3 TRIM17
         UNC93B1 UVRAG)
-  - [ ] Write peroxisome and lysosome rules once the lysosome list is done
-        (lessons so far in the 2026-11-21 NOTES entry); the degradation rule must
-        say how over-annotating a direct-evidence row sits beside rule 3: a pool
-        seen only under perturbation is a claim that the location is not real,
-        not about granularity (as rule 8's perturbation-only evidence)
-  - [ ] GRIN2B and BACE1 keep late-endosome (GO:0005770) rows resting on the same
-        figures that sank their lysosome rows (GRIN2B's SEP-NR2B; BACE1's LAMP2
-        imaging, which cannot separate late endosome from lysosome); revisit in the
-        endosome series
+  - [x] Lysosome batch 2: the last 13 human genes (2026-11-22, #6695); human
+        root-only lysosome list done (25 genes)
+  - [x] Peroxisome and lysosome rule written as rule 10 (2026-11-23), from both
+        batches; it says how the degradation test sits beside rule 2 (the earlier
+        status item named rule 3 by mistake)
+  - [x] Endosome batch 1 (2026-11-23, #6756): all 28 human genes whose endosome rows
+        are root-only with a synthesis row (survey regenerated 2026-11-23; 110 human
+        genes have an endosome row, 74 already with a stage or sub-compartment); the
+        maintainer extended CLAUDE.md's root-organelle exception to the endosome first
+  - [x] Endosome rule written as rule 11 (2026-11-23)
+  - [ ] Propose CLAUDE.md wording that adds the endosome to the root-organelle
+        exception (the maintainer decision is recorded in rule 11; CLAUDE.md still
+        lists the endosome as not covered, so a reviewer reading CLAUDE.md alone would
+        MODIFY an endosome root row). Do this before endosome batch 2
+  - [ ] Add GO:0005768 to FIRST_PASS in `ORGANELLES/scripts/root_organelle_usage.py` so
+        the red-flags page lists endosome rows, ahead of the 74-gene sweep
+  - [ ] Check the 8 human genes whose endosome rows are root-only with direct or TAS
+        evidence only (ACE, AVPR1A, CBLIF, EZR, GIGYF2, IL15, LRBA, RHOA) for rule 11
+        stage candidates
+  - [ ] Endosome batch 2: stage rows that rest on the same evidence as a lysosome row
+        changed in the lysosome batches. GRIN2B (SEP-NR2B figure), BACE1 (LAMP2 imaging
+        that cannot separate late endosome from lysosome), RUBCN (overexpressed
+        GFP-Rubicon), RAB9A (late endosome IDA on the same background sentence as its
+        lysosome IDA), UVRAG (late and early endosome rows on the same unread papers).
+        UNC93B1's endosome rows were settled in batch 1
+  - [ ] Check the 74 human genes that already carry an endosome stage row for stage
+        rows resting on a single line, or on perturbed or LAMP-only evidence
+  - [ ] OPRM1: GOA has two ISS GO:0005768 rows from P97266 (2017 and 2025), the review
+        one; pick up at the next fetch-gene refresh
+  - [ ] UVRAG's GO:0000323 lytic vacuole MODIFY lists lysosome as a replacement while
+        the lysosome row is KEEP_AS_NON_CORE, the shape CLAUDE.md's "replacement must be
+        a claim you would ACCEPT" rule targets; fix ahead of the rest of the vacuole
+        series (likely KEEP_AS_NON_CORE on GO:0000323, or drop lysosome from the
+        replacement list)
+  - [ ] SORL1's GO:1905146 lysosomal protein catabolic process row needs the
+        participation test (sorLA sorts the cargo; it does not degrade it)
+  - [ ] At the next `just local-quote-baseline --prune`, check the RAB7B and RAB9A
+        keys (quotes rewritten in #6695)
   - [ ] MFF's two mitochondrion rows are MODIFY to GO:0005741 from an earlier
         non-ORGANELLES pass, against rule 1; fix in a mitochondrion follow-up
-- [ ] Separate sections for nucleus, endosome and autophagy series, and plastids
+- [ ] Separate sections for nucleus, autophagy series and plastids (endosome: rule 11)
 
 # NOTES
+
+## 2026-11-23 (endosome batch 1: 28 human genes)
+
+The first endosome (GO:0005768) batch and the first for a series organelle (#6756). The
+survey regenerated on 2026-11-23 found 110 human genes with an endosome row; 74 already
+carry a stage or sub-compartment somewhere in the review, and 28 are root-only with a
+synthesis row. The other 8 are root-only with direct or TAS evidence only (ACE, AVPR1A,
+CBLIF, EZR, GIGYF2, IL15, LRBA, RHOA) and were not in scope. All 28 were checked.
+Before the batch the maintainer extended CLAUDE.md's root-organelle exception to the
+endosome (keep the root; add a stage only on two independent lines). Two genes gained a
+sub-compartment row, and endosome rows changed action on 9 genes. The lessons are folded
+into rule 11.
+
+| gene | outcome | evidence |
+|---|---|---|
+| ABCA1 | root; IDA and IEA ACCEPT to KEEP_AS_NON_CORE; endosome out of core_functions | all lines are tagged or overexpressed protein (PMID:24097981, PMID:20025763, PMID:14747463), early in one cell line and late in another; the floppase activity is at the plasma membrane |
+| ANKRD50 | root; IEA stays ACCEPT (core) | the UniProt item is a curator inference; no source images ANKRD50 itself, so the root rests on SNX27-retromer-WASH membership and its recycling function (PMID:25278552) |
+| AP4E1 | root; IEA (ARBA) UNDECIDED to MARK_AS_OVER_ANNOTATED; Reactome endosome lumen REMOVE kept | readable marker negative: AP-4 beta4 with mannosidase II and TGN38, not the transferrin receptor (PMID:10436028); the endosome is where APP goes, not where AP-4 sits |
+| ARRDC5 | root; IBA stays UNDECIDED; WRONG_QUALIFIER CHECK | IBD seeded only by the paralog ARRDC3; no ARRDC5 localisation data (PMID:37069147) |
+| ASTN1 | root; IBA and IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED; conditional WRONG_QUALIFIER CHECK | only co-transfection with GFP-RhoB in HEK293T; the "endogenous" neuron experiment used a clathrin marker (PMID:20573900) |
+| ATP1A2 | root; IEA stays KEEP_AS_NON_CORE | rat donor RGD IDA: endogenous alpha2 in an endosome fraction moving to the surface on stretch (PMID:16893515, abstract); UNDECIDED is the alternative |
+| ATP6V1E1 | root; ISS stays ACCEPT (core) | the bovine donor no longer carries the term; V-ATPase membership and endosome acidification carry it (PMID:28065471, PMID:33065002) |
+| BACE2 | root; IBA and IEA stay ACCEPT (core) | PMEL cleavage in endosomal melanosome precursors (PMID:23754390); the UniProt Endosome item is untagged |
+| BIN1 | root; IEA and ISS ACCEPT to KEEP_AS_NON_CORE; isoform CHECK | mouse donor (PMID:12668730); a recruited BAR adaptor; the RIN3 data are on overexpression-enlarged vesicles (PMID:32552912) |
+| BIRC6 | root; IEA and IDA ACCEPT to KEEP_AS_NON_CORE | curator deference to an abstract that says only "vesicular system" (PMID:18329369) |
+| C9orf72 | root; IBA, IDA and IEA UNDECIDED to KEEP_AS_NON_CORE; WRONG_QUALIFIER and WRONG_REFERENCE CHECKs | endogenous C9ORF72 with a knockdown-checked antibody in RAB5/EEA1 endosomes of iPSC motor neurons (PMID:29400714); the cited antibody failed a knockout test (PMID:30075745); no stage row, because HEK293FT data disagree |
+| CDK2 | root; IEA and IDA stay KEEP_AS_NON_CORE | hepatic endosome fractions with no stated controls (PMID:21262353, abstract); deference |
+| CDKN1B | root; IEA stays KEEP_AS_NON_CORE | mouse donor: purified endosomal fractions and EEA1 colocalisation (PMID:20228253, abstract); a degradation-route pool seen unperturbed |
+| CUBN | root; IEA and EXP stay ACCEPT (core) | an endocytic receptor at the surface and in endosomes (PMID:14576052) |
+| FGFR4 | root; IEA ACCEPT to KEEP_AS_NON_CORE | a ligand-driven recycling pool in four abstracts from one group, all transfected (PMID:10564275, PMID:16091423, PMID:24589086, PMID:27615514); no recycling row |
+| FOLR1 | root; EXP and IEA stay ACCEPT (core); NEW IC GO:0010008 endosome membrane | GPI anchor (PMID:2527252), endogenous immunogold in endosomes and recycling to the surface (PMID:8567728, full text PMC2120708) |
+| FSHR | root; IEA stays KEEP_AS_NON_CORE | rat donor RGD IDA (PMID:12907758, abstract); the earlier "APPL1 endosome" reading withdrawn, since PMID:24375413 assigns FSHR endosomes by size only |
+| GRAP2 | root; IDA and IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | the only line is Myc-GrpL beside overexpressed HD-PTP, which defines the "large endosomes" itself (PMID:21179510) |
+| GRB2 | root; IDA and IEA stay KEEP_AS_NON_CORE | the cited paper is the GRAP2 line; the claim holds on GRB2-YFP replacing endogenous GRB2 entering endosomes after EGF (PMID:24259669) |
+| JAK1 | root; IEA and TAS stay KEEP_AS_NON_CORE | endogenous phospho-JAK1 in EEA1-immunoisolated endosomes (PMID:20028207); ARBA and the Reactome event supply no line |
+| JAK2 | root; IEA (ARBA) KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED; Reactome lumen REMOVE kept with a WRONG_TERM CHECK | no source places JAK2 itself in endosomes; the cited paper localises TpoR (PMID:15899890) |
+| JAK3 | root; IEA and TAS stay KEEP_AS_NON_CORE | abstract deference: JAK3 with gamma-c in endosomes, probably in COS and HeLa cells (PMID:15143194); the weakest JAK line |
+| LPAR1 | root; IEA and IDA stay KEEP_AS_NON_CORE; NEW IC GO:0005769 early endosome | endogenous LPAR1 with EEA1 in PC3 cells (PMID:24657741); FLAG-LPA1 to APPL1 then EEA1 endosomes after LPA (PMID:23145131) |
+| OPRM1 | root; IEA and ISS stay KEEP_AS_NON_CORE | guinea-pig donor: endogenous myenteric MOR in endosomes after etorphine (PMID:8799185); GOA has a second ISS row the review lacks |
+| SLC34A1 | root; IEA stays KEEP_AS_NON_CORE | rat donor: endogenous NaPi-IIa through EEA1 endosomes after PTH (PMID:16514432); a degradation-route pool seen unperturbed |
+| SLC6A5 | root; ISS stays KEEP_AS_NON_CORE | rat donor is GFP in PC12 (PMID:12091465); rescued by endogenous GLYT2 in Rab11 endosomes in brainstem (PMID:19374720) |
+| SLC6A9 | root; IEA and ISS stay KEEP_AS_NON_CORE | same donor study; rescued by endogenous GlyT1 with EEA1 in retina (PMID:26418248); one study, so no stage row |
+| UNC93B1 | root; IBA, IDA, IEA and ISS stay ACCEPT (core); endosome added to core_functions | mouse full text: TLR9 released from Unc93b1 in Lamp1+ endosomal fractions with internalised CpG (PMID:31546247); its lysosome rows stay non-core |
+
+Review follow-ups in the same PR: FOLR1's membrane row cites the recycling and says why
+the anchor alone is not enough; ASTN1's qualifier query is conditional; an unsourced
+claim about GADS expression in HeLa was dropped from GRAP2; FSHR's notes no longer state
+the withdrawn APPL1 reading; FGFR4's endosome row no longer quotes the deep-research
+report; FOLR1's immunogold quote now has the source's colon in all five rows (double
+quoted, since a bare ": " breaks YAML, which is probably how the comma reached main).
+
+Lessons are folded into rule 11.
+
+## 2026-11-22 (lysosome batch 2: the last 13 human genes)
+
+The last 13 human genes from the 2026-11-21 survey whose lysosome (GO:0005764) rows are
+root-only with a synthesis row (#6695). No gene gained a sub-compartment row. Lysosome rows
+changed action on 9 genes. With batch 1 this completes the human lysosome list (25 genes)
+and, with the 9 peroxisome genes, rule 10.
+
+| gene | outcome | evidence |
+|---|---|---|
+| PLD4 | root; IEA stays ACCEPT (core) | BMP synthase activity in affinity-isolated lysosomes, catalytic mutants inactive but lysosomal, Pld4 KO loses spleen BMP (PMID:39423811); acid pH optimum (PMID:30111894); no GO:0005765, the lysosomal pool is shown only for overexpressed protein |
+| RAB7B | root; IBA, IEA and IDA ACCEPT to KEEP_AS_NON_CORE; lysosome out of core_functions; WRONG_QUALIFIER CHECK on the IBA | two abstract-only papers call it lysosome-associated (PMID:15144907, PMID:20375062); its activity is late endosome-to-TGN transport |
+| RAB8A | root; IEA stays KEEP_AS_NON_CORE | endogenous Rab8a on LRRK2-positive lysosomes after chloroquine, recruiting EHBP1/EHBP1L1 (PMID:30209220): a stress-induced pool with a function |
+| RAB9A | root; IBA and IDA ACCEPT to KEEP_AS_NON_CORE; WRONG_QUALIFIER CHECK on the IBA; WRONG_EVIDENCE_CODE CHECK on the MGI IDA | the IDA paper's only lysosome statement cites a review (PMID:15078902); EGFP-Rab9A on LAMP1 lysosomes (PMID:20937701); activity at late endosomes |
+| RAB9B | root; IBA ACCEPT to KEEP_AS_NON_CORE; WRONG_QUALIFIER CHECK | no data of its own; same PAINT node and evidence as RAB9A |
+| RTL9 | root; the review's own NEW row kept | an RTL9-mCherry knock-in is in microglial lysosomes and needed for zymosan degradation (PMID:37834332); LysoTracker only, so no sub-compartment |
+| RUBCN | root; EXP and IEA ACCEPT to KEEP_AS_NON_CORE; lysosome out of core_functions | the curated line is from an abstract-only paper (PMID:19270696); the readable data are overexpressed Rubicon on compartments the overexpression enlarges (PMID:19270693) |
+| SLCO2A1 | root; IEA and ISS stay KEEP_AS_NON_CORE | the mouse donor (not rat): endogenous Oatp2a1 with Lamp1, and PGE2 uptake by a light-lysosome fraction (PMID:26474801); core activity at the plasma membrane |
+| SORL1 | root; IEA KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED | an inter-ontology inference from a lysosomal-catabolism process row; the cargo, not sorLA, is degraded, and only seen when hydrolases are inhibited (PMID:26858303); UniProt has no lysosome item |
+| TNFAIP3 | root; IEA ACCEPT to MARK_AS_OVER_ANNOTATED; UniProt CHECK defect | the authors place A20 in a "lysosome-interacting" compartment they keep distinct (PMID:18952128, PMID:18329387) |
+| TRIM17 | root; EXP and IEA ACCEPT to KEEP_AS_NON_CORE; lysosome out of core_functions | curator deference: the cached paper (PMID:27562068) holds no results |
+| UNC93B1 | root; IBA, IEA and ISS ACCEPT to KEEP_AS_NON_CORE | mouse full text: Unc93b1 releases TLR9 in Lamp1+ endosomes (PMID:31546247); LAMP1 alone does not separate them from lysosomes, and the core activity is at the ER |
+| UVRAG | root; IDA and IEA ACCEPT to KEEP_AS_NON_CORE; lysosome out of core_functions | curator deference to two unreadable papers whose abstract leans to Rab9-positive endosomes (PMID:18843052, PMID:19270696) |
+
+Lessons are folded into rule 10.
 
 ## 2026-11-21 (peroxisome and lysosome batch 1: 20 human genes)
 

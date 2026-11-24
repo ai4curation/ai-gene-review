@@ -11,7 +11,10 @@ from pathlib import Path
 import re
 
 import yaml
+import functools
 from ai_gene_review.module_logic import compile_node, is_satisfied, _atom_from_annoton
+# This audit expands protein_complex active_units itself, so it compiles one atom per complex annoton.
+compile_node = functools.partial(compile_node, expand_complexes=False)
 
 ROOT = Path(__file__).resolve().parents[2]
 SLUG = 'bacterial_choline_to_glycine_betaine_biosynthesis'
