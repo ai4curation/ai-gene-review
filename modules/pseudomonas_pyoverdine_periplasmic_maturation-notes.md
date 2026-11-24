@@ -261,6 +261,33 @@ belongs in the pre-push check alongside the quote run, not in the set of things 
 And the correct home for all six already existed — this file carries every one of those points,
 in fuller form, which is what makes their presence in the YAML redundant as well as wrong.
 
+### The parallel-instance miss, three times
+
+Round 4 named it: a flagged instance is a sample, so re-read the whole field. It has still
+happened three more times, each in the commit that was applying the lesson elsewhere.
+
+- Round 8: grounding PvdO's PANTHER rationale left PvdN's identical rationale in prose.
+- Round 9: grounding PvdP's `NF051454` left PvdO's `NF051459` short-name claim in prose, and
+  grounding PvdN's PANTHER line left its class-V fold description ungrounded.
+
+All now cited. The pattern is specific enough to act on: when a fix grounds a claim for one
+participant, the same claim shape almost certainly exists for the other two, because the three
+parts were written in parallel from the same template. **Grep the sibling descriptors before
+pushing the fix**, not after the next review.
+
+### A deleted gloss can come back under its own replacement
+
+Round 6 removed "a di-copper centre is the canonical tyrosinase active site" as the module's
+enzymology rather than a source's. Round 9 restored the di-copper *domain* with real grounding —
+and carried the word "canonical" back in with it, in two places. The grounding was new and
+correct; the gloss on top of it was the same unsourced claim, re-entering under cover of the
+fix that had been asked for.
+
+Now stated as the module's own inference: the record has the di-copper centre domain, tyrosinase
+active sites are built on one, and the connection between those two facts is the module's to own
+rather than either record's to assert. Worth watching for generally — a restored claim arrives
+with its old phrasing attached, and the phrasing may have been the part that was wrong.
+
 ### Attribute to the right structure within a deposition set
 
 The restored copper claim said UniProt records the six Cu(2+) residues "from" the 2.11 Å
