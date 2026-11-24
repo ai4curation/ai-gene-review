@@ -60,8 +60,10 @@
    T cell chemotaxis (IDA) in QuickGO; the query returned CCL19's own GO:0002407 as a positive control.
    CCL21 has no lymphocyte chemotaxis row either, a likely gap for its review.
 4. REMOVE: protein binding (MEOX2 Y2H); eosinophil chemotaxis IBA (CCL19 does not attract granulocytes);
-   cellular response to prostaglandin E and response to nitric oxide (the DCs respond, CCL19 is the
-   chemoattractant); cellular response to virus IMP (full text: only galectin-9 was perturbed).
+   cellular response to virus IMP (full text: only galectin-9 was perturbed). Cellular response to
+   prostaglandin E and response to nitric oxide (the DCs respond, CCL19 is the chemoattractant) are
+   MARK_AS_OVER_ANNOTATED rather than removed: both papers are abstract-only here, so the attribution
+   stays a PROBABLE/CHECK query (revised after PR review).
 5. Mouse ISS rows describing indirect T-cell outcomes of DC maturation (T cell costimulation, T cell
    proliferation, Th1 differentiation, immunological synapse, glycoprotein biosynthesis) are
    MARK_AS_OVER_ANNOTATED; direct DC responses are kept as non-core.
