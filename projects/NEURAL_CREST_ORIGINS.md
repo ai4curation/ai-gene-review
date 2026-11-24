@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [XENLA, human, CIOIN]
 genes: [foxd3-a, sox10, snai2, sox9-a, twist1, ets1-a, myc-a, id3-a, sox8, pax3-a, zic1, MSX1, TFAP2A, hes4-a, gbx2, pou5f1.1, lin28a, snai1, sox2, sox3-a, TFAP2B, TFAP2C, PAX7]
+index_group: OTHER_ORGANISM
 ---
 # Project NEURAL_CREST_ORIGINS: the gene regulatory network that made the vertebrate head
 

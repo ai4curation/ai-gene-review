@@ -11,3 +11,10 @@ Manual evidence check:
 - PMID:17367808 defines the E. coli OGDH complex as SucA/E1o, SucB/E2o, and LpdA/E3. The lpd TCA-cycle row is therefore sound even though the paper structurally focuses on SucA.
 - PMID:24580753 supports hydrogen-peroxide sensitivity from loss of LpdA but is phenotype-level evidence; it does not make oxidative stress response a core function.
 - The zinc-binding annotation from PMID:11985624 is not verifiable from the cached abstract, which lists several identified zinc-binding proteins but not LpdA by name.
+
+## 2026-11-10 glycine cleavage module completion pass (Claude, AI-assisted)
+
+- Every row now carries a verbatim supporting quote; truncated UniProt quotes were completed to the end of the claim.
+- Broad parent rows shared across the module's P/H/T/L reviews were harmonized: glycine metabolic/catabolic process (and amino acid metabolic process) -> MODIFY to GO:0019464; for the L proteins 2-oxoglutarate metabolic process and tricarboxylic acid cycle -> MODIFY to GO:0120551, generic oxidoreductase parents -> MODIFY to GO:0004148, FAD binding ACCEPT.
+- Zinc ion binding (IDA, PMID:11985624, abstract only) resolved as MARK_AS_OVER_ANNOTATED: gel-blot Zn(II) screen; no zinc site or role in the E3 mechanism.
+- Cytoplasm rows -> MODIFY to the retained GO:0005829 cytosol; membrane (HDA) -> MODIFY to the retained GO:0005886 plasma membrane (the UniProt line gives a peripheral inner-membrane pool). Same rule as the module notes.

@@ -17,6 +17,8 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/FWa7DRJiqJvUFZNxGvrErV
       title: Project brief
+index_group: CROSS_CUTTING
+description: ProtNLM, BioReason, DeepECTransformer, Affinage, and annotation-transfer reviews
 ---
 # Function Prediction Evaluation
 

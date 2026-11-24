@@ -16,6 +16,13 @@ MOD_PROVIDER: Dict[str, Tuple[str, str]] = {
     "Xenbase": ("xenbase", "Xenbase"),
 }
 
+# MODs whose Alliance MOD_provided_gene_description is not a description of gene
+# function, so no deep-research file is written for them. See
+# projects/MOD_DESCRIPTIONS.md ("Mouse (MGI): not used").
+UNUSED_MOD_NOTES: Dict[str, str] = {
+    "MGI": "MGI's note summarises mutant allele phenotypes, not gene function",
+}
+
 
 def is_mod_description_file(name: str) -> bool:
     """True for a ``GENE-deep-research-<mod>.md`` MOD gene description file.

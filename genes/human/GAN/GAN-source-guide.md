@@ -1,0 +1,37 @@
+# GAN evidence and source guide
+
+Gigaxonin recruits selected substrates to CUL3–RBX1 ubiquitin ligase complexes. Its substrate-adaptor role supports protein ubiquitination, proteasomal turnover and intermediate-filament organization. The review also retains evidence for MAP1B-dependent microtubule localization and stabilization. These findings do not establish autonomous ligase catalysis, motor activity or direct tubulin binding.
+
+The [review](GAN-ai-review.yaml) contains 32 original annotation contexts: 14 ACCEPT, five MODIFY and 13 REMOVE. Three cytoplasm claims are refined to cytosol, cytoskeleton location to microtubule cytoskeleton, and cytoskeleton organization to two supported processes. Generic protein-binding removals preserve the positive interaction evidence. No new annotation is proposed. The [evidence file](GAN-source-evidence.yaml) preserves the original records and source locators; the [journal](GAN-notes.md) preserves the dated reasoning and changes.
+
+## Mechanistic evidence
+
+- [PMID:37903270](https://pmc.ncbi.nlm.nih.gov/articles/PMC10636361/) provides purified reconstitution with E1, E2, neddylated CUL3–RBX1, human GST-gigaxonin and defined substrates. NEFL, INA, TPM1, TAGLN and CNN2 occur in the purified assay; TPM2 is not added to that list from its broader cellular evidence. Main Results/Methods and selected supplementary reagent-table material were read. Purchased GST-gigaxonin identity does not establish its exact construct boundaries.
+- [PMID:12147674](https://pmc.ncbi.nlm.nih.gov/articles/PMC2173828/) shows full-length tagged GAN with MAP1B light chain along microtubules in cotransfected COS-7 cells, and endogenous gigaxonin/MAP1B colocalization in mouse DRG neurons and sciatic nerves. Cotransfection protects microtubules from colchicine-induced disassembly. The isolated Kelch-domain experiment on actin stress filaments is a separate construct result. Main prose, Results, Methods and textual captions were read; images were not independently inspected.
+- PMID:23585478, PMID:31944090 and PMID:37043392 support intermediate-filament clearance, soluble-pool control and organization. PMID:26460568 supplies binding evidence. Binding alone is not evidence that intact GAN localizes along filaments. The transport phenotype and kinesin-tether rescue do not identify GAN as the motor adaptor. PMID:40749357 further distinguishes effects on soluble vimentin from effects on filament morphology.
+- The acquired PMID:23585478 full text was read selectively for Results and IP/ubiquitination Methods. Vimentin ubiquitination was not detected and TBCB levels were unchanged in those assays; those conditions do not negate later reconstitution with selected substrates. PMID:16227972 and PMID:16303566 supply abstract-level MAP1B/TBCB turnover evidence; their complete Methods were not read.
+- PMID:15983046 includes GAN1 ubiquitination. Being modified is not itself participation in substrate ubiquitination; the independent reconstitution establishes the adaptor role. PMID:19424503 reports cytoplasmic GAN-1 as data not shown. The more precise cytosol placement comes from the GAN-bearing Reactome complex model, corroborated by diffuse staining, rather than an independently inspected IDA image.
+
+Individual reference assessments distinguish selected reading from source availability. A full-text flag does not mean every image, section or supplement was inspected. For example, PMID:27000625 is now available in full, while the recorded reading remains its abstract and Figure 1–4 captions. Mouse DRG phenotypes are not direct human mitochondrial-transport activity.
+
+## Locations, processes and models
+
+The inspected GO paths are `GO:0005829 part_of GO:0005737`, `GO:0015630 is_a GO:0005856`, and both `GO:0045104 is_a GO:0007010` and `GO:0000226 is_a GO:0007010`. The microtubule term includes associated proteins. The process refinements retain separate intermediate-filament and microtubule evidence, without narrowing further to spatial filament-meshwork organization from clearance data alone.
+
+The single core retains substrate-adaptor activity. Its cellular facets are protein ubiquitination, proteasome-mediated ubiquitin-dependent protein catabolism and intermediate-filament organization. The first two are not ancestors of one another under the inspected is_a/part_of closure. No new annotation is manufactured by describing these supported core roles.
+
+Five Reactome event-to-component chains reach human GAN entity [976014](https://reactome.org/content/detail/R-HSA-976014), reference Q9H2C0, in cytosol. Intermediate sets and relations are retained in the evidence file. Complex membership does not assign GAN the catalytic work of neddylation, deneddylation or CAND1 exchange.
+
+## Products, phylogeny and interactions
+
+The official human Q9H2C0 sequence has 597 residues and no declared alternative product. Partner suffixes identify partner isoforms, not GAN products. Engineered fragments remain distinct from the full-length sequence. PMID:19818708's selected original describes GAN 1–258, while the UniProt bibliography gives 1–254; the discrepancy is preserved.
+
+The four incoming PAINT assertions use the [PANTHER19 PTHR24412 book](https://data.pantherdb.org/PANTHER19.0/books/PTHR24412/tree.tree), distinct from the current PTHR45632:SF17 classification. The exact human sequence maps to AN1997/PTN002521105 below assertion node AN25/PTN001561260. Original IBD lines, donor sets and target path are retained, with no negative assertion found on that path. Target self-evidence is legitimate descendant grounding. The compact evidence contains the route and assertions; the complete family files are retained privately. Family-release reconciliation remains a provenance question in the journal.
+
+Original BioPlex 2/3 GAN–NUDCD3 rows, the NDEx U2OS AP-MS edge and exact IntAct partner/method records are preserved with locators. These cellular associations are not purified affinity measurements. The [recovered PMID:15778465 original](https://www.researchgate.net/publication/7957504_Targeted_Proteomic_Analysis_of_14-3-3_a_p53_Effector_Commonly_Silenced_in_Cancer) contains the GAN Table I row; its percentages are sequence coverage, and repeated EGF columns are not new conditions. Selected Methods, opening Results, caption and footnote were read. PMID:25036637 has a partial extraction despite its full-text flag; additional selected prose and the IntAct LUMIER pair are available. Two purported spreadsheet downloads were HTML, so no workbook-cell verification is claimed. Haenig and PMID:36931259 retain abstract/curated-record limits.
+
+## Record preservation
+
+The evidence table reconstructs all 32 original QuickGO records, including nulls, dates, qualifiers and donor order. Saved joins connect each record to the export and actual generated review row. All 16 export columns and the 597-residue sequence were reconciled. There are no NOT records or extension atoms, and no inherited GAN review or journal was present.
+
+All 38 source files are preserved: 20 reused from main and 18 acquired publications/Reactome records. An initially projected but absent PTHR45632 PAINT filename was excluded rather than filled with an empty file. Six existing excerpts remain unchanged and match their sources. The append-only journal records earlier stages; the current amendment and its checks are documented in a new history record.

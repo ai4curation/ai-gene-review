@@ -11,3 +11,7 @@ Decisions: GARP and EARP complex ACCEPT; ND MF row MODIFY to vesicle membrane te
 
 Deep research: falcon completed (genes/DROME/Vps51/Vps51-deep-research-falcon.md) after the review was first committed; checked for consistency.
 - Deep research (falcon) agrees: fly evidence for Vps51 is limited to co-purification with the other GARP subunits on Arl5-GTP; no Vps51 mutant phenotype is reported.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[4], GO:0003674 molecular_function (ND, ACCEPT): may be stale. Fly papers identify Vps51 as a GTP-selective interactor of Arl5 (PMID:25795912, affinity purification from head lysate and Arl5-liposome purification from S2 cytosol) and of Rab4 (PMID:25453831, Rab-GTP affinity chromatography in S2 cells). This is fly literature identifying a small GTPase binding activity (complex-level co-purification; direct contact not mapped), so the ND may no longer hold. Action left unchanged pending curator review.

@@ -13,3 +13,10 @@
 ## Review decisions
 - All 11 GOA rows accepted (CAF-1 complex, nucleosome assembly, replication-dependent chromatin assembly, chromatin/nucleus, IC contributes_to histone binding).
 - Core function: contributes_to H3-H4 histone complex chaperone activity in CAF-1.
+
+## 2026-11-01 follow-up: Notch signaling (FlyBase description)
+
+- FlyBase says Caf1-105 contributes to Notch signaling. Verified in Yu et al. 2013 (now cached)
+  [PMID:23942516 "The association of dCAF-1-p105 with Su(H) on chromatin establishes an active local chromatin status for transcription by maintaining a high level of histone H4 acetylation."].
+  Added to the review description. No NEW annotation: a single study, and the role is at target
+  enhancers downstream of signal activation rather than in the core signaling cascade.

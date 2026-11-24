@@ -37,3 +37,28 @@ literature (`modules/bacterial_cytochrome_c_maturation_system_i.yaml`).
   covalent holo-CcmE; CcmB does not transport free heme); GO:0043190 ABC
   transporter complex (as for ccmA).
 - MODIFY: GO:0016020 membrane -> GO:0005886; GO:0017004 -> GO:1903607.
+
+
+## 2026-11-06 system I comparative reassessment
+
+Forms the membrane coupling subunit of CcmABCD, connecting CcmA ATP hydrolysis to heme-chaperone handling and release. The E. coli evidence is distinguished from heterologous ortholog assays and engineered expression constructs.
+
+Read the full 2023 E. coli structures (PMID:37626034), 2025 CcmB efflux work (PMID:40026579) and CcmCD crosslink mapping (PMID:40167305). The studies disagree about the heme conduit. ATP-dependent holo-CcmE release and covalent loading remain supported; heme contact, engineered overexpression, and proposed channel models are distinguished from purified vectorial transport. Broad intracellular heme handoff is not equivalent to membrane translocation. The 2025 review PMID:40460019 is abstract-only and is not used to settle this disagreement.
+
+Specific reassessment: Forms the membrane coupling subunit of CcmABCD, connecting CcmA ATP hydrolysis to heme-chaperone handling and release.
+
+Default Falcon was genuinely attempted and failed with HTTP403 authentication; no provider report was created. Manual literature assessment is recorded here. Original seed rows (including inherited NEW), raw UniProt/GOA, and existing provider files are preserved against original-members-baseline.json. Focused validation and helper history are recorded in the original-panel audit ledger.
+
+Panel source and strain evidence is catalogued in [ccmB-source-analysis/evidence.yaml](ccmB-source-analysis/evidence.yaml); run `.venv/bin/python genes/ECOLI/ccmB/ccmB-source-analysis/verify.py` for quote and source-hash checks. The full supplementary PDF remains in ignored cache.
+
+
+## PR6121 round-1 evidence correction (2026-11-06)
+
+- Generic membrane refinement now cites curated inner-membrane topology, not a heme-release quote.
+
+Current GO definitions were checked against the official QuickGO API. All original annotation payloads, including authored NEW rows, are preserved. Primary scope and construct limits remain explicit; no raw UniProt/GOA, provider report or publication cache was edited. Scoped comparative proof is recorded in the round-1 audit.
+
+
+## PR6121 reference-finding follow-up (2026-11-06)
+
+Narrowed the top-level finding statements for PMID:40167305 to the claims established by their existing quoted passages. Annotation actions, core functions, quotes and source records are unchanged. The original 52-file handoff remains preserved and verified separately; this edit has a supplemental history and manifest.

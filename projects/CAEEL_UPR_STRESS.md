@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/GhbVGvzpDdWA5Wgpt4KqiD
       title: Project brief
+index_group: WORM
 ---
 
 # C. elegans Unfolded Protein Response & Stress Integration Project

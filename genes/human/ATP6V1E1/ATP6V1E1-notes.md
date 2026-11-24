@@ -86,3 +86,10 @@ association documented above, and sharpens the disease mechanism; no change to c
 
 Net: no change to calls — E1 is the peripheral-stalk (EG) stator subunit supporting
 V-ATPase assembly/coupling and organellar (incl. Golgi) acidification.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Endosome ISS (GO_REF:0000024, 2009, bovine P50518): ACCEPT kept, reason rewritten.
+- The current bovine record (UniProt REST 2026-11-23) lists no endosome, so the ISS donor statement is stale and cannot be traced.
+- The root rests on membership of the V-ATPase (E1 is the somatic peripheral-stalk subunit) and on the endosome-acidification function (Reactome R-HSA-74723, R-HSA-917841; PMID:28065471 abstract; PMID:33065002). Core because acidification acts at the endosome; UNDECIDED is the alternative since no marker-controlled assay places E1 on endosomes.
+- The old reason referred to a "more specific endosome membrane annotation" that does not exist in the review; corrected. No membrane or stage row (no direct line; V1 assembly is regulated, not tethering).

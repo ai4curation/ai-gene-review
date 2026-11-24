@@ -28,3 +28,10 @@ Manual synthesis:
   interaction studies [PMID:15690043; PMID:24561554]. Those rows should not be
   read as false interactions, but they also do not describe Lnt's catalytic
   N-acyltransferase activity.
+
+
+## 2026-11-07 source and ontology audit
+
+Reviewed all original rows, references and core activity. Original annotation payloads/order and historical NEW actions are preserved; no row was added or retired. See `analysis/module_audits/bacterial_lipoprotein_maturation/ecoli-bacsu-consultation/evidence.md` for the complete source/construct and ontology rationale. All genuine Falcon attempts returned authentication HTTP403; manual synthesis is recorded here without creating provider output. Final PAINT lineage inspection reported no IRD/IKR loss; initial cold-cache download races were retried sequentially and logged. Protected publication/provider/raw files remain unchanged.
+
+Replaced protein-name/EC-label support with measured phospholipid-dependent N-acylation. GO:0140186 is lysine-N6/acyl-CoA chemistry and is not a replacement. Retained actual periplasmic catalytic-domain location alongside membrane insertion, without asserting a soluble enzyme.

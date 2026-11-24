@@ -30,3 +30,7 @@ curated family assignment and primary publications. No new GO assertion was adde
 `just fetch-fitness PSEPK phnW` failed because neither a local FEBA database nor
 the remote source was reachable; no artifact was written. This is a data-access
 limitation, not a negative fitness result.
+
+## 2026-11-02
+
+Status promoted to COMPLETE after re-checking both rows against PMID:12107130, PMID:9841125 and the HAMAP-based UniProt record; added the falcon deep-research file as a cross-checked supporting source. No KT2440-specific assay of Q88KT0 exists; the review keeps that distinction.

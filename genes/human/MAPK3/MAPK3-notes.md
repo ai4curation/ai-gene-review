@@ -77,3 +77,42 @@ Replacement MF terms follow the MAPK1 review choices:
 - substrates/high-throughput partners without an informative MF (DHPS, TPR, RPS3, Eps8,
   Nsmf/Jacob, PKM, CDKN2AIP, PNKD, UNG, FAM135B, OTUD7B, MRFAP1L1, KLHL32, CD248, PADI3)
   -> REMOVE (removal does not mean the interaction is false).
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+Rows: GO:0005739 IEA (GO_REF:0000117, ARBA:ARBA00026962) and TAS (PMID:19565474), both located_in, both
+MARK_AS_OVER_ANNOTATED before. No sub-compartment rows.
+
+Checks:
+- ARBA00026962 is a multi-family association rule without its own evidence; not used as support.
+- TAS review PMID:19565474 is abstract-only and does not mention mitochondria.
+- Direct human ERK1 evidence, PMID:19847302 (Galli 2009, HeLa, full text): [PMID:19847302 "we demonstrated the
+  presence of endogenous and recombinant hERK1 in purified non-contaminated mitochondria of HeLa cells"];
+  [PMID:19847302 "Approximately 15% of the hERK1-GFP molecules localized in mitochondria"]; ER contamination
+  checked [PMID:19847302 "5′ nucleotidase and glucose-6-phosphatase were determined in mitochondria from HeLa
+  cells"]. Serum stimulation moves ERK1 out towards the nucleus. Histone partners placed at the OMM by
+  proteinase K; the discussion speculates about matrix/TFAM.
+- Rodent ERK1/2 antibody data: PMID:18545666 (OMM and IMS subfractions), PMID:15030409 (OMM/IMS fraction).
+
+Outcome: both rows MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE. Stays at root (transient trafficking,
+disagreeing sub-mitochondrial lines). References added: PMID:18545666, PMID:15030409, PMID:19847302.
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- Two GO:0005794 rows: IEA GO_REF:0000117 (ARBA00028708) and TAS PMID:19565474 (UniProt), both
+  `located_in`. Changed MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE on both.
+- Check: PMID:16533948 (full text cached) - endogenous ERK1c, an alternatively spliced ERK1 cloned
+  from human cells, co-stains with GM130 and p58 in synchronized mitotic HeLa cells (isoform-specific
+  antibody; signal reduced by ERK1c siRNA), earlier also seen in the Golgi of confluent cells, and
+  drives mitotic Golgi fragmentation. Canonical ERK1 was not detected in the Golgi at any stage ["the
+  Golgi localization was specific to ERK1c, as the more abundant ERK1 isoform was not detected in the
+  Golgi during prophase"]. So the MAPK3 gene product has a real, recruited, functional Golgi pool, but
+  only in the ERK1c form; non-core for the gene.
+- Source defect (UniProt, CHECK, SUSPECTED) on the TAS row: the rows name no isoform. Candidate
+  isoform P27361-3 (named ERK1b in UniProt; 357 aa, C-terminal 40 residues replaced by 18) matches the
+  described structure of human ERK1c, but the mapping was inferred, not checked against the ERK1c
+  cloning paper (Aebersold et al. 2004, not cached). If ERK1c is not among the entry's isoforms the
+  case is MISSING_ISOFORM.
+- PMID:37208329 (Golgi-enrichment-kit fraction in MOLT-4 with a pan-ERK antibody) adds little.
+- MARK_AS_OVER_ANNOTATED was the close alternative (canonical ERK1 is shown absent).
+- No sub-compartment row (p58 and GM130 are one cis line; p58 does not separate ERGIC from cis-Golgi).

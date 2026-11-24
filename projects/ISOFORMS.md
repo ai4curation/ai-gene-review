@@ -13,6 +13,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/7VHDo7VPudGeN5Lo7yzWtU
       title: Project brief
+index_group: MAMMAL
 ---
 # ISOFORMS: Genes with Clear Functional Differences Between Isoforms
 

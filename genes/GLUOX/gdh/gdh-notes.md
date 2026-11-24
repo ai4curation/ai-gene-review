@@ -116,6 +116,121 @@ spent-fluid-catalytic-cracking-catalyst, spent-nickel-metal-hydride-batteries) t
   EcoCyc, EXP, PMID:2228962, with qualifier acts_upstream_of_or_within. The PMID:2228962
   abstract is about cloning and sequencing gcd and does not itself describe the process,
   so it is not quoted as support.
-- GO:0008876 label: GOA uses the newer name "glucose dehydrogenase (PQQ, quinone)
-  activity"; authored slots keep "quinoprotein glucose dehydrogenase activity", the
-  label in the validation ontology version.
+- GO:0008876 label: GOA uses the current name "glucose dehydrogenase (PQQ, quinone)
+  activity". Authored slots originally kept "quinoprotein glucose dehydrogenase
+  activity", the label in the committed term cache; this was changed on 2026-11-23 so
+  that every slot uses GO's current name (see the PR #6790 round-2 note below).
+
+---
+
+**Correction (2026-11-23, issue #6783)**
+
+The review carried a `NEW` row on **GO:0019595 "non-phosphorylated glucose
+catabolic process"** (IC, PMID:20453146), and the same id under
+`core_functions[].directly_involved_in`. That term is **obsolete** in the current
+ontology (verified against QuickGO, GO release 2026-11-21, where it resolves as
+"obsolete non-phosphorylated glucose catabolic process"). GO's obsoletion comment:
+*"This term was obsoleted because it overlaps other GO terms: glucose 1-phosphate
+catabolic process ; GO:0019255 and Entner-Doudoroff pathway ; GO:0061678."* There
+is no `replaced_by`, only those two `consider` targets.
+
+Candidates weighed:
+
+- **GO:0019255 glucose 1-phosphate catabolic process** (live) — rejected. It
+  requires a phosphorylated hexose. No phosphorylated intermediate occurs anywhere
+  in the periplasmic route; mGDH oxidizes free D-glucose directly to
+  D-glucono-1,5-lactone.
+- **GO:0061678 Entner-Doudoroff pathway** (live) — rejected. Its definition is
+  conversion of a carbohydrate "to pyruvate and either glyceraldehyde or
+  glyceraldehyde-3 phosphate by dehydration and aldol cleavage via a gluconate or
+  6-phosphogluconate intermediate". mGDH performs none of that chemistry: it is a
+  periplasmic, membrane-anchored oxidase upstream of and physically separated from
+  any cytoplasmic ED enzymes, and in *G. oxydans* most of its product leaves the
+  cell as gluconic acid. Asserting ED here would fail CLAUDE.md's participation
+  test — the entity that performs the dehydration and the aldol cleavage is not
+  this protein.
+- **GO:0046178 D-gluconate biosynthetic process** — the obvious third candidate,
+  and it is **also obsolete** in the current release, with the comment *"The reason
+  for obsoletion is that D-gluconate is formed as a product of glucose and glucose
+  1-phosphate catabolism, and is not the output of a dedicated biosynthetic
+  process."* Worth recording, because that ruling is what settles the choice: GO
+  itself places the formation of gluconate from glucose **inside glucose
+  catabolism**. (GO:0046177 D-gluconate catabolic process is obsolete too;
+  GO:0019521 D-gluconate metabolic process is live but is a bare metabolic grouping
+  whose only remaining child is the obsoleted biosynthetic term, and it says nothing
+  about glucose.)
+- **GO:0006007 glucose catabolic process** (live) — chosen. It is the direct parent
+  under which the obsoleted GO:0019595 sat, it is true of this enzyme, and GO's own
+  GO:0046178 obsoletion comment licenses it for gluconate formation. Its other live
+  children (GO:0019658 bifid shunt, GO:0061621 canonical glycolysis, GO:0061633
+  transport-coupled glycolytic process, GO:0061718 glucose catabolic process to
+  pyruvate) are all wrong for a periplasmic oxidase, so GO:0006007 is the most
+  specific live term available.
+
+**Decision: the `NEW` row was restated at GO:0006007 glucose catabolic process**
+(evidence, qualifier and quotes unchanged), `core_functions[].directly_involved_in`
+updated to match, and the `reason` rewritten to argue for that term and record why
+each alternative was rejected. The gene's GOA record carries no biological-process
+annotation at all, so the row still adds coverage rather than restating something.
+
+**A `proposed_new_terms` entry was added** ("periplasmic oxidative glucose
+catabolic process", parent GO:0006007), because the granularity was lost to the
+obsoletions rather than to the evidence: the direct, non-phosphorylative,
+extracytoplasmic oxidation of glucose is a real and widespread peripheral pathway
+in the *Acetobacteraceae* and the pseudomonads, and neither obsoletion addressed
+it. GO:0006007 does not distinguish it from glycolysis.
+
+**Elsewhere in the corpus (not edited here).** The same obsolete id is asserted in
+two other places, both of which need the same correction in their own PRs:
+`genes/PSEPK/gcd/gcd-ai-review.yaml` (a `NEW` IMP row, plus
+`core_functions[].directly_involved_in`), and
+`modules/pseudomonad_2_ketogluconate_loop.yaml` (as the module's top-level
+concept). Separately, QuickGO on 2026-11-23 still shows *E. coli* Gcd
+(UniProtKB:P15877) annotated to GO:0019595 from EcoCyc on EXP evidence
+(PMID:2228962, `acts_upstream_of_or_within`) — i.e. GOA has not yet propagated the
+obsoletion, so there is no upstream remapping to follow.
+
+## Review follow-up (2026-11-23, PR #6790 round 2)
+
+**Necessity vs participation on the GO:0006007 NEW row.** The round-1 `reason` argued that
+mGDH catalyses "the first and committing step of glucose breakdown in this organism" and
+that "the route stops when it is removed". Its own quote refutes the second half: the
+mgdH/gdhM mutants of G. oxydans N44-1 "completely consumed the glucose but produced
+neither gluconate nor the secondary products 2-ketogluconate and 2,5-diketogluconate"
+(PMID:20453146). Glucose catabolism therefore continues without mGDH; what stops is
+gluconate and ketogluconate formation. That is necessity-for-an-output evidence, which
+CLAUDE.md warns is indistinguishable from participation evidence in a GAF row and is not
+a substitute for it.
+
+`GO:0006007` is unchanged, but it now rests on the direct-chemistry ground alone: mGDH
+itself oxidizes free D-glucose to D-glucono-1,5-lactone, which is a glucose-catabolizing
+reaction carried out by this protein, so the protein does some of the work of the process.
+That argument holds whatever else the organism can do with glucose. The committing-step
+and route-stops framing is deleted from both the `summary` and the `reason`, and the
+knockout result is now cited explicitly as what it is — a loss of gluconate, not a loss of
+glucose catabolism.
+
+**proposed_new_terms justification (reviewer suggestion 9).** The `supported_by` quote
+proves only that mGDH performs the oxidation and that gluconate is lost without it; it says
+nothing about whether the route needs its own class. The justification now says outright
+that the case for the term is ontological — it rests on the shape of the ontology after the
+GO:0019595 and GO:0046178 obsoletions, and on the breadth of the route across the
+Acetobacteraceae and pseudomonads, for which no systematic survey is cited here. No
+evidence was invented to carry an ontological argument.
+
+**Label convention (reviewer suggestion 6).** This PR previously used two opposite
+conventions for a term GO has renamed since the committed `cache/go/terms.csv` snapshot:
+gdh kept the stale cache label in authored slots, while `genes/human/LMTK3` wrote GO's
+current label for `GO:2001136` and accepted a transient `Label mismatch` warning. The
+convention adopted for both is **GO's current label**, on the ground that the file should
+state the term's real name and that the mismatch disappears when the shared cache is
+refreshed in its own PR (CLAUDE.md requires single-file shared caches to be regenerated in
+dedicated refresh PRs, so the cache is deliberately not touched here). Accordingly the
+authored slots in `gdh-ai-review.yaml` — the `proposed_replacement_terms` on the
+oxidoreductase rows and `core_functions[0].molecular_function` — now read
+"glucose dehydrogenase (PQQ, quinone) activity" instead of the demoted synonym
+"quinoprotein glucose dehydrogenase activity" (QuickGO, checked 2026-11-23: current name
+"glucose dehydrogenase (PQQ, quinone) activity"; "quinoprotein D-glucose dehydrogenase
+activity" and related forms are synonyms). The GOA-sourced row already carried the current
+name, so the file no longer says two different things about one id. Expect a transient
+`Label mismatch for 'GO:0008876'` warning until the cache refresh.

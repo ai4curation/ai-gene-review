@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [EVALUATION, PIPELINE]
 species: [human, mouse, rat, yeast, SCHPO, DROME, NEUCR, ARATH]
 genes: [SSA1, SSA2, SSA3, SSA4, SSB1, SSB2, SSZ1, SLC52A1, CFLAR, HDAC6, PIP4K2A, FZD9, ATG16L2, pmp20, cia30]
+index_group: CROSS_CUTTING
 ---
 # IRD Evidence: How PAINT Uses Inferred from Rapid Divergence
 
@@ -332,8 +333,35 @@ Updated 2026-10-06.
 - [x] Fix the PAINT slicer so IRD nodes are not dropped; refresh the 545 affected slices
 - [x] `just fill-node-evidence`: copy PAINT evidence, negation and loss seeds into every
       node assessment, so new reviews of loss rows no longer fail NODE_POLARITY by omission
-- [ ] Adjudicate the remaining 151 seeded IRD rows (their families have no review yet)
-- [ ] Run the "IRD clade contains a seed of the blocked IBD" check over all IRD rows
+- [x] Adjudicate the 29 seeded IRD rows in families that already have a review (2026-11-14).
+      28 are now node assessments in 24 family reviews (counts after merging main): 13 LOSS_CONTRADICTED, 5
+      LOSS_TOO_BROAD, 7 LOSS_SUPPORTED and 3 UNRESOLVED. Each verdict was checked against
+      the clade's members in the PANTHER tree, not only the seed list. Notable cases:
+      - A gene-level IRD denies ubiquinone biosynthesis to mouse Coq7, although Coq7
+        knockout embryos make no CoQ9 (PTHR11237).
+      - PTN002259328 (PTHR11309) is not an SFRP-only node. It also holds FZD9, FZD10,
+        lin-17 and fz3, so its plasma-membrane and Wnt-receptor IRDs are too broad. This
+        answers the depth question the family review had left open.
+      - Too-broad pairs where one branch keeps the function and the loss belongs on a
+        sibling branch: KCS1/ARG82, ORT1/YMC and MAPDA/ADA2.
+      - The four LOSS_SUPPORTED cytosol IRDs on plastid and mitochondrial enzymes conflict
+        only with crude-fraction proteomics.
+      - The PTHR42902 row is no longer in the PAINT slice, so it was not assessed.
+- [x] Batch 1 of the unreviewed families (2026-11-15): new IN_PROGRESS family reviews for 10
+      families (PTHR11937, PTHR10625, PTHR19139, PTHR19878, PTHR20275, PTHR11207, PTHR12929,
+      PTHR13723, PTHR24073, PTHR10454) holding 25 IRD assessments. Verdicts: 8 LOSS_CONTRADICTED,
+      1 LOSS_TOO_BROAD, 11 LOSS_SUPPORTED and 5 UNRESOLVED.
+      - Many IRDs are sound specificity calls. ARP2, ARP3, ARP6/Arp10 and ARP1 are not
+        cytoskeletal structural constituents. Class IIb HDAC6/HDAC10 work on non-histone
+        substrates. Pos5 and NADK3 are NADH kinases.
+      - Others contradict assays inside the clade: ATG16L2's complex membership, AQP6 CO2
+        transport, RNase III dsRNA binding (Pac1), and the SLC52A1, CFLAR and papilin cases.
+- [ ] Adjudicate the remaining 82 seeded IRD rows in 76 families that have no family
+      review yet (most still need their PANTHER slice fetched first)
+- [x] Run the "IRD clade contains a seed of the blocked IBD" check over all IRD rows:
+      144 of 2,538 IRD rows (5.7%), in 113 families, have an experimental seed of the
+      blocked IBD inside their clade ([ird_seed_check.md](IRD_EVIDENCE/ird_seed_check.md),
+      from `ird_seed_check.py`; 7,386 of 7,393 seeds mapped to UniProt; the 2026-11-14 rerun mapped one seed fewer than the previous 7,387, a change in the UniProt ID-mapping response rather than in PAINT)
 - [ ] Report the fungal Hsp70 refolding IRD (PTHR19375) to PAINT as too broad (drafted in
       [PAINT_REPORT.md](IRD_EVIDENCE/PAINT_REPORT.md), section 1; not yet sent)
 - [x] SSA2–4 gene reviews: note that the accepted refolding IBA was withdrawn upstream.
@@ -348,19 +376,30 @@ Updated 2026-10-06.
 - [x] Add an IRD check to the annotation-reviewer skill: `just paint-losses <org> <GENE>`
       lists the IRD/IKR losses on a gene's PANTHER lineage and the review's rows on each
       blocked term
-- [ ] Add a structured slot for the PAINT loss that withdrew an IBA (for example
-      `paint_loss_node` and `paint_loss_date` on `PropagationReview`). The 24 stale-IBA
-      notes are prose for now, and `paint_report_gene_cases.yaml` restates three of them
-      by hand; with the slot, report section 2 could be derived from the reviews
-- [ ] Revisit SCHPO pmp20 GO:0005777 peroxisome (UNDECIDED): experimentally supported
-      cytosolic/nuclear pools, no canonical PTS, and the PTN000824099 IRD now point the same
-      way, and `projects/ORGANELLES.md` offers keep, MARK_AS_OVER_ANNOTATED or REMOVE for a
-      synthesis row on a root organelle term
-- [ ] Inspect the 20 fully re-annotated IRD rows (the 14 stale overrides are listed in
-      [PAINT_REPORT.md](IRD_EVIDENCE/PAINT_REPORT.md), section 3)
+- [x] Structured slot for the PAINT loss that withdrew an IBA:
+      `review.propagation_review.paint_losses` (node, IRD/IKR, date, and AGREES /
+      CONTRADICTED / TOO_BROAD / UNRESOLVED). All 24 stale-IBA rows carry it; validation
+      checks each entry against the family's paint.tsv; section 2 of
+      [PAINT_REPORT.md](IRD_EVIDENCE/PAINT_REPORT.md) is now derived from it, replacing the
+      hand-maintained case list
+- [x] SCHPO pmp20 GO:0005777 peroxisome and GO:0005739 mitochondrion: UNDECIDED to
+      MARK_AS_OVER_ANNOTATED under `projects/ORGANELLES.md` rule 3. Experimental locations are
+      cytoplasm, cytosol and nucleus, and the PTN000824099 IRD withdraws the IBA's support;
+      the mitochondrion row also notes the missing PRDX5-type transit peptide. The C-terminal
+      SSL is only a weak remark, since PRDX5's equally non-consensus SQL is PEX5-imported.
+      Not REMOVE, because no assay excludes a minor organelle pool
+- [x] Inspect the 20 fully re-annotated IRD rows: none is re-annotated below the IRD
+      node. In 18 an ancestral IBD carries a more specific term the IRD does not block, and
+      in 2 the IRD node itself carries one; each IRD contradicts PAINT's own propagation.
+      Listed in [PAINT_REPORT.md](IRD_EVIDENCE/PAINT_REPORT.md), section 4 (the 14 stale
+      overrides are section 3)
 - [ ] Send the probable IRD errors to PAINT: [PAINT_REPORT.md](IRD_EVIDENCE/PAINT_REPORT.md)
-      (14 family-review cases, 3 gene-review cases, 14 stale overrides), generated by
+      (50 family-review cases, 1 gene-review case, 14 stale overrides, 20 fully re-annotated
+      IRDs), generated by
       `paint_report.py`; drafted, not sent
+- [ ] Check that a declared `paint_losses` node is on the gene's own lineage (as
+      `gene_paint_losses.losses_on_lineage` does), where the family tree is cached; the
+      validator now checks only node, term, code and date
 - [ ] Confirm with PAINT that gene-level IRD rows are no longer exported, then propose the
       wiki update drafted in [GO_WIKI_IRD_PROPOSAL.md](IRD_EVIDENCE/GO_WIKI_IRD_PROPOSAL.md)
       (current USP39 example, with/from convention, propagation, the empty sections)

@@ -97,3 +97,11 @@ The [source guide](ETFB-source-guide.md#structured-core-and-curated-record-suppo
 The retired ARBA mitochondrial context remains a historical review with its matrix refinement, not a requested edit to a current GOA assertion. Its retirement records source absence and does not imply loss of mitochondrial function. The inherited MitoCoP title quotation is retained as provenance; target-level support comes from the previously inspected workbook rows described in the source guide. Earlier dated journal entries and validation counts remain historical checkpoints. Current biological attribution and evidence-access limits are stated in this entry and the source guide.
 
 The revised canonical review passes all six checks; all 65 narrative strings appear in the private rendering. Computed status is DRAFT with 4 advisories: three generic-binding non-core contexts and the supported AMP-binding core term absent from annotation rows under the no-NEW campaign scope. All 27 active contexts, one retired context, 21 original references, one added unchanged-record reference, two ordered cores and 41 inherited quotation anchors remain preserved. Normal source files and the prior history record remain unchanged.
+
+## 2026-11-04 session (Claude, AI-assisted): finished to COMPLETE
+
+- No provider deep research was generated (no API keys).
+- Every supported_by item now has a verbatim quote. Fragmentary quotes were completed to the end of the claim. GO_REF items, which cannot be quoted, were dropped from supported_by.
+- Root-organelle policy: the GO:0005739 mitochondrion rows were changed from MODIFY-to-matrix to ACCEPT. The matrix is kept as the separate GO:0005759 rows.
+- Protein-binding policy: bare GO:0005515 rows that were UNDECIDED or KEEP_AS_NON_CORE are now REMOVE. These were the HSCB, CFTR and LYRM5 partner rows. The S1P/MBTPS1 row (which has the partner subunit in WITH) is now MODIFY to GO:0046982, matching the other ETFA/ETFB partner rows.
+- ETFB: added NEW GO:0016208 AMP binding (IDA, PMID:15159392 structure; UniProt FUNCTION/FT BINDING) so the AMP-binding core function has an annotation row.

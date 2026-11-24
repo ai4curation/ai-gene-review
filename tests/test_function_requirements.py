@@ -246,16 +246,19 @@ def test_interpro_ids_and_labels_match_interpro():
     import json
     import urllib.request
 
-    features = {
-        f["id"]: f["label"]
+    # Keep every (id, label) pair, so a duplicated id with a divergent label is
+    # still checked; fetch each id once.
+    pairs = {
+        (f["id"], f["label"])
         for r in load_rules(RULES_PATH)
         for f in r.get("requires_any_of", []) + r.get("excluded_by_any_of", [])
     }
-    mismatches = {}
-    for ipr, label in sorted(features.items()):
+    names = {}
+    for ipr in sorted({ipr for ipr, _ in pairs}):
         url = f"https://www.ebi.ac.uk/interpro/api/entry/interpro/{ipr}/"
         with urllib.request.urlopen(url, timeout=60) as resp:
-            name = json.load(resp)["metadata"]["name"]["name"]
-        if name != label:
-            mismatches[ipr] = (label, name)
+            names[ipr] = json.load(resp)["metadata"]["name"]["name"]
+    mismatches = sorted(
+        (ipr, label, names[ipr]) for ipr, label in pairs if names[ipr] != label
+    )
     assert not mismatches, mismatches

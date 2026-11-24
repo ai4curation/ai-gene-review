@@ -8,3 +8,22 @@
 - Cytoplasm (GFP survey) [PMID:14562095]. GCN4-regulated [UniProt:P33330].
 - UniProt also lists 4-phosphohydroxythreonine transamination (PLP/pyridoxine pathway in bacteria); in yeast PLP is made by SNZ/SNO, so that reaction is unlikely to be physiological here.
 - Uba1 interaction rows come from HT AP-MS [PMID:11805837; PMID:37968396]; no functional interpretation.
+
+## 2026-11 completion (status COMPLETE)
+
+- IBA rows now cite the PTN000475655 PAINT lines; SER1 (SGD:S000005710) is a
+  seed of the GO:0004648 and GO:0006564 nodes through its own experimental rows,
+  which is expected, not circular.
+- GO:0009070 serine family amino acid biosynthesis (RCA) changed from
+  KEEP_AS_NON_CORE to MODIFY -> GO:0006564: the old reason argued it was only a
+  parent term, which is the MODIFY case.
+- Location rows (cytoplasm HDA/IBA, cytosol RCA) set to KEEP_AS_NON_CORE. The
+  GFP survey cannot resolve cytosol, and cytosol rests only on YeastPathways RCA,
+  so cytoplasm is kept rather than refined; the core function no longer lists a
+  location. (E. coli SerC, with cytosol IDA rows, refines cytoplasm to cytosol.)
+- GO:0009113 purine nucleobase biosynthesis stays MARK_AS_OVER_ANNOTATED: the
+  paper calls the role indirect. [PMID:10509016 "In this study we demonstrate
+  that ade9 plays an indirect role in purine biosynthesis as a non-functional
+  allele of SER1"]
+- Summaries quoted by `interpro/panther/PTHR43247/PTHR43247-review.yaml` were
+  preserved verbatim.

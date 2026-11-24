@@ -33,3 +33,14 @@ reduction and isomerization of incorrect disulfides sit beside, not inside, the
 DsbA oxidase step. Generic DsbA-DsbB and DsbA-PhoA `protein binding` rows are
 real physical intermediates but are less informative than the corresponding
 redox function.
+
+
+## 2026-11-06 independent annotation audit
+
+The original annotation payloads, including inherited NEW proposals, and frozen UniProt/GOA bytes were preserved. Every row and the core synthesis were reassessed. An initial provider-unspecified invocation was rejected by the CLI; the subsequent explicit Falcon request genuinely reached the provider and failed HTTP403 authentication. No provider report was written. PAINT lineage checks completed after retrying a concurrent cache-download race for the E. coli targets; no IRD/IKR loss was found.
+
+Official QuickGO defines GO:0015035 as “Catalysis of the reaction: a protein with reduced sulfide groups = a protein with oxidized disulfide bonds.” Its reversible equation includes physiological protein oxidation despite the reductase label. GO:0015035 is a descendant of GO:0015036 and GO:0016491. GO:0016672 instead specifies a sulfur-containing donor and quinone acceptor; it is not a descendant of GO:0015035 or GO:0009055. These are distinct specificity axes, not interchangeable granularity levels. Definitions and is_a/part_of ancestor responses were saved in the ignored original-five audit cache from https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0015035 and corresponding term/ancestors endpoints.
+
+The oxidative core is directly supported by purified-substrate assays [PMID:1429594: “Purified DsbA markedly stimulated disulfide bond formation of E. coli alkaline phosphatase”] and full-text mixed-disulfide intermediates [PMID:19766568]. A separate assay establishes actual isomerization by reduced DsbA [PMID:8155639: “This conversion is the result of breaking and re-forming two disulfide bonds.”; “Kinetic analysis of the reaction yielded a Km of 43 microM and a kcat of 0.2 min-1.”]. The quantitative catalysis and undetectable uncatalyzed reaction warrant KEEP_AS_NON_CORE, not deletion or replacement of the isomerase claim. The reduced-enzyme preparation and artificial IGF-I substrate bound the observation; no native IGF-I pathway is inferred. The full-text native study assigns DsbA mainly to oxidation and DsbC to isomerization [PMID:8917542]. The original1934062 full text remains inaccessible, so the review does not claim it excludes rearrangement. Antibiotic-response rows remain UNDECIDED: the7628442 abstract discusses DsbD and other dsb mutants, while the exact DsbA assay table was not recovered; title focus is not proof of misattribution.
+
+Current action counts: {"ACCEPT": 8, "KEEP_AS_NON_CORE": 2, "MODIFY": 4, "NEW": 1, "REMOVE": 2, "UNDECIDED": 2}.
