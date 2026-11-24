@@ -35,6 +35,9 @@ It does not hold, and the row gets another action, when:
   gene being one of its own seeds are not reasons to doubt an IBA;
 - the term is true but less specific than the evidence supports: `MODIFY` to a
   supported descendant, or keep it when it is as precise as the evidence allows;
+- the term is true but imprecise on its own, and a more specific term on another row of
+  the review already entails it (`membrane` beside an accepted `plasma membrane`):
+  `TOO_GENERAL`;
 - the term is a root organelle term whose organelle claim holds
   (`projects/ORGANELLES.md`): keep it;
 - the term is wrong for the target on TARGET_LOSS, MISPLACED_IBD, BAD_SEED or LINEAGE
@@ -68,5 +71,5 @@ genes:
     notes: anything a later reader needs
 ```
 
-`ground` is NONE exactly when the row moves to ACCEPT, KEEP_AS_NON_CORE, MODIFY or
-UNDECIDED. `target_node_id` is read from `treeview.py` output, never composed.
+`ground` is NONE exactly when the row moves to ACCEPT, KEEP_AS_NON_CORE, MODIFY,
+TOO_GENERAL or UNDECIDED. `target_node_id` is read from `treeview.py` output, never composed.
