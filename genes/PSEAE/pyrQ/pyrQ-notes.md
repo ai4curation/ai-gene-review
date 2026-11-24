@@ -63,10 +63,12 @@ Two further checks:
 - **The organism's other DHOase is annotated as one.** The same query for EC 3.5.2.3 returns
   P72170, `pyrC` — PA3527, the constitutive enzyme of the pair.
 
-This is the second member exception on the same family's `GO:0004038` term assessment. The
-first, *P. putida* pyrC', is the catalytically **inactive** DHOase-like ATCase subunit; PA5541
-is the complementary case, an **active** DHOase. Both are Pseudomonas pyrC-family proteins that
-the allantoinase subfamily has absorbed.
+This is the second member exception on the same family's `GO:0004038` term assessment, and it is
+made in this PR rather than deferred: `just validate-families` raises a hard `CONFLICT` when a
+family scopes a term over a gene whose review removes it, so the two have to change together. The
+first exception, *P. putida* pyrC', is the catalytically **inactive** DHOase-like ATCase subunit;
+PA5541 is the complementary case, an **active** DHOase. Both are Pseudomonas pyrC-family proteins
+that the allantoinase subfamily has absorbed.
 
 ## The IEA chain
 
