@@ -79,3 +79,9 @@
 - Blood coagulation IDA from PMID:8632006 (FIX activation by FVIIa-TF) -> MODIFY to
   GO:0007598 blood coagulation, extrinsic pathway, whose definition is literally the
   TF-initiated cascade.
+
+## 2026-11-24 PR review follow-up
+- GO:0002541 (IDA, PMID:17469850) changed from MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE. In
+  GO 2026-07-26, GO:0002543 is_a GO:0030194 and part_of GO:0002526; GO:0002541 is_a GO:0016485 and
+  part_of GO:0002526. The two are siblings under acute inflammatory response, not parent and child,
+  so TOO_GENERAL does not apply; the inflammatory framing applies equally to the accepted GO:0002543.
