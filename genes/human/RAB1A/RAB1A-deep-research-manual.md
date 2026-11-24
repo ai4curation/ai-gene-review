@@ -13,7 +13,7 @@ In the RNF115/TLR GO-CAM, RAB1A supplies the ER-to-Golgi leg of TLR transport. R
 ## Curation decisions
 
 - Accepted Rab GTPase activity, G protein activity, ER and Golgi localization, ER-to-Golgi transport, Golgi organization, autophagosome assembly/autophagy, and transport-vesicle membrane rows.
-- Kept cytosol, early endosome, endocytosis, cell migration, HSV-1 virion assembly, melanosome, defense-response, neuronal-cell-body, and microtubule vesicle-transport rows as non-core secondary contexts.
+- Kept cytosol, early endosome, endocytosis, cell migration, HSV-1 virion assembly, melanosome, defense-response, and microtubule vesicle-transport rows as non-core secondary contexts; left the propagated neuronal-cell-body row unresolved.
 - Marked growth hormone secretion, positive regulation of IL-8 production, cadherin binding, extracellular exosome, COPII cargo loading, and positive regulation of glycoprotein metabolism as over-annotations.
-- Marked `endomembrane system`, `membrane`, `intracellular protein transport`, and `vesicle-mediated transport` as too general because the same review accepts specific ER, Golgi, transport-vesicle, early-endosome, ER-to-Golgi, and autophagy terms.
+- Marked `endomembrane system`, `membrane`, and `vesicle-mediated transport` as too general because the same review accepts specific ER, Golgi, transport-vesicle, early-endosome, ER-to-Golgi, and autophagy terms; refined `intracellular protein transport` to `GO:0006888 endoplasmic reticulum to Golgi vesicle-mediated transport`.
 - Removed all bare `GO:0005515` protein-binding rows under the generic protein-binding policy while preserving the RAB1A interaction evidence in review support.
