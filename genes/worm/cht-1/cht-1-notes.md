@@ -20,13 +20,19 @@
 - The molecular-function and chitin-catabolism rows are well supported by the
   GH18 catalytic domain, EC 3.2.1.14, PAINT and the CeCht1 structural paper.
   Chitin binding and extracellular region fit the two C-terminal type-2
-  chitin-binding domains and PAINT but do not have a CHT-1-specific
-  localization assay in the cached literature, so they were kept as non-core.
+  chitin-binding domains and PAINT, but the Q11174 UniProt flat file has no
+  `SIGNAL` feature or `SUBCELLULAR LOCATION` comment and the cached literature
+  lacks a CHT-1-specific localization assay, so they were kept as non-core.
 - PMID:21731485 shows that C. albicans exposure induces cht-1 transcript
   expression, and PMID:16184190 shows that cht-1 is an ATF-6-dependent
-  tunicamycin-inducible transcript. Neither paper perturbs CHT-1, so those IEP
-  and HEP rows were marked as over-annotations rather than accepted as direct
-  process participation.
+  tunicamycin-inducible transcript. The Candida IEP row is a valid peripheral
+  expression-based `response to fungus` annotation, but the paper does not show
+  a direct antifungal effector role. The ATF-6-dependent tunicamycin row was
+  marked over-annotated rather than accepted as direct UPR participation.
+- The initial review marked the `response to fungus` row as
+  `MARK_AS_OVER_ANNOTATED`; AI review correctly caught that this applied a
+  defense-effector bar to a bare `response to` term, whose definition covers
+  expression changes after fungal stimulus.
 - WormBase's candidate embryogenesis, molting/cuticle-degradation and
   pathogen-chitin roles were not traced to target-specific perturbation data in
   the three cached GOA publications. They remain open questions for the
