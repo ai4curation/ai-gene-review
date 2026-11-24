@@ -62,8 +62,8 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json
 import functools
+import json
 import re
 import sys
 import time
@@ -438,8 +438,9 @@ def _file_cutoffs(
 ) -> tuple[tuple[float, float], tuple[float, float] | None]:
     """``_cutoffs`` for one model file, read once per process.
 
-    A library scan reports the same few hundred families for many proteins, so
-    rereading each model's HMM file per hit dominated the sweep's run time.
+    A library scan reports the same few hundred families for many proteins, so each
+    model's HMM file is read once rather than once per hit. The cache is keyed by path
+    and assumes the NCBIfam library does not change within one process.
     """
     import pyhmmer
 
