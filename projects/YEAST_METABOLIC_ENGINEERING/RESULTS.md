@@ -184,5 +184,6 @@ These findings come from the GO-CAM review of `YeastPathways_PWY-5177`, not from
 **Where the matching annotation errors are filed.**
 - The GO-CAM review files the FOX2 and PHS1 activities of `YeastPathways_PWY-5177` as `GO_CAM` source defects.
 - The FOX2 gene review files its GOA rows as `GO_CENTRAL` and `SGD` source defects: the four GO:0003857 (3S)-dehydrogenase rows (PAINT IBA, SGD IDA, two YeastPathways RCA) are repointed to the (3R)-specific GO:0106386, and the two YeastPathways RCA cytosol rows are deleted.
+- The PHS1 gene review files its two YeastPathways RCA cytosol rows and its GO:0046395 carboxylic acid catabolic process RCA row as `SGD` deletions; Phs1 is an ER membrane protein, and that location is already annotated. The ERG10 gene review files its GO:0046395 RCA row as an `SGD` query, and its vacuole NAS row (PMID:28904410) as a `UNIPROT` query.
 
 The model-side errors in the table cannot be filed this way. Source defects attach to GOA rows, GO-CAM activities or cited source text, and the schema has no resource value for a genome-scale model. They remain report-ready findings here for the model maintainers.
