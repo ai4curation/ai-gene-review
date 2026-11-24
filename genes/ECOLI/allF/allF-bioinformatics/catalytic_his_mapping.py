@@ -332,6 +332,16 @@ def main():
                                             if nres in rev else None)
                 roi[tag(t)] = e
             r["allf_residues_of_interest"] = roi
+            # every histidine of the AllF structure (both chains), nearest first, in this frame
+            allhis = []
+            for cid, residues in (("A", A), ("B", B)):
+                for t in residues:
+                    if t.get_resname() == "HIS" and "CA" in t:
+                        allhis.append((round(float(min(np.linalg.norm(x.coord - ne) for x in t)), 1),
+                                       round(float(np.linalg.norm(t["CA"].coord - hc)), 1), f"{cid}:{tag(t)}"))
+            r["all_allf_histidines_to_superposed_his"] = [
+                {"residue": n, "closest_atom_to_superposed_his_NE2": d, "ca_distance_to_superposed_his_ca": c}
+                for d, c, n in sorted(allhis)]
             if k == 1:
                 # dimer frame: histidine placed through lobe 1 of chain A, insert histidine of chain B
                 t = byno(B, P["allf_insert_his"])
