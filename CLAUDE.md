@@ -747,7 +747,9 @@ points to the wrong paper).
 The reference validator already catches the *mechanical* citation failures automatically: it
 verifies each cited reference's `title` matches the fetched record (a transposed/wrong PMID whose
 title no longer matches fails) and that every `supporting_text` is a **verbatim substring** of the
-cached publication (a quote from the wrong paper, or a paraphrased/invented quote, fails).
+cached publication (a quote from the wrong paper, or a paraphrased/invented quote, fails);
+for `PMID:` and `DOI:` sources the paper's cached title also counts, as a separate text a quote
+cannot run into the body from (`src/ai_gene_review/validation/title_matching.py`).
 A `supporting_text` value must contain actual verbatim source text. Editorial square
 brackets may clarify part of a real quotation; an empty string or a value consisting
 only of editorial commentary is not a quotation. Omit this optional field when no

@@ -22,7 +22,10 @@ from linkml_reference_validator.validation.supporting_text_validator import (
 )
 
 from ai_gene_review.validation.supporting_text import build_supporting_text_validator
-from ai_gene_review.validation.title_matching import install_title_matching
+from ai_gene_review.validation.title_matching import (
+    install_title_matching,
+    uninstall_title_matching,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 REFERENCE_ID = "PMID:99999901"
@@ -51,6 +54,37 @@ full_text_attempted: true
 
 {BODY_SENTENCE} Their membrane proteome was mapped by mass spectrometry.
 """
+
+
+@pytest.fixture(autouse=True)
+def clean_validator_class():
+    """Start and end every test with the library's own ``searchable_texts``.
+
+    The patch is process-wide, so without this a test that relies on the wiring in
+    ``build_supporting_text_validator`` would pass whenever any earlier test or
+    doctest had already installed it.
+    """
+    uninstall_title_matching()
+    yield
+    uninstall_title_matching()
+
+
+def test_library_alone_does_not_search_the_title():
+    """The premise of the fix: without it, the title is not searchable."""
+    reference = ReferenceContent(
+        reference_id="PMID:1", content="Body text.", title="A Title"
+    )
+    assert SupportingTextValidator.searchable_texts(reference) == ["Body text."]
+
+
+def test_uninstall_restores_the_library_method():
+    install_title_matching()
+    uninstall_title_matching()
+    reference = ReferenceContent(
+        reference_id="PMID:1", content="Body text.", title="A Title"
+    )
+    assert SupportingTextValidator.searchable_texts(reference) == ["Body text."]
+    uninstall_title_matching()  # a second call is a no-op
 
 
 @pytest.fixture
