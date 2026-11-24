@@ -75,11 +75,21 @@ oxidation factor instead, with substrates and products named because the transfo
 established, and the hedge in `role_description`. The schema has no "required for" relation for
 an annoton, so prose is as far as this can be taken.
 
-**The second connection is `PRECEDES` with `chaining_status: NOT_APPLICABLE`.** PvdO's product
-is not the tailoring step's substrate: the tailoring acts on the position-1 glutamate, not on
-the chromophore. And the order is not established either, since PvdN will accept ferribactin,
-which sits upstream of PvdP. Marking it `VERIFIED` would assert a substrate relationship that
-does not hold.
+**The second connection carries no `connection_type`, only `chaining_status: NOT_APPLICABLE`.**
+Neither relation a `connection_type` could assert holds. PvdO's product is not the tailoring
+step's substrate — the tailoring acts on the position-1 glutamate, not on the chromophore —
+which is what `NOT_APPLICABLE` records. And the order is not established either, since PvdN
+accepts ferribactin, which sits upstream of PvdP, so the tailoring step may precede the
+oxidations rather than follow them.
+
+This took two attempts. The first version used `PRECEDES`, whose enum definition is "the source
+occurs before the target" — precisely the claim the connection's own description withdrew. That
+is the same defect as the part-optionality one above: a machine-readable field asserting what
+the prose beside it denies, and I introduced it while fixing the first instance. The enum has no
+member meaning "adjacent in the pathway, order not established", and `connection_type` is
+optional, so the honest encoding is to assert neither relation. Worth noting as a pattern: when
+no enum member fits, the temptation is to pick the nearest one and qualify it in prose, and a
+reader of the data never sees the qualification.
 
 ## Open questions for a reader with more sources
 
