@@ -211,6 +211,26 @@ gap 5, the only one touching the step the module calls solid.
 The same figure legend also says "PvdO, possibly in conjunction with other proteins, facilitates
 the final oxidation", which independently supports the PvdO hedging and is now quoted on gap 1.
 
+### Quoting inside a free-text slot is worse than paraphrasing
+
+The verb discrepancy ended up load-bearing in three places — an `evidence[].statement`, a
+`role_description` and gap 5's `gap_statement` — and each stated it with the words in quotation
+marks inside the free text. `validate-quotes` reads `supporting_text` and nothing else, so none
+of it was checkable: quotation marks in a prose slot promise verification the tooling cannot
+give. A paraphrase would at least have been honest about being a paraphrase. Both sentences are
+now `supporting_text` on gap 5, which is where the rule two sections up already said they
+belonged — the rule was written and then not applied to the next thing it covered.
+
+### A position change has to be propagated to every field
+
+Moving from "use the weaker verb" to "the closure is open" was carried into the node label and
+the part role but not the top-level `description`, which still had PvdP "oxidatively cyclising"
+the residues — the exact claim gap 5 had just recorded as unknown, in the field read without the
+apparatus. Note that this was not a sourcing defect: the figure legend licenses that wording,
+and it was fine before the module took its new position. What changed was the module, and the
+check that catches it is to re-read every field that touches a claim after changing what the
+module says about it, not just the fields the reviewer quoted.
+
 ## Keep review history out of published slots
 
 By round 6 the module file had accumulated sentences like "this is the second attempt at encoding
