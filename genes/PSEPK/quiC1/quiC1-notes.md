@@ -1,4 +1,4 @@
-# qsuB Gene Review Notes
+# quiC1 notes (carried over from the retired duplicate folder quiC1_qsuB, first written as a qsuB review)
 
 ## Colleague Question
 **Contact**: metabolic@doe.gov

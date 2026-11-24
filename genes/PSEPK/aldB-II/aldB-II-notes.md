@@ -1,4 +1,4 @@
-# pedI notes
+# aldB-II (PedI) notes
 
 - PP_2680/Q88JG9 is annotated in UniProt as `aldB-II`, but the KT2440 ethylene glycol study explicitly maps this locus to PedI based on conserved sequence and neighborhood with the Ped cluster [PMID:23023748 "PedI (PP_2680) 97 (PedI) 88 (ExaC)"] [PMID:23023748 "Due to this homology, we will use the Ped nomenclature of P. putida U for the corresponding genes PP_2664 to PP_2680 in P. putida KT2440"].
 - In *P. putida* U, the Ped pathway requires an aldehyde dehydrogenase step for oxidation of 2-phenylethanol-derived phenylacetaldehyde to phenylacetic acid [PMID:18177365 "Another catabolic route (PedS(1)R(1)ABCS(2)R(2)DEFGHI) is needed for the uptake of 2-phenylethanol and for its oxidation to phenylacetic acid via phenylacetaldehyde"].

@@ -63,6 +63,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import functools
 import re
 import sys
 import time
@@ -431,6 +432,21 @@ def _cutoffs(
     return (round(tc[0], 1), round(tc[1], 1)), rounded_nc
 
 
+@functools.lru_cache(maxsize=None)
+def _file_cutoffs(
+    path: Path,
+) -> tuple[tuple[float, float], tuple[float, float] | None]:
+    """``_cutoffs`` for one model file, read once per process.
+
+    A library scan reports the same few hundred families for many proteins, so
+    rereading each model's HMM file per hit dominated the sweep's run time.
+    """
+    import pyhmmer
+
+    with pyhmmer.plan7.HMMFile(path) as fh:
+        return _cutoffs(fh.read())
+
+
 def score_families(
     sequence: str,
     accession: str,
@@ -542,12 +558,9 @@ def scan_library(
 
 def _hits_to_scores(hits: list, db: NCBIfam, top: int) -> list[FamilyScore]:
     """FamilyScores for library hits, with each model's own cutoffs, closest first."""
-    import pyhmmer
-
     scores = []
     for family, hit in hits:
-        with pyhmmer.plan7.HMMFile(db.hmm_path(family)) as fh:
-            tc, nc = _cutoffs(fh.read())
+        tc, nc = _file_cutoffs(db.hmm_path(family))
         scores.append(
             FamilyScore(
                 accession=family.accession,
