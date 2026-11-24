@@ -26,34 +26,58 @@ The two are redundant and differentially expressed — *pyrC2* is silent unless 
 in the pyrC mutant background."] — which is why neither single mutant is auxotrophic and why
 the abstract calls this "the first report of a true DHOase mutant in P. aeruginosa".
 
-## The problem: PANTHER places an experimentally confirmed DHOase in the allantoinase clade
+## The problem: an experimentally confirmed DHOase outside the sub-clade PAINT pruned
 
-All three of this gene's IBA rows come from **PANTHER:PTN000909483**, and PAINT's own records
-for PTHR43668 show that node is the *allantoinase* node, explicitly separated from the DHOase
-branch above it:
+All three of this gene's IBA rows come from **PANTHER:PTN000909483**. The PAINT rows for
+PTHR43668 are:
 
-| node | term | evidence | negated |
-|---|---|---|---|
-| PTN000182407 | GO:0004151 dihydroorotase activity | IBD | false |
-| PTN000182407 | GO:0004038 allantoinase activity | IRD | **true** |
-| PTN000182407 | GO:0000256 allantoin catabolic process | IRD | **true** |
-| PTN000182407 | GO:0006145 purine nucleobase catabolic process | IRD | **true** |
-| PTN000909483 | GO:0004038 allantoinase activity | IBD | false |
-| PTN000909483 | GO:0006145 purine nucleobase catabolic process | IBD | false |
+| node | term | evidence | negated | with/from |
+|---|---|---|---|---|
+| PTN000909483 | GO:0004038 allantoinase activity | IBD | false | four allantoinases |
+| PTN000909483 | GO:0000256 allantoin catabolic process | IBD | false | DAL1 |
+| PTN000909483 | GO:0006145 purine nucleobase catabolic process | IBD | false | ALN, AlnA |
+| PTN000182407 | GO:0004151 dihydroorotase activity | IBD | false | O66990 |
+| PTN000182407 | GO:0004038 allantoinase activity | IRD | **true** | PTN000909483 |
+| PTN000182407 | GO:0000256 allantoin catabolic process | IRD | **true** | PTN000909483 |
+| PTN000182407 | GO:0006145 purine nucleobase catabolic process | IRD | **true** | PTN000909483 |
 
 (`interpro/panther/PTHR43668/PTHR43668-paint.tsv`.)
 
-The curator therefore did the hard part correctly: the DHOase function is placed at
-PTN000182407, seeded by UniProtKB:O66990 — *Aquifex aeolicus* PyrC, whose EC 3.5.2.3
-assignment carries experimental evidence (`ECO:0000269|PubMed:15381710`) — and the allantoinase
-function is confined to PTN000909483 by three explicit IRD rows at the ancestor.
+**Read the with/from column carefully — the direction is the opposite of what it looks like.**
+For an IRD or IKR row, the with/from field holds the **ancestral gain node**, not a descendant:
+`src/ai_gene_review/etl/panther_paint.py` documents `seeds` as "experimental seeds for IBD; the
+ancestral node for IRD/IKR", and `loss_nodes_by_ancestor` maps an IRD at `PTNa` naming `PTNb` to
+`{'PTNb': {'PTNa'}}`. So **PTN000909483 is the ancestor and PTN000182407 is a loss node beneath
+it**, not the other way round. The internal tell is that an IRD at an ancestor would be inert: a
+loss row only stops an ancestral IBD from descending, so it has to sit below the gain it
+overrides.
 
-The dispute is not with that judgement but with **where PANTHER puts this leaf**. PA5541 is an
-experimentally confirmed DHOase that complements an *E. coli* `pyrC` mutant, so functionally it
-belongs on the PTN000182407 side of exactly the boundary PAINT drew; the tree instead places it
-under PTN000909483 and it inherits the allantoinase assertions the ancestor was explicitly
-pruned of. PANTHER assigns it to subfamily SF4, which the family review describes as "Bacterial
-AllB".
+What PAINT actually did, then, is the more interesting story: it asserted allantoinase at the
+family node from four genuine allantoinases, then recognised a bacterial sub-clade that had
+switched chemistry, pruned all three allantoinase terms there, and asserted `GO:0004151` in their
+place from *Aquifex aeolicus* PyrC (O66990, whose EC 3.5.2.3 assignment carries
+`ECO:0000269|PubMed:15381710`).
+
+**PA5541 is the kind of member that sub-clade was made for, and it is not in it.** Its leaf is
+`PTN002462798`, whose lineage runs
+`PTN005175582 → PTN001702525 → PTN000909483 → PTN000182426 → PTN000182433 → PTN002462789 →
+PTN002462798` — through the allantoinase gain node, and not through `PTN000182407`. Two
+confirmations that this is the real position rather than a cached-GOA artefact:
+
+- `uv run python -m ai_gene_review.validation.gene_paint_losses PSEAE pyrQ` reports **"No IRD or
+  IKR loss on this gene's lineage"**, so no loss withdraws either IBA.
+- The gene carries no `GO:0004151` IBA, which it would receive if its leaf were under
+  `PTN000182407`.
+
+This matters for what is asked of PAINT. The fix is **not** a re-rooting of the leaf: it is an
+**added loss (`ADD_IRD`) on pyrQ's branch**, extending to `PTN002462798` the pruning already done
+at `PTN000182407`. That is now encoded in the family review's node assessment as
+`paint_action: ADD_IRD` with `target_node_id: PANTHER:PTN002462798`, so
+`just export-paint-change-requests` emits it as a change request rather than leaving it in prose.
+
+Whether pyrQ represents a second, independent acquisition of dihydroorotase activity inside the
+allantoinase clade, or whether PANTHER's tree simply places it badly, is not settled here and
+does not need to be: the requested change is the same either way.
 
 Two further checks:
 
