@@ -13,7 +13,7 @@ RNF115/BCA2/Rabring7 is an intracellular RING E3 ligase. Early work showed intri
 - RNF115 has antiviral roles through K48-linked MAVS degradation in the resting state and K63-linked STING/MITA ubiquitination after HSV-1 infection [PMID:33139700].
 - RNF115 contributes to ubiquitin-dependent sorting of EGFR, MET, and CXCR4 from the early endocytic compartment [PMID:23418353].
 - RNF115 promotes autophagosome maturation by stabilizing the autophagosomal SNARE STX17, though that STX17 effect was reported not to be a direct K48/K63-ubiquitination effect [PMID:32980859].
-- Multiple large binary interactome papers report RNF115 interactions, including with UBE2D/UBE2E family E2 enzymes. Those E2 rows support `ubiquitin conjugating enzyme binding`, while the rows to DAZAP2, MDM4, VCP, and MDM2 remain bare `protein binding` and are not mechanistically informative enough for GO [PMID:25416956; PMID:31515488; PMID:32296183; PMID:32814053; PMID:35044719].
+- Multiple large binary interactome papers report RNF115 interactions, including with UBE2D/UBE2E family E2 enzymes. Those E2 rows support `ubiquitin conjugating enzyme binding`, and the RAB7A row supports `small GTPase binding`, while the rows to DAZAP2, MDM4, VCP, and MDM2 remain bare `protein binding` and are not mechanistically informative enough for GO [PMID:16925951; PMID:25416956; PMID:31515488; PMID:32296183; PMID:32814053; PMID:35044719].
 
 ## GO-CAM 65692e7e00001822 consistency
 
