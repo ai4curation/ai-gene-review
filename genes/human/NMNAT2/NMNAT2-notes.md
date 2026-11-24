@@ -169,16 +169,25 @@ justification, provenance and the missing suggestion blocks.
     sustains a metabolite pool whose depletion activates SARM1. Real, indirect,
     mediated by the catalytic function already annotated.
 
-- **Term-fit concern flagged for a curator, action deliberately unchanged:
-  `GO:0140768`.** The term is defined as "An enzyme-substrate adaptor that bings
-  together a protein ADP-ribosyl transferase and its substrate" (OLS), which
-  implies bridging *separable from catalysis*. But UniProt's mutagenesis data from
-  the same paper show H24D and W92G abolish **both** adenylyltransferase activity
-  **and** the ability to promote ribosome mono-ADP-ribosylation
-  (ECO:0000269|PubMed:34314702). Catalysis-dependence points to local NAD+ supply,
-  not adaptor bridging. The curator read the full text, so this is recorded as a
-  `suggested_question` plus a mechanism-separating experiment rather than acted on
-  unilaterally.
+- **`GO:0140768` term fit: checked against the full text and it holds.** The term
+  is defined as "An enzyme-substrate adaptor that bings together a protein
+  ADP-ribosyl transferase and its substrate" (OLS), which implies bridging
+  *separable from catalysis*. An earlier draft of this review read UniProt's
+  mutagenesis data from the same paper (H24D and W92G abolish **both**
+  adenylyltransferase activity **and** the ability to promote ribosome
+  mono-ADP-ribosylation, ECO:0000269|PubMed:34314702) as evidence against
+  bridging. The cached full text settles it the other way: Challa et al. ran the
+  co-IP with wild-type and W92G side by side precisely to separate the two —
+  "NMNAT-2 and PARP-16 interact in cells in a manner that is independent of
+  NMNAT-2 catalytic activity, but only wild-type and not catalytically dead mutant
+  NMNAT-2 (W92G) enhances PARP-16 auto-MARylation" [PMID:34314702]. So binding and
+  catalysis are separable and not competing explanations; the association the term
+  requires is demonstrated, and the catalysis-dependence governs how much
+  MARylation the bound complex achieves, which the authors attribute to local NAD+
+  supply. `KEEP_AS_NON_CORE` stands, now on the correct reasoning. The genuinely
+  open question is narrower — is contact *required* for the enhancement, or would
+  raising cytosolic NAD+ by any route suffice — and that is what the
+  `suggested_question` and the mechanism-separating experiment now ask.
 
 - **`findings` added to all 13 references** — 3 on PMID:16118205, 3 on
   PMID:17402747, 2 on PMID:30304512, 4 on PMID:34314702, 1 each on the two
