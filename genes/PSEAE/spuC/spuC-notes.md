@@ -47,6 +47,17 @@ transfer rides on. Class III is a large family whose members differ precisely in
 donor and which keto acceptor they use, so family membership predicts the chemistry and not the
 substrate.
 
+## A wrong statement in the UniProt record
+
+The record's `CC INDUCTION` line reads "By putrescine and agmatine", with evidence
+`ECO:0000269|PubMed:12081945`. That paper concludes the opposite about agmatine, in its abstract:
+[PMID:12081945 "Since the observed induction effect of agmatine was abolished in an aguA mutant
+where conversion of agmatine into putrescine was blocked, putrescine or spermidine, but not
+agmatine, serves as the inducer molecule of the spuA-spuI divergent promoters."] The agmatine
+effect is indirect, and the second real inducer is spermidine, which the line omits. Filed as
+`WRONG_STATEMENT` against UniProt at `CONFIRMED` — the statement contradicts the publication it
+itself cites, which no unread text can change.
+
 ## The transaminase IMP cites a paper that does not mention the gene
 
 `GO:0008483` is annotated IMP from PMID:21622750, whose abstract is about the seven

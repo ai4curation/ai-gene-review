@@ -83,6 +83,21 @@ IEA rows are ancestors of the IMP-supported term. They are not all the same case
   DIHYDROOROTASE_2`. That row's own evidence does reach the specific reaction → `MODIFY` to
   `GO:0004151`.
 
+## The process term
+
+`GO:0006221` pyrimidine nucleotide biosynthetic process is `MODIFY` to **`GO:0044205` 'de novo'
+UMP biosynthetic process**, following the call the repo already made on the sibling enzyme
+(`genes/PSEPK/pyrC`, which marks `GO:0006221` TOO_GENERAL and keeps `GO:0044205`; *P. putida*
+PyrC carries it in GOA). The row's own evidence reaches the specific pathway: complementation of
+an *E. coli* `pyrC` mutant is complementation of a de novo defect, and an absolute pyrimidine
+requirement is the phenotype of a cell that can no longer make pyrimidines de novo but can still
+salvage them — whereas pyrimidine nucleotide biosynthesis in general would also be satisfied by
+salvage.
+
+Unlike *P. putida* PyrC, Q9HT33 is an unreviewed entry with **no `CC PATHWAY` line**, so the de
+novo assignment here is an inference from those two genetic results rather than a transcription
+from the record, and the review says so.
+
 ## What is not claimed
 
 The `CC FUNCTION`, `CC COFACTOR` (Zn) and `CC SIMILARITY` lines on Q9HT33 are all

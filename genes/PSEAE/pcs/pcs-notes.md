@@ -51,6 +51,18 @@ as an observation here rather than filed, since the unread text could settle it 
 later paper, PMID:22363496, supplies an unambiguous in-frame deletion with complementation, so an
 IMP on this gene is in any case correct for that row.
 
+## The process term
+
+The three `GO:0008654` rows are `MODIFY` to **`GO:0006656` phosphatidylcholine biosynthetic
+process**, which is live, descends from `GO:0008654` via `GO:0046474`, and carries no taxon
+constraint (checked in OLS). The repo already uses it on yeast CPT1, a member of the same
+class-I CDP-alcohol phosphatidyltransferase family making the same transfer onto choline. Both
+IDA rows reach it on their own evidence — one paper is titled "Pseudomonas aeruginosa synthesizes
+phosphatidylcholine by use of the phosphatidylcholine synthase pathway", the other places
+P. aeruginosa among the bacteria that have only the synthase route. The InterPro2GO row is the
+weak one of the three, since a family-level signature cannot name the acceptor alcohol; it takes
+the same action because a term is judged as a claim about the gene rather than row by row.
+
 ## Granularity
 
 - `GO:0016780` phosphotransferase activity, for other substituted phosphate groups is the CDP-alcohol

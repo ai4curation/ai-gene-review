@@ -18,7 +18,9 @@ Two things make this a confident call rather than a guess about unread text:
 
 The *claim* is not in doubt — see below — so the row is kept rather than removed, and the defect
 filed is `WRONG_EVIDENCE_CODE`: an annotation transferred from a characterised ortholog is ISS,
-not IMP. This follows the merged `pvdL` precedent in this project, where an IMP citing a
+not IMP. The reference itself is marked `VERIFIED` rather than `MISCITED`, since the paper is
+correctly identified and does support the trehalase claim; what is wrong is the code attached to
+it, and that is recorded as the defect. This follows the merged `pvdL` precedent in this project, where an IMP citing a
 *P. syringae* paper was kept and faulted the same way.
 
 ## The claim itself is solidly supported, just not by that paper
