@@ -136,7 +136,7 @@ MSP1 nucleates a large peripheral surface complex:
   the PMID:22431641 row to `GO:0044548 S100 protein binding`.
 - `GO:0005886 plasma membrane` accepted on all seven rows (core location); the extra
   specificity from the GPI-anchor biochemistry (PMID:8992312) is added as a separate `NEW`
-  row for `GO:0031362 anchored component of external side of plasma membrane`.
+  row for `GO:0009897 external side of plasma membrane` (see the correction note below).
 - `GO:0005576 extracellular region` kept but non-core: the shed complex is real but not
   where MSP1 does its work.
 - **Both `GO:0005774 vacuolar membrane` rows downgraded to `KEEP_AS_NON_CORE`.** The
@@ -150,7 +150,7 @@ MSP1 nucleates a large peripheral surface complex:
   basis for proposing the term, and `GO:0005774` is adequate for the claim being made.
 - `GO:0016020 membrane` (IEA/InterPro) marked `TOO_GENERAL` — entailed by the accepted
   plasma membrane term.
-- Three `NEW` rows only, all passing the participation test: `GO:0031362` (location),
+- Three `NEW` rows only, all passing the participation test: `GO:0009897` (location),
   `GO:0030507 spectrin binding` (two labs, orthogonal methods) and
   `GO:0035891 exit from host cell` (MSP1 itself binds and engages the host spectrin lattice
   that must give way; loss of surface MSP1 gives a severe egress defect).
@@ -165,3 +165,53 @@ MSP1 nucleates a large peripheral surface complex:
 - No `REMOVE` anywhere: nothing in the GOA set is contradicted by the literature.
 - Validation (`just validate PLAF7 MSP1`) passes with no errors and no protein-binding
   warnings.
+
+## 9. Corrections
+
+**Correction (2026-11-23, issue #6783)** — obsolete GO term on a `NEW` row.
+
+The `NEW` cellular-component row in this review asserted `GO:0031362 anchored component
+of external side of plasma membrane`. GO obsoleted that term on 2022-08-26 with the
+comment "This term was obsoleted because it represents protein topology, not a cellular
+component", and recorded `replaced_by GO:0009897 (external side of plasma membrane)`
+(verified against the QuickGO term history for GO:0031362, 2026-11-23; the id returned
+was GO:0031362 itself, not a silently resolved merge target). Because
+`existing_annotations[].term.id` is deliberately not hard-validated — GOA ids are trusted
+— nothing flagged this, and the row still carried the pre-obsoletion label.
+
+Choice made: **keep the row and swap the term to `GO:0009897 external side of plasma
+membrane`**, rather than dropping it. The replacement is weaker than the original: it
+asserts only that MSP1 occupies the outer leaflet of the plasma membrane, and says
+nothing about *how* it is held there. That remaining claim is still real and still
+non-redundant here — MSP1's GOA set contains only `GO:0005886 plasma membrane` (seven
+rows) and no sidedness term, and `GO:0009897` is a `part_of` descendant of `GO:0005886`,
+so the row continues to add the one fact those rows omit. This is the case that differs
+from the comparable merge handled in PR #6268, where the replacement simply restated a
+term the gene already carried and the row was therefore dropped; here it does not.
+
+What was lost by the swap, and where it now lives: the GPI-anchoring topology (a protein
+tethered to the membrane only by a covalent lipid anchor) is exactly what GO decided is
+not a cellular component. It is no longer asserted as an annotation. It remains recorded
+in prose — in the `reason` of the `GO:0005886` row supported by PMID:8992312, in the
+`reason` of the new `GO:0009897` row, and in section 2 of these notes — and is supported
+by PMID:8992312 (anchor structure confirmed by tritiated-precursor labelling plus
+enzymatic and chemical treatments) and PMID:18769730 (p19 "still attached to the
+merozoite via its GPI-anchor"). No evidence, `supported_by` quote or reference was
+removed; `core_functions` was unaffected, since all three core functions already use
+`GO:0005886` as their location.
+
+## Review follow-up (2026-11-23, PR #6790 round 2)
+
+Reviewer suggestion 5: after the `GO:0031362` -> `GO:0009897` swap, the surviving claim on
+that `NEW` row is sidedness (outer leaflet), while both `supported_by` quotes established
+GPI anchoring, leaving the sidedness argument in `summary` — surface-protease and antibody
+accessibility — with no quote behind it. The reviewer offered either `IC` or a
+surface-accessibility quote.
+
+`IDA` is kept and two verbatim quotes from PMID:18769730 were added, because the sidedness
+is observed and not merely inferred from the anchor: MSP1 "is processed into four fragments
+on the parasite surface" and, on invasion, "most of the protein is shed from the surface
+except for the C-terminal 19-kDa fragment". Both require the bulk of the protein to be
+exposed outside the intact merozoite, which is the external-side claim; the GPI anchor then
+says which leaflet carries it. The `reason` now states this explicitly and says why `IC`
+was not used. No term, qualifier or reference was changed.

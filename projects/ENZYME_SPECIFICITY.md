@@ -324,9 +324,26 @@ Worked pair (both from the same ML-prediction paper, PMID:37963869):
 ## Pending Reviews
 - (none)
 
-Last updated: 2026-11-22
+Last updated: 2026-11-24
 
 # NOTES
+
+## 2026-11-23
+
+**Checked the whole NCBIfam release table for GO terms that contradict the model's own
+reaction.**
+
+The [release-table check](ENZYME_SPECIFICITY/ncbifam-metadata/RESULTS.md) extends the
+sweep's six models to all of NCBIfam 20.0. Of 18691 (model, GO term) pairs, 2847 have EC
+numbers on both sides and 263 of those disagree. The 231 that are not simply broader
+terms were triaged by hand: 64 entries name another enzyme's reaction (PurK carrying
+PurE's AIR carboxylase, adenosine deaminase carrying adenine deaminase), 11 a different
+cofactor, 4 point to a wrong EC number and 32 need family knowledge. The change list for
+NCBIfam curators is [FEEDBACK.md](ENZYME_SPECIFICITY/ncbifam-metadata/FEEDBACK.md), ranked
+by RefSeq reach. Verdicts come from names and GO definitions, not literature. GO terms with
+no EC cross-reference, often Rhea-only, are not compared, and 84 class-term leads are
+listed in [CANDIDATES.md](ENZYME_SPECIFICITY/ncbifam-metadata/CANDIDATES.md) untriaged. No
+review action changes.
 
 ## 2026-11-22
 

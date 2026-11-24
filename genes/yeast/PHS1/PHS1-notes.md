@@ -19,3 +19,9 @@ Evidence journal (no paid deep research run; built from UniProt and cached publi
 
 ## Genome-scale metabolic models (2026-11-21)
 - PHS1 is absent from iMM904 GPRs. In yeast-GEM 9.1.1 its seven reactions are all ER-membrane dehydrations (EC 4.2.1.134), none on (R) metabolites: three (S) (r_2168, r_2169, r_2174) and four unspecified [file:gocams/YeastPathways_PWY-5177/YeastPathways_PWY-5177-bioinformatics/gem_gene_audit.md]. EC 4.2.1.134 is (3R)-specific, so the (S) labels are a candidate yeast-GEM defect; no change to this review.
+
+## Source defects filed (2026-11-23)
+- Filed `SGD` `DELETE_ROW` defects (PROBABLE) on three YeastPathways RCA rows that this review REMOVEs: cytosol from PWY-5080-1, cytosol from PWY-5177, and carboxylic acid catabolic process from PWY-5177 (cause `SCOPE_OVER_REACH`). Phs1 is a six-pass integral ER membrane protein acting in VLCFA elongation. The matching GO-CAM activity defects are on gomodel:YeastPathways_PWY-5177/RXN-11667.
+- No defect is filed on the GO:0004300 rows (MODIFY to GO:0102158): the term is general, not wrong.
+- The yeast-GEM 9.1.1 (S)-labelling of PHS1 reactions is summarised in projects/YEAST_METABOLIC_ENGINEERING/RESULTS.md (FOX2 PR, #6784); GEM errors have no source-defect home.
+- (PR #6796 review) The cytosol defects now say why they ask for DELETE_ROW where the GO-CAM activity asks for a repoint: PHS1 already has is_active_in ER membrane from the PAINT IBA, so a repoint would duplicate that row. The topology quote no longer includes the cytosol-facing-termini clause.

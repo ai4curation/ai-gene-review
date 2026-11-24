@@ -167,3 +167,22 @@ In `pnnl/ChatGEM`'s reference script `46._automatic_E_flux.py`, GPR strings are 
 | **Alternative complexes** | `(YGR240C and YMR205C) or (YDL022W and YOL059W)` | **`0.3500`** | **`0.2000`** | **`-0.1500` (evaluates outer `OR` as `max` instead of `sum`)** |
 
 The per-gene levels in this benchmark are synthetic inputs chosen to expose the parser bug, not measured expression data, so the benchmark says nothing about which isozyme dominates in any condition. Resolving the `OR`-GPR isozyme degeneracy noted in [YEAST_METABOLIC_ENGINEERING](../YEAST_METABOLIC_ENGINEERING.md) needs condition-specific transcriptomic or proteomic data, which this audit does not load.
+
+## 6. Stereochemistry and Compartment Defects in FOX2, PHS1 and ERG10 Reactions
+
+These findings come from the GO-CAM review of `YeastPathways_PWY-5177`, not from `run_yeast_gem_audit.py`. The scripts and outputs are in that review's bioinformatics folder: [`gem_gene_audit.py`](../../gocams/YeastPathways_PWY-5177/YeastPathways_PWY-5177-bioinformatics/gem_gene_audit.py) writes [`gem_gene_audit.md`](../../gocams/YeastPathways_PWY-5177/YeastPathways_PWY-5177-bioinformatics/gem_gene_audit.md), and the interpretation is in its [`RESULTS.md`](../../gocams/YeastPathways_PWY-5177/YeastPathways_PWY-5177-bioinformatics/RESULTS.md). They check the stereochemistry of each 3-hydroxyacyl-CoA participant, read from the metabolite name, against the gene's curated UniProt catalytic activity. This complements the EC and GPR checks in sections 1 and 2.
+
+| Gene | Model | Finding | Curated activity |
+|---|---|---|---|
+| FOX2 (`YKR009C`) | `iMM904` | All 12 3-hydroxyacyl-CoA participants of the hydratase (`ECOAH4p`–`ECOAH11p`) and dehydrogenase (`HACD4p`–`HACD10p`) reactions are (S), on the (S)-specific EC 4.2.1.17 and EC 1.1.1.35. `ECOAH8p` pairs EC 4.2.1.134 with EC 4.2.1.17 on an (S) metabolite. | (3R): EC 4.2.1.119 (RHEA:26526) and EC 1.1.1.n12 (RHEA:32711) |
+| FOX2 | yeast-GEM 9.1.1 | 28 participants are (R) and 6 are (S): the C14, C16 and C26 pairs, e.g. `r_2250`/`r_0057`. Two (C18) are unspecified, although every reaction carries EC 4.2.1.119 / 1.1.1.n12. | as above |
+| PHS1 (`YJL097W`) | yeast-GEM 9.1.1 | None of the seven ER dehydratase reactions (EC 4.2.1.134) has an (R) participant: three are (S) (`r_2168`, `r_2169`, `r_2174`) and four unspecified. PHS1 is absent from `iMM904` GPRs. | (3R): EC 4.2.1.134 (RHEA:45812) |
+| ERG10 (`YPL028W`) | both | An Erg10 reaction is placed in the mitochondrion (`ACACT1m`, `r_0104`) as well as the cytosol. The reviewed evidence is cytosolic (PMID:7989303), but whole-cell assays cannot exclude a mitochondrial pool, so the reaction is unsupported rather than refuted. | — |
+
+**Effect on simulation.** In `iMM904` the (S) FOX2 intermediates are made and used only by FOX2 in the peroxisome, so the network balances and fluxes do not change. The errors break the cross-referencing that this audit depends on: matching a model reaction to a GO term, a Rhea reaction or an EC number gives the wrong enantiomer.
+
+**Where the matching annotation errors are filed.**
+- The GO-CAM review files the FOX2 and PHS1 activities of `YeastPathways_PWY-5177` as `GO_CAM` source defects.
+- The FOX2 gene review files its GOA rows as `GO_CENTRAL` and `SGD` source defects: the four GO:0003857 (3S)-dehydrogenase rows (PAINT IBA, SGD IDA, two YeastPathways RCA) are repointed to the (3R)-specific GO:0106386, and the two YeastPathways RCA cytosol rows are deleted.
+
+The model-side errors in the table cannot be filed this way. Source defects attach to GOA rows, GO-CAM activities or cited source text, and the schema has no resource value for a genome-scale model. They remain report-ready findings here for the model maintainers.
