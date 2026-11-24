@@ -1,7 +1,7 @@
 """Check member choice and regulator logic, not physiological sufficiency.
 
-The production compiler treats complexes as atoms. The oracle below also
-requires their declared active_units so a lone RGS6 cannot stand in for its
+The production compiler expands a complex into its active_units (an AND), and
+the oracle below also requires them, so a lone RGS6 cannot stand in for its
 RGS6-GNB5 complex. Evidence for expression/assembly is assessed separately.
 """
 from pathlib import Path

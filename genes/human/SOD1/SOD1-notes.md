@@ -109,3 +109,12 @@ Chromosome 21. Erythrocyte/cytosolic enzyme; one of the most abundant cytosolic 
   partners where direct (CCS chaperone binding, Rac1, calcineurin).
 - Mitochondrion (whole) and peroxisome are largely IBA/IEA over-annotations; PMID:1332049 explicitly
   found mitochondria/secretory compartments did NOT label and peroxisome ~background. Mark accordingly.
+
+## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
+
+- Correction to the entries above: PMID:1332049 does not report peroxisome labeling "near background". Its abstract says [PMID:1332049 "In human cells, peroxisomes showed a labeling density slightly less than that of cytoplasm"], i.e. human peroxisomes contain endogenous SOD1 at nearly cytosolic density (immuno-EM). PMC50347 offered no readable full text.
+- Rat donor papers traced via QuickGO (P07632): peroxisome IDA PMID:19686298 (UniProt) and lysosome IDA PMID:7096343 (CACAO); both fetched into publications/ (abstract-only).
+- Peroxisome: rat liver peroxisome proteomics found SOD1 and CCS; SOD1 has no PTS and is imported piggyback with PTS1-bearing CCS [PMID:19686298 "CCS-mediated SOD1 import into peroxisomes was abolished by deletion of the SOD domain of CCS, which is required for heterodimer formation."]. All four peroxisome rows (IBA, Ensembl IEA, IDA, ISS) moved from MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE. IBA (PTN002558033) seeds are rat Sod1 and human SOD1, both positive. is_active_in on the IBA queried (WRONG_QUALIFIER, CHECK, SUSPECTED, GO_CENTRAL): neither seed abstract measures activity in peroxisomes. No matrix row: the only import assay is co-overexpression in CHO cells.
+- Lysosome (Ensembl IEA from rat): KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED. The donor authors attribute the 2-8% lysosomal pool to autophagy of cytosolic SOD1 [PMID:7096343 "This increase in lysosomal Cu,Zn-superoxide dismutase upon fasting is consistent with what is known to occur with other soluble cytosolic proteins during autophagy."]. Cargo, not residence.
+- The same rat paper attributes the apparent mitochondrial SOD1 signal to lysosomal contamination; relevant to the mitochondrion rows in a later pass (not changed here).
+- Description now lists the peroxisomal pool.

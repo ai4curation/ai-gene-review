@@ -68,7 +68,7 @@ PantherDB inventory gives usable subfamily assignments.
   - Module/GO-CAM split: no module or GO-CAM change was needed for PRPS; the
     core family work was self-contained in gene and PANTHER reviews.
 
-- [ ] **PTHR10030, alpha-L-fucosidase family**
+- [x] **PTHR10030, alpha-L-fucosidase family**
   - STATUS: merged in PR #6567.
   - Seed: `FUCA2` / UniProtKB:Q9BTY2, reviewed Swiss-Prot, unreviewed locally,
     with 35 GOA rows and a compact PANTHER family containing one reviewed human
@@ -87,8 +87,8 @@ PantherDB inventory gives usable subfamily assignments.
     excludes upstream free-fucose release by FUCA1/FUCA2, and `gocams/index.tsv`
     has no FUCA2 production model.
 
-- [ ] **PTHR10204, NQO1/NQO2 quinone reductase family**
-  - STATUS: in review on PR #6570.
+- [x] **PTHR10204, NQO1/NQO2 quinone reductase family**
+  - STATUS: merged in PR #6570.
   - Seed: `NQO1` / UniProtKB:P15559, reviewed Swiss-Prot, unreviewed locally,
     with 44 GOA rows and a compact two-member human PANTHER family.
   - Human family members in this checkout:
@@ -103,11 +103,77 @@ PantherDB inventory gives usable subfamily assignments.
     multi-protein mechanism, and `gocams/index.tsv` has no NQO1/NQO2 production
     model.
 
+- [x] **PTHR24348, Atg1/ULK kinase family**
+  - STATUS: merged in PR #6573.
+  - Seed: `ULK2` / UniProtKB:Q8IYT8, reviewed Swiss-Prot, unreviewed locally,
+    with a compact ULK1/ULK2/ULK3 human family that exposes canonical Atg1
+    autophagy propagation onto the divergent ULK3 Hedgehog branch.
+  - Human family members in this checkout:
+    - [x] `ULK1` / UniProtKB:O75385: already COMPLETE; cross-checked as the
+      canonical ULK1/Atg1 autophagy-initiation kinase.
+    - [x] `ULK2` / UniProtKB:Q8IYT8: new review with conserved Atg1/ULK
+      autophagy initiation retained.
+    - [x] `ULK3` / UniProtKB:Q6PHR2: new review with direct Hedgehog/GLI
+      kinase evidence retained and canonical ULK1/ULK2 autophagy rows pruned.
+  - PANTHER: `interpro/panther/PTHR24348/PTHR24348-review.yaml` records the
+    family-wide serine/threonine kinase and cytoplasm gains, the Atg1/ULK
+    autophagy PAINT rows that should be pruned away from human ULK3, and the
+    ULK3-specific Hedgehog signaling branch.
+  - Module/GO-CAM split: the existing
+    `modules/autophagosome_core_biogenesis.yaml` module now lists ULK2 beside
+    ULK1 as a human Atg1/ULK representative, and the production Smoothened/ULK3
+    GO-CAM `gomodel:696022cd00001523` has a COMPLETE review that flags the
+    unsupported CDK1 edge in the ULK3-to-GLI2 branch.
+
+- [x] **PTHR24057, glycogen synthase kinase-3 family**
+  - STATUS: merged in PR #6593.
+  - Seed: `GSK3A` / UniProtKB:P49840, reviewed Swiss-Prot, unreviewed
+    locally, in the vertebrate GSK3A subfamily of a broad eukaryotic GSK3
+    kinase family with an existing PANTHER review.
+  - Human family members in this checkout:
+    - [x] `GSK3B` / UniProtKB:P49841: already COMPLETE; cross-checked as the
+      beta-catenin destruction-complex and tau-kinase exemplar.
+    - [x] `GSK3A` / UniProtKB:P49840: new COMPLETE review.
+  - PANTHER: `interpro/panther/PTHR24057/PTHR24057-review.yaml` now links the
+    SF14 human GSK3A representative to the new gene review. The family review
+    scopes the euteleostome GSK3A and GSK3B subfamilies, and records that
+    PAINT's GSK3B-only Wnt and tau placements are conservative rather than
+    evidence of GSK3A loss.
+  - Module/GO-CAM split: the existing `modules/wnt_signaling.yaml` module now
+    lists GSK3A beside GSK3B as a human GSK3 family representative in the
+    beta-catenin destruction complex; no production GO-CAM review was needed.
+
+- [x] **PTHR10071, GATA zinc-finger transcription factor family**
+  - STATUS: merged in PR #6609.
+  - Seed: `GATA5` / UniProtKB:Q9BWX5, reviewed Swiss-Prot, unreviewed locally,
+    with 62 GOA rows in a transcription-factor family whose other five human
+    paralogs already had local reviews.
+  - Human family members in this checkout:
+    - [x] `GATA1` / UniProtKB:P15976: already DRAFT; cross-checked as the
+      vertebrate GATA1 representative.
+    - [x] `GATA2` / UniProtKB:P23769: already DRAFT; cross-checked as the
+      vertebrate GATA2 representative.
+    - [x] `GATA3` / UniProtKB:P23771: already DRAFT; cross-checked as the
+      vertebrate GATA3 representative.
+    - [x] `GATA4` / UniProtKB:P43694: already COMPLETE; cross-checked as the
+      vertebrate GATA4 representative.
+    - [x] `GATA5` / UniProtKB:Q9BWX5: new COMPLETE review.
+    - [x] `GATA6` / UniProtKB:Q92908: already COMPLETE; cross-checked as the
+      vertebrate GATA6 representative.
+  - PANTHER: `interpro/panther/PTHR10071/PTHR10071-review.yaml` records the
+    six reviewed human vertebrate subfamilies, the sound root GATA-family
+    transcription-factor PAINT rows, the GATA5 cardiac-development node, and
+    the GATA2/GATA3/GATA6 paralog-specific developmental placements.
+  - Module/GO-CAM split: no new ModuleReview or GO-CAM review was needed.
+    GATA5 is a lineage-specific transcription-factor paralog rather than a
+    reusable multi-protein module, and `gocams/index.tsv` has no GATA5
+    production model.
+
 - [ ] Next human Swiss-Prot seed family
-  - STATUS: queued after PR #6570 is mergeable again.
+  - STATUS: queued after the next approved family PR merges.
   - NOTES: keep selecting small, biologically characterized, cached PANTHER
-    families from the missing-accession table while the NQO branch waits for
-    review.
+    families from the missing-accession table while approved family branches
+    work through the merge queue.
 
 # NOTES
 
@@ -146,3 +212,7 @@ PantherDB inventory gives usable subfamily assignments.
   review, NQO2 already documented the paralogous shift toward efficient
   NRH-dependent quinone reduction, and the family PAINT assertions are two
   simple root gains rather than an exception-heavy tree.
+- `PTHR24348` was selected as a three-human-member Atg1/ULK kinase family:
+  ULK2 lacked a local review, while ULK1 already anchored the canonical
+  autophagy-initiation branch and ULK3 gave the family a useful PAINT pruning
+  case for divergent Hedgehog-pathway Fused-family kinases.

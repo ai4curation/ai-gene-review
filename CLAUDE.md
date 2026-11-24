@@ -48,6 +48,31 @@ high quality annotations.
   new batch. File allocation and APFS physical free-space changes are different
   measurements; do not claim one proves the other.
 
+## Parallel PRs: avoid shared files
+
+Content PRs should touch only their owned slice: the gene folders, history
+records, publications, modules, GO-CAM reviews, rules, or family reviews that the
+PR is explicitly delivering. Branch each content PR from current `main`; do not
+stack it on another unmerged content branch.
+
+- Update top-level `projects/*.md` status pages in a separate status PR after
+  the content they summarize has merged. Until then, record progress in gene
+  notes, module notes, or append-only history records.
+- Do not commit rendered `pages/**` HTML from content PRs. The
+  `generate-pages` workflow renders `pages/` from `main` with `just render-all`
+  and `just render-projects`, then publishes those outputs. Older rendered
+  `pages/` copies are still tracked while they are untracked in batches; do not
+  stage re-rendered versions of them.
+- Regenerate single-file shared caches, including committed `cache/**/terms.csv`
+  files and `interpro/panther/panther.obo`, in dedicated refresh PRs. If a merge
+  leaves a cache unsorted or duplicated, run the repair command such as
+  `just fix-caches` before staging the cache.
+- If you edit a local file other records may quote, such as a gene review, a
+  family review under `interpro/panther/`, or a bioinformatics `RESULTS.md`,
+  run `just validate-quotes` and fix any incoming `supporting_text` quotes in
+  the same PR. Prefer a primary publication, PAINT node, or stable database
+  record over quoting mutable review prose when it supports the same claim.
+
 ## Repository layout
 
 src/
@@ -181,6 +206,8 @@ A deep research file should already be present in the gene folder, e.g. `genes/S
 ```bash
 just deep-research SPECIES GENE --provider perplexity
 ```
+
+The Falcon (FutureHouse/Edison) stack is not in the default install. Run `uv sync --extra edison` once before the recipes that run Falcon through the repo environment: `deep-research-interpro-family` (its default provider is falcon), `rules-deep-research-falcon`, `term-deep-research-falcon`, `family-deep-research-falcon`, `gene-hypothesis-research` with falcon, and `fetch-research-artifacts`. The uvx-based `deep-research-falcon` and `module-*-deep-research-falcon` recipes are unaffected. `uv run` keeps the extra, but an exact sync (plain `uv sync`, or `just install`, which runs `uv sync --group dev`) removes it, so afterwards re-run `uv sync --group dev --extra edison`.
 
 This will create a file like `GENE-deep-research-perplexity.md`. You can also make your own notes in `genes/SPECIES/GENE/GENE-notes.md`.
 

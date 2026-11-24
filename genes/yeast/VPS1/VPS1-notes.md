@@ -218,3 +218,7 @@ without checking. Findings:
   function 4 lists only GO:0034497, which is part_of GO:0000045. Added a
   proposed_new_terms entry for an "Atg9 reservoir" CC term.
 - Family review wording updated to reflect the Vps1 in vitro result. Verdicts unchanged.
+
+## Session 2026-11-21: consistency with the retromer-pathway batch
+
+The PEP8/VPS29 and MVP1 reviews cite Suzuki et al. 2021 [PMID:34524084 "the SNX-BAR protein, Mvp1, mediates an endosomal recycling pathway that is mechanistically distinct from the retromer and Snx4 pathways" ... "Subsequently, Mvp1 recruits the dynamin-like GTPase Vps1 to catalyze membrane scission and release of the recycling tubule."]. The VPS1 description had followed Chi et al. 2014 (PMID:24567361) in placing Vps1 "with retromer and the SNX-BAR protein Mvp1" on the same tubules. It now names two routes, retromer and a separate Mvp1 route on which Mvp1 recruits Vps1. The open question on Vps1 recruitment now records that Mvp1 recruits Vps1 on its own route (with conflicting reports on direct binding) and asks only about the retromer route. The annotation actions are unchanged. The two Chi 2014 summaries describing "retromer/Mvp1-decorated" tubules are kept, because they report that paper accurately.
