@@ -80,3 +80,14 @@ moonlighting candidate.
 
 No experimental (IDA/IMP/IPI/EXP) annotation was REMOVEd; no IEA was removed either (all were either correct core,
 correct-but-general, or contributory).
+
+## 2026-11-24: mitochondrial matrix IBA re-judged against the PAINT tree
+
+The GO:0005759 mitochondrial matrix IBA comes from PTN000897621 (34 leaves), and human FDPS (P14324)
+is one of its three seeds, with rat Fdps and Drosophila Fpps. Rat Fdps carries a matrix IDA
+[PMID:8119922 "Mitochondrial FPP synthase exhibits trypsin sensitivity only after sonication of intact mitochondria and upon subfractionation the activity is found localized in the matrix"],
+and the human gene makes a mitochondrially targeted isoform
+[PMID:17198737 "one of the two mRNAs expressed from this gene encodes an isoform with a 66 amino acid N-terminal extension containing a peptide that targets it to mitochondria"].
+Both quotes are from the PubMed abstracts; neither paper is in `publications/`. The row was changed from
+MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE. The earlier note above, that the IBA is not supported for the
+human protein, is superseded.
