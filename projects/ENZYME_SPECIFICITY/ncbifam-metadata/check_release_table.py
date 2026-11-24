@@ -33,6 +33,7 @@ network access to QuickGO on first run; term data are cached under ``.cache``.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
 import sys
@@ -60,7 +61,7 @@ SKIP_LABELS = {  # in reporting order; each test applies only to pairs the ones 
     "mf_term_partial_ec_within_model": "with a class term whose partial EC lies inside the model's partial EC (narrower)",
     "mf_term_ancestor_of_model_term": "with a class term that is a GO ancestor of a term for the model's EC, though its partial EC does not contain it",
     "mf_term_partial_ec_outside_model": "with a class term unrelated to the model's EC by EC class or GO ancestry",
-    "mf_term_has_no_ec": "with a molecular function term that has no EC cross-reference at all",
+    "mf_term_has_no_ec": "with a molecular function term that reaches no EC, directly or through Rhea",
 }
 QUICKGO = "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{ids}"
 
@@ -120,15 +121,114 @@ def classify(family_ecs: list[str], term_ecs: list[str]) -> str:
     return "other_reaction"
 
 
-class GoHierarchy:
-    """EC-to-GO cross-references and is_a ancestry from the semsql GO database."""
+RHEA_URL = "https://ftp.expasy.org/databases/rhea/tsv/{name}"
+RHEA_FILES = ("rhea2ec.tsv", "rhea-directions.tsv")
 
-    def __init__(self, path: Path) -> None:
+
+class RheaEC:
+    """EC numbers of Rhea reactions, from Rhea's ``rhea2ec.tsv`` and ``rhea-directions.tsv``.
+
+    GO cross-references many reaction terms only to Rhea, and may use any of a reaction's
+    four ids (undirected master, left-to-right, right-to-left, bidirectional), while
+    ``rhea2ec.tsv`` is keyed by the master id, so every id is mapped to its master first.
+
+    >>> r = RheaEC.from_rows([("10000", "3.5.1.50")], [("10000", "10001", "10002", "10003")])
+    >>> r.ecs("RHEA:10002"), r.ecs("RHEA:99")
+    ({'3.5.1.50'}, set())
+    """
+
+    def __init__(
+        self, ec_by_master: dict[str, set[str]], master: dict[str, str]
+    ) -> None:
+        self.ec_by_master, self.master = ec_by_master, master
+
+    @classmethod
+    def from_rows(cls, ec_rows, direction_rows) -> RheaEC:
+        ec_by_master: dict[str, set[str]] = {}
+        for master_id, ec in ec_rows:
+            ec_by_master.setdefault(master_id, set()).add(ec)
+        master = {i: row[0] for row in direction_rows for i in row}
+        return cls(ec_by_master, master)
+
+    @classmethod
+    def load(cls, cache_dir: Path) -> RheaEC:
+        """Read the Rhea tables from ``cache_dir``, downloading them when missing."""
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        for name in RHEA_FILES:
+            path = cache_dir / name
+            if not path.exists():
+                req = urllib.request.Request(RHEA_URL.format(name=name))
+                path.write_bytes(_read_with_retry(req))
+
+        def rows(name: str) -> list[list[str]]:
+            lines = (cache_dir / name).read_text().splitlines()[1:]
+            return [line.split("\t") for line in lines if line]
+
+        ec_rows = [(r[2], r[3]) for r in rows("rhea2ec.tsv")]  # MASTER_ID, EC ID
+        return cls.from_rows(ec_rows, rows("rhea-directions.tsv"))
+
+    def ecs(self, xref: str) -> set[str]:
+        """EC numbers of the reaction a ``RHEA:`` cross-reference names."""
+        rid = xref.removeprefix("RHEA:")
+        return set(self.ec_by_master.get(self.master.get(rid, rid), ()))
+
+
+def rhea_digest(cache_dir: Path) -> dict[str, str]:
+    """SHA-256 of each Rhea table used, so a run records which Rhea data it read."""
+    return {
+        name: hashlib.sha256((cache_dir / name).read_bytes()).hexdigest()
+        for name in RHEA_FILES
+    }
+
+
+class GoHierarchy:
+    """EC-to-GO cross-references and is_a ancestry from the semsql GO database.
+
+    With ``rhea``, a GO term cross-referenced to a Rhea reaction also counts as
+    cross-referencing that reaction's EC number, but only when its Rhea cross-references
+    reach exactly one EC and the term carries no partial EC of its own. A generic term
+    fails that test: ATP hydrolysis activity's Rhea reaction maps to nine ECs (helicases,
+    translocases), so the route would give it a reaction it does not name.
+    """
+
+    def __init__(self, path: Path, rhea: RheaEC | None = None) -> None:
         if not path.exists():
             raise SystemExit(
                 f"{path} not found: run `just validate` once so oaklib fetches sqlite:obo:go"
             )
         self.db = sqlite3.connect(path)
+        self.rhea_ecs_by_term: dict[str, set[str]] = {}
+        self.rhea_ambiguous: set[str] = set()  # terms whose Rhea reaches several ECs
+        if rhea is not None:
+            reached: dict[str, set[str]] = {}
+            for term, xref in self.db.execute(
+                "SELECT subject, value FROM statements WHERE predicate='oio:hasDbXref' "
+                "AND value LIKE 'RHEA:%' AND subject LIKE 'GO:%'"
+            ):
+                if ecs := rhea.ecs(xref):
+                    reached.setdefault(term, set()).update(ecs)
+            class_terms = {
+                t
+                for (t,) in self.db.execute(
+                    "SELECT subject FROM statements WHERE predicate='oio:hasDbXref' "
+                    "AND value LIKE 'EC:%-%' AND subject LIKE 'GO:%'"
+                )
+            }
+            for term, ecs in reached.items():
+                if term in class_terms:
+                    continue
+                if len(ecs) == 1 and is_complete_ec(next(iter(ecs))):
+                    self.rhea_ecs_by_term[term] = ecs
+                else:
+                    self.rhea_ambiguous.add(term)
+        self.rhea_terms_by_ec: dict[str, set[str]] = {}
+        for term, ecs in self.rhea_ecs_by_term.items():
+            for ec in ecs:
+                self.rhea_terms_by_ec.setdefault(ec, set()).add(term)
+
+    def rhea_ecs(self, term: str) -> list[str]:
+        """Complete EC numbers a GO term reaches through its Rhea cross-references."""
+        return sorted(self.rhea_ecs_by_term.get(term, ()))
 
     def terms_for_ec(self, ec: str) -> set[str]:
         """GO terms that cross-reference this EC number, or any EC under a partial one
@@ -142,7 +242,17 @@ class GoHierarchy:
             f"SELECT subject FROM statements WHERE predicate='oio:hasDbXref' AND {query}",
             (arg,),
         )
-        return {r[0] for r in rows if r[0].startswith("GO:")}
+        terms = {r[0] for r in rows if r[0].startswith("GO:")}
+        if is_complete_ec(ec):
+            terms |= self.rhea_terms_by_ec.get(ec, set())
+        else:
+            terms |= {
+                t
+                for rhea_ec, ts in self.rhea_terms_by_ec.items()
+                if rhea_ec.startswith(f"{prefix}.")
+                for t in ts
+            }
+        return terms
 
     def partial_ecs(self, term: str) -> list[str]:
         """The partial EC cross-references (``1.8.-.-``) on a GO term, which a class
@@ -259,9 +369,15 @@ def refseq_hits(cache_dir: Path) -> dict[str, int]:
 def main() -> None:
     """Classify every (model, GO term) pair and write the results and candidate list."""
     db = NCBIfam(CACHE / "ncbifam")
-    hierarchy = GoHierarchy(GO_DB)
+    rhea = RheaEC.load(CACHE / "rhea")
+    hierarchy = GoHierarchy(GO_DB, rhea)
     hits = refseq_hits(db.cache_dir)
     terms = term_data({go for f in db.families for go in f.go_terms})
+    # a term's reaction: its own complete EC cross-references, else those its Rhea
+    # cross-references reach (many GO terms now cross-reference only Rhea)
+    for go, t in terms.items():
+        t["ec_rhea"] = [] if t["ec"] else hierarchy.rhea_ecs(go)
+        t["ec_all"] = t["ec"] or t["ec_rhea"]
     rows, obsolete, class_mismatch, class_within, class_ancestor = [], [], [], [], []
     # GO ids in the release table that QuickGO does not return (merged or invalid ids)
     unresolved = sorted(
@@ -289,7 +405,7 @@ def main() -> None:
             if not f.ec_numbers:
                 skipped["model_has_no_ec"] += 1
                 continue
-            if not t["ec"]:
+            if not t["ec_all"]:
                 # the term has no complete EC: BP and CC terms, class terms with only a
                 # partial EC, and MF terms with none are counted, not compared
                 if t["aspect"] != "molecular_function":
@@ -339,7 +455,6 @@ def main() -> None:
                         class_mismatch.append(
                             record | {"ancestry_tested": bool(model_terms)}
                         )
-                    continue
                 else:
                     skipped["mf_term_has_no_ec"] += 1
                 continue
@@ -351,15 +466,16 @@ def main() -> None:
                     "ec_numbers": f.ec_numbers,
                     "go": go,
                     "go_name": t["name"],
-                    "go_ec": t["ec"],
-                    "relation": (rel := classify(f.ec_numbers, t["ec"])),
+                    "go_ec": t["ec_all"],
+                    "go_ec_source": "rhea" if t["ec_rhea"] else "ec_xref",
+                    "relation": (rel := classify(f.ec_numbers, t["ec_all"])),
                     "refseq_hits": hits.get(f.accession, 0),
                 }
             )
             if rel == "consistent":
                 rows[-1]["placement"] = None
             else:
-                where, model_terms = placement(go, f.ec_numbers, t["ec"], hierarchy)
+                where, model_terms = placement(go, f.ec_numbers, t["ec_all"], hierarchy)
                 rows[-1]["placement"] = where
                 if where != "broad_class":  # the heuristic does not look terms up
                     rows[-1]["model_ec_terms_first10"] = model_terms[:10]
@@ -371,6 +487,8 @@ def main() -> None:
         "model_go_pairs": sum(len(f.go_terms) for f in db.families),
         "pairs_skipped": {k: skipped[k] for k in SKIP_LABELS},
         "pairs_checked": len(rows),
+        "pairs_checked_via_rhea": sum(1 for r in rows if r["go_ec_source"] == "rhea"),
+        "rhea_tables_sha256": rhea_digest(CACHE / "rhea"),
         "relations": dict(Counter(r["relation"] for r in rows)),
         "placements": dict(Counter(r["placement"] for r in rows if r["placement"])),
         "obsolete_go_pairs": len(obsolete),
@@ -488,13 +606,15 @@ def render(
             "",
             f"## Class term inside the model's partial EC ({len(class_within)})",
             "",
-            "Not triaged, and product names not checked: the model's EC is partial and "
-            "the GO term's partial EC lies inside it. Either the term really is more "
-            "specific than the model's EC (oxidoreductase acting on CH-OH donors on "
-            "the mycofactocin dehydrogenase MftG, EC 1.-.-.-), or only the term's "
-            "cross-reference is: endopeptidase activity is cross-referenced only to EC "
-            "3.4.99.- but covers all of EC 3.4. `GO ancestor` says whether the term is "
-            "also a GO ancestor of a term for the model's EC.",
+            "The model's EC is partial and the GO term's partial EC lies inside it. "
+            "Either the term really is more specific than the model's EC "
+            "(oxidoreductase acting on CH-OH donors on the mycofactocin dehydrogenase "
+            "MftG, EC 1.-.-.-), or only the term's cross-reference is: endopeptidase "
+            "activity is cross-referenced only to EC 3.4.99.- but covers all of EC 3.4. "
+            "`GO ancestor` says whether the term is also a GO ancestor of a term for "
+            "the model's EC; for a partial model EC that test matches nearly any class "
+            "term, so it cannot tell the two readings apart. Each row is triaged in "
+            "`triage.yaml` (`class_term_triage`).",
             "",
             "| model | product name | family type | model EC | GO term | term EC | "
             "GO ancestor | RefSeq hits |",
@@ -513,13 +633,15 @@ def render(
             "",
             f"## Class term outside the model's EC class ({len(class_mismatch)})",
             "",
-            "Not compared above and not triaged: the GO term carries only a partial EC, "
-            "neither EC class contains the other, and the term is not a GO ancestor of "
-            "any term for the model's EC (a glycoside hydrolase term on the branching "
-            "enzyme GlgB, say, which may instead be a family-level mapping, since GlgB "
-            "belongs to glycoside hydrolase family 13). Candidate causes: a wrong-class "
-            "term, a wrong EC on the model, an EC reclassification, or a term whose "
-            "partial EC is narrower than its scope.",
+            "Not compared above: the GO term carries only a partial EC, neither EC class "
+            "contains the other, and the term is not a GO ancestor of any term for the "
+            "model's EC, or the ancestry test could not run because no GO term reaches "
+            "that EC (`ancestry tested` is `no`). A glycoside hydrolase term on the "
+            "branching enzyme GlgB is an example. Candidate causes: a wrong-class term "
+            "that follows the family's fold, a wrong EC on the model, an EC "
+            "reclassification, or a term whose partial EC is narrower than its scope. "
+            "Each row is triaged in `triage.yaml` (`class_term_triage`); FEEDBACK.md "
+            "lists the ones that are not acceptable.",
             "",
             "`ancestry tested` is `no` where GO has no term cross-referencing the "
             "model's EC, so the GO-ancestor test could not run; endopeptidase activity "
