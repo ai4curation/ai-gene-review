@@ -244,6 +244,32 @@ Two separate mistakes, worth keeping apart:
 The restored version is stronger than the one deleted: the deleted sentence asserted a general
 fact about tyrosinases, where the record shows two copper sites resolved **on this protein**.
 
+### The grounding was inverted, and nothing in the file showed it
+
+Round 9's sharpest observation is not about any single claim. Part 2 grounded PvdO's *single
+unpublished* 2016 PDB deposition in three separate evidence items, while part 1 — the step this
+module calls solid, the only one with primary enzymology — named no structure, rested its
+cofactor on one adjective in a review, and reached NCBIfam through a *P. putida* ortholog's row
+in a regenerable results TSV when `NF051454` sits on the *P. aeruginosa* record itself.
+
+That shape is invisible from inside any one field. Every individual citation was defensible; what
+was wrong was the distribution, and the only way to see it is to ask which claim in the module is
+best supported and then check whether its grounding is the heaviest. It wasn't, by a wide margin.
+Both primary papers, three structures and six copper-binding residues were available and unused,
+while an unpublished deposition carried three items.
+
+Fixed by grounding part 1 properly rather than by thinning part 2: the NCBIfam line from pvdP's
+own record, PMID:31899238 for the activity and for the family's clade boundary, and the di-copper
+evidence restored above.
+
+### Prefer the subject's own record to an ortholog's derived table
+
+The NCBIfam accession was being cited through `projects/REFSEQ_GO/results/PSEPK/ncbi_proteins.tsv`
+— a regenerable file, about the *P. putida* ortholog — when the same accession is a `DR` line on
+the *P. aeruginosa* record. That was the right call when pvdP's record was not on `main`, and
+stopped being so the moment it was. Same lesson as the deletion-versus-deferral one above: a
+citation chosen because of what the tree contained needs revisiting when the tree changes.
+
 ### One claim per evidence item
 
 The 5HHA citation landed as a single evidence item whose `statement` said it grounded PvdO's
