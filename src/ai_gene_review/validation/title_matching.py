@@ -85,8 +85,10 @@ def uninstall_title_matching() -> None:
     """Restore the library's own ``searchable_texts``. A no-op when not installed."""
     if not getattr(SupportingTextValidator, _MARKER, False):
         return
-    SupportingTextValidator.searchable_texts = getattr(
-        SupportingTextValidator, _ORIGINAL_ATTR
-    )  # type: ignore[method-assign]
+    # Read the raw descriptor from the class dict: ``getattr`` would bind the saved
+    # classmethod to this class and restore a bound method instead.
+    SupportingTextValidator.searchable_texts = SupportingTextValidator.__dict__[
+        _ORIGINAL_ATTR
+    ]  # type: ignore[method-assign]
     delattr(SupportingTextValidator, _ORIGINAL_ATTR)
     delattr(SupportingTextValidator, _MARKER)

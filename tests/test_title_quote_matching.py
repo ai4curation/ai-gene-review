@@ -65,8 +65,10 @@ def clean_validator_class():
     doctest had already installed it.
     """
     uninstall_title_matching()
+    build_supporting_text_validator.cache_clear()
     yield
     uninstall_title_matching()
+    build_supporting_text_validator.cache_clear()
 
 
 def test_library_alone_does_not_search_the_title():
@@ -84,6 +86,8 @@ def test_uninstall_restores_the_library_method():
         reference_id="PMID:1", content="Body text.", title="A Title"
     )
     assert SupportingTextValidator.searchable_texts(reference) == ["Body text."]
+    # The library's classmethod itself is back, not a bound copy of it.
+    assert isinstance(SupportingTextValidator.__dict__["searchable_texts"], classmethod)
     uninstall_title_matching()  # a second call is a no-op
 
 
