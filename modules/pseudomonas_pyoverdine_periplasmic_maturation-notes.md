@@ -221,6 +221,25 @@ give. A paraphrase would at least have been honest about being a paraphrase. Bot
 now `supporting_text` on gap 5, which is where the rule two sections up already said they
 belonged — the rule was written and then not applied to the next thing it covered.
 
+### One claim per evidence item
+
+The 5HHA citation landed as a single evidence item whose `statement` said it grounded PvdO's
+FGE fold *and* its calcium site as observed rather than predicted — attached to the quote
+`DR   PDB; 5HHA; X-ray; 1.24 A; A/B=22-284.`, which establishes only that a structure exists at
+that resolution over those residues. Of the two substantive attributes the statement claimed, the
+quote carried neither; both were on other lines of the same file it already cited.
+
+Split into three: the cross-reference for the modality, `X-RAY CRYSTALLOGRAPHY (1.24 ANGSTROMS)
+OF 22-284 IN COMPLEX WITH CA(2+)` for the calcium, and the Pfam line for the fold. The
+shared-authors reasoning moved onto the deposition-title item, where the naming claim it
+qualifies actually lives.
+
+The generalisation, which is the fourth variant of one idea in this file: **an
+`evidence[].statement` should name one claim, and the quote beside it should carry that claim.**
+When a statement needs the word "and", that is usually two items. A multi-claim statement is how
+a quote ends up vouching for things it never mentions, and nothing checks it — `validate-quotes`
+confirms the quote is verbatim, not that it supports what the statement says it supports.
+
 ### A position change has to be propagated to every field
 
 Moving from "use the weaker verb" to "the closure is open" was carried into the node label and
