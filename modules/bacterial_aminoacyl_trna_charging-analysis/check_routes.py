@@ -1,14 +1,18 @@
 """Exercise native-context output routes with the production Boolean compiler.
 
 The explicit oracle enforces organism context and all named complex subunits.
-The generic compiler does not itself infer taxonomy or expand active units.
+The generic compiler does not infer taxonomy, and is called here with
+expand_complexes=False so that this oracle expands active units itself.
 Passing a partial chemistry route is not proof of native flux or a complete genome.
 """
+import functools
 import json
 from pathlib import Path
 
 import yaml
 from ai_gene_review.module_logic import compile_node, is_satisfied
+# This audit expands protein_complex active_units itself, so it compiles one atom per complex annoton.
+compile_node = functools.partial(compile_node, expand_complexes=False)
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]

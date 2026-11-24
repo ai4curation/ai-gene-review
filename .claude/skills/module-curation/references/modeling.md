@@ -65,7 +65,11 @@ See `projects/GOCAM_COMPARTMENTS.md`.
 - Use `FAMILY`, `DOMAIN`, `HOMOLOG_OF`, `ORTHOLOG_OF`, `ANY_WITH_FUNCTION`, or
   `ANY_WITH_DOMAIN` for reusable roles.
 - Use `active_units` inside complex descriptors when a complex has role-bearing
-  subunits that must remain visible to reasoning.
+  subunits that must remain visible to reasoning. The engine reads them as a
+  conjunction: the complex holds only where every listed unit holds, so list
+  only units that must all be present (a discriminating subset is fine), and
+  give each unit its own selector and, where known, its own `function`; a unit
+  without one inherits the complex annoton's function.
 - Keep activation enzymes, cofactor biosynthesis, transport, regulation, and
   upstream/downstream biology outside the module core unless they are required
   parts of the pathway definition.

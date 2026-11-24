@@ -29,16 +29,13 @@ genes of a pathway, and only 56 of the 144 have any human GO-CAM model whose
 process falls under the mapped GO term. Third, as a source of module seeds. We parsed
 all 200 RGD diagram pages into structured records (3,209 interaction edges,
 1,715 gene links, 651 chemicals, 580 links to other pathways). These were
-triaged against our 714 modules. Ninety already have a matching module, 14 are
-ready to model, 9 have only a broad GO process term or none, and 56 are disease
-or drug pathways and out of scope. Thirteen modules have now been derived from RGD
-diagrams: the pilot `srebp_signaling`; the linked blood set `coagulation_cascade`,
-`fibrinolysis` and `kallikrein_kinin_cascade`; a second set,
-`acetylcholine_signaling`, `dopamine_receptor_signaling`,
-`visual_phototransduction` and `prostanoid_biosynthesis`; and a third set,
-`protein_kinase_c_signaling`, `dna_cytosine_methylation_cycle`,
-`reelin_signaling`, `trail_apoptotic_signaling` and `nmj_achr_clustering`. All
-thirteen pass schema and module validation.
+triaged against our 877 modules (2026-11-23). 136 now have a matching module, none
+is left to model, 1 (titanium dioxide nanoparticle response) is left without a module
+by decision, 7 have too few curated genes, and 56 are disease or drug pathways and out
+of scope. The modules derived from RGD diagrams, starting with the pilot
+`srebp_signaling` and continuing through sixteen sets (below), cite their PW pathways as
+evidence; 86 modules now cite an RGD PW id that way, and each passes schema and module
+validation.
 
 ## Why this source
 
@@ -104,14 +101,14 @@ Module matching uses three tests. A module that cites the PW id matches. A
 module matches when at least two of its human members are in the pathway and
 they make up at least half its members (mapped through HGNC). A module also
 matches when it uses the mapped GO term or one of its descendants. Seeds are
-then put in tiers:
+then put in tiers (counts as of the 2026-11-23 triage):
 
 | Tier | Rule | Diagram pathways |
 |------|------|------------------|
-| `has_module` | Cites the PW id as an `evidence` source, or at least half of a module's genes are in the pathway | 131 |
+| `has_module` | Cites the PW id as an `evidence` source, or at least half of a module's genes are in the pathway | 136 |
 | `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 0 |
-| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 4 |
-| `no_specific_go_term` | Curated, but GO has only a broad process term or none (not used for matching) | 2 |
+| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 0 |
+| `no_specific_go_term` | Curated, but GO has only a broad process term or none (not used for matching) | 1 |
 | `needs_go_mapping` | At least 5 curated genes but no GO process mapping | 0 |
 | `thin` | Fewer than 5 RGD-curated human genes | 7 |
 | `out_of_scope` | Disease or drug branch, or an "altered ..." pathway | 56 |
@@ -1333,6 +1330,32 @@ earlier sets split out.
 The Reelin synapse candidate is not modelled: its NMDA and AMPA receptor evidence
 is from mouse.
 
+### Sixteenth set: follow-ups
+
+The sixteenth set closes follow-ups from the earlier sets rather than adding modules.
+
+- `nucleotide_excision_repair` and `eukaryotic_mismatch_repair` now reach their
+  gap-filling and ligation steps by `module_ref` to
+  `dna_repair_gap_filling_synthesis_and_ligation` (MMR keeps `pcna_loading`, which also
+  activates MutLalpha). The NER file lists 18 fewer accessions and the MMR file 5; both
+  still cite their PW ids, so their tiers do not change, but their seed basis counts in
+  `module_seeds.yaml` now understate coverage until the triage follows `module_ref`.
+- `gpcr_camp_pka_signaling`'s PKA steps now resolve into `camp_pka_signal_transduction`;
+  its ten callers in seven modules are unchanged. The cyclase step keeps its own ADCY5
+  annoton, because the fuller module's cyclase step also admits soluble ADCY10, which
+  G proteins do not regulate; the CREB step stays because the fuller module leaves PKA
+  substrates out.
+- `plasma_membrane_calcium_extrusion` models PMCA1-4 as complexes of the ATP2B pump and
+  one accessory unit, a family of NPTN or BSG (a native complex carries one or the
+  other; PMID:29056295, PMID:30190470), and asks for a direction-neutral definition of
+  GO:0090534.
+- `retinoic_acid_receptor_signaling`'s production part now references
+  `retinoic_acid_metabolism`'s `retinal_oxidation` and `crabp2_variant` nodes.
+- The HDAC4 gene review now marks its histone deacetylase rows over-annotated,
+  matching the HDAC5 review and `histone_deacetylation`, and its description names
+  His976 (not His803) as the residue that replaces the catalytic Tyr. The met-2 review
+  now reads GO:0140942 as the full two-step dimethylation.
+
 ## Next steps
 
 - Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
@@ -1344,9 +1367,16 @@ is from mouse.
   Filtering `curation_rule` on `pw2go:qa/` returns all 50 rows: `qa/OBSOLETE_TARGET` 45, `qa/MISSING_TARGET` 1,
   `qa/PAGE_XREF_DISAGREES` 4 (the three wrong citations and the defensible
   PW:0000862) and `qa/ID_ECHO` 1 (PW:0000076, which also disagrees).
-- Reconcile `gpcr_camp_pka_signaling` with the fuller
-  `camp_pka_signal_transduction`: the four Gs hormone modules still refer to the
-  compact module's cyclase and PKA steps.
+- Optionally add a transmembrane-only adenylyl cyclase node to
+  `camp_pka_signal_transduction`, so that `gpcr_camp_pka_signaling`'s cyclase step
+  (still an inline ADCY5 annoton) could also reference the fuller module.
+- Add an `ADD_IRD` node assessment for the vertebrate class IIa HDAC clade to
+  `interpro/panther/PTHR10625/PTHR10625-review.yaml`: the HDAC4 and HDAC5 reviews both
+  reject the propagated histone deacetylase activity on the catalytic-Tyr argument, and
+  only a PAINT change stops the propagation.
+- Correct three stale sentences in `gpcr_camp_pka_signaling.yaml` left by the
+  sixteenth-set cyclase fix (its description still says the cyclase step is
+  referenced and omits ADCY5 from the exemplars).
 - Submit the new-term requests now recorded in module `proposed_new_terms`
   (`export_proposed_terms.py modules` lists them) to GO. Deduplicate by
   `proposed_name`: calcium channel activator activity is requested by both
@@ -1363,17 +1393,9 @@ is from mouse.
   [broad_pathway_split_plans.md](RGD_PATHWAY_ONTOLOGY/broad_pathway_split_plans.md),
   with a suggested order. All of them are now carried out (ninth to fourteenth
   sets), and the candidates they split out are modelled in the fifteenth set.
-- Point the `repair_synthesis` and `ligation` parts of `nucleotide_excision_repair`
-  and the `pold_resynthesis` and `lig1_ligation` parts of `eukaryotic_mismatch_repair`
-  at `dna_repair_gap_filling_synthesis_and_ligation` (MMR's `pcna_loading` stays, as it
-  also activates MutLalpha).
-- Revisit the HDAC4 gene review: it accepts HDAC4's histone deacetylase rows, which
-  the HDAC5 review and `histone_deacetylation` treat as over-annotation.
-- Add the obligatory PMCA subunits NPTN and BSG to
-  `plasma_membrane_calcium_extrusion`.
-- Point
-  `retinoic_acid_receptor_signaling`'s production step at
-  `retinoic_acid_metabolism`.
+- Teach the triage to follow `module_ref` when counting a module's genes: since the
+  sixteenth set, NER and mismatch repair reach their gap-filling proteins only by
+  reference.
 - Fix the triage's prose scraping of GO and UniProt ids
   (ai4curation/ai-gene-review#6006).
 - Candidate modules split out during the sets: Reelin modulation of NMDA/AMPA
@@ -1409,6 +1431,7 @@ is from mouse.
 - [x] Model ribosome biogenesis (thirteenth set)
 - [x] Model the SK channels from the calcium-mediated signaling leftovers and decide PW:0001437 (fourteenth set)
 - [x] Model the candidate modules split out of earlier sets (fifteenth set)
+- [x] Close the follow-ups from the earlier sets (sixteenth set)
 
 ## Notes
 
@@ -1503,3 +1526,10 @@ polarity, DNA repair gap filling and stereocilium bundle organization, plus the
 follow-ups from the review of sets 11-14 and the removal of a claim resting on a
 retracted paper from `nucleotide_excision_repair`. Tiers are unchanged (136
 `has_module`); `modules_compared` is 873.
+
+### 2026-11-23
+
+Sixteenth set: NER and MMR gap filling by module_ref, the cAMP/PKA reconciliation,
+PMCA accessory subunits, the retinoic acid production repoint, and the HDAC4 and met-2
+gene review revisits (merged in ai4curation/ai-gene-review#6630). Tiers are unchanged
+(136 `has_module`); `modules_compared` is 877, with modules merged on `main` meanwhile.

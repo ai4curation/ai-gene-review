@@ -176,3 +176,10 @@ Biomolecules review; Malagrino 2024; Nocka 2023 eLife BTK; Qiu 2024 PNAS).
 - The human UniProt Golgi item is ECO:0000250 by similarity to mouse Grb2; the mouse item is curated (ECO:0000269) from PMID:11571277 (QuickGO: mouse EXP row, assigned by UniProt). That paper (PrPC yeast two-hybrid interactors) is abstract-only in the cache, Europe PMC lists no PMC copy (subscription), and doi.org/jbc.org returned 403 on 2026-11-18. The abstract does not mention the Golgi.
 - PMID:17276458 (full text in cache, PMC1861842), the source the earlier reason used, shows Grb2/PLD2 in the "perinuclear Golgi region" and "Golgi-like structures" after EGF, but no Golgi marker (GM130, giantin, TGN46 etc.) or brefeldin A test appears in the text: not the Golgi by the CABP2 standard.
 - Unreadable donor plus unmarked human data -> UNDECIDED (CD247 line). Either reading is non-core: GRB2 acts at activated receptors at the plasma membrane and on endosomes. No sub-compartment row.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Two GO:0005768 rows (IDA PMID:21179510; IEA SL-0101 tagged to the same paper), both KEEP_AS_NON_CORE, unchanged.
+- The cited paper is a perturbed line (co-overexpression with EGFP-HD-PTP in HeLa, endosomes defined by the partner itself; see GRAP2 notes). It would not hold the row alone.
+- Unperturbed line found and cached: [PMID:24259669 "Endogenous Grb2 was replaced in these cells by Grb2 fused to yellow fluorescent protein (YFP). After transient residence in the plasma membrane, Rhodamine-conjugated EGF (EGF-Rh) and Grb2-YFP were rapidly internalized and accumulated in endosomes."] (HeLa, low physiological EGF; abstract only, PMC3889400 not read). Earlier overexpression work from the same group (Jiang and Sorkin 2002, PMID:12006650; Sorkin et al. 2000, PMID:11084343) agrees but was not cached or cited.
+- Recruited adaptor riding on internalised EGFR: non-core; no tethering (rule 7), no stage marker, so no sub-compartment row.

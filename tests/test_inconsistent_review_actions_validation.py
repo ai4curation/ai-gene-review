@@ -228,3 +228,31 @@ def test_remove_with_inconsistent_kept_actions_still_warns():
         "Divergent actions among the kept rows should still warn even when a "
         "distinct-citation REMOVE row is present"
     )
+
+
+def _negated_rows_yaml(negated_action: str, positive_actions: list[str]) -> dict:
+    """Positive rows plus one NOT row, all IDA from the same paper, on one term."""
+    yaml_data = _build_yaml(
+        "GO:0043814",
+        [{"evidence_type": "IDA", "pmid": "PMID:18260642", "action": a} for a in positive_actions]
+        + [{"evidence_type": "IDA", "pmid": "PMID:18260642", "action": negated_action}],
+    )
+    yaml_data["existing_annotations"][-1]["negated"] = True
+    yaml_data["references"] = yaml_data["references"][:1]
+    return yaml_data
+
+
+def test_negated_row_is_not_compared_with_positive_rows():
+    """The METJA cofC pattern: a NOT row asserts the opposite claim.
+
+    Accepting the positive rows and removing the contradicting NOT row is the
+    consistent judgement, so the two polarities must not be grouped together.
+    """
+    report = _validate(_negated_rows_yaml("REMOVE", ["ACCEPT", "ACCEPT"]))
+    assert not _has_inconsistent_action_warning(report)
+
+
+def test_positive_rows_still_compared_when_a_negated_row_is_present():
+    """Excluding NOT rows must not hide a real divergence among the positive rows."""
+    report = _validate(_negated_rows_yaml("REMOVE", ["ACCEPT", "MARK_AS_OVER_ANNOTATED"]))
+    assert _has_inconsistent_action_warning(report)
