@@ -10,7 +10,7 @@ lineage, and writes ``inventory.tsv``. The ``status`` column is computed, not ju
   NEGATED             the reviewed row is itself a NOT annotation
   UNPLACED            the snapshot has the IBA but the gene is not a leaf of a tree we can read
 
-    uv run python projects/IBA_REVIEW/rereview-2026-11-21/inventory.py
+    uv run python projects/IBA_REVIEW/rereview-2026-11-21/inventory.py [ACTION OUT.tsv]
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ FIELDS = [
 ]
 
 
-def main() -> None:
+def main(action: str = "REMOVE", out_path: Path = HERE / "inventory.tsv") -> None:
     cache = paint_cache_dir(Path(".cache/paint"))
     with open_text(download_cached(IBD_GAF_URL, cache)) as fh:
         ibd = parse_ibd_gaf(fh)
@@ -62,7 +62,7 @@ def main() -> None:
     out = []
     for path in sorted(glob.glob("genes/*/*/*-ai-review.yaml")):
         text = Path(path).read_text()
-        if "IBA" not in text or "REMOVE" not in text:
+        if "IBA" not in text or action not in text:
             continue
         doc = safe_load(text) or {}
         acc = str(doc.get("id", ""))
@@ -71,7 +71,7 @@ def main() -> None:
         anns = doc.get("existing_annotations") or []
         for a in anns:
             rev = a.get("review") or {}
-            if a.get("evidence_type") != "IBA" or rev.get("action") != "REMOVE":
+            if a.get("evidence_type") != "IBA" or rev.get("action") != action:
                 continue
             go, neg = a["term"]["id"], bool(a.get("negated"))
             snap_nodes = leaf_rows.get((acc, go, neg))
@@ -116,7 +116,7 @@ def main() -> None:
                     break
             row["status"] = status
             out.append(row)
-    with open(HERE / "inventory.tsv", "w", newline="") as fh:
+    with open(out_path, "w", newline="") as fh:
         w = csv.DictWriter(fh, FIELDS, delimiter="\t", lineterminator="\n")
         w.writeheader()
         w.writerows(out)
@@ -127,4 +127,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    # optional: <ACTION> <output.tsv>, for passes over other review actions
+    main(*([sys.argv[1], Path(sys.argv[2])] if len(sys.argv) == 3 else []))
