@@ -15,6 +15,7 @@
 - The shared PTHR12290 family review separates cornichon cargo receptors from unrelated PPCS enzymes in the same PANTHER family and leaves the cornichon PAINT terms for gene-level review [file:interpro/panther/PTHR12290/PTHR12290-review.yaml, "No cornichon gene review exists in this repo, so the cornichon PAINT terms (cargo receptor activity, ER-to-Golgi transport, COPII vesicle, synapse/dendrite) are left unassessed"].
 - Kacovska et al. summarize the conserved S. cerevisiae/human cornichon mechanism: cornichons bind cargoes and COPII-coat proteins so their partners can be incorporated into COPII-coated vesicles for ER export [PMID:41676957, "Due to their ability to bind both cargoes and COPII-complex proteins"]
 - The same paper models conserved S. cerevisiae Erv14 residues against Sec24 and finds that the predicted Sec24 contacts lie next to or in the Sec24 D-site, matching experimental work on the budding-yeast cargo receptor [PMID:41676957, "the model corresponds well to experimentally obtained data"].
+- The cached literature supports Erv14 as a conserved cornichon COPII cargo receptor, but did not identify an assayed S. pombe Erv14-specific transmembrane cargo or test how Erv14 cargo choice differs from Cor1 cargo choice.
 
 ## GO-CAM context
 
