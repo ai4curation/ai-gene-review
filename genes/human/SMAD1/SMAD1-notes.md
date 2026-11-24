@@ -16,6 +16,8 @@ The core biochemical pathway is BMP receptor phosphorylation of SMAD1, SMAD1-SMA
 
 SMAD1 also has a SMAD4-independent RNA-processing role. In human pulmonary artery smooth-muscle cells, BMP4 requires SMAD1/5 to increase pre-miR-21 and mature miR-21 without increasing pri-miR-21; SMAD1 binds DDX5/p68 and is recruited to the DROSHA microprocessor on pri-miR-21 [PMID:18548003]. This supports primary miRNA binding, DDX5 binding, and primary miRNA processing as noncanonical, non-core activities.
 
+The primary papers reviewed here support BMP-family signal transduction, transcriptional regulation, and noncanonical pri-miRNA processing; I did not find direct SMAD1 evidence for inflammatory-response execution.
+
 ## Protein-interaction rows
 
 Many IntAct rows assert only bare `GO:0005515 protein binding`. Those are intentionally uninformative in GO. The rows supported by mechanistic papers are represented better by specific terms already present in GOA: `co-SMAD binding` for SMAD4, `I-SMAD binding` for SMAD6, `DEAD/H-box RNA helicase binding` for DDX5, `ubiquitin protein ligase binding` for SMURF1/SMURF2, `protein kinase binding` for HIPK2, and `identical protein binding` for the SMAD1 homomer. Several remaining partners, including PSMB4, LEMD3, CTDSP1/2/L, IPO8, YAP1, FAM83G/PAWS1, RANBP3L, UCHL3, and USP15, are biologically plausible SMAD1 regulators but lack a more specific existing GO molecular-function term in this review.
