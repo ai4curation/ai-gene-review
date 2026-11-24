@@ -41,9 +41,9 @@ IC basis were not recovered.
 
 Reactome `R-HSA-163748` is cached as transcriptional activation of AGPAT1 by
 ChREBP:MLX and says the resulting AGPAT1 mRNA is translated to ACACB protein.
-That event does not support the old AGPAT1 ER-membrane row; the row is retained
-because AGPAT1 is truly in the ER membrane, and the likely intended Reactome
-event is `R-HSA-75885`.
+Reactome legitimately exports `located_in` TAS rows from located transcription
+events, including this one; the source-record defect is the cached event summary
+misnaming the translation product as ACACB.
 
 ## Module and GO-CAM
 
