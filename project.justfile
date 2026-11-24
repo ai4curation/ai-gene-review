@@ -1462,6 +1462,17 @@ local-quote-baseline *args:
 ec-class-audit *files:
     uv run python -m ai_gene_review.validation.ec_class_consistency {{files}}
 
+# List author-supplied GO ids (NEW rows and their extensions, core_functions,
+# proposed_replacement_terms, proposed_parent, isoform_specific_terms) that an
+# offline signal marks obsolete. Same rule as the
+# obsolete_authored_term warning in `just validate`. The signals are incomplete --
+# a hit is informative, a clean result does not prove the ids are live -- so this
+# exits 0 by default; pass --strict to fail, --no-ontology to skip the GO snapshot.
+# Example: just obsolete-term-audit genes/human/CPT1C/CPT1C-ai-review.yaml
+[group('QC')]
+obsolete-term-audit *files:
+    uv run python -m ai_gene_review.validation.obsolete_authored_terms {{files}}
+
 # List processes that modules assert for a gene and that neither GOA nor the
 # gene's review carries: leads for NEW annotations, not annotations. Writes
 # reports/module-annotation-leads.tsv (git-ignored). See modules/README.md.
