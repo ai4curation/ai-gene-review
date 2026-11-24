@@ -76,10 +76,21 @@ at `PTN000182407`. That is now encoded in the family review's node assessments a
 `GO:0006145` separately — PAINT prunes per annotation, so each term needs its own request — and
 `just export-paint-change-requests` emits both rather than leaving the ask in prose.
 
-**The target has to be the leaf, not a clade above it.** `PTN002462789`, pyrQ's parent, holds 34
-leaves, and one of them is *E. coli* AllB (P77671) — a genuine allantoinase, and one of the seeds
-of the very IBD being pruned. A loss at the parent would strip the term from a member that
-supports it, so leaf-level is a derivation rather than a conservative choice.
+**The target has to be the leaf, not a clade above it** — and the reason differs by term, because
+the two IBDs at `PTN000909483` have different seeds. `PTN002462789`, pyrQ's parent, holds 34
+leaves, one of which is *E. coli* AllB (P77671).
+
+- For **`GO:0004038`**, P77671 is among that IBD's own seeds
+  (`AT4G04955|S000001466|P77671|Q5B4C7`), so a loss at the parent would strip the term from a
+  member that helped establish it.
+- For **`GO:0006145`**, P77671 is *not* a seed — that IBD rests only on `AT4G04955` and `Q5B4C7`,
+  both from organisms with urate oxidase. The reason is different and arguably stronger: pruning
+  at the parent would decide, for AllB's branch, whether *E. coli* — which has no urate oxidase —
+  retains a purine-to-allantoin route. That is precisely the taxonomic question the node
+  assessment says it is **not** settling today, so the loss cannot be placed where it would
+  pre-judge it.
+
+Either way the leaf is a derivation rather than a conservative choice.
 
 Whether pyrQ represents a second, independent acquisition of dihydroorotase activity inside the
 allantoinase clade, or whether PANTHER's tree simply places it badly, is not settled here and
