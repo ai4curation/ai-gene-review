@@ -244,6 +244,37 @@ Two separate mistakes, worth keeping apart:
 The restored version is stronger than the one deleted: the deleted sentence asserted a general
 fact about tyrosinases, where the record shows two copper sites resolved **on this protein**.
 
+### The narration rule needs re-checking after every commit, not once
+
+`e5fc71b771` stripped review narration from the module and set the rule: an `evidence[].statement`
+says what the source supports, a `description` describes the biology, the editorial trail lives
+here. Review confirmed the file clean. Two commits later, six statements narrated the PR again —
+"removed from the module in an earlier round", "the module previously reached this", "had rested
+on PMID:24816606 alone". The first of them spent five of its seven lines on the editing history
+of this PR and one on the source.
+
+Why it recurred is worth naming: each instance arrives while *explaining a fix*, which is exactly
+when the editing history is uppermost and feels like the relevant context. The rule is easy to
+state, easy to verify once, and easy to break the next time there is something to explain. So it
+belongs in the pre-push check alongside the quote run, not in the set of things considered settled.
+
+And the correct home for all six already existed — this file carries every one of those points,
+in fuller form, which is what makes their presence in the YAML redundant as well as wrong.
+
+### Attribute to the right structure within a deposition set
+
+The restored copper claim said UniProt records the six Cu(2+) residues "from" the 2.11 Å
+structure, and `role_description` said they were "resolved in" it. They are not. Every one of the
+six `FT BINDING` lines carries `/evidence="ECO:0007829|PDB:6RRP, ECO:0007829|PDB:6RRQ"` — the
+2.40 Å and 2.70 Å entries — and 6RRR, the 2.11 Å one, appears in no `FT` evidence at all. The
+`RP` line reports the *best* resolution in a reference that covers all three, so quoting it and
+then saying the residues come from it reads one structure's resolution onto another's evidence.
+
+Nothing substantive turned on it — one paper, one deposition set — but the module stated a
+specific attribution the record contradicts, in the field grounding its best-evidenced claim.
+When a reference covers several structures, the `RP` resolution and the `FT` evidence are
+different facts about different members of the set.
+
 ### The grounding was inverted, and nothing in the file showed it
 
 Round 9's sharpest observation is not about any single claim. Part 2 grounded PvdO's *single
