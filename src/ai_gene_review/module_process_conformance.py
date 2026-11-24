@@ -87,6 +87,10 @@ class GoProcessGraph:
     def is_sibling_branch(self, term: str, expected: str) -> bool:
         """Whether ``term`` lies below a direct parent of ``expected`` but off its line.
 
+        Only the is-a parents of ``expected`` are considered, so a process related
+        to it through ``part_of`` alone is never found as a sibling. That limits
+        sensitivity; it does not produce false warnings.
+
         >>> up = {"GO:plc": {"GO:gpcr"}, "GO:camp": {"GO:gpcr"}, "GO:gpcr": set()}
         >>> graph = GoProcessGraph(
         ...     ancestors=lambda t: frozenset(up.get(t, ())),
@@ -373,17 +377,19 @@ def module_process_conformance(
     gene_index: dict[str, Path] | None = None,
     genes_dir: Path = Path("genes"),
     graph: GoProcessGraph | None = None,
+    go_adapter: str | None = "sqlite:obo:go",
 ) -> dict[str, Any]:
     """Compare every concrete exemplar with the process its annoton sits under.
 
     ``gene_index`` maps a base UniProt accession to its gene review path; the GOA
     file is read from the same folder. ``graph`` may be injected for tests;
-    otherwise the local GO snapshot is used, and a failure to load it yields no
-    rows and a ``failure`` message instead of false negatives.
+    otherwise the GO snapshot named by ``go_adapter`` is used (the validator
+    passes the one configured in ``conf/oak_config.yaml``), and a failure to load
+    it yields no rows and a ``failure`` message instead of false negatives.
     """
     oak: OakGoProcessGraph | None = None
     if graph is None:
-        oak = oak_go_process_graph()
+        oak = oak_go_process_graph(go_adapter)
         graph = oak.graph
     if gene_index is None:
         gene_index = index_gene_reviews(genes_dir)

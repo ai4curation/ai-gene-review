@@ -2085,6 +2085,7 @@ def validate_module_file(
             doc,
             gene_index=gene_index,
             genes_dir=genes_dir if genes_dir is not None else project_root / "genes",
+            go_adapter=adapter_map.get("GO"),
         )
         if process_conformance["failure"]:
             warnings.append(f"Process conformance not checked: {process_conformance['failure']}")
