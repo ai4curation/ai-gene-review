@@ -3,7 +3,9 @@
 Each NCBIfam model in ``hmm_PGAP.tsv`` can carry EC numbers and GO terms. PGAP uses
 both to annotate RefSeq proteins, and GO's InterPro2GO mappings inherit the GO terms
 for the models InterPro integrates. A GO molecular-function term names a reaction
-through its EC cross-references, so it can be compared with the model's EC numbers.
+through its EC cross-references, so it can be compared with the model's EC numbers. A
+term with no complete EC cross-reference reaches one through Rhea when its Rhea
+cross-references map to exactly one complete EC (``RheaEC``, ``GoHierarchy``).
 
 For every (model, GO term) pair where the term has complete EC cross-references and
 the model has at least one EC number, the pair is classified:
