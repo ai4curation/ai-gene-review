@@ -29,4 +29,4 @@ The GOA `GO:0006094 gluconeogenesis` IDA row cites Collino et al. That paper pla
 - `GO:0005737 cytoplasm` is too general once the cytosol rows are asserted.
 - The propagated `protein kinase binding` rows are left `UNDECIDED`: the claim is not core and no cached mouse or human primary evidence identifies the relevant kinase-binding assay.
 - The HDA `myelin sheath` row is left `UNDECIDED` because the cached PMID 17634366 abstract describes a CNS myelin proteome but does not name Pgam1.
-- The PGAM4-derived `sperm principal piece` row is marked over-annotated for Pgam1. The remaining specialized locations (`nucleus`, `neuronal cell body`, `ooplasm`) are plausible but non-core cytoplasmic or tissue-context rows; `rough endoplasmic reticulum cisterna` is over-annotated for this soluble cytosolic enzyme.
+- The PGAM4-derived `sperm principal piece` row is marked over-annotated for Pgam1. The rat-derived `nucleus` and `neuronal cell body` rows are kept as non-core pools based on PMID:1314249, `ooplasm` is left `UNDECIDED` for lack of an accessible primary ooplasm assay, and `rough endoplasmic reticulum cisterna` is over-annotated for this soluble cytosolic enzyme.
