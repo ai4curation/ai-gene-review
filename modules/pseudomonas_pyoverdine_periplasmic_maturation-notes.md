@@ -91,6 +91,28 @@ optional, so the honest encoding is to assert neither relation. Worth noting as 
 no enum member fits, the temptation is to pick the nearest one and qualify it in prose, and a
 reader of the data never sees the qualification.
 
+The unordered edge is also a positive finding, not a shrug. The review devotes a section to it —
+"Reactions of periplasmic pyoverdine biogenesis may not occur in a strict order" — and closes by
+saying there is no evidence for any channeling that could impose one. Both sentences are now
+quoted on the connection.
+
+## A third pattern: encode the warrant, not just the conclusion
+
+Round 3 of review found that `optional: true` and `selection: ONE_OR_MORE` were argued only in
+this notes file and in the YAML's free-text `notes`, with no `evidence` item on either the part
+or the variant set — even though `ModulePart` and `ModuleVariantSet` both have an `evidence`
+slot and `modules/` uses part-level evidence over 300 times. Worse, the sentence that licenses
+`optional: true` states the case outright ("Removal of both tailoring enzymes leaves the
+original glutamate unaltered") and was quoted nowhere, so what the file argued from instead was
+the *single*-enzyme deletion, making an inference the review renders unnecessary.
+
+That is the same shape as the round-1 quote finding: a weaker sentence cited while the direct
+one sits in the same paper. Three rounds, three variants of one mistake — the structural
+decision was right every time, and every time the machine-readable justification for it was
+thinner than the prose beside it. The rule to carry forward: when a structural slot is set
+because of something a source says, quote that sentence in the slot's own `evidence`, not in a
+note nearby.
+
 ## Open questions for a reader with more sources
 
 1. Ground the PtaA variant from the primary paper (the review's ref 74).
