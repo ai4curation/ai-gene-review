@@ -9,8 +9,8 @@ NCBIfam release hmm_PGAP/20.0. Each row is a model in `hmm_PGAP.tsv` whose GO te
 | WRONG_REACTION | 65 | 97 | 1202530 |
 | WRONG_COFACTOR | 11 | 12 | 153187 |
 | EC_SUSPECT | 4 | 17 | 194686 |
-| CHECK | 32 | 36 | 1119506 |
-| ACCEPTABLE | 25 | 68 | 1036283 |
+| CHECK | 33 | 37 | 1124881 |
+| ACCEPTABLE | 24 | 67 | 1030908 |
 
 ## GO term names a different enzyme's reaction (65)
 
@@ -107,7 +107,7 @@ NCBIfam release hmm_PGAP/20.0. Each row is a model in `hmm_PGAP.tsv` whose GO te
 | NF007604.0 enterobactin synthase subunit EntD (6.3.2.14) | GO:0008897 holo-[acyl-carrier-protein] synthase activity | keep the term; check the EC | GO:0047527 2,3-dihydroxybenzoate-serine ligase activity | EntD is the phosphopantetheinyl transferase of enterobactin synthesis, and the PPTase term fits it. EC 6.3.2.14 is the 2,3-dihydroxybenzoate--serine ligase reaction (GO:0047527), which is not EntD's. |
 | NF042999.1 beta-ketothiolase BktB (2.3.1.1, 2.3.1.16) | GO:0003985 acetyl-CoA C-acetyltransferase activity | keep the term; check the EC | EC 2.3.1.1: GO:0004042 L-glutamate N-acetyltransferase activity, acting on acetyl-CoA as donor / EC 2.3.1.16: GO:0003988 acetyl-CoA C-acyltransferase activity | The acetoacetyl-CoA thiolase term fits beta-ketothiolase BktB, but one of the model's EC numbers, 2.3.1.1, is amino-acid N-acetyltransferase. |
 
-## Unclear from names alone (32)
+## Unclear from names alone (33)
 
 | model, product name (EC) | GO term | proposed | GO terms for the model's EC | note |
 |---|---|---|---|---|
@@ -128,6 +128,7 @@ NCBIfam release hmm_PGAP/20.0. Each row is a model in `hmm_PGAP.tsv` whose GO te
 | NF008668.0 D-alanyl-D-alanine endopeptidase (3.4.21.-) | GO:0009002 serine-type D-Ala-D-Ala carboxypeptidase activity | check | (partial EC 3.4.21.-; not listed) | D-Ala-D-Ala endopeptidases (PBP7 type) often also act as DD-carboxypeptidases. |
 | NF007525.0 alpha-glucosidase (3.2.1.20) | GO:0004555 alpha,alpha-trehalase activity | check | GO:0004558 alpha-1,4-glucosidase activity | An alpha-glucosidase carries trehalase. |
 | NF011685.0 peptidoglycan glycosyltransferase FtsI (3.4.16.4) | GO:0008955 peptidoglycan glycosyltransferase activity | check | GO:0009002 serine-type D-Ala-D-Ala carboxypeptidase activity | The model is named peptidoglycan glycosyltransferase FtsI, but FtsI is usually treated as the transpeptidase of FtsW-FtsI. |
+| NF007998.1 purine nucleoside phosphorylase YfiH (2.4.2.1) | GO:0004000 adenosine deaminase activity | check | GO:0004731 purine-nucleoside phosphorylase activity | The model's comment says only that YfiH (PgeF) may also act as an adenosine deaminase, and the protein was recently reassigned as a purine nucleoside phosphorylase; whether the second activity is established needs the literature. |
 | TIGR02024.1 glutamate formimidoyltransferase (2.1.2.5) | GO:0030412 formimidoyltetrahydrofolate cyclodeaminase activity | check | GO:0030409 glutamate formimidoyltransferase activity | Right only if the model covers the bifunctional formimidoyltransferase-cyclodeaminase. |
 | NF006369.1 enoyl-ACP reductase FabI (1.3.1.39) | GO:0004318 enoyl-[acyl-carrier-protein] reductase (NADH) activity | check | GO:0141148 enoyl-[acyl-carrier-protein] reductase (NADPH) activity | E. coli FabI is NADH-dependent, so the term may be right and the model's NADPH EC (1.3.1.39) the question. |
 | NF011704.0 RNA 2',3'-cyclic phosphodiesterase (3.1.4.58) | GO:0004113 2',3'-cyclic-nucleotide 3'-phosphodiesterase activity | check | GO:0008664 RNA 2',3'-cyclic 3'-phosphodiesterase activity | RNA 2',3'-cyclic phosphodiesterase carries the 2',3'-cyclic-nucleotide 3'-phosphodiesterase term. |
@@ -144,7 +145,7 @@ NCBIfam release hmm_PGAP/20.0. Each row is a model in `hmm_PGAP.tsv` whose GO te
 | NF052578.1 sterol demethylase protein SdmB (1.1.1.270, 1.1.1.417) | GO:0004029 aldehyde dehydrogenase (NAD+) activity | check | EC 1.1.1.270: GO:0000253 3-beta-hydroxysteroid 3-dehydrogenase (NADP+) activity / EC 1.1.1.417: (no GO term reaches it) | The sterol demethylase SdmB (an alcohol dehydrogenase EC) carries aldehyde dehydrogenase. |
 | NF041160.1 digeranylgeranylglycerophospholipid reductase (1.3.1.101) | GO:0102067 geranylgeranyl diphosphate reductase activity | check | (no GO term reaches EC 1.3.1.101) | Digeranylgeranylglycerophospholipid reductase carries geranylgeranyl diphosphate reductase. |
 
-25 further entries were triaged `ACCEPTABLE` (bifunctional models, dual-substrate names, partial or secondary activities, EC reclassifications) and are listed in `triage.yaml` only.
+24 further entries were triaged `ACCEPTABLE` (bifunctional models, dual-substrate names, partial or secondary activities, EC reclassifications) and are listed in `triage.yaml` only.
 
 ## Class terms that do not fit the model's EC (41)
 

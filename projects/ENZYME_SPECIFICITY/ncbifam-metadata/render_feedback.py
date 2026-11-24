@@ -7,7 +7,11 @@ Checks first, and fails rather than writing a misleading report:
 * conversely, every triaged (model, GO term) pair is one of those flagged pairs, unless
   its entry is marked ``source: sweep`` (a model the EC comparison cannot catch);
 * every triaged (model, GO term) pair exists in the NCBIfam release table;
-* every ``better`` term exists in the GO database and is not obsolete.
+* every ``better`` term exists in the GO database and is not obsolete, and no
+  EC_SUSPECT entry carries one;
+* every class-term lead (``class_term_outside_model_ec`` and
+  ``class_term_within_model_ec``) has exactly one ``class_term_triage`` entry, and
+  that list triages nothing else.
 
     uv run python projects/ENZYME_SPECIFICITY/ncbifam-metadata/render_feedback.py
 """

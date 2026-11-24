@@ -19,7 +19,7 @@ that reach, and the lists rank by it.
 1. **Pair up terms and ECs.** Each model's GO terms are paired with its EC numbers. A
    term's reaction is its complete EC cross-references from QuickGO. A term with none
    reaches an EC through Rhea when its Rhea cross-references map, by Rhea's own
-   `rhea2ec.tsv`, to exactly one complete EC and it carries no partial EC (see
+   `rhea2ec.tsv`, to exactly one complete EC and it carries no EC of its own (see
    [Rhea](#reaching-ecs-through-rhea)). 2919 pairs have EC numbers on both sides, 72 of
    them through Rhea.
 2. **Classify each pair** as `consistent` when an EC matches, allowing for a partial
@@ -67,7 +67,8 @@ that reach, and the lists rank by it.
 | not compared: class term whose partial EC lies inside the model's partial EC (narrower; class-term triage) | 3 |
 | skipped: class term that is a GO ancestor of a term for the model's EC | 4 |
 | not compared: class term unrelated by EC class or GO ancestry (class-term triage) | 81 |
-| skipped: molecular function term that reaches no EC, directly or through Rhea | 2108 |
+| skipped: molecular function term whose Rhea reactions map to several ECs (Rhea route not used) | 45 |
+| skipped: molecular function term that reaches no EC, directly or through Rhea | 2063 |
 | EC on both sides | 2919 |
 | of which through Rhea | 72 |
 | consistent | 2652 |
@@ -87,8 +88,8 @@ Separately, 112 of these pairs carry an obsolete GO term, listed in
 | WRONG_REACTION | 65 | 97 | 1202530 |
 | WRONG_COFACTOR | 11 | 12 | 153187 |
 | EC_SUSPECT | 4 | 17 | 194686 |
-| CHECK | 32 | 36 | 1119506 |
-| ACCEPTABLE | 25 | 68 | 1036283 |
+| CHECK | 33 | 37 | 1124881 |
+| ACCEPTABLE | 24 | 67 | 1030908 |
 
 RefSeq hits are summed over the distinct models in each verdict, read from the release
 table, so the models without an EC number count too. A model with pairs in two verdicts
@@ -150,16 +151,16 @@ check could not compare it and placed the adenosine deaminase models
 with Rhea's [`rhea2ec.tsv`](https://ftp.expasy.org/databases/rhea/tsv/rhea2ec.tsv),
 using `rhea-directions.tsv` because GO may cite any of a reaction's four directional ids.
 A term counts only when its Rhea reactions reach exactly one complete EC and it carries
-no partial EC of its own. Generic terms are excluded that way: ATP hydrolysis activity
+no EC cross-reference of its own, partial or complete. Generic terms are excluded that way: ATP hydrolysis activity
 (nine ECs through one Rhea reaction), GTPase activity (seven) and the class term for
 NAD(P)-dependent CH-OH oxidoreductases (partial EC 1.1.1.-). Without that rule, every
 helicase, chaperone and transporter carrying them reads as a mismatch.
 
 The route makes 72 more pairs comparable. 68 agree with the model's EC. The four that
 do not are triaged: the Kce term for 3-keto-5-aminohexanoate cleavage (EC 2.3.1.247)
-on two acetyl-CoA transferase models with their own ECs (wrong reaction), and two
-second activities named in the models' own descriptions (NadN's NAD+ diphosphatase,
-YfiH's adenosine deaminase). The same lookup adds Rhea-linked terms as candidates for
+on two acetyl-CoA transferase models with their own ECs (wrong reaction), NadN's NAD+
+diphosphatase, a second activity its model description names (acceptable), and YfiH's
+adenosine deaminase, which its model comment calls only possible (check). The same lookup adds Rhea-linked terms as candidates for
 the model's own EC, so the adenosine deaminase models now list GO:0004000. The run
 records the SHA-256 of both Rhea tables in `release_table_check.yaml`.
 
@@ -226,9 +227,10 @@ right only for its allantoate amidohydrolase members.
   terms for each model's own EC from the model itself. It does not list them for a
   partial EC, which would offer a whole subclass, or when a complete EC has more than
   ten. It says `(model has no EC)` for the sweep models without one.
-- **Function terms that reach no EC are never compared.** 2108 pairs join a model that
+- **Function terms that reach no EC are never compared.** 2063 pairs join a model that
   has an EC number to a molecular function term that reaches no complete EC, directly or
-  through Rhea. What they are was not characterised, and a sister-reaction error on such
+  through Rhea, and 45 more to a term whose Rhea reactions map to several ECs, which the
+  route does not use. What they are was not characterised, and a sister-reaction error on such
   a term would be missed. The 779 class terms that carry only a partial EC are handled
   separately (see [Class-term leads](#class-term-leads)).
 - **The Rhea route is deliberately narrow.** A term counts only when all its Rhea

@@ -7,8 +7,8 @@ through its EC cross-references, so it can be compared with the model's EC numbe
 term with no complete EC cross-reference reaches one through Rhea when its Rhea
 cross-references map to exactly one complete EC (``RheaEC``, ``GoHierarchy``).
 
-For every (model, GO term) pair where the term has complete EC cross-references and
-the model has at least one EC number, the pair is classified:
+For every (model, GO term) pair where the term reaches a complete EC (directly or
+through Rhea) and the model has at least one EC number, the pair is classified:
 
 * ``consistent``: an EC of the term equals, or falls under, one of the model's ECs.
 * ``sister_reaction``: no match, but some pair shares the first three EC levels,
@@ -17,7 +17,7 @@ the model has at least one EC number, the pair is classified:
 * ``other_reaction``: no match and no shared subclass.
 
 Pairs that do not match are then placed in the GO hierarchy (semsql GO, the database
-``just validate`` uses) against the GO terms that cross-reference the model's own ECs:
+``just validate`` uses) against the GO terms that reach the model's own ECs:
 ``broader`` (an ancestor: true, less specific), ``narrower`` (a descendant: a specific
 substrate or cofactor) or ``unrelated`` (a different reaction, the strongest lead).
 
@@ -63,6 +63,7 @@ SKIP_LABELS = {  # in reporting order; each test applies only to pairs the ones 
     "mf_term_partial_ec_within_model": "with a class term whose partial EC lies inside the model's partial EC (narrower)",
     "mf_term_ancestor_of_model_term": "with a class term that is a GO ancestor of a term for the model's EC, though its partial EC does not contain it",
     "mf_term_partial_ec_outside_model": "with a class term unrelated to the model's EC by EC class or GO ancestry",
+    "mf_term_rhea_ambiguous": "with a molecular function term whose Rhea reactions map to several ECs (not used)",
     "mf_term_has_no_ec": "with a molecular function term that reaches no EC, directly or through Rhea",
 }
 QUICKGO = "https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/{ids}"
@@ -188,7 +189,8 @@ class GoHierarchy:
 
     With ``rhea``, a GO term cross-referenced to a Rhea reaction also counts as
     cross-referencing that reaction's EC number, but only when its Rhea cross-references
-    reach exactly one EC and the term carries no partial EC of its own. A generic term
+    reach exactly one EC and the term carries no EC cross-reference of its own, partial
+    or complete (the same gate ``main`` applies to pairs). A generic term
     fails that test: ATP hydrolysis activity's Rhea reaction maps to nine ECs (helicases,
     translocases), so the route would give it a reaction it does not name.
     """
@@ -209,15 +211,17 @@ class GoHierarchy:
             ):
                 if ecs := rhea.ecs(xref):
                     reached.setdefault(term, set()).update(ecs)
-            class_terms = {
+            # a term with an EC cross-reference of its own, partial (a class term) or
+            # complete, keeps that EC; Rhea is only the route for terms with none
+            has_ec_xref = {
                 t
                 for (t,) in self.db.execute(
                     "SELECT subject FROM statements WHERE predicate='oio:hasDbXref' "
-                    "AND value LIKE 'EC:%-%' AND subject LIKE 'GO:%'"
+                    "AND value LIKE 'EC:%' AND subject LIKE 'GO:%'"
                 )
             }
             for term, ecs in reached.items():
-                if term in class_terms:
+                if term in has_ec_xref:
                     continue
                 if len(ecs) == 1 and is_complete_ec(next(iter(ecs))):
                     self.rhea_ecs_by_term[term] = ecs
@@ -298,7 +302,8 @@ def placement(
     ``broader``: an ancestor of a term for the model's EC (true, only less specific).
     ``narrower``: a descendant of such a term (a more specific substrate or cofactor).
     ``unrelated``: neither, so the term names a different reaction.
-    ``no_go_for_model_ec``: no GO term cross-references the model's EC numbers.
+    ``no_go_for_model_ec``: no GO term reaches the model's EC numbers, by EC
+    cross-reference or through Rhea.
     ``broad_class``: a class-level term covering the model's EC subclass (see
     ``broad_class_term``), which GO's hierarchy does not always link to the EC's term.
     This heuristic is tested first, before the hierarchy is consulted.
@@ -458,7 +463,12 @@ def main() -> None:
                             record | {"ancestry_tested": bool(model_terms)}
                         )
                 else:
-                    skipped["mf_term_has_no_ec"] += 1
+                    key = (
+                        "mf_term_rhea_ambiguous"
+                        if go in hierarchy.rhea_ambiguous
+                        else "mf_term_has_no_ec"
+                    )
+                    skipped[key] += 1
                 continue
             rows.append(
                 {
@@ -545,7 +555,8 @@ def render(
     lines += [
         "",
         "Pairs whose EC numbers do not match are placed in the GO hierarchy relative to "
-        "the GO terms that cross-reference the model's own EC numbers:",
+        "the GO terms that reach the model's own EC numbers, by EC cross-reference or "
+        "through Rhea:",
         "",
         "| placement | pairs |",
         "|---|---|",
@@ -587,10 +598,11 @@ def render(
     )
     table(
         "no_go_for_model_ec",
-        "No GO term cross-references the model's EC",
-        "These cannot be placed: no GO term carries the model's EC as a "
-        "cross-reference (a recent EC number, or a GO term cross-referenced only to "
-        "Rhea). Check by name.",
+        "No GO term reaches the model's EC",
+        "These cannot be placed: no GO term reaches the model's EC, by EC "
+        "cross-reference or through Rhea. The EC may be recent, or its GO term may "
+        "cross-reference a Rhea reaction that maps to several ECs, which the Rhea "
+        "route does not use. Check by name.",
     )
     broader = meta["placements"].get("broader", 0)
     broad = meta["placements"].get("broad_class", 0)
