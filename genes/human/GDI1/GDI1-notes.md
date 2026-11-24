@@ -9,10 +9,10 @@
 
 GDI1/Rab GDI alpha is a soluble Rab GDP-dissociation inhibitor. It binds prenylated GDP-bound Rabs, suppresses nucleotide exchange while the Rab is in the soluble complex, extracts inactive Rabs from membranes, and thereby maintains a cytosolic Rab:GDI pool for repeated membrane-delivery cycles [PMID:19570034; PMID:23815289].
 
-- GDI1 preferentially interacts with RAB10 over GDI2 in the insulin-stimulated GLUT4-trafficking system and localizes with RAB10 and GLUT4 at the trans-Golgi network and peripheral cytoplasm [PMID:19570034].
+- GDI1 preferentially interacts with RAB10, while the paralog GDI2 favors RAB4A, in the insulin-stimulated GLUT4-trafficking system; both GDIs localize with RAB10 and GLUT4 at the trans-Golgi network and peripheral cytoplasm [PMID:19570034].
 - The Legionella SidM/DrrA structural paper captures the same core mammalian mechanism from the pathogen side: host prenylated Rab1:GDP is sequestered by GDI1 in the cytosol, and Rab1 activation requires GDI displacement [PMID:19942850].
 - In the RNF115/TLR GO-CAM pathway, GDI1 is recruited to RAB1A and RAB13; RNF115-catalyzed K11-linked ubiquitination of RAB1A and RAB13 blocks this recruitment and inhibits Rab recycling, thereby limiting TLR post-ER and post-Golgi trafficking [PMID:35343654].
-- Several large human interactome papers report GDI1 interactions with RAB1A, RAB4A, LNX1, and USP25. Rows to RAB1A and RAB4A support `Rab GTPase binding`; rows to LNX1 and USP25 remain bare `protein binding` and are not mechanistically informative enough for GO [PMID:25416956; PMID:25910212; PMID:26496610; PMID:28514442; PMID:33961781; PMID:35271311; PMID:35914814].
+- Several large human interactome papers report GDI1 interactions with RAB1A, RAB4A, LNX1, and USP25. Rows to RAB1A and RAB4A support `small GTPase binding`; rows to LNX1 and USP25 remain bare `protein binding` and are not mechanistically informative enough for GO [PMID:25416956; PMID:25910212; PMID:26496610; PMID:28514442; PMID:33961781; PMID:35271311; PMID:35914814].
 
 ## GO-CAM 65692e7e00001822 consistency
 
