@@ -49,3 +49,7 @@
   describe two-component His-Asp phosphorelays. HPrK/P is a P-loop Ser kinase /
   phosphorylase; the historical description of it as the "sensor in a multicomponent
   phosphorelay" (PMID:9570401) uses phosphorelay loosely.
+
+## Review follow-up (PR review)
+
+- PMID:25278935 is full text, not just an interaction screen. HPrK/P did not interact with other kinases in the two-hybrid assay, but in vitro it phosphorylated the Hanks-type kinase PrkD (YbdM, O31435) on Ser148 in the activation loop [PMID:25278935 "HprK/P phosphorylated PrkD on the residue S148 (Figure 5A) in the activation loop"]. PrkD is therefore a candidate protein substrate of the HPrK/P serine kinase beyond HPr and Crh; this is raised as a suggested question. The protein binding rows are still REMOVEd under the protein-binding policy, and their reasons now describe the paper correctly.
