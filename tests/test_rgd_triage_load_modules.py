@@ -129,3 +129,32 @@ def test_unresolved_node_ref_adds_nothing(tmp_path, capsys):
         mods, {"P00004": "G4", "P00005": "G5", "P00006": "G6"})}
     assert by_id["a"]["symbols"] == {"G4"}
     assert "unresolved module_ref big#no_such_node" in capsys.readouterr().err
+
+
+def test_ref_to_missing_module_adds_nothing(tmp_path, capsys):
+    analyze = _load_script()
+    mods = tmp_path / "modules"
+    mods.mkdir()
+    _write(
+        mods / "a.yaml",
+        {"id": "MODULE:a", "title": "A",
+         "module": {"id": "a", "annotons": [_gene("P00004")],
+                    "parts": [{"node": {"id": "r", "module_ref": "no_such_module#n"}}]}},
+    )
+    by_id = {m["id"]: m for m in analyze.load_modules(mods, {"P00004": "G4"})}
+    assert by_id["a"]["symbols"] == {"G4"}
+    assert "module_ref to missing module 'no_such_module'" in capsys.readouterr().err
+
+
+def test_invalid_yaml_warns_and_is_skipped(tmp_path, capsys):
+    analyze = _load_script()
+    mods = tmp_path / "modules"
+    mods.mkdir()
+    (mods / "broken.yaml").write_text("id: [unclosed\n")
+    _write(
+        mods / "a.yaml",
+        {"id": "MODULE:a", "title": "A", "module": {"id": "a", "annotons": [_gene("P00004")]}},
+    )
+    mods_loaded = analyze.load_modules(mods, {"P00004": "G4"})
+    assert [m["id"] for m in mods_loaded] == ["a"]
+    assert "broken.yaml is not valid YAML" in capsys.readouterr().err
