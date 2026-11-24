@@ -146,6 +146,36 @@ overstatements, in the same sentence, found in the same round. The lesson that g
 less about descriptions than about fixes: a flagged instance is a sample, so when a pattern is
 named, re-read the whole field for it rather than patching the line quoted in the review.
 
+## Ferribactin is the deacylated peptide
+
+Worth stating because two slots in this file got it wrong in opposite directions from the rest.
+The review's usage is consistent: the acylated species is always named "acylated ferribactin"
+("The acylated ferribactin is exported most likely by PvdE into the periplasm, where it is
+deacylated by the Ntn-type hydrolase PvdQ"), and bare **ferribactin is the deacylated peptide**,
+which is what PvdP then acts on ("After ferribactin is deacylated, the fluorescent
+dihydroxyquinoline ring system is generated"). The module agrees everywhere else — part 1's
+substrate is plain `ferribactin`, and the scope line puts PvdQ-dependent deacylation *outside*
+as upstream — so by its own boundary the ferribactin PvdP consumes is already deacylated.
+
+Two places nonetheless called it "the undeacylated precursor", giving one molecule incompatible
+acylation states inside one file. Both are fixed. The consequences differed, which is the part
+worth keeping:
+
+- On the connection, only the appositive was wrong. PvdN accepting ferribactin does place the
+  tailoring upstream of the oxidations, because ferribactin is PvdP's substrate — and the review
+  draws exactly that conclusion, that the ring system is not really relevant to the tailoring
+  enzymes.
+- On PvdN's `role_description`, the wrong appositive carried a wrong inference with it: "so this
+  tailoring step is not strictly ordered after deacylation". If ferribactin is already
+  deacylated, accepting it says nothing about ordering relative to deacylation. The claim was
+  not merely imprecisely worded; it did not follow.
+
+Unlike the five instances above, this is not a hedging failure — the statement was wrong rather
+than overconfident, and no amount of qualifying it would have helped. The check that catches it
+is different too: when the same entity appears in more than one slot, make sure the slots agree
+about what it is. Here part 1's `substrates`, the scope line and two prose passages were
+describing one molecule, and two of the four disagreed with the other two.
+
 ## Open questions for a reader with more sources
 
 1. Ground the PtaA variant from the primary paper (the review's ref 74).
