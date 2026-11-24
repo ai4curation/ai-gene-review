@@ -6,9 +6,9 @@ The succinyltransferase and glutaryltransferase rows were judged weak-or-nonenzy
 
 KAT2A association with the oxoglutarate dehydrogenase complex was kept as a real non-core association without treating OGDH colocalization as proof that histone succinyltransferase activity is a physiological KAT2A core function. [PMID:29211711 "OGDH binds to KAT2A"]
 
-The mouse-ISS process rows for cytokine production, long-term memory, regulatory T-cell differentiation, synaptic plasticity, T-cell activation, cartilage development, bone development, and stem-cell population maintenance were treated as phenotype-level transfers from mouse Kat2a rather than as direct human KAT2A core functions. [PMID:18838386 "human ATAC complexes incorporate in addition to GCN5 or PCAF"]
+The mouse-ISS process rows for cytokine production, long-term memory, regulatory T-cell differentiation, synaptic plasticity, T-cell activation, cartilage development, bone development, and stem-cell population maintenance were treated as phenotype-level transfers from mouse Kat2a rather than as direct human KAT2A core functions.
 
-The rat/Ensembl transfers for protein phosphatase binding, cell-projection organization, mitochondrial distribution, TNF response, NGF response, and cardiac muscle cell differentiation were treated as electronic phenotypic transfers not directly established for human KAT2A. [file:human/KAT2A/KAT2A-uniprot.txt "Protein lysine acyltransferase that catalyzes acetylation"]
+The rat/Ensembl transfers for protein phosphatase binding, cell-projection organization, mitochondrial distribution, TNF response, NGF response, and cardiac muscle cell differentiation were treated as electronic phenotypic transfers not directly established for human KAT2A.
 
 PMID:39694035 supports KAT2A as the acetyltransferase recruited by MYO1F to acetylate cGAS, not as the primary factor positioning cGAS at the plasma membrane. [PMID:39694035 "phosphorylation of MYO1F by spleen-associated tyrosine"]
 
