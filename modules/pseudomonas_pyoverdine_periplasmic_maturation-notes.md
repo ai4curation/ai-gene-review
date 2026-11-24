@@ -137,6 +137,15 @@ reading the description against the parts it summarises and asking whether any v
 more than the part does. Worth doing before publishing any module, since the description is what
 gets read without the apparatus around it.
 
+And the check has to be run over the whole sentence, not the clause that was flagged. The first
+pass fixed the PvdO clause and left the next one standing — "a PLP-dependent tailoring enzyme
+converts the glutamate side chain into one of the alternative mature forms" asserts
+unconditionally the step the part marks `optional: true`, and "one of" understates a set encoded
+`ONE_OR_MORE` whose source reports strains making the products of both branches. Two more
+overstatements, in the same sentence, found in the same round. The lesson that generalises is
+less about descriptions than about fixes: a flagged instance is a sample, so when a pattern is
+named, re-read the whole field for it rather than patching the line quoted in the review.
+
 ## Open questions for a reader with more sources
 
 1. Ground the PtaA variant from the primary paper (the review's ref 74).
