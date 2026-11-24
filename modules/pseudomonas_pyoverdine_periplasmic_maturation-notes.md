@@ -198,12 +198,29 @@ shape of five previous findings so well that I applied the fix without asking wh
 was consistent. A named pattern makes the next instance cheaper to fix and easier to see where it
 is not.
 
-What the module says now: the review is inconsistent on the verb, part 1 uses the weaker reading
-because it is in the discursive text rather than a summary legend and because nothing in the part
-turns on it, and the mechanistic gloss is labelled as this review's inference rather than the
-paper's claim. The same figure legend also says "PvdO, possibly in conjunction with other
-proteins, facilitates the final oxidation", which independently supports the PvdO hedging and is
-now quoted on gap 1.
+Even that was still taking a side. The right answer, which the next round supplied, is that the
+**ring-closure mechanism is unsettled**: the review presents the oxidative cyclisation cascade as
+a proposal and sets a postulated intramolecular Bucherer reaction beside it, noting that the
+pseudoverdin observation it rests on came from an artificial system whose product did not work in
+iron acquisition. If it is not known which chemistry closes the ring, it is not known whether
+PvdP catalyses the closure — so the verb question was never answerable from the text, and picking
+the weaker reading was the same mistake one notch quieter. Part 1 now asserts the hydroxylation
+and the oxidation, says the closure is open in both directions, and the question is knowledge
+gap 5, the only one touching the step the module calls solid.
+
+The same figure legend also says "PvdO, possibly in conjunction with other proteins, facilitates
+the final oxidation", which independently supports the PvdO hedging and is now quoted on gap 1.
+
+## Keep review history out of published slots
+
+By round 6 the module file had accumulated sentences like "this is the second attempt at encoding
+this relation honestly", "PRECEDES was used here first", "the first version collapsed them", and
+an `evidence[].statement` explaining what had been missing from the module rather than what the
+source establishes. That is this file's job, and the history records', and neither belongs in a
+published module that someone else will read without any of this context. An
+`evidence[].statement` should say what the source supports; a `description` should describe the
+biology; the editorial trail goes here. Cleaned out in `ebc052bb0c`'s successor — worth watching
+for, because each instance arrived as a reasonable-looking act of transparency.
 
 ## Open questions for a reader with more sources
 
