@@ -18,14 +18,14 @@ PTHR11931 already has a family review. It scopes `GO:0004619 phosphoglycerate mu
 
 GO-CAMs 61e0e55600001225 and 62d0afa500000298 use Pgam1 for the cytosolic phosphoglycerate mutase step of mouse gluconeogenesis. The model reaction is chemically coherent: in the gluconeogenic direction Pgam1 converts 2-phosphoglycerate to 3-phosphoglycerate for the downstream Pgk1 step. Pgam1 is the correct liver/kidney-expressed isoform for this shared reverse-of-glycolysis step, unlike the muscle isoform Pgam2.
 
-The GOA `GO:0006094 gluconeogenesis` IDA row cites Collino et al. That paper places Pgam1 in a calorie-restriction transcriptomic pattern favoring gluconeogenesis and reports increased hepatic Pgam1 mRNA, but does not directly assay Pgam1 enzyme flux in gluconeogenesis [PMID:24958256, "Pgam1 = 1.6-fold, p = 0.0057"]. The review therefore keeps gluconeogenesis as a real but non-core pathway context, and the GO-CAM review should continue to mention that the enabled_by evidence for the Pgam1 activity is transcriptomic rather than direct.
+The GOA `GO:0006094 gluconeogenesis` IDA row cites Collino et al. That paper places Pgam1 in a calorie-restriction transcriptomic pattern favoring gluconeogenesis and reports increased hepatic Pgam1 mRNA, but does not directly assay Pgam1 enzyme flux in gluconeogenesis [PMID:24958256, "Pgam1 = 1.6-fold, p = 0.0057"]. The review therefore accepts gluconeogenesis as a core direct pathway for the reversible Pgam1 reaction but records a source defect that the MGI evidence code should be checked and changed from IDA to IEP.
 
 ## Annotation decisions
 
 - `GO:0004619 phosphoglycerate mutase activity` is the core molecular function and is accepted on all evidence lines, including the two mouse IDA rows.
 - `GO:0004082 bisphosphoglycerate mutase activity` is kept as non-core because mouse UniProt transfers the side activity from human PGAM1. PTHR11931 does not currently scope the BPGM term to SF15/PGAM1, so this is flagged as the main residual question.
 - `GO:0006096 glycolytic process` is accepted as the core process. Obsolete `GO:0061621 canonical glycolysis` rows are modified to `GO:0006096`.
-- `GO:0006094 gluconeogenesis` and `GO:0046166 glyceraldehyde-3-phosphate biosynthetic process` are kept as non-core reverse-pathway contexts.
+- `GO:0006094 gluconeogenesis` is accepted as the core reverse pathway in liver/kidney gluconeogenesis, while `GO:0046166 glyceraldehyde-3-phosphate biosynthetic process` is kept as a non-core reverse-pathway context.
 - `GO:0005737 cytoplasm` is too general once the cytosol rows are asserted.
 - The propagated `protein kinase binding` rows are left `UNDECIDED`: the claim is not core and no cached mouse or human primary evidence identifies the relevant kinase-binding assay.
 - The HDA `myelin sheath` row is left `UNDECIDED` because the cached PMID 17634366 abstract describes a CNS myelin proteome but does not name Pgam1.
