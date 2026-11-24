@@ -18,13 +18,15 @@ ActR-IIB also binds non-activin ligands. A GDF11/myostatin antagonist study used
 and showed GDF11 binding blocked by GASP-1 or GASP-2 [PMID:24019467, "GDF-11 bound readily to
 ACVR2B/Fc"]. BMP3/ActRIIB signaling in colorectal cancer cells is a BMP ligand using the ALK4-SMAD2
 branch rather than the SMAD1/5/8 BMP arm [PMID:31665064, "BMP3 binds to activin type IIB receptor"].
-In pulmonary arterial endothelial cells, BMP9 signals through ALK1 with either BMPR-II or ActR-II
-as type II receptors; ActR-II contributes most to the BMP9-Smad2 output, while BMPR-II contributes
-more to IL-8, E-selectin, and growth inhibition [PMID:19366699, "ActR-II contributed more to
-BMP9-mediated Smad2 activation"]. A crystal structure directly resolves the ternary BMP9-ALK1-
-ActRIIB extracellular complex [PMID:22718755, "BMP9 with the extracellular domains of ALK1 and
-ActRIIB"]. These BMP9 data justify adding BMP receptor activity for ACVR2B even though the existing
-GOA file has only the activin-specific type II receptor term.
+For BMP9, the direct ACVR2B evidence is a ternary extracellular BMP9-ALK1-
+ActRIIB complex [PMID:22718755, "BMP9 with the extracellular domains of ALK1 and
+ActRIIB"]. A pulmonary endothelial BMP9 paper assayed BMPR-II and ActR-II as
+type II receptors, but in that naming convention ActR-II is ACVR2A rather than
+ACVR2B/ActR-IIB, so it is not positive ACVR2B evidence. BMP3 can also use
+ActRIIB in an ALK4/SMAD2 branch in colorectal cancer cells [PMID:31665064,
+"BMP3 binds to activin type IIB receptor"]. These BMP-family data justify
+adding BMP receptor activity for ACVR2B even though the existing GOA file has
+only the activin-specific type II receptor term.
 
 Several seeded BMP-related rows point to papers that do not actually establish ACVR2B in the cited
 context. The hemojuvelin/hepcidin abstract explicitly reports that HJV uses ActRIIA and BMPRII but
