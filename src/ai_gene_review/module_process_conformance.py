@@ -132,6 +132,7 @@ class OakGoProcessGraph:
     def session(self) -> Any:
         """Open the snapshot once; record a failure and stop trying."""
         if self.adapter_string is None:
+            self.failure = "No GO adapter is configured; process fit was not checked."
             return None
         from oaklib import get_adapter
 

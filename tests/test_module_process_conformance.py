@@ -278,3 +278,11 @@ def test_adrb2_is_flagged_against_plc_activating_signaling():
     assert [(row["status"], row["severity"]) for row in result["rows"]] == [
         ("SIBLING_PROCESS_ONLY", "warning")
     ]
+
+
+def test_no_go_adapter_is_reported_not_silently_skipped(tmp_path):
+    """A configuration without GO must say the check did not run."""
+    index = write_gene(tmp_path, "P1", [("involved_in", ADRENERGIC_CAMP, "IDA")])
+    result = module_process_conformance(module(), gene_index=index, go_adapter=None)
+    assert result["rows"] == []
+    assert result["failure"] and "not checked" in result["failure"]
