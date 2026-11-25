@@ -40,19 +40,24 @@ inhibiting autophagy-mediated degradation"].
 
 The protein-stabilization process is the immediate annotation for the EGLN3
 reaction. Negative regulation of ferroptosis is downstream but still
-evidence-backed as `acts_upstream_of`, because the reaction prevents GPX4 loss.
-The gene review and model are therefore consistent for the EGLN3 step.
+evidence-backed as `involved_in`, because the reaction prevents GPX4 loss and
+the existing GOA row uses that qualifier. The gene review and model are
+therefore consistent for the EGLN3 step.
 
-## QuickGO/GOA gap
+## GOA fetch
 
-`just fetch-gene human EGLN3` produced a GOA file containing only the header even
-though the 2026-11-04 UniProtKB record lists curated GO cross-references for
-cytoplasm, nucleus, cytosol, nucleoplasm, 2-oxoglutarate-dependent dioxygenase
-activity, HIF-proline dioxygenase activity, peptidyl-proline 4-dioxygenase
-activity, negative regulation of ferroptosis, protein hydroxylation and protein
-stabilization [file:human/EGLN3/EGLN3-uniprot.txt "GO; GO:0031545;
-F:peptidyl-proline 4-dioxygenase activity; IDA:UniProtKB."; file:human/EGLN3/EGLN3-uniprot.txt
-"GO; GO:0110076; P:negative regulation of ferroptosis; IDA:UniProtKB."].
+The first `just fetch-gene human EGLN3` attempt returned only a GOA header even
+though the 2026-11-04 UniProtKB record already listed curated GO cross-references
+for cytoplasm, nucleus, cytosol, nucleoplasm, 2-oxoglutarate-dependent
+dioxygenase activity, HIF-proline dioxygenase activity, peptidyl-proline
+4-dioxygenase activity, negative regulation of ferroptosis, protein
+hydroxylation and protein stabilization [file:human/EGLN3/EGLN3-uniprot.txt
+"GO; GO:0031545; F:peptidyl-proline 4-dioxygenase activity; IDA:UniProtKB.";
+file:human/EGLN3/EGLN3-uniprot.txt "GO; GO:0110076; P:negative regulation of
+ferroptosis; IDA:UniProtKB."].
 
-Because the exported GOA table was empty, the review records the supported
-annotations as `NEW` rows.
+That first empty GOA file was a transient fetch failure, not evidence that the
+annotations were missing upstream. A forced re-fetch on 2026-11-25 recovered 75
+GOA rows and seeded 73 current GOA annotations for full review. The final
+`EGLN3-ai-review.yaml` therefore reviews those existing rows directly rather
+than proposing the GPX4 and HIF chemistry as `NEW`.
