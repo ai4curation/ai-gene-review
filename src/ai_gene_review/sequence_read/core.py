@@ -305,9 +305,23 @@ def call_model(
         thinking_tokens=(usage.get("output_tokens_details") or {}).get(
             "thinking_tokens"
         ),
-        context_tokens_high=input_tokens > 1500 + len(prompt),
+        context_tokens_high=input_tokens > context_token_limit(prompt),
     )
     return rec
+
+
+def context_token_limit(prompt: str) -> int:
+    """Most input tokens a clean call can have: the tool's own context plus the question.
+
+    Measured on CLI 2.1.325: a one-sentence prompt used 949 input tokens, and the FEAT
+    and PSEUDO questions on 354 to 421 residues used about one token per 2.7 prompt
+    characters. The limit allows the tool's context (1,200) plus one token per two
+    characters, so an attachment of a few hundred tokens is flagged.
+
+    >>> context_token_limit("x" * 1500)
+    1950
+    """
+    return 1200 + len(prompt) // 2
 
 
 def usable(call: dict[str, Any]) -> bool:
@@ -343,13 +357,20 @@ def fetch_pfam_locations(accession: str) -> list[dict[str, Any]]:
     """Pfam matches with boundaries for a UniProt accession, from the InterPro API."""
     import requests
 
-    url = f"https://www.ebi.ac.uk/interpro/api/entry/pfam/protein/uniprot/{accession}/"
-    r = requests.get(url, timeout=60)
-    if r.status_code == 204:
-        return []
-    r.raise_for_status()
+    url: Optional[str] = (
+        f"https://www.ebi.ac.uk/interpro/api/entry/pfam/protein/uniprot/{accession}/"
+    )
+    results: list[dict[str, Any]] = []
+    while url:  # the API pages its results; follow every page
+        r = requests.get(url, timeout=60)
+        if r.status_code == 204:
+            break
+        r.raise_for_status()
+        page = r.json()
+        results += page["results"]
+        url = page.get("next")
     out = []
-    for res in r.json()["results"]:
+    for res in results:
         md = res["metadata"]
         for prot in res["proteins"]:
             for loc in prot["entry_protein_locations"]:
@@ -424,10 +445,10 @@ def choose_probe(
 ) -> tuple[Optional[Probe], str]:
     """Pick a catalytic residue to substitute and a matched decoy position.
 
-    The target is the first single-residue UniProt ACT_SITE, else the first
-    residue the model named that is really present at that position, preferring
-    one whose stated role is catalytic (nucleophile, acid/base) over a
-    cofactor- or substrate-binding one.
+    The target is the first single-residue UniProt ACT_SITE, else a residue the
+    model named that is really present at that position, preferring one whose
+    stated role is catalytic (nucleophile, acid/base), then an acidic residue
+    UniProt annotates as BINDING (a metal ligand), then any other.
     The decoy is a residue of the same type, inside the same UniProt DOMAIN when
     there is one, at least ``DECOY_MARGIN`` residues from any annotated site,
     any residue the model named, and outside cleaved peptides. Returns the probe,
@@ -446,10 +467,18 @@ def choose_probe(
             target = (f.start, "UniProt ACT_SITE")
             break
     if target is None:
-        # residues whose stated role is catalytic come before cofactor/binding ones
-        for r in sorted(
-            named, key=lambda r: not CATALYTIC_ROLE.search(str(r.get("role")))
-        ):
+        binding = {
+            p for f in record.of_type("BINDING") for p in range(f.start, f.end + 1)
+        }
+
+        def rank(r: dict[str, Any]) -> int:
+            if CATALYTIC_ROLE.search(str(r.get("role"))):
+                return 0
+            return (
+                1 if r["position"] in binding and r.get("residue") in ("D", "E") else 2
+            )
+
+        for r in sorted(named, key=rank):
             pos = r["position"]
             if 1 <= pos <= len(seq) and seq[pos - 1] == str(r.get("residue")):
                 if replacement_for(seq[pos - 1], family):
@@ -672,6 +701,8 @@ def probe_verdict(
     'TRACKS_CATALYTIC_RESIDUE'
     >>> probe_verdict("yes", "no", "no", True, True)
     'REJECTS_ANY_CHANGE'
+    >>> probe_verdict("yes", "uncertain", "yes", True, False)
+    'REPORTS_BUT_NOT_INACTIVE'
     >>> probe_verdict("yes", "yes", "yes", False, False)
     'INSENSITIVE'
     """
@@ -681,6 +712,9 @@ def probe_verdict(
         return "INCOMPLETE"
     if decoy != "yes" or decoy_reports:
         return "REJECTS_ANY_CHANGE"
-    if mutant == "no" or mutant_reports:
+    if mutant == "no":
         return "TRACKS_CATALYTIC_RESIDUE"
+    if mutant_reports:
+        # fs2f's second error pattern: the loss is seen, then argued around
+        return "REPORTS_BUT_NOT_INACTIVE"
     return "INSENSITIVE"

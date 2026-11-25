@@ -34,7 +34,9 @@ def genes_root(tmp_path: Path, pten: core.ProteinRecord, monkeypatch) -> Path:
 
 def test_prompts_are_fs2f_verbatim():
     """The prompts must stay identical to the benchmarked ones (fs2f @ 442bd92)."""
-    # SHA-256 of the string P in experiments/features/ask.py and experiments/pseudo/ask.py
+    # SHA-256 of the string P in experiments/features/ask.py and experiments/pseudo/ask.py,
+    # computed from those files in a checkout of fable-sequence-to-function at 442bd92
+    # (not from this module), so a match shows the constants are that text verbatim.
     assert (
         core.sha256(core.FEAT_PROMPT)
         == "b03b98845ad2ebd1e169fb60b413fee9c5ab657df3087b046ae444f81243661e"
@@ -92,7 +94,8 @@ def test_choose_probe_uses_model_residue_only_if_present(pten: core.ProteinRecor
     "wt,mut,decoy,mrep,drep,verdict",
     [
         ("yes", "no", "yes", True, False, "TRACKS_CATALYTIC_RESIDUE"),
-        ("yes", "yes", "yes", True, False, "TRACKS_CATALYTIC_RESIDUE"),
+        ("yes", "yes", "yes", True, False, "REPORTS_BUT_NOT_INACTIVE"),
+        ("yes", "uncertain", "yes", True, False, "REPORTS_BUT_NOT_INACTIVE"),
         ("yes", "no", "no", True, False, "REJECTS_ANY_CHANGE"),
         ("yes", "yes", "yes", False, False, "INSENSITIVE"),
         ("no", "no", "no", False, False, "WILD_TYPE_NOT_CALLED_ACTIVE"),
@@ -153,3 +156,19 @@ def test_cli_run_requires_uniprot_file(tmp_path: Path):
     )
     assert res.exit_code != 0
     assert "fetch-gene" in res.output
+
+
+def test_choose_probe_prefers_acidic_binding_residue():
+    """With no ACT_SITE (ADPRH), an acidic UniProt BINDING residue beats list order."""
+    adprh = core.read_uniprot(Path("genes/human/ADPRH/ADPRH-uniprot.txt"))
+    assert not adprh.of_type("ACT_SITE")
+    wt = {
+        "enzyme_family": "ADP-ribosylhydrolase",
+        "catalytic_residues": [
+            {"role": "Mg2+ coordination", "residue": "S", "position": 54},
+            {"role": "Mg2+ coordination", "residue": "D", "position": 55},
+        ],
+    }
+    probe = core.choose_probe(adprh, wt)[0]
+    assert probe is not None
+    assert probe.label(probe.target_position) == "D55A"

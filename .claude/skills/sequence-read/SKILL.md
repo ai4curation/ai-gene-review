@@ -14,7 +14,7 @@ sequence and the UniProt record, and writes a `RESULTS.md` that a review can cit
 as a `BIOINFORMATICS` reference.
 
 It is **opt-in**. Do not run it as part of a routine review. Each run bills three to
-five model calls (US$0.16 to 0.40 per gene in the worked examples below, at high effort) to
+five model calls (US$0.19 to 0.50 per gene in the worked examples below, at high effort) to
 the account the `claude` tool is signed in to.
 
 ## What the study found, and what follows for this skill
@@ -83,7 +83,8 @@ than the question allows is marked `context_tokens_high` and is not used.
 
 The prompts are the fs2f strings verbatim (a test pins their SHA-256). The probe
 target is the UniProt `ACT_SITE`, else a residue the model itself named and that is
-really present at that position, preferring a catalytic role over a binding one.
+really present at that position, preferring a stated catalytic role, then an acidic
+residue UniProt annotates as `BINDING` (a metal ligand), then list order.
 The substitution is Asp to Asn and Lys to Met for kinases, otherwise Ala. The decoy
 follows the fs2f rule: same residue type, inside the same UniProt `DOMAIN` when there
 is one, at least 3 residues from any annotated site or model-named residue, outside
@@ -115,7 +116,8 @@ model's; if that check fails for a call, do not rely on it.
 | Shuffled control `FAILS` | Discard the domain calls of this run. |
 | Named residue `NOT in the sequence` | The model misread or misremembered the position; discount its residue claims. |
 | Reported lost residue that matches the sequence | A lead that a canonical catalytic or cofactor residue is absent; check it with an alignment to active relatives. |
-| Probe `TRACKS_CATALYTIC_RESIDUE` | The call changed for the catalytic substitution and not for the decoy: the model is reading that residue. |
+| Probe `TRACKS_CATALYTIC_RESIDUE` | The catalytic mutant was called inactive and the decoy active: the model is reading that residue. |
+| Probe `REPORTS_BUT_NOT_INACTIVE` | The model named the substituted position but still called the mutant active or uncertain: the fs2f pattern of seeing a loss and arguing around it. It reads the residue but its activity calls are not reliable. |
 | Probe `REJECTS_ANY_CHANGE` | The decoy changed the call too; the activity calls of this run are not residue-specific. |
 | Probe `INSENSITIVE` | Neither changed the call; it is probably recall. Give its activity call no weight. |
 | Probe not run, wild type inactive | Expected for a pseudoenzyme or a non-enzyme; the lost-residue lines are the result. |
@@ -157,8 +159,10 @@ needed.
      displaced, as in WNK1), nor that intact motifs mean activity (kin-32), and a lost
      catalytic residue says nothing against a non-catalytic function.
 
-4. Note the run in `GENE-notes.md` and add a history record (`just new-history`) as
-   for any review edit.
+4. Add a history record (`just new-history --kind gene ...`) for every gene whose run
+   you commit, cited in its review or not: `docs/history.md` puts any session on a file
+   in the gene folder, bioinformatics included, under the gene's target. Note the run in
+   `GENE-notes.md` when the gene has one.
 
 A possible schema refinement, not yet made: a dedicated `publication_type` value for
 model reads (for example `SEQUENCE_MODEL_READ`) would let reports separate them from
@@ -170,12 +174,14 @@ suffix `sequence-only language-model read` identify them; keep both.
 | Gene | Kind | Result |
 |---|---|---|
 | PTEN (P60484) | well studied | PF10409 C2 at IoU 0.99; the phosphatase domain named as PF22785, which the UniProt record lists but InterPro now gives as PF22784 (`IN_UNIPROT_NOT_INTERPRO`); Cys124 named (UniProt ACT_SITE); C124A called inactive with the position reported, decoy C83A called active: `TRACKS_CATALYTIC_RESIDUE`. |
-| ADPRH (P54922) | active paralog | PF03747 at IoU 0.93; six Mg2+-site residues named, all UniProt BINDING; S54A called "uncertain" with the position reported, decoy S248A active: `TRACKS_CATALYTIC_RESIDUE`. |
-| ADPRHL1 (Q8NDY3) | catalytic-dead paralog | Called inactive; reported D to N at 58, D to E at 304 and D to A at 306, each matching the sequence and the positions of the review's alignment census. Recorded in the review as a LOW-relevance reference (see `genes/human/ADPRHL1`). |
-| C7orf25 (Q9BPX7) | obscure, two DUFs | Both DUFs (PF18474, PF07000) named, IoU 0.97 and 0.83; activity "uncertain", no residues named, so no probe. |
+| ADPRH (P54922) | active paralog | PF03747 at IoU 0.94; six Mg2+-site residues named, all UniProt BINDING; no ACT_SITE, so the probe took the acidic BINDING residue Asp55: D55A called inactive with the position reported, decoy D255A active: `TRACKS_CATALYTIC_RESIDUE`. |
+| ADPRHL1 (Q8NDY3) | catalytic-dead paralog | Called inactive; reported lost aspartates at 58 (Asn), 304 (Glu) and 306 (Ala), each matching the sequence. That is the aspartate-only count of PMID:27217161; the review's own donor census keeps Glu304 and scores Ser305 to Ala307 as lost, which the read does not mention. Recorded in the review as a LOW-relevance reference (see `genes/human/ADPRHL1`). |
+| C7orf25 (Q9BPX7) | obscure, two DUFs | Both DUFs (PF18474, PF07000) named, IoU 0.91 and 0.98; activity "uncertain", no residues named, so no probe. |
 
-In all four the model said it recognised the protein, and all controls passed (one
-transmembrane helix was predicted on the shuffled ADPRHL1 sequence, as fs2f saw for
-12 of 60). Cost was US$0.16 to 0.40 per gene.
+The model said or implied that it recognised the protein in all four, and all
+controls passed (one transmembrane helix was predicted on the shuffled ADPRHL1
+sequence, as fs2f saw for 12 of 60). Cost was US$0.19 to 0.50 per gene. The ADPRHL1 case
+shows why the check lines matter: a read can agree with one published reading of a
+site and not with another, and the review has to say which.
 
 See each gene's `GENE-bioinformatics/sequence-read/RESULTS.md` for the run.

@@ -15,6 +15,7 @@ catalytic residue can be chosen (``core.choose_probe``).
 from __future__ import annotations
 
 import json
+import shlex
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 from pathlib import Path
@@ -196,7 +197,7 @@ def write_run(
         "sequence_version": record.sequence_version,
         "model": model,
         "effort": effort,
-        "route": f"claude CLI {cli_version}, flags: {' '.join(core.CLI_FLAGS)!r}",
+        "route": f"claude CLI {cli_version}, flags: {shlex.join(core.CLI_FLAGS)}",
         "run_date": date.today().isoformat(),
         "prompts_from": f"{core.FS2F_REPO} @ {core.FS2F_COMMIT}",
         **body,

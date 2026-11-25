@@ -57,6 +57,8 @@ def render_run(doc: dict[str, Any]) -> list[str]:
             f"In {main} of them the reply is one turn whose token counts are those of {doc['model']}, "
             "so the second model's request was a side call by the tool; the record cannot show what it was for."
         )
+    if helpers:
+        out.append("")
     unusable = [c for c in calls if not core.usable(c)]
     for c in unusable:
         why = c.get("error") or (
@@ -198,9 +200,10 @@ def render(out_dir: Path, gene: str) -> Path:
         "",
         *[f"- {c}" for c in CAVEATS],
         "",
-        "Probe verdicts: TRACKS_CATALYTIC_RESIDUE means the call changed for the catalytic substitution and "
-        "not for the decoy; REJECTS_ANY_CHANGE means the decoy also changed the call, so the read is not "
-        "residue-specific; INSENSITIVE means neither changed it.",
+        "Probe verdicts: TRACKS_CATALYTIC_RESIDUE means the catalytic mutant was called inactive and the decoy "
+        "active; REPORTS_BUT_NOT_INACTIVE means the model named the substituted position but still did not call "
+        "the mutant inactive (the fs2f pattern of seeing a loss and arguing around it); REJECTS_ANY_CHANGE means "
+        "the decoy also changed the call, so the read is not residue-specific; INSENSITIVE means neither changed it.",
         "",
     ]
     for p in runs:
