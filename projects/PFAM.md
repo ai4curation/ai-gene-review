@@ -287,7 +287,7 @@ family-to-term mapping the shortlist suggested, and one family was dropped.
 | Family | Outcome | What the profile changed |
 |---|---|---|
 | SIR2_2 (PF13289) | CR-0012, proposed: NAD+ nucleosidase activity | 204 members also sit in the sirtuin deacylase family and are excluded. Characterized NADases come from five unrelated systems, which is what supports a family-wide term. |
-| zf-CCCH_DUS3L (PF25585) | CR-0013, draft: mRNA and tRNA-U47 dihydrouridine synthase activity | The zinc finger alone also occurs outside DUS3, so the catalytic domain is required. The mRNA activity is demonstrated in fission yeast only; the human study says its own mRNA sites need orthogonal validation. |
+| zf-CCCH_DUS3L (PF25585) | CR-0013, proposed: tRNA-U47 dihydrouridine synthase activity only | The zinc finger alone also occurs outside DUS3, so the catalytic domain is required. The shortlisted mRNA term was dropped: it is demonstrated in fission yeast only, and the human study says its own mRNA sites need orthogonal validation. What is left adds 35 annotations, and UniProt's curated rule UR000077057 already picks out most of the same proteins through a PROSITE profile. |
 | BphC_D1 (PF22632) | CR-0014, proposed: dioxygenase activity incorporating two atoms of oxygen | 223 members that another signature calls glyoxalase I or methylmalonyl-CoA epimerase are excluded. |
 | WGR (PF05406) | CR-0015, proposed: protein-aspartate and protein-glutamate ADP-ribosyltransferase activity | 40% of WGR proteins have no catalytic domain, most of them bacterial, so the PARP catalytic domain and Eukaryota are required. With that conjunction the rule can be written on InterPro entries just as well, so this one is not Pfam-only after all. |
 | GH16_XgeA (PF26113) | No rule | See below. |
@@ -304,9 +304,10 @@ mixed-linkage one. In GO the two activities share no ancestor more specific than
 hydrolase activity, hydrolyzing O-glycosyl compounds, which InterPro2GO already
 gives to 90% of the members. There is no safe term to add.
 
-So of the six shortlisted Pfam-only pairs, three survive as rules that need a
-Pfam condition: CR-0012, CR-0014 and CR-0013, the last only if its open question
-is settled. The two WGR pairs survive as a rule that does not need Pfam.
+So of the six shortlisted Pfam-only pairs, two survive as rules that need a Pfam
+condition: CR-0012 and CR-0014. The two WGR pairs survive as a rule that does not
+need Pfam. The DUS3 pair did not survive: its rule now assigns a different, already
+well-covered term, and the GH16 pair has no rule.
 
 **Paralog traps are flagged, not dropped.** 34 headline pairs have reviewed
 members with a different function: the IF-2B family (PF01008) is 91%
