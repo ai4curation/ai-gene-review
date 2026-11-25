@@ -36,11 +36,13 @@ for the manual review.
 - The 65bc GO-CAM's TRAF3IP3 activity is consistent with the gene review:
   `GO:0030674 protein-macromolecule adaptor activity` at the mitochondrial
   outer membrane in cytoplasmic pattern-recognition receptor signaling.
-- The MGI `GO:0000139 Golgi membrane` row is true but appears to cite the MAVS
-  paper PMID:31390091 instead of the Golgi MEK/BRAF paper PMID:26195727.
+- The MGI `GO:0000139 Golgi membrane`, `GO:0005789 endoplasmic reticulum
+  membrane`, and `GO:0031966 mitochondrial membrane` rows from PMID:31390091
+  are co-dated, consistent with a compartment-localization experiment in the
+  paper's uncached Results rather than with a one-off Golgi reference
+  transposition. The gene review therefore does not record a source defect on
+  the Golgi row.
 - The MGI `GO:0044198 zf-TRAF domain binding` row cites PMID:31390091 but has
-  MAVS in `With/From`; if the zf-TRAF binding term is retained upstream, the
-  TRAF-family partner should be TRAF3 rather than MAVS. The gene review
-  modifies that row to TRAF3IP3's demonstrated protein-macromolecule adaptor
-  activity.
-
+  MAVS in `With/From`; the gene review modifies that row to TRAF3IP3's
+  demonstrated protein-macromolecule adaptor activity rather than proposing a
+  precise With/From correction.
