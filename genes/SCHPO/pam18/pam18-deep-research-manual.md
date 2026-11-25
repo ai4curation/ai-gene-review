@@ -73,4 +73,6 @@ the mitochondrial matrix as part of `GO:0030150` protein import into the
 mitochondrial matrix. The gene review agrees with that activity: the protein is
 anchored in the mitochondrial inner membrane, but its J-domain ATPase activator
 activity is matrix-facing and directed toward Ssc1/mtHsp70 in the PAM import
-motor.
+motor. It therefore refines the model's `GO:0005759` matrix location to
+`GO:0099617` matrix side of mitochondrial inner membrane rather than treating
+Pam18 as a soluble matrix protein.
