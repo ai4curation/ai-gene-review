@@ -37,13 +37,19 @@ association, the second transmembrane region helps bridge respiratory complexes
 to the TIM23 complex through Tim21, and both transmembrane regions are required
 for lateral sorting into the inner membrane (PMID:32186971).
 
-Human ROMO1 supports conservation of the Mgr2/Romo1 TIM23 role outside fungi.
+Human ROMO1 supports conservation of TIM23-complex membership outside fungi.
 Richter et al. identified ROMO1 as a human TIM23 constituent and showed that it
 participates in TIM21 dynamics and the selective import of YME1L
-(PMID:30598479). The human specialization does not justify adding a
-S. pombe-specific YME1L or OPA1/Mgm1 processing annotation, but it supports the
-PANTHER placement of TIM23-complex membership and inner-membrane insertion at
-the Mgr2/Romo1 family node.
+(PMID:30598479). They also reported that ROMO1 is dispensable for
+inner-membrane sorting, in contrast to yeast Mgr2, so the human seed is weak
+for the `GO:0045039` PAINT transfer; fungal Mgr2 evidence carries the
+S. pombe inner-membrane-insertion row.
+
+UniProt annotates S. pombe Mgr2 as required by similarity for cell viability in
+cells lacking mitochondrial DNA, matching the budding-yeast phenotype that gave
+the gene its MGR2 name. That by-similarity phenotype is consistent with a
+conserved mitochondrial role but is not itself a GO molecular-function or
+matrix-import annotation.
 
 The PomBase HDA row from Matsuyama et al. reports cytoplasm for an S. pombe
 C-terminal YFP fusion (PMID:16823372). That conflicts with the two predicted
@@ -55,7 +61,8 @@ therefore undecided pending image and tag-compatibility review.
 
 - Accept all three PAINT IBA rows. `GO:0005744`, `GO:0030150`, and
   `GO:0045039` are all placed at `PTN002003652` in PTHR28525 and agree with the
-  budding-yeast Mgr2 mechanism.
+  budding-yeast Mgr2 mechanism. The human ROMO1 seed supports the complex row
+  but is weak for the `GO:0045039` inner-membrane-insertion row.
 - Accept the PomBase IC row to `GO:7770060` because TIM23-complex membership
   and the Mgr2 lateral gatekeeper mechanism both support the specific
   TOM-TIM23-SORT insertion process.
