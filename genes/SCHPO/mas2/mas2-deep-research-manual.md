@@ -19,4 +19,4 @@ The PTHR11851 family review already judged the PAINT `GO:0017087 mitochondrial p
 
 ## GO-CAM context
 
-GO-CAM 69729a3800007453 models `PomBase:SPBC18E5.12c` as enabling peptidase activator activity (`GO:0016504`), part of mitochondrial protein processing (`GO:0034982`), occurring in the mitochondrial matrix (`GO:0005759`), and directly positively regulating the mas1 signal peptidase activity. The gene review agrees with this split of the MPP heterodimer: Mas2 is the noncatalytic activator, and mas1 is the catalytic signal peptidase subunit.
+GO-CAM 69729a3800007453 models `PomBase:SPBC18E5.12c` as enabling peptidase activator activity (`GO:0016504`), part of mitochondrial protein processing (`GO:0034982`), occurring in the mitochondrial matrix (`GO:0005759`), and directly positively regulating the mas1 activity that the model types as signal peptidase activity (`GO:0009003`). The gene review agrees with this split of the MPP heterodimer: Mas2 is the noncatalytic activator, and mas1 is the catalytic zinc metalloendopeptidase subunit.
