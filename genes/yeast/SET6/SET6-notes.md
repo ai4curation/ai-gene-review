@@ -173,3 +173,16 @@ These notes are the manual research journal instead.
   term, not a strict parent of every histone methyltransferase.
 - Reclassified the `GO:0006338 chromatin remodeling` IEA propagation failure as a
   circular/redundant evidence chain from the over-specific `GO:0042054` MF premise.
+
+## 2026-11-25 validation fix
+
+- Corrected the `taxon.label` from `Saccharomyces cerevisiae` to
+  `Saccharomyces cerevisiae S288C`, the label NCBITaxon:559292 actually carries
+  (checked against NCBITaxon via OLS). This was a blocking `just validate`
+  error; nothing else in the review changed.
+- Still open: `just validate` warns that both ND rows (`GO:0005575` and
+  `GO:0008150`, `GO_REF:0000015`) are ACCEPTed without evidence that the
+  literature was searched, and neither carries a `review.nd_case`. Per
+  `projects/NO_DATA.md` the aspect-specific case and any matching BIOLOGY
+  knowledge gap are a curation judgement for a gene this dark, so they are
+  left for the reviewer rather than guessed at here.
