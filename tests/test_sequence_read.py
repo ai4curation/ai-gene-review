@@ -5,6 +5,7 @@ the two prompts deterministically from the sequence it is given.
 """
 
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -16,6 +17,14 @@ from ai_gene_review.sequence_read import core
 
 PTEN_UNIPROT = Path("genes/human/PTEN/PTEN-uniprot.txt")
 STUB = Path("tests/input/sequence_read/stub_claude.py").resolve()
+# Rich colours and wraps error panels to the terminal width, which differs on CI.
+PLAIN = {"NO_COLOR": "1", "TERM": "dumb", "COLUMNS": "400"}
+
+
+def plain(text: str) -> str:
+    """Error output with ANSI codes, panel borders and line breaks removed."""
+    text = re.sub(r"\x1b\[[0-9;]*m", "", text)
+    return " ".join(text.replace("│", " ").split())
 
 
 @pytest.fixture
@@ -138,9 +147,9 @@ def test_cli_run_with_stub(genes_root: Path):
     assert "**Not literature evidence.**" in results
     assert "- Probe verdict: TRACKS_CATALYTIC_RESIDUE" in results
     # A second run for the same model and effort is refused without --force.
-    again = runner.invoke(app, args)
+    again = runner.invoke(app, args, env=PLAIN)
     assert again.exit_code != 0
-    assert "--force" in again.output
+    assert "pass --force to replace it" in plain(again.output)
     # render alone needs no model
     res = runner.invoke(
         app,
@@ -153,9 +162,10 @@ def test_cli_run_requires_uniprot_file(tmp_path: Path):
     res = CliRunner().invoke(
         app,
         ["sequence-read", "run", "human", "NOPE", "--genes-root", str(tmp_path)],
+        env=PLAIN,
     )
     assert res.exit_code != 0
-    assert "fetch-gene" in res.output
+    assert "just fetch-gene human NOPE" in plain(res.output)
 
 
 def test_choose_probe_prefers_acidic_binding_residue():
