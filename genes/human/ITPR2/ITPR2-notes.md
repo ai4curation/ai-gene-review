@@ -27,8 +27,10 @@ checked` for PTHR45816 and found no IRD or IKR loss on the ITPR2 lineage.
   C-terminal six-transmembrane architecture [PMID:8081734].
 - Adkins et al. tested cells expressing predominantly each IP3 receptor subtype
   and showed that IP3-evoked calcium mobilization by type 2 receptors, like
-  types 1 and 3, is calmodulin-sensitive [PMID:10620513, "predominantly type-1,
-  -2 or -3 InsP(3) receptors"].
+  types 1 and 3, is calmodulin-sensitive [PMID:10620513, "Using cell types
+  expressing predominantly type-1, -2 or -3 InsP(3) receptors, we show that
+  InsP(3)-evoked Ca(2+) mobilization from each is similarly inhibited by
+  calmodulin"].
 - The UniProt Q14571 record summarizes the orthology-supported core activity as
   an "Inositol 1,4,5-trisphosphate-gated calcium channel" that transports
   calcium from the endoplasmic reticulum lumen to the cytoplasm and places the
@@ -43,6 +45,11 @@ checked` for PTHR45816 and found no IRD or IKR loss on the ITPR2 lineage.
   sarcoplasmic-reticulum membrane row should be re-pointed to platelet dense
   tubular network membrane [PMID:10828023, "The type II receptor exhibited a
   dual distribution"].
+- Garcia et al. found all three IP3R isoforms in neonatal and adult rat
+  ventricular cardiomyocytes and in human heart tissue, supporting the propagated
+  sarcoplasmic-reticulum rows as true but secondary muscle-store locations
+  [PMID:28923351, "The three IP3R proteins are expressed throughout the
+  cardiomyocyte sarcoplasmic reticulum"].
 - BANK1 scaffold binding is a peripheral B-cell regulatory interaction
   [PMID:11782428, "associate with the distinct regions of BANK"]. The Tespa1
   paper detected all three IP3R family members in a Jurkat pull-down but
@@ -60,16 +67,22 @@ checked` for PTHR45816 and found no IRD or IKR loss on the ITPR2 lineage.
 
 ### GO-CAM consistency notes
 
-Do not edit `gocams/671ae02600000964/` in the gene PR. Carry these observations
-into the final GO-CAM consistency-notes PR after this ITPR2 review merges:
+Do not edit `gocams/671ae02600000964/` in the gene PR. Reconcile these
+observations in the final GO-CAM consistency-notes PR after this ITPR2 review
+merges:
 
 - The model and the pre-existing GOA rows use the broad process `GO:0051209`
   release of sequestered calcium ion into cytosol. The gene review modifies this
   to the ER-specific child `GO:1903514` release of sequestered calcium ion into
-  cytosol by endoplasmic reticulum.
+  cytosol by endoplasmic reticulum. This defect is already recorded in
+  `gocams/671ae02600000964/671ae02600000964-review.yaml`.
 - The model output calcium participant uses `GO:0005737` cytoplasm; cytosol
   (`GO:0005829`) is the more precise compartment for calcium after ITPR2 channel
-  opening.
+  opening. This defect is already recorded in the GO-CAM review.
 - The model's IP3 activator edge uses `ECO:0000314` with/from `UniProtKB:Q14573`;
   the cached gene-level and GO-CAM review did not include enough evidence to
-  confirm that ITPR3 with/from value for an ITPR2 activity.
+  confirm that ITPR3 with/from value for an ITPR2 activity. This query is already
+  recorded in the GO-CAM review.
+- The GO-CAM review's `consistency: NO_GENE_REVIEW` judgement and the
+  `modules/er_calcium_store_cycling.yaml` note saying no local ITPR2 review
+  exists become stale once this PR merges.
