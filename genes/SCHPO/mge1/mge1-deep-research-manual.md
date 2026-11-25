@@ -24,8 +24,11 @@ assertions on the GrpE family:
   mitochondrial matrix.
 
 The family review judged the nucleotide-exchange activity sound across
-GrpE-like proteins and explicitly scoped mitochondrial PAM/import assertions
-away from bacterial GrpE.
+GrpE-like proteins. It retained the mitochondrial PAM/import assertions but
+left the full breadth of the eukaryotic PTN000478265 node unresolved, so this
+review accepts the two S. pombe mge1 transfers from a clean PAINT loss check,
+the fission-yeast mitochondrial GrpE identity and the local GO-CAM/UniProt
+context rather than by declaring the whole family node settled.
 
 ## Primary evidence from orthologs
 
