@@ -40,3 +40,8 @@ The duplicate Q9HTI7/PA5377 review is consolidated into genes/PSEAE/cbcW/cbcW-ai
 ## 2026-11-08 — consistent complex-level activity
 
 The CaiX-CbcWV annoton names the assembled carnitine transport activity. All three PAO1 subunits accept that function and use contributes_to in core synthesis; CbcV/CbcW additionally name the ATP-coupled quaternary-ammonium mechanism. These are complementary cargo and energy-coupling axes, not a claim that an isolated SBP, ATPase or permease transports carnitine. The module reaction lists ATP/water consumption because it is the assembled ABC importer. Existing source qualifiers are preserved. CbcW IBA and IDA agree on the experimentally supported target function; its separate GO_CENTRAL CHECK and the UNRESOLVED family node assessment concern broader partner-dependent cargo scope. Generated PseudoCAP project reports are refreshed to resolve the canonical cbcW paths.
+
+
+## 2026-11-25 — reconcile importer qualifier treatment
+
+The inherited enables qualifier is retained for CaiX, CbcV and CbcW, while core functions represent each subunit's contribution to the assembled importer. The uptake experiment supports that complex-level activity; an isolated subunit's inability to translocate does not by itself establish that PseudoCAP's qualifier must be changed. The CaiX-only WRONG_QUALIFIER request restored during main integration is withdrawn, matching the policy already adopted for all three subunits. The separate CaiX choline-substrate InterPro defect is retained. The PseudoCAP report is regenerated from all committed PAO1 review blobs plus this edit, avoiding loss of reports from files absent in the sparse checkout.
