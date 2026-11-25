@@ -400,6 +400,42 @@
 <div class="codehilite"><pre><span></span><code>just<span class="w"> </span>validate-interpro-mappings<span class="w">   </span><span class="c1"># SSSOM structure + GO term/label validation</span>
 </code></pre></div>
 
+<h2 id="before-proposing-a-removal">Before proposing a removal</h2>
+<p>A removal row (<code>exactMatch</code> + <code>predicate_modifier: Not</code>) drops the term from every protein the<br />
+entry matches, including the members for which it is correct. Before adding one, run two checks<br />
+and record the result at the end of the row's <code>comment</code>, starting "Rule cover (...)".</p>
+<ol>
+<li><strong>Sole-source check.</strong> List the reviewed annotations of the term whose only InterPro source is<br />
+   this entry. Those genes lose the annotation outright. Read their review actions: if reviewers<br />
+   accepted the term on most of them, the removal costs correct annotations and the note must say so.</li>
+</ol>
+<p><code>bash
+   # genes whose only InterPro source for GO:0005524 is IPR000719
+   awk -F'\t' '$4=="GO:0005524" &amp;&amp; $3=="IPR000719" {print $1"/"$2, $6}' \
+     projects/INTERPRO/suspect_interpro_mappings.tsv</code></p>
+<ol>
+<li><strong>Rule-cover check.</strong> Find what else still supplies the term to the members that should keep it:</li>
+<li><strong>Another InterPro entry.</strong> Grep the current interpro2go file for the term. Site-level and<br />
+     catalytic entries, such as the kinase ATP-binding site IPR017441, often already carry it.</li>
+<li><strong>A UniRule.</strong> Search the UniProt UniRule API for the term and for the family name. HAMAP,<br />
+     PIRSR, PIRNR and RU rules can require a site, exclude a domain with a negative condition, or<br />
+     limit the taxon. That is how the Cu/Zn SOD rule UR000000113 excludes the copper chaperone CCS.<br />
+     Check the EC-to-GO mapping too, because many rules assign an EC number rather than a GO term.</li>
+</ol>
+<p><code>bash
+   curl -sS https://current.geneontology.org/ontology/external2go/interpro2go | grep 'GO:0005524'
+   curl -sS 'https://rest.uniprot.org/unirule/search?query=GO:0005524&amp;size=50&amp;format=json'
+   curl -sS https://current.geneontology.org/ontology/external2go/ec2go | grep '^EC:1.15.1.1 '</code></p>
+<p>The local cache in <code>rules/unirule/</code> is incomplete: it holds no PIRSR rules and lacks<br />
+   UR000000113, so query the live API.</p>
+<p>Then choose the request that fits:</p>
+<ul>
+<li><strong>Wrong for every member:</strong> remove; add the correct term to the entry if one exists.</li>
+<li><strong>Right for a subset that another entry or a rule already covers:</strong> remove, and cite the covering<br />
+  source in the note.</li>
+<li><strong>Right for a subset that nothing covers:</strong> remove only together with a request for the covering<br />
+  rule or mapping. Otherwise propose narrowing (<code>broadMatch</code>) rather than removal.</li>
+</ul>
 <h2 id="family-deep-research-generated-process">Family deep research (generated process)</h2>
 <p>Family deep research is generated, not hand-written. It is wired the same way as gene<br />
 deep research:</p>

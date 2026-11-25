@@ -1,0 +1,11 @@
+# Pseudomonas fragi FaoAB / FadBA evidence
+
+PMID:15229654 full text was read from the indexed primary PMC page https://pmc.ncbi.nlm.nih.gov/articles/PMC514956/ on 2026-11-06. Ordinary PMC/EuropePMC downloads failed or returned incomplete XML; the normal abstract-only cache was not overwritten. Verbatim Results sentence: "Previous biochemical data demonstrate that the thiolase reaction for long fatty acyl chains requires the α-subunits".
+
+PMID:1607366 identifies the donor as P. fragi B-0771, alpha faoA(715aa) and beta faoB(390aa mature after initiator removal). Current official symbols are fadB/fadA. The adjacent identity proof compares the official UniProt sequence to PDB 1WDL polymer entities: P28793 matches 715/715; P28790 residues 2–391 match the 390-residue beta chain. PDBe also maps 2D3T, the 2006 follow-up complex, to this same pair. Species-level taxon 296 is retained; no different strain is substituted.
+
+PMID:9396725 reconstitutes the heterotetramer from purified separate subunits. Isolated alpha has hydration/dehydrogenation, whereas isolated beta lacks thiolase activity under the tested conditions. Assembly restores all three activities. This is not evidence that the beta-chain catalytic function is false: its catalytic center resides on beta and the alpha partner contributes the productive substrate-binding arrangement. An enables annotation does not assert autonomous activity of an isolated monomer.
+
+PMID:2361950 purifies native complex from oleate-grown cells. Its complete in-vitro oxidation system adds separate acyl-CoA synthetase and acyl-CoA oxidase. That experiment does not identify a native matched first-step dehydrogenase. C4–C18 saturated and selected unsaturated substrates are degraded; failure for even-position cis double bonds is rescued by added 2,4-dienoyl-CoA reductase. The measured epimerase activity was not effective in that reconstructed pathway and is retained as non-core capability. No phenylacetate pathway was demonstrated by these studies.
+
+The 2004 channeling model is a structure-based mechanistic proposal; the 2006 SAXS ensemble differs from crystal conformations. These do not establish universal rigid architecture or direct quantitative channeling for every acyl substrate.

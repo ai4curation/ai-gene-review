@@ -50,3 +50,26 @@ The genuine [Falcon report](trm402-deep-research-falcon.md) is retained with its
 ## Full-gene re-review, 2026-09-20
 
 All19 rows reviewed, preserving trm402 folder and current trm4b symbol. Restored RNA binding, methyltransferase, RNA methyltransferase and cytoplasm to ACCEPT. Physiological wobbleC34 IBA/ISO remain REMOVE on direct paralog-resolved evidence, explicitly preserving real in-vitro C34 catalysis. RNA-substrate and mitochondrial-assembly extensions remain UNDECIDED pending root-managed clade/substrate adjudication. The complete Falcon report is now referenced and used substantively; its physiological-site distinction and non-exclusion of cytoplasmic residence agree with the primary full text. No NEW rows added.
+
+## OpenScientist rRNA/mRNA follow-up, 2026-10-10
+
+Reviewed `trm402-hypotheses/trm4b-rrna-mrna-and-mitochondrial-ribosome-functions/openscientist.md` against the local GOA rows and the checked PTHR22808 family artifacts. The focused run answered the previous PAINT-boundary question: MGI:1919431 is mouse Nsun4, NSUN4 is a short mitochondrial rRNA methyltransferase branch inside heterogeneous PTHR22808, and the repo's PTHR22808 review independently treats the family as substrate-divergent. The GO:0006364 rRNA processing, GO:0009383 rRNA C5 methyltransferase and GO:1902775 mitochondrial large ribosomal subunit assembly IBA rows should therefore be removed as NSUN4 branch carry-over, not left UNDECIDED. GO:0062152 mRNA C5 methyltransferase remains UNDECIDED because the ISS from human NSUN2 is plausible but non-conservative and still untested in S. pombe.
+
+Reviewed the PR follow-up comments. Human NSUN2 carries the same three NSUN4-donor IBAs from `PANTHER:PTN000516076`, so the OpenScientist run resolved donor identity rather than the exact PAINT node boundary. GO:0006364 and GO:0009383 are now marked over-annotated, consistent with NSUN2: MGI:1919431 names an NSUN4 donor that supports rRNA claims for NSUN4 but not for the Trm4/NSUN2 branch, while the family-wide PTN remains unaudited. GO:1902775 remains REMOVE because Trm4b is nuclear and lacks the direct mitochondrial targeting needed for a mitochondrial large ribosomal subunit assembly claim.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Identity: the benchmark accession O13935 is the canonical, Swiss-Prot reviewed full-length product of trm4b/SPAC23C4.17 (685 aa; catalytic MTase domain with predicted nucleophile C323 plus NSUN2-type pre-PUA and PUA domains). It is not an isoform, fragment or alternative gene model.
+
+Evolutionary placement (from `interpro/panther/PTHR22808/PTHR22808-entries.csv`): Trm4b is in PTHR22808:SF1 (RNA CYTOSINE-C(5)-METHYLTRANSFERASE NSUN2-RELATED) together with budding-yeast Trm4/Ncl1 (P38205), Drosophila Nsun2 and Xenopus/chicken NSUN2; its paralog Trm4a (Q9HGQ2) is in a separate subfamily SF29, human NSUN2 (Q08J23) in SF20 and NSUN4 (Q96CB9) in SF3. The primary paper states the two S. pombe paralogs come from a recent lineage-specific duplication [PMID:30646830 "they derive from a relatively recent duplication event that occurred independently of the duplication in plants"]. The PTHR22808 family review in the repo agrees with SF1 placement for Trm4b; no disagreement.
+
+Changes in this pass:
+- GO:0003723 RNA binding (IEA): ACCEPT -> MODIFY to GO:0000049 tRNA binding (true but general; tRNA is the demonstrated substrate).
+- GO:0008168 and GO:0008173 (IEA): ACCEPT -> MODIFY to GO:0016428, which the gene already carries by IDA/IMP.
+- GO:0005737 cytoplasm (IBA): ACCEPT -> KEEP_AS_NON_CORE; the only target-level location observation is nuclear.
+- GO:0002127 IBA/ISO: REMOVE kept; reason now records that the PAINT node is right for the SF1 clade (budding-yeast Trm4 does C34) and the exception is target-specific after the recent duplication that partitioned C34 to Trm4a [PMID:30646830 "Trm4b methylates both C34 and C49 in vitro, even though it does not methylate C34 in vivo."].
+- GO:0062152 mRNA C5 MTase (ISS): UNDECIDED kept; added that the donor NSUN2 is SF20, not Trm4b's SF1.
+- rRNA processing / rRNA C5 MTase (MARK_AS_OVER_ANNOTATED) and mitochondrial LSU assembly (REMOVE) unchanged: NSUN4 (SF3) donor carry-over.
+- Description and core function rewritten to include domain architecture, the C50 tRNAs (tRNA-Asp, tRNA-Gly(GCC)) and the lack of an obvious deletion phenotype.
+
+Relative to review next: budding-yeast Trm4/NCL1 (P38205), the experimentally characterised member of the same PANTHER subfamily (SF1); no review exists in the repo (`genes/yeast/` has no NCL1/TRM4). The paralog Trm4a (trm401, Q9HGQ2) is also unreviewed. No module in `modules/` mentions trm4b/O13935.

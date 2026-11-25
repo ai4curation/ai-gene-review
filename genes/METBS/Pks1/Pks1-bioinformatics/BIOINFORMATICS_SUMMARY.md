@@ -1,5 +1,19 @@
 # PKS1 Bioinformatics Analysis Summary
 
+## Audit Note
+
+This summary is retained as a stale wrong-input analysis artifact, not as curated
+evidence for `Pks1-ai-review.yaml`. The embedded `PKS1_SEQUENCE` used by the
+analysis was 2137 aa, while the cached UniProt record is 2148 aa and diverges by
+residue 40; the current UniProt `ACT_SITE` and `MOD_RES` coordinates were
+therefore indexed into the wrong sequence. The failed coordinate checks are
+artifacts and do not impeach the UniProt `MOD_RES` 1712/1830 evidence supporting
+the accepted GO:0031177 phosphopantetheine binding annotation. The homolog
+identity values are hand-entered rather than recomputed, and the GO
+recommendations include process terms that were rejected or narrowed in the
+2026-10-01 re-review. Use the cached UniProt record and PMID:29958281 for curated
+support.
+
 ## Executive Summary
 Comprehensive bioinformatics analysis confirms PKS1 (A0A0B4ESU9) as a Type I iterative non-reducing polyketide synthase responsible for anthraquinone-based conidial pigment biosynthesis in *Metarhizium brunneum*. All essential catalytic residues are conserved, domain architecture matches characterized anthraquinone synthases, and phylogenetic analysis places it within the fungal pigment biosynthesis clade.
 
@@ -14,13 +28,13 @@ Comprehensive bioinformatics analysis confirms PKS1 (A0A0B4ESU9) as a Type I ite
 ### 2. Catalytic Residue Conservation
 | Domain | Residue | Position | Function | Status |
 |--------|---------|----------|----------|---------|
-| KS | Cys | 566 | Nucleophile | ✓ Conserved |
-| KS | His | 701, 745 | Catalytic dyad | ✓ Conserved |
-| MAT | Ser | 1018 | Acyltransfer | ✓ Conserved |
-| PT | His | 1346, 1533 | Dehydratase | ✓ Conserved |
-| ACP1 | Ser | 1712 | Phosphopantetheine | ✓ Conserved |
-| ACP2 | Ser | 1830 | Phosphopantetheine | ✓ Conserved |
-| TE | Ser | 1973 | Hydrolysis | ✓ Conserved |
+| KS | Cys | 566 | Nucleophile | Stale coordinate artifact |
+| KS | His | 701, 745 | Catalytic dyad | Stale coordinate artifact |
+| MAT | Ser | 1018 | Acyltransfer | Stale coordinate artifact |
+| PT | His | 1346, 1533 | Dehydratase | Stale coordinate artifact |
+| ACP1 | Ser | 1712 | Phosphopantetheine | Stale coordinate artifact |
+| ACP2 | Ser | 1830 | Phosphopantetheine | Hard-coded, not independently checked |
+| TE | Ser | 1973 | Hydrolysis | Stale coordinate artifact |
 
 ### 3. Product Prediction
 - **Primary product**: 1-acetyl-2,4,6,8-tetrahydroxy-9,10-anthraquinone

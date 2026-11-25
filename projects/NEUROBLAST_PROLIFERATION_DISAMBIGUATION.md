@@ -10,6 +10,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/XBdGBSK3stehfvRxFBKmU9
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Neuroblast Proliferation / Division — Vertebrate vs Protostome Disambiguation

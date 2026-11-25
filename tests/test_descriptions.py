@@ -153,3 +153,80 @@ class TestFetchIntegration:
         sources = [d.source for d in gd.descriptions]
         assert "UniProt" in sources
         assert "Alliance_Imported" in sources
+
+
+def _reviewed(text_a: str = "A text", text_b: str = "B text"):
+    from ai_gene_review.etl.descriptions import (
+        DescriptionReview, DescriptionReviewRubric, Finding, GeneDescriptions, SourceDescription,
+    )
+
+    def rv(score: int) -> DescriptionReview:
+        return DescriptionReview(reviewer="AI", rubrics=[DescriptionReviewRubric(rubric="correctness", score=score)])
+
+    return GeneDescriptions(
+        gene_symbol="g", organism="worm",
+        descriptions=[
+            SourceDescription(source="UniProt", text=text_a, review=rv(4)),
+            SourceDescription(source="Alliance_Imported", text=text_b, review=rv(2)),
+        ],
+        findings=[Finding(category="gap", text="x")],
+        review=rv(3),
+    )
+
+
+def test_refetch_keeps_reviews_when_texts_unchanged(tmp_path):
+    """Re-saving freshly fetched, unreviewed data keeps the existing reviews."""
+    from ai_gene_review.etl.descriptions import (
+        GeneDescriptions, SourceDescription, load_gene_descriptions,
+        save_gene_descriptions, save_preserving_reviews,
+    )
+    path = tmp_path / "g-descriptions.yaml"
+    save_gene_descriptions(_reviewed(), path)
+    fresh = GeneDescriptions(gene_symbol="g", organism="worm", descriptions=[
+        SourceDescription(source="UniProt", text="A text"),
+        SourceDescription(source="Alliance_Imported", text="B text"),
+    ])
+    save_preserving_reviews(fresh, path)
+    gd = load_gene_descriptions(path)
+    assert [d.review.rubrics[0].score for d in gd.descriptions] == [4, 2]
+    assert gd.review is not None and len(gd.findings) == 1
+    assert gd.status == "COMPLETE"
+
+
+def test_refetch_drops_reviews_of_changed_text(tmp_path):
+    """A source whose text changed loses its stale review, and so does the cross-source review."""
+    from ai_gene_review.etl.descriptions import (
+        GeneDescriptions, SourceDescription, load_gene_descriptions,
+        save_gene_descriptions, save_preserving_reviews,
+    )
+    path = tmp_path / "g-descriptions.yaml"
+    save_gene_descriptions(_reviewed(), path)
+    fresh = GeneDescriptions(gene_symbol="g", organism="worm", descriptions=[
+        SourceDescription(source="UniProt", text="A text"),
+        SourceDescription(source="Alliance_Imported", text="B text, revised"),
+    ])
+    save_preserving_reviews(fresh, path)
+    gd = load_gene_descriptions(path)
+    assert gd.descriptions[0].review is not None
+    assert gd.descriptions[1].review is None
+    assert gd.review is None and gd.findings == []
+    assert gd.status == "IN_PROGRESS"
+
+
+def test_refetch_keeps_sources_missing_from_fresh_fetch(tmp_path):
+    """A source the fresh fetch did not return (fetch failure, API change) is carried forward with its review."""
+    from ai_gene_review.etl.descriptions import (
+        GeneDescriptions, SourceDescription, load_gene_descriptions,
+        save_gene_descriptions, save_preserving_reviews,
+    )
+    path = tmp_path / "g-descriptions.yaml"
+    save_gene_descriptions(_reviewed(), path)
+    fresh = GeneDescriptions(gene_symbol="g", organism="worm", descriptions=[
+        SourceDescription(source="UniProt", text="A text"),
+    ])
+    save_preserving_reviews(fresh, path)
+    gd = load_gene_descriptions(path)
+    assert [d.source for d in gd.descriptions] == ["UniProt", "Alliance_Imported"]
+    assert [d.review.rubrics[0].score for d in gd.descriptions] == [4, 2]
+    assert gd.review is not None and len(gd.findings) == 1
+    assert gd.status == "COMPLETE"

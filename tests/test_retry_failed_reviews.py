@@ -45,8 +45,8 @@ def pr(**overrides):
     } | overrides
 
 
-def reason(row=None, pull=None, peers=(), reviews=()):
-    return retry.skip_reason(row or run(), pull or pr(), peers, reviews, NOW, 1, "owner/repo")
+def reason(row=None, pull=None, peers=()):
+    return retry.skip_reason(row or run(), pull or pr(), peers, NOW, 1, "owner/repo")
 
 
 def test_human_owned_assigned_draft_can_be_retried():
@@ -95,19 +95,6 @@ def test_closed_pr_and_superseding_reviews():
     assert reason(peers=[run(id=21, created_at=(NOW - timedelta(hours=1)).isoformat())])
     assert reason(peers=[run(id=21, conclusion="success", updated_at=NOW.isoformat())])
     assert reason(peers=[run(id=21, conclusion="skipped")]) is None
-
-
-@pytest.mark.parametrize("state", ["APPROVED", "CHANGES_REQUESTED"])
-def test_current_bot_verdict_stops_retry_but_old_verdict_does_not(state):
-    review = {
-        "id": 1,
-        "user": {"login": "ai4c-reviewer[bot]"},
-        "state": state,
-        "commit_id": "abc",
-    }
-    assert reason(reviews=[review])
-    assert reason(reviews=[review | {"commit_id": "old"}]) is None
-    assert reason(reviews=[review | {"state": "DISMISSED"}]) is None
 
 
 def test_manual_run_is_rerunnable_despite_main_sha():
@@ -167,6 +154,43 @@ def test_sweep_issues_exact_failed_job_rerun(monkeypatch):
     assert writes == [
         (("run", "rerun", "20", "--failed", "--repo", "owner/repo"), {"write": True})
     ]
+    assert "retried failed jobs" in rows[0]
+
+
+@pytest.mark.parametrize("state", ["APPROVED", "CHANGES_REQUESTED"])
+@pytest.mark.parametrize("conclusion", ["failure", "timed_out"])
+@pytest.mark.parametrize("verdict_hours_ago", [6, 3])
+def test_current_verdict_does_not_strand_failed_check(
+    monkeypatch, state, conclusion, verdict_hours_ago
+):
+    # #5433 had an approval before a later failed run on the same commit.
+    # Also cover jobs that post a verdict and then fail before completing.
+    review = {
+        "id": 1,
+        "user": {"login": "ai4c-reviewer[bot]"},
+        "state": state,
+        "commit_id": "abc",
+        "submitted_at": (NOW - timedelta(hours=verdict_hours_ago)).isoformat(),
+    }
+    writes = harness(monkeypatch, rows=[run(conclusion=conclusion)], reviews=[review])
+    rows, errors = retry.sweep("owner/repo", NOW, dry_run=False)
+    assert errors == 0
+    assert writes == [
+        (("run", "rerun", "20", "--failed", "--repo", "owner/repo"), {"write": True})
+    ]
+    assert "retried failed jobs" in rows[0]
+
+
+def test_recovery_does_not_depend_on_formal_review_lookup(monkeypatch):
+    writes = harness(monkeypatch)
+
+    def unavailable(*args):
+        raise subprocess.CalledProcessError(1, ["gh", "api", "reviews"])
+
+    monkeypatch.setattr(retry, "pages", unavailable)
+    rows, errors = retry.sweep("owner/repo", NOW, dry_run=False)
+    assert errors == 0
+    assert len(writes) == 1
     assert "retried failed jobs" in rows[0]
 
 
@@ -611,10 +635,6 @@ def test_late_success_on_old_commit_does_not_hide_current_failure():
     assert reason(peers=[old]) is None
 
 
-def test_deleted_reviewer_does_not_crash_recovery():
-    assert reason(reviews=[{"id": 1, "user": None, "state": "APPROVED"}]) is None
-
-
 def test_zero_delay_explicitly_bypasses_backoff():
     assert retry.delay_hours(1, 0) == 0
     assert retry.delay_hours(5, 0) == 0
@@ -734,7 +754,18 @@ def test_execute_requires_writer_before_discovery(monkeypatch):
     assert exc.value.code == 2
 
 
+class _FrozenDatetime(datetime):
+    """datetime whose now() is the fixtures' NOW, so main() sees the same clock."""
+
+    @classmethod
+    def now(cls, tz=None):
+        return NOW if tz is None else NOW.astimezone(tz)
+
+
 def test_execute_cli_uses_explicit_live_mode(monkeypatch):
+    # main() reads the wall clock; without freezing it, the fixture run drifts
+    # outside GitHub's 30-day rerun window once NOW is a month old.
+    monkeypatch.setattr(retry, "datetime", _FrozenDatetime)
     writes = harness(monkeypatch)
     assert retry.main(["--repo", "owner/repo", "--execute", "--min-delay-hours", "0"]) == 0
     assert len(writes) == 1

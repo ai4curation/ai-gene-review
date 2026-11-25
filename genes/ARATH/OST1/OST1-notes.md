@@ -90,3 +90,14 @@ Remaining PMID:22090030 occurrences in the file are legitimate (it is the actual
 original_reference_id for GO:0046777 autophosphorylation, a properly attributed secondary
 reference for GO:0009789, and a references-block entry) — not catch-all misattributions.
 Validation: ✓ Valid (1 pre-existing unrelated plasma-membrane location warning).
+
+
+## 2026-10-25 — ABA module member audit
+
+Assessed all 80 existing annotation decisions and the evidence synthesis for the ABA module's kinase activation and output steps. The core kinase, ABA, stomatal and stress-response claims remain supported. The negated cytosol row is a NOT assertion, so its REMOVE does not contradict accepted positive localization. Broad kinase terms are refined to GO:0004674, matching the independently justified edits in open PR #5402. No CBL10 content was copied.
+
+The previous description and core function conflated initiation with amplification. PMID:33911084 states "transphosphorylation by RAFs is required for the reactivation of SnRK2.2/2.3/2.6." PMID:31896774 establishes the MAP3K input after PP2C dephosphorylation and resulting SLAC1/transcriptional outputs. Both full texts were inspected. Autophosphorylation remains accepted, but as an observed reaction/amplification mechanism rather than sufficient autonomous reactivation. The two identical-protein-binding IPI rows are now UNDECIDED: neither accessible abstract resolves its self-association experiment, and lack of a stable dimer does not show that binding is over-annotated.
+
+Research used existing provider reports/manual notes and cached primary literature. All rows retain explicit decisions; unresolved findings are UNDECIDED rather than inferred from missing text. Record-section backfill and targeted validation were run for this session.
+
+The plasma-membrane localization is accepted as a core site of OST1-SLAC1 action: PMID:19955405 directly localizes the BiFC complex at that membrane. This corroborates the existing HDA localization and reconciles it with the channel-regulation core function.

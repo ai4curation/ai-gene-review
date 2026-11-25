@@ -1,5 +1,6 @@
 ---
 title: "Pfam → GO Mapping: A Precision Gap-Filling Experiment"
+collections: [MAPPINGS]
 maturity: MATURE
 tags: [PIPELINE, EVALUATION]
 sidecars:
@@ -13,6 +14,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/W4798uw5yzf3XeGei7Mvp4
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Pfam → GO Mapping: A Precision Gap-Filling Experiment
@@ -263,7 +265,7 @@ entry level is more plausibly found by:
 3. **Per-protein curation** (UniProt, GOA experimental) — outside the scope of
    domain→GO mappings entirely.
 
-See [PANTHER_IBA_REVIEW](PANTHER_IBA_REVIEW/) and
+See [PANTHER_IBA_REVIEW](PANTHER_IBA_REVIEW.md) and
 [IBA_REVIEW.md](IBA_REVIEW.md) for the subfamily-level direction.
 
 ## Reproducing

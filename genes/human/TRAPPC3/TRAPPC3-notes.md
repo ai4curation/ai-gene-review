@@ -25,3 +25,10 @@ Annotation stance:
 The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
 
 - Moved out of the YAML description: the prior wording described the autophagophore-recruitment context as PN-specific and interpreted it through TRAPP complex membership and cautious TRAPPIII/RAB1 context rather than a broad autophagy process annotation.
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+- Row: GO:0005783 IEA (GO_REF:0000044, SL-0095), located_in. UniProt line is "Endoplasmic reticulum {ECO:0000250}" (by similarity; mouse O55013 is also ECO:0000250).
+- Check: the claim holds on mammalian data. Yu et al. 2006 [PMID:16880271 "Immuno-EM in NRK cells confirmed that mBet3p (5-nm gold particles) resides on the tER region labeled with Sec31p (10-nm gold particles)."; "Unlike Man II and GM130, mBet3p always clustered with the ER exit sites"]. Scrivens et al. 2011 [PMID:21525244 "C3, a core component of the complex, localizes to the transitional ER"]. Loh et al. 2005 [PMID:15728249 "In contrast to yeast Bet3p, the majority of Bet3 is present in the cytosol."] (abstract only).
+- Topology: soluble, peripheral, no TM or signal peptide, so no ER membrane or lumen row.
+- Outcome: IEA row kept ACCEPT with the check recorded. NEW GO:0070971 endoplasmic reticulum exit site (IC) added: localization (Sec31p co-staining, Sar1p H79G clustering, quantitative immuno-EM) plus mechanism (TRAPPC3 binds SEC23 on COPII vesicles, Reactome:R-HSA-5694439). Comparators SEC23A, SEC31A, SAR1A carry GO:0070971 in GOA. core_functions left unchanged (rule 6), although the cargo-accumulation result in PMID:16880271 could arguably put the tethering activity at ERES.

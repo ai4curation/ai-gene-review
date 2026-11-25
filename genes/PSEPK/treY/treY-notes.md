@@ -23,3 +23,16 @@
 - PTHR10357 is a broad alpha-amylase family; PTHR10357:SF216 is the precise
   TreY-related subfamily. No PTN is asserted from the TreeGrafter-only GOA
   evidence.
+
+## 2026-11-04 completion pass
+
+- Broad parent rows (carbohydrate metabolic process; glycosidase parents for
+  treZ) changed from MARK_AS_OVER_ANNOTATED to MODIFY with the specific term
+  the gene already carries, per the "correct but general is MODIFY" rule, and
+  aligned with the Arthrobacter sp. Q36 and M. tuberculosis orthologs reviewed
+  in the same pass (genes/ARTSQ, genes/MYCTU).
+- Label-only UniProt DE quotes (product name, EC) were removed from the
+  reference findings; family-model cross-references are quoted instead.
+- Deep research by an external provider was not available (no API keys); the
+  OpenScientist species review already in the project folder remains the
+  research input.

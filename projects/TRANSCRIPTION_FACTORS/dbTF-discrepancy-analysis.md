@@ -4,7 +4,7 @@ title: "Human dbTF Annotation Discrepancy Analysis"
 
 # Human dbTF Annotation Discrepancy Analysis
 
-Analysis comparing GO dbTF annotations (GO:0003700 descendants) with InterPro domain annotations.
+Analysis comparing February 2026 local exports of GO dbTF annotations (GO:0003700 descendants) with InterPro domain annotations.
 
 ## Summary
 
@@ -63,6 +63,7 @@ Proteins with DNA-binding domains NOT annotated as dbTF.
 | C9JSJ3 | MEIOSIN | Meiosis initiator protein | Meiosis-specific, needs review |
 
 **Conclusion:**
+
 - **ID1-4**: Correctly excluded — they are dominant-negative inhibitors that heterodimerize with bHLH TFs to PREVENT DNA binding
 - **NCOA1-3**: Correctly excluded — they are transcription **coactivators** (GO:0003713), not dbTFs
 - **MEIOSIN**: May warrant review
@@ -82,6 +83,7 @@ Proteins with DNA-binding domains NOT annotated as dbTF.
 945 proteins have dbTF annotation based only on computational evidence (no experimental support).
 
 **Recommended action:** Run DeepTFactor on these proteins to identify:
+
 1. Low-confidence TF predictions → candidates for annotation removal
 2. Saliency maps not highlighting canonical DBDs → may be coTFs misannotated as dbTFs
 
@@ -170,14 +172,14 @@ The GREEKC consortium maintains a curated dbTF target set. See [`greekc-goa-comp
 | Dataset | Count | Scope |
 |---------|-------|-------|
 | GREEKC dbTF target set | 1,449 | Curated by GREEKC consortium |
-| GOA GO:0003700 | 1,447 | Swiss-Prot human proteins |
+| GOA GO:0003700 | 1,447 | Swiss-Prot human proteins in the GREEKC comparison |
 | **Agreement** | 1,385 | 95.6% overlap |
 | GOA-only | 62 | Potential over-annotations |
 | GREEKC-only | 50 | Potential false negatives (14 isoforms excluded) |
 
 ### GOA-only: Potential Over-annotations
 
-62 proteins with GOA dbTF annotation but NOT in GREEKC curated set. Many are concerning:
+62 proteins with GOA dbTF annotation but NOT in the February 2026 GREEKC curated set. Many are concerning:
 
 | UniProt | Gene | Concern |
 |---------|------|---------|
@@ -203,5 +205,5 @@ The GREEKC consortium maintains a curated dbTF target set. See [`greekc-goa-comp
 2. [ ] Review MEIOSIN annotation status
 3. [ ] Compare with TFCheckpoint 2.0 for additional cross-validation
 4. [x] Compare with GREEKC curated target set
-5. [ ] Review 62 GOA-only proteins for potential removal
+5. [ ] Review the remaining 55 of 62 GOA-only proteins
 6. [ ] Review 50 GREEKC-only proteins for potential annotation

@@ -14,6 +14,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/PXWTPryxRQnYCr1b89XoEc
       title: Project brief
+index_group: BACTERIA
 ---
 
 # Lipoate Biosynthetic Process — Obsoletion & Merge into Protein Lipoylation

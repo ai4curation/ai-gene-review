@@ -1,0 +1,15 @@
+# RlmD source review
+
+## 2026-10-26
+
+Normal `just fetch-gene ECOLI rlmD` established the reviewed K-12 accession P55135, gene rlmD (synonyms rumA/ygcA), locus b2785/JW2756. Eleven seeded annotation payloads and the raw UniProt/GOA hashes were captured before curation. RlmD is a biologically necessary comparator for the U747-specific RlmC assignment and now supplies the dedicated U1939 activity of the expanded paired-site module; broad family membership alone cannot distinguish those sites.
+
+Actual Falcon and perplexity-lite fallback requests failed authentication/provider access; logs are preserved, and no research report was manufactured. Normal publication caching and primary/manual research were used. The actual FEBA lookup for keio/b2785 also failed because no source was reachable; this supplies no mutant-fitness conclusion.
+
+PMID:11779873 explicitly reports purified enzyme methylating U1939, a 40-nucleotide active substrate, and lack of methylation of tested 16S rRNA and tRNA. Canonical access remained abstract-only after a real normal forced fetch; the accessible conclusions are independently corroborated by full PMID:12907714, whose recombinant YgcA modifies the U1939-containing transcript. These data support activity, not an assertion that the same short substrate is the physiological assembly state. PMID:15766524's structural abstract identifies distal RNA hairpin contacts and RNA refolding in the RumA-RNA-cofactor complex; it supports refining broad RNA binding to rRNA binding. No unaccessed full-text kinetic details were invented.
+
+Full PMID:15181002 was recovered on a retry after a transient HTTP429. It measures native RumA optical/EPR properties and changes after reductant/oxidant treatment. The Fe-S cluster is a core biochemical property and the broad iron term is refined to GO:0051539. The paper says oxidative decomposition “could be a mechanism” for regulation; no native oxidative-stress response annotation is inferred. Full text also notes the cluster's precise function remains enigmatic. The original 2002 measurement of iron equivalents and the later four-iron cluster identification are not identical experimental measurements. PMID:15016356 is available as an abstract/curated structure-linked source; a forced refresh failed HTTP429 and was not silently represented as full text.
+
+All eleven rows are reviewed. RNA processing and general RNA methylation are refined to the supported rRNA base/C5 activities. IBA is retained on its phylogenetic merits with direct target grounding: the target among PTN000115109 descendants is not circularity. The native reaction and defined-substrate biochemistry are distinct from RlmC's original recombinant inactivity. No NEW annotation is proposed. The review describes no broad bacterial universal presence, physiological redox sensor, or obligatory relationship between U747 and U1939 modification.
+
+Validation: strict schema, term/ontology, source/quote and consistency checks pass with zero errors and warnings.
