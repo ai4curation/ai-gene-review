@@ -68,3 +68,7 @@ No deep-research file; searched PubMed directly.
 - ATP binding GO:0005524 IEA: KEEP_AS_NON_CORE (cosubstrate).
 - NEW: protein UMPylation (GO:0018177) BP and a NEW MF row to GO:0070569 with proposed child
   "protein UMPylase activity" — the demonstrated UMPylase activity is absent from GOA.
+
+## Revision (PR review)
+
+- GO:0016779 nucleotidyltransferase activity was changed from KEEP_AS_NON_CORE to TOO_GENERAL. Both specific child activities are now asserted in the review: GO:0070733 (accepted) and GO:0070569 uridylyltransferase activity (NEW). The generic parent therefore adds nothing, which matches how the trhO review treats its generic oxidoreductase rows.
