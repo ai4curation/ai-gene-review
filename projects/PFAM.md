@@ -274,13 +274,39 @@ sulfhydryl oxidase activity.
 of its InterPro entry, or the term holds equally well across the entry, so adding
 the term to interpro2go on that entry does the same job. A mapping written at
 Pfam level is the only route for 17 headline pairs, six of them in the
-well-supported set: SIR2_2 (PF13289) to NAD+ nucleosidase activity, GH16_XgeA
-(PF26113) to endo-1,3(4)-beta-glucanase activity, zf-CCCH_DUS3L (PF25585) to mRNA
-dihydrouridine synthase activity and BphC_D1 (PF22632), all unintegrated; and
-WGR (PF05406) to two protein ADP-ribosyltransferase terms, which its entry holds
-less well. The answer to the project's opening question is therefore narrow:
-mapping from Pfam instead of InterPro adds a handful of families, while the
-larger gain is a list of terms to request on existing InterPro entries.
+well-supported set, from five families. The larger gain is a list of terms to
+request on existing InterPro entries.
+
+**Curated rules from the Pfam-only candidates.** Each of the five families was
+profiled across all its UniProtKB members with
+[`pfam_rule_probe.py`](PFAM/pfam_rule_probe.py) before a rule was written, because
+purity on reviewed members says nothing about the unreviewed ones a rule also
+fires on. Four rules resulted (`rules/curated`), none of them the plain
+family-to-term mapping the shortlist suggested, and one family was dropped.
+
+| Family | Outcome | What the profile changed |
+|---|---|---|
+| SIR2_2 (PF13289) | CR-0012, proposed: NAD+ nucleosidase activity | 204 members also sit in the sirtuin deacylase family and are excluded. Characterized NADases come from five unrelated systems, which is what supports a family-wide term. |
+| zf-CCCH_DUS3L (PF25585) | CR-0013, draft: mRNA and tRNA-U47 dihydrouridine synthase activity | The zinc finger alone also occurs outside DUS3, so the catalytic domain is required. The mRNA activity is demonstrated in fission yeast only; the human study says its own mRNA sites need orthogonal validation. |
+| BphC_D1 (PF22632) | CR-0014, proposed: dioxygenase activity incorporating two atoms of oxygen | 223 members that another signature calls glyoxalase I or methylmalonyl-CoA epimerase are excluded. |
+| WGR (PF05406) | CR-0015, proposed: protein-aspartate and protein-glutamate ADP-ribosyltransferase activity | 40% of WGR proteins have no catalytic domain, most of them bacterial, so the PARP catalytic domain and Eukaryota are required. With that conjunction the rule can be written on InterPro entries just as well, so this one is not Pfam-only after all. |
+| GH16_XgeA (PF26113) | No rule | See below. |
+
+GH16_XgeA was dropped because the reviewed members do not show that the family
+shares one specificity. Nine of the ten carry EC 3.2.1.6: the *Aspergillus
+nidulans* enzyme XgeA on the evidence of a single enzyme screen (PMID:16844780),
+and eight relatives from *Aspergillus* and *Trichophyton* by similarity. The family
+has a median of four members per genome, three in *A. nidulans*. A bacterial
+member with a structure, the *Streptomyces sioyaensis* glucanase UniProtKB:Q9L816,
+was characterized as an endo-1,3-beta-glucanase that prefers 1,3-beta-linked
+glucans (PMID:11932459), which is the laminarinase reaction and not the
+mixed-linkage one. In GO the two activities share no ancestor more specific than
+hydrolase activity, hydrolyzing O-glycosyl compounds, which InterPro2GO already
+gives to 90% of the members. There is no safe term to add.
+
+So of the six shortlisted Pfam-only pairs, three survive as rules that need a
+Pfam condition: CR-0012, CR-0014 and CR-0013, the last only if its open question
+is settled. The two WGR pairs survive as a rule that does not need Pfam.
 
 **Paralog traps are flagged, not dropped.** 34 headline pairs have reviewed
 members with a different function: the IF-2B family (PF01008) is 91%
@@ -348,6 +374,7 @@ python3 analyze_pfam_go_gaps.py --download   # Part 1: existing pfam2go vs inter
 python3 headroom_analysis.py                 # Part 2: headroom for new mappings
 python3 validate_pfam_reviews.py             # Part 2: validate the hand-curated reviews + refresh index
 python3 high_value_unique.py --download      # Part 3: high-value, unique candidates (queries UniProt)
+python3 pfam_rule_probe.py PF13289 GO:0003953 --download --exclude IPR050134   # Part 3: profile a family before writing a rule
 just validate-pfam-reviews                   # the above + LinkML structural + GO-label validation
 ```
 

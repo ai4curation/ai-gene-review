@@ -18,6 +18,10 @@ auditable record, and names the external source it replaces.
 | [CR-0009](CR-0009.yaml) | GO:0005540 hyaluronic acid binding | IPR026203 AND (Vertebrata OR Cephalochordata) | interpro2go IPR026203 | PROPOSED |
 | [CR-0010](CR-0010.yaml) | GO:0070823 HDA1 complex | IPR021006 AND Fungi | interpro2go IPR021006 | PROPOSED |
 | [CR-0011](CR-0011.yaml) | GO:0016705 oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen | (IPR011251 OR IPR036661) AND NOT 18 F420-dependent family entries | interpro2go IPR011251, IPR036661 | PROPOSED |
+| [CR-0012](CR-0012.yaml) | GO:0003953 NAD+ nucleosidase activity | Pfam PF13289 AND NOT IPR050134 | (new coverage; family unintegrated in InterPro) | PROPOSED |
+| [CR-0013](CR-0013.yaml) | GO:0102265 tRNA-dihydrouridine47 synthase activity, GO:0106414 mRNA dihydrouridine synthase activity | Pfam PF25585 AND Pfam PF01207 | (new coverage; zinc finger family unintegrated in InterPro) | DRAFT |
+| [CR-0014](CR-0014.yaml) | GO:0016702 oxidoreductase activity, acting on single donors with incorporation of two atoms of oxygen | Pfam PF22632 AND NOT IPR018146 AND NOT IPR051785 | (new coverage; family unintegrated in InterPro) | PROPOSED |
+| [CR-0015](CR-0015.yaml) | GO:0140806 NAD+-protein-aspartate and GO:0140807 NAD+-protein-glutamate ADP-ribosyltransferase activity | Pfam PF05406 AND Pfam PF00644 AND Eukaryota | (new coverage) | PROPOSED |
 
 ## Semantics
 
