@@ -13,6 +13,13 @@
 - Human DDAH2 has a separate, catalytically unresolved mitochondrial infection phenotype:
   Huang et al. report that viral infection relocates DDAH2 to mitochondria, promotes NO
   production and DNM1L/Drp1 activation, and blocks MAVS-dependent innate signaling.
+- PMID:21898353 independently supports stimulus-linked mitochondrial DDAH2 and NO
+  regulation in IL1B-treated normal human chondrocytes: the abstract reports that
+  DDAH2 increased in mitochondrial extracts after IL1B, that immunofluorescence and
+  confocal microscopy found DDAH2 in mitochondria, and that blocking DDAH2 expression
+  or mitochondrial translocation reduced the induced NO production. Its localization
+  evidence is useful, but its older dimethylargininase interpretation should be treated
+  as disputed after the 2023 multicentre DDAH2 activity study.
 - The PMID:16130169 apoptosis paper is an abstract-only HUVEC etoposide proteomics
   study in the cache. The abstract does not mention DDAH2, but the full text could
   have listed DDAH2 among the proteomics changes, so the GOA row is left `UNDECIDED`
