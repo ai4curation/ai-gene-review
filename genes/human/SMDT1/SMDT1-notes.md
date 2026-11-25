@@ -4,10 +4,11 @@
   attempted after the fetch step, but the Falcon and Perplexity providers were
   unavailable. No provider-named deep-research file was written; this manual
   note records the literature and model checks used for the review instead.
-- `just paint-losses human SMDT1` reported no IRD or IKR loss on the human
-  SMDT1/EMRE lineage, so the PAINT IBA rows to calcium import, mitochondrial
-  calcium homeostasis, and uniplex membership can be judged against the positive
-  human and metazoan evidence rather than against an outstanding loss.
+- `uv run python -m ai_gene_review.validation.gene_paint_losses human SMDT1`
+  reported `No IRD or IKR loss on this gene's lineage.`, so the PAINT IBA rows
+  to calcium import, mitochondrial calcium homeostasis, and uniplex membership
+  can be judged against the positive human and metazoan evidence rather than
+  against an outstanding loss.
 - The reviewed GO-CAM `gomodel:65d7e4ac00001363` is aligned with the SMDT1
   review: EMRE is a single-pass mitochondrial inner-membrane MCU pore auxiliary
   subunit whose transmembrane helix activates the pore and whose acidic
