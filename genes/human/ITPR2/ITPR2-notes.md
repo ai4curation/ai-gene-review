@@ -41,10 +41,11 @@ checked` for PTHR45816 and found no IRD or IKR loss on the ITPR2 lineage.
   the ER to the cytoplasm"].
 - Platelet fractionation found type II IP3 receptor in both human platelet
   plasma-membrane and internal-membrane fractions, supporting the existing
-  plasma-membrane row as a non-core platelet location and supporting a direct
-  platelet dense tubular network membrane assertion separate from the true
-  sarcoplasmic-reticulum membrane claim [PMID:10828023, "The type II receptor
-  exhibited a dual distribution"].
+  plasma-membrane row as a non-core platelet location and supporting GO checking
+  the BHF-UCL sarcoplasmic-reticulum membrane row for re-pointing to a separate
+  platelet dense tubular network membrane assertion; the independently supported
+  sarcoplasmic-reticulum membrane claim should be retained or re-sourced
+  [PMID:10828023, "The type II receptor exhibited a dual distribution"].
 - Garcia et al. found all three IP3R isoforms in neonatal and adult rat
   ventricular cardiomyocytes and in human heart tissue, supporting the propagated
   sarcoplasmic-reticulum rows as true but secondary muscle-store locations
