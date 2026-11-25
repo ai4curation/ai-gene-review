@@ -25,9 +25,11 @@ review: budding-yeast Mge1 stimulates release of both ATP and ADP from Ssc1
 and Mge1 is one of the named essential PAM motor subunits
 [PMID:14638855, "the nucleotide exchange factor Mge1"].
 
-I did not find a model disagreement for mge1. The GO-CAM evidence is also
-consistent with the cached PTHR21237 PAINT rows for adenyl-nucleotide exchange,
-PAM membership and mitochondrial-matrix import.
+I did not find a model disagreement for mge1. The GO-CAM evidence also agrees
+with the cached PTHR21237 PAINT rows for adenyl-nucleotide exchange, PAM
+membership and mitochondrial-matrix import in this fission-yeast GrpE target,
+while the PTHR21237 family review leaves the full eukaryotic breadth of the
+PAM/import node unresolved.
 
 ## Annotation synthesis
 
