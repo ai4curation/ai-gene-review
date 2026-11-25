@@ -44,6 +44,7 @@ process.
   process because Cym1 degrades released peptides rather than intact proteins.
 - Keep GO:0008270 zinc ion binding as a non-core cofactor property and narrow
   the generic IPR011249 metal-ion-binding IEA to that zinc term.
-- Remove the mitochondrial intermembrane space ISS row from budding-yeast Cym1
-  as a stale or erroneous compartment transfer; all specific PreP-family
-  evidence supports the matrix.
+- Mark the mitochondrial intermembrane-space ISS row from budding-yeast Cym1 as
+  over-annotated because it lacks S. pombe-specific or inspected donor evidence
+  beyond the same homology transfer that also supports matrix localization; all
+  specific PreP-family evidence supports the matrix.
