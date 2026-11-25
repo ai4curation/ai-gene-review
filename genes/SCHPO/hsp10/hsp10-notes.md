@@ -18,3 +18,4 @@
 ### GO-CAM consistency queue
 
 - Add a final consistency note after the gene PRs merge: the Hsp10 GO-CAM activity is biologically consistent with the hsp10 review, but both the GO-CAM enabled_by ISO and the PomBase GOA ISO row cite `SGD:S000000004` as their budding-yeast donor. That identifier is SSA1/YAL005C; the S. cerevisiae ortholog for S. pombe hsp10 is HSP10/YOR020C, `SGD:S000005546`.
+- Queue a PTHR10772 family review: the `GO:0046872 metal ion binding` IBD is on the PTHR10772 root node `PTN000080668` from the single *M. tuberculosis* Cpn10 seed `UniProtKB:P9WPE5`, so the family review should consider moving or removing the root placement before it reaches fungal mitochondrial Cpn10 proteins.
