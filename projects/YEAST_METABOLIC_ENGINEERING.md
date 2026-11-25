@@ -3,8 +3,8 @@ title: "Yeast Metabolic Engineering & Bioproduction"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN, FLAGSHIP, PIPELINE, EVALUATION]
 species: [yeast]
-genes: [PDC1, ADH1, ADH2, GPD1, GPD2, HXK1, HXK2, GLK1, PFK1, PFK2, PYC1, PYC2, TDH1, TDH2, TDH3, ZWF1, BNA3, BNA7, DAL3, "DUR1,2", ERG26]
-last_reviewed: '2026-11-21'
+genes: [PDC1, ADH1, ADH2, GPD1, GPD2, HXK1, HXK2, GLK1, PFK1, PFK2, PYC1, PYC2, TDH1, TDH2, TDH3, ZWF1, BNA3, BNA7, DAL3, "DUR1,2", ERG26, FOX2, PHS1, ERG10]
+last_reviewed: '2026-11-24'
 autolink_gene_symbols: false
 manifest:
   slides:
@@ -95,13 +95,14 @@ Full quantitative tables, simulation provenance, and reproducibility checklists 
 - [`YEAST_METABOLIC_ENGINEERING/out/target_genes_audit.yaml`](YEAST_METABOLIC_ENGINEERING/out/target_genes_audit.yaml) — Detailed EC, compartment, and AST-GPR audit for the 16 central-carbon target and paralog genes.
 - [`YEAST_METABOLIC_ENGINEERING/out/fba_vs_pfba_routing.yaml`](YEAST_METABOLIC_ENGINEERING/out/fba_vs_pfba_routing.yaml) — Standard FBA vs. parsimonious FBA flux distributions under aerobic and anaerobic glucose conditions, demonstrating the `PFK_3`/`FBA3`/`TALA` and `GLYCDy`/`DHAK` bypasses.
 - [`YEAST_METABOLIC_ENGINEERING/out/knockout_and_repair_experiments.yaml`](YEAST_METABOLIC_ENGINEERING/out/knockout_and_repair_experiments.yaml) — Single and double paralog knockouts before and after curation-guided repairs for `GPD1`/`GPD2`, `DAL3`/`DUR1,2`, and `BNA3`/`BNA7`.
+- [Section 6 of `RESULTS.md`](YEAST_METABOLIC_ENGINEERING/RESULTS.md#6-stereochemistry-and-compartment-defects-in-fox2-phs1-and-erg10-reactions) — Stereochemistry and compartment checks of FOX2, PHS1 and ERG10 reactions in `iMM904` and yeast-GEM 9.1.1, from the `YeastPathways_PWY-5177` GO-CAM review's own audit script rather than `run_yeast_gem_audit.py`.
 - [`YEAST_METABOLIC_ENGINEERING/out/ast_eflux_conditions.yaml`](YEAST_METABOLIC_ENGINEERING/out/ast_eflux_conditions.yaml) — Benchmark of AST-based E-Flux vs. ChatGEM's regex GPR parser (`46._automatic_E_flux.py`) on nested GPR rules, using synthetic per-gene levels.
 
 ---
 
 # STATUS
 
-Last updated: 2026-11-21
+Last updated: 2026-11-24
 
 ## Reviewed Central-Carbon Target & Paralog Genes
 
@@ -128,6 +129,14 @@ Last updated: 2026-11-21
 - [x] `DAL3` (`YIR032C`, `COMPLETE`) & `DUR1,2` (`YBR208C`, `COMPLETE`) — Corrected `UGLYCH` from bacterial ureidoglycolate hydrolase (`EC 3.5.3.19`) to yeast ureidoglycolate lyase (`EC 4.3.2.3`), restoring essentiality of `DUR1,2` on allantoin.
 - [x] `ERG26` (`YGL001C`, `COMPLETE`) — Identified inherited BiGG `EC 5.3.3.1` (steroid isomerase) misannotation on C-3 sterol dehydrogenase/decarboxylase (`EC 1.1.1.170`).
 
+## Stereochemistry and Compartment Defects (from the `YeastPathways_PWY-5177` GO-CAM review)
+
+- [x] `FOX2` (`YKR009C`) — `iMM904` gives all 12 3-hydroxyacyl-CoA participants of its hydratase and dehydrogenase reactions the (S) configuration, and yeast-GEM 9.1.1 gives 6 of them (S); MFE-2 is (3R)-specific. The four GO:0003857 (3S)-dehydrogenase GOA rows are filed for repointing to GO:0106386, and the two YeastPathways cytosol rows for deletion.
+- [x] `PHS1` (`YJL097W`) — No yeast-GEM 9.1.1 dehydratase reaction has an (R) participant. Its two YeastPathways cytosol rows and its carboxylic acid catabolic process row are filed with SGD for deletion.
+- [x] `ERG10` (`YPL028W`) — Both models add a mitochondrial thiolase reaction that the reviewed evidence does not support. The catabolic process RCA row and the UniProt vacuole NAS row are filed as queries.
+- [ ] Vacuole NAS rows from the same UniProt batch on `ERG8`, `MVD1`, `ERG20` and `IDI1` — queries in review.
+- [ ] Model-side errors (the (S) participants and the mitochondrial `ACACT1m`/`r_0104`) have no source-defect home; the schema has no resource value for a genome-scale model.
+
 ## Progress
 
 - Core target + paralog genes reviewed: 16 / 16 (16 `COMPLETE`)
@@ -137,6 +146,10 @@ Last updated: 2026-11-21
 ---
 
 # NOTES
+
+## 2026-11-24
+
+- Added the stereochemistry and compartment findings for `FOX2`, `PHS1` and `ERG10` ([`RESULTS.md` section 6](YEAST_METABOLIC_ENGINEERING/RESULTS.md#6-stereochemistry-and-compartment-defects-in-fox2-phs1-and-erg10-reactions)) and filed the matching GOA rows as source defects in the three gene reviews. Per-gene changes are in each gene's history record.
 
 ## 2026-11-21
 
