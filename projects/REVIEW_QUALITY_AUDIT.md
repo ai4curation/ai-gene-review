@@ -7,6 +7,7 @@ manifest:
   slides:
     - href: REVIEW_QUALITY_AUDIT/slides/REVIEW_QUALITY_AUDIT-slides.html
       description: AI generated
+index_group: CROSS_CUTTING
 ---
 
 # Review Quality Audit

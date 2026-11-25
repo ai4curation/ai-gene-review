@@ -172,3 +172,49 @@ def test_expand_inputs_reports_missing_paths(tmp_path: Path) -> None:
 
     with pytest.raises(FileNotFoundError, match="Review input does not exist"):
         expand_inputs([missing])
+
+
+def test_module_reviews_are_exported(tmp_path: Path) -> None:
+    modules = tmp_path / "modules"
+    modules.mkdir()
+    (modules / "example_signaling.yaml").write_text(
+        """
+id: MODULE:example_signaling
+title: Example signaling
+proposed_new_terms:
+  - proposed_name: example signaling pathway
+    proposed_definition: A signaling pathway used in a test.
+    proposed_parent:
+      id: GO:0007165
+      label: signal transduction
+""",
+        encoding="utf-8",
+    )
+    (modules / "no_requests.yaml").write_text(
+        "id: MODULE:no_requests\ntitle: No requests\n", encoding="utf-8"
+    )
+    output = tmp_path / "out.tsv"
+
+    assert expand_inputs([modules]) == sorted(
+        modules.glob("*.yaml"), key=lambda path: path.as_posix()
+    )
+    assert export_proposed_terms([modules], output) == 1
+    with output.open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle, delimiter="\t"))
+    assert rows[0]["review_id"] == "MODULE:example_signaling"
+    assert rows[0]["proposed_name"] == "example signaling pathway"
+    assert rows[0]["proposed_parent_id"] == "GO:0007165"
+    assert rows[0]["organism"] == ""
+    assert rows[0]["gene_symbol"] == ""
+
+
+def test_gene_tree_below_a_modules_folder_keeps_the_gene_glob(tmp_path: Path) -> None:
+    gene_dir = tmp_path / "modules" / "checkout" / "genes" / "yeast" / "SAS3"
+    gene_dir.mkdir(parents=True)
+    body = "proposed_new_terms:\n  - proposed_name: a term\n"
+    (gene_dir / "SAS3-ai-review.yaml").write_text(body, encoding="utf-8")
+    (gene_dir / "SAS3-ai-review-clean.yaml").write_text(body, encoding="utf-8")
+
+    found = expand_inputs([tmp_path / "modules" / "checkout" / "genes"])
+
+    assert [path.name for path in found] == ["SAS3-ai-review.yaml"]

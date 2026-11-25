@@ -49,3 +49,19 @@ Reported partners include SNAI1, MARCKSL1, vimentin, collagen IV, fibronectin, a
 ## Human versus ortholog evidence
 
 Human recombinant protein establishes catalytic activity, structural chemistry, and several interactions. Physiological angiogenesis evidence in PMID:21835952 combines endothelial-cell assays with zebrafish knockdown, while inhibitor phenotypes in PMID:20818376 use xenograft and fibrosis models. These ortholog/model results support conserved biology but do not by themselves demonstrate the identical tissue-specific mechanism in healthy humans.
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095) and IDA (PMID:28332555); no ER sub-compartment row.
+
+- The UniProt ER line is curated from PMID:28332555 (ECO:0000269). Full text read:
+  endogenous LOXL2 in MDA-MB-231 and Hs578T cells "co-fractionated mainly with Calnexin
+  in the lineal Optiprep gradients (Fig. 1a,b) and immunofluorescence analysis confirmed
+  LOXL2 co-localization with Calnexin-positive ER structures in both cell lines"
+  [PMID:28332555]. A minor Golgi pool is read as "LOXL2 leaving the ER", and the authors
+  hypothesize that the ER pool is "accumulated precursor forms of LOXL2 waiting for
+  departure from the ER" [PMID:28332555].
+- Sequence: signal peptide 1-25, no TM, C-terminus ...SGLLNNQLSPQ (no KDEL-like motif).
+- Outcome: both rows stay KEEP_AS_NON_CORE, with rewritten reasons (the old "overexpression-induced"
+  wording was inaccurate; the endogenous protein was shown). Transit pool with direct
+  evidence on the gene in native cells (ADIPOQ, GBA1 precedent). No ER lumen row.

@@ -27,10 +27,11 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import yaml
 
+from ai_gene_review.evidence import EXPERIMENTAL_EVIDENCE_CODES as EXPERIMENTAL, source_evidence_code
+
 
 API = "https://rest.uniprot.org"
 REVIEWED = "UniProtKB reviewed (Swiss-Prot)"
-EXPERIMENTAL = frozenset("EXP IDA IPI IMP IGI IEP HTP HDA HMP HGI HEP".split())
 EVIDENCE_CODES = "EXP IDA IPI IMP IGI IEP HTP HDA HMP HGI HEP IBA IBD IKR IRD ISS ISO ISA ISM IGC RCA TAS NAS IC ND IEA".split()
 REPO_URL = "https://github.com/ai4curation/ai-gene-review/blob/main/"
 ENTRY_FIELDS = "accession,id,reviewed,gene_names,protein_name,organism_id,organism_name,xref_proteomes"
@@ -226,7 +227,7 @@ def goa_counts(
                 continue
             if (
                 not row.get("GO TERM")
-                or not row.get("GO EVIDENCE CODE")
+                or not source_evidence_code(row.get("GO EVIDENCE CODE"), row.get("ECO ID"))
                 or None in row
                 or any(v is None for v in row.values())
             ):
@@ -236,7 +237,7 @@ def goa_counts(
             diagnostics.append(
                 f"{accession}: ignored foreign GOA products in {path.relative_to(root)}: {', '.join(sorted(other_ids))}"
             )
-    counts = Counter(row["GO EVIDENCE CODE"] for row in rows.values())
+    counts = Counter(source_evidence_code(row.get("GO EVIDENCE CODE"), row.get("ECO ID")) for row in rows.values())
     dates = sorted(row["DATE"] for row in rows.values() if row.get("DATE"))
     known = bool(sources)
     return {

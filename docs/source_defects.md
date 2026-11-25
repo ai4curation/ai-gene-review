@@ -23,19 +23,43 @@ should fix, in a form from which a report to that resource can be generated.
   activity id.
 - Functional isoforms: `functional_isoforms[].source_defects`, for a defect in
   the source's record of that isoform. Set `record` to the UniProt accession.
+- Rule reviews: top-level `source_defects` in `rules/**/<ID>-review.yaml`, for a
+  defect in an annotation record the review cites as a receipt (a curated GOA
+  row whose reference looks mis-keyed). Set `record` to the row: subject, term,
+  evidence code and reference. A defect of the rule itself is the review's
+  verdict, not a source defect.
+- Cited source text: `references[].reference_review.source_defects`, for an
+  error in a source's own curated text: a MOD gene description (cited as its
+  `-deep-research-<mod>.md` file) or a UniProt FUNCTION or other comment (cited
+  as the `-uniprot.txt` file). Set `record` to the source record (`WB:WBGene...`,
+  `UniProtKB:...`) and `slot` to the field (`MOD_provided_gene_description`,
+  `CC:FUNCTION`). Use `WRONG_STATEMENT` for a claim the literature contradicts,
+  `OUTDATED_STATEMENT` for one that has been superseded ("novel protein", "no
+  obvious function in RNAi assays"), and `MISSING_STATEMENT` for content the
+  source has lost or omits. For the first two, `asserted_value` is the
+  offending sentence copied verbatim from the cited file, run-together words
+  included, and `requested_change` is `CHECK`, with the explanation saying what
+  the text should say. Validation warns when the value is not found in the file
+  (`statement_defect_not_in_source`). For `MISSING_STATEMENT`, as for
+  `MISSING_ISOFORM`, nothing wrong is asserted: `asserted_value` repeats
+  `record` and `requested_change` is `ADD`. An error in an Alliance *automated* description
+  usually comes from the GO annotations it is generated from. Record it on
+  those annotation rows, not on the text, unless the text itself is the fault
+  (for example, function sentences lost between releases, which is
+  `resource: ALLIANCE`).
 
 ## Fields
 
 | Field | Required | Meaning |
 |---|---|---|
-| `defect_type` | yes | `WRONG_GENE_PRODUCT`, `WRONG_REFERENCE`, `WRONG_TERM`, `WRONG_EVIDENCE_CODE`, `MISSING_NEGATION`, `WRONG_WITH_FROM`, `WRONG_QUALIFIER`, `WRONG_CAUSAL_RELATION`, `MISSING_ISOFORM`, `OTHER` |
-| `resource` | yes | Who must fix it. For a GOA row this is the `assigned_by` group (`TAIR`, `MGI`, ...), not GOA. A GO-CAM model is `GO_CAM`. |
+| `defect_type` | yes | `WRONG_GENE_PRODUCT`, `WRONG_REFERENCE`, `WRONG_TERM`, `WRONG_EVIDENCE_CODE`, `MISSING_NEGATION`, `WRONG_WITH_FROM`, `WRONG_QUALIFIER`, `WRONG_CAUSAL_RELATION`, `WRONG_STATEMENT`, `OUTDATED_STATEMENT`, `MISSING_STATEMENT`, `MISSING_ISOFORM`, `DUPLICATE_ASSERTION`, `OTHER` |
+| `resource` | yes | Who must fix it. For a GOA row this is the `assigned_by` group (`TAIR`, `MGI`, ...), not GOA. A GO-CAM model is `GO_CAM`. Pipelines and non-MOD resources have their own values too - see [Choosing a resource](#choosing-a-resource). |
 | `record` | no | Id of the defective record when it is not the enclosing annotation. |
 | `slot` | no | The field holding `asserted_value`, in the source's own terms: `enabled_by` or `has_input` for a GO-CAM activity; `DB_Object_ID`, `DB:Reference`, `With/From`, `Evidence_Code` or `Qualifier` for a GAF row. |
 | `requested_change` | no | `REPOINT` (replace with `corrected_value`), `DELETE_VALUE` (drop the value, keep the record), `DELETE_ROW`, `ADD` (add `corrected_value`, which the record lacks), or `CHECK` (the right change depends on information we could not see; the explanation gives the alternatives). |
 | `asserted_value` | yes | What the source says now, as a CURIE (`AGI_LocusCode:AT2G45160`, `PMID:32213638`). For `requested_change: ADD` nothing wrong is asserted, so this names the record that lacks the value (the same CURIE as `record`, e.g. `UniProtKB:Q96PV0` for a missing isoform); group `ADD` rows separately when analysing asserted values. |
 | `corrected_value` / `corrected_label` | no | What it should say, when known. Leave unset when the value is wrong but the right one is unknown. |
-| `cause` | no | `SYMBOL_COLLISION`, `LEGACY_ALIAS`, `IDENTIFIER_TRANSPOSITION`, `SEQUENCE_MISMAPPING`, `CONTAMINANT`, `OTHER`, `UNKNOWN` |
+| `cause` | no | `SYMBOL_COLLISION`, `LEGACY_ALIAS`, `IDENTIFIER_TRANSPOSITION`, `SEQUENCE_MISMAPPING`, `CONTAMINANT`, `OVER_PROPAGATION`, `SCOPE_OVER_REACH`, `LABEL_WITHOUT_DEFINITION`, `SPECULATION_AS_ASSERTION`, `PRACTICE_CHANGE`, `ORTHOLOG_TRANSFER_AS_EXPERIMENTAL`, `CONTEXT_NOT_ASSAYED`, `OTHER`, `UNKNOWN`. The first five are gene-identity confusions; the next seven are pipeline, process and evidence mechanisms - see [Choosing a cause](#choosing-a-cause). |
 | `confidence` | yes | `CONFIRMED` (file as a correction), `PROBABLE` (file as a query), `SUSPECTED` |
 | `explanation` | yes | Self-contained text a curator at the resource can act on. |
 | `supported_by` | no | Verbatim quotes, checked like any other `supporting_text`. |
@@ -106,6 +130,176 @@ PRs that touch a defect. The `source_defects` blocks in the reviews are the
 record. Generate the reports when you need them. Filing a report is a
 manual step. When it is done, set `report_status: REPORTED` and
 `report_url`, and set `FIXED` once a re-fetch shows the correction.
+
+## Choosing a resource
+
+`resource` names who must fix the defect, which for a GOA row is normally the
+`assigned_by` group.
+
+**Not every defect is in a GOA row.** Two values name resources that assign no
+GOA rows at all, and both were added because defects against them had nowhere
+to go:
+
+- **`AFFINAGE`** is an Affinage gene record - the LLM synthesis served at
+  `affinage.wi.mit.edu` and cached here as `GENE-deep-research-affinage.md`.
+  `CLAUDE.md` directs you to record errors in a provider's text as source
+  defects, and these are those: a wrong grounding, an omitted complex, a
+  malformed citation. Put the record's URL in `record:` and the field within it
+  in `slot:` (`molecular_activity`, `localization`, `citations`), which is
+  better evidence of the responsible resource than any prose.
+- **`PROSITE`** is a pattern or its ProRule placing a name, EC number or
+  feature on every match of a motif too broad to support it (`PS00161` /
+  `PRU10119` assigning "Isocitrate lyase" and EC 4.1.3.1 to a superfamily
+  catalytic cysteine). The fix is the rule's scope - not `UNIPROT`, which only
+  applies the rule, and not `INTERPRO`, whose InterPro2GO mappings are a
+  different mechanism.
+
+**A shared institution is not a shared curation group.** `ARUK_UCL`,
+`HGNC_UCL` and `PARKINSONSUK_UCL` are three values, because a report has to
+reach the team that made the row. `ARUK_UCL` covers ARUK-UCL and BHF-UCL
+together, as its description says.
+
+Three further groups of values are easy to confuse:
+
+- **Pipelines, not annotations.** A term that is wrong on an InterPro signature
+  or a PANTHER node is wrong for every protein that inherits it, so the fix is
+  upstream of any gene. Use `INTERPRO` for the InterPro2GO mappings behind
+  `GO_REF:0000002` and for signature descriptions, and `PANTHER` for a family or
+  ancestral-node GO association propagated by TreeGrafter (`GO_REF:0000118`).
+  An `INTERPRO` defect's `record:` is the signature, written `InterPro:IPR006108`
+  and joined with `|` for several, as GOA writes WITH/FROM:
+  `InterPro:IPR006108|InterPro:IPR006176`. Without `record:` the report falls
+  back to the GAF-row tuple, heading an InterPro defect with a row InterPro
+  never wrote.
+
+  **Which signatures belong in it:** of the ones the faulted term's GOA row cites
+  in WITH/FROM, exactly those that carry that GO term in the committed
+  `rules/arba/_interpro2go.txt`. That set is the defective record, and asking the
+  mapping file is better than reading the explanation, because it guards both
+  directions at once:
+
+  - It *drops* a signature the explanation names only to ask for its exclusion
+    from the mapping (IPR026578 for the L-carnitine dehydrogenases, IPR006277 for
+    the sarcosine oxidase alpha subunits). Those are not mapped to the faulted
+    term, so they fall out on their own.
+  - It *adds* the sibling signatures that carry the same mapping and that the
+    prose happened not to mention. This is the direction that is easy to miss:
+    `ECOLI/garK` asks for GO:0008887 to be repointed, and IPR018193 and IPR036129
+    carry that mapping too, so repointing the one signature the explanation named
+    would have left the row standing.
+
+  **When that set comes out empty**, no cited signature carries the faulted term,
+  so the row is not that mapping's output: it is GOC-derived or the term was
+  refined downstream. Record the signature the explanation names - the one whose
+  mapping produced the *upstream* row - and say in `explanation` which row that
+  is. `RHOCA/fruA` and `AZOBR/fruA1` are the worked case: their GO:1902600 rows
+  come from GO_REF:0000108, and IPR006327 is cited by the GO:0005351 row the
+  inference rests on. Never leave `record:` empty on that account, which is the
+  problem this rule exists to prevent.
+
+  Two limits on the check. The mapping file is a **committed snapshot**
+  (`!version date` at its head), so a signature added upstream since will not
+  appear in it. And the mapped set tells you which signatures are *candidates*,
+  not that all of them are faulted: where a cited signature covers a shared
+  structural domain rather than the activity, requesting a change to its mapping
+  over-reaches. Use the set to find the candidates and judge each one - six
+  records in the corpus name fewer signatures than their row maps, and
+  `9EURY/mcrA`, whose seven include sub-domain entries such as IPR009024
+  (ferredoxin-like fold), is exactly the case where widening mechanically would
+  be wrong.
+
+  Where the narrow ask is deliberate - `rat/Kcnj16` disputes `enables` only for
+  the Kir5 signature, not for the generic Kir one that shares the mapping - say so
+  in `explanation`, since the record otherwise looks like the same omission.
+- **`INTERPRO` is not `GOA_EBI`.** Ask what the fix changes. The *content* of a
+  mapping - its GO term, its qualifier, the signatures it covers - or the
+  signature's own description is `INTERPRO`, and stays `INTERPRO` however the
+  row reached the gene: a defect that says "check the IPRnnnnnn mapping" is an
+  InterPro defect even when the row carrying it is IEA from GOA, and it should
+  name the mapping in `record:`. `GOA_EBI` is GOA's own curation: the row, not
+  the mapping. `worm/dpm-1` is the clean case, and its structured fields say so
+  more plainly than its prose - `defect_type: WRONG_GENE_PRODUCT`,
+  `slot: DB_Object_ID`, `requested_change: REPOINT`, `UniProtKB:U4PF58` ->
+  `UniProtKB:Q9TYJ7`. The mapping is not wrong; GOA applied it to a 51-residue
+  fragment, and only GOA can repoint the row. (Its explanation also suggests a
+  minimum-coverage requirement before InterPro2GO transfer, which is a change
+  to the pipeline - also GOA's, and also not the mapping's content.) This split
+  is easy to reopen. It was closed corpus-wide in #6027, and reopened twice
+  while that PR waited to merge, in reviews that had carried no defects at all.
+  The worked examples this paragraph used to carry - the IPR016270 PGS1 mapping
+  in `ECOLI/pssA` and `PSEPK/pssA`, and IPR006327 across `XANCP/fruA`,
+  `RHOCA/fruA` and `AZOBR/fruA1` - were pinned to commit `485113c854`, where
+  they were filed `GOA_EBI` and named no mapping in `record:`. All of them are
+  now filed `INTERPRO` and carry one, so the examples are gone rather than
+  rewritten: a passage that describes the corpus goes stale the moment the
+  corpus moves, and these had. The rule they illustrated stands on its own:
+  check the filing whenever a defect's fix is a mapping, whatever the row's
+  `assigned_by` says.
+- **`PANTHER` is not `GO_CENTRAL`.** `GO_CENTRAL` is PAINT's own IBD/IBA
+  curation. A term can sit on a PANTHER node without PAINT ever asserting it,
+  and the two are fixed in different places; a gene can carry rows from both.
+- **`SYNGO` is not `GO_CENTRAL`.** A row SynGO curated from a paper is
+  `SYNGO`. SynGO annotations were also used as seeds in GO Phylogenetic
+  Annotation (PMID:31171447), so an IBA that PAINT propagated from a SynGO seed
+  is `GO_CENTRAL`, even when the seed it rests on is the defect. File the seed
+  as `SYNGO` and the propagated rows as `GO_CENTRAL`, and say in each
+  explanation that the other exists.
+- **`GOC` is for the ontology, not an annotation.** When the defect is in a term
+  itself - its label, definition, or placement in the graph - the annotations
+  using it may all be reasonable. That is a `GOC` defect.
+
+`OTHER` remains correct for a resource with no value, and the explanation must
+then name it. It is *not* the right choice for a resource that does have a
+value: a defect filed as `OTHER` when `CACAO` or `ECOLIWIKI` would have fit is
+invisible to that resource's report, which is the whole point of the field.
+
+## Choosing a cause
+
+`cause` is optional and records the mechanism, not the defect. The first five
+values are all gene-identity confusions - the wrong gene got the annotation.
+The pipeline and process mechanisms are different in kind: the annotation is on
+the intended gene and something else went wrong.
+
+- `OVER_PROPAGATION` - the evidence is real somewhere but was spread past the
+  clade, family or node where it holds. Fix the seed or the node, not the
+  inherited rows.
+- `SCOPE_OVER_REACH` - a mapping correct for some members was applied outside
+  that scope, most often across a taxon boundary.
+- `LABEL_WITHOUT_DEFINITION` - the term's label was read and its definition was
+  not, including near-miss labels in unrelated parts of the graph.
+- `SPECULATION_AS_ASSERTION` - a hedge in the source ("may function as") became
+  an assertion.
+- `PRACTICE_CHANGE` - a curation programme's convention changed, so a dated
+  cohort shares a defect that is not a per-row judgement. Give the date range
+  and row count; these are fixable in bulk.
+- `ORTHOLOG_TRANSFER_AS_EXPERIMENTAL` - an experiment in another species was
+  recorded on this gene with an experimental code (IDA, IMP) rather than ISO.
+  The experiment may be sound; the evidence code misstates how it reaches the
+  gene. Pair it with `defect_type: WRONG_EVIDENCE_CODE`. The fix has two
+  parts, and the defect should name both: the evidence code becomes ISO, and
+  `With/From` names the gene that was actually assayed (the rodent ortholog,
+  for SynGO). Changing the code alone leaves an ISO with no source. When it is
+  a resource's documented convention (SynGO maps rodent annotations to the
+  human ortholog by design, PMID:31171447), raise it once for the cohort, as
+  for `PRACTICE_CHANGE`: give the date range and the row count, not one defect
+  per row.
+- `CONTEXT_NOT_ASSAYED` - the work shows the activity but not the context the
+  term asserts, most often a precomposed "X involved in Y" term annotated from
+  a protein expressed in heterologous cells. Pair it with
+  `defect_type: WRONG_TERM` and put the plain activity term in
+  `corrected_value`. As of 2026-11 we found no explicit GO rule on evidence
+  from heterologous systems; the point here is narrower: when the context is
+  part of the term, evidence that cannot reach the context does not support
+  the term. In a gene review the same row is a MODIFY that decomposes the
+  precomposed term, recorded in `review.decomposed_into` (see
+  [INVOLVED_IN_PRECOMPOSITION](../projects/INVOLVED_IN_PRECOMPOSITION.md)).
+  Before dropping the context, check whether another paper does assay it: if
+  one does, the claim is true but mis-sourced, and the fix is to re-source the
+  row rather than generalise it.
+
+Use `OTHER` when the mechanism is identifiable but unlisted, and `UNKNOWN` when
+it is not identifiable at all. Prefer naming a mechanism where one fits: a
+typed cause is what makes a pattern countable across resources.
 
 This complements `reference_review` (see [Reference Curation](reference_curation.md)),
 which judges the *reference* itself. When a correct paper is attached badly

@@ -9,6 +9,7 @@ manifest:
   slides:
     - href: RIBOSOME_QUALITY_CONTROL/slides/RIBOSOME_QUALITY_CONTROL-slides.html
       description: AI generated
+index_group: MAMMAL
 ---
 
 # Ribosome Quality Control (RQC) Project

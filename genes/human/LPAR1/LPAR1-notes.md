@@ -215,3 +215,21 @@ experimental annotations.
   These should not all be elevated to independent molecular functions.
 - Mouse developmental phenotypes, high-throughput PDZ/RAMP contacts, and generic
   Reactome G-protein-cycle steps require explicit evidence/source boundaries.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Endosome rows (IEA SubCell SL-0101, IDA PMID:19306925) both rest on the UniProt Endosome item
+  tagged ECO:0000269 to PMID:19306925, abstract-only (no PMC copy) and silent on endosomes: a
+  curated line from an unreadable paper. Kept KEEP_AS_NON_CORE (ligand-driven pool of a PM GPCR).
+- Readable full texts fetched and read: PMID:24657741 (PMC4064372, DOI 10.1016/j.freeradbiomed.2014.03.017):
+  endogenous LPAR1 in PC3 cells, anti-LPAR1 antibody with blocking-peptide control, colocalizes
+  with EEA1 before and after LPA ["show extensive association with an early endosomal marker,
+  EEA1, both before and after exogenous LPA addition"]. PMID:23145131 (PMC3493537, DOI
+  10.1371/journal.pone.0049227): FLAG-LPA1 stably expressed in HEK293 moves through APPL1
+  endosomes to EEA1 early endosomes by 30 min after LPA ["they dissociate from one another before
+  LPA1 reaches early (EEA1) endosomes (30 min)"].
+- Two independent unperturbed, marker-resolved lines agree on the early endosome, so a NEW IC
+  GO:0005769 early endosome row was added beside the root. Not counted: PMID:12668728 (Rab5 S34N
+  perturbation, HeLa, not cached) and PMID:37054840 (FRET with overexpressed Rab constructs).
+- APPL1 signalling-endosome data (Akt) suggestive of endosomal signalling but only for the
+  overexpressed receptor; core_functions stays at the plasma membrane.

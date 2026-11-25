@@ -30,3 +30,8 @@ PMID:38000372 directly studies KT2440 NasT/c-di-GMP regulation, nirBD transcript
 The 2026 P. putida Y-9 study (PMID:41980646) is available as a normally fetched abstract only. Its explicit nirB/nirD deletion and isotope-tracing results are comparative evidence. The strain's aerobic DNRA/ANRA phenotypes are not promoted to directly measured KT2440 physiology. Existing full-text access failures are documented rather than repeatedly retried.
 
 The earlier journal attribution of nitrate fitness to thesis-level evidence is superseded by the inspected PMID:35285712 primary publication. Nitrate transport is ACCEPT; nitrite activity/process remain UNDECIDED. Correct broad transporter/process terms are MODIFY. RuleBase RU366033 and the twelve transmembrane features support plasma-membrane placement. No ATP-coupled ABC mechanism or specific proton stoichiometry is inferred from the porter family. The transcriptome's NasT assignment is explicitly putative, not a direct NasT-binding assay.
+
+
+## Module completion pass, 2026-11-03
+
+Resolved the remaining UNDECIDED row so the review can be COMPLETE for the bacterial assimilatory nitrate reduction module. GO:0015113 and GO:0015707 nitrite rows (InterPro IEA): UNDECIDED -> MARK_AS_OVER_ANNOTATED, consistent with Bacillus NasA. The KT2440 fitness data show no nitrite-condition phenotype [PMID:35285712 "However, no significant phenotype could be detected for this gene in the nitrite condition, suggesting that it may be specific to nitrate."].

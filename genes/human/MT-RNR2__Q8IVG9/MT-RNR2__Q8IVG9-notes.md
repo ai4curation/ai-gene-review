@@ -188,3 +188,11 @@ Two rows are flatly unsupported:
   intrinsic apoptotic signaling pathway") would be an ancestor/descendant
   neighbour of terms the gene already carries (GO:0043066, GO:1900118), which
   CLAUDE.md excludes as redundancy rather than coverage.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+- Rows: GO:0005739 IDA x3 (PMID:15567815 synovitis HSP60 double staining; PMID:20542501 sperm immuno-EM; PMID:26990160 exogenous FITC-humanin uptake in RPE) and IEA (GO_REF:0000044, SL-0173); all located_in. All ACCEPT -> KEEP_AS_NON_CORE.
+- [PMID:15567815 "Double staining with anti-humanin and anti-heat shock protein 60 showed that humanin was expressed mainly in mitochondria"] (abstract-only); [PMID:26990160 "Exogenous HN was taken up by RPE and colocalized with mitochondria."].
+- IEA: SL-0173 rests on curated UniProt location [file:human/MT-RNR2__Q8IVG9/MT-RNR2__Q8IVG9-uniprot.txt "Also detected in sperm mitochondria (PubMed:20542501)"].
+- All assays organelle-level; no TM or transit peptide; no sub-compartment. Stays at root.
+- Why non-core: core activities (receptor ligand, extracellular; BAX/tBID sequestration, cytosolic) are outside the organelle, as in core_functions. Antibody results cannot separate humanin from MTRNR2L paralogs (caveat kept).

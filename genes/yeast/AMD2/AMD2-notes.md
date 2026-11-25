@@ -109,3 +109,21 @@ All AS-family biochemistry statements (Ser-cisSer-Lys triad, generic R-CO-NH2 + 
 reaction, family substrate diversity: FAAH/NAE, plant AMI1/IAM, malonamidase E2, peptide amidase) are
 consistent with the UniProt/InterPro record and general enzymology; they are used only as framing, with
 the concrete review anchored to UniProt + GOA + PMID:2263500 + PMID:32024536.
+
+## ND literature-search citations (2026-11-02)
+
+The MF and BP ND rows now cite the falcon deep-research report, which searched the AMD2 literature
+and finds no direct test of AMD2's activity, substrate or pathway. The CC ND row is left uncited on
+purpose: the same report says AMD2 localizes to the cytoplasm in the Huh et al. 2003 genome-wide GFP
+study. If that study reports YDR242W, the CC ND is stale (literature on this gene in this species
+identifies a location) and should become REMOVE with `nd_case: STALE` plus an IDA cytoplasm row, not
+an accepted ND with a citation. The paper is not in the cache, so this needs checking first.
+
+## ND literature-search citations (2026-11-06)
+
+- `existing_annotations[2]` GO:0005575 cellular_component (ND) left uncited again and flagged as
+  possibly stale. `AMD2-deep-research-falcon.md` states that AMD2 "is annotated as localizing to
+  the **cytoplasm** based on the global GFP localization study" of Huh et al. 2003 (Nature
+  425:686-691). A genome-wide GFP screen that localizes YDR242W is literature on this gene in
+  this species, so the CC ND would be stale; the Huh et al. data for YDR242W still need checking
+  before the row is re-actioned.

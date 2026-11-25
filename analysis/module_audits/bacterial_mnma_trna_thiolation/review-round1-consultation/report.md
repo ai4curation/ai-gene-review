@@ -1,0 +1,16 @@
+# PR6199 scientific review follow-up
+
+Completed the adjudicated corrections without downloads, source rewriting, rendering, full validation, staging, commits or remote messages.
+
+- Preserved 19 reviewed proteins and every inherited row in order: 162 machine rows plus four historical NEW rows. Qualifiers and other original payload fields are identical. Final total: 167 rows, including five NEW rows.
+- Authored exactly one proposal: THET2 MnmA/Q72GX1 GO:0051539, IDA, PMID:31801798. The exact HB27 Ttc1727 recombinant protein binds a reconstituted [4Fe–4S] cluster; native cellular occupancy is not claimed.
+- Replaced the Thermus donor quotation where ATP/U34 chemistry or localization was asserted. Added exact methods, U34A-control, ATP, iron-stoichiometry and apoenzyme quotations/findings. Cytosol refinements consistently use explicit functional/structural inference. Target HAMAP location statements support BACSU/THET2 MnmA; no localization experiment is invented.
+- Removed unsupported author locations from BACSU IscS1 and the two Thermus donor cores. Removed their unqualified Thermus core U34-process assertions while retaining directly demonstrated reductant-free reconstitution capacity in prose and the conditional module routes. The removed author assertions are archived, not silently erased.
+- Replaced broad TIGR03342-only TusE anchors with target PTHR37010:SF1, PIRSR Cys110 mapping and separately classified PP_3993–PP_3996 neighbors. Genomic neighborhood is not cotranscription or measured native KT2440 flux. Preserved the former LOW_QUALITY OpenScientist assessment exactly in the additive archive.
+- Corrected three distinct Tus-family PTN narratives. PTHR11601 Fe-S propagation remains UNRESOLVED at the subfamily-wide scope: established IscS/NifS/NFS1 positives and the sound eukaryotic node are retained; SF36/SF50 uncertainty and SF62 non-transferability are explicit. No blanket SF34 authorization or unsupported YrvO negative exception was introduced.
+- Added the reconstituted cluster to the C-type module activity's cofactor descriptor. Moved the general family-specificity observation into notes; retained the two genuine biological knowledge gaps.
+- Fixed copied TusD rationales and repetitive summaries; retained MnmA boric-acid sensitivity as non-core with gene-specific primary text. TusA's 17-review-row/18-GOA-row seed collapse is explicitly documented, with no manufactured replacement row.
+
+Checks: all 384 quotation occurrences match cached/local sources, including 63 newly introduced occurrences. All 2,031 protected-source/old-receipt hashes match the pre-edit snapshot. Scoped record-section backfill found zero mismatches. All 17 helper-generated histories use actor codex, model gpt-6 and PR6199 links and passed history validation. Scoped git diff --check passes. No old receipts or history records were rewritten.
+
+This package is scientifically complete for integration. The integrating agent must run gene/family/module validation and rendering; those checks are intentionally not claimed here. Shared project metadata, proof-link publication and git integration are outside this package. The stage manifest and SHA-256 seal are in .cache/module-audit-logs/mnma-review-round1-consultation/.

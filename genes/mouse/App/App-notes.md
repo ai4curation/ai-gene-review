@@ -90,3 +90,9 @@ C99 → Aβ40/Aβ42 + AICD (via gamma-secretase)
 1. How to handle annotations that clearly apply only to Aβ vs sAPP vs full-length?
 2. Should we use functional_isoforms for both splice variants AND cleavage products?
 3. How to handle the controversial AICD transcription factor activity?
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0042802 / PMID:23986251: defect retyped (evidence depth: FULL_TEXT). PMC full text (PMC3756761, read through a web fetch of the first 100k characters, not cached) shows immunoblots of SDS-stable Abeta dimers/trimers from 7PA2 cells, so the paper does bear on identical protein binding and the reference is correctly keyed. The ISO donor, however, is O35463, an unreviewed Chinese hamster APP fragment, while 7PA2 cells are CHO cells expressing human APP V717F. Retyped to WRONG_WITH_FROM (slot With/From, asserted O35463, candidate P05067 verified, CHECK, cause OTHER); the defect stays on the same annotation.

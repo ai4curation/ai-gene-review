@@ -127,3 +127,25 @@ against their cached titles: PMID:8893006 (Oprm1 knockout), PMID:10617462
   attenuated by presynaptic mu opioid receptors (MORs) activation"].
 - Ethanol: [PMID:10869404 "In no case did knockout mice show evidence of
   ethanol self-administration"].
+
+## 2026-10-31: merge with parallel review (PR #5350)
+
+A second, independent review of OPRM1 was made in PR #5350. This review (#5042) is kept
+as the base. Ported from #5350: PMID:42870023 (Deutsch et al. 2026, Nat Struct Mol
+Biol), which used mouse μOR coupled to human Gαi1β1γ2 and shows that agonist efficacy
+is encoded in how fast the Gi α-helical domain opens for GDP release [PMID:42870023 "Mean dwell times in this high-FRET state (τhigh) depended strongly on ligand efficacy"]. Added as a reference, with two suggested questions and one suggested
+experiment on whether this holds for human OPRM1 and its N40D variant.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Endosome rows (IEA SL-0101, ISS from P97266) trace to the human UniProt Endosome item
+  ECO:0000250 to guinea pig P97266 (OPRM_CAVPO, looked up), whose Endosome item is ECO:0000269 to
+  PMID:8799185 (Sternini et al. 1996, PNAS, DOI 10.1073/pnas.93.17.9241, PMC38626; PMC served no
+  text, abstract cached). The abstract shows endogenous MOR in guinea pig myenteric neurons in
+  endosomes 15 min after etorphine in vivo, blocked by naloxone ["Within 15 min of an
+  intraperitoneal injection of the opiate agonist etorphine, intense MOR-IR was present in
+  vesicle-like structures, which were identified as endosomes by confocal microscopy"].
+- Donor-species readable evidence carries the root; KEEP_AS_NON_CORE (ligand-driven pool). No
+  stage marker in the readable donor; human data are heterologous overexpression, so no stage row.
+- GOA mismatch: the current GOA file has two ISS GO:0005768 rows from P97266 (dated 20170109 and
+  20251027) but the review has one ISS row; not added (brief: report, do not add).

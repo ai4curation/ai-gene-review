@@ -11,3 +11,7 @@ Positive transcriptional regulation is valid only in context. Evidence includes 
 Generic `protein binding` rows are over-annotated for this review. ATF3 clearly dimerizes with bZIP partners, and partner choice affects DNA specificity [PMID:28186491 "genome-wide binding of ATF3 is best explained by considering many dimers in which it participates"], but broad interaction-screen annotations should not be used as core functional statements when specific homodimerization, heterodimerization, and transcription-factor complex annotations are available.
 
 Two cited rows appear misattributed. PMID:16300731 is an ATF5 paper, not an ATF3 paper [PMID:16300731 "ATF5 transcription factor plays an essential role"]. PMID:14685163 is a CHOP/GADD153 ER-stress review without direct ATF3 evidence [PMID:14685163 "roles of CHOP/GADD153 in ER stress-mediated apoptosis"].
+
+## 2026-11-15: source-defect re-review
+
+The statement above that the PMID:16300731 rows "appear misattributed" is withdrawn, and the two SUSPECTED WRONG_GENE_PRODUCT defects (GO:0001228 and GO:0045944) were removed. QuickGO by reference shows NTNU_SB annotated ATF2, ATF3 and ATF5 to the same two terms from this paper, a deliberate family-wide annotation; ATF5 already carries the rows, so there is nothing to repoint. The full text was not read (not open access), so whether ATF3 was assayed is unverified; the rows stay ACCEPT on the other evidence for the terms. The PMID:14685163 concern is unaffected.

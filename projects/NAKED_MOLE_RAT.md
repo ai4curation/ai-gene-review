@@ -24,6 +24,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/QZ1exte7BMGxrEdFcomwvJ
       title: Project brief
+index_group: OTHER_ORGANISM
 ---
 
 # Naked Mole Rat (HETGA) Annotation Review

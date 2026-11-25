@@ -38,3 +38,18 @@ deep-research file exists. The review uses the cached full-text papers below.
 - Transfer guidance: established in human cells (no in vivo/animal data): Rab11 binding, TRAPPIII
   adaptor role, RE-to-Golgi transport, regulation of starvation-induced autophagosome formation,
   RE/Golgi localization. GAP activity is not established and should not be transferred.
+
+## 2026-11-19 ORGANELLES Golgi batch 4 (Golgi apparatus rows)
+
+- Two GO:0005794 rows in the review (HPA IDA, UniProt SubCell IEA), matching the two in the current
+  -goa.tsv; the third GO:0005794 occurrence in the review is the core_functions location, not a row.
+  No GOA drift.
+- Marker check: endogenous TBC1D14 colocalizes with GM130 and TGN46 in HEK293A cells, and the Golgi/TGN
+  pool grows on starvation [PMID:22613832 "We found that endogenous TBC1D14 colocalizes with GM130, a
+  cis/medial-Golgi marker, and TGN46, a TGN marker"]. The later paper says "Golgi stack" and shows
+  TRAPPC4 and RAB1B partially with TBC1D14 at the Golgi; TBC1D14 depletion lowers RAB1B-GTP
+  [PMID:26711178].
+- Both rows stay ACCEPT (core), reasons extended with the check: the adaptor activity (Rab11 to TRAPPIII,
+  RAB1 activation, RE-to-Golgi ATG9 step) is shown at the Golgi. Recruited, cycling pool of a peripheral
+  protein (BICD2 pattern). No sub-compartment row: cis/medial (GM130), TGN (TGN46) and "Golgi stack"
+  lines disagree. Neither row is is_active_in.

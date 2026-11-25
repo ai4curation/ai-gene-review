@@ -256,6 +256,12 @@ def find_local_quote_failures(
 
 @lru_cache(maxsize=1)
 def _baseline(path: Path = BASELINE_PATH) -> Dict[str, Set[str]]:
+    return load_local_quote_baseline(path)
+
+
+def load_local_quote_baseline(path: Optional[Path] = None) -> Dict[str, Set[str]]:
+    """Read the gene-review local-source quote baseline."""
+    path = BASELINE_PATH if path is None else path
     if not path.exists():
         return {}
     loaded = yaml.safe_load(path.read_text()) or {}
@@ -298,9 +304,10 @@ def validate_local_source_quotes(
             message = f"Cannot check supporting text: {reference_id} does not resolve to a file"
             if local_prefix(reference_id) == "Reactome":
                 suggestion = (
-                    "Cache the Reactome entry: uv run python -c \"from "
+                    'Cache the Reactome entry: uv run python -c "from '
                     "ai_gene_review.etl.reactome import cache_reactome_pathway; "
-                    f"cache_reactome_pathway('{reference_id}')\""
+                    f"cache_reactome_pathway('{reference_id}', "
+                    'include_participants=True)"'
                 )
             else:
                 suggestion = "Point reference_id at an existing file under genes/ or the repository root"

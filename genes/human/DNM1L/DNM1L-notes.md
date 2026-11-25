@@ -36,3 +36,11 @@ The cytosol IDA from GO_REF:0000052 now directly cites the [Human Protein Atlas 
 PMID:21525035 is a genuine current human DNM2 donor citation: the saved QuickGO record joins P50570, microtubule GO:0005874, IDA and UniProt assignment dated 2012-06-01. Its abstract foregrounds PEX14, and the DNM2-specific full experiment remains unread. The literal donor record establishes provenance, not a reason to transfer the PEX14 mechanism to DNM1L or dismiss the donor because of the title.
 
 All 153 source dictionaries and annotation actions, nine product records, the integrated motor core and inherited quotations remain unchanged. The older journal bullets are historical and remain superseded by the preceding augmentation: generic interactions were retained, and the GAP inference remains over-annotated rather than experimentally refuted. Source-specific UNDECIDED judgments remain explicit where the necessary target evidence is unavailable. No new GO annotation or completion credit is introduced by this follow-up.
+
+## 2026-11-15 ORGANELLES Golgi batch 2 (Golgi apparatus rows)
+
+- Rows: GO:0005794 EXP (PMID:9348079), EXP (PMID:9570752), IDA (PMID:20688057), IEA (GO_REF:0000044). All now KEEP_AS_NON_CORE (the PMID:9348079 row was UNDECIDED, which left the term with inconsistent actions).
+- PMID:9348079 (abstract-only): tagged DVLP perinuclear staining "not superimposed" on Golgi, TGN, lysosome, endosome or ER markers, the opposite of the claim. Recorded as a SUSPECTED WRONG_REFERENCE source defect (UniProt, CHECK) rather than removing the row; the claim stands on PMID:20688057.
+- PMID:9570752 (abstract-only): overexpressed tagged DRP1 in CHO, perinuclear with ER dye DiOC6(3) and Golgi lipid dye C5-DMB-Cer; weak, kept on deference.
+- PMID:20688057 (abstract-only): DLP1 at the Golgi in some but not all cell lines; main line, kept on deference. TGN apical-sorting role rests on silencing (perturbation), so no TGN row.
+- Soluble recruited GTPase; root only, non-core (core activity at mitochondria and peroxisomes).

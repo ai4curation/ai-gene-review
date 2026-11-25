@@ -64,3 +64,6 @@ perplexity fallback is unavailable in this environment. A rerun with `--timeout 
 `lin-12-deep-research-falcon.md`. It is consistent with the review and is cited in core_functions. Note that
 falcon reports C. elegans LIN-12/GLP-1 are tuned to lower force thresholds for activation than Drosophila
 Notch (Langridge et al. 2021 bioRxiv; not in the publications cache, so not used as evidence here).
+
+## Description follow-up (2026-10-30): adult behaviour
+- UniProt FUNCTION names octanol avoidance and basement-membrane mobility. Both are now in the review description. Basement-membrane sliding already had a KEEP_AS_NON_CORE row (PMID:27661254). Octanol avoidance and lethargus quiescence come from Singh et al. 2011 [PMID:21549604 "OSM-11 acts with the DSL ligand LAG-2 to activate LIN-12 and GLP-1 Notch receptors in the neurons of adult animals, thereby regulating octanol avoidance response"]. These are pleiotropic behavioural outputs of the same receptor activity, and GOA has no row for them. No NEW behaviour annotation was added, because they are outputs of Notch signalling and not core activities.

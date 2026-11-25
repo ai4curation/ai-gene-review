@@ -55,7 +55,17 @@ cover (see "Do not add what curators deliberately declined to add" in CLAUDE.md)
   and my gene does not", name two or three other gene products in the **same role**
   relative to the same kind of process and query whether they carry it. A systematic
   absence across species and MODs is a convention you have not identified yet, not a
-  curation lapse. Check the term's parents too: a process under `GO:0006508 proteolysis`
+  curation lapse. **A negative result is the fragile one, because it is the one that
+  licenses the strong conclusion, so confirm the query can return a positive before you
+  trust it** — query the term id directly, or run it against a gene you know carries the
+  term. A malformed query returns a clean, confident, false absence and does not look
+  like an error; a result too tidy to be curation usually is not curation. (This has
+  happened: a GZMB review declined `GO:0042742` on a reported absence across all four
+  granule effectors, from a query that filtered on a field it returned empty. GNLY
+  carries that term by IDA.) A positive result does not compel the annotation either:
+  comparators show whether a convention exists, never that your gene does the work, and
+  the participation test still governs. Check the term's parents too: a process under
+  `GO:0006508 proteolysis`
   names whatever does the cleaving, which is the substrate itself in the autoprocessing
   case (`GO:0016540`) and otherwise is not.
 
@@ -97,6 +107,32 @@ evidence and, where a PAINT node is at fault, a `pruned_node_id` matching a nega
 `node_assessment`. The exception is the family's judgement on that member, so the gene
 review's `REMOVE` then agrees with it. Do not downgrade a justified `REMOVE` to
 `MARK_AS_OVER_ANNOTATED` just to silence the check.
+
+**Check the PAINT losses on the gene's lineage.** Run `just paint-losses <organism> <GENE>`
+before judging IBA rows. It lists every IRD or IKR whose PANTHER node lies above the gene,
+the IBD node each one blocks, whether PAINT re-annotates the term below the loss, and the
+review's own rows on the blocked term. Act on what it reports:
+
+- An IRD produces no leaf annotation; it only stops the ancestral IBD from descending. The
+  cached `*-goa.tsv` can therefore still carry an IBA that a newer IRD has withdrawn. Say so
+  in that row's `reason` (node and date), and judge the claim on its evidence: the IBA's
+  ancestral support is gone, but the term may still be right.
+- If the review keeps the blocked term (ACCEPT, KEEP_AS_NON_CORE, a core function or a
+  NEW), it now argues against a deliberate PAINT decision. State the evidence that
+  contradicts the loss, as for SLC52A1 riboflavin transport (IDA) under PTN000309189.
+- If the family has a FamilyReview, check its `node_assessments` for the loss node. A
+  LOSS_TOO_BROAD or LOSS_CONTRADICTED verdict there is the argument to cite.
+- "Re-annotated below: yes" means PAINT lifts the block for this gene; the IBA is current.
+- Record each loss that applies on the row itself, as
+  `review.propagation_review.paint_losses` (`node_id`, `evidence`, `date`, and `agreement`:
+  AGREES, CONTRADICTED, TOO_BROAD or UNRESOLVED). Validation checks the node, term,
+  code and date against the family's paint.tsv when the family has one. For a
+  CONTRADICTED or TOO_BROAD loss, also give `argument` (the case for PAINT, with
+  citations and the clade) and `suggestion` (the change to propose):
+  `projects/IRD_EVIDENCE/paint_report.py` collects these rows for the PAINT team.
+
+The tool matches terms exactly, so a review row on a descendant of the blocked term is not
+listed. See [projects/IRD_EVIDENCE.md](../../../projects/IRD_EVIDENCE.md).
 
 See [projects/IBA_REVIEW.md](../../../projects/IBA_REVIEW.md) for the full propagation
 taxonomy and the fifteen catalogued failure patterns.
@@ -153,7 +189,10 @@ Always make use of the `original_reference_id`. If this refers to a PMID, then r
 
 You should make use of:
 
-- pre-existing literature deep research review (GENE-deep-research.md)
+- pre-existing literature deep research review (GENE-deep-research-PROVIDER.md), including any
+  MOD curated gene description (GENE-deep-research-wormbase.md, -flybase.md, -sgd.md, ...).
+  The MOD text is hand-written but uncited and often stale: check each of its claims and record
+  the verdict in that reference's `reference_review`.
 - existing UniProt annotations (.uniprot.txt), in particular text annotations and features and domains
 - holistic but critical gestalt of existing GO annotations in the gene review YAML file (priortizing IBA annotations)
 
@@ -216,6 +255,14 @@ experimental annotations whose full text you have not read.
      Apply this policy to new reviews and to annotations touched during re-review.
      Older untouched reviews may retain legacy actions; migrate those when they
      are re-reviewed rather than treating their presence as an exception.
+   - **High-throughput knockout screens (IMPC/KOMP/EUCOMM, Sanger MGP) report
+     organism-level phenotypes.** Such a result supports at most an organism-level
+     process row, usually `KEEP_AS_NON_CORE`, and never a molecular-function or
+     `core_functions` claim without a separate assay of the product. Lethality alone
+     says the gene is required, not what it does. The converse also holds: a screen
+     with no significant call across many tests is a tested absence of phenotype
+     for those systems, usable when downgrading process rows (as `human/ARHGAP4`
+     does), but not evidence against a molecular function. See `projects/IMPC.md`.
    - Consider specificity - terms that are too general should be modified to more specific functions
    - Watch for overly specific or contorted terms that might need generalization
    - Evaluate whether annotations truly represent core vs. peripheral functions

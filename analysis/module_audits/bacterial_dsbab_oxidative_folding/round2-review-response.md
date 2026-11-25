@@ -1,0 +1,5 @@
+# PR6129 second review follow-up
+
+The protein-folding decisions now use one explicit evidence threshold. BdbD has direct oxidation chemistry plus disulfide-dependent functional PhoA secretion in its target organism (strain 168); the bdbC induction control does not rescue loss of BdbD. Campylobacter has in vitro model-substrate refolding transferred from archived sequence-identical records, and PA14 lacks equivalent target-strain productive-folding evidence rather than inheriting PAO1 experiments. These differences explain the BdbD proposal and the deferrals. The upstream convention gap remains shared uncertainty and is not used as the discriminator.
+
+Only the BdbD reason and three suggested questions change. No annotation payload, action, core function, or quotation changes. The independent review correctly identified an inconsistent rationale; its shorthand “rescue” is not substituted for the actual bdbC non-rescue control in the cited experiment. Focused validation and a new full run are required for this revision.

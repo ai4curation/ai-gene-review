@@ -7,3 +7,12 @@
 - PMID:19824013 plasma-membrane localization: the cached paper is abstract-only and reports a broad plasma-membrane proteomics workflow, not the Erg6 peptide evidence. I left GO:0005886 UNDECIDED rather than removing a CGD experimental row without the full text/supplement.
 - PMID:17604452 xenobiotic response: the CaFT study shows altered ERG6 strain fitness in response to fluconazole and other compounds, but this is a membrane-sterol/drug-susceptibility phenotype rather than an Erg6 execution step in a xenobiotic response, so GO:0071466 is marked over-annotated.
 - Deep research: `UV_PROJECT_ENVIRONMENT=/srv/home/cmungall/orca/workspaces/ai-gene-review/aigr-ros-yeast/.venv just deep-research-falcon CANAL ERG6` was attempted twice on 2026-10-21. The first attempt exposed missing sparse-checkout support files (`scripts/deep_research_wrapper.py`, then `templates/gene_research_go_focused.md`); after adding those cones, Falcon failed because `agentapi` was unavailable and no OpenAI, Edison, Asta, or Perplexity API keys were configured. No `ERG6-deep-research-falcon.md` file was fabricated.
+- 2026-11-06 PTHR44068 re-review: refreshed the UniProt flat file from entry
+  version 126 to 127; the only substantive-visible differences were NCBI
+  taxonomy line wording and the OMA xref, with no functional, catalytic,
+  pathway, GO, PANTHER or feature changes. Web searches for newer Candida ERG6
+  papers found 2025-2026 work using ERG6 as an ergosterol-pathway context gene,
+  low-quality in-silico inhibitor docking, and a 2025 bioRxiv expression and
+  crystallization preprint, but no newer peer-reviewed direct function paper
+  stronger than the already cited 2025 zymosterol paper (PMID:40698822) or the
+  direct CaErg6 inhibitor papers already in the review.

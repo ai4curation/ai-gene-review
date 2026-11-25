@@ -10,3 +10,11 @@
 - FAA2 is the only Faa paralog acting inside peroxisomes; it is the true activation step of peroxisomal beta-oxidation (medium-chain directly, long/very-long-chain as re-esterification after Pxa1/2). EC 6.2.1.3 assignment is OK but its signature activity is medium-chain (GO:0031956).
 - ER IBA (from ER-type ACSLs) does not fit this PTS1 peroxisomal enzyme; cytosol RCA removed.
 - GO:0015916 fatty-acyl-CoA transport IGI (PMID:18757502) left UNDECIDED (abstract only; acyl-CoA transport is Pxa1/Pxa2's).
+
+## Follow-up on the SGD description (2026-11-01)
+
+- SGD notes that a mitochondrially targeted Faa2 form may arise from translation starting at a
+  non-canonical codon upstream of the annotated start. This is a comparative-genomics prediction only
+  [PMID:31216041 "extended mitochondrial isoforms of Bpl1, Faa2 and Sam2 have been predicted based on
+  comparative analyses"]. No experiment has shown a mitochondrial Faa2 pool, so no location or isoform
+  was added.

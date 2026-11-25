@@ -64,6 +64,12 @@ sys.exit(1 if phase and phase in args else 0)
     wrapper.parent.mkdir()
     wrapper.write_text('#!/usr/bin/env bash\nexec uv references "$@"\n')
     wrapper.chmod(0o755)
+    # validate-families/validate-all/… term validation now goes through this
+    # helper (it forwards to the stubbed `uv run linkml-term-validator`), so the
+    # sandbox needs the real script, like the reference wrapper above.
+    term_helper = tmp_path / "scripts/term_validate.sh"
+    shutil.copyfile(ROOT / "scripts/term_validate.sh", term_helper)
+    term_helper.chmod(0o755)
     log = tmp_path / "calls.jsonl"
     result = subprocess.run(
         [just, recipe], cwd=tmp_path, capture_output=True, text=True,

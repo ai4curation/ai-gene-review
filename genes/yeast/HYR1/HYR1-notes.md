@@ -12,3 +12,6 @@ Module context: `glutathione_thioredoxin_redox_systems`; YeastCyc places it on H
 ## Conclusions
 - Core MF GO:0140824; GSH-peroxidase/PHGPx non-core; RCA glutathione metabolic process removed.
 - Suggested question: GO:0140442 peroxide sensor activity for the Yap1 relay (not proposed as NEW; definition is about change in the sensor's own activity).
+
+## Huntington's disease model (SGD description follow-up)
+- SGD says GPx activity is neuroprotective in Huntington's disease models. Source: a genome-wide overexpression suppressor screen in yeast expressing a mutant Htt fragment, where GPX1 and GPX3 (HYR1) were among the strongest suppressors [PMID:23974869 "Two of the most robust suppressors identified were GPX1 and GPX3, which encode antioxidant GPx enzymes"]. This is an overexpression effect in a heterologous disease model; it reflects the peroxidase activity and does not add a physiological role, so no annotation.

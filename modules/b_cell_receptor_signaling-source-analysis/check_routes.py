@@ -1,8 +1,8 @@
 """Check structural member requirements, not physiological sufficiency.
 
-The production compiler represents a complex as an atom. The predicate below
-requires every named active unit, so isolated CD79 or p110 cannot satisfy the
-modeled assembly. Species and isoform alternatives are assessed explicitly.
+The production compiler expands a complex into its active units (an AND), and
+the predicate below also requires every named active unit, so isolated CD79
+or p110 cannot satisfy the modeled assembly. Species and isoform alternatives are assessed explicitly.
 """
 
 from pathlib import Path

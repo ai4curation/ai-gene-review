@@ -293,7 +293,7 @@ routine event in the repo into a red X.
   fails outright, which is how `pr-shepherd` came to fail 121 runs in a row — so
   deleting it is bookkeeping rather than a cutover.
 - **Five workflows run with `--dangerously-skip-permissions`**:
-  `arba-issue-monitor`, `curation-scanner`, `go-annotation-scanner`,
+  `arba-issue-monitor`, `curation-scanner`, `shadow-issues-worker`,
   `pr-shepherd` and `weekly-compliance`. Not just the scanners —
   **`pr-shepherd` reads PR titles, bodies, diffs and review comments**, a wider
   untrusted-input surface than upstream GO issue text. The mitigations are the
@@ -319,7 +319,8 @@ routine event in the repo into a red X.
 dismech has scanners this repo deliberately did not take: `discussion-scanner`,
 `literature-scan`, `preprint-scan`, `knowledge-gap-scan`. ai-gene-review does
 less literature mining and more scanning of GO repositories, which its own
-`go-annotation-scanner`, `arba-issue-monitor` and `litscan-module-member` cover.
+`shadow-issues-worker` (which replaced `go-annotation-scanner`), `arba-issue-monitor`
+and `litscan-module-member` cover.
 `post-review-agent` (turns human review comments into suggested changes) and
 `auto-merge-compliance` are still open candidates.
 

@@ -53,3 +53,26 @@ Scope: full re-review of every existing annotation, the description and core fun
 ### Relative to review next
 - Closest experimentally characterised ortholog in a model organism by phylogenetic placement: Drosophila melanogaster rig (rigor mortis; FBgn0250850, UniProtKB:Q86BY9), in the same PANTHER subfamily (PTHR46362:SF1) and a donor to the Gemin5 PAINT node PTN005299808 (SMN complex, nucleus IBAs). It has IDA/IMP/IGI annotations (SMN complex, snRNP assembly-related). Mouse Gemin5 (Q8BX17) carries only one experimental row (mRNA 3'-UTR binding). No review of rig exists under genes/DROME/.
 - Module: modules/dmel_smn_complex.yaml includes rig as the snRNA-binding Gemin5 subunit.
+
+
+## 2026-11-05 — substrate recognition and context-dependent translation
+
+GEMIN5 has two coherent functional units: snRNA recognition coupled to SMN-dependent snRNP assembly, and translational regulation through RNA and ribosome interactions. The 2016 structures resolve 14 WD repeats in two propellers and refine the older cap-binding model. Natural full-length human GEMIN5 has 1,508 residues; shorter structural and RNA-binding constructs are reagents, not alternative natural products. [PMID:27834343; PMID:27881600; PMID:27881601]
+
+The translation evidence has distinct directions and conditions. Direct SMN 3′-UTR recognition accompanies positive transcript-specific effects, whereas other experiments support repression of broader protein synthesis. Simplified SMN assemblies can work without GEMIN5 even though cellular substrate recognition and recruitment involve it. These observations do not identify GEMIN5 as a spliceosomal catalyst. [PMID:25911097; PMID:27507887; PMID:18984161]
+
+Positive interaction evidence is retained independently of annotation specificity. The direct eIF4E result and the later negative tagged-cell coimmunoprecipitation result are both represented. The membrane-fraction association is non-core: exact target rows were recovered in an author thesis, but the final journal supplement remained unavailable. The source guide and manual evidence page give the portable thesis locator, exact tables and fractionation limits. [PMID:16739988; PMID:19750007; PMID:19946888]
+
+
+## 2026-11-05 — Direct functions and source anchors
+
+Cap recognition and ribosome binding are now represented as direct molecular activities alongside snRNA recognition and SMN-mRNA 3′-UTR binding. These are four activities within two biological systems, RNA-substrate selection/assembly and translation control. The cap activity is not forced into an obligatory SMN complex or a separately asserted decay process; ribosome binding does not mean structural membership or a demonstrated stalling mechanism.
+
+Selected primary excerpts and partner FUNCTION, SUBUNIT and SIMILARITY comments make the evidence easier to inspect. The prior 194 quote associations remain archived; repeated historical quotations are not restored wholesale. Both positive thesis membrane-fraction rows remain distinct from the unavailable final journal supplement. Source-specific RNA and nuclear-body judgments retain their biological scope.
+
+The viral RNA-binding context is refined to mRNA 5′-UTR binding after checking the official RNAcentral IRES identity, the GO definition and the original substrate study. The 462-nucleotide record remains distinct from the short d5/d5ss reagents. This refinement does not add a viral process or a new core activity.
+
+
+## 2026-11-05 — Local excerpts for qualified judgments
+
+Compact source excerpts now accompany the independent mRNA-binding support, the viral IRES region, the separately accessed thesis membrane-fraction row, gem localization and Sm-core assembly. The thesis excerpt quotes the local account of an independently inspected source; it is not presented as a recovered journal supplement. Source-specific judgments and all four direct molecular activities are unchanged.

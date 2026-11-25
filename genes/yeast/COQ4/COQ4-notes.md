@@ -14,3 +14,31 @@
 
 ## YeastPathways
 - YeastPathways PWY3O-19 / PWY3O-862 have no gene for the decarboxylation (RXN3O-73) and assign C1 hydroxylation (RXN3O-12) to COQ6; COQ4 is absent from YeastCyc entirely (no COQ4 reactions in the summary file).
+
+## ND literature-search citations (2026-11-06)
+
+- `existing_annotations[0]` GO:0003674 molecular_function (ND) not cited, flagged as possibly
+  stale. These notes cite yeast literature that assigns Coq4 a role in this aspect: the yeast
+  CoQ-synthome study [PMID:24406904 "indicating that Coq4 is a central organizer of the Coq
+  complex"] (a structural/scaffolding role) and the oxidative-decarboxylase paper
+  [PMID:38295803], whose cached abstract does not say whether the yeast protein was among the
+  COQ4 orthologs assayed. If either paper tested S. cerevisiae Coq4, the MF ND is stale; check
+  the PMID:38295803 full text before re-actioning.
+
+## Audit to COMPLETE (2026-11-11)
+
+- Deep research: no provider deep-research file is available (no API keys in this session); the review
+  rests on UniProt O13525, the SGD description and the cached literature below.
+- ND MF row resolved as STALE. The full text of Pelosi et al. 2024 (PMC7616408, re-fetched into the
+  publications cache) shows the yeast protein itself was assayed: [PMID:38295803 "Heterologous
+  expression of both yeast COQ4 (yCOQ4) and hCOQ4 increased the respiratory growth of ΔubiD cells"]
+  and in C. glutamicum [PMID:38295803 "strongly suggesting that the conversion of 9-10P-HB into PBQ9-10
+  occurred in a single step, via an oxidative decarboxylation"]. The activity is O2-dependent
+  [PMID:38295803 "the activity of yCOQ4 and hCOQ4 depends on O2"]. The ND row is therefore REMOVEd
+  (nd_case STALE); the GO:0120539 IBA/EC rows carry the activity.
+- GO:0120539 is defined as a non-oxidative decarboxylation (phenol product); the Pelosi data describe an
+  oxidative decarboxylation to the C1-hydroxylated product. Kept GO:0120539 (closest term, used by the
+  module and the human COQ4 review) and raised the gap as a suggested question.
+- Zinc ion binding changed from KEEP_AS_NON_CORE to ACCEPT for consistency with human COQ4: the
+  HDxxH(x)11E motif is conserved, and [PMID:38295803 "The D164A mutant was unable to complement
+  respiratory growth in ΔCOQ4 yeast (Fig S2E) and the protein was virtually unable to bind zinc"].

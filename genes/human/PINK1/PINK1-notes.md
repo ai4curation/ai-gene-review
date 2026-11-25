@@ -14,3 +14,14 @@ Deep research was not run: falcon times out in this environment and perplexity-l
 - Positive regulation of cytochrome c release (IMP, PMID:19880420) was changed (MODIFY) to the negative regulation term. The full text shows that PINK1 depletion enhanced cytochrome c release.
 - Terms that GOA labels obsolete (GO:1903747/GO:1903749) were changed to GO:0070585 protein localization to mitochondrion (PINK1-dependent recruitment of Parkin).
 - All 34 protein binding rows were removed.
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IDA (PMID:31536960) and GO:0005783 IEA (GO_REF:0000120; ARBA:ARBA00028672 plus mouse/rat orthologs). No ER sub-compartment rows.
+
+Checks:
+- PMID:31536960 (full text): endogenous PINK1 immunoprecipitated from marker-controlled ER, mitochondrial and MAM fractions, where it binds NENF [PMID:31536960 "Similarly, NENF was found to interact with a PD-contributing protein, PINK1 (PTEN-induced putative kinase 1; Figure 6B)"].
+- Human UniProt no longer lists the ER (mitochondrial outer/inner membrane, cytosol only); mouse Q99MQ3 and rat B5DFG1 (UniProt REST, 2026-11-05) list no ER either. The IEA therefore rests on the ARBA rule, an unvetted prediction.
+- PINK1 has a mitochondrial transit peptide (1-77) and no ER-targeting signal.
+
+Outcome: both rows stay KEEP_AS_NON_CORE (reasons updated). The IEA would be MARK_AS_OVER_ANNOTATED on its own source, but it makes the same claim as the IDA row and the two take the same action. Stays at the root; a MAM pool during mitophagy is reported in the literature but was not checked here (no cached source).
