@@ -15,9 +15,11 @@ Reactome records, the kallikrein-kinin module, and the local ACE and BDKRB1 revi
   receptor assays [PMID:1314587; PMID:1329734].
 - High-molecular-weight kininogen has a scaffold role in contact activation: it binds
   prekallikrein and surfaces or endothelial receptor complexes so that factor XII,
-  prolylcarboxypeptidase and plasma kallikrein can generate bradykinin. This role is important
-  but is not the same as KNG1 itself participating as a protease in the plasma or tissue
-  kallikrein-kinin cascade.
+  prolylcarboxypeptidase and plasma kallikrein can generate bradykinin. A comparator check
+  against `F8` nonenzymatic intrinsic-tenase cofactor annotations and `F12` contact-protease
+  annotations supports a conservative new `GO:0007597` intrinsic coagulation assertion for this
+  scaffold role, while keeping it distinct from any claim that KNG1 itself is the plasma or
+  tissue kallikrein-kinin protease.
 - Cleaved two-chain high-molecular-weight kininogen and domain 5 block vitronectin-dependent
   adhesion and platelet aggregation [PMID:11970955]. This is a real post-cleavage effect but a
   separate non-core branch from the kinin hormone precursor function.
