@@ -20,7 +20,7 @@ Sun et al. (PMID:30174313) showed that depletion of the lncRNA `Lncenc1` in mous
 
 ## Methylglyoxal side reaction
 
-UniProt transfers a methylglyoxal synthase side activity from the *E. coli* TIM (`P00939`). The chemistry is real: Iyengar and Rose (PMID:7013790) and Richard (PMID:2021650) describe slow beta-elimination from the TIM-bound enediol phosphate intermediate, yielding methylglyoxal and phosphate. The side reaction is much slower than productive isomerization, and the native enzyme suppresses this elimination. I therefore followed the newer rat `Tpi1` precedent and treated `GO:0008929` and `GO:0019242` as over-annotations rather than as non-core curated functions.
+UniProt transfers a methylglyoxal synthase side activity from rabbit TPI1 (`P00939`). The chemistry is real: Iyengar and Rose (PMID:7013790) and Richard (PMID:2021650) describe slow beta-elimination from the TIM-bound enediol phosphate intermediate, yielding methylglyoxal and phosphate; Richard measured this side reaction on rabbit muscle TIM itself and estimated that the enzyme-bound intermediate partitions about 1,000,000-to-1 toward protonation over elimination. I therefore followed the newer rat `Tpi1` precedent and treated `GO:0008929` and `GO:0019242` as over-annotations rather than as non-core curated functions.
 
 ## Interactions and oligomeric state
 
