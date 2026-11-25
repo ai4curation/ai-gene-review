@@ -22,8 +22,8 @@ The PTHR12763 family extract places S. pombe pam18 and budding-yeast PAM18 in
 the same Tim14/Pam18 subfamily, `PTHR12763:SF28`. Its PAINT extract places
 `GO:0001405` PAM-complex membership, `GO:0001671` ATPase activator activity,
 and `GO:0030150` matrix import at node `PTN000298641`, supported by
-budding-yeast PAM18 and MDJ2. The local PAINT extract has no loss rows for this
-family.
+SGD:S000003998 and SGD:S000005272. The local PAINT extract has no loss rows for
+this family.
 
 The budding-yeast PAM18/TIM14 literature supports the transfer. D'Silva et al.
 showed that Pam18 is an inner-membrane J-domain protein whose depletion
