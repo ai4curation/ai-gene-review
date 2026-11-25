@@ -25,3 +25,8 @@ CaiX, CbcW and CbcV participate in the same measured carnitine-import activity. 
 ## 2026-11-10 — process propagation and importer control
 
 The target carnitine-transport process and activity both remain accepted. The PAINT node CHECK concerns unresolved scope across other permease/partner combinations, not an unsupported PAO1 target or an established evolutionary loss. The CbcV activity support again includes the MKH13 core-only negative control.
+
+
+## 2026-11-25 — duplicate and citation reconciliation
+
+PA5376 is canonical CbcV/Q9HTI8. Its duplicate review is consolidated with all 26 source rows preserved; the six source defects (five PseudoCAP and one GO_CENTRAL) are retained, with the sulfate request updated from recovered COS reporter evidence. The detailed action-by-action decisions and old structured review are preserved in analysis/module_audits/bacterial_l_carnitine_catabolism/review-round2-20261125/. GO:0055085 is refined only to its supported carnitine transmembrane descendant; choline and betaine remain separate accepted processes. Full PMID:21478341 inspection resolves the glycine-betaine evidence question; the carnitine citation CHECK remains.

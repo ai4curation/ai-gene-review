@@ -45,3 +45,8 @@ The CaiX-CbcWV annoton names the assembled carnitine transport activity. All thr
 ## 2026-11-25 — reconcile importer qualifier treatment
 
 The inherited enables qualifier is retained for CaiX, CbcV and CbcW, while core functions represent each subunit's contribution to the assembled importer. The uptake experiment supports that complex-level activity; an isolated subunit's inability to translocate does not by itself establish that PseudoCAP's qualifier must be changed. The CaiX-only WRONG_QUALIFIER request restored during main integration is withdrawn, matching the policy already adopted for all three subunits. The separate CaiX choline-substrate InterPro defect is retained. The PseudoCAP report is regenerated from all committed PAO1 review blobs plus this edit, avoiding loss of reports from files absent in the sparse checkout.
+
+
+## 2026-11-25 — completion scope
+
+The concrete carnitine reaction and named representatives remain supported, but PTHR48075 family-wide substrate/process boundaries are unresolved. Module status is DRAFT while that broader completion criterion remains open; this does not erase measured carnitine chemistry or infer an unsupported PAINT gain/loss boundary.

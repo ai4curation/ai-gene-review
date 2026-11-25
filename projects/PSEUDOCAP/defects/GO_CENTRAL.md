@@ -1,6 +1,6 @@
 # Source-record defects for GO_CENTRAL
 
-117 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
+116 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
 
 ## 1. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
@@ -197,20 +197,7 @@ PTN000764275 (PTHR30083, 12 leaf IBAs in 5 taxa) carries an IBD of GO:0071453 ce
 > positively controlled by Anr and anaerobiosis
 > — PMID:17890313
 
-## 14. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
-
-- **Record:** PANTHER:PTN008682975
-- **Subject:** UniProtKB:Q9I1J5
-- **Change:** check PMID:22304305 (alternatives in the explanation)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA2280/PA2280-ai-review.yaml`
-
-The IBD of GO:0016655 at PTN008682975 rests on one seed, the PseudoCAP IDA of PA2280 (Q9I1J5) to PMID:22304305, which characterises Synechocystis sp. PCC 6803 ArsH, not the P. aeruginosa protein. The term is nonetheless supported for PA2280 by PMID:26621870 (recombinant P. aeruginosa ArsH shows NAD(P)H quinone oxidoreductase activity). Please confirm the seed once PseudoCAP re-cites it; the IBD content need not change.
-
-> Here we have expressed and purified Synechocystis ArsH and conducted an intensive biochemical study.
-> — PMID:22304305
-
-## 15. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 14. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002422332
 - **Subject:** UniProtKB:Q9HXU3
@@ -222,7 +209,7 @@ The GO:0080164 regulation of nitric oxide metabolic process IBD at PTN002422332 
 > Both PA0779 and PA3697 were found to be essential for NO3(-) and NO2(-) induced Pfhp activity under aerobic and low-oxygen conditions
 > — PMID:18043907
 
-## 16. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 15. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000532509
 - **Subject:** UniProtKB:Q9HXN5
@@ -240,7 +227,7 @@ The IBD of GO:0015764 N-acetylglucosamine transport at PTN000532509 has one seed
 > The second cluster of PTS genes encodes a putative fused enzyme I/HPr/enzyme IIA and a putative enzyme IIBC. These two genes are located at the end of a putative operon encoding glucosamine utilization genes, suggesting N-acetylglucosamine as a potential substrate for the PTS transporter.
 > — PMID:18833300
 
-## 17. OTHER (PROBABLE, NOT_REPORTED)
+## 16. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001953445
 - **Subject:** UniProtKB:Q9HXC2
@@ -251,7 +238,7 @@ The IBD of GO:0015764 N-acetylglucosamine transport at PTN000532509 has one seed
 
 The IBD for GO:0005886 plasma membrane at PTN001953445 (PTHR43117, about 31 leaf IBAs in 24 taxa) has one seed, P. aeruginosa PA3891 (Q9HXC2), through a PseudoCAP IDA to GO:0043190 citing PMID:17660277. That paper only shows that a PAO1 genomic clone carrying PA3891 complements an osmoprotection defect of a P. syringae opuCA mutant. It does not localise PA3891 or show the complex. The node term is biologically reasonable for ABC importer NBDs, but please re-seed it with an experimental localisation from a clade member, or record that it rests on family-level inference.
 
-## 18. OTHER (PROBABLE, NOT_REPORTED)
+## 17. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001953060
 - **Subject:** UniProtKB:Q9HXC2
@@ -262,7 +249,7 @@ The IBD for GO:0005886 plasma membrane at PTN001953445 (PTHR43117, about 31 leaf
 
 The IBD for GO:0031459 ABC-type glycine betaine transporter activity at PTN001953060 (PTHR43117, about 23 leaf IBAs in 18 taxa) has one seed, P. aeruginosa PA3891 (Q9HXC2), through a PseudoCAP IDA citing PMID:17660277. In that paper PA3891 was only identified as a PAO1 genomic clone that restored growth of a P. syringae opuCA mutant on 0.5 M NaCl with betaine or choline. Uptake and specificity assays were done on the P. syringae DC3000 OpuC transporter (ATPase Q87WH5, PSPTO_4575). The node term is plausible for the clade. Please re-seed the IBD with Q87WH5 if it lies within PTN001953060, or with another experimentally characterised OpuC-type ATPase, so that the node does not rest on complementation evidence alone.
 
-## 19. WRONG_STATEMENT (PROBABLE, NOT_REPORTED)
+## 18. WRONG_STATEMENT (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000241400
 - **Subject:** UniProtKB:Q9HWU0
@@ -277,7 +264,7 @@ The PAINT IBD of GO:0042286 at PTN000241400 is seeded by E. coli HemL and PA4088
 > | E. coli HemL P23893 vs PAO1 HemL P48247 | 65.7 |
 > — file:PSEAE/PA4088/PA4088-bioinformatics/RESULTS.md
 
-## 20. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 19. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001297884
 - **Subject:** UniProtKB:Q9HWK3
@@ -290,7 +277,7 @@ PA4178 (Q9HWK3, EftM) receives the UbiE/COQ5 IBDs of PTN001297884 (GO:0006744 ub
 > EftM is a thermolabile, SAM-dependent methyltransferase that directly trimethylates lysine 5 of EF-Tu in P. aeruginosa.
 > — PMID:26677219
 
-## 21. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 20. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000765601
 - **Subject:** UniProtKB:Q9HVR8
@@ -302,7 +289,7 @@ The IBD of GO:0071916 dipeptide transmembrane transporter activity at PTN0007656
 > The substrate specificity of ABC transporters is determined by its associated substrate-binding proteins (SBPs).
 > — PMID:25338022
 
-## 22. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 21. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000766696
 - **Subject:** UniProtKB:Q9HVR7
@@ -314,7 +301,7 @@ The IBD of GO:0071916 dipeptide transmembrane transporter activity at PTN0007666
 > The substrate specificity of ABC transporters is determined by its associated substrate-binding proteins (SBPs).
 > — PMID:25338022
 
-## 23. WRONG_TERM (SUSPECTED, NOT_REPORTED)
+## 22. WRONG_TERM (SUSPECTED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002214697
 - **Subject:** UniProtKB:G3XD69
@@ -328,7 +315,7 @@ The IBD of GO:0046677 response to antibiotic at PTN002214697 (PTHR38684 AmpE; 7 
 > The ampD product transcomplemented Escherichia coli ampD mutants to wild-type beta-lactamase expression.
 > — PMID:9835532
 
-## 24. OTHER (CONFIRMED, NOT_REPORTED)
+## 23. OTHER (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001279639
 - **Subject:** UniProtKB:Q9HU50
@@ -339,7 +326,7 @@ The IBD of GO:0046677 response to antibiotic at PTN002214697 (PTHR38684 AmpE; 7 
 
 The PAINT IBD for signal transduction on PTN001279639 rests on three seeds. The PA5134 seed cites PMID:24928312, a Staphylococcus aureus CtpA paper (CONFIRMED wrong reference), so UniProtKB:Q9HU50 should be dropped from the WITH/FROM - not because a gene in its own WITH/FROM is circular, which it is not, but because that seed annotation is itself defective. The topology was checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05 and confirms the scoping problem. PTN001279639 is a DUPLICATION node with 58 leaves spanning three subfamilies (PTHR32060:SF22 9, SF29 2, SF30 47) and exactly two children: PTN004918760 (SPECIATION, Eubacteria, 9 leaves, all SF22 - the Prc/tail-specific protease branch, holding P. aeruginosa Prc Q9HYY3 and, in PTN002078873, E. coli Prc/Tsp P23865) and PTN008644010 (SPECIATION, Eubacteria, 49 leaves, SF29+SF30 - the CtpA branch). The two sound seeds straddle that duplication: `--contains Q9HYY3,P23865` returns PTN000786025 (Gammaproteobacteria Prc, 8 leaves, SF22), while B. subtilis CtpB (O35002) is SF29 in the 2-leaf Bacillus clade PTN002078920 inside PTN008644010. PA5134 is SF30, in the Gammaproteobacteria clade PTN002078922 (6 leaves). The term is therefore asserted at the family root to cover two seeds in different subfamilies, and propagates to all 58 leaves, including the entire SF30 CtpA clade and E. coli Prc/Tsp, for which no signalling role is on record. Please move the term to the clades that support it: PTN000786025 (or PTN004918760) for the Prc lineage and PTN002078920 for CtpB, and remove it from PTN001279639.
 
-## 25. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 24. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002194937
 - **Subject:** UniProtKB:Q9HTY2
@@ -356,7 +343,7 @@ The IBD of GO:0071978 bacterial-type flagellum-dependent swarming motility at PT
 > InterPro; IPR018445; Put_Phosphate_transp_reg.
 > — file:PSEAE/PA5208/PA5208-uniprot.txt
 
-## 26. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 25. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002217427
 - **Subject:** UniProtKB:Q9HTJ9
@@ -369,18 +356,7 @@ PTN002217427 is the root of PTHR39335 (7 reference leaves in 5 organisms) and ca
 > Alkane catabolism needs an alkane hydroxylase, rubredoxin and rubredoxin reductase; nothing in this family supplies any of them
 > — file:PSEAE/PA5359/PA5359-bioinformatics/RESULTS.md
 
-## 27. WRONG_TERM (PROBABLE, NOT_REPORTED)
-
-- **Record:** PANTHER:PTN002466744
-- **Subject:** UniProtKB:Q9HTI8
-- **Field:** GO_ID
-- **Change:** GO:0005275 → GO:0015418 (ABC-type quaternary ammonium compound transporting activity)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA5376/PA5376-ai-review.yaml`
-
-The IBD for GO:0005275 amine transmembrane transporter activity at PTN002466744 (PTHR43869, ProV/ChoV-type ABC ATPases, 14 leaf IBAs) is seeded by P. aeruginosa PA5376/CbcV (Q9HTI8, PseudoCAP IDA, PMID:19919675) and E. coli ProV (P14175, EcoCyc IDA, PMID:23249124). Both transport quaternary ammonium compounds (choline, glycine betaine, carnitine, proline betaine), which GO classifies under GO:0015651 and GO:0015418, not under amine transmembrane transporter activity. The IBD is therefore unsound on either seed. Please repoint it to GO:0015418 (or GO:0015651); because the node members are ATPase subunits, consider contributes_to. The parallel permease node PTN000766131 (PA5377/ProW) carries the same error.
-
-## 28. OTHER (CONFIRMED, NOT_REPORTED)
+## 26. OTHER (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002288302
 - **Subject:** UniProtKB:Q9HTB5
@@ -394,7 +370,7 @@ The PAINT IBD of GO:0016757 glycosyltransferase activity on PTN002288302 (57 lea
 > Gene sequence analysis indicated that pa5455 and pa5456 encode putative glycosyltransferases.
 > — PMID:23341552
 
-## 29. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 27. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000546715
 - **Subject:** UniProtKB:Q9HTB2
@@ -411,7 +387,7 @@ The PAINT IBD of GO:0000271 polysaccharide biosynthetic process at PTN000546715 
 > Mutation of the putative acetyltransferase-encoding gene pa5458 did not abrogate polysaccharide production
 > — PMID:23341552
 
-## 30. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 28. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000546841
 - **Subject:** UniProtKB:Q9HTB2
@@ -428,7 +404,7 @@ The PAINT IBD of GO:0009103 lipopolysaccharide biosynthetic process at PTN000546
 > the muramic acid of the oatA mutant lacked this modification
 > — PMID:15661003
 
-## 31. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 29. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002019107
 - **Subject:** UniProtKB:Q9HTB8
@@ -438,7 +414,7 @@ The PAINT IBD of GO:0009103 lipopolysaccharide biosynthetic process at PTN000546
 
 The IBD of GO:0015920 lipopolysaccharide transport at PTN002019107 (PTHR30413, inner membrane transport permease) rests on one seed, P. aeruginosa Wzm (Q9HTB8). Its PseudoCAP IMP (PMID:9244257) is sound: wzm mutants accumulate A-band polysaccharide in the cytoplasm. But the node's 24 leaves include Bacillus subtilis TagG (P42953, a wall teichoic acid exporter), Staphylococcus aureus SAOUHSC_00642, Listeria lmo1074, two Streptomyces permeases, the capsule exporters CtrC (P32015) and Synechocystis KpsM (P73974), and the archaeal permeases MA_1176 (Methanosarcina) and SSO1143 (Sulfolobus). Gram-positive bacteria and archaea make no lipopolysaccharide. The substrate-neutral parent GO:0015774 polysaccharide transport fits the clade. Otherwise, GO:0015920 should be restricted to a node confined to Gram-negative O-antigen Wzm permeases.
 
-## 32. OTHER (PROBABLE, NOT_REPORTED)
+## 30. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000530809
 - **Subject:** UniProtKB:Q52463
@@ -453,7 +429,7 @@ The PAINT IBDs for GO:0050501 hyaluronan synthase activity and GO:0030213 hyalur
 > O67594 alg, Q9FBM8 SCO5051, Q52463 alg8, Q97YM4 nodC-like, P26024 nodC
 > — file:PSEAE/alg8/alg8-notes.md
 
-## 33. OTHER (PROBABLE, NOT_REPORTED)
+## 31. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002019137
 - **Subject:** UniProtKB:G3XCW9
@@ -470,7 +446,7 @@ The IBD of GO:0009276 Gram-negative-bacterium-type cell wall on PTN002019137 (se
 > This analysis identifies AmpD of P. aeruginosa as the cytoplasmic protease for commitment to the cell-wall recycling events and for the reversal of the activation of the antibiotic-resistance pathway.
 > — PMID:23510438
 
-## 34. OTHER (PROBABLE, NOT_REPORTED)
+## 32. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN005338738
 - **Subject:** UniProtKB:P13981
@@ -482,7 +458,7 @@ The GO:0016990 arginine deiminase activity IBD at PTN005338738 (23 leaf IBAs, so
 > The structure exhibits similarity to other arginine-modifying or substituted arginine-modifying enzymes such as dimethylarginine dimethylaminohydrolase (DDAH)
 > — PMID:14701825
 
-## 35. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
+## 33. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000150424
 - **Subject:** UniProtKB:P08308
@@ -495,7 +471,7 @@ The PTN000150424 IBDs of GO:0006526 L-arginine biosynthetic process and GO:00192
 > This catabolic OTCase does not carry out the biosynthetic reaction because of a poor affinity and a marked cooperativity for carbamoyl phosphate
 > — file:PSEAE/arcB/arcB-uniprot.txt
 
-## 36. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 34. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000764469
 - **Subject:** UniProtKB:P13982
@@ -508,7 +484,7 @@ The PTN000764469 IBD of GO:0000256 allantoin catabolic process rests on a single
 > PATHWAY: Amino-acid degradation; L-arginine degradation via ADI pathway.
 > — file:PSEAE/arcC/arcC-uniprot.txt
 
-## 37. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
+## 35. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000208945
 - **Subject:** UniProtKB:P18275
@@ -520,7 +496,7 @@ The GO:0043858 arginine:ornithine antiporter activity IBD at PTN000208945 (sole 
 > The chlamydial AaxC transporter was resistant to cadaverine, L-lysine and L-ornithine, which inhibit the E. coli AdiC antiporter.
 > — PMID:18790867
 
-## 38. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 36. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN004744913
 - **Subject:** UniProtKB:P22567
@@ -537,7 +513,7 @@ The PAINT IBD on PTN004744913 asserts GO:0004358 (acetyl-L-ornithine donor, the 
 > Reaction=L-glutamate + acetyl-CoA = N-acetyl-L-glutamate + CoA + H(+)
 > — file:PSEAE/argA/argA-uniprot.txt
 
-## 39. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
+## 37. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000241318
 - **Subject:** UniProtKB:O30508
@@ -549,7 +525,7 @@ PTN000241318 (PTHR11986) is a SPECIATION node at the Eubacteria level holding 37
 > this explains the enzyme's dual role in arginine biosynthesis and catabolism
 > — PMID:16593724
 
-## 40. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 38. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000764516
 - **Subject:** UniProtKB:P80357
@@ -563,7 +539,7 @@ The PTN000764516 IBD for GO:0009015 N-succinylarginine dihydrolase activity (sol
 > the aruF and aruG genes encode the subunits (AruAI and AruAII) of arginine and ornithine N2-succinyltransferases
 > — PMID:9393691
 
-## 41. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 39. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002212868
 - **Subject:** UniProtKB:P00282
@@ -572,7 +548,18 @@ The PTN000764516 IBD for GO:0009015 N-succinylarginine dihydrolase activity (sol
 
 The IBD of GO:0005886 plasma membrane at PTN002212868 rests on a single seed, Chloroflexus aurantiacus auracyanin A (P27197, UniProt IDA PMID:1313011), a membrane-associated cupredoxin of a monoderm bacterium. The 11 leaves include soluble periplasmic azurins (P. aeruginosa azu P00282, Shewanella azu Q8CVD5, Xanthomonas az1 Q8P5R2), P. aeruginosa CopI (Q9I036) and Neisseria Laz (P57026), an outer-membrane lipoprotein. P. aeruginosa azurin has a cleaved Sec signal peptide, no lipobox or transmembrane segment, and UniProt places it in the periplasm. Please restrict the IBD to the auracyanin clade or remove it. Leaves checked in the PAINT leaf file and P27197 annotations in QuickGO (2026-11-05).
 
-## 42. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 40. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** PANTHER:PTN002466744
+- **Subject:** UniProtKB:Q9HTI8
+- **Field:** GO_ID
+- **Change:** GO:0005275 → GO:0015418 (ABC-type quaternary ammonium compound transporting activity)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/cbcV/cbcV-ai-review.yaml`
+
+The IBD for GO:0005275 amine transmembrane transporter activity at PTN002466744 (PTHR43869, ProV/ChoV-type ABC ATPases, 14 leaf IBAs) is seeded by P. aeruginosa PA5376/CbcV (Q9HTI8, PseudoCAP IDA, PMID:19919675) and E. coli ProV (P14175, EcoCyc IDA, PMID:23249124). Both transport quaternary ammonium compounds (choline, glycine betaine, carnitine, proline betaine), which GO classifies under GO:0015651 and GO:0015418, not under amine transmembrane transporter activity. The IBD is therefore unsound on either seed. Please repoint it to GO:0015418 (or GO:0015651). The core function records the subunit contribution separately. The parallel permease node PTN000766131 (PA5377/ProW) carries the same error.
+
+## 41. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000766131
 - **Subject:** UniProtKB:Q9HTI7
@@ -583,7 +570,7 @@ The IBD of GO:0005886 plasma membrane at PTN002212868 rests on a single seed, Ch
 
 The IBD for GO:0005275 amine transmembrane transporter activity at PTN000766131 (PTHR47737, ProW/ChoW-type permeases, about 13 leaf IBAs) is seeded by P. aeruginosa PA5377/CbcW (Q9HTI7, PseudoCAP IDA, PMID:19919675) and E. coli ProW (P14176). Both transport quaternary ammonium compounds (choline, glycine betaine, carnitine, proline betaine), which GO classifies under GO:0015651 and GO:0015418, not under amine transmembrane transporter activity. Please repoint the IBD to GO:0015418 (or GO:0015651). Because the node members are permease subunits, consider contributes_to.
 
-## 43. OTHER (PROBABLE, NOT_REPORTED)
+## 42. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000766131
 - **Subject:** UniProtKB:Q9HTI7
@@ -594,7 +581,7 @@ The IBD for GO:0005275 amine transmembrane transporter activity at PTN000766131 
 
 Please check the cargo-specific scope of the GO:0015226 IBD at PTN000766131 against descendant permease and binding-protein evidence. The PAO1 CbcW seed Q9HTI7 has direct CaiX-dependent carnitine-uptake evidence and its target claim is accepted. The paper contrasts closely related Cbc cores with different binding-protein complements, so cargo specificity cannot be established from the core sequence alone. Alternative native cargo or absence of a known partner does not by itself demonstrate evolutionary loss or justify pruning a leaf. The family review therefore keeps exact node placement UNRESOLVED; this CHECK does not request removal of the experimentally supported PAO1 annotation or use seed count as evidence against inheritance.
 
-## 44. OTHER (PROBABLE, NOT_REPORTED)
+## 43. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000766131
 - **Subject:** UniProtKB:Q9HTI7
@@ -605,7 +592,7 @@ Please check the cargo-specific scope of the GO:0015226 IBD at PTN000766131 agai
 
 Please check the cargo-specific scope of the GO:1902603 IBD at PTN000766131 against descendant permease and binding-protein evidence. The experimentally supported PAO1 CbcW target transports carnitine in the assembled CaiX-CbcWV importer, and that target process remains accepted. Alternative native cargo or absence of a known binding-protein partner does not establish evolutionary loss or justify pruning a leaf. Exact node scope remains UNRESOLVED in the family review. This CHECK is consistent with the GO:0015226 cargo-activity CHECK and does not request removal of the supported PAO1 annotation.
 
-## 45. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 44. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001247822
 - **Subject:** UniProtKB:Q9I3N5
@@ -617,7 +604,7 @@ The IBD of GO:0004096 catalase activity at PTN001247822 (CcmC/heme exporter prot
 > The ccmC mutant was also found to accumulate porphyrins, and catalase production was undetectable, consistent with the increased sensitivity to hydrogen peroxide.
 > — PMID:18174132
 
-## 46. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 45. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002435498
 - **Subject:** UniProtKB:Q9I3G5
@@ -629,7 +616,7 @@ PTN002435498 carries an IBD of GO:0004129 cytochrome-c oxidase activity whose on
 > Pfam; PF13442; Cytochrome_CBB3; 2.
 > — file:PSEAE/ccoP1/ccoP1-uniprot.txt
 
-## 47. WRONG_TERM (SUSPECTED, NOT_REPORTED)
+## 46. WRONG_TERM (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTH9 enables GO:0047617 fatty acyl-CoA hydrolase activity (IBA, GO_REF:0000033)
 - **Field:** GO ID
@@ -639,7 +626,7 @@ PTN002435498 carries an IBD of GO:0004129 cytochrome-c oxidase activity whose on
 
 Investigate the substrate scope of the ancestral fatty-acyl assertion using target substrate-range data. The supported CdhB-type reaction is acyl-CoA hydrolysis, but an alternate physiological substrate alone does not justify deleting the secondary fatty-acyl possibility or restricting the node to FadM. No categorical propagation correction is requested.
 
-## 48. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 47. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001252526
 - **Subject:** UniProtKB:Q9I1Y5
@@ -652,7 +639,7 @@ The IBD of GO:0007155 cell adhesion at PTN001252526 (fimbrial usher clade, 36 le
 > called usher, that forms a channel into the outer membrane through which the pilin subunits are sequentially assembled
 > — PMID:11381121
 
-## 49. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 48. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002824317
 - **Subject:** UniProtKB:G3XCU6
@@ -665,7 +652,7 @@ The IBD of GO:0019344 L-cysteine biosynthetic process at PTN002824317 rests on o
 > which shares a high degree of sequence identity (63%) with CysB from Escherichia coli and from Salmonella typhimurium, a transcriptional factor of the LysR superfamily
 > — PMID:9218775
 
-## 50. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 49. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002169725
 - **Subject:** UniProtKB:Q9HU17
@@ -677,7 +664,7 @@ The IBD of GO:0015740 C4-dicarboxylate transport at PTN002169725 has one seed, t
 > the DctPQM transporter belonging to the tripartite ATP-independent periplasmic (TRAP) family of carriers
 > — PMID:21725012
 
-## 51. OTHER (PROBABLE, NOT_REPORTED)
+## 50. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000229983
 - **Subject:** UniProtKB:Q9HTG5
@@ -692,7 +679,7 @@ PTN000229983 carries an IBD of GO:0016491 oxidoreductase activity that is seeded
 > The evidence for the DMG → sarcosine step is a **transposon-mutant growth phenotype plus 13C NMR metabolite accumulation**, not an enzyme assay.
 > — file:PSEAE/dgcB/dgcB-notes.md
 
-## 52. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 51. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN005219546
 - **Subject:** UniProtKB:O33407
@@ -706,7 +693,7 @@ The PAINT IBD of GO:0008610 lipid biosynthetic process at PTN005219546 (PTHR4564
 > This report is focused on the influence of the outer membrane-bound esterase EstA of P. aeruginosa PAO1 on rhamnolipid production.
 > — PMID:17631636
 
-## 53. OTHER (PROBABLE, NOT_REPORTED)
+## 52. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000344128
 - **Subject:** UniProtKB:G3XD64
@@ -723,7 +710,7 @@ The IBD for GO:0005524 ATP binding at PTN000344128 (PTHR43384, MinD/ParA/FlhG cl
 > Crystal structures of FleN in the apo form (1.66 Å) and in complex with β,γ-imidoadenosine 5'-triphosphate (1.55 Å) reveal that it undergoes drastic conformational changes on ATP binding to attain a structure capable of dimerization.
 > — PMID:28065505
 
-## 54. OTHER (PROBABLE, NOT_REPORTED)
+## 53. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002500048
 - **Subject:** UniProtKB:Q9HYK7
@@ -736,7 +723,7 @@ The IBD of GO:0042167 heme catabolic process at PTN002500048 rests on one seed, 
 > Hence, findings reported herein extend the range of redox partners recognized by the fold of pa-FPR to include a heme oxygenase (pa-HO).
 > — PMID:17915950
 
-## 55. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 54. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002112386
 - **Subject:** UniProtKB:Q03456
@@ -749,7 +736,7 @@ The IBD of GO:1900376 regulation of secondary metabolite biosynthetic process at
 > The A2 and A4 mutants expressed higher levels of siderophores in iron-deficient media and in iron-replete media.
 > — PMID:8885270
 
-## 56. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 55. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002112483
 - **Subject:** UniProtKB:Q03456
@@ -762,7 +749,7 @@ Topology checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN00211
 > The A2 and A4 mutants expressed higher levels of siderophores in iron-deficient media and in iron-replete media.
 > — PMID:8885270
 
-## 57. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 56. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000501197
 - **Subject:** UniProtKB:Q9I291
@@ -774,7 +761,7 @@ PTN000501197 carries an IBD of GO:0009244 lipopolysaccharide core region biosynt
 > indicating the involvement of GalU in P. aeruginosa LPS core synthesis
 > — PMID:12044687
 
-## 58. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
+## 57. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN004253691
 - **Subject:** UniProtKB:Q9I3S3
@@ -786,7 +773,7 @@ PTN004253691 (PTHR11358) is a HORIZ_TRANSFER node holding 34 leaves, all in subf
 > We demonstrate here that the enzyme efficiently hydrolyzed linear guanidino acids such as TC and GBA, whereas GPA and arginine were turned over less efficiently
 > — PMID:36543883
 
-## 59. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
+## 58. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN004253691
 - **Subject:** UniProtKB:Q9I3S3
@@ -798,7 +785,7 @@ PTN004253691 (PTHR11358) is a HORIZ_TRANSFER node holding 34 leaves, all in subf
 > No enzyme activity was detected with other guanidino compounds, including arginine, agmatine, 3-guanidinopropionate, and guanidinoacetate.
 > — PMID:12029055
 
-## 60. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 59. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q51366 involved_in GO:0042351 'de novo' GDP-L-fucose biosynthetic process (IBA, GO_REF:0000033)
 - **Field:** GO_ID
@@ -811,7 +798,7 @@ The IBA assigns P. aeruginosa Gmd (Q51366) to GO:0042351 'de novo' GDP-L-fucose 
 > P. aeruginosa GMD is bifunctional, and can catalyze both GDP-d-mannose 4,6-dehydration and the subsequent reduction reaction to produce GDP-D-rhamnose.
 > — PMID:19459932
 
-## 61. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 60. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN004738955
 - **Subject:** UniProtKB:Q9HYJ7
@@ -825,7 +812,7 @@ PTN004738955 is the LUCA root of PTHR30069, spanning 149 leaves across 18 subfam
 > A deltahasR mutant also exhibited decreased utilization of haem and haemoglobin, and a deltaphuR deltahasR double mutant was virtually unable to take up either compound.
 > — PMID:10658665
 
-## 62. OTHER (CONFIRMED, NOT_REPORTED)
+## 61. OTHER (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000138516
 - **Subject:** UniProtKB:Q9HU77
@@ -840,7 +827,7 @@ Tree topology checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN
 > The protein Pa3175 is dislocated from the hut operon and was shown to catalyze the hydrolysis of N-formimino-L-glutamate to formamide and L-glutamate.
 > — PMID:16475788
 
-## 63. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
+## 62. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002233700
 - **Subject:** UniProtKB:Q9HU85
@@ -858,7 +845,7 @@ Topology checked with projects/PSEUDOCAP/panther_tree.py (--family PTHR10362, no
 > PA5093 (Q9HU90), the second HutH-like gene in the PAO1 hut locus, has no Ala-Ser-Gly tripeptide anywhere
 > — file:PSEAE/hutH/hutH-bioinformatics/RESULTS.md
 
-## 64. OTHER (CONFIRMED, NOT_REPORTED)
+## 63. OTHER (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000505272
 - **Subject:** UniProtKB:Q9HU91
@@ -870,7 +857,7 @@ Topology checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN00050
 > Histidine ammonia lyase (histidase), urocanase, and the capacity to degrade formiminoglutamate, which are respectively involved in steps I, II, and IV in the catabolism of histidine
 > — PMID:4290562
 
-## 65. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 64. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002217335
 - **Subject:** UniProtKB:P33883
@@ -882,7 +869,7 @@ The GO:0007165 signal transduction IBD at PTN002217335 (LuxI-family AHL synthase
 > The lasl gene is involved in the synthesis of a diffusible molecule termed Pseudomonas autoinducer (PAI).
 > — PMID:8493556
 
-## 66. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 65. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002433936
 - **Subject:** UniProtKB:Q9I489
@@ -898,7 +885,7 @@ PTN002433936 (PTHR33442, 9 reference leaves in 7 organisms; 35 GOA rows in with/
 > We herein demonstrated that PaLhpL gene (PA1255; Fig. 1d) in the L-hydroxyproline gene cluster encodes a bifunctional dehydratase and 2-epimerase toward trans-3-hydroxy-L-proline as the leading candidate
 > — PMID:27929065
 
-## 67. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 66. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001627042
 - **Subject:** UniProtKB:Q9I1X7
@@ -909,7 +896,7 @@ PTN002433936 (PTHR33442, 9 reference leaves in 7 organisms; 35 GOA rows in with/
 
 The IBD for GO:0006269 DNA replication, synthesis of primer at PTN001627042 (LigD clade, 15 leaf IBAs) rests on M. tuberculosis LigD (P9WNV3, MTBBASE IDA, PMID:16023671). LigD polymerase/primase activity has been shown in vitro, but LigD functions in Ku-dependent NHEJ repair of double-strand breaks, not in chromosomal replication. The topology was checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN001627042 is a SPECIATION node (LUCA) with 15 leaves in two subfamilies (PTHR42705:SF2 12, SF3 3) and two children: PTN005127089 (SPECIATION, Eukaryota, 2 leaves: Monosiga MONBRDRAFT_36321 "DNA ligase D" and Gossypium LOC107941224) and PTN000048875 (SPECIATION, Eubacteria, 13 leaves), which holds the Terrabacteria clade PTN008085115 (7 leaves, including Mtb LigD P9WNV3 and B. subtilis LigD O34398, plus the Streptomyces SF2/SF3 duplication PTN000048869) and the Proteobacteria clade PTN005127091 (6 leaves, with P. aeruginosa LigD Q9I1X7 reached through the HORIZ_TRANSFER node PTN005127093). Every leaf is a LigD-type or ATP-dependent DNA ligase; the two with full names are both bifunctional NHEJ proteins, and no leaf is a replicative primase or a DnaG-type enzyme. The clade is thus homogeneous, which means the term cannot be rescued by moving it to a subclade: the mismatch is between the term and the whole family. Please remove this IBD (the activity is already covered by the GO:0003887 IBD at the same node and the role by GO:0006303 non-recombinational repair). PROBABLE rather than CONFIRMED because the topology settles that relocation is not the fix, while the Mtb seed paper PMID:16023671 was still not read and could report a replication-linked assay.
 
-## 68. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 67. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001733227
 - **Subject:** UniProtKB:Q9I298
@@ -919,7 +906,7 @@ The IBD for GO:0006269 DNA replication, synthesis of primer at PTN001627042 (Lig
 
 The IBD of GO:0004490 methylglutaconyl-CoA hydratase activity at PTN001733227 has one seed, the PseudoCAP IMP of P. aeruginosa LiuC (Q9I298) to PMID:16517656, a mutant-based inference with no reported enzyme assay. The topology was checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN001733227 is a SPECIATION node placed at LUCA, with 13 leaves all in PTHR42964:SF1, splitting into the Monosiga brevicollis leaf PTN000941888 and the Eubacteria clade PTN000234935 (12 leaves), which divides into Terrabacteria PTN008092237 (4 leaves; B. subtilis PksH, Chloroflexus, Actinomycetales) and Proteobacteria PTN000234939 (8 leaves). Placing a substrate-specific crotonase activity at a LUCA node is not supportable, and the tree shows the support stops at the leaf; LiuC's own sister is P. aeruginosa AtuE (Q9HZV7, leaf PTN002452382, duplication node PTN002452381), which hydrates isohexenylglutaconyl-CoA instead, and B. subtilis PksH (P40805) is recorded by UniProt (ECO:0000269) as dehydrating an HMG group tethered to the carrier protein PksL in bacillaene biosynthesis, not HMG-CoA. Even the smallest clade holding the three methylglutaconyl-CoA hydratases of the family (Q9I298, Shewanella Q8EFS1, Coxiella Q83CX5) is PTN001733230 (SPECIATION, Gammaproteobacteria, 7 leaves), which also contains AtuE, Coxiella PksH and the two Xanthomonas enzymes (one a p-hydroxycinnamoyl-CoA hydratase/lyase). There is therefore no node confined to LiuC orthologs above the LiuC leaf PTN002452383. Please put a generic enoyl-CoA hydratase/hydro-lyase term at PTN001733227 and keep GO:0004490 as a leaf-level annotation on the characterised LiuC leaves.
 
-## 69. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 68. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001733227
 - **Subject:** UniProtKB:Q9I298
@@ -932,7 +919,7 @@ The IBD of GO:0046247 terpene catabolic process at PTN001733227 rests on one see
 > P. fluorescens, but not P. putida, could grow on acyclic terpenes (citronellol and citronellate), while both species were able to utilize leucine and isovalerate
 > — PMID:16820476
 
-## 70. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 69. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000031222
 - **Subject:** UniProtKB:Q9I2A0
@@ -946,7 +933,7 @@ The GO:0046951 ketone body biosynthetic process IBD on PANTHER node PTN000031222
 > The LiuE protein was purified as a His-tagged recombinant protein and in addition to show HMG-CoA lyase activity
 > — PMID:19597963
 
-## 71. OTHER (PROBABLE, NOT_REPORTED)
+## 70. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000227060
 - **Subject:** UniProtKB:Q9I544
@@ -960,7 +947,7 @@ The IBD of GO:0000287 magnesium ion binding at PTN000227060 (PTHR43773 family ro
 > showed that magnesium-binding sites in the connecting helix region of MgtE are vital in coupling these two functions
 > — PMID:24722909
 
-## 72. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
+## 71. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000227060
 - **Subject:** UniProtKB:Q9I544
@@ -972,7 +959,7 @@ PTN000227060 (PTHR43773 family root, 25 leaves) carries an IBD of GO:0015693 mag
 > Of the 22 leaves resolved in UniProt, 16 carry Pfam PF01769 (MgtE transmembrane domain) and 6 do not
 > — file:PSEAE/mgtE/mgtE-bioinformatics/RESULTS.md
 
-## 73. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 72. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001251133
 - **Subject:** UniProtKB:Q9HUL2
@@ -989,7 +976,7 @@ The IBD of GO:0071978 bacterial-type flagellum-dependent swarming motility at PT
 > Mutation of both genes encoding the MotA homologs or MotB homologs was sufficient to abolish motility.
 > — PMID:15375113
 
-## 74. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 73. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001252377
 - **Subject:** UniProtKB:G3XD73
@@ -1006,7 +993,7 @@ The IBD of GO:0071978 bacterial-type flagellum-dependent swarming motility at PT
 > Mutation of both genes encoding the MotA homologs or MotB homologs was sufficient to abolish motility.
 > — PMID:15375113
 
-## 75. WRONG_TERM (SUSPECTED, NOT_REPORTED)
+## 74. WRONG_TERM (SUSPECTED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002215378
 - **Subject:** UniProtKB:P38108
@@ -1018,7 +1005,7 @@ The GO:0032885 regulation of polysaccharide biosynthetic process IBD at PTN00221
 > RseB (a MucB homolog), which is a protein that inhibits DegS cleavage of RseA
 > — PMID:19298369
 
-## 76. OTHER (PROBABLE, NOT_REPORTED)
+## 75. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000132400
 - **Subject:** UniProtKB:G3XD10
@@ -1031,7 +1018,7 @@ The IBD of GO:0006783 heme biosynthetic process at PTN000132400 rests on one see
 > Thus, NirJ and AhbC use the same substrate.
 > — PMID:40318205
 
-## 77. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 76. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001284536
 - **Subject:** UniProtKB:Q9HWH9
@@ -1044,7 +1031,7 @@ The IBD of GO:0018580 nitronate monooxygenase activity at PTN001284536 rests on 
 > Despite its annotation, PA0660 did not exhibit nitronate monooxygenase activity.
 > — PMID:31075192
 
-## 78. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 77. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000171476
 - **Subject:** UniProtKB:Q9HT76
@@ -1059,7 +1046,7 @@ PTN000171476 (PTHR43371, class II / vitamin B12-dependent ribonucleotide reducta
 > 50 mM Tris-HCl buffer at pH 7.5, 30 mM DTT, 10 mM MgCl2, 100 μM AdoCbl, 1 mM ATP, 1 mM CTP, and 2 μM of NrdJa and NrdJb
 > — PMID:26225432
 
-## 79. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 78. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001607041
 - **Subject:** UniProtKB:Q9HUK1
@@ -1072,7 +1059,7 @@ PAINT IBD GO:0005524 ATP binding at PTN001607041, the type IIA topoisomerase A-s
 > GyrA is responsible for the DNA strand binding, cleavage, and rejoining, and GyrB is responsible for ATPase activity.
 > — PMID:10049263
 
-## 80. OTHER (PROBABLE, NOT_REPORTED)
+## 79. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002211012
 - **Subject:** UniProtKB:Q51507
@@ -1085,7 +1072,7 @@ The IBD of GO:0009697 salicylic acid biosynthetic process at PTN002211012 rests 
 > PchB also produces prephenate from chorismate, most likely due to structural homology to the Escherchia coli chorismate mutase.
 > — PMID:19432488
 
-## 81. OTHER (PROBABLE, NOT_REPORTED)
+## 80. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002441861
 - **Subject:** UniProtKB:Q9HZE4
@@ -1097,7 +1084,7 @@ The GO:0019213 deacetylase activity IBD at PTN002441861 (3 leaf IBAs) rests only
 > The deacetylase domain of PaPelA (residues 520–804) has previously been predicted to have structural similarity to CE4 enzymes (18, 33).
 > — PMID:40120681
 
-## 82. OTHER (CONFIRMED, NOT_REPORTED)
+## 81. OTHER (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000763909
 - **Subject:** UniProtKB:Q05098
@@ -1106,7 +1093,7 @@ The GO:0019213 deacetylase activity IBD at PTN002441861 (3 leaf IBAs) rests only
 
 Topology checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN000763909 is a SPECIATION node (Gammaproteobacteria) in PTHR30069 with 3 leaves, all subfamily PTHR30069:SF51, and exactly two children: the P. aeruginosa leaf PTN002409317 (Q05098 PfeA) and PTN002012591 (SPECIATION, Enterobacteriaceae; 2 leaves, E. coli FepA P05825 and S. typhimurium FepA Q8ZR40). The GO:0042912 colicin transmembrane transporter activity IBD is seeded by E. coli FepA, and colicin B/D uptake is a documented property of enterobacterial FepA only; no evidence shows PfeA admits colicins, and colicins B and D are not known to act on P. aeruginosa. Because the colicin-receptor leaves form one clean child clade, moving this IBD from PTN000763909 to PTN002012591 keeps both FepA IBAs and removes the only unsupported leaf IBA (PfeA). The sibling GO:0042930 enterobactin transport IBD is correct at PTN000763909 and should stay there.
 
-## 83. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 82. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002463889
 - **Subject:** UniProtKB:Q04804
@@ -1119,7 +1106,7 @@ Topology checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. The node
 > PF00512; HisKA
 > — file:PSEAE/pfeS/pfeS-uniprot.txt
 
-## 84. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 83. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000230115
 - **Subject:** UniProtKB:P09786
@@ -1132,7 +1119,7 @@ PTN000230115 (PTHR43418:SF2, 7 reference leaves, 267 GOA rows in with/from of wh
 > Based on its organization in an operon and quinolone-dependent regulation, PhnAB has probably evolved to generate anthranilate for quinolone biosynthesis
 > — PMID:23449919
 
-## 85. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 84. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000230115
 - **Subject:** UniProtKB:P09786
@@ -1145,7 +1132,7 @@ PTN000230115 (PTHR43418:SF2) carries an IBD of GO:0004048 anthranilate phosphori
 > FT CHAIN 1..200
 > — file:PSEAE/phnB/phnB-uniprot.txt
 
-## 86. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 85. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000481936
 - **Subject:** UniProtKB:Q7DC82
@@ -1164,7 +1151,7 @@ PTN000481936 (PTHR21337, Proteobacteria, 5 leaves, all in PTHR21337:SF0) carries
 > evolutionary trajectory for the type II DAH7PSs may have diverged to deliver type II enzymes that function within either primary or secondary metabolism
 > — PMID:30242059
 
-## 87. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 86. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001286216
 - **Subject:** UniProtKB:G3XD28
@@ -1176,7 +1163,7 @@ The IBD of GO:0043107 type IV pilus-dependent motility at PTN001286216 has one s
 > PilM has shared sequence motifs with the cell division protein FtsA from Bacillus subtilis and Escherichia coli, as well as the rod-shape-determining protein MreB
 > — PMID:7565110
 
-## 88. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 87. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001286216
 - **Subject:** UniProtKB:G3XD28
@@ -1188,7 +1175,7 @@ The IBD of GO:0044096 type IV pilus (is_active_in) at PTN001286216 rests only on
 > all four proteins, including the nominally cytoplasmic PilM, colocalized to the inner membrane
 > — PMID:19857645
 
-## 89. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 88. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002220336
 - **Subject:** UniProtKB:G3XD30
@@ -1200,7 +1187,7 @@ The IBD of GO:0044096 type IV pilus at PTN002220336 (dated 2026-06-17) rests onl
 > all four proteins, including the nominally cytoplasmic PilM, colocalized to the inner membrane
 > — PMID:19857645
 
-## 90. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 89. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000766390
 - **Subject:** UniProtKB:G3XCX3
@@ -1213,7 +1200,7 @@ The IBD of GO:0016888 "DNA endonuclease activity, producing 5'-phosphomonoesters
 > Assay of purified 6xHis-tagged PilB, PilT and PilU from P. aeruginosa showed that all three proteins have ATPase activities in vitro.
 > — PMID:18174131
 
-## 91. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 90. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002147059
 - **Subject:** UniProtKB:Q9I4X1
@@ -1223,7 +1210,7 @@ The IBD of GO:0016888 "DNA endonuclease activity, producing 5'-phosphomonoesters
 
 The IBD of GO:0044550 secondary metabolite biosynthetic process at PTN002147059 (PTHR34069) has a single seed, P. aeruginosa PqsC (Q9I4X1), whose PseudoCAP IMP (PMID:12426334, pqsC transposon mutant lacking PQS) is sound for PqsC. But the node sits above canonical type II fatty acid synthase FabH (KAS III) enzymes, and the PAINT leaf file propagates the term to them: Haemophilus influenzae FabH (P43711), Bacillus subtilis FabHB (O07600), P. aeruginosa FabH (Q9HYR2) and PA3286 (Q9HYV7), Plasmodium falciparum FabH (Q7KWI9), Chlamydia FabH (O84242) and others, 30 leaves in all. These initiate primary fatty acid synthesis and do not make secondary metabolites. Please move the IBD down to the node that holds only PqsC orthologues, or drop it.
 
-## 92. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 91. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002463206
 - **Subject:** UniProtKB:Q9I1N6
@@ -1235,7 +1222,7 @@ The GO:0044010 single-species biofilm formation IBD at PTN002463206 (7 leaf IBAs
 > Enzymes in the GT-2 family transfer a wide variety of nucleotide activated sugars (including glucose, rhamnose, and mannose), so it is difficult to speculate which of these substrates PslC specifically recognizes.
 > — PMID:21991261
 
-## 93. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 92. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002215317
 - **Subject:** UniProtKB:G3XDA6
@@ -1249,7 +1236,7 @@ The IBD of GO:1900378 positive regulation of secondary metabolite biosynthetic p
 > Therefore, PtrB is a new TTSS repressor that coordinates TTSS repression and pyocin synthesis under the stress of DNA damage.
 > — PMID:16109947
 
-## 94. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 93. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001083175
 - **Subject:** UniProtKB:Q9I524
@@ -1262,7 +1249,7 @@ The IBD of GO:0008893 guanosine-3',5'-bis(diphosphate) 3'-diphosphatase activity
 > while RelA is clearly more divergent, consistent with its loss of hydrolase activity
 > — PMID:21858139
 
-## 95. OTHER (PROBABLE, NOT_REPORTED)
+## 94. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002105365
 - **Subject:** UniProtKB:Q9HX69
@@ -1275,7 +1262,7 @@ The IBD of GO:0005886 plasma membrane (is_active_in) at PTN002105365 is seeded b
 > a finding consistent with the observation that RocR forms tetramers in solution
 > — PMID:22753070
 
-## 96. OTHER (PROBABLE, NOT_REPORTED)
+## 95. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002105365
 - **Subject:** UniProtKB:Q9HX69
@@ -1288,7 +1275,7 @@ The GO:0071111 IBD at PTN002105365 is sound for the clade as a whole and does no
 > These results suggested that the EAL domain of CsrD activity does not hydrolyze c-di-GMP.
 > — PMID:16980588
 
-## 97. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 96. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000779307
 - **Subject:** UniProtKB:P45684
@@ -1302,7 +1289,7 @@ The PAINT IBD of GO:0003899 DNA-directed RNA polymerase activity (enables) at PT
 > Sigma factors are initiation factors that promote the attachment of RNA polymerase to specific initiation sites and are then released.
 > — file:PSEAE/rpoS/rpoS-uniprot.txt
 
-## 98. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
+## 97. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000561806
 - **Subject:** UniProtKB:Q9X4P2
@@ -1312,7 +1299,7 @@ The PAINT IBD of GO:0003899 DNA-directed RNA polymerase activity (enables) at PT
 
 The PTN000561806 IBD of GO:0000290 deadenylation-dependent decapping of nuclear-transcribed mRNA (eukaryotic seeds only) reaches the bacterial RppH leaf Q9X4P2. Please either move the IBD below the split from the bacterial RppH clade or add a NOT on the bacterial RppH subclade (PTN001500664). This node is not seeded by PseudoCAP; recorded because the propagation is a taxon mismatch.
 
-## 99. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
+## 98. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000159726
 - **Subject:** UniProtKB:Q9HVQ3
@@ -1325,7 +1312,7 @@ The PTN000159726 IBD of GO:0004586 ornithine decarboxylase activity propagates t
 > AZI is an enzymatically inactive ODC homolog that counteracts the negative effect of ODC antizymes
 > — file:PSEAE/speC/speC-notes.md
 
-## 100. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 99. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000168372
 - **Subject:** UniProtKB:Q9HV34
@@ -1338,7 +1325,7 @@ The thermospermine synthase activity (GO:0010487) IBD at PTN000168372 is seeded 
 > Catalyzes the irreversible transfer of a propylamine group
 > — file:PSEAE/speE2/speE2-uniprot.txt
 
-## 101. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
+## 100. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN008624361
 - **Subject:** UniProtKB:Q9I6J0
@@ -1351,7 +1338,7 @@ The PTN008624361 IBD of GO:0015847 putrescine transport (seeds E. coli PotF and 
 > Binds spermidine with high affinity (KD=14.3 nM). Does not bind putrescine, cadaverine or spermine.
 > — file:PSEAE/spuE/spuE-uniprot.txt
 
-## 102. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
+## 101. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN008624361
 - **Subject:** UniProtKB:Q9I6J0
@@ -1364,7 +1351,7 @@ The PTN008624361 IBD of GO:0019810 putrescine binding (seeds SpuD, E. coli PotF 
 > we found that SpuD is a putrescine-preferential binding protein, while SpuE binds to spermidine exclusively.
 > — PMID:22300763
 
-## 103. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 102. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002126683
 - **Subject:** UniProtKB:Q9HZX3
@@ -1377,7 +1364,7 @@ The IBD of GO:0003810 protein-glutamine gamma-glutamyltransferase activity at PT
 > In the periplasm of B. bronchiseptica, WbmE protein catalyzes the deamidation of uronamide-rich O chains of lipopolysaccharide (LPS)
 > — PMID:23209712
 
-## 104. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 103. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001804941
 - **Subject:** UniProtKB:Q9HU66
@@ -1389,7 +1376,7 @@ The IBD of GO:0052837 thiazole biosynthetic process at PTN001804941, the root of
 > proteins annotated as ThiI based on containing only the AANH and THUMP domains are unlikely to be involved in thiazole synthesis and would be better annotated as 4-thiouridine sulfurtransferases
 > — PMID:21724998
 
-## 105. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
+## 104. MISSING_NEGATION (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001464661
 - **Subject:** UniProtKB:P29364
@@ -1401,7 +1388,7 @@ Topology checked with projects/PSEUDOCAP/panther_tree.py on 2026-11-05. PTN00146
 > B. subtilis 168 has an amiN homolog (yerI) that also phosphorylates Ami, mediating natural B. subtilis resistance to the drug.
 > — PMID:30181282
 
-## 106. OUTDATED_STATEMENT (CONFIRMED, NOT_REPORTED)
+## 105. OUTDATED_STATEMENT (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002454730
 - **Subject:** UniProtKB:P57668
@@ -1413,7 +1400,7 @@ The IBD at PTN002454730 (thiol peroxidase clade, 32 leaf IBAs in 30 taxa) uses G
 > The enzyme catalyzes thioredoxin-dependent peroxidation and can utilize organic hydroperoxides and H(2)O(2) as substrates.
 > — PMID:22609922
 
-## 107. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 106. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001575314
 - **Subject:** UniProtKB:Q9HUF5
@@ -1426,7 +1413,7 @@ The IBD of GO:0008713 (heptosyl-Kdo2-lipid A + ADP-heptose, the heptosyltransfer
 > Catalyzes the addition of the first heptose unit to one 3-deoxy-D-manno-octulosonic acid (Kdo) residue of the Kdo2-lipid A module
 > — file:PSEAE/waaC/waaC-uniprot.txt
 
-## 108. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 107. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000531351
 - **Subject:** UniProtKB:Q9HUG5
@@ -1438,7 +1425,7 @@ The IBD of GO:0009244 lipopolysaccharide core region biosynthetic process at PTN
 > These results provide evidence that WapR is the alpha-1,3-rhamnosyltransferase, while MigA is the alpha-1,6-rhamnosyltransferase.
 > — PMID:18178733
 
-## 109. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 108. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001292385
 - **Subject:** UniProtKB:G3XD01
@@ -1452,7 +1439,7 @@ The IBD for GO:0006065 UDP-glucuronate biosynthetic process at PTN001292385 (PTH
 > we confirm that WbpD catalyzes the acetylation of UDP-GlcNAc(3NH(2))A to give UDP-GlcNAc(3NAc)A
 > — PMID:19348502
 
-## 110. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
+## 109. MISSING_NEGATION (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001056041
 - **Subject:** UniProtKB:G3XD61
@@ -1464,7 +1451,7 @@ PTN001056041 propagates GO:0008761 UDP-N-acetylglucosamine 2-epimerase activity,
 > Neither enzyme utilized UDP-alpha-D-GlcNAc, UDP-alpha-D-GlcNAcA (UDP-2-acetamido-2,3-dideoxy-alpha-D-glucuronic acid) or UDP-alpha-D-GlcNAc3NAc (UDP-2,3-diacetamido-2,3-dideoxy-alpha-D-glucose) as substrates.
 > — PMID:17346239
 
-## 111. OTHER (PROBABLE, NOT_REPORTED)
+## 110. OTHER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN005302544
 - **Subject:** UniProtKB:Q9HTB9
@@ -1478,7 +1465,7 @@ The IBD for GO:0016757 glycosyltransferase activity at PTN005302544 (PTHR46401, 
 > We demonstrated that these GTs are indeed D-RhaTs and catalyze the transfer of D-Rha from GDP-D-Rha to the reaction product of WbpZ.
 > — PMID:35166992
 
-## 112. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 111. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002895351
 - **Subject:** UniProtKB:Q9HXT9
@@ -1491,7 +1478,7 @@ The IBD of GO:0005886 plasma membrane at PTN002895351 rests on six E. coli trans
 > Kyte-Doolittle, 19-residue window, mean above 1.6: no window found in WspR (347 aa).
 > — file:PSEAE/wspR/wspR-notes.md
 
-## 113. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
+## 112. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002895351
 - **Subject:** UniProtKB:Q9HXT9
@@ -1504,7 +1491,7 @@ The IBD of GO:0043709 cell adhesion involved in single-species biofilm formation
 > While PA3177 contributed to biofilm drug tolerance, inactivation of PA3177 had no effect on attachment and biofilm formation.
 > — PMID:30082282
 
-## 114. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 113. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN000794252
 - **Subject:** UniProtKB:G3XCY2
@@ -1514,7 +1501,7 @@ The IBD of GO:0043709 cell adhesion involved in single-species biofilm formation
 
 The IBD of GO:0004713 protein tyrosine kinase activity at PTN000794252 is seeded by the E. coli BY-kinases Wzc (P76387) and Etk (P38134). The same node's plasma-membrane IBD lists Wzz1 (PAO1 PA3160, G3XCY2), Wzz2 (PA0938, Q9I520) and E. coli FepE (P26266) among its seeds, which are PCP-1 chain-length regulators. Their sequences end shortly after the second TM helix (Wzz1 is 348 aa with TM2 at 319-343) and lack the cytoplasmic Walker A/B tyrosine-autokinase domain, so they cannot have this activity. Please move the kinase IBD to the Wzc/Etk (PCP-2a) subclade or add NOT for the PCP-1 branch.
 
-## 115. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 114. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002446181
 - **Subject:** UniProtKB:Q00516
@@ -1527,7 +1514,7 @@ The IBD of GO:0015627 type II protein secretion system complex at PTN002446181 (
 > The real fault is narrower: the IBD sits one node above PTN002215342 (Proteobacteria, 10 leaves), which holds every T2SS-named leaf including XcpV, while the root also covers two deep generic prepilins.
 > — file:PSEAE/xcpV/xcpV-bioinformatics/RESULTS.md
 
-## 116. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 115. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN002446181
 - **Subject:** UniProtKB:Q00516
@@ -1540,7 +1527,7 @@ The IBD of GO:0015628 protein secretion by the type II secretion system at PTN00
 > The real fault is narrower: the IBD sits one node above PTN002215342 (Proteobacteria, 10 leaves), which holds every T2SS-named leaf including XcpV, while the root also covers two deep generic prepilins.
 > — file:PSEAE/xcpV/xcpV-bioinformatics/RESULTS.md
 
-## 117. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 116. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** PANTHER:PTN001952271
 - **Subject:** UniProtKB:Q9HT73

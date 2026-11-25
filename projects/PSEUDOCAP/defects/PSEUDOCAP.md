@@ -1,6 +1,6 @@
 # Source-record defects for PSEUDOCAP
 
-281 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
+290 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
 
 ## 1. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
@@ -72,15 +72,15 @@ The abstract of PMID:23955007 reports Iap genetics in wzz single and double muta
 
 Full text of PMID:24309320 read. It is a site-directed mutagenesis study of the Wzy polymerase; Wzz1 and Wzz2 appear as chain-length readouts and as mCherry fusions used for complementation. No experiment localises Wzz2 to the peptidoglycan layer (GO:0009276 Gram-negative-bacterium-type cell wall), and Wzz2 is an integral inner-membrane protein. Please delete the row; the plasma-membrane rows already capture the location.
 
-## 7. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
+## 7. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I509 enables GO:0016655 oxidoreductase activity, acting on NAD(P)H, quinone or similar compound as acceptor (IDA, PMID:16672604)
-- **Field:** Reference
-- **Change:** check PMID:16672604 (alternatives in the explanation)
+- **Field:** Evidence_Code
+- **Change:** check ECO:0000314 (alternatives in the explanation)
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/PA0949/PA0949-ai-review.yaml`
 
-GO:0016655 IDA on PA0949 (Q9I509) cites PMID:16672604, which biochemically characterises only E. coli and A. fulgidus WrbA (full text read). P. aeruginosa WrbA appears only as a previously solved crystal structure. Please either re-point the IDA to PMID:25085734, where the purified P. aeruginosa enzyme was assayed (and use GO:0003955), or change the evidence to ISS with E. coli WrbA (P0A8G6).
+GO:0016655 IDA on PA0949 (Q9I509) cites PMID:16672604, which biochemically characterises only E. coli and A. fulgidus WrbA (full text read; cached). P. aeruginosa WrbA appears there only as a previously solved crystal structure, so the row is a finding on the E. coli ortholog carried to PA0949 under a direct-assay code (the cause recorded as OTHER). Please either change the evidence to ISS with E. coli WrbA (UniProtKB:P0A8G6), or re-point the IDA to PMID:25085734, where the purified P. aeruginosa enzyme was assayed in vitro (abstract read only) and from which PseudoCAP made its other PA0949 rows on the same day (2019-03-11), using GO:0003955.
 
 > The presence of this fold has recently been confirmed in the published crystal structures of the Deinococcus radiodurans and Pseudomonas aeruginosa WrbA homologues
 > — PMID:16672604
@@ -355,14 +355,15 @@ The PseudoCAP IMP of GO:1900191 to PA2133 from PMID:16186483 (Hickman et al. 200
 > A PA2133 mutant resembled the wild type in attachment assays.
 > — PMID:16186483
 
-## 29. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
+## 29. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I1J5 enables GO:0016655 oxidoreductase activity, acting on NAD(P)H, quinone or similar compound as acceptor (IDA, PMID:22304305)
-- **Change:** PMID:22304305 → PMID:26621870
+- **Field:** Evidence_Code
+- **Change:** check ECO:0000314 (alternatives in the explanation)
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/PA2280/PA2280-ai-review.yaml`
 
-GO:0016655 for PA2280 (Q9I1J5, ArsH) is annotated IDA to PMID:22304305, which reports the purification and kinetics of Synechocystis sp. PCC 6803 ArsH; the abstract gives no indication that the P. aeruginosa protein was assayed. Re-cite the row to PMID:26621870 (Crescente et al. 2016), which assayed recombinant P. aeruginosa ArsH (pa2280) and found NAD(P)H quinone oxidoreductase and azoreductase activity, and consider GO:0003955. This row is the sole seed of the PAINT IBD at PTN008682975.
+GO:0016655 for PA2280 (Q9I1J5, ArsH) is annotated IDA to PMID:22304305, which reports the purification and kinetics of Synechocystis sp. PCC 6803 ArsH; the abstract gives no indication that the P. aeruginosa protein was assayed (only the abstract was read, not the full text). If the paper has no P. aeruginosa data, the row transfers an ortholog's result under a direct-assay code. Please check, and then either recode it as a sequence-similarity transfer (ISS) with the Synechocystis protein in WITH/FROM, or keep IDA and re-cite the row to PMID:26621870 (Crescente et al. 2016), whose abstract reports recombinant P. aeruginosa enzymes including ArsH with NAD(P)H quinone oxidoreductase and azoreductase activity; consider GO:0003955 in that case. This row is the sole seed of the PAINT IBD at PTN008682975.
 
 > Here we have expressed and purified Synechocystis ArsH and conducted an intensive biochemical study.
 > — PMID:22304305
@@ -436,7 +437,7 @@ GO:0043190 ATP-binding cassette (ABC) transporter complex for PA3891 (Q9HXC2) is
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/PA3933/PA3933-ai-review.yaml`
 
-PA3933 is annotated enables GO:0005275 (IDA, PMID:21478341). The paper studies BetT1, BetT3 and CbcXWV, naming BetT2 as PA14_12990 and BetT3 as PA14_69850. PA14_12990 is identical to PAO1 PA3933 and PA14_69850 is identical to PAO1 PA5291. The paper has no transport data for BetT2; the choline uptake data are for BetT3 (PA5291). Please move the row to PA5291 (better as GO:0015220 choline transmembrane transporter activity).
+PA3933 is annotated enables GO:0005275 (IDA, PMID:21478341). The paper studies BetT1, BetT3 and CbcXWV, naming BetT2 as PA14_12990 and BetT3 as PA14_69850. PA14_12990 is identical to PAO1 PA3933 and PA14_69850 is identical to PAO1 PA5291. The paper has no transport data for BetT2; the choline uptake data are for BetT3 (PA5291). Please move the row to PA5291 (better as GO:0015220 choline transmembrane transporter activity). Checked against the full text (PMC3133218) and by sequence: UniProt PA14_12990 is identical to Q9HX83 and PA14_69850 to Q9HTR3. PseudoCAP has no row from this paper on PA5291, so the paper's BetT3 appears to have been matched to the wrong PAO1 locus (the cause recorded as OTHER).
 
 ## 36. WRONG_GENE_PRODUCT (CONFIRMED, NOT_REPORTED)
 
@@ -446,7 +447,7 @@ PA3933 is annotated enables GO:0005275 (IDA, PMID:21478341). The paper studies B
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/PA3933/PA3933-ai-review.yaml`
 
-PA3933 is annotated enables GO:0033265 choline binding (IDA, PMID:21478341). The paper's BetT3 is PA14_69850, identical to PAO1 PA5291; BetT2 (PA3933) is only measured by qRT-PCR. The row belongs to PA5291; note also that the paper measures uptake, not binding.
+PA3933 is annotated enables GO:0033265 choline binding (IDA, PMID:21478341). The paper's BetT3 is PA14_69850, identical to PAO1 PA5291; BetT2 (PA3933) is only measured by qRT-PCR. The row belongs to PA5291; note also that the paper measures uptake, not binding. Checked against the full text (PMC3133218) and by sequence: UniProt PA14_12990 is identical to Q9HX83 and PA14_69850 to Q9HTR3. PseudoCAP has no row from this paper on PA5291, so the paper's BetT3 appears to have been matched to the wrong PAO1 locus (the cause recorded as OTHER).
 
 ## 37. WRONG_GENE_PRODUCT (CONFIRMED, NOT_REPORTED)
 
@@ -456,7 +457,7 @@ PA3933 is annotated enables GO:0033265 choline binding (IDA, PMID:21478341). The
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/PA3933/PA3933-ai-review.yaml`
 
-PA3933 is annotated involved_in GO:0042426 (IDA, PMID:21478341). The growth data are for BetT3 (PA14_69850 = PAO1 PA5291), not BetT2 (PA14_12990 = PAO1 PA3933). On PA5291 the term should itself be GO:0015871 choline transport, since the transporter performs no catabolic step.
+PA3933 is annotated involved_in GO:0042426 (IDA, PMID:21478341). The growth data are for BetT3 (PA14_69850 = PAO1 PA5291), not BetT2 (PA14_12990 = PAO1 PA3933). On PA5291 the term should itself be GO:0015871 choline transport, since the transporter performs no catabolic step. Checked against the full text (PMC3133218) and by sequence: UniProt PA14_12990 is identical to Q9HX83 and PA14_69850 to Q9HTR3. PseudoCAP has no row from this paper on PA5291, so the paper's BetT3 appears to have been matched to the wrong PAO1 locus (the cause recorded as OTHER).
 
 ## 38. WRONG_GENE_PRODUCT (CONFIRMED, NOT_REPORTED)
 
@@ -466,7 +467,7 @@ PA3933 is annotated involved_in GO:0042426 (IDA, PMID:21478341). The growth data
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/PA3933/PA3933-ai-review.yaml`
 
-PA3933 is annotated involved_in GO:0071475 (IDA, PMID:21478341). The paper's hyperosmolar growth data concern BetT3, which is PA14_69850 = PAO1 PA5291. BetT2 (PA3933) was not tested. Please move the row to PA5291.
+PA3933 is annotated involved_in GO:0071475 (IDA, PMID:21478341). The paper's hyperosmolar growth data concern BetT3, which is PA14_69850 = PAO1 PA5291. BetT2 (PA3933) was not tested. Please move the row to PA5291. Checked against the full text (PMC3133218) and by sequence: UniProt PA14_12990 is identical to Q9HX83 and PA14_69850 to Q9HTR3. PseudoCAP has no row from this paper on PA5291, so the paper's BetT3 appears to have been matched to the wrong PAO1 locus (the cause recorded as OTHER).
 
 ## 39. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
@@ -723,27 +724,7 @@ involved_in GO:0071978 (IMP) on PA5208 rests on a single mini-Tn5 insertion muta
 > and a PA5208 mutant that had a slight growth defect
 > — PMID:17158671
 
-## 59. WRONG_GENE_PRODUCT (PROBABLE, NOT_REPORTED)
-
-- **Record:** UniProtKB:Q9HTR3 enables GO:0015653 glycine betaine:proton symporter activity (IDA, PMID:18156257)
-- **Field:** DB_Object_ID
-- **Change:** check UniProtKB:Q9HTR3 (alternatives in the explanation)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA5291/PA5291-ai-review.yaml`
-
-PA5291 is annotated enables GO:0015653 glycine betaine:proton symporter activity (IDA, PMID:18156257). Malek et al. 2011 (PMID:21478341), from the same group, state that this paper showed BetT2 transports glycine betaine and BetT3 transports choline, and name BetT2 and BetT3 as PA14_12990 and PA14_69850. These are identical to PAO1 PA3933 and PA5291. The glycine betaine transport data therefore most likely belong to PA3933. Please check against the full text and move the row to PA3933 if confirmed.
-
-## 60. WRONG_GENE_PRODUCT (PROBABLE, NOT_REPORTED)
-
-- **Record:** UniProtKB:Q9HTR3 involved_in GO:0031460 glycine betaine transport (IDA, PMID:18156257)
-- **Field:** DB_Object_ID
-- **Change:** check UniProtKB:Q9HTR3 (alternatives in the explanation)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA5291/PA5291-ai-review.yaml`
-
-PA5291 is annotated involved_in GO:0031460 glycine betaine transport (IDA, PMID:18156257). As for the GO:0015653 row from the same paper, the glycine betaine transporter characterised there is BetT2, which is PA3933 (identical to PA14_12990), not BetT3 (PA5291, identical to PA14_69850). Please check and move the row to PA3933 if confirmed.
-
-## 61. WRONG_GENE_PRODUCT (SUSPECTED, NOT_REPORTED)
+## 59. WRONG_GENE_PRODUCT (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTJ9 involved_in GO:0043448 alkane catabolic process (IMP, PMID:14574114)
 - **Field:** DB_Object_ID
@@ -756,57 +737,36 @@ PseudoCAP annotates PA5359 (UniProtKB:Q9HTJ9) with GO:0043448 alkane catabolic p
 > Heterologous expression showed that the two alkane hydroxylase homologs of P. aeruginosa PAO1 (AlkB1 and AlkB2) oxidize C(12)-C(16)n-alkanes, while two rubredoxin (RubA1 and RubA2) and a rubredoxin reductase (RubB) homologs can replace their P. putida GPo1 counterparts in n-octane oxidation.
 > — PMID:14574114
 
-## 62. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 60. WRONG_GENE_PRODUCT (CONFIRMED, NOT_REPORTED)
 
-- **Record:** UniProtKB:Q9HTI8 enables GO:0005275 amine transmembrane transporter activity (IDA, PMID:19919675)
-- **Field:** GO_ID
-- **Change:** GO:0005275 → GO:0015418 (ABC-type quaternary ammonium compound transporting activity)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA5376/PA5376-ai-review.yaml`
+- **Record:** UniProtKB:Q9HTE2 involved_in GO:0006798 polyphosphate catabolic process (IMP, PMID:9734809)
+- **Field:** DB_Object_ID
+- **Change:** delete the record asserting UniProtKB:Q9HTE2
+- **Likely cause:** IDENTIFIER_TRANSPOSITION
+- **Recorded in:** `genes/PSEAE/PA5422/PA5422-ai-review.yaml`
 
-PA5376 (CbcV ATPase, Q9HTI8) is annotated GO:0005275 amine transmembrane transporter activity, IDA, PMID:19919675 (full text read). The substrates shown in that paper (choline, glycine betaine, L-carnitine) are quaternary ammonium compounds, which GO does not class as amines. GO:0015418 ABC-type quaternary ammonium compound transporting activity (contributes_to for an ATPase subunit) is the accurate term. This row co-seeds the PAINT IBD at PTN002466744.
+PseudoCAP annotates GO:0006798 polyphosphate catabolic process to PA5422 (UniProtKB:Q9HTE2) by IMP from PMID:9734809, alongside the GO:0008976 row reported separately. The gene attribution is wrong for the reasons given there: the paper's subject is PA5242 (UniProtKB:P0DP44, ppk), identified by its neighbour hemB (PA5243), and PA5422 is a 318-residue aldose-1-epimerase-family protein. This row is additionally wrong in direction. The paper reports that "ATP-dependent polyphosphate-synthesizing activity was drastically enhanced", i.e. synthesis, and the correctly attributed entry P0DP44 carries GO:0006799 polyphosphate biosynthetic process. No corrected gene product is given here because the row should not be recreated on PA5242 either: the catabolic term is not supported by this paper for any gene. Requested change: delete the row.
 
-## 63. WRONG_TERM (SUSPECTED, NOT_REPORTED)
+> ATP-dependent polyphosphate-synthesizing activity was drastically enhanced, confirming that the protein is a PPK.
+> — PMID:9734809
 
-- **Record:** UniProtKB:Q9HTI8 enables GO:0015419 ABC-type sulfate transporter activity (IDA, PMID:23763788)
-- **Field:** GO_ID
-- **Change:** check GO:0015419 (alternatives in the explanation)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA5376/PA5376-ai-review.yaml`
+## 61. WRONG_GENE_PRODUCT (CONFIRMED, NOT_REPORTED)
 
-PA5376 (CbcV, ATPase of the Cbc choline/betaine/carnitine ABC importer) is annotated GO:0015419 ABC-type sulfate transporter activity, IDA, PMID:23763788. The abstract describes P. syringae QAC bioreporters and plant choline and does not mention sulfate or PA5376. If the paper shows uptake of a sulfur-containing QAC (for example choline-O-sulfate), the row should be GO:0015418 ABC-type quaternary ammonium compound transporting activity, not a sulfate transporter. Only the abstract was read, hence SUSPECTED.
+- **Record:** UniProtKB:Q9HTE2 enables GO:0008976 polyphosphate kinase activity (IMP, PMID:9734809)
+- **Field:** DB_Object_ID
+- **Change:** delete the record asserting UniProtKB:Q9HTE2
+- **Likely cause:** IDENTIFIER_TRANSPOSITION
+- **Recorded in:** `genes/PSEAE/PA5422/PA5422-ai-review.yaml`
 
-## 64. WRONG_TERM (PROBABLE, NOT_REPORTED)
+PseudoCAP annotates GO:0008976 polyphosphate kinase activity to PA5422 (UniProtKB:Q9HTE2) by IMP from PMID:9734809. That paper reports the cloning of the P. aeruginosa polyphosphate kinase gene and locates it by its neighbour: "The gene immediately follows the hemB gene". In PAO1, hemB is PA5243, so the gene described is PA5242, which is UniProtKB:P0DP44 (PPK1_PSEAE, gene ppk, 690 aa, "Polyphosphate kinase"). PA5422 encodes a 318-residue protein of the aldose-1-epimerase family (Pfam PF01263; InterPro IPR025532, G6P_1-epimerase; PIRNR016020) with no polyphosphate kinase domain, and is less than half the length of the protein the paper describes. P0DP44 already carries GO:0008976 from this PMID with evidence code EXP, so deleting the PA5422 row loses no information. The two locus tags differ by a transposition of their middle digits, which is the likely mechanism. Requested change: delete the row from PA5422.
 
-- **Record:** UniProtKB:Q9HTI8 involved_in GO:0031457 glycine betaine catabolic process (IDA, PMID:19919675)
-- **Field:** GO_ID
-- **Change:** check GO:0031457 (alternatives in the explanation)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA5376/PA5376-ai-review.yaml`
+> The gene immediately follows the hemB gene encoding porphobilinogen synthase responsible for heme synthesis.
+> — PMID:9734809
 
-PA5376 (CbcV, ABC ATPase) is annotated involved_in GO:0031457 glycine betaine catabolic process (IDA, PMID:19919675). The evidence is that cbc transposon mutants cannot grow on betaine as sole carbon source, which reflects loss of uptake. The transporter does not catalyse any catabolic step. Consider removing the row, keeping GO:0031460 glycine betaine transport.
+> The predicted amino acid sequence of P. aeruginosa PPK is similar to those of PPKs previously characterized except that it possesses an extra stretch of 46 amino acids at its N-terminus
+> — PMID:9734809
 
-## 65. WRONG_TERM (PROBABLE, NOT_REPORTED)
-
-- **Record:** UniProtKB:Q9HTI8 involved_in GO:0042426 choline catabolic process (IDA, PMID:19919675)
-- **Field:** GO_ID
-- **Change:** check GO:0042426 (alternatives in the explanation)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA5376/PA5376-ai-review.yaml`
-
-PA5376 (CbcV, ABC ATPase) is annotated involved_in GO:0042426 choline catabolic process (IDA, PMID:19919675 and PMID:21478341). Both papers show that Cbc is needed for growth on choline as a carbon source, which reflects choline uptake. The transporter performs no catabolic step. GO:0015871 choline transport already captures its role. Consider removing these rows.
-
-## 66. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
-
-- **Record:** UniProtKB:Q9HTI8 involved_in GO:1902603 carnitine transmembrane transport (IDA, PMID:21478341)
-- **Field:** DB:Reference
-- **Change:** check PMID:21478341 (alternatives in the explanation)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/PA5376/PA5376-ai-review.yaml`
-
-GO:1902603 carnitine transmembrane transport for PA5376 (Q9HTI8) cites PMID:21478341 (Malek et al. 2011), whose abstract deals only with choline uptake by CbcXWV, BetT1 and BetT3. The carnitine evidence for Cbc is in PMID:19919675 (PA14 cbc mutants, including PA5376::tn, fail to grow on carnitine) and PMID:29517479. If PMID:21478341 has no carnitine data, please re-key the row. Only the abstract was read.
-
-## 67. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 62. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTB5 involved_in GO:0009243 O antigen biosynthetic process (IDA, PMID:23341552)
 - **Field:** Evidence_Code
@@ -819,7 +779,7 @@ The PseudoCAP row PA5455 GO:0009243 IDA PMID:23341552 rests on in-frame deletion
 > We have presented evidence from genetic studies that the genes in the pa5455-pa5459 cluster are involved in CPA biosynthesis in P. aeruginosa.
 > — PMID:23341552
 
-## 68. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 63. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTB5 enables GO:0016757 glycosyltransferase activity (IDA, PMID:23341552)
 - **Field:** Evidence_Code
@@ -832,7 +792,7 @@ The PseudoCAP row PA5455 GO:0016757 IDA PMID:23341552 has no direct assay behind
 > Gene sequence analysis indicated that pa5455 and pa5456 encode putative glycosyltransferases.
 > — PMID:23341552
 
-## 69. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 64. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTB4 involved_in GO:0009243 O antigen biosynthetic process (IDA, PMID:23341552)
 - **Field:** Evidence_Code
@@ -845,7 +805,7 @@ The PseudoCAP row PA5456 GO:0009243 IDA PMID:23341552 rests on in-frame deletion
 > We have presented evidence from genetic studies that the genes in the pa5455-pa5459 cluster are involved in CPA biosynthesis in P. aeruginosa.
 > — PMID:23341552
 
-## 70. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 65. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTB4 enables GO:0016757 glycosyltransferase activity (IDA, PMID:23341552)
 - **Field:** Evidence_Code
@@ -858,7 +818,7 @@ The PseudoCAP row PA5456 GO:0016757 IDA PMID:23341552 has no direct assay behind
 > Gene sequence analysis indicated that pa5455 and pa5456 encode putative glycosyltransferases.
 > — PMID:23341552
 
-## 71. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 66. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTB2 involved_in GO:0009243 O antigen biosynthetic process (IDA, PMID:23341552)
 - **Field:** Evidence_Code
@@ -871,7 +831,7 @@ The PseudoCAP GO:0009243 row for PA5458 (PMID:23341552, Hao et al. 2013) uses ID
 > Mutation of the putative acetyltransferase-encoding gene pa5458 did not abrogate polysaccharide production
 > — PMID:23341552
 
-## 72. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
+## 67. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HT75 enables GO:0000006 high-affinity zinc transmembrane transporter activity (ISS, PMID:9680209)
 - **Field:** Qualifier
@@ -883,7 +843,7 @@ A periplasmic solute-binding protein does not by itself enable transmembrane tra
 > The Znu permease comprises the solute-binding protein (SBP) ZnuA, and an ABC transporter, which consists of ZnuB
 > — PMID:26290475
 
-## 73. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 68. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HT75 involved_in GO:0010043 response to zinc ion (IMP, PMID:24086521)
 - **Field:** GO_ID
@@ -895,7 +855,7 @@ Full text read: the znuA evidence is a growth defect of the deletion mutant unde
 > the inability to express the putative znuA, znuB, or znuC genes resulted in decreased growth at 18 hours
 > — PMID:24086521
 
-## 74. WRONG_TERM (SUSPECTED, NOT_REPORTED)
+## 69. WRONG_TERM (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HT69 involved_in GO:1903810 L-histidine import across plasma membrane (IMP, PMID:18833300)
 - **Field:** GO_ID
@@ -908,7 +868,7 @@ The PseudoCAP IMP GO:1903810 L-histidine import across plasma membrane row on PA
 > A PA5504 knockout affected growth on L-histidine as a carbon source (Table 2), however its expression was not induced by this compound.
 > — PMID:18833300
 
-## 75. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 70. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTB8 involved_in GO:0015920 lipopolysaccharide transport (IMP, PMID:9244257)
 - **Field:** GO_ID
@@ -921,7 +881,7 @@ involved_in GO:0015920 lipopolysaccharide transport (IMP, PMID:9244257) on Wzm (
 > The inability of the polymer to cross the inner membrane resulted in the accumulation of cytoplasmic A-band polysaccharide.
 > — PMID:9244257
 
-## 76. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 71. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HY69 enables GO:0004467 long-chain fatty acid-CoA ligase activity (IDA, PMID:16797016)
 - **Field:** GO_ID
@@ -936,7 +896,7 @@ The PseudoCAP IDA annotation assigns long-chain fatty acid-CoA ligase activity t
 > These studies suggest that Alg44 may act as a co-polymerase in concert with Alg8, the major GT
 > — PMID:18524915
 
-## 77. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 72. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P23747 involved_in GO:0042121 alginic acid biosynthetic process (IMP, PMID:1738315)
 - **Field:** GO_ID
@@ -949,7 +909,7 @@ PA5483/algB is annotated to alginic acid biosynthetic process (IMP, PMID:1738315
 > regulates the expression of the alginate biosynthetic gene, algD, thereby resulting in increased expression of alginate in mucoid P. aeruginosa
 > — PMID:1738315
 
-## 78. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
+## 73. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:P23747 involved_in GO:0045862 positive regulation of proteolysis (IMP, PMID:23024348)
 - **Field:** REFERENCE
@@ -962,7 +922,7 @@ PMID:23024348 (full text read) has no proteolysis data, and its elastase data sh
 > Our results also indicate that AlgW-mediated MucA degradation required algB and rpoN in the kinB mutant.
 > — PMID:19168621
 
-## 79. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
+## 74. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:P23747 involved_in GO:1900232 negative regulation of single-species biofilm formation on inanimate substrate (IMP, PMID:19168621)
 - **Field:** REFERENCE
@@ -975,7 +935,7 @@ The full text of PMID:19168621 has no biofilm experiments or mentions. The row n
 > Our results also indicate that AlgW-mediated MucA degradation required algB and rpoN in the kinB mutant.
 > — PMID:19168621
 
-## 80. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 75. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P23747 involved_in GO:1900378 positive regulation of secondary metabolite biosynthetic process (IMP, PMID:23024348)
 - **Field:** GO_ID
@@ -991,7 +951,7 @@ Full text of PMID:23024348 read: algB deletion in PA14 kinB restores wild-type p
 > These data suggest that in the absence of KinB, AlgB must be phosphorylated in order to repress virulence.
 > — PMID:23024348
 
-## 81. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 76. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P23747 involved_in GO:2000147 positive regulation of cell motility (IMP, PMID:23024348)
 - **Field:** GO_ID
@@ -1004,7 +964,7 @@ Full text of PMID:23024348 read: complementing algB in the algB kinB double muta
 > Episomal complementation of the algB deletion in the PA14Δ algB Δ kinB strain restores the reduced pyocyanin, elastase, and motility phenotypes of the PA14Δ kinB strain
 > — PMID:23024348
 
-## 82. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 77. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q06749 enables GO:0004794 threonine deaminase activity (IDA, PMID:8370530)
 - **Field:** GO_ID
@@ -1017,7 +977,7 @@ The PseudoCAP IDA row for AlgL (Q06749) from PMID:8370530 uses GO:0004794 threon
 > The purified protein was shown to have alginate lyase activity.
 > — PMID:8370530
 
-## 83. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 78. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XCZ2 involved_in GO:0000160 phosphorelay signal transduction system (IDA, PMID:8790418)
 - **Field:** Evidence_Code
@@ -1030,7 +990,7 @@ The PseudoCAP row codes GO:0000160 to AlgZ/FimS as IDA from PMID:8790418. The ab
 > FimS and AlgR are representative of a new subclass of two-component transmitter-receiver regulatory systems.
 > — PMID:8790418
 
-## 84. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 79. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XCW9 located_in GO:0009276 Gram-negative-bacterium-type cell wall (IMP, PMID:9835532)
 - **Field:** GO_ID
@@ -1043,7 +1003,7 @@ The PseudoCAP IMP row placing PA4522/ampD in GO:0009276 Gram-negative-bacterium-
 > The ampD product transcomplemented Escherichia coli ampD mutants to wild-type beta-lactamase expression.
 > — PMID:9835532
 
-## 85. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 80. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XCW9 involved_in GO:0033252 regulation of beta-lactamase activity (IMP, PMID:9835532)
 - **Field:** GO_ID
@@ -1056,7 +1016,7 @@ The PseudoCAP IMP row annotates PA4522/ampD to GO:0033252 regulation of beta-lac
 > The ampD product transcomplemented Escherichia coli ampD mutants to wild-type beta-lactamase expression.
 > — PMID:9835532
 
-## 86. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 81. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HT86 located_in GO:0009276 Gram-negative-bacterium-type cell wall (IDA, PMID:23510438)
 - **Field:** Evidence_Code
@@ -1069,7 +1029,7 @@ The PseudoCAP row PA5485/ampDh2 located_in GO:0009276 is coded IDA from PMID:235
 > If AmpDh2 and AmpDh3 were to be periplasmic enzymes, as proposed in this report
 > — PMID:23510438
 
-## 87. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 82. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HT86 involved_in GO:0033252 regulation of beta-lactamase activity (IDA, PMID:23510438)
 - **Field:** GO_ID
@@ -1082,7 +1042,7 @@ The PseudoCAP IDA row annotates PA5485/ampDh2 to GO:0033252 regulation of beta-l
 > Nonetheless, the marginal activity in turnover of metabolite 1 with AmpDh2 and AmpDh3 explains the stepwise effect observed in augmenting derepression of AmpC β-lactamase by eliminations of these enzymes one-by-one.
 > — PMID:23510438
 
-## 88. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 83. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I5D1 located_in GO:0009276 Gram-negative-bacterium-type cell wall (IDA, PMID:23510438)
 - **Field:** Evidence_Code
@@ -1095,7 +1055,7 @@ The PseudoCAP row PA0807/ampDh3 located_in GO:0009276 is coded IDA from PMID:235
 > the cellular location of AmpDh3 is currently unknown
 > — PMID:23510438
 
-## 89. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 84. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I5D1 involved_in GO:0033252 regulation of beta-lactamase activity (IDA, PMID:23510438)
 - **Field:** GO_ID
@@ -1108,7 +1068,7 @@ The PseudoCAP IDA row annotates PA0807/ampDh3 to GO:0033252 regulation of beta-l
 > Nonetheless, the marginal activity in turnover of metabolite 1 with AmpDh2 and AmpDh3 explains the stepwise effect observed in augmenting derepression of AmpC β-lactamase by eliminations of these enzymes one-by-one.
 > — PMID:23510438
 
-## 90. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 85. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XCT7 located_in GO:0009276 Gram-negative-bacterium-type cell wall (IMP, PMID:20713660)
 - **Field:** GO_ID
@@ -1121,7 +1081,7 @@ GO:0009276 Gram-negative-bacterium-type cell wall (defined as the peptidoglycan 
 > suggesting that AmpG has only 14 TM helices (Figures 4C and 4D).
 > — PMID:21192796
 
-## 91. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 86. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XCT7 involved_in GO:0033252 regulation of beta-lactamase activity (IMP, PMID:20713660)
 - **Field:** GO_ID
@@ -1137,7 +1097,7 @@ GO:0033252 regulation of beta-lactamase activity is annotated to the AmpG permea
 > Benzyl-penicillin dependent induction of PampC-lacZ was lost in PAOampG or PAOampP (Figure 6).
 > — PMID:21192796
 
-## 92. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 87. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P24734 involved_in GO:0006355 regulation of DNA-templated transcription (IDA, PMID:22479525)
 - **Field:** Evidence_Code
@@ -1150,7 +1110,7 @@ involved_in GO:0006355 on ampR (PA4109) is coded IDA citing Balasubramanian et a
 > Studies aimed at identifying the direct targets of AmpR are needed to identify genes that are directly regulated by AmpR
 > — PMID:22479525
 
-## 93. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 88. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:P18275 enables GO:0043858 arginine:ornithine antiporter activity (IMP, PMID:1311296)
 - **Field:** Evidence_Code
@@ -1162,7 +1122,7 @@ enables GO:0043858 (IMP) on PA5170 arcD cites Verhoogt et al. 1992, which measur
 > The ArcD protein was reconstituted in proteoliposomes after detergent solubilization of membrane vesicles.
 > — PMID:1311296
 
-## 94. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 89. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P22567 enables GO:0004358 L-glutamate N-acetyltransferase activity, acting on acetyl-L-ornithine as donor (IMP, PMID:22447897)
 - **Field:** GO_ID
@@ -1178,7 +1138,7 @@ Full text of PMID:22447897 read: the assay mixture contains L-glutamate and acet
 > 30 mM l -glutamate (sodium salt), 4 mM acetyl-CoA, and, when used, the indicated concentrations of arginine hydrochloride
 > — PMID:22447897
 
-## 95. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 90. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I025 enables GO:0004114 3',5'-cyclic-nucleotide phosphodiesterase activity (IDA, PMID:16121184)
 - **Change:** GO:0004114 → GO:0071111 (cyclic-guanylate-specific phosphodiesterase activity)
@@ -1190,7 +1150,7 @@ The cited abstract (PMID:16121184) names c-di-GMP as the substrate whose hydroly
 > membranes from arr mutants had diminished c-di-GMP phosphodiesterase activity
 > — PMID:16121184
 
-## 96. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 91. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:P51691 enables GO:0008081 phosphoric diester hydrolase activity (IDA, PMID:19554727)
 - **Field:** GO_ID
@@ -1202,7 +1162,7 @@ The PseudoCAP IDA on PA0183 atsA to PMID:19554727 uses GO:0008081 phosphoric die
 > Besides hydrolyzing sulfate monoesters, this enzyme catalyzes the hydrolysis of phosphate monoesters with multiple turnovers
 > — PMID:19554727
 
-## 97. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 92. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HZW2 involved_in GO:0046247 terpene catabolic process (IDA, PMID:20487029)
 - **Field:** GO_ID
@@ -1215,7 +1175,7 @@ PseudoCAP IDA row for PA2885/atuR, GO:0046247 terpene catabolic process, from PM
 > AtuR was identified as a repressor of the atu gene cluster expression by (1) amino acid similarity to TetR repressor family members, (2) constitutive expression of Atu proteins in the atuR insertion mutant and (3) specific binding of purified AtuR homodimers to the atuR-atuA intergenic region in electrophoretic mobility shift assay (EMSA)
 > — PMID:20487029
 
-## 98. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 93. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTI9 involved_in GO:0042426 choline catabolic process (IDA, PMID:21478341)
 - **Field:** GO_ID
@@ -1225,7 +1185,7 @@ PseudoCAP IDA row for PA2885/atuR, GO:0046247 terpene catabolic process, from PM
 
 PA5375 (BetT1, BCCT choline transporter) is annotated involved_in GO:0042426 choline catabolic process (IDA, PMID:21478341). The paper shows choline uptake by BetT1 and a lag on choline in the deletion mutant; the transporter performs no catabolic step. GO:0015871 choline transport describes its role. Consider replacing the row.
 
-## 99. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 94. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:P21175 involved_in GO:0042941 D-alanine transmembrane transport (IMP, PMID:18833300)
 - **Field:** GO_ID
@@ -1237,6 +1197,59 @@ GO:0042941 D-alanine transmembrane transport is annotated by IMP to the LIV-I bi
 
 > ITC experiments revealed binding with nanomolar affinities for the five ligands identified in the study by Hoshino et al. [58] (Figure 6A), whereas no binding was detected for l-Met and d-Ala.
 > — PMID:31627455
+
+## 95. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q9HTI8 enables GO:0005275 amine transmembrane transporter activity (IDA, PMID:19919675)
+- **Field:** GO_ID
+- **Change:** GO:0005275 → GO:0015418 (ABC-type quaternary ammonium compound transporting activity)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/cbcV/cbcV-ai-review.yaml`
+
+PA5376 (CbcV ATPase, Q9HTI8) is annotated GO:0005275 amine transmembrane transporter activity, IDA, PMID:19919675 (full text read). The substrates shown in that paper (choline, glycine betaine, L-carnitine) are quaternary ammonium compounds, which GO does not class as amines. GO:0015418 ABC-type quaternary ammonium compound transporting activity is the accurate term. This row co-seeds the PAINT IBD at PTN002466744.
+
+## 96. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q9HTI8 enables GO:0015419 ABC-type sulfate transporter activity (IDA, PMID:23763788)
+- **Field:** GO_ID
+- **Change:** GO:0015419 → GO:0015418 (ABC-type quaternary ammonium compound transporting activity)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/cbcV/cbcV-ai-review.yaml`
+
+The recovered PMID:23763788 Figure 5 reporter experiment supports CosX-dependent entry of choline-O-sulfate using the PAO1 CbcWV construct in P. syringae B728a. This is a sulfate ester carried as an organic quaternary ammonium cargo, not uptake of free inorganic sulfate. Repoint the substrate class to GO:0015418. The assay is cellular entry measured by a reporter, not purified flux or native PAO1 COS physiology; the earlier abstract-only uncertainty is superseded.
+
+## 97. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q9HTI8 involved_in GO:0031457 glycine betaine catabolic process (IDA, PMID:19919675)
+- **Field:** GO_ID
+- **Change:** check GO:0031457 (alternatives in the explanation)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/cbcV/cbcV-ai-review.yaml`
+
+PA5376 (CbcV, ABC ATPase) is annotated involved_in GO:0031457 glycine betaine catabolic process (IDA, PMID:19919675). The evidence is that cbc transposon mutants cannot grow on betaine as sole carbon source, which reflects loss of uptake. The transporter does not catalyse any catabolic step. Consider removing the row, keeping GO:0031460 glycine betaine transport.
+
+## 98. WRONG_TERM (PROBABLE, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q9HTI8 involved_in GO:0042426 choline catabolic process (IDA, PMID:19919675)
+- **Field:** GO_ID
+- **Change:** check GO:0042426 (alternatives in the explanation)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/cbcV/cbcV-ai-review.yaml`
+
+PA5376 (CbcV, ABC ATPase) is annotated involved_in GO:0042426 choline catabolic process (IDA, PMID:19919675 and PMID:21478341). Both papers show that Cbc is needed for growth on choline as a carbon source, which reflects choline uptake. The transporter performs no catabolic step. GO:0015871 choline transport already captures its role. Consider removing these rows.
+
+## 99. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q9HTI8 involved_in GO:1902603 carnitine transmembrane transport (IDA, PMID:21478341)
+- **Field:** DB:Reference
+- **Change:** PMID:21478341 → PMID:19919675
+- **Likely cause:** UNKNOWN
+- **Recorded in:** `genes/PSEAE/cbcV/cbcV-ai-review.yaml`
+
+The full text of PMID:21478341 reports choline uptake assays and choline/glycine-betaine growth experiments, including PAO1 cbcXWV complementation of PA14 mutants. No carnitine experiment was identified in its Methods, Results or figure captions. Please check whether this carnitine row should cite PMID:19919675, which directly establishes CaiX-dependent carnitine uptake by the PAO1 CbcWV construct. The accepted function is unchanged; this is a citation-scope CHECK.
+
+> These transposon mutants also failed to grow on L-carnitine (Fig. S2), suggesting that carnitine is an additional substrate for this transporter.
+> — PMID:19919675
 
 ## 100. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
@@ -1268,7 +1281,7 @@ PA5377 (CbcW, ABC permease) is annotated involved_in GO:0031457 glycine betaine 
 
 PA5377 (CbcW, ABC permease) is annotated involved_in GO:0042426 choline catabolic process (IDA, PMID:19919675 and PMID:21478341). Both papers show that Cbc is needed for growth on choline as a carbon source, which reflects choline uptake. The permease does not perform any catabolic step. GO:0015871 choline transport already captures its role. Consider removing these rows.
 
-## 103. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+## 103. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTI7 involved_in GO:1902603 carnitine transmembrane transport (IDA, PMID:21478341)
 - **Field:** DB:Reference
@@ -1276,7 +1289,7 @@ PA5377 (CbcW, ABC permease) is annotated involved_in GO:0042426 choline cataboli
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/cbcW/cbcW-ai-review.yaml`
 
-GO:1902603 carnitine transmembrane transport for PA5377 (Q9HTI7) cites PMID:21478341 (Malek et al. 2011), whose abstract deals only with choline uptake by CbcXWV, BetT1 and BetT3. The carnitine evidence for CbcWV is in PMID:19919675 (PA14 cbc mutants fail to grow on carnitine, and PAO1 CbcWV restores CaiX-dependent carnitine uptake) and PMID:29517479. If PMID:21478341 has no carnitine data, please re-key the row. It is the sole seed of the PAINT IBD at PTN000766131.
+The full text of PMID:21478341 reports choline uptake assays and choline/glycine-betaine growth experiments, including PAO1 cbcXWV complementation of PA14 mutants. No carnitine experiment was identified in its Methods, Results or figure captions. Please check whether this carnitine row should cite PMID:19919675, which directly establishes CaiX-dependent carnitine uptake by the PAO1 CbcWV construct. The accepted function is unchanged; this is a citation-scope CHECK.
 
 > These transposon mutants also failed to grow on L-carnitine (Fig. S2), suggesting that carnitine is an additional substrate for this transporter.
 > — PMID:19919675
@@ -1298,8 +1311,8 @@ involved_in GO:0000160 phosphorelay signal transduction system (IDA) on PA4725 (
 
 - **Record:** UniProtKB:Q9I3N5 involved_in GO:0002049 pyoverdine biosynthetic process (IMP, PMID:16824107)
 - **Field:** DB:Reference
-- **Change:** PMID:16824107 → PMID:18174132 (Baert et al. 2008, Multiple phenotypic alterations caused by a c-type cytochrome maturation ccmC gene mutation in Pseudomonas aeruginosa)
-- **Likely cause:** IDENTIFIER_TRANSPOSITION
+- **Change:** check PMID:16824107 (alternatives in the explanation)
+- **Likely cause:** UNKNOWN
 - **Recorded in:** `genes/PSEAE/ccmC/ccmC-ai-review.yaml`
 
 The abstract of PMID:16824107 (Feissner et al. 2006, Kranz lab) describes a biochemical study of the CcmA2B1C1 complex releasing holo-CcmE. It does not name the organism (MEDLINE indexes it under Escherichia coli, not Pseudomonas) and describes no mutant phenotypes; the full text was not available here. The pyoverdine, catalase, rhamnolipid, swarming and twitching phenotypes annotated to PA1477 are those of the P. aeruginosa ccmC mutant in the abstract of PMID:18174132. All six PseudoCAP IMP rows on PA1477 dated 2019-03-11 cite PMID:16824107 and should be re-keyed.
@@ -1320,8 +1333,8 @@ enables GO:0004096 catalase activity (IMP) on PA1477 ccmC records the mutant phe
 
 - **Record:** UniProtKB:Q9I3N5 enables GO:0004096 catalase activity (IMP, PMID:16824107)
 - **Field:** DB:Reference
-- **Change:** PMID:16824107 → PMID:18174132
-- **Likely cause:** IDENTIFIER_TRANSPOSITION
+- **Change:** check PMID:16824107 (alternatives in the explanation)
+- **Likely cause:** UNKNOWN
 - **Recorded in:** `genes/PSEAE/ccmC/ccmC-ai-review.yaml`
 
 The abstract of PMID:16824107 describes CcmABC biochemistry (MEDLINE indexes it under E. coli) and reports no catalase activity; the full text was not available here. The phenotype is reported for the P. aeruginosa ccmC mutant in PMID:18174132.
@@ -1366,8 +1379,8 @@ Reduced swarming in a ccmC mutant (PMID:18174132) is an indirect phenotype. The 
 
 - **Record:** UniProtKB:Q9I3N2 involved_in GO:0002049 pyoverdine biosynthetic process (IMP, PMID:16824107)
 - **Field:** DB:Reference
-- **Change:** PMID:16824107 → PMID:18174132 (Baert et al. 2008, Multiple phenotypic alterations caused by a c-type cytochrome maturation ccmC gene mutation in Pseudomonas aeruginosa)
-- **Likely cause:** IDENTIFIER_TRANSPOSITION
+- **Change:** check PMID:16824107 (alternatives in the explanation)
+- **Likely cause:** UNKNOWN
 - **Recorded in:** `genes/PSEAE/ccmF/ccmF-ai-review.yaml`
 
 The abstract of PMID:16824107 (Feissner et al. 2006) describes the CcmA2B1C1 complex that releases holo-CcmE; it does not mention CcmF or any mutant phenotype, and its full text could not be read here. All five PseudoCAP IMP rows on PA1480 dated 2019-03-11 (pyoverdine, catalase, twitching, swimming, swarming) cite it, as do the matching rows on ccmC (PA1477). The P. aeruginosa ccmF insertion mutant and its pleiotropic phenotypes are described in PMID:18174132. Please re-key all five rows.
@@ -1621,7 +1634,7 @@ PseudoCAP IMP glycolipid biosynthetic process on EstA (O33407, PA5112) from PMID
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/estA/estA-ai-review.yaml`
 
-PseudoCAP IMP bacterial-type flagellum-dependent cell motility on EstA (O33407) from PMID:17631636. The estA mutant loses swimming, swarming and twitching alike, so the defect is not specific to the flagellar machinery, and EstA (a surface esterase) is not a flagellar component. The phenotype is most plausibly pleiotropic, so even the general cell motility term (annotated by UniProt from the same paper) overstates participation; please check whether the row should be removed.
+PseudoCAP IMP bacterial-type flagellum-dependent cell motility on EstA (O33407) from PMID:17631636. The estA mutant loses swimming, swarming and twitching alike, so the defect is not specific to the flagellar machinery, and EstA (a surface esterase) is not a flagellar component. The paper's own transcriptome data find type IV pilus genes downregulated but no change in flagellar gene expression, so the flagellum-dependent term names the one motility form the authors cannot account for, and rhamnolipid add-back does not restore motility. Even the general cell motility term (annotated by UniProt from the same paper) overstates participation; please check whether the row should be removed.
 
 ## 133. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
@@ -1654,7 +1667,7 @@ The IMP row codes ExsA to GO:0050709 negative regulation of protein secretion fr
 - **Likely cause:** IDENTIFIER_TRANSPOSITION
 - **Recorded in:** `genes/PSEAE/fimT/fimT-ai-review.yaml`
 
-enables GO:0016888 "DNA endonuclease activity, producing 5'-phosphomonoesters" (IDA, PMID:18174131, 2019-03-11) on PA4549 fimT (Q9HVN0). A live QuickGO query shows the four PseudoCAP rows from this paper, all dated 2019-03-11: PA4526 pilB and PA0395 pilT to GO:0016887 ATP hydrolysis activity, and PA0396 pilU and PA4549 fimT to GO:0016888, the next GO id. GO:0016888 is the same keying slip already reported for the pilU row. FimT is a GspH-family minor pilin with no nuclease domain, so GO:0016888 is wrong for it. GO:0016887 is not the correction here either, because FimT is not an ATPase; see the companion WRONG_GENE_PRODUCT defect, which asks for the row to be deleted.
+enables GO:0016888 "DNA endonuclease activity, producing 5'-phosphomonoesters" (IDA, PMID:18174131, 2019-03-11) on PA4549 fimT (Q9HVN0). A live QuickGO query shows the four PseudoCAP rows from this paper, all dated 2019-03-11: PA4526 pilB and PA0395 pilT to GO:0016887 ATP hydrolysis activity, and PA0396 pilU and PA4549 fimT to GO:0016888, the next GO id. GO:0016888 is the same keying slip already reported for the pilU row. FimT is a GspH-family minor pilin with no nuclease domain, so GO:0016888 is wrong for it. GO:0016887 is not the correction here either, because FimT is not an ATPase; see the companion WRONG_GENE_PRODUCT defect, which asks whether the row belongs on fimT at all.
 
 > Assay of purified 6xHis-tagged PilB, PilT and PilU from P. aeruginosa showed that all three proteins have ATPase activities in vitro.
 > — PMID:18174131
@@ -1663,11 +1676,11 @@ enables GO:0016888 "DNA endonuclease activity, producing 5'-phosphomonoesters" (
 
 - **Record:** UniProtKB:Q9HVN0 enables GO:0016888 DNA endonuclease activity, producing 5'-phosphomonoesters (IDA, PMID:18174131)
 - **Field:** DB_Object_ID
-- **Change:** delete the record asserting UniProtKB:Q9HVN0
+- **Change:** check UniProtKB:Q9HVN0 (alternatives in the explanation)
 - **Likely cause:** UNKNOWN
 - **Recorded in:** `genes/PSEAE/fimT/fimT-ai-review.yaml`
 
-The PA4549 fimT row enables GO:0016888 (IDA, PMID:18174131) appears to be a duplicate of the PA0396 pilU row (same paper, same wrong GO id, same date) attached to the wrong gene product. Chiang et al. 2008 purified and mutated the type IV pilus NTPases PilB, PilT and PilU (stated in the abstract); FimT is a minor pilin, not an NTPase, and is not mentioned in the abstract. Since pilU already has its own row (separately reported for repointing to GO:0016887), please delete the fimT row rather than repoint it. We could read only the abstract; if the full text does report an experiment on FimT, please re-key the row to the term that experiment supports.
+The PA4549 fimT row enables GO:0016888 (IDA, PMID:18174131) appears to be a duplicate of the PA0396 pilU row (same paper, same wrong GO id, same date) attached to the wrong gene product. Chiang et al. 2008 purified and mutated the type IV pilus NTPases PilB, PilT and PilU (stated in the abstract); FimT is a minor pilin, not an NTPase, and is not mentioned in the abstract. Since pilU already has its own row (separately reported for repointing to GO:0016887), please check whether the fimT row should exist. We could read only the abstract: if the paper reports no experiment on FimT the row should be deleted rather than repointed, and if it does, re-keyed to the term that experiment supports.
 
 > In Pseudomonas aeruginosa, PilB and PilT are bipolar proteins belonging to the secretion NTPase superfamily, and power pilus extension and retraction, respectively, while the unipolar PilT paralogue PilU supports pilus retraction in an unknown manner.
 > — PMID:18174131
@@ -2310,15 +2323,15 @@ PseudoCAP IMP row for PA4600/nfxB, GO:0032410 negative regulation of transporter
 > the cloned nfxB gene repressed synthesis of a mexC-lacZ fusion in Escherichia coli
 > — PMID:8878035
 
-## 186. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 186. WRONG_TERM (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HT74 involved_in GO:1900376 regulation of secondary metabolite biosynthetic process (IMP, PMID:12426334)
 - **Field:** GO_ID
-- **Change:** delete the record asserting GO:1900376
+- **Change:** check GO:1900376 (alternatives in the explanation)
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/np20/np20-ai-review.yaml`
 
-PseudoCAP IMP row for PA5499/np20 (Q9HT74), GO:1900376 regulation of secondary metabolite biosynthetic process, from PMID:12426334 (Gallagher et al. 2002). The full text reports an np20 transposon mutant from a pyocyanin-deficiency screen with reduced transcription of several quorum-sensing-controlled genes; it does not test whether Np20 acts on phenazine or other secondary-metabolite genes. Np20 was later shown to be Zur, a zinc-responsive repressor of the znuABC zinc uptake genes (PMID:24086521). The row records an indirect, pleiotropic phenotype. Requested change: delete the row. This row also seeds the PTN002112386 GO:1900376 IBD. PROBABLE because the indirectness is an inference from the absence of a mechanism and from the protein's known function.
+PseudoCAP IMP row for PA5499/np20 (Q9HT74), GO:1900376 regulation of secondary metabolite biosynthetic process, from PMID:12426334 (Gallagher et al. 2002). The full text reports an np20 transposon mutant from a pyocyanin-deficiency screen with reduced transcription of several quorum-sensing-controlled genes; it does not test whether Np20 acts on phenazine or other secondary-metabolite genes. Np20 was later shown to be Zur, a zinc-responsive repressor of the znuABC zinc uptake genes (PMID:24086521). The row records an indirect, pleiotropic phenotype. Requested change: check whether the row should stay, since the phenotype was observed but is probably indirect. This row also seeds the PTN002112386 GO:1900376 IBD, an 83-leaf Fur superfamily node. SUSPECTED because the indirectness is an inference from the absence of a mechanism and from the protein's known function.
 
 > Third, mutations in the putative regulators np20 and PA3946 reduced transcription of a number of quorum sensing-controlled genes, showing that these functions participate in the quorum-sensing regulatory network.
 > — PMID:12426334
@@ -2665,7 +2678,7 @@ PA0844 (PlcH) is cargo of the Xcp type II secretion system, not a component of i
 > two substrates for the Pseudomonas aeruginosa secreton, both phospholipases, use the twin-arginine translocation (Tat) system
 > — PMID:11726509
 
-## 213. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
+## 213. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P06200 involved_in GO:0044179 hemolysis in another organism (IMP, PMID:23667230)
 - **Field:** DB:Reference
@@ -2682,11 +2695,11 @@ involved_in GO:0044179 hemolysis in another organism (IMP) on PA0844 cites Jacks
 
 - **Record:** UniProtKB:Q9HYC2 enables GO:0004630 D-type glycerophospholipase activity (IMP, PMID:24832454)
 - **Field:** DB:Reference
-- **Change:** PMID:24832454 → PMID:23552891 (Diverse type VI secretion phospholipases are functionally plastic antibacterial effectors (Russell et al. 2013; PldA = Tle5PA, purified-enzyme assay))
+- **Change:** check PMID:24832454 (alternatives in the explanation)
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/pldA/pldA-ai-review.yaml`
 
-The PseudoCAP IMP row for PA3487/pldA on GO:0004630 cites PMID:24832454, whose abstract states that the work characterises PldB, the paralogous phospholipase D effector encoded at PA5089. The same row with the same PMID is also present on PA5089, where it belongs. The annotated activity is correct for PldA, but its own evidence is elsewhere: PMID:23552891 shows purified PldA (Tle5PA) releasing choline from phosphatidylcholine with a requirement for His855, and PMID:11136451 reports calcium-regulated PLD activity for cloned pldA. Requested change: re-point the reference to PMID:23552891 (or PMID:11136451), and consider raising the evidence code from IMP accordingly. Filed as PROBABLE because only the abstract of PMID:24832454 is available; the full text might also contain PldA experiments.
+The PseudoCAP IMP row for PA3487/pldA on GO:0004630 cites PMID:24832454, whose abstract states that the work characterises PldB, the paralogous phospholipase D effector encoded at PA5089. The same row with the same PMID is also present on PA5089, where it belongs. The annotated activity is correct for PldA, but its own evidence is elsewhere: PMID:23552891 shows purified PldA (Tle5PA) releasing choline from phosphatidylcholine with a requirement for His855, and PMID:11136451 reports calcium-regulated PLD activity for cloned pldA. Please check whether the full text of PMID:24832454 also assays PldA; if it does not, re-point the reference to PMID:23552891 (or PMID:11136451) and consider raising the evidence code from IMP accordingly. Filed as PROBABLE/CHECK because only the abstract of PMID:24832454 is available (its title and abstract foreground the paralog PldB), so the full text might also contain PldA experiments.
 
 > Here we describe the characterization of a P. aeruginosa H3-T6SS-dependent phospholipase D effector, PldB, and its three tightly linked cognate immunity proteins.
 > — PMID:24832454
@@ -2782,6 +2795,33 @@ PseudoCAP IDA rows GO:0006099 and GO:0036440 for PA0795/prpC (Q9I5E3) cite Mitch
 
 ## 222. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
 
+- **Record:** UniProtKB:Q9I1N7 involved_in GO:0044010 single-species biofilm formation (IDA, PMID:19659934)
+- **Field:** Evidence_Code
+- **Change:** check IDA (alternatives in the explanation)
+- **Recorded in:** `genes/PSEAE/pslB/pslB-ai-review.yaml`
+
+PseudoCAP annotates GO:0044010 single-species biofilm formation to PA2232 (UniProtKB:Q9I1N7) with evidence code IDA from PMID:19659934. Two things are worth checking. First, all of the attachment and Psl-production data in that paper are mutant phenotypes (microtiter-plate attachment, immunoblot and ELISA on deletion strains), which is IMP rather than IDA. Second, and more substantially, the paper states that the pslB single mutant has no phenotype: "deletion of pslB, pslM, pslN, or pslO did not result in an observable attachment defect compared to PAO1", and the pslB mutant "showed abundant attachment both at the air-liquid interface and submerged regions of the coverslip". The loss of Psl and of attachment is seen only in the pslB wbpW double mutant, which the authors interpret as showing that WbpW substitutes for PslB. Raised as a query rather than a confirmed defect, since a curator may have annotated deliberately from the double-mutant figures; if so, the evidence code and a WITH/FROM naming wbpW would make that explicit.
+
+> Lastly, the pslB mutant showed abundant attachment both at the air-liquid interface and submerged regions of the coverslip (Fig.
+> — PMID:19659934
+
+> An ELISA quantifying Psl production by these same strains revealed a complete loss of Psl in extracts from the pslB wbpW double mutant but no significant decrease for extracts derived from the wbpW mutant (Fig.
+> — PMID:19659934
+
+## 223. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q9I1N7 enables GO:0050089 mannose isomerase activity (IMP, PMID:19659934)
+- **Field:** GO_ID
+- **Change:** GO:0050089 → GO:0004476 (mannose-6-phosphate isomerase activity)
+- **Recorded in:** `genes/PSEAE/pslB/pslB-ai-review.yaml`
+
+PseudoCAP annotates GO:0050089 mannose isomerase activity to PA2232 (UniProtKB:Q9I1N7) by IMP from PMID:19659934. GO:0050089 is defined as "D-mannose = D-fructose" and corresponds to EC 5.3.1.7, acting on the free sugar. The cited paper describes a different reaction: it refers to "the phosphomannose isomerase (PMI) activity of PslB" and to PslB "functioning as a PMI/GMP". Phosphomannose isomerase is mannose-6-phosphate isomerase, EC 5.3.1.8, GO term GO:0004476. The UniProt entry agrees, giving the catalytic activity as "D-mannose 6-phosphate = D-fructose 6-phosphate" with EC 5.3.1.8, and the entry matches NCBIfam TIGR01479 (GMP_PMI), the curated model for the bifunctional guanylyltransferase/phosphomannose isomerase. GO:0004476 is already present on this gene as an IEA from the EC mapping. Requested change: repoint the GO term on this row from GO:0050089 to GO:0004476.
+
+> The lack of a Psl phenotype in the wbpW mutant demonstrates that PslB does not require WbpW for Psl synthesis and is capable of functioning as a PMI/GMP, in agreement with recently published PslB enzymatic data (Lee et al.
+> — PMID:19659934
+
+## 224. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+
 - **Record:** UniProtKB:Q9I1N6 involved_in GO:0044010 single-species biofilm formation (IDA, PMID:19659934)
 - **Field:** Evidence_Code
 - **Change:** ECO:0000314 → ECO:0000315 (mutant phenotype evidence used in manual assertion)
@@ -2792,7 +2832,7 @@ GO:0044010 single-species biofilm formation for PslC (PA2233, Q9I1N6) from PMID:
 > The same eleven strains that were deficient in attachment likewise did not produce detectable levels of Psl.
 > — PMID:19659934
 
-## 223. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 225. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XDA6 involved_in GO:1900378 positive regulation of secondary metabolite biosynthetic process (IMP, PMID:16109947)
 - **Field:** GO_ID
@@ -2805,7 +2845,7 @@ involved_in GO:1900378 positive regulation of secondary metabolite biosynthetic 
 > Therefore, PtrB is a new TTSS repressor that coordinates TTSS repression and pyocin synthesis under the stress of DNA damage.
 > — PMID:16109947
 
-## 224. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 226. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P72131 enables GO:0003950 NAD+ poly-ADP-ribosyltransferase activity (IMP, PMID:8843437)
 - **Field:** GO_ID
@@ -2821,7 +2861,7 @@ PseudoCAP IMP row for PA2258/ptxR, GO:0003950 NAD+ poly-ADP-ribosyltransferase a
 > both mutants showed a significant reduction in the level of exotoxin A activity
 > — PMID:8843437
 
-## 225. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 227. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I182 involved_in GO:0002049 pyoverdine biosynthetic process (IMP, PMID:12700264)
 - **Field:** Evidence_Code
@@ -2834,7 +2874,7 @@ PseudoCAP rows for PvdD (PA2399, Q9I182) GO:0002049 and GO:0003824, IMP, PMID:12
 > The first module of pvdD was overexpressed in Escherichia coli, and the protein product was purified.
 > — PMID:12700264
 
-## 226. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+## 228. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I182 involved_in GO:0002049 pyoverdine biosynthetic process (IMP, PMID:9770291)
 - **Field:** DB:Reference
@@ -2847,7 +2887,7 @@ PseudoCAP rows for PvdD (Q9I182) GO:0002049 and GO:0003824, IMP, PMID:9770291 (S
 > lasR mutants were not altered with respect to expression of the pvdD gene involved in the synthesis of the peptide portion of pyoverdine
 > — PMID:9770291
 
-## 227. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 229. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I181 involved_in GO:0002049 pyoverdine biosynthetic process (IMP, PMID:19854904)
 - **Field:** Evidence_Code
@@ -2860,7 +2900,7 @@ PseudoCAP rows for PvdJ (PA2400, Q9I181) GO:0002049 pyoverdine biosynthetic proc
 > The constructs were digested with StuI, AfaI, or AgeI to delete 483, 196, or 975 internal bp for generation of the Δ fpvA , Δ pvdJ , or Δ pvdL mutant, respectively.
 > — PMID:19854904
 
-## 228. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 230. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I194 located_in GO:0005737 cytoplasm (IDA, PMID:22498339)
 - **Field:** GO_ID
@@ -2873,7 +2913,7 @@ The PseudoCAP IDA row places PA2385/PvdQ in the cytoplasm from PMID:22498339 (Gu
 > Epifluorescence and TIRF imaging on cells expressing labelled PvdQ showed that this enzyme was uniformly distributed in the periplasm
 > — PMID:22498339
 
-## 229. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 231. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I191 involved_in GO:0002049 pyoverdine biosynthetic process (IMP, PMID:12686626)
 - **Field:** GO_ID
@@ -2889,7 +2929,7 @@ pvdR is a component of the PvdRT-OpmQ efflux pump, which exports pyoverdine from
 > Bacteria lacking this efflux pump accumulated PVD, or a fluorescent precursor, in the periplasm, due to their inability to efficiently secrete into the media newly synthesized PVD.
 > — PMID:21035449
 
-## 230. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 232. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I191 enables GO:0015562 efflux transmembrane transporter activity (IDA, PMID:19906986)
 - **Field:** Evidence_Code
@@ -2902,7 +2942,7 @@ The IDA row for pvdR (GO:0015562 efflux transmembrane transporter activity) cite
 > Conversely, PA2389 , PA2390 , and opmQ mutants accumulated five- to sixfold higher amounts of PVD than wild-type PAO1, suggesting an involvement of these genes in PVD export.
 > — PMID:19906986
 
-## 231. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 233. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I191 part_of GO:1990281 efflux pump complex (IDA, PMID:19906986)
 - **Field:** Evidence_Code
@@ -2915,7 +2955,7 @@ The IDA row for pvdR (GO:1990281 efflux pump complex) cites PMID:19906986 (Imper
 > Conversely, PA2389 , PA2390 , and opmQ mutants accumulated five- to sixfold higher amounts of PVD than wild-type PAO1, suggesting an involvement of these genes in PVD export.
 > — PMID:19906986
 
-## 232. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+## 234. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XCV1 involved_in GO:1900378 positive regulation of secondary metabolite biosynthetic process (IMP, PMID:15073293)
 - **Field:** DB:Reference
@@ -2928,7 +2968,7 @@ PseudoCAP IMP GO:1900378 on PA2426/pvdS cites Juhas et al. 2004, a study of the 
 > the vqsR mutant harboured less mRNA transcript for the production of siderophores
 > — PMID:15073293
 
-## 233. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 235. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I190 involved_in GO:0002049 pyoverdine biosynthetic process (IMP, PMID:12686626)
 - **Field:** GO_ID
@@ -2943,7 +2983,7 @@ The PseudoCAP IMP GO:0002049 pyoverdine biosynthetic process on PA2390 pvdT (PMI
 > Bacteria lacking this efflux pump accumulated PVD, or a fluorescent precursor, in the periplasm, due to their inability to efficiently secrete into the media newly synthesized PVD
 > — PMID:21035449
 
-## 234. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 236. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HU21 involved_in GO:0009244 lipopolysaccharide core region biosynthetic process (IDA, PMID:11065359)
 - **Field:** Evidence_Code
@@ -2955,7 +2995,7 @@ GO:0009244 for rmlC (Q9HU21, PA5164) is coded IDA to PMID:11065359. The abstract
 > Non-polar chromosomal rmlC mutants were generated in P. aeruginosa strains PAO1 (serotype O5) and PAK (serotype O6) and LPS extracted from the mutants was analysed by SDS-PAGE and Western immunoblotting.
 > — PMID:11065359
 
-## 235. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 237. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P45684 involved_in GO:0006355 regulation of DNA-templated transcription (IDA, PMID:10383954)
 - **Field:** Evidence_Code
@@ -2968,7 +3008,7 @@ PseudoCAP row for PA3622/rpoS (P45684), GO:0006355 regulation of DNA-templated t
 > In addition, the PAO1 rpoS mutant was hypersensitive to heat shock at 50°C, increased osmolarity, and prolonged exposure to high concentrations of H 2 O 2 .
 > — PMID:10383954
 
-## 236. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 238. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I2W5 enables GO:0016987 sigma factor activity (IDA, PMID:10438740)
 - **Field:** Evidence_Code
@@ -2981,7 +3021,7 @@ The PseudoCAP row for PA1776/sigX, GO:0016987 sigma factor activity from PMID:10
 > Comparison of sigX-disrupted and wild-type cell transcripts by primer extension indicated that monocistronic transcription of oprF occurs from two overlapping promoters
 > — PMID:10438740
 
-## 237. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 239. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I2W5 involved_in GO:0030307 positive regulation of cell growth (IMP, PMID:10438740)
 - **Field:** GO_ID
@@ -2994,7 +3034,7 @@ PseudoCAP IMP GO:0030307 positive regulation of cell growth on PA1776/sigX from 
 > which included a markedly reduced logarithmic-phase growth rate in rich medium
 > — PMID:10438740
 
-## 238. OTHER (SUSPECTED, NOT_REPORTED)
+## 240. OTHER (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HV35 enables GO:0004014 adenosylmethionine decarboxylase activity (IMP, PMID:22155771)
 - **Field:** Reference
@@ -3009,7 +3049,7 @@ The PseudoCAP IMP adenosylmethionine decarboxylase activity row for PA4773 cites
 > Mutation of PA4774
 > — PMID:22155771
 
-## 239. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
+## 241. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I6J4 involved_in GO:0046203 spermidine catabolic process (IMP, PMID:21622750)
 - **Field:** DB:Reference
@@ -3017,12 +3057,24 @@ The PseudoCAP IMP adenosylmethionine decarboxylase activity row for PA4773 cites
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/spuA/spuA-ai-review.yaml`
 
-The PseudoCAP IMP row for PA0297/spuA (spermidine catabolic process) cites Yao et al. 2011. Its abstract does not mention spuA, and in the full text (read online from PMC3147493, not cached) spuA/pauD1 appears only as a restatement of the laboratory's earlier result; the new mutants in that paper are pauA genes. The spuA mutant phenotype was reported by Lu et al. 2002 (PMID:12081945). The term is correct, so the PAINT IBD on PTN000230196 is unaffected. PROBABLE rather than CONFIRMED because the supplementary material was not checked.
+The PseudoCAP IMP row for PA0297/spuA (spermidine catabolic process) cites Yao et al. 2011. Its abstract does not mention spuA, and in the full text (read online from PMC3147493) Table 1 lists PA0297 as "pauD1 or spuA" and spuA/pauD1 appears only as a restatement of the laboratory's earlier result ("we reported previously that a lesion in pauD1 (spuA) causes a significant growth defect on Spd but not Put"); no spuA/pauD mutant is constructed or assayed here, the new mutants being pauA and bau genes. The spuA mutant spermidine phenotype was reported by Lu et al. 2002 (PMID:12081945). The term is correct, so the PAINT IBD on PTN000230196 is unaffected.
 
 > Although spuA and spuB mutants showed an apparent defect in spermidine utilization, the biochemical functions of the gene products have yet to be elucidated.
 > — PMID:12081945
 
-## 240. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
+## 242. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q9I6J2 enables GO:0008483 transaminase activity (IMP, PMID:21622750)
+- **Field:** DB:Reference
+- **Change:** check PMID:21622750 (alternatives in the explanation)
+- **Recorded in:** `genes/PSEAE/spuC/spuC-ai-review.yaml`
+
+PseudoCAP annotates GO:0008483 transaminase activity to PA0299 (UniProtKB:Q9I6J2) by IMP from PMID:21622750. That paper's abstract describes the seven gamma-glutamylpolyamine synthetase genes (pauA1-pauA6, pauB1-pauB4, pauC, pauD1-pauD2) and the bauRABCD locus, and does not mention spuC; its subject is the gamma-glutamylation route to GABA, which is the alternative to the transaminase route SpuC acts in. The full text is not available to us, so this is raised as a query rather than a correction: spuC may well be assayed or used as a background strain in text we cannot see. If it is not, the natural reference for a transaminase IMP on this gene is PMID:12081945, which reports the enzymatic measurement that identified the activity, or PMID:18192388, which names SpuC as "the major putrescine-pyruvate transaminase" and reports the mutant phenotype. Requested change: check which figure or passage of PMID:21622750 supports this row and, if none does, repoint the reference.
+
+> In summary, the present study support that the γ-glutamylation pathway for polyamine utilization is evolutionarily conserved in E. coli and Pseudomonas spp. and is further expanded in Pseudomonas to accommodate a more diverse metabolic capacity in this group of microorganisms.
+> — PMID:21622750
+
+## 243. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I6J5 involved_in GO:0009447 putrescine catabolic process (IMP, PMID:12081945)
 - **Field:** REFERENCE
@@ -3035,7 +3087,7 @@ The PseudoCAP IMP GO:0009447 row on PA0296/spuI cites Lu et al. 2002 (PMID:12081
 > While mutations on spuI did not show any growth defect on agmatine and polyamines
 > — PMID:12081945
 
-## 241. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
+## 244. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I6J5 involved_in GO:0046203 spermidine catabolic process (IMP, PMID:12081945)
 - **Field:** REFERENCE
@@ -3048,19 +3100,20 @@ The PseudoCAP IMP GO:0046203 spermidine catabolic process row on PA0296/spuI cit
 > Although spuA and spuB mutants showed an apparent defect in spermidine utilization
 > — PMID:12081945
 
-## 242. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 245. WRONG_GENE_PRODUCT (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:P53593 involved_in GO:0046777 protein autophosphorylation (IDA, PMID:10671455)
-- **Change:** delete the record asserting GO:0046777
+- **Field:** DB_Object_ID
+- **Change:** delete the record asserting UniProtKB:P53593
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/sucC/sucC-ai-review.yaml`
 
-GO:0046777 protein autophosphorylation for sucC (P53593, SCS beta) is coded IDA to PMID:10671455. In that paper the phosphorylated protein is the 30-kDa alpha subunit (SucD), and the label is the catalytic phosphohistidine intermediate of succinyl-CoA synthetase, not a regulatory autophosphorylation. Delete it from SucC; for SucD it would also be better captured by the ligase activity. PROBABLE (full text read) because how a curator should treat the phosphoenzyme intermediate is a matter of interpretation. Not an IBD seed.
+GO:0046777 protein autophosphorylation for sucC (P53593, SCS beta) is coded IDA to PMID:10671455. The full text was read. The phosphorylated protein in that paper is the 30-kDa alpha subunit, SucD (Q51567); phosphorylation of the 40-kDa beta subunit is not reported, although both purified subunits were present in the reaction. QuickGO by reference (2026-11-18) shows the same four PseudoCAP rows from this paper on both subunits and this row on SucC only, with no GO:0046777 row on Q51567. Deletion is requested and not a repoint to SucD, because on SucD the label is the transient catalytic phosphohistidine intermediate of the ligase reaction and the row would still be an over-annotation. PROBABLE and not CONFIRMED because whether the curator meant the row for the complex as a whole cannot be seen from the record. Not an IBD seed.
 
 > A 5 μM concentration of GDP in the reaction mixture stimulated the phosphorylation of the 30-kDa Scs α subunit, whereas 50 μM GDP in the reaction mixture showed a significant decrease.
 > — PMID:10671455
 
-## 243. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 246. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HU66 involved_in GO:0052837 thiazole biosynthetic process (IDA, PMID:9209060)
 - **Field:** Evidence_Code
@@ -3075,7 +3128,7 @@ involved_in GO:0052837 thiazole biosynthetic process (IDA) on PA5118 cites Webb,
 > thiI is a 1,449-bp open reading frame located at minute 9.65 on the S. typhimurium chromosome
 > — PMID:9209060
 
-## 244. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 247. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P29364 enables GO:0004413 homoserine kinase activity (IDA, PMID:10220164)
 - **Field:** Evidence_Code
@@ -3087,7 +3140,7 @@ enables GO:0004413 (IDA) on PA5495 thrB cites Patte et al. 1999, whose abstract 
 > In P. aeruginosa, threonine auxotrophy is observed only when both thrB and thrH are simultaneously inactivated.
 > — PMID:10220164
 
-## 245. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 248. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:P29364 involved_in GO:0009088 L-threonine biosynthetic process (IDA, PMID:10220164)
 - **Field:** Evidence_Code
@@ -3099,7 +3152,20 @@ involved_in GO:0009088 (IDA) on PA5495 thrB cites Patte et al. 1999, whose abstr
 > In P. aeruginosa, threonine auxotrophy is observed only when both thrB and thrH are simultaneously inactivated.
 > — PMID:10220164
 
-## 246. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
+## 249. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q9I165 enables GO:0015927 trehalase activity (IMP, PMID:2820965)
+- **Field:** Evidence_Code
+- **Change:** IMP → ISS
+- **Likely cause:** OVER_PROPAGATION
+- **Recorded in:** `genes/PSEAE/treA/treA-ai-review.yaml`
+
+PseudoCAP annotates GO:0015927 to PA2416 (UniProtKB:Q9I165) with evidence code IMP citing PMID:2820965. An IMP asserts that a mutant of the annotated gene showed the phenotype, and that paper's mutants are Escherichia coli strains: the abstract names the treA::Tn10 insertion as "mapped at 26 min on the E. coli linkage map", along with strains MC4100, PPA69 and UE5. The paper was published in 1987, thirteen years before the PAO1 genome defined PA2416, so it cannot be reporting a mutant of this gene. The underlying claim is well supported for P. aeruginosa by orthology and by curated family rules (HAMAP MF_01060, NCBIfam NF009774/NF009775, PROSITE PS00927 and PS00928), so the appropriate code is ISS with the E. coli TreA entry in WITH/FROM, not IMP. Requested change: change the evidence code to ISS, or replace the reference with a study of the P. aeruginosa enzyme if one exists.
+
+> The Tn10 insertion was mapped at 26 min on the E. coli linkage map and was 3% cotransducible with trp, in the order treA::Tn10, trp, cys.
+> — PMID:2820965
+
+## 250. WRONG_QUALIFIER (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:P20576 enables GO:0004049 anthranilate synthase activity (IMP, PMID:2153661)
 - **Field:** Qualifier
@@ -3112,12 +3178,11 @@ The anthranilate synthase reaction (chorismate + L-glutamine to anthranilate + p
 > Heterotetramer consisting of two non-identical subunits: a
 > — file:PSEAE/trpG/trpG-uniprot.txt
 
-## 247. WRONG_GENE_PRODUCT (CONFIRMED, NOT_REPORTED)
+## 251. WRONG_GENE_PRODUCT (CONFIRMED, NOT_REPORTED)
 
-- **Record:** UniProtKB:Q9I739
-- **Subject:** UniProtKB:Q9I739
-- **Field:** GO_ID
-- **Change:** delete the record asserting GO:0097351 on Q9I739 (tse6)
+- **Record:** UniProtKB:Q9I739 enables GO:0097351 toxin sequestering activity (IMP, PMID:24589350)
+- **Field:** DB_Object_ID
+- **Change:** delete the record asserting UniProtKB:Q9I739
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/tse6/tse6-ai-review.yaml`
 
@@ -3129,15 +3194,15 @@ GO:0097351 toxin sequestering activity is annotated by IMP from PMID:24589350 to
 > the observed toxicity was specific to Tse6-CT as co-expression of Tsi6, but not the non-cognate cytoplasmic immunity protein Tsi2, provided full rescue of E. coli viability
 > — PMID:24589350
 
-## 248. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
+## 252. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9I737 involved_in GO:0033103 protein secretion by the type VI secretion system (IMP, PMID:21325275)
 - **Field:** DB:Reference
 - **Change:** PMID:21325275 → PMID:30455305
-- **Likely cause:** OTHER
+- **Likely cause:** OVER_PROPAGATION
 - **Recorded in:** `genes/PSEAE/vgrG1b/vgrG1b-ai-review.yaml`
 
-involved_in GO:0033103 (IMP) and part_of GO:0033104 (IMP) on vgrG1b (PA0095) both cite Hachani et al. 2011, whose result for this gene is negative: VgrG1b is not required for Hcp1 or VgrG1a/VgrG1c secretion, and its own release is unaffected by deletion of clpV1, clpV2, clpV3 or all three. The paper's conclusion is that VgrG1b neither needs nor supports the H1-T6SS for secretion, so it cannot be the IMP support for a positive T6SS secretion or complex row. The claims are supported by later work: Pissaridou et al. 2018 (PMID:30455305) show VgrG1b forms a spike topped by the PAAR protein Tse7 whose delivery depends on the H1-T6SS cluster, and Hachani et al. 2014 (PMID:24794869) show vgrG1b alone restores activity to a triple vgrG1abc mutant. Please repoint both rows to those references. These rows are two of the three seeds of the PTN002088178 IBDs; the node itself stands on the VgrG1a and VgrG1c seeds.
+involved_in GO:0033103 (IMP) and part_of GO:0033104 (IMP) on vgrG1b (PA0095) both cite Hachani et al. 2011, whose result for this gene is negative: VgrG1b is not required for Hcp1 or VgrG1a/VgrG1c secretion, and its own release is unaffected by deletion of clpV1, clpV2, clpV3 or all three. The paper's conclusion is that VgrG1b neither needs nor supports the H1-T6SS for secretion, so it cannot be the IMP support for a positive T6SS secretion or complex row. The claims are supported by later work: Pissaridou et al. 2018 (PMID:30455305) show VgrG1b forms a spike topped by the PAAR protein Tse7 whose delivery depends on the H1-T6SS cluster, and Hachani et al. 2014 (PMID:24794869) show vgrG1b alone restores activity to a triple vgrG1abc mutant. Please repoint both rows to those references. These rows are two of the three seeds of the PTN002088178 IBDs; the node itself stands on the VgrG1a and VgrG1c seeds. PseudoCAP made the same two IMP rows from this paper on vgrG1a and vgrG1c on the same day (2019-03-11), where the paper's mutant data do support them; the family-wide entry carried them onto vgrG1b, for which the paper's result is negative. Full text read.
 
 > Overall, these results indicate that although vgrG1b is co-expressed with H1-T6SS genes, VgrG1b neither impacts secretion of components of the H1-T6SS nor requires H1-T6SS components for its own secretion.
 > — PMID:21325275
@@ -3145,7 +3210,7 @@ involved_in GO:0033103 (IMP) and part_of GO:0033104 (IMP) on vgrG1b (PA0095) bot
 > Thus, VgrG1b secretion is independent of the three known T6SS clusters.
 > — PMID:21325275
 
-## 249. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 253. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUF5 involved_in GO:0009244 lipopolysaccharide core region biosynthetic process (IDA, PMID:9171387)
 - **Field:** Evidence_Code
@@ -3155,7 +3220,7 @@ involved_in GO:0033103 (IMP) and part_of GO:0033104 (IMP) on vgrG1b (PA0095) bot
 
 The abstract of PMID:9171387 reports cloning by complementation of a Salmonella waaC mutant (restored smooth LPS), sequence identity, maxicell expression and failed chromosomal knockouts; it describes no direct assay of WaaC. IGI (complementation) or IMP looks like the right code. Only the abstract was read, so the full text could contain an assay, hence SUSPECTED and CHECK. The GO term is sound.
 
-## 250. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 254. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUF5 enables GO:0071968 lipid A-core heptosyltransferase activity (ISS, PMID:9171387)
 - **Field:** GO_ID
@@ -3165,7 +3230,7 @@ The abstract of PMID:9171387 reports cloning by complementation of a Salmonella 
 
 GO:0071968 lipid A-core heptosyltransferase activity is defined as galactosyl-glucosyl3-heptosyl3-KDO2-lipid A-bisphosphate + ADP-heptose = lipid A-core + ADP. The with/from protein, Salmonella WaaC (P26469), is heptosyltransferase I (EC 2.4.99.23), which transfers the first heptose to Kdo2-lipid A. GO has no term for that reaction, so the correct term is the parent GO:0008920. The same row was made for waaF (PA5012), whose correct term is GO:0008713.
 
-## 251. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
+## 255. WRONG_EVIDENCE_CODE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XD35 involved_in GO:0009244 lipopolysaccharide core region biosynthetic process (IDA, PMID:9171387)
 - **Field:** Evidence_Code
@@ -3175,7 +3240,7 @@ GO:0071968 lipid A-core heptosyltransferase activity is defined as galactosyl-gl
 
 The abstract of PMID:9171387 reports cloning of waaF by complementation of a Salmonella waaF mutant, sequence identity, maxicell expression and failed chromosomal knockouts; no direct assay of WaaF is described. IGI (or IMP) looks like the right code. Only the abstract was read, hence SUSPECTED and CHECK. Same issue on the waaC (PA5011) row from this paper.
 
-## 252. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 256. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XD35 enables GO:0071968 lipid A-core heptosyltransferase activity (ISS, PMID:9171387)
 - **Field:** GO_ID
@@ -3185,7 +3250,7 @@ The abstract of PMID:9171387 reports cloning of waaF by complementation of a Sal
 
 GO:0071968 lipid A-core heptosyltransferase activity is defined with a galactosyl-glucosyl3-heptosyl3-KDO2-lipid A-bisphosphate acceptor. The with/from protein, Salmonella WaaF (P37421), is heptosyltransferase II (EC 2.4.99.24), whose reaction (heptosyl-Kdo2-lipid A acceptor) is GO:0008713. The same wrong term was used on waaC (PA5011).
 
-## 253. WRONG_TERM (SUSPECTED, NOT_REPORTED)
+## 257. WRONG_TERM (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUG6 involved_in GO:0009243 O antigen biosynthetic process (IMP, PMID:15838026)
 - **Field:** GO_ID
@@ -3198,7 +3263,7 @@ waaL (PA4999) is annotated IMP to GO:0009243 O antigen biosynthetic process (PMI
 > The completed chains are covalently attached to lipid A core by the O-antigen ligase, WaaL.
 > — PMID:15838026
 
-## 254. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 258. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUG6 involved_in GO:0009297 pilus assembly (IMP, PMID:15838026)
 - **Field:** GO_ID
@@ -3208,7 +3273,7 @@ waaL (PA4999) is annotated IMP to GO:0009243 O antigen biosynthetic process (PMI
 
 waaL (PA4999) is annotated IMP to GO:0009297 pilus assembly from PMID:15838026. The O-antigen ligase does not participate in pilus assembly; the twitching/pilus defect of the O-antigen-less mutant is an indirect envelope phenotype. Please remove (or capture as a phenotype rather than a GO process). Audit 2026-10-29 - full text read at PMC1082828; its only data on pili, flagella and motility are mutant phenotypes (TEM counts, twitching and swimming assays), which the authors attribute to a disturbed outer membrane and reduced surface wettability.
 
-## 255. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 259. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUG6 enables GO:0016874 ligase activity (IDA, PMID:17697256)
 - **Field:** GO_ID
@@ -3221,7 +3286,7 @@ waaL (PA4999) is annotated IDA to GO:0016874 ligase activity citing PMID:1769725
 > E. coli and Pseudomonas aeruginosa WaaL proteins cannot catalyze ATP hydrolysis in vitro
 > — PMID:21983211
 
-## 256. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 260. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUG6 involved_in GO:0043107 type IV pilus-dependent motility (IMP, PMID:15838026)
 - **Field:** GO_ID
@@ -3231,7 +3296,7 @@ waaL (PA4999) is annotated IDA to GO:0016874 ligase activity citing PMID:1769725
 
 waaL (PA4999) is annotated IMP to GO:0043107 type IV pilus-dependent motility from PMID:15838026. The twitching defect of the O-antigen ligase mutant is an indirect consequence of altered LPS/envelope, not participation of WaaL in motility. Please remove. Audit 2026-10-29 - full text read at PMC1082828; its only data on pili, flagella and motility are mutant phenotypes (TEM counts, twitching and swimming assays), which the authors attribute to a disturbed outer membrane and reduced surface wettability.
 
-## 257. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 261. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUG6 involved_in GO:0044780 bacterial-type flagellum assembly (IMP, PMID:15838026)
 - **Field:** GO_ID
@@ -3241,7 +3306,7 @@ waaL (PA4999) is annotated IMP to GO:0043107 type IV pilus-dependent motility fr
 
 waaL (PA4999) is annotated IMP to GO:0044780 bacterial-type flagellum assembly from PMID:15838026. Reduced flagellation of the O-antigen-less mutant is an indirect envelope phenotype; WaaL does not participate in flagellum assembly. Please remove. Audit 2026-10-29 - full text read at PMC1082828; its only data on pili, flagella and motility are mutant phenotypes (TEM counts, twitching and swimming assays), which the authors attribute to a disturbed outer membrane and reduced surface wettability.
 
-## 258. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 262. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUG6 involved_in GO:0071977 bacterial-type flagellum-dependent swimming motility (IMP, PMID:15838026)
 - **Field:** GO_ID
@@ -3251,7 +3316,7 @@ waaL (PA4999) is annotated IMP to GO:0044780 bacterial-type flagellum assembly f
 
 waaL (PA4999) is annotated IMP to GO:0071977 bacterial-type flagellum-dependent swimming motility from PMID:15838026. The motility defect of the O-antigen ligase mutant is indirect (envelope/LPS), and waaL deletion in PA14 and PAK did not abolish swimming (PMID:29059582). Please remove. Audit 2026-10-29 - full text read at PMC1082828; its only data on pili, flagella and motility are mutant phenotypes (TEM counts, twitching and swimming assays), which the authors attribute to a disturbed outer membrane and reduced surface wettability.
 
-## 259. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 263. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUG5 involved_in GO:0009243 O antigen biosynthetic process (IMP, PMID:18178733)
 - **Field:** GO_ID
@@ -3266,7 +3331,7 @@ involved_in GO:0009243 O antigen biosynthetic process (IMP) on PA5000 wapR recor
 > one form is capped with O antigen through an alpha-1,3-linked L-rhamnose (L-Rha), while the other is uncapped and contains an alpha-1,6-linked L-Rha
 > — PMID:18178733
 
-## 260. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 264. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HUG5 involved_in GO:0015920 lipopolysaccharide transport (IDA, PMID:19589832)
 - **Field:** GO_ID
@@ -3281,7 +3346,7 @@ involved_in GO:0015920 lipopolysaccharide transport (IDA, PMID:19589832) is not 
 > LPS truncations probably alter flagella-mediated motility in P. aeruginosa by modulating cell-surface attachment but not flagella synthesis
 > — PMID:19589832
 
-## 261. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 265. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XD94 enables GO:0003954 NADH dehydrogenase activity (EXP, PMID:18621892)
 - **Field:** GO_ID
@@ -3294,7 +3359,7 @@ GO:0003954 NADH dehydrogenase activity is annotated by EXP to WbpA (PA3159, G3XD
 > Capillary electrophoresis was used to characterize the enzymatic activities of purified WbpO(1629) and WbpO(3150)
 > — PMID:18621892
 
-## 262. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 266. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XD01 involved_in GO:0006065 UDP-glucuronate biosynthetic process (EXP, PMID:16102001)
 - **Field:** GO_ID
@@ -3310,7 +3375,7 @@ wbpD (PA3156) is annotated EXP to GO:0006065 UDP-glucuronate biosynthetic proces
 > we confirm that WbpD catalyzes the acetylation of UDP-GlcNAc(3NH(2))A to give UDP-GlcNAc(3NAc)A
 > — PMID:19348502
 
-## 263. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 267. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HZ76 involved_in GO:0006065 UDP-glucuronate biosynthetic process (EXP, PMID:19282284)
 - **Field:** GO_ID
@@ -3323,7 +3388,7 @@ wbpE (PA3155) is annotated EXP to GO:0006065 UDP-glucuronate biosynthetic proces
 > we identified ions that corresponded to the predicted products of WbpB (UDP-3-keto-d-GlcNAcA) and WbpE (UDP-d-GlcNAc3NA) in the coupled enzyme-substrate reaction
 > — PMID:19282284
 
-## 264. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 268. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XD61 enables GO:0008761 UDP-N-acetylglucosamine 2-epimerase activity (IMP, PMID:10930727)
 - **Change:** check GO:0008761 (alternatives in the explanation)
@@ -3338,7 +3403,7 @@ This IMP row seeds the GO:0008761 IBD at PANTHER:PTN001056041. The cited paper (
 > Neither enzyme utilized UDP-alpha-D-GlcNAc, UDP-alpha-D-GlcNAcA (UDP-2-acetamido-2,3-dideoxy-alpha-D-glucuronic acid) or UDP-alpha-D-GlcNAc3NAc (UDP-2,3-diacetamido-2,3-dideoxy-alpha-D-glucose) as substrates.
 > — PMID:17346239
 
-## 265. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 269. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XD61 enables GO:0050378 UDP-glucuronate 4-epimerase activity (EXP, PMID:17346239)
 - **Change:** check GO:0050378 (alternatives in the explanation)
@@ -3350,7 +3415,7 @@ GO:0050378 UDP-glucuronate 4-epimerase activity (UDP-glucuronate = UDP-galacturo
 > Data collected from one- and two-dimensional NMR experiments showed that His6-WbpI catalysed the 2-epimerization of UDP-alpha-D-GlcNAc3NAcA, converting it into UDP-alpha-D-ManNAc3NAcA.
 > — PMID:17346239
 
-## 266. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 270. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XD50 enables GO:0016757 glycosyltransferase activity (IMP, PMID:9680202)
 - **Field:** GO_ID
@@ -3363,7 +3428,7 @@ The PseudoCAP IMP row codes WbpL to GO:0016757 glycosyltransferase activity. The
 > Cross-complementation experiments using WbpL and its homologue, Escherichia coli WecA, demonstrates that WbpL is bifunctional
 > — PMID:9680202
 
-## 267. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 271. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTB7 involved_in GO:0009243 O antigen biosynthetic process (IDA, PMID:19659934)
 - **Field:** Evidence_Code
@@ -3373,7 +3438,7 @@ The PseudoCAP IMP row codes WbpL to GO:0016757 glycosyltransferase activity. The
 
 wbpW (PA5452) involved_in GO:0009243 O antigen biosynthetic process is coded IDA from PMID:19659934 (Byrd et al. 2009, full text read). The A-band data in that paper are immunoblots of in-frame wbpW, pslB and pslB wbpW deletion mutants; there is no direct assay of WbpW in O-antigen synthesis. The evidence code should be IMP. The term itself is correct.
 
-## 268. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
+## 272. WRONG_EVIDENCE_CODE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HTB7 involved_in GO:0009298 GDP-mannose biosynthetic process (IDA, PMID:9781879)
 - **Field:** Evidence_Code
@@ -3383,33 +3448,20 @@ wbpW (PA5452) involved_in GO:0009243 O antigen biosynthetic process is coded IDA
 
 wbpW (PA5452) involved_in GO:0009298 GDP-mannose biosynthetic process is coded IDA from PMID:9781879 (Rocchetta et al. 1998). The abstract states that the activity was confirmed by complementing E. coli PMI and GMP mutants with wbpW and restoring K30 capsule, and describes no assay of WbpW protein. Heterologous complementation is IGI (or IMP), not IDA. Only the abstract was read, hence PROBABLE and CHECK. The term is correct, and the row is a seed of the PAINT IBD at PTN000283179, which also stands on E. coli ManC.
 
-## 269. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
-
-- **Record:** UniProtKB:Q9HTB9 enables GO:0016757 glycosyltransferase activity (IMP, PMID:9680202)
-- **Field:** DB:Reference
-- **Change:** check PMID:9680202 (alternatives in the explanation)
-- **Likely cause:** OTHER
-- **Recorded in:** `genes/PSEAE/wbpY/wbpY-ai-review.yaml`
-
-GO:0016757 glycosyltransferase activity for wbpY (PA5448) is annotated IMP to PMID:9680202. The IMP code and the abstract both point to inference from the A-band-negative mutant phenotype and sequence similarity (the abstract calls the transferase assignments probable/predicted); the full text was not read. Direct evidence now exists in PMID:35166992, which shows recombinant WbpY transfers D-Rha from GDP-D-Rha in a1-3 linkage. Please add an IDA row citing PMID:35166992, preferably to GO:0016758 hexosyltransferase activity, and consider retiring the IMP MF row. This row seeds the PAINT IBD at PTN005302544.
-
-> NMR spectroscopic analysis of the WbpY reaction product showed that WbpY transferred one D-Rha residue in α1-3 linkage
-> — PMID:35166992
-
-## 270. WRONG_REFERENCE (CONFIRMED, NOT_REPORTED)
+## 273. WRONG_REFERENCE (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HXT9 enables GO:0052621 diguanylate cyclase activity (IMP, PMID:12426335)
 - **Field:** DB:Reference
-- **Change:** PMID:12426335 → PMID:16186483
+- **Change:** check PMID:12426335 (alternatives in the explanation)
 - **Likely cause:** OTHER
 - **Recorded in:** `genes/PSEAE/wspR/wspR-ai-review.yaml`
 
-GO:0052621 IMP on wspR (Q9HXT9) cites D'Argenio et al. 2002 (PMID:12426335). Full text read: wspR insertions suppress the wrinkled colony phenotype of a wspF mutant, but no c-di-GMP or enzyme activity is measured, and the GGDEF domain is discussed only as a probable nucleotide cyclase from other work. Please repoint to Hickman et al. 2005 (PMID:16186483), where purified WspR makes c-di-GMP in vitro (IDA), or delete the row, since an IDA from PMID:16477007 already exists.
+GO:0052621 IMP on wspR (Q9HXT9) cites D'Argenio et al. 2002 (PMID:12426335). Full text read: wspR insertions suppress the wrinkled colony phenotype of a wspF mutant, but no c-di-GMP or enzyme activity is measured, and the GGDEF domain is discussed only as a probable nucleotide cyclase from other work. This is the only PseudoCAP row from the paper, so it is a deliberate inference of the activity from the mutant phenotype and not a keying slip; it is filed as a query. The alternatives are to repoint to Hickman et al. 2005 (PMID:16186483, a candidate), where purified WspR makes c-di-GMP in vitro (which would be IDA, not IMP), or to delete the row, since an IDA from PMID:16477007 already exists.
 
 > The mechanism by which regulatory proteins with a GGDEF domain exert their effect is not yet clear, but there is growing evidence that the domain encodes a nucleotide cyclase
 > — PMID:12426335
 
-## 271. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 274. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XD19 located_in GO:0009276 Gram-negative-bacterium-type cell wall (IDA, PMID:9922263)
 - **Change:** delete the record asserting GO:0009276
@@ -3420,7 +3472,7 @@ GO:0009276 Gram-negative-bacterium-type cell wall for wzx (G3XD19, PA3153) is co
 > Protein orientation in the inner membrane was confirmed via C-terminal fusion to green fluorescent protein.
 > — PMID:20824106
 
-## 272. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+## 275. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:G3XD19 located_in GO:0098567 periplasmic side of plasma membrane (IDA, PMID:20824106)
 - **Change:** delete the record asserting GO:0098567
@@ -3431,7 +3483,7 @@ GO:0098567 periplasmic side of plasma membrane for wzx (G3XD19, PA3153) is coded
 > requiring the integral inner membrane proteins Wzx (O-antigen [O-Ag] flippase), Wzy (O-Ag polymerase), and WaaL (O-Ag ligase)
 > — PMID:20824106
 
-## 273. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 276. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:P35818 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -3441,7 +3493,7 @@ GO:0098567 periplasmic side of plasma membrane for wzx (G3XD19, PA3153) is coded
 
 GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev 22:177-198). We read the full text; it is a review, and it reports no original experiment showing that this protein acts in type II secretion. Its only new observations are unpublished or in-preparation notes on Xcp protein structure and interactions (XcpT multimerization, XcpR homomultimers and membrane association, XcpP-XcpQ interaction); the secretion roles it describes are attributed to cited primary papers. The term is correct, so the evidence code should be TAS, or the row re-keyed to a primary paper with IMP. This row is a PAINT IBD seed, so the change should be coordinated with PAINT re-seeding.
 
-## 274. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 277. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00512 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -3451,7 +3503,7 @@ GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEM
 
 GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev 22:177-198). We read the full text; it is a review, and it reports no original experiment showing that this protein acts in type II secretion. Its only new observations are unpublished or in-preparation notes on Xcp protein structure and interactions (XcpT multimerization, XcpR homomultimers and membrane association, XcpP-XcpQ interaction); the secretion roles it describes are attributed to cited primary papers. The term is correct, so the evidence code should be TAS, or the row re-keyed to a primary paper with IMP. This row is a PAINT IBD seed, so the change should be coordinated with PAINT re-seeding.
 
-## 275. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 278. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00513 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -3464,7 +3516,59 @@ GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEM
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381
 
-## 276. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+## 279. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q00514 part_of GO:0015627 type II protein secretion system complex (IDA, PMID:8331069)
+- **Field:** Reference
+- **Change:** check PMID:8331069 (alternatives in the explanation)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/xcpT/xcpT-ai-review.yaml`
+
+GO:0015627 for XcpT (PA3101, Q00514) is annotated IDA to PMID:8331069 (Nunn and Lory 1993). The abstract reports PilD cleavage, N-methylation and inner-membrane fractionation of XcpT-W, which support plasma membrane (already annotated EXP from the same paper) rather than membership of the T2SS complex. Complex membership is shown by co-purification of His-tagged XcpT with XcpT, U, V and W (PMID:9282737). Please check the full text and, if it does not assay complex membership, re-key the row to PMID:9282737. This row seeds the PAINT IBD at PTN000764351.
+
+> Analysis of cellular fractions from wild-type and pilD mutant strains of P. aeruginosa showed that the precursor forms of XcpT-W are located predominantly in the bacterial inner membrane
+> — PMID:8331069
+
+## 280. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q00514 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
+- **Field:** Evidence_Code
+- **Change:** ECO:0000314 → ECO:0000304 (TAS (traceable author statement))
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/xcpT/xcpT-ai-review.yaml`
+
+GO:0015628 for XcpT (Q00514) is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev 22:177-198), a review of the Xcp system that reports no original experiment showing that XcpT acts in type II secretion. The term is correct, so the evidence code should be TAS, or the row re-keyed to a primary paper (for example PMID:9466269) with IMP. This row seeds a PAINT IBD, so the change should be coordinated with PAINT re-seeding.
+
+> In this review, we will use the P. aeruginosa Xcp system as a basis
+> — PMID:9818381
+
+## 281. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q00515 part_of GO:0015627 type II protein secretion system complex (IDA, PMID:8331069)
+- **Field:** Reference
+- **Change:** check PMID:8331069 (alternatives in the explanation)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/xcpU/xcpU-ai-review.yaml`
+
+GO:0015627 for XcpU (PA3100, Q00515) is annotated IDA to PMID:8331069 (Nunn and Lory 1993). The abstract reports PilD cleavage, N-methylation and inner-membrane fractionation of XcpT-W, which support plasma membrane (already annotated EXP from the same paper) rather than membership of the T2SS complex. Membership is shown directly by co-purification and surface plasmon resonance of the XcpU-V-W-X tip complex (PMID:19828448, Douzi et al. 2009). Please check the full text and, if it does not assay complex membership, re-key the row to PMID:19828448. This row seeds the PAINT IBD at PTN000764351.
+
+> Analysis of cellular fractions from wild-type and pilD mutant strains of P. aeruginosa showed that the precursor forms of XcpT-W are located predominantly in the bacterial inner membrane
+> — PMID:8331069
+
+## 282. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+
+- **Record:** UniProtKB:Q00515 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
+- **Field:** Evidence_Code
+- **Change:** ECO:0000314 → ECO:0000304 (TAS (traceable author statement))
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/xcpU/xcpU-ai-review.yaml`
+
+GO:0015628 for XcpU (Q00515) is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev 22:177-198), a review of the Xcp system that reports no original experiment showing that XcpU acts in type II secretion. The term is correct, so the evidence code should be TAS, or the row re-keyed to a primary paper. This row seeds a PAINT IBD, so the change should be coordinated with PAINT re-seeding.
+
+> In this review, we will use the P. aeruginosa Xcp system as a basis
+> — PMID:9818381
+
+## 283. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00516 part_of GO:0015627 type II protein secretion system complex (IDA, PMID:8331069)
 - **Field:** Reference
@@ -3477,7 +3581,7 @@ GO:0015627 for XcpV (PA3099, Q00516) is annotated IDA to PMID:8331069 (Nunn and 
 > Analysis of cellular fractions from wild-type and pilD mutant strains of P. aeruginosa showed that the precursor forms of XcpT-W are located predominantly in the bacterial inner membrane
 > — PMID:8331069
 
-## 277. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 284. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00516 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -3490,7 +3594,7 @@ GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEM
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381
 
-## 278. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
+## 285. WRONG_REFERENCE (SUSPECTED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00517 part_of GO:0015627 type II protein secretion system complex (IDA, PMID:8331069)
 - **Field:** Reference
@@ -3503,7 +3607,7 @@ GO:0015627 for XcpW (PA3098, Q00517) is annotated IDA to PMID:8331069 (Nunn and 
 > Analysis of cellular fractions from wild-type and pilD mutant strains of P. aeruginosa showed that the precursor forms of XcpT-W are located predominantly in the bacterial inner membrane
 > — PMID:8331069
 
-## 279. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 286. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00517 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -3516,7 +3620,7 @@ GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEM
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381
 
-## 280. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+## 287. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q00518 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
 - **Field:** Evidence_Code
@@ -3529,7 +3633,33 @@ GO:0015628 is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEM
 > In this review, we will use the P. aeruginosa Xcp system as a basis
 > — PMID:9818381
 
-## 281. WRONG_TERM (PROBABLE, NOT_REPORTED)
+## 288. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+
+- **Record:** UniProtKB:P25060 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
+- **Field:** Evidence_Code
+- **Change:** ECO:0000314 → ECO:0000304 (TAS (traceable author statement))
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/xcpY/xcpY-ai-review.yaml`
+
+GO:0015628 for XcpY (P25060) is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev 22:177-198), a review of the Xcp system that reports no original experiment showing that XcpY acts in type II secretion. The term is correct, so the evidence code should be TAS, or the row re-keyed to a primary paper such as PMID:9884230 (mutual stabilisation of XcpY and XcpZ in the functional apparatus) with IMP or IPI.
+
+> In this review, we will use the P. aeruginosa Xcp system as a basis
+> — PMID:9818381
+
+## 289. WRONG_EVIDENCE_CODE (CONFIRMED, NOT_REPORTED)
+
+- **Record:** UniProtKB:P25061 involved_in GO:0015628 protein secretion by the type II secretion system (IDA, PMID:9818381)
+- **Field:** Evidence_Code
+- **Change:** ECO:0000314 → ECO:0000304 (TAS (traceable author statement))
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/xcpZ/xcpZ-ai-review.yaml`
+
+GO:0015628 for XcpZ (P25061) is annotated IDA to PMID:9818381 (Filloux, Michel and Bally 1998, FEMS Microbiol Rev 22:177-198), a review of the Xcp system that reports no original experiment showing that XcpZ acts in type II secretion. The term is correct, so the evidence code should be TAS, or the row re-keyed to a primary paper such as PMID:11872731, whose linker-insertion variants show that defined XcpZ regions are required for secreton function, with IMP.
+
+> In this review, we will use the P. aeruginosa Xcp system as a basis
+> — PMID:9818381
+
+## 290. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
 - **Record:** UniProtKB:Q9HT73 involved_in GO:0010043 response to zinc ion (IMP, PMID:24086521)
 - **Change:** GO:0010043 → GO:0071578 (zinc ion import across plasma membrane)
