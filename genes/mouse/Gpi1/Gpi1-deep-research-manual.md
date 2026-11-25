@@ -47,9 +47,10 @@ peripheral to the cytosolic G6P/F6P isomerase function.
 
 UniProt curates the G6P anomerase and mannose-6-phosphate C2-epimerase
 activities by similarity to yeast or mammalian proteins rather than from mouse
-assays. `GO:0047938 glucose-6-phosphate 1-epimerase activity` is therefore kept
-as non-core, while the broader carbohydrate racemase/epimerase parent is
-redundant.
+assays. `GO:0047938 glucose-6-phosphate 1-epimerase activity` covers the G6P
+anomerase, while the `GO:0016857` row is the only GO coverage in this review
+for the Q9N1E2-backed C2-epimerase activity; both are kept as non-core side
+activities.
 
 ## GO-CAM context
 
