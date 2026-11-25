@@ -2,9 +2,12 @@
 
 ## 2026-11-25 setup and GO-CAM context
 
-`just fetch-gene human IL18` created a UniProt/GOA stub with no existing GOA rows
-for `UniProtKB:Q14116`, so all IL18 annotations in this review are proposed `NEW`
-rows rather than adjudications of existing rows.
+The first `just fetch-gene human IL18` attempt produced a header-only
+`IL18-goa.tsv` even though the UniProt Q14116 record already listed GO rows.
+This was a transient QuickGO/fetch artifact rather than a true absence of IL18
+annotations. Re-running `just fetch-gene human IL18 --force` on 2026-11-25
+fetched 98 QuickGO annotations for Q14116, and the review now adjudicates those
+real GOA rows instead of proposing the NLRP3 GO-CAM triple as `NEW`.
 
 Automated deep research could not run in this worker: the `falcon` provider and
 the `perplexity-lite` fallback both reported unavailable providers. Per project
@@ -15,7 +18,7 @@ activity, `gomodel:635b1e3e00001811/635b1e3e00001943`, enabled by
 `UniProtKB:Q14116` with `GO:0005125` cytokine activity in the extracellular
 region and part_of `GO:0035655` interleukin-18-mediated signaling pathway. The
 cached GO-CAM review marked that node `OK` but `NO_GENE_REVIEW`; the cytokine
-activity and extracellular-region annotations proposed here should make the node
+activity and extracellular-region annotations reviewed here should make the node
 `CONSISTENT`.
 
 ## Key biology
