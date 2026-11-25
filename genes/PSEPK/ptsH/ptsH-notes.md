@@ -67,3 +67,8 @@ Retain target-specific cross-system judgments and assay limits from this audit. 
 ## 2026-11-11 — review follow-up: evidence and source routing
 
 Quote the Discussion inference that FruB delivers phosphate to NPr where that target-specific claim distinguishes NPr from PtsP. Route InterPro2GO and TreeGrafter source defects to INTERPRO and PANTHER respectively, retaining their claims and requested corrections. No annotation payload or action changes.
+
+
+## 2026-11-25 — integration review follow-up
+
+This branch-selected file required reconciliation with incoming main. Restore the target-supported phosphocarrier-term proposal and a PROBABLE UniRule process-scope CHECK. Retain MARK_AS_OVER_ANNOTATED because native FruB-derived input is demonstrated but is not itself coupled sugar uptake. The inherited GO:0016775 remains the broad, supported function pending a specific term.

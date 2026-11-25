@@ -138,3 +138,8 @@ Remove the obsolete cross-species BP contrast from the GO:0008982 MF reason. Thi
 ## 2026-11-13 — integrate the reviewed nitrogen-PTS audit
 
 Preserve all machine annotation payloads and the approved branch decisions. Compatible incoming positive quotations are retained without duplicate nested quotations. For ECOLI PtsI, the native carbohydrate EI-HPr-NagE pathway supports the existing non-core N-acetylglucosamine claim despite the broader family node also covering non-carbohydrate EI(Ntr); homodimerization remains the functional enzyme assembly. For ECOLI PtsN and PtsP, preferred regulatory partners and parallel-chain evidence do not prove every cross-system contribution absent; the conservative MARK_AS_OVER_ANNOTATED sugar-process assessment supersedes incoming universal deletion language. PtsN kinase activation retains its specific biochemical refinement of the KdpD interaction. PSEPK PtsP retains the target-specific distinction between FruB-to-NPr cross talk and PtsP function, and the unverified localization remains UNDECIDED. Incoming questions are preserved, while stronger claims unsupported by the target evidence are not adopted. Cached full-text publications are retained byte-for-byte from the audit branch.
+
+
+## 2026-11-25 — integration review follow-up
+
+Restore the GO:0009401 InterPro request as PROBABLE/CHECK while retaining MARK_AS_OVER_ANNOTATED and demonstrated cross-system chemistry. Restore REMOVE on the PMID:24561554 bare-binding screen row with its own quote; kinase activation remains supported by the separate PMID:19400808 rows.

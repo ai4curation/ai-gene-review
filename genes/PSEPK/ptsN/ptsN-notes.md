@@ -67,3 +67,8 @@ Quote the Discussion inference that FruB delivers phosphate to NPr where that ta
 ## 2026-11-11 — separate coupled transporter activity from process scope
 
 Remove the obsolete cross-species BP contrast from the GO:0008982 MF reason. This coupled transmembrane carbohydrate transport/phosphorylation activity remains REMOVE for soluble PtsN effectors, regardless of measured cross-system protein phosphate exchange. The target-specific BP judgments are unchanged.
+
+
+## 2026-11-25 — integration review follow-up
+
+Record this branch-selected file as a reconciliation with incoming main rather than implying no review was needed. Its REMOVE decision for GO:0009401 is retained: the native target cannot substitute for the FruB EIIA domain to phosphorylate FruA, despite receipt of FruB-derived phosphate. Existing upstream defect payloads remain present; this follow-up does not alter its gene-review YAML.

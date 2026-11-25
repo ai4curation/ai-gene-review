@@ -77,3 +77,8 @@ The following is the incoming review journal; current target-specific adjudicati
 ## 2026-11-11 — reconcile merged parallel PTS review
 
 Retain target-specific cross-system judgments and assay limits from this audit. Incorporate incoming experimentally coded proposals and retire their historical TAS predecessors in place where present. Incoming source-defect records are retained when consistent with the current action; broad sugar-process rejection is superseded where direct target cross-system chemistry supports over-annotation. Core relay activities and all original machine source rows remain unchanged.
+
+
+## 2026-11-25 — integration review follow-up
+
+This file was selected from the audit branch during integration, but incoming main had its own curation and required reconciliation. Restore the phosphocarrier-term proposal and GO_CENTRAL CHECK, qualified to the current over-annotation judgment without asserting an unobserved loss node. For the LpxD row, PMID:21605551 itself infers inhibition from binding and phenotypes: restore the hedged MODIFY to enzyme inhibitor activity. No direct inhibition assay or core inhibitory role is claimed from its abstract.
