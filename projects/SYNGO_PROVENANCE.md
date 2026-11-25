@@ -265,8 +265,8 @@ Each node keeps independent support. For GABA-ergic synapse, eight of the nine o
 donors have their own experimental rows for the term (the remaining donor, MGI:3588203, which
 the Alliance gene record names mouse Gabrr3, matched no reviewed UniProt entry by cross-reference
 or by free text, so its support was not checked); for postsynaptic membrane, all three other donors do
-(rat Gabrb3, human GABRB3 and bovine GABRB1); plasma membrane has dozens (56 of the 58
-resolvable donors; the eight that did not resolve, five FlyBase and three ZFIN genes, match no
+(rat Gabrb3, human GABRB3 and bovine GABRB1); plasma membrane has dozens (54 of the 56
+other resolvable donors; the eight that did not resolve, five FlyBase and three ZFIN genes, match no
 reviewed UniProt entry by cross-reference or by free text). So correcting
 the seeds removes donors without changing any node. Mouse Gabrb1 is a donor to no other IBA, and no
 IBA anywhere uses the G protein-coupled neurotransmitter receptor activity row. The
