@@ -49,6 +49,28 @@ def test_invalid_prediction_evidence_fails(tmp_path: Path, fault: str) -> None:
     assert not validate_prediction_evidence(path, tmp_path).is_valid
 
 
+def test_goa_file_as_support_fails(tmp_path: Path) -> None:
+    path = write_case(tmp_path)
+    (tmp_path / "genes/X-goa.tsv").write_text("enables\tGO:0003674\tmolecular_function\n")
+    data = yaml.safe_load(path.read_text())
+    data["references"].append({"id": "file:X-goa.tsv", "title": "GOA"})
+    data["predictions"][0]["review"]["supported_by"].append(
+        {"reference_id": "file:X-goa.tsv", "supporting_text": "molecular_function"})
+    path.write_text(yaml.safe_dump(data))
+    report = validate_prediction_evidence(path, tmp_path)
+    assert not report.is_valid
+    assert [i.check_type for i in report.issues] == ["supporting_text_goa_file"]
+
+
+def test_goa_file_listed_only_in_references_passes(tmp_path: Path) -> None:
+    path = write_case(tmp_path)
+    (tmp_path / "genes/X-goa.tsv").write_text("enables\tGO:0003674\tmolecular_function\n")
+    data = yaml.safe_load(path.read_text())
+    data["references"].append({"id": "file:X-goa.tsv", "title": "GOA"})
+    path.write_text(yaml.safe_dump(data))
+    assert validate_prediction_evidence(path, tmp_path).is_valid
+
+
 def test_missing_quote_is_reported_without_changing_schema_optionality(tmp_path: Path) -> None:
     path = write_case(tmp_path)
     data = yaml.safe_load(path.read_text())
@@ -98,3 +120,48 @@ def test_publication_titles_quotes_and_missing_cache(tmp_path: Path, fault: str 
     path.write_text(yaml.safe_dump(data))
     report = validate_prediction_evidence(path, tmp_path)
     assert report.is_valid == (fault is None)
+
+
+@pytest.mark.parametrize(
+    ("source", "valid"),
+    [
+        ("huggingface.co/datasets/wanglab/protein_catalogue", True),
+        ("https://example.org/data.tsv", True),
+        ("genes/missing.txt", False),
+        ("missing.md", False),
+        ("SPAC8E11.10-hypotheses/x/openscientist.md", False),
+        ("SPCC16C4.02c-notes/x.md", False),
+    ],
+)
+def test_source_documents_external_ids_pass_missing_files_fail(
+    tmp_path: Path, source: str, valid: bool
+) -> None:
+    path = write_case(tmp_path)
+    data = yaml.safe_load(path.read_text())
+    data["source_documents"].append(source)
+    path.write_text(yaml.safe_dump(data))
+    assert validate_prediction_evidence(path, tmp_path).is_valid is valid
+
+
+@pytest.mark.parametrize("prefix", ["DOI", "doi"])
+@pytest.mark.parametrize("title_ok", [True, False])
+def test_doi_reference_is_resolved_whatever_the_prefix_case(
+    tmp_path: Path, prefix: str, title_ok: bool
+) -> None:
+    path = write_case(tmp_path)
+    publications = tmp_path / "publications"
+    publications.mkdir()
+    (publications / "DOI_10.1_x.md").write_text(
+        "---\nreference_id: DOI:10.1/x\ntitle: Source title.\ndoi: 10.1/x\n"
+        "content_type: abstract_only\n---\n\n# Source title.\n\n## Content\n\nAbstract.\n"
+    )
+    data = yaml.safe_load(path.read_text())
+    data["references"].append(
+        {"id": f"{prefix}:10.1/x", "title": "Source title." if title_ok else "Unrelated experiment."}
+    )
+    path.write_text(yaml.safe_dump(data))
+    report = validate_prediction_evidence(path, tmp_path)
+    assert report.is_valid is title_ok
+    assert not any("Unsupported source" in issue.message for issue in report.issues)
+    assert report.metadata["verified_titles"] == (1 if title_ok else 0)
+

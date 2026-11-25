@@ -29,10 +29,12 @@ from ai_gene_review.validation.module_validator import (
     validate_family_members,
     validate_paint_ptns,
     validate_go_branches,
+    validate_leaf_grounding_completeness,
     validate_taxon_context,
     validate_terms,
     validate_module_file,
     load_oak_adapter_map,
+    iter_evidence_go_terms,
     load_term_label_aliases,
 )
 
@@ -498,6 +500,145 @@ def test_validate_terms_accepts_reviewed_label_alias():
     assert warnings == []
 
 
+def test_validate_terms_reviewed_alias_cannot_bridge_obsoletion():
+    # GO:0006535 sat in a module for months because oak_config.yaml carried its
+    # pre-obsoletion label as a reviewed alias: the alias matched, so the
+    # 'obsolete ' prefix on the ontology label never surfaced.
+    terms = [("GO:0006535", "L-cysteine biosynthetic process from L-serine")]
+    resolver = _resolver_factory(
+        {
+            "GO:0006535": (
+                "obsolete L-cysteine biosynthetic process from L-serine",
+                set(),
+            )
+        }
+    )
+    aliases = {"GO:0006535": {"L-cysteine biosynthetic process from L-serine"}}
+    errors, warnings = validate_terms(
+        terms, {"GO": "real"}, resolver, label_aliases=aliases
+    )
+    assert len(errors) == 1
+    assert "is obsolete" in errors[0]
+    assert "alias" in errors[0] and "dropped" in errors[0]
+    assert warnings == []
+
+
+def test_validate_terms_reports_obsoletion_without_an_alias():
+    # No alias involved: the message still names the obsoletion, not just a
+    # label mismatch, so the remedy is to repoint rather than to relabel.
+    terms = [("GO:0006535", "L-cysteine biosynthetic process from L-serine")]
+    resolver = _resolver_factory(
+        {
+            "GO:0006535": (
+                "obsolete L-cysteine biosynthetic process from L-serine",
+                set(),
+            )
+        }
+    )
+    errors, _ = validate_terms(terms, {"GO": "real"}, resolver)
+    assert len(errors) == 1
+    assert "is obsolete" in errors[0] and "replaced_by" in errors[0]
+    assert "alias" not in errors[0]
+
+
+def test_validate_terms_rejects_verbatim_obsolete_label_as_grounding():
+    # Pasting the ontology's 'obsolete X' label into a term block matches the
+    # primary label exactly, but a module still cannot be grounded on it.
+    terms = [
+        ("GO:0046537", "obsolete 2,3-bisphosphoglycerate-independent PGM activity")
+    ]
+    resolver = _resolver_factory(
+        {
+            "GO:0046537": (
+                "obsolete 2,3-bisphosphoglycerate-independent PGM activity",
+                set(),
+            )
+        }
+    )
+    errors, _ = validate_terms(terms, {"GO": "real"}, resolver)
+    assert len(errors) == 1
+    assert "cannot be grounded on a retired term" in errors[0]
+
+
+def test_validate_terms_lets_evidence_quote_a_retired_label_verbatim():
+    # emp_glycolysis cites GO:0046537 as evidence with its retired label to
+    # explain why the dPGM/iPGM distinction cannot be grounded; that is allowed.
+    terms = [
+        ("GO:0046537", "obsolete 2,3-bisphosphoglycerate-independent PGM activity")
+    ]
+    resolver = _resolver_factory(
+        {
+            "GO:0046537": (
+                "obsolete 2,3-bisphosphoglycerate-independent PGM activity",
+                set(),
+            )
+        }
+    )
+    errors, warnings = validate_terms(
+        terms,
+        {"GO": "real"},
+        resolver,
+        where="evidence title",
+        allow_obsolete_citation=True,
+    )
+    assert errors == []
+    # ...and the benign carve-out is visible rather than silent.
+    assert len(warnings) == 1 and "quotes the retired label verbatim" in warnings[0]
+    # ...but a stale pre-obsoletion title on the same id is still an obsoletion.
+    stale = [("GO:0046537", "2,3-bisphosphoglycerate-independent PGM activity")]
+    errors, _ = validate_terms(
+        stale,
+        {"GO": "real"},
+        resolver,
+        where="evidence title",
+        allow_obsolete_citation=True,
+    )
+    assert len(errors) == 1
+    assert (
+        "is obsolete" in errors[0] and "quote the retired label verbatim" in errors[0]
+    )
+
+
+def test_validate_terms_names_the_field_in_mismatch_messages():
+    terms = [("GO:0019288", "stale evidence title")]
+    resolver = _resolver_factory({"GO:0019288": ("current label", set())})
+    errors, _ = validate_terms(terms, {"GO": "real"}, resolver, where="evidence title")
+    assert len(errors) == 1
+    assert errors[0].startswith(
+        "Label mismatch for GO:0019288: evidence title says "
+        "'stale evidence title' but ontology label is 'current label'"
+    )
+
+
+def test_iter_evidence_go_terms_collects_titled_go_citations_at_any_depth():
+    doc = {
+        "evidence": [
+            {"source_id": "GO:0019344", "title": "L-cysteine biosynthetic process"},
+            {"source_id": "PMID:1", "title": "a paper"},
+            {"source_id": "GO:0000001"},  # untitled: nothing to compare
+            {"source_id": "file:x.md", "title": "GO:0000002 is not a source_id"},
+        ],
+        "module": {
+            "parts": [
+                {
+                    "node": {
+                        "evidence": [
+                            {
+                                "source_id": "GO:0061678",
+                                "title": " Entner-Doudoroff pathway ",
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+    }
+    assert list(iter_evidence_go_terms(doc)) == [
+        ("GO:0019344", "L-cysteine biosynthetic process"),
+        ("GO:0061678", "Entner-Doudoroff pathway"),
+    ]
+
+
 def test_validate_terms_flags_unresolvable_id():
     terms = [("GO:9999999", "nonexistent")]
     resolver = _resolver_factory({})  # nothing known -> not_found
@@ -598,9 +739,7 @@ def test_load_oak_adapter_map():
 
 def test_load_term_label_aliases():
     aliases = load_term_label_aliases(PROJECT_ROOT / "conf" / "oak_config.yaml")
-    assert aliases["GO:0008883"] == {
-        "glutamyl-tRNA reductase (NADP+) activity"
-    }
+    assert aliases["GO:0008883"] == {"glutamyl-tRNA reductase (NADP+) activity"}
 
 
 # --------------------------------------------------------------------------- #
@@ -613,6 +752,45 @@ def test_nicotine_module_terms_resolve_for_real():
     path = MODULES_DIR / "nicotine_biosynthesis.yaml"
     result = validate_module_file(path)
     assert result.errors == [], "\n".join(result.errors)
+
+
+@pytest.mark.integration
+def test_ols_backed_taxon_label_is_checked_not_unavailable():
+    """The OLS adapter has no alias map; that must not mark NCBITaxon unavailable."""
+    from ai_gene_review.validation.module_validator import _build_oak_resolver
+
+    resolve = _build_oak_resolver({"NCBITaxon": "ols:ncbitaxon"})
+    status, label, _aliases = resolve("NCBITaxon:7227")
+    assert (status, label) == ("ok_no_aliases", "Drosophila melanogaster")
+
+
+def _no_alias_resolver(curie):
+    """Resolver for a source that returns a primary label but no synonyms."""
+    return ("ok_no_aliases", "ATP(4-)", set())
+
+
+def test_validate_terms_no_alias_source_accepts_primary_label():
+    errors, warnings = validate_terms(
+        [("CHEBI:30616", "ATP(4-)")], {"CHEBI": "ols:chebi"}, _no_alias_resolver
+    )
+    assert (errors, warnings) == ([], [])
+
+
+def test_validate_terms_no_alias_source_downgrades_mismatch_to_warning():
+    # 'ATP' may be a synonym the source cannot list, so it must not be an error.
+    errors, warnings = validate_terms(
+        [("CHEBI:30616", "ATP")], {"CHEBI": "ols:chebi"}, _no_alias_resolver
+    )
+    assert errors == []
+    assert len(warnings) == 1 and "synonyms unavailable" in warnings[0]
+
+
+def test_validate_terms_no_alias_source_still_errors_on_obsolete():
+    def resolver(curie):
+        return ("ok_no_aliases", "obsolete something", set())
+
+    errors, _ = validate_terms([("CHEBI:1", "something")], {"CHEBI": "ols:chebi"}, resolver)
+    assert len(errors) == 1
 
 
 # --------------------------------------------------------------------------- #
@@ -629,13 +807,54 @@ def _skip_label_resolver(curie):
     return ("unavailable", None, set())
 
 
-def test_validate_module_file_passes_conformant_module():
-    # erk_cascade's erk_relay bundle conforms EXACTly to mapk_relay, so with
-    # label checking skipped the file should validate with no errors.
+def test_validate_module_file_passes_conformant_module(tmp_path):
+    # Keep the smoke test focused on conformance instead of any optional
+    # executable models declared by a full repository module.
+    template_doc = yaml.safe_load((MODULES_DIR / "mapk_relay.yaml").read_text())
+    (tmp_path / "mapk_relay.yaml").write_text(
+        yaml.safe_dump(template_doc), encoding="utf-8"
+    )
+
+    conformant_doc = yaml.safe_load(yaml.safe_dump(template_doc))
+    conformant_doc["id"] = "MODULE:conformant_mapk_relay"
+    conformant_doc["title"] = "Conformant MAPK relay"
+    conformant_doc["module"]["id"] = "conformant_mapk_relay"
+    conformant_doc["module"]["conforms_to"] = [
+        {"template": "mapk_relay", "status": "EXACT"}
+    ]
+    path = tmp_path / "conformant_mapk_relay.yaml"
+    path.write_text(yaml.safe_dump(conformant_doc), encoding="utf-8")
+
+    result = validate_module_file(path, resolver=_skip_label_resolver)
+    assert result.errors == [], "\n".join(result.errors)
+
+
+def test_validate_module_file_passes_repository_module():
     result = validate_module_file(
-        MODULES_DIR / "erk_cascade.yaml", resolver=_skip_label_resolver
+        MODULES_DIR / "bbsome.yaml", resolver=_skip_label_resolver
     )
     assert result.errors == [], "\n".join(result.errors)
+
+
+def test_validate_module_file_checks_evidence_titles(tmp_path):
+    # The evidence-title check is wired through validate_module_file: a stale
+    # title on a GO id cited as evidence surfaces as an error, and the same id
+    # asserted as a grounding resolves through one cached lookup.
+    doc = {
+        "id": "MODULE:evidence_titles",
+        "title": "evidence titles",
+        "evidence": [{"source_id": "GO:0019344", "title": "stale title"}],
+        "module": {"id": "m", "label": "m"},
+    }
+    path = tmp_path / "evidence_titles.yaml"
+    path.write_text(yaml.safe_dump(doc), encoding="utf-8")
+    resolver = _resolver_factory(
+        {"GO:0019344": ("L-cysteine biosynthetic process", set())}
+    )
+    result = validate_module_file(path, resolver=resolver)
+    assert [e for e in result.errors if "evidence title says 'stale title'" in e], (
+        result.errors
+    )
 
 
 def test_validate_module_file_flags_bad_conformance(tmp_path):
@@ -666,42 +885,221 @@ def test_validate_module_file_flags_bad_conformance(tmp_path):
     )
 
 
+def _umbrella_doc(module_ref: str) -> dict:
+    return {
+        "id": "MODULE:umbrella",
+        "title": "umbrella",
+        "module": {
+            "id": "umbrella",
+            "label": "umbrella",
+            "parts": [{"node": {"id": "stage", "label": "stage", "module_ref": module_ref}}],
+        },
+    }
+
+
+def test_validate_module_file_accepts_resolvable_module_ref(tmp_path):
+    (tmp_path / "leaf.yaml").write_text(
+        yaml.safe_dump({"id": "MODULE:leaf", "title": "leaf",
+                        "module": {"id": "leaf", "label": "leaf"}}),
+        encoding="utf-8",
+    )
+    path = tmp_path / "umbrella.yaml"
+    path.write_text(yaml.safe_dump(_umbrella_doc("leaf")), encoding="utf-8")
+    result = validate_module_file(path, resolver=_skip_label_resolver)
+    assert not [e for e in result.errors if "module_ref" in e], result.errors
+
+
+@pytest.mark.parametrize(
+    ("module_ref", "message"),
+    [("no_such_module", "not found"), ("umbrella", "cycle: umbrella -> umbrella")],
+)
+def test_validate_module_file_flags_bad_module_ref(tmp_path, module_ref, message):
+    path = tmp_path / "umbrella.yaml"
+    path.write_text(yaml.safe_dump(_umbrella_doc(module_ref)), encoding="utf-8")
+    result = validate_module_file(path, resolver=_skip_label_resolver)
+    assert not result.is_valid
+    assert any("module_ref [stage" in e and message in e for e in result.errors), result.errors
+
+
+# --------------------------------------------------------------------------- #
+# Completed module completeness
+# --------------------------------------------------------------------------- #
+
+
+def test_validate_leaf_grounding_completeness_blocks_complete_uniprotless_leaf():
+    doc = {
+        "status": "COMPLETE",
+        "module": {
+            "id": "root",
+            "label": "Root",
+            "annotons": [
+                {
+                    "id": "a",
+                    "participant": {
+                        "selector_type": "ANY_WITH_FUNCTION",
+                        "required_function": {
+                            "term": {
+                                "id": "GO:0004672",
+                                "label": "protein kinase activity",
+                            }
+                        },
+                    },
+                }
+            ],
+        },
+    }
+
+    errors = validate_leaf_grounding_completeness(doc)
+
+    assert len(errors) == 1
+    assert "COMPLETE concrete modules" in errors[0]
+    assert "'root'" in errors[0]
+    assert "ANY_WITH_FUNCTION" in errors[0]
+
+
+@pytest.mark.parametrize(
+    "patch",
+    [
+        {"status": "DRAFT"},
+        {"status": "COMPLETE", "scope": "ABSTRACT"},
+    ],
+)
+def test_validate_leaf_grounding_completeness_allows_draft_or_abstract(patch):
+    doc = {
+        **patch,
+        "module": {
+            "id": "root",
+            "label": "Root",
+            "annotons": [
+                {
+                    "id": "a",
+                    "participant": {
+                        "selector_type": "ANY_PARTICIPANT",
+                        "description": "abstract participant",
+                    },
+                }
+            ],
+        },
+    }
+
+    assert validate_leaf_grounding_completeness(doc) == []
+
+
+def test_validate_leaf_grounding_completeness_allows_intentionally_ungrounded_leaf():
+    doc = {
+        "status": "COMPLETE",
+        "module": {
+            "id": "root",
+            "label": "Root",
+            "annotons": [
+                {
+                    "id": "a",
+                    "participant": {
+                        "selector_type": "ANY_WITH_FUNCTION",
+                        "required_function": {
+                            "term": {
+                                "id": "GO:0008757",
+                                "label": "S-adenosylmethionine-dependent methyltransferase activity",
+                            }
+                        },
+                    },
+                }
+            ],
+            "intentionally_ungrounded": True,
+        },
+    }
+
+    assert validate_leaf_grounding_completeness(doc) == []
+
+
+def test_validate_leaf_grounding_completeness_allows_annotonless_outcome_leaf():
+    doc = {
+        "status": "COMPLETE",
+        "module": {
+            "id": "motility",
+            "label": "Motility",
+            "parts": [
+                {
+                    "node": {
+                        "id": "flagellar_motor_rotation_output",
+                        "label": "Flagellum-dependent motility output",
+                        "module_type": "BIOLOGICAL_PROCESS",
+                        "concepts": [
+                            {
+                                "preferred_term": "bacterial-type flagellum-dependent cell motility",
+                                "term": {
+                                    "id": "GO:0071973",
+                                    "label": "bacterial-type flagellum-dependent cell motility",
+                                },
+                            }
+                        ],
+                    }
+                }
+            ],
+        },
+    }
+
+    assert validate_leaf_grounding_completeness(doc) == []
+
+
 # --------------------------------------------------------------------------- #
 # supporting_text snippet validation
 # --------------------------------------------------------------------------- #
 
 from ai_gene_review.validation.module_validator import (  # noqa: E402
-    iter_evidence_snippets,
     validate_supporting_text,
 )
 
 PUBLICATIONS_DIR = PROJECT_ROOT / "publications"
 
 
-def test_iter_evidence_snippets_only_literature_with_text():
-    """Only PMID/DOI EvidenceItems carrying a non-empty quote are yielded."""
+def test_validate_supporting_text_reports_unreadable_sources_as_unchecked():
+    """A quote citing a source with no readable text is reported, not silently passed (#6021)."""
     doc = {
         "module": {
-            "annotons": [
-                {
-                    "evidence": [
-                        {"source_id": "PMID:123", "supporting_text": "a real quote"},
-                        {"source_id": "GO:0001", "supporting_text": "grounding, skip"},
-                        {"source_id": "PMID:999", "statement": "no quote here"},
-                        {"source_id": "DOI:10.1/x", "supporting_text": "doi quote"},
-                    ]
-                }
+            "evidence": [
+                {"source_id": "GO:1", "supporting_text": "x"},
+                {"source_id": "url:https://example.org", "supporting_text": "y"},
             ]
         }
     }
-    got = sorted(iter_evidence_snippets(doc))
-    assert got == [("DOI:10.1/x", "doi quote"), ("PMID:123", "a real quote")]
-
-
-def test_validate_supporting_text_no_literature_is_noop():
-    doc = {"module": {"evidence": [{"source_id": "GO:1", "supporting_text": "x"}]}}
     errors, warnings = validate_supporting_text(doc)
-    assert errors == [] and warnings == []
+    assert errors == []
+    assert len(warnings) == 1
+    assert "2 supporting_text quote(s)" in warnings[0] and "not verified" in warnings[0]
+
+
+TP53_UNIPROT = "file:human/TP53/TP53-uniprot.txt"
+BDH1_REACTION = "Reactome:R-HSA-73912"
+
+
+@pytest.mark.parametrize(
+    "location",
+    [
+        # EvidenceItem.source_id, the slot #6021 found unchecked for local sources.
+        lambda item: {"module": {"evidence": [{"source_id": item[0], "supporting_text": item[1]}]}},
+        # knowledge_gaps[].provenance uses reference_id, which was never read at all.
+        lambda item: {"module": {"knowledge_gaps": [{"provenance": [
+            {"reference_id": item[0], "supporting_text": item[1]}]}]}},
+        # references[].findings inherit the reference id.
+        lambda item: {"references": [{"id": item[0], "findings": [{"supporting_text": item[1]}]}]},
+    ],
+    ids=["source_id", "reference_id", "findings"],
+)
+@pytest.mark.parametrize(
+    "reference_id,quote,ok",
+    [
+        (TP53_UNIPROT, "Nucleus. Cytoplasm. Note=Predominantly nuclear but localizes to the cytoplasm", True),
+        (TP53_UNIPROT, "TP53 is a fabricated sentence that is in no UniProt record", False),
+        (BDH1_REACTION, "catalyzes the reversible reaction of acetoacetate with NADH + H+ to form", True),
+        (BDH1_REACTION, "an invented Reactome summary", False),
+        ("file:human/NO_SUCH_GENE/NO_SUCH_GENE-uniprot.txt", "anything", False),
+    ],
+)
+def test_validate_supporting_text_checks_local_sources_in_modules(location, reference_id, quote, ok):
+    """file:/Reactome: quotes in modules are checked in every slot that can carry one."""
+    errors, _ = validate_supporting_text(location((reference_id, quote)))
+    assert (errors == []) is ok, errors
 
 
 def test_validate_supporting_text_fetch_exception_is_an_error(monkeypatch):
@@ -724,9 +1122,7 @@ def test_validate_supporting_text_fetch_exception_is_an_error(monkeypatch):
     )
     doc = {
         "module": {
-            "evidence": [
-                {"source_id": "PMID:123", "supporting_text": "a real quote"}
-            ]
+            "evidence": [{"source_id": "PMID:123", "supporting_text": "a real quote"}]
         }
     }
     errors, warnings = validate_supporting_text(doc)
@@ -755,9 +1151,7 @@ def test_validate_supporting_text_uncached_reference_is_an_error(monkeypatch):
     )
     doc = {
         "module": {
-            "evidence": [
-                {"source_id": "PMID:123", "supporting_text": "a real quote"}
-            ]
+            "evidence": [{"source_id": "PMID:123", "supporting_text": "a real quote"}]
         }
     }
     errors, warnings = validate_supporting_text(doc)
@@ -879,11 +1273,7 @@ def test_validate_reference_titles_wrong_title_errors():
     pytest.importorskip("linkml_reference_validator")
     if not (PUBLICATIONS_DIR / "PMID_10049358.md").exists():
         pytest.skip("cached publication PMID_10049358 not present")
-    doc = {
-        "references": [
-            {"id": "PMID:10049358", "title": "An unrelated wrong title"}
-        ]
-    }
+    doc = {"references": [{"id": "PMID:10049358", "title": "An unrelated wrong title"}]}
     errors, _ = validate_reference_titles(doc, publications_dir=PUBLICATIONS_DIR)
     assert any("title mismatch" in e.lower() for e in errors), errors
 
@@ -913,7 +1303,9 @@ def test_iter_family_member_uses_requires_both_family_and_member():
 
     no_family = {
         "family": {
-            "representative_members": [{"term": {"id": "UniProtKB:O14521", "label": "r"}}]
+            "representative_members": [
+                {"term": {"id": "UniProtKB:O14521", "label": "r"}}
+            ]
         }
     }
     assert list(iter_family_member_uses(no_family)) == []
@@ -938,6 +1330,31 @@ def test_validate_family_members_rejects_member_in_a_different_family():
     assert len(errors) == 1
     assert "PANTHER:PTHR11375" in errors[0]
     assert "O14521 is in PANTHER:PTHR13337:SF6" in errors[0]
+
+
+def test_validate_family_members_previous_release_match_is_a_warning_during_a_switch():
+    """During a PANTHER switch, a family the members left in the bump is a warning."""
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR11375", "O14521")))
+    current = {"O14521": "PTHR13337:SF6"}
+
+    errors, _ = validate_family_members(uses, current)
+    assert len(errors) == 1
+
+    errors, warnings = validate_family_members(
+        uses, current, previous=("19.0", {"O14521": "PTHR11375:SF2"})
+    )
+    assert errors == []
+    assert len(warnings) == 1 and "PANTHER 19.0" in warnings[0]
+
+
+def test_validate_family_members_switch_does_not_excuse_a_family_wrong_in_both():
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR11375", "O14521")))
+
+    errors, _ = validate_family_members(
+        uses, {"O14521": "PTHR13337:SF6"}, previous=("19.0", {"O14521": "PTHR13337:SF6"})
+    )
+
+    assert len(errors) == 1
 
 
 def test_validate_family_members_matches_on_family_when_declared_as_subfamily():
@@ -1011,9 +1428,7 @@ def test_validate_cited_ptn_sources_accepts_goa_attested_node():
     current PAINT snapshot no longer carries it (release skew)."""
     cited = [("$.evidence[0].source_id", "PANTHER:PTN002225929")]
 
-    assert (
-        validate_cited_ptn_sources(cited, {}, {"PANTHER:PTN002225929"}) == []
-    )
+    assert validate_cited_ptn_sources(cited, {}, {"PANTHER:PTN002225929"}) == []
 
 
 def test_load_goa_attested_ptns_reads_with_from_column(tmp_path):
@@ -1054,7 +1469,10 @@ def test_validate_family_members_defers_to_paint_corroboration():
     is corroborated by a second machine source, so it warns rather than fails."""
     doc = {
         "family": {
-            "term": {"id": "PANTHER:PTHR16515", "label": "PR DOMAIN ZINC FINGER PROTEIN"},
+            "term": {
+                "id": "PANTHER:PTHR16515",
+                "label": "PR DOMAIN ZINC FINGER PROTEIN",
+            },
             "representative_members": [
                 {"term": {"id": "UniProtKB:P10069", "label": "BrlA"}}
             ],
@@ -1158,9 +1576,7 @@ def test_count_ungrounded_families_sees_family_terms_only_grounding():
     doc = {
         "family": {
             "family_terms": [{"id": "PANTHER:PTHR38761:SF1", "label": "x"}],
-            "representative_members": [
-                {"term": {"id": "UniProtKB:P1", "label": "m"}}
-            ],
+            "representative_members": [{"term": {"id": "UniProtKB:P1", "label": "m"}}],
         }
     }
 
@@ -1172,9 +1588,7 @@ def test_count_ungrounded_families_treats_non_panther_term_as_grounded():
     doc = {
         "family": {
             "term": {"id": "InterPro:IPR000719", "label": "x"},
-            "representative_members": [
-                {"term": {"id": "UniProtKB:P1", "label": "m"}}
-            ],
+            "representative_members": [{"term": {"id": "UniProtKB:P1", "label": "m"}}],
         }
     }
 
@@ -1247,7 +1661,10 @@ def test_validate_family_members_advises_subfamily_for_heterogeneous_family():
     """PTHR24416 grounds 13 different receptor kinases; the family says little."""
     doc = {
         "family": {
-            "term": {"id": "PANTHER:PTHR24416", "label": "TYROSINE-PROTEIN KINASE RECEPTOR"},
+            "term": {
+                "id": "PANTHER:PTHR24416",
+                "label": "TYROSINE-PROTEIN KINASE RECEPTOR",
+            },
             "representative_members": [
                 {"term": {"id": "UniProtKB:P00533", "label": "EGFR"}}
             ],
@@ -1269,9 +1686,7 @@ def test_validate_family_members_no_subfamily_advice_for_small_family():
     doc = {
         "family": {
             "term": {"id": "PANTHER:PTHR1", "label": "f"},
-            "representative_members": [
-                {"term": {"id": "UniProtKB:P1", "label": "m"}}
-            ],
+            "representative_members": [{"term": {"id": "UniProtKB:P1", "label": "m"}}],
         }
     }
     errors, warnings = validate_family_members(
@@ -1316,11 +1731,7 @@ def test_validate_paint_ptns_seed_overlap_is_vacuous_without_uniprot_seeds():
             ],
         },
     }
-    index = {
-        "PANTHER:PTN000000001": [
-            _paint_row(seeds="MGI:MGI:88314|SGD:S000003865")
-        ]
-    }
+    index = {"PANTHER:PTN000000001": [_paint_row(seeds="MGI:MGI:88314|SGD:S000003865")]}
 
     errors, warnings = validate_paint_ptns(list(iter_ancestral_node_uses(doc)), index)
 
@@ -1492,3 +1903,31 @@ def test_compare_label_diagnoses_a_placeholder_under_any_prefix(curie):
     assert "asserts nothing about the entity" in message
     assert "usually means the ID is wrong" not in message
     assert "fix-panther-labels" not in message
+
+
+def test_validate_family_members_accepts_uniprot_alternate_with_warning():
+    """When PANTHER's files and UniProt disagree, either family is accepted."""
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR11375", "O14521")))
+
+    errors, warnings = validate_family_members(
+        uses,
+        {"O14521": "PTHR13337:SF6"},
+        alternates={"O14521": "PTHR11375:SF2"},
+    )
+
+    assert errors == []
+    assert len(warnings) == 1
+    assert "UniProt" in warnings[0]
+    assert "PTHR11375:SF2" in warnings[0]
+
+
+def test_validate_family_members_alternate_for_other_family_still_fails():
+    uses = list(iter_family_member_uses(_family_doc("PANTHER:PTHR11375", "O14521")))
+
+    errors, _ = validate_family_members(
+        uses,
+        {"O14521": "PTHR13337:SF6"},
+        alternates={"O14521": "PTHR99999"},
+    )
+
+    assert len(errors) == 1

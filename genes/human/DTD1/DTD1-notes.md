@@ -51,3 +51,31 @@ Exact sequence mapping: [DTD1-bioinformatics/RESULTS.md](DTD1-bioinformatics/RES
 ## Research integration
 
 The genuine [Falcon report](DTD1-deep-research-falcon.md) supplies literature synthesis for DTD1. Its full-length enzyme mechanism is interpreted through the exact127-residue input and the mapped absence of the Gly-cisPro site; activity of the longer human editing core is not an assay of this short product.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM files were not opened or used; this section is based only on UniProt, Ensembl, PANTHER and cached literature.
+
+### Identity of A0A2R8YCT7 (gene-model problem, not a canonical product)
+
+- A0A2R8YCT7 (127 aa, TrEMBL) is the translation of Ensembl ENST00000647441 / ENSP00000493969. Ensembl annotates that transcript with biotype **nonsense_mediated_decay**. The canonical DTD1 product is Q8TEA8 (209 aa, Swiss-Prot; ENST00000377452, Ensembl canonical).
+- The NMD model carries an extra 47-nt exon (chr20:18620067-18620113, length mod 3 = 2) between canonical exons 3 and 4. The CDS ends inside it (18620080).
+- Protein consequence: residues 1-124 are identical to Q8TEA8, followed by a frameshifted tail `TLF` (canonical continues `GKFGAYMQVHIQNDGPVT...`). Earlier notes gave "125/127 identities over 1-127". That figure is an alignment artifact: only Phe127 matches by chance.
+- Lost relative to canonical: the final core beta-strand 131-146 (PDB 2OKV), the NxGP(V/F)T motif with the cross-subunit Gly139-Pro140 chiral-selection dipeptide, and the whole disordered vertebrate-specific C-terminal extension (142-209: DNA binding, Ser197/204/205 phosphosites, Cdc45-regulating region). Retained: the Mg2+ ligands 4, 6 and 28 and the SQFTL motif (78-82).
+- UniProt gives PE 1 from PeptideAtlas/ProteomicsDB only. Any peptide inside 1-124 is shared with Q8TEA8, so it does not show that this product exists.
+- Analysis: [DTD1-bioinformatics/RESULTS-rereview.md](DTD1-bioinformatics/RESULTS-rereview.md) (script `compare_gene_model_rereview.py`; earlier RESULTS.md left untouched).
+
+### Evolutionary grounding
+
+- PANTHER PTHR10472:SF5 (D-AMINOACYL-TRNA DEACYLASE 1) holds both A0A2R8YCT7 and Q8TEA8. DTD2 (Q96FN9) is in SF1. Q8TEA8 carries IBA (GO_Central) for D-tyrosyl-tRNA(Tyr) deacylase activity and tRNA metabolic process, so the deacylase is ancestral for the subfamily and the canonical gene inherits it.
+- The mechanism of the family (P. falciparum DTD, PMID:24302572): the active sites are at the dimer interface, and each subunit donates a Gly-cisPro. The fragment's failure is therefore structural loss in this gene model, not a lineage-level loss of function.
+- Family review interpro/panther/PTHR10472/PTHR10472-review.yaml agrees on SF5 placement (no disagreement). It currently lists the fragment A0A2R8YCT7, not Q8TEA8, as the SF5 representative. Q8TEA8 would be a better representative once it is reviewed.
+
+### Decisions
+
+- The three MF rows (GO:0002161, GO:0051499, GO:0106026) are REMOVE for this product, since the editing site cannot form.
+- The two BP rows (GO:0006399, GO:0106074) were changed from UNDECIDED to MARK_AS_OVER_ANNOTATED. Both are true of the gene but depend on the removed activity.
+- Cytoplasm stays UNDECIDED. Canonical cytoplasm is itself only ISS, nucleus is experimental, and nothing is known for this product.
+- No core functions are given for this product. The description was rewritten to describe the gene and canonical product, and the gene-model defect, without project commentary.
+- No DTD-related modules were found in modules/.
+- Next relative: the canonical product Q8TEA8 (same_gene_canonical), which has no review in the repo. The folder should be genes/human/DTD1__Q8TEA8.

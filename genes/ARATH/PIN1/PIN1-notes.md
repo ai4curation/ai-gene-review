@@ -163,3 +163,25 @@ Note: PIN1 plasma-membrane localization itself remains well supported by other r
 *particular* citations don't substantiate localization, hence the validator's
 "inconsistent review actions for GO:0005886" warning (expected/acceptable).
 Status kept DRAFT; validation: ✓ Valid.
+
+## 2026-10-05 update (auxin_polar_transport module curation)
+- Resolved eight UNDECIDED rows. Several had been judged from abstract-only caches; per the curation policy experimental annotations are deferred to curators rather than rejected:
+  - leaf shaping (PMID:16971475) and xylem/phloem pattern formation (PMID:16943276): KEEP_AS_NON_CORE. The 16943276 abstract shows pin1 was among the mutants analysed [PMID:16943276 "Our analyses of double mutant and transgenic plants indicated that auxin transport and perception act independently to pattern leaf veins"].
+  - photomorphogenesis TAS (PMID:16141452): supported by the full text [PMID:16141452 "the PIN-FORMED1 (PIN1) protein is required for basipetal auxin movement and crucial for shoot vascular development, gravitropic responses, and photomorphogenesis"].
+  - plasmodesma HDA: KEEP_AS_NON_CORE; cytoplasm HDA: MARK_AS_OVER_ANNOTATED; gravitropism IMP (PMID:16601150, abstract-only): stays UNDECIDED.
+- All GO:0005515 rows switched to REMOVE (repository policy: protein binding is uninformative; removal does not deny the interaction).
+- Basal and apical plasma membrane rows upgraded to ACCEPT (core polar locations used in core_functions).
+- 2026-10-06: gravitropism IMP (PMID:16601150) — Europe PMC reports no PMC/open-access full text; evidence not seen. Deferred to curator as KEEP_AS_NON_CORE (polar auxin transport is required for gravitropic responses). No UNDECIDED rows remain.
+
+
+## Polar auxin transport source audit — 2026-10-26
+
+This dated audit supersedes conflicting earlier shorthand. All 45 original annotation payloads, including qualifiers and inherited NEW rows, were retained exactly. Every row was reconsidered against the target biology and cited sources. Actual Falcon and fallback provider attempts failed; the orchestration logs are preserved in `.cache/module-audit-logs/auxin-polar-fetch/provider-publication-results.json`. Existing provider reports, where present, served only as discovery aids. Manual primary-source inspection and normally fetched caches support the decisions below. No provider report was fabricated.
+
+The core is direct plasma-membrane auxin efflux. PMID:35917925 resolves the transport pocket, inhibitor interaction and homodimer, but also observes monomeric particles; do not infer obligatory native dimer stoichiometry. Protein homodimerization is an integral structural property, not an automatically peripheral interaction. Polar localization is tissue/construct dependent. PMID:15514156 supports a PID-induced basal-to-apical shift, while the PIN1-GFP2 construct under the PIN2 promoter in PMID:33705718 is predominantly basal. Cellular export is distinct from the anatomical direction of transport.
+
+Full PMID:36398993 was normally recovered from the publisher at publications/url_https___oup.silverchair-cdn.com_article-minimal_6833154.md. Its Arabidopsis pin1;2 and higher-order PIN root-regeneration genetics are real; pin1;2 has a reported 32% rooting reduction. Fig.7 ER-body localization is instead the C-terminal BIG fragment fused to mScarlet-i, compared with an ER-HDEL marker. Only the ER-body claim is rejected after target-resolved full-text inspection. The finding is not based on a tomato-focused title/abstract. Live GO:0010168 refers to the specialized ER-derived body, not the general ER organelle.
+
+Cytoplasm HDA is retained as contextual: cytoplasm is not synonymous with soluble cytosol and PIN1 intracellular trafficking independently corroborates a cytoplasmic membrane pool. The cell-wall IDA remains UNDECIDED after the accessible abstract and unsuccessful full-PDF retrieval; plasma-membrane localization does not establish exclusion. Plasmodesmata HDA is retained non-core using the actual PMID:21533090 Table S1 raw identification: AT1G73590.1, Excel row 1345, two unique peptides, 4.34% coverage. The fraction is enriched, not pure; no exclusive plasmodesmatal residence or function is inferred. Reproducible shared analysis is in ../ABCB1/ABCB1-source-analysis/. Imported GO Table S3 is not evidence. Reversed FYPP accessions in old prose were removed; actual FYPP1/FYPP3 interaction evidence remains.
+
+Final actions: 15 ACCEPT, 15 KEEP_AS_NON_CORE, 6 MODIFY, 8 REMOVE, 1 UNDECIDED. This panel contains no negated source rows; there are no manufactured NOT assertions. Exact-row payload proof and focused validation are recorded in `.cache/module-audit-logs/auxin-polar-six-*`. Reciprocal scientific consultation with the parallel annotation reviewer confirmed source-specific localization, integral binding and substrate-assay distinctions.

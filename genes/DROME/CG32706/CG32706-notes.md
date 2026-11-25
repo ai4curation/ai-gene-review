@@ -15,3 +15,48 @@ The completed Falcon report was inspected. It supports the Esf2 family-based rib
 ## Final research readback
 
 The full Falcon output was inspected. It supports the conserved Esf2 mechanism while identifying uncertainty about exact fly RNA contacts; no yeast experiment is labeled as direct fly evidence.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+**Identity.** Q8IRM9 (230 aa, TrEMBL, CG32706-PA) is the only UniProt entry for FlyBase
+FBgn0052706, so the benchmark accession is the canonical product, not a fragment or
+alternative model. It starts with Met, carries the full RRM (62-140, SMART) and the
+ABT1/Esf2 post-RRM core. It is shorter than yeast Esf2 (316 aa) and human ABT1 (272 aa)
+because it lacks the yeast acidic N-terminal extension and the yeast C-terminal tail, ending
+instead in a Lys/Ala-rich repeat (`CG32706-bioinformatics/RESULTS-rereview.md`, new script
+`compare_sequences_rereview.py`; identity 33.6% to P53743, 29.4% to Q9ULW3 over ~215 columns).
+
+**Evolutionary grounding.** PANTHER PTHR12311 has a single subfamily, SF7, holding fungal
+Esf2, Dictyostelium esf2, vertebrate ABT1 and CG32706 (`interpro/panther/PTHR12311/PTHR12311-entries.csv`).
+The family is one-to-one in fly, so yeast Esf2 (P53743) is the ortholog. All IBA rows come from
+PAINT node PTN000267771. PAINT propagated RNA binding, nucleolus, SSU-processome assembly and
+the three early cleavages, but not Esf2's Dbp8 ATPase-stimulating activity
+[PMID:16772403 "show that it enhances Dbp8 ATPase activity by decreasing the K(M) for ATP"];
+I treat that omission as deliberate, and the fly protein has only part of the yeast C-terminal
+Dbp8-binding region, so no ATPase-activator term is proposed.
+
+**Changes vs previous review.**
+- The three endonucleolytic-cleavage IBA rows went from ACCEPT to KEEP_AS_NON_CORE. Esf2 is a
+  processome component but not the nuclease, and the yeast paper attributes the cleavage block
+  to failed assembly [PMID:15964808 "This suggests that in the absence of proper SSU processome
+  assembly, early pre-rRNA processing is inhibited"]. Core = GO:0034462 + RNA binding + nucleolus.
+- PMID:16772403 added as direct support for RNA binding
+  [PMID:16772403 "We show that Esf2 can bind to pre-rRNAs"].
+- GO:0042742 defense response to bacterium (IMP, PMID:18245331) went from UNDECIDED to
+  KEEP_AS_NON_CORE. The full text was read online at https://pmc.ncbi.nlm.nih.gov/articles/PMC2278058/
+  (not cacheable locally: Europe PMC and BioC return nothing). Table 3 lists PBac line 10881
+  "Within 100 bp of 3' end of CG32706", and Table 4 scores it + S. aureus, 0 S. typhimurium,
+  + bacterial load, i.e. the defense class, which matches the curator. It is a single insertion
+  allele with no reported revertants, and could be an indirect ribosome-biogenesis effect, so non-core.
+- The description was rewritten as a project-independent summary. Status set to COMPLETE.
+
+**Relative for next review.** Yeast ESF2 (P53743, SGD:S000005337) is the experimentally
+characterised one-to-one ortholog in the same PANTHER subfamily and the PAINT donor. No review
+exists in the repo (no genes/*/ESF2, nor P53743, Q9ULW3, O74362 or Q9QYL7 ids).
+
+**Family review / modules.** `interpro/panther/PTHR12311/PTHR12311-review.yaml` agrees with the SF7
+placement and lists CG32706 as SF7's representative; there is no subfamily disagreement. It leaves
+GO:0034462 scope UNRESOLVED family-wide, but this review accepts it for CG32706 via the PAINT node.
+No module under modules/ models the SSU processome. The nearest is `modules/dmel_small_nucleolar_rnps.yaml`
+(the U3 box C/D snoRNP, whose partner Esf2 is in yeast); CG32706 is not a participant there and should
+not be, since it is not a snoRNP subunit. CG32706 is not in gocams/index.tsv.

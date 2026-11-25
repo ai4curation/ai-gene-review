@@ -37,3 +37,7 @@ Recovered and assessed the exact OpenScientist final report from a cancelled job
 ## Recovery review consistency follow-up (2026-09-22)
 
 Restored readable identifiers in manual prose. Where applicable, reconciled AP3M2 reference notes with the retained contextual claim, removed unrelated PIK3C3 support from unresolved projections, separated PIK3C3 aspect-specific reasons, and documented the surviving/renamed ATG14 membrane term. Source assertion fields and verbatim quotations are unchanged.
+
+## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
+
+- Peroxisome IBA (is_active_in, PTN000005955, eukaryote node, single yeast seed SGD:S000004230): UNDECIDED -> KEEP_AS_NON_CORE. The seed is readable and positive [PMID:21121900 "We have discovered a PtdIns3P-synthesizing activity in peroxisomes of Saccharomyces cerevisiae"], and the earlier full-text check (PIK3C3-PMID21121900-primary-check.md) records cofractionation with peroxisomal markers. No human-specific loss or readable negative; under the IBA and evidence-depth rules the root stands as a non-core recruited pool. is_active_in matches the seed (activity shown in yeast peroxisomes), so no qualifier defect. No sub-compartment: no TM/PTS, no tethering partner, and GO has no cytoplasmic-side peroxisome term. Close call: UNDECIDED remains defensible.

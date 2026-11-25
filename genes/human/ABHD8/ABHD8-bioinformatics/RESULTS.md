@@ -51,9 +51,8 @@ former is settled here for all 6 sources; the latter for 5.
 SGD:S000004089 resolves to ICT1_YEAST (Q12385, gene ICT1), whose UniProt recommended name is "1-acylglycerol-3-phosphate O-acyltransferase ICT1".
 
 The acyltransferase activity therefore sits in a named, reviewed member of this family
-in another organism, so the two acyltransferase-branch IBAs are propagating from a real
-annotated activity. They are marked over-annotated rather than removed because what is
-absent is a demonstration in ABHD8, not an activity in the family.
+in another organism, so the two acyltransferase-branch IBAs are not removed outright:
+what is absent is a demonstration in ABHD8, not an activity in the family.
 
 **Q8WTS1** — ABHD5_HUMAN, Homo sapiens: 1-acylglycerol-3-phosphate O-acyltransferase ABHD5
 - annotated active-site residues: **0**
@@ -78,4 +77,3 @@ a full annotated charge-relay triad where ABHD5 has none, so ABHD8 cannot be dis
 an ABHD5-type catalytically dead fold. Both the case for the lipid IBAs and the case
 against them are weaker than the ABHD5 comparison is usually made to carry. The
 defensible position is the narrow one: ABHD8's triad is intact and untested.
-

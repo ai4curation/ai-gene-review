@@ -1,0 +1,8 @@
+
+## 2026-11-06 complete AcpP review
+
+Reviewed all27 seeded annotations and retained every original non-review payload. Main carrier chemistry, lipid/fatty-acid/lipid-A participation, acyl/cofactor binding and cytosolic location are supported. Bare protein-binding rows are removed under policy while their actual PlsB/YbgC/SpoT/BioH interactions remain acknowledged. Broad cytoplasm and lipid biosynthesis are refined; the xenobiotic-response row stays UNDECIDED because15459190 is abstract-only and later20047918 challenges the proposed toxicity mechanism.
+
+Two NEW assertions are separately authored: GO1900727 OPG participation as a demonstrated soluble cofactor (2945202,3479786,9171419), and GO0001671 MukB ATPase activation (34795302), both IC with precise attribution limitations. OPG support is not direct glucan-transfer catalysis; no phosphopantetheine requirement, universal ACP compatibility or periplasmic ACP location is inferred. Whole-gene synthesis also includes BioH substrate presentation and restricted SpoT signaling. The source-analysis records exact primary strain/construct limitations and the comparator/ontology checks.
+
+Normal Falcon research was attempted and failed403; no provider report was fabricated. PAINT-losses reports no IRD/IKR on this gene lineage. Source16352845 normal force-fetch remained abstract-only;34795302 and20047918 normal fetches provided full text. Shared9171419 and the frozen UniProt/GOA were not refreshed. Other authoritative acquisition attempts failed; only scoped source analysis is intended for commit, and acquired full XML stays ignored. Focused validation, rendering, helper history and independent payload/raw preservation accompany the handoff.

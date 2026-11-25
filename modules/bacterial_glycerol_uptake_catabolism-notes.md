@@ -1,0 +1,9 @@
+# Comparative glycerol uptake/catabolism audit
+
+2026-11-07 UTC. Glycerol comparative curation complete: nine member reviews preserve all 116 ordered annotation payloads, with one inherited NEW and no added rows. Eleven curated references and 24 findings support three family-grounded steps across E. coli, P. putida and B. subtilis. All nine focused reviews and 29 source-based coverage checks pass. Full validation, dedicated PR, review/CI and actual merge remain pending.
+
+The quinone-linked route differs from GlpO oxygen/peroxide chemistry and GlpABC complex activity. E. coli GlpD supports nitrate respiration without oxygen. Pseudomonas quinone/topology assignments combine pathway attribution and ortholog evidence; GlpK activity was measured in KT2440 extracts. Bacillus genetics and tetrazolium assays establish NAD-independent glycerol-phosphate catabolism, while quinone specificity is retained curated synthesis. A 17,000 × g extract supernatant does not resolve membrane topology. Bacillus GlpF has comparative sequence/operon support rather than a direct target permeability assay.
+
+PTHR11985 SF35 contains both Bacillus GlpD and oxidases. The curated O86963 reaction is oxygen-dependent, despite a conflicting electronic quinone GO row in its record. The activity oracle uses independent reaction evidence, not this electronic row or our review actions. The single-gene architecture and same-system gates are external to the production compiler and explicitly documented in the 29 checks. PAINT ancestry is not re-inferred by the checker.
+
+Family-wide quinone and mitochondrial-shuttle boundaries remain unresolved because PANTHER subfamilies mix the relevant chemistry or taxa; this does not overturn supported individual activities. The module passes with that known family warning. Full validation and PR shepherding remain to be completed.

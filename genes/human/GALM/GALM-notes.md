@@ -45,3 +45,24 @@ UniProtKB: Q96C23; HGNC:24063; EC 5.1.3.3; 342 aa; PDB 1SNZ/1SO0.
 
 Cached pubs (PMID_12753898, PMID_30451973, PMID_19056867) are all abstract-only (full_text_available: false).
 Do not REMOVE experimental annotations on the basis of abstract-only text.
+
+## 2026-11-12 audit to COMPLETE
+
+Several of the calls above were revised to follow the rule that a correct but general
+term is MODIFY, not ACCEPT or KEEP_AS_NON_CORE. Descendancy was checked against the GO
+sqlite ancestors: GO:0033499 is_a GO:0019388 / GO:0006012 / GO:0019318 / GO:0005975,
+and GO:0005829 is part of GO:0005737.
+
+- GO:0005975 carbohydrate metabolic process (IEA, IDA), GO:0019318 hexose metabolic
+  process (IEA) and GO:0006012 galactose metabolic process (IEA, IDA): now MODIFY to
+  GO:0033499 Leloir pathway. This matches the E. coli galE and galM reviews.
+- GO:0005737 cytoplasm (IEA): now MODIFY to GO:0005829 cytosol, which the gene
+  already carries through the Reactome TAS rows.
+- core_functions: GO:0033499 label updated to the current "beta-D-galactose catabolic
+  process via UDP-galactose, Leloir pathway". The redundant ancestor GO:0006012 was
+  removed from directly_involved_in.
+- Verbatim supported_by quotes were added to the rows that lacked them. The NOT
+  homodimerization row is supported by the UniProt SUBUNIT line "Monomer"
+  (PMID:12753898, PMID:15026423; the latter is not cached).
+- glucose metabolic process (IBA, IDA) stays KEEP_AS_NON_CORE: a genuine secondary
+  activity (kcat 4900 vs 12000 s-1 for galactose; PMID:12753898 via UniProt).
