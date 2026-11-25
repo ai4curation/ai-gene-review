@@ -409,3 +409,13 @@ That gap is recorded in `knowledge_gaps` instead.
   an unanchored `"56D" in m` substring test also matched the other orthologues' rows. Anchored on
   the accession. Same shape as the brief's `"reviewed" in entryType` and
   `"reference_id:" in line` traps.
+
+## 2026-11-25: sequence-only language-model read
+
+Ran `just sequence-read human ADPRHL1` (claude-fable-5-2, high effort; FEAT and PSEUDO
+prompts of fable-sequence-to-function, with the shuffled-sequence control). Output in
+`ADPRHL1-bioinformatics/sequence-read/`. The model called the protein inactive and listed
+Asp-to-Asn at 58, Asp-to-Glu at 304 and Asp-to-Ala at 306, all present in the sequence and
+the same positions as the alignment census in `ADPRHL1-bioinformatics/RESULTS.md`. It said
+it identified ADPRHL1 from recall, so this is corroboration, not independent evidence. Cited
+as a LOW-relevance BIOINFORMATICS reference on the GO:0000287 row; no action changed.
