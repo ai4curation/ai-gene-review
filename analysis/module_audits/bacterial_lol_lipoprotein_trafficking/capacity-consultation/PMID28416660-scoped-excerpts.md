@@ -3,7 +3,7 @@
 Source URL: https://pmc.ncbi.nlm.nih.gov/articles/PMC5422772/?report=xml
 
 Access: 2026-11-07, independently captured by ECOLI consultant.
-Original full text: .cache/module-audit-logs/lol-20261107/ecoli-consultation/28416660-full.txt
+Original full text: analysis/module_audits/bacterial_lol_lipoprotein_trafficking/review-followup/historical-source-copies/28416660-full.txt
 Original text SHA256: 154ec0d3db287ba482ff04fe2c82377539961c976bc90cabeff86114937c1616
 
 Verbatim excerpts (not a replacement for the immutable abstract-only publication cache):

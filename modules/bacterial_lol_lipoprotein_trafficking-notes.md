@@ -40,3 +40,8 @@ their broad no-gap/essentiality generalizations are bounded by primary evidence.
 Module consultation artifacts record the pre-edit document, source preservation,
 focused checks and final release. No full-corpus validation, index rebuild,
 commit or publication is performed by this consultation.
+
+
+## 2026-11-25 review follow-up
+
+Curation work remaining: The comparative member panel does not yet identify and review the exact F. johnsoniae UW101 extractor assembly that connects to the established LolA1/LolB1 delivery pair. Native UW101 carrier/inserter trafficking evidence is available; missing extractor coverage in this panel is not evidence that the organism lacks extraction or a complete pathway. This is panel coverage work, not a biological knowledge gap.
