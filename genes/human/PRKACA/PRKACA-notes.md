@@ -64,3 +64,10 @@ row, HSF1 heat-shock row, Raptor/mTORC1 row, GLI/OFD1 ciliary rows, and
 SLC6A6 plasma-membrane localization row all describe real peripheral PKA
 branches. They were kept as non-core unless the row was a broad tissue phenotype
 that did not show PRKACA itself executing a step in that process.
+
+The remaining over-annotation calls are broad inferences or detections that stop
+short of interpretable PRKACA biology. The EnsemblCompara domain-specific-binding
+row lacks a named binding domain or a named partner. The same electronic source
+for neuromuscular junction does not show stable PRKACA localization at the
+junction. The prostate extracellular-vesicle HDA row is a weak possible cargo
+detection beside stronger cytosolic and nuclear PKA locations.
