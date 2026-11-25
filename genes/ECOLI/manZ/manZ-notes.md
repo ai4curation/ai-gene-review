@@ -43,3 +43,10 @@ ManZ (P69805) is the EIID component of the mannose-specific PTS in E. coli K12. 
 - Secondary substrates (glucose, fructose, GlcNAc) kept as non-core
 - Added NEW annotation: GO:1902495 (transmembrane transporter complex) from ComplexPortal
 - Core MF: GO:0022870 (mannose PTS transporter activity)
+
+
+## 2026-11-07 complete annotation re-review
+
+All existing annotations and genuine Falcon research were re-read. No source file was refreshed. Historical notes above are retained; this audit supersedes their broad-term decisions and unsupported source attributions. General membrane/cytoplasm and ManX enzyme genera now refine to supported specific terms. ManX allows intra- and intersubunit phosphotransfer [PMID:2681202, PMID:8262947]; ManYZ supplies direct substrate-binding/translocation work, with contributes_to core rather than autonomous phosphorylation [PMID:31209249, PMID:2951378]. No new rows were added; historical complex NEW rows remain intact.
+
+Source/construct scope, exact short quotations, access failures and ontology snapshots: `analysis/module_audits/bacterial_mannose_pts/ecoli-consultation/evidence.md`. In particular,1985IIMan is not uniquely modern ManZ,1996single-anchor ManZ topology is superseded by2019structure, and lambda membrane-component sufficiency does not establish a ManX pore. The2019ManYZ assay is counterflow in liposomes, not the complete PEP/ManX reaction; sequence-exact K-12 proteins were expressed recombinantly in knockoutBL21. Early sugar experimental annotations are retained with independent substrate corroboration and explicit inaccessible-table limits. All PAINT checks reported no IRD/IKR on the recovered target lineages.

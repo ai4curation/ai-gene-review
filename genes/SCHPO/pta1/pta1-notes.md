@@ -22,3 +22,32 @@ Primary reports are interpreted at the species, assay and subunit level. Abstrac
 ## Provider report appraisal
 
 The Falcon report supports a noncatalytic CPF architectural role; the decisive target CPF composition was verified in PMID:33711009 and ortholog extract complementation in PMID:10523662. Generic CPF network extensions in the report were not assigned as Pta1 core functions.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 output was not opened or used. Evidence: UniProt Q10222, cached publications, PANTHER inventory, QuickGO for orthologs.
+
+### Identity
+- Q10222 is the reviewed Swiss-Prot canonical product of pta1 (SPAC1071.01c; alt ORF SPAC4H3.15c), 721 aa, sequence version 3 (revised; PMID:26615217 "SEQUENCE REVISION"; A0AAN2H7U2 and Q9UTR2 are secondary accessions). Single chain PRO_0000116838 1..721; contains the Symplekin/Pta1_N (PF11935) region and IPR021850. Not a fragment, isoform or alternative model. Length is in line with S. cerevisiae Pta1 (Q01329, 785 aa); animal symplekins are longer (human Q92797 1274 aa) with extra C-terminal sequence.
+
+### Evolutionary grounding
+- PANTHER: Q10222, S. cerevisiae PTA1 Q01329, human SYMPK Q92797 and mouse Sympk Q80X82 are all in PTHR15245:SF20 (SYMPLEKIN) per interpro/panther/PTHR15245/PTHR15245-entries.csv. The family review interpro/panther/PTHR15245/PTHR15245-review.yaml places pta1 in SF20 too: no disagreement.
+- IBA (PTN000391745) propagates only CPF complex membership (GO:0005847). SGD's PTA1 terms include tRNA processing (IMP, PMID:1508188) and termination, but PAINT did not propagate tRNA processing; treated as a deliberate omission.
+- SGD MF annotations for PTA1 are only GO:0005515 IPI and GO:0003723 contributes_to (IC); no specific MF exists to transfer, so the ND MF stands.
+
+### Key new evidence (budding yeast ortholog, same subfamily)
+- [PMID:19188448 "Furthermore, different regions of Pta1 interact with the CPF subunits Ssu72, Pti1, and Ysh1, supporting the idea that Pta1 acts as a scaffold to organize CPF."]
+- [PMID:19188448 "The pta1-Delta75 mutant is defective for snoRNA termination, RNA polymerase II C-terminal domain Ser5-P dephosphorylation, and gene looping but is fully functional for mRNA 3'-end processing."]
+- [PMID:10523662 "The cause of the tRNA splicing defect in yeast is not known."]
+- [PMID:1508188 "Extracts prepared from pta1-1 strains had normal pre-tRNA splicing endonuclease activity."]
+
+### Changes
+- GO:0008033 tRNA processing (ISO): KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED. Necessity phenotype of a nonsense allele, mechanism unknown, likely indirect; no participation evidence; not propagated by PAINT; added propagation_review.
+- All other rows (ND MF, nucleus x3, CPF complex x3, termination, co-transcriptional 3'-end processing) remain ACCEPT with rewritten, row-specific reasons; IDA PMID:14617822 kept (abstract about Set1, CPF identification in full text per UniProt).
+- Added references PMID:12819204 and PMID:19188448 (newly cached) and the UniProt file; added reference_review to each PMID.
+- Description and core function rewritten to describe the symplekin/Pta1 scaffold role; added suggested questions (adaptor MF; tRNA phenotype) and an experiment.
+- No NEW terms: a scaffold/adaptor MF lacks direct pombe evidence and no ortholog curator has asserted one.
+
+### Relative
+- Closest characterised relative by phylogenetic placement (same subfamily SF20, PAINT donor): S. cerevisiae PTA1 (Q01329). No review in repo (genes/yeast/PTA1 absent). Human SYMPK also absent.
+- Modules: modules/dmel_cleavage_polyadenylation.yaml and modules/dmel_histone_mrna_3prime_processing.yaml include the fly ortholog Symplekin (Q8MSU4); no pombe CPF module exists.

@@ -77,13 +77,53 @@ lint-caches:
 fix-caches:
 	uv run python -m ai_gene_review.tools.cache_lint --fix
 
+# Score a protein against the NCBIfam family HMMs for an annotated enzyme activity and
+# compare with each model's trusted/noise cutoffs (Schnoes et al. 2009, PMID:20011109).
+# e.g. just enzyme-cutoff-check Q88KF6 --go GO:0004451
+enzyme-cutoff-check ACC *ARGS:
+	uv run python -m ai_gene_review.validation.enzyme_family_cutoff {{ACC}} {{ARGS}}
+
+# Check a protein for the curated substrate-specificity fingerprints in
+# conf/specificity_fingerprints.yaml (Kinateder et al. 2024, PMID:38284491).
+# e.g. just enzyme-fingerprint-check Q88CN3 --fingerprint holpase_hisn_pseudomonas
+enzyme-fingerprint-check ACC *ARGS:
+	uv run python -m ai_gene_review.validation.specificity_fingerprint {{ACC}} {{ARGS}}
+
+# Report the terms the committed term-validator cache cannot answer offline
+# (cache misses need the ontology service, so an outage can hit them; #5731).
+# Pass files or directories; add --check to exit 1 on a miss, --warm to fill the
+# cache online first (then review, `just lint-caches` and commit cache/).
+ontology-cache-coverage *args:
+	uv run python -m ai_gene_review.tools.ontology_cache_coverage {{args}}
+
+# Exercise the DISMECH_METABOLIC_ALIGNMENT page generator's refusals: each case breaks one
+# thing in a copy of the committed reports and checks the generator refuses with the message
+# it declares, or still renders with the clause it declares.
+check-alignment-page-guards *ARGS:
+	uv run python projects/DISMECH_METABOLIC_ALIGNMENT/check_page_guards.py {{ARGS}}
+
 # Validate SSSOM mapping files: (1) structural validation against the SSSOM schema, and
 # (2) ontology term validation (every ARO/GO CURIE resolves and its label matches) via
 # linkml-term-validator on the regenerated nested term-tuple file.
+#
+# This and the other *2go mapping recipes in this file call linkml-term-validator
+# directly (not scripts/term_validate.sh): they are manual, mapping-curation QA
+# recipes, not invoked by any workflow, so an ontology-service outage is not a
+# merge-queue jam path -- it just surfaces as an ordinary failure to re-run. Only
+# the CI-invoked term-validation paths are wrapped for outage tolerance.
 validate-mappings:
 	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/ANTIMICROBIAL_RESISTANCE/*.sssom.yaml
 	uv run python projects/ANTIMICROBIAL_RESISTANCE/sssom_to_terms.py projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml -o projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml
 	uv run linkml-term-validator validate-data projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml -s src/ai_gene_review/schema/aro_go_mapping.yaml -t AROGOMappingSet --labels -c conf/oak_config.yaml
+
+# Validate the RGD Pathway Ontology -> GO mapping sets against the SSSOM schema: the
+# hand-curated pw_go_curated.sssom.yaml and the generated pw_go_mappings.sssom.yaml.
+# There is no separate GO label step. analyze_rgd_pathways.py stops with an error on any
+# curated GO id that is missing, obsolete, not a biological process or mislabelled, and
+# the generated set deliberately keeps obsolete and unresolvable targets, flagged
+# pw2go:qa/OBSOLETE_TARGET and qa/MISSING_TARGET.
+validate-rgd-mappings:
+	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/RGD_PATHWAY_ONTOLOGY/data/pw_go_curated.sssom.yaml projects/RGD_PATHWAY_ONTOLOGY/data/pw_go_mappings.sssom.yaml
 
 # Validate the curated RHEA->GO gap-fill mapping set (projects/RHEA/rhea2go.sssom.yaml):
 # (1) SSSOM structural validation, then (2) GO term/label validation on the regenerated nested file.

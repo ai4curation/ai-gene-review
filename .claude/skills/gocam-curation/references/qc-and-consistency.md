@@ -25,14 +25,21 @@ Record every specific issue observed (multivalued):
 |---|---|---|
 | `BINDING_AS_FUNCTION` | bare binding MF, no consequence | molecular-function.md |
 | `GENERIC_MF` | generic term where a child applies | molecular-function.md |
+| `WRONG_MF_TERM` | MF is wrong, not vague (fix may be a parent or a lateral term) | molecular-function.md |
 | `HAS_INPUT_MISUSE` | wrong `has input` filler | has-input.md |
 | `DIRECT_VS_INDIRECT_CAUSAL` | directness wrong for the mechanism | causal-relations.md |
 | `INCORRECT_DIRECTIONALITY` | reversed subject→object edge | causal-relations.md |
+| `WRONG_CAUSAL_SIGN` | positive edge where the evidence shows inhibition, or vice versa | causal-relations.md |
 | `MISSING_LOCATION` | no `occurs_in` | — |
 | `MISSING_PROCESS` | not tied to a process via `part_of` | — |
 | `ORPHAN_ACTIVITY` | no causal edges | causal-relations.md |
 | `MISSING_EVIDENCE` | no ECO code / reference | — |
 | `COMPLEX_SUBUNIT_REPRESENTATION` | wrong subunit/complex attribution | complexes.md |
+| `UNRESOLVED_COMPARTMENT` | `occurs_in` reaches no distinct compartment (e.g. chromatin) | compartments.md |
+| `NONADJACENT_COMPARTMENTS` | causal edge skips a compartment (e.g. cytosol → extracellular) | compartments.md |
+
+Use no flag rather than a near miss: `verdict` and `source_defects` already
+carry the signal, and an inaccurate flag poisons flag queries.
 
 ## Consistency with the gene review — `GoCamConsistencyEnum`
 
@@ -43,10 +50,21 @@ How the activity relates to the gene's `genes/**/<gene>-ai-review.yaml` (join on
 - `MORE_SPECIFIC` / `MORE_GENERAL` — a clean subsumption either way.
 - `RELATED` — same area, neither match nor clean subsumption.
 - `CONFLICT` — the review **removed / negated / over-annotated** this function.
+  Consistency judges the activity's *function*; a wrong causal edge on a
+  correct function is `CONSISTENT` plus `WRONG_CAUSAL_SIGN`, not `CONFLICT`.
 - `NOT_IN_REVIEW` — function not represented in the review (a candidate gap).
 - `NO_GENE_REVIEW` — no review exists yet for this gene product.
 
 `CONFLICT` and `NOT_IN_REVIEW` are the signals worth surfacing.
+
+## Start from the linter
+
+Run `just gocam-lint <model_id>` before reviewing. It lists structural
+anomalies (compartment crossings on direct edges, same-gene chains, duplicate
+nodes, opposite-sign fan-out, transcription factors with direct edges, ligands
+as receptor inputs, generic or binding MFs, orphans, parallel components) with
+the QC flag each maps to. Every finding still needs checking against the
+literature; see `docs/gocam_lint.md`.
 
 ## Pre-finalize checklist
 
@@ -54,6 +72,7 @@ How the activity relates to the gene's `genes/**/<gene>-ai-review.yaml` (join on
 - [ ] `has input` names the substrate/target-gene/effector/cargo — not a ligand or raw DNA.
 - [ ] Causal edges are direct/indirect as the mechanism warrants, pointing subject→object.
 - [ ] `occurs_in` and `part_of` present where known.
+- [ ] Each `just gocam-compartments` lead checked against the evidence, and either flagged with the missing step named or dismissed in `notes`.
 - [ ] Every activity/edge has an ECO code + reference; claims have verbatim support.
 - [ ] Complex activities attributed to the right subunit(s).
 - [ ] `verdict`, any `qc_flags`, and `consistency` recorded for every activity.

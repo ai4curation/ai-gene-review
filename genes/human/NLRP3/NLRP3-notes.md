@@ -185,3 +185,17 @@ Five, each a distinct mechanistic step rather than five names for one thing:
 Deliberately **not** core: molecular sensor activity (see above), bare protein binding (24 IPI
 annotations, MARK_AS_OVER_ANNOTATED), apoptotic process (NAS, a relic of the "Apaf1-like" naming
 era - NLRP3's death modality is pyroptosis), and the entire Th2/transcription cluster.
+
+## 2026-11-03 ORGANELLES batch 4 (mitochondrion rows)
+
+- Rows: GO:0005739 IEA (GO_REF:0000120, ARBA + SL-0173), EXP (PMID:21124315), IDA (PMID:23582325); all located_in; all stay KEEP_AS_NON_CORE.
+- Recruitment on activation, not residence: [PMID:23582325 "NLRP3 was predominantly cytosolic in untreated, resting BMDMs and localized to the mitochondrial fraction upon activation with nigericin"], via MAVS. Fraction prepared with a kit or by Wieckowski; authors themselves describe the earlier Zhou result as [PMID:23582325 "NLRP3 has been shown to localize to the mitochondrial/MAM fraction upon activation"], so mitochondrion vs MAM is unresolved. PMID:21124315 is abstract-only in cache.
+- No anchor or transit peptide. TRAF3/BRAF precedent: stays at root, no GO:0005741 or GO:0044233 added.
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095) and ISS (GO_REF:0000024, from mouse Q8R4B8); both located_in; both stay KEEP_AS_NON_CORE.
+- Source chain: human UniProt "Endoplasmic reticulum {ECO:0000250|UniProtKB:Q8R4B8}"; mouse Q8R4B8 ER line is curated from PMID:23502856 (UniProt REST, 2026-11-05), and mouse GOA has an EXP to GO:0005783 from the same paper (QuickGO, 2026-11-05).
+- [PMID:23502856 "Acetylated α-tubulin mediated the dynein-dependent transport of mitochondria and subsequent apposition of ASC on mitochondria to NLRP3 on the endoplasmic reticulum."] (abstract only, mouse macrophages); [PMID:21124315 "Resting NLRP3 localizes to endoplasmic reticulum structures"] (abstract only).
+- Topology: soluble cytosolic NLR, no signal peptide or TM; resting cage is membrane-associated via the polybasic linker [PMID:34861190 "full-length NLRP3 forms an inactive double ring cage that is primarily membrane localized, which is consistent with previously reported localization of NLRP3 on various membranous organelles"]. Recruited pool on the cytosolic face -> stays at root, no GO:0005789 or GO:0044233 (BRSK2/TRAF3 precedent), matching the mitochondrion rows.
+- Added references PMID:23502856 and PMID:34861190 (both already cached).

@@ -621,4 +621,13 @@ stays `UNDECIDED` until an expert decides.
 - `OVER_ANNOTATION_PATTERNS.md` — pattern #4 ("indirect downstream process
   annotations") is the conceptual cousin; this project quantifies the
   assay-specific version of it.
+- [`NONPHYSIOLOGICAL_REACTIONS.md`](NONPHYSIOLOGICAL_REACTIONS.md) — the other
+  axis of the same problem. This project asks whether an assay's *readout* is
+  proximal to the gene product's own activity; that one asks whether the
+  assay's *substrate* is one the gene product ever encounters (a chromogenic
+  or surrogate compound that reaches GO via EC and Rhea). Neither property is
+  recorded by a GO evidence code, and both yield annotations that are literally
+  true and functionally misleading. The two are complementary by construction:
+  the pipeline here mines cached publications behind PMID-backed annotations,
+  which cannot reach the Rhea/EC-derived IEAs that project scores.
 - `BIOSENSORS.md` — unrelated (plant synthetic-biology biosensors).

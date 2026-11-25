@@ -100,4 +100,4 @@ Testing 160 fission yeast IBAs at the tree node they came from
 - Done: 160 IBAs analysed; written review in `REVIEW.md`.
 - PAINT loss table: **2,129** findings across 549 cached families; **63 IKR** losses fall on a reviewed member, ready for residue reconstruction with `prepare_loss_analysis.py`.
 
-**Read more:** `projects/PANTHER_IBA_REVIEW/README.md` · `REVIEW.md` · `iba_propagation.tsv` · `projects/IBA_REVIEW.md`
+**Read more:** `projects/PANTHER_IBA_REVIEW.md` · `REVIEW.md` · `iba_propagation.tsv` · `projects/IBA_REVIEW.md`

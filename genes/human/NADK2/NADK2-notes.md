@@ -98,3 +98,40 @@ Core CC: **GO:0005759 mitochondrial matrix** (soluble matrix enzyme).
 - LONP1 Reactome TAS matrix entries (R-HSA-9838081/9838093) → NADK2 is a LONP1 protease
   substrate; the CC (matrix) is correct, but these do not describe NADK2's own function;
   keep as non-core matrix localization.
+
+## 2026-11-02 completion and family reconciliation (claude-code)
+
+- No `NADK2-deep-research-*.md` exists for human; none was generated. Cached and fetched
+  primary papers were used instead: PMID:23212377, PMID:23616928, PMID:24847004,
+  PMID:28923496, PMID:33833463, PMID:33888598, PMID:35733246, PMID:35868311.
+- GO:0019674 NAD+ metabolic process (IBA, IEA, IDA) changed from ACCEPT to MODIFY ->
+  GO:0006741 NADP+ biosynthetic process (is_a descendant, checked in QuickGO), matching
+  the horse and donkey NADK2 reviews and genes/SCHPO/pos5. The separate NEW GO:0006741
+  row was dropped because the MODIFY rows carry it.
+  [PMID:23212377 "NAD kinase is the sole NADP(+) biosynthetic enzyme"]
+- NEW GO:0005524 ATP binding row and its core function were dropped: ATP is the
+  phosphoryl donor of the kinase reaction, so this adds nothing to NAD+ kinase activity.
+- Matrix rows from the LONP1 Reactome events changed KEEP_AS_NON_CORE -> ACCEPT: the review
+  judges the claim (matrix location), which is the same as the other matrix rows.
+- Homodimerization stays KEEP_AS_NON_CORE, now supported by two crystal structures.
+  [PMID:35868311 "We find that NADK2 presents an unexpected dimeric organization instead of the typical tetrameric assemblage observed for other NADKs."]
+- NADH kinase activity is weak (about 10% of NAD+ kinase) and not annotated.
+  [PMID:23212377 "the NADHK activity of C5orf33 protein was only 10% of its NADK activity"]
+- Proline biosynthesis / lysine degradation / DECR: NADK2 supplies NADPH to P5CS and
+  the other NADPH-dependent enzymes but performs no step, so no process term is added
+  (participation test). [PMID:33833463 "suggesting that the generation of P5C through P5CS is the bottleneck step that requires mitochondrial NADPH and NADK2 activity"]
+  PMID:33888598 found no change in mitochondrial folate pathway activity after NADK2
+  deletion, so "one-carbon metabolism" was removed from the description.
+- Family review: interpro/panther/PTHR13158/PTHR13158-review.yaml. The PAINT root
+  PTN004406956 (NAD+ kinase activity, NAD+ metabolic process) is a horizontal-transfer
+  node that includes a divergent bacterial branch; judged TOO_DEEP. Human NADK2 is in
+  the eukaryotic clade, so its IBA rows are unaffected.
+
+## 2026-11-02 PR review fixes (claude-code)
+
+- Removed "or, in other models, lethality" from the description: no reviewed paper was
+  added to support a specific lethal allele, so the clause was dropped rather than cited
+  second-hand.
+- GO:0005759 ARBA row now quotes Reactome:R-HSA-8955030 directly; core function text
+  states that the matrix location is inferred (soluble protein, cleavable presequence,
+  matrix NADPH-dependent enzymes, Reactome), not measured.

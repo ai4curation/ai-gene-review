@@ -186,3 +186,27 @@ These notes are the manual research journal instead.
   `projects/NO_DATA.md` the aspect-specific case and any matching BIOLOGY
   knowledge gap are a curation judgement for a gene this dark, so they are
   left for the reviewer rather than guessed at here.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[6], GO:0008150 biological_process (ND, GO_REF:0000015), ACCEPT: the ND may be stale. These notes cite PMID:14718668, a chemogenomic heterozygous-deletion screen that UniProt curates (ECO:0000269) as SET6 being "Involved in resistance to compounds that target ergosterol biosynthesis, including fenpropimorph, dyclonine, and alverine citrate". That is a loss-of-function phenotype for this gene product in S. cerevisiae tied to a drug response, so a curator should decide whether it supports a BP annotation. UniProt itself suggests the effect may reflect compound availability. The review action was left unchanged.
+
+## 2026-11-25 merge with main
+
+- Merged `main` into this branch to clear merge conflicts. In `SET6-ai-review.yaml`
+  all four conflicts were the same prose on both sides, with `main` additionally
+  carrying the 2026-11-06 ND citation pass, so `main`'s side was taken in each
+  case: the reflowed `description`, the reflowed bioinformatics `review_notes`
+  plus the `file:yeast/SET6/SET6-notes.md` reference entry, the `GO:0005575` ND
+  `supported_by` quote from these notes, and the `GO:0008150` ND possibly-stale
+  flag. Nothing from this branch's review was dropped.
+- This supersedes the "Still open" bullet above: the cellular-component ND now
+  cites the recorded literature search, and the biological-process ND carries the
+  possibly-stale flag from the 2026-11-06 pass. Choosing `review.nd_case` values
+  remains a reviewer judgement and is still untouched here.
+- The project tracking files under `projects/IBA_REVIEW/rereview-2026-09-20/`
+  conflicted only because this branch's copies predate later waves. `main`'s newer
+  copies were kept and this branch's SET6 contribution re-applied: the SET6 row in
+  `progress.tsv`, the matching `reviewed`/`unreviewed` counts in `progress.json`,
+  and the SET6 entry in `source-preservation-check.json` (same `baseline_commit`
+  on both sides).

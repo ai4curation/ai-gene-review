@@ -93,3 +93,12 @@
   ribonucleotide monophosphate catabolism (RNA-turnover product recycling in erythroid cells).
 - Cofactor: **magnesium ion binding (GO:0000287)**.
 - Location: **cytosol (GO:0005829)** / cytoplasm.
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095), IDA (GO_REF:0000052, HPA), IDA (PMID:8557639); all located_in; all stay KEEP_AS_NON_CORE; reasons added (none existed).
+- Displayed UniProt sequence is isoform 2 (Q9H0P0-4) with a 50-residue N-terminal extension (VSP_021565 / VSP_015623 / VSP_015624 remove or replace it in isoforms 1, 3, 4). The extension starts with a hydrophobic stretch (about 14-32, VGAVASASVCALVAGVVLA; Kyte-Doolittle 19-residue window mean 2.3, computed ad hoc on the UniProt sequence) followed by KRKTGRKTK; UniProt annotates no TM/signal anchor.
+- [file:human/NT5C3A/NT5C3A-uniprot.txt "SUBCELLULAR LOCATION: [Isoform 2]: Endoplasmic reticulum."]; [file:human/NT5C3A/NT5C3A-uniprot.txt "Isoform 2 is induced by interferon alpha in Raji cells in association with lupus inclusions. {ECO:0000269|PubMed:8557639}"].
+- [PMID:8557639 "by immunofluorescence microscopy to co-localize with the endoplasmic reticulum resident protein, protein disulfide isomerase"] (abstract only): endogenous, IFN-induced p36.
+- Inconsistency to flag: UniProt lists "Name=3; Synonyms=p36" (isoform 3, no extension) but ties the p36 induction and ER location to isoform 2. Which isoform p36 is is unsettled (blocked N-terminus in the paper), so not recorded as a source defect.
+- No GO:0005789: one line only (an unannotated hydrophobic segment); IF cannot resolve membrane vs lumen, and the isoform identity is uncertain.

@@ -155,3 +155,8 @@ about the MBOAT family, NOT direct acn1 data):
   as two domains; they are the SAME domain (InterPro IPR032805 is the InterPro entry for
   Pfam PF13813). Do not double-count. The falcon DOI citations are family reviews, not
   acn1-specific; I will NOT cite them as supporting acn1 function directly.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[1], GO:0005575 cellular_component (ND, ACCEPT): may be stale. The ORFeome YFP localization screen PMID:16823372 (Matsuyama et al. 2006) localizes acn1 to mitochondria; UniProt and the PomBase HDA mitochondrion annotation rest on it. A genome-wide localization study of this gene product in S. pombe identifies a cellular component, so the ND may no longer hold. Action left unchanged pending curator review.
+- existing_annotations[2], GO:0008150 biological_process: cited to acn1-deep-research-falcon.md (no primary article characterizes the biological role).
