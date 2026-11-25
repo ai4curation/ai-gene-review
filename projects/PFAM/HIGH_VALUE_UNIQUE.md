@@ -1,5 +1,6 @@
 ---
 title: "High-Value, Unique Pfam → GO Candidates"
+autolink_gene_symbols: false
 ---
 
 # High-Value, Unique Pfam → GO Candidates
@@ -103,7 +104,7 @@ Every reviewed member either carries the term or has no other non-binding functi
 | PF25037 | VPS13_C | phospholipid transfer activity (GO:0120014) | 16 | 7 | 94% | 1 | nothing | 7,698 | 2% | 7,511 | SOLE_SIGNATURE |
 | PF03092 | BT1 | folic acid transmembrane transporter activity (GO:0008517) | 13 | 3 | 92% | 4 | nothing | 7,811 | 6% | 7,381 | SHARED_ENTRY |
 | PF18086 | PPIP5K2_N | inositol hexakisphosphate 1-kinase activity (GO:0052723) | 16 | 12 | 100% | 7 | inositol phosphate kinase activity | 9,450 | 32% | 6,417 | SOLE_SIGNATURE |
-| PF04137 | ERO1 | flavin-dependent sulfhydryl oxidase activity (GO:0016971) | 20 | 16 | 100% | 4 | thiol oxidase activity | 6,093 | 0% | 6,067 | SHARED_ENTRY |
+| PF04137 | ERO1 | flavin-dependent sulfhydryl oxidase activity (GO:0016971) | 20 | 16 | 100% | 4 | protein-disulfide reductase activity | 6,093 | 0% | 6,067 | SHARED_ENTRY |
 | PF00124 | Photo_RC | oxygen evolving activity (GO:0010242) | 416 | 217 | 94% | 2 | nothing | 7,915 | 27% | 5,780 | SHARED_ENTRY |
 | PF01142 | TruD | tRNA pseudouridine(13) synthase activity (GO:0160150) | 202 | 196 | 98% | 3 | pseudouridine synthase activity | 9,826 | 41% | 5,762 | SHARED_ENTRY |
 | PF05995 | CDO_I | cysteine dioxygenase activity (GO:0017172) | 15 | 14 | 93% | 5 | oxidoreductase activity, acting on single donors with incorporation of molecular oxygen, incorporation of two atoms of oxygen | 9,290 | 40% | 5,540 | SHARED_ENTRY |
@@ -124,9 +125,9 @@ Every reviewed member either carries the term or has no other non-binding functi
 | PF10565 | NMDAR2_C | transmitter-gated monoatomic ion channel activity involved in regulation of postsynaptic membrane potential (GO:1904315) | 13 | 6 | 100% | 3 | ligand-gated monoatomic ion channel activity | 3,682 | 1% | 3,631 | SOLE_SIGNATURE |
 | PF08952 | DUF1866 | inositol-1,4,5-trisphosphate 5-phosphatase activity (GO:0052658) | 8 | 5 | 100% | 3 | phosphatase activity | 3,715 | 3% | 3,608 | SHARED_ENTRY |
 | PF21310 | OCRL-like_ASH | inositol-1,4,5-trisphosphate 5-phosphatase activity (GO:0052658) | 5 | 3 | 100% | 3 | inositol phosphate phosphatase activity | 5,056 | 30% | 3,543 | SOLE_SIGNATURE |
-| PF09030 | Creb_binding | peptide lactyltransferase (CoA-dependent) activity (GO:0120300) | 5 | 3 | 100% | 2 | acyltransferase activity, transferring groups other than amino-acyl groups | 3,738 | 7% | 3,467 | SOLE_SIGNATURE |
 | PF09030 | Creb_binding | histone H3K18 acetyltransferase activity (GO:0043993) | 5 | 3 | 100% | 2 | histone acetyltransferase activity | 3,738 | 7% | 3,467 | SOLE_SIGNATURE |
 | PF09030 | Creb_binding | histone H3K27 acetyltransferase activity (GO:0044017) | 5 | 3 | 100% | 2 | histone acetyltransferase activity | 3,738 | 7% | 3,467 | SOLE_SIGNATURE |
+| PF09030 | Creb_binding | peptide lactyltransferase (CoA-dependent) activity (GO:0120300) | 5 | 3 | 100% | 2 | acyltransferase activity, transferring groups other than amino-acyl groups | 3,738 | 7% | 3,467 | SOLE_SIGNATURE |
 | PF31009 | DAGL_N | monoacylglycerol lipase activity (GO:0047372) | 6 | 3 | 100% | 2 | nothing | 3,437 | 0% | 3,437 | SOLE_SIGNATURE |
 | PF21138 | SMUBP-2_HCS1_1B | double-stranded DNA helicase activity (GO:0036121) | 6 | 6 | 100% | 1 | helicase activity | 3,453 | 2% | 3,379 | SOLE_SIGNATURE |
 | PF18323 | CSN5_C | deNEDDylase activity (GO:0019784) | 19 | 17 | 95% | 1 | peptidase activity | 3,645 | 8% | 3,352 | SOLE_SIGNATURE |
@@ -195,7 +196,7 @@ At least one reviewed member lacks the term and carries a different non-binding 
 | PF08007 | JmjC_2 | histone H3K4 demethylase activity (GO:0032453) | 33 | 91% | 2 | P27431: peptidyl-arginine 3-dioxygenase activity | 10,304 | 7,183 | SHARED_ENTRY |
 | PF08007 | JmjC_2 | histone H3K36 demethylase activity (GO:0051864) | 33 | 91% | 1 | P27431: peptidyl-arginine 3-dioxygenase activity | 10,304 | 7,161 | SHARED_ENTRY |
 | PF06736 | TMEM175 | potassium ion leak channel activity (GO:0022841) | 10 | 90% | 1 | K9UJK2: proton channel activity | 6,980 | 6,885 | SOLE_SIGNATURE |
-| PF02330 | MAM33 | C5-methylcytidine-containing RNA reader activity (GO:0062153) | 12 | 92% | 1 | Q9MZE0: enzyme inhibitor activity | 6,948 | 6,572 | SHARED_ENTRY |
+| PF02330 | MAM33 | C5-methylcytidine-containing RNA reader activity (GO:0062153) | 12 | 92% | 1 | Q9MZE0: transcription corepressor activity | 6,948 | 6,572 | SHARED_ENTRY |
 | PF05336 | rhaM | L-rhamnose mutarotase activity (GO:0062192) | 102 | 98% | 1 | Q8P3K1: L-fucose mutarotase activity | 9,439 | 6,197 | SOLE_SIGNATURE |
 | PF01735 | PLA2_B | A1-type glycerophospholipase activity (GO:0140322) | 50 | 94% | 3 | P53541: A2-type glycerophospholipase activity | 11,607 | 5,868 | SHARED_ENTRY |
 | PF01231 | IDO | L-tryptophan 2,3-dioxygenase activity (GO:0004833) | 14 | 93% | 1 | A0A823AAW6: indoleamine 2,3-dioxygenase activity | 6,679 | 4,993 | SHARED_ENTRY |
@@ -250,9 +251,9 @@ Traced pairs, reported whatever the filters say: the SH2 example from the projec
 
 ## Is Pfam used in the restricting rules we have?
 
-Curated rules (`rules/curated`): 7. Condition types used: INTERPRO ×7, TAXON ×5, CDD ×3, FUNFAM ×2, MODULE_CONTEXT ×1. Rules with a Pfam condition: **0**. Rules with a negated condition: 0.
+Curated rules (`rules/curated`): 15. Condition types used: INTERPRO ×53, TAXON ×12, PFAM ×6, CDD ×3, FUNFAM ×2. Rules with a Pfam condition: **4**. Rules with a negated condition: 3.
 
-InterPro2GO removals and narrowings (`projects/INTERPRO/interpro2go.sssom.yaml`): 23 entries. For each, whether a Pfam family is a member signature, and which Pfam families are found on between 5% and 95% of the entry's reviewed members. Such a family could serve as a splitting condition; whether it separates right from wrong members is a curation question this table does not answer.
+InterPro2GO removals and narrowings (`projects/INTERPRO/interpro2go.sssom.yaml`): 35 entries. For each, whether a Pfam family is a member signature, and which Pfam families are found on between 5% and 95% of the entry's reviewed members. Such a family could serve as a splitting condition; whether it separates right from wrong members is a curation question this table does not answer.
 
 | InterPro | name | type | remove | narrow | Pfam member signatures | reviewed | Pfam families that split the members |
 |---|---|---|---:|---:|---:|---:|---|
@@ -264,19 +265,31 @@ InterPro2GO removals and narrowings (`projects/INTERPRO/interpro2go.sssom.yaml`)
 | IPR001128 | Cytochrome P450 | Family | 0 | 2 | 1 | 1,918 | none |
 | IPR001135 | NADH-quinone oxidoreductase, subunit D | Domain | 1 | 0 | 1 | 642 | PF00329 Complex1_30kDa (22%) |
 | IPR001424 | Superoxide dismutase, copper/zinc binding domain | Domain | 1 | 1 | 1 | 195 | none |
+| IPR002844 | F420-dependent methylenetetrahydromethanopterin dehydrogenase | Family | 1 | 0 | 1 | 19 | none |
 | IPR002956 | Bride of sevenless protein | Family | 1 | 1 | 0 | 3 | none |
 | IPR004100 | ATPase, F1/V1/A1 complex, alpha/beta subunit, N-terminal domain | Domain | 0 | 2 | 1 | 2,318 | PF22919 ATP-synt_VA_C (58%); PF00306 ATP-synt_ab_C (41%); PF16886 ATP-synt_ab_Xtn (7%) |
 | IPR005024 | Vacuolar-sorting protein SNF7-like | Family | 0 | 1 | 1 | 123 | PF25880 WHD_CHMP7_1st (8%); PF25239 WHD_CHMP7 (6%) |
 | IPR005714 | ATPase, type III secretion system, FliI/YscN | Family | 1 | 0 | 0 | 29 | PF02874 ATP-synt_ab_N (62%) |
-| IPR006657 | Molybdopterin dinucleotide-binding domain | Domain | 0 | 1 | 1 | 248 | PF04879 Molybdop_Fe4S4 (79%); PF13510 Fer2_4 (12%); PF10588 NADH-G_4Fe-4S_3 (12%); PF10518 TAT_signal (10%); PF18364 Molybdopterin_N (7%); PF22117 Fer4_Nqo3 (6%); +1 more |
-| IPR006935 | Helicase/UvrB, N-terminal | Domain | 1 | 1 | 1 | 530 | PF00271 Helicase_C (87%); PF27431 UvrB_3rd (71%); PF17757 UvrB_inter (71%); PF12344 UvrB (71%); PF02151 UVR (71%) |
+| IPR005778 | Tetrahydromethanopterin S-methyltransferase subunit A, MtrA | Family | 1 | 0 | 0 | 20 | none |
+| IPR006657 | Molybdopterin dinucleotide-binding domain | Domain | 0 | 1 | 1 | 248 | PF04879 Molybdop_Fe4S4 (79%); PF10588 NADH-G_4Fe-4S_3 (12%); PF13510 Fer2_4 (12%); PF10518 TAT_signal (10%); PF18364 Molybdopterin_N (7%); PF22117 Fer4_Nqo3 (6%); +1 more |
+| IPR006935 | Helicase/UvrB, N-terminal | Domain | 1 | 1 | 1 | 530 | PF00271 Helicase_C (87%); PF12344 UvrB (71%); PF17757 UvrB_inter (71%); PF27431 UvrB_3rd (71%); PF02151 UVR (71%) |
+| IPR011251 | Luciferase-like domain | Domain | 0 | 1 | 1 | 250 | none |
 | IPR012724 | Chaperone DnaJ | Family | 1 | 1 | 0 | 658 | PF27439 DnaJ_C_2 (71%) |
 | IPR013380 | Type 3 secretion system ATPase SctN | Family | 2 | 0 | 0 | 6 | PF02874 ATP-synt_ab_N (83%) |
 | IPR017402 | Proteorhodopsin | Family | 1 | 0 | 0 | 3 | none |
+| IPR017679 | Coenzyme F420 hydrogenase subunit beta, archaea | Family | 1 | 0 | 0 | 4 | none |
+| IPR017681 | Coenzyme F420 hydrogenase, subunit gamma | Family | 2 | 0 | 0 | 4 | PF13237 Fer4_10 (75%); PF13187 Fer4_9 (25%) |
+| IPR017682 | Coenzyme F420 hydrogenase, subunit alpha | Family | 2 | 0 | 0 | 4 | PF27537 HoxH (75%) |
+| IPR018194 | Nickel-dependent hydrogenase, large subunit, nickel binding site | Binding_site | 1 | 0 | 0 | 38 | PF27537 HoxH (87%); PF00346 Complex1_49kDa (5%) |
 | IPR018229 | Rhodopsin, retinal binding site | Binding_site | 1 | 0 | 0 | 45 | none |
 | IPR019982 | Proteasome alpha subunit, archaeal | Family | 1 | 0 | 0 | 48 | none |
 | IPR020849 | Small GTPase, Ras-type | Family | 0 | 2 | 0 | 177 | none |
+| IPR021006 | HDA1 complex subunit 2/3 | Family | 0 | 1 | 1 | 4 | none |
+| IPR026203 | Intracellular hyaluronic acid binding protein | Family | 0 | 1 | 0 | 3 | none |
+| IPR036080 | F420-dependent methylenetetrahydromethanopterin dehydrogenase superfamily | Homologous_superfamily | 1 | 0 | 0 | 19 | none |
+| IPR036661 | Luciferase-like domain superfamily | Homologous_superfamily | 0 | 1 | 0 | 253 | none |
 | IPR037893 | Calcyclin-binding Protein, CS domain | Domain | 1 | 1 | 0 | 6 | none |
+| IPR039398 | Deltex family | Family | 0 | 1 | 0 | 13 | PF02825 WWE (62%); PF13923 zf-C3HC4_2 (38%); PF21717 DTX3L_a-b (15%); PF21718 KH_DTX3L (15%); PF23222 RRM_PARP14_1 (15%); PF00097 zf-C3HC4 (15%) |
 | IPR042371 | Z-binding domain | Domain | 1 | 0 | 1 | 11 | PF00035 dsrm (73%); PF02137 A_deamin (27%); PF12721 RHIM (27%) |
 | IPR045122 | Calcium permeable stress-gated cation channel 1-like | Family | 1 | 0 | 0 | 36 | PF12621 PHM7_ext (8%) |
 

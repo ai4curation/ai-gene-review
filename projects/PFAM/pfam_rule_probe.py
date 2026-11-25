@@ -147,7 +147,7 @@ def main() -> int:
         rest = [t for t in r["_closed"] - closure(term) if t != MF_ROOT and closure(t) & tops]
         # a descendant of the term is not "another" function
         rest = [t for t in rest if term not in closure(t)]
-        return max(rest, key=depth) if rest else None
+        return max(sorted(rest), key=depth) if rest else None
 
     reviewed = [r for r in rows if r["Reviewed"] == "reviewed"]
     unreviewed = [r for r in rows if r["Reviewed"] != "reviewed"]

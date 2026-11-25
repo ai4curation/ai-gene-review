@@ -314,15 +314,15 @@ S-methyl-5-thioribose-1-phosphate isomerase by count, and the rest are eIF2B
 subunits. A plain mapping would mis-annotate those, so each needs a restricting
 condition and belongs in a curated rule (`rules/curated`).
 
-**Pfam in the restricting rules we have.** None of the seven curated rules uses a
-Pfam condition (they use InterPro, taxon, CDD, FunFam and one module condition),
-and none negates a condition. The 23 InterPro entries with a proposed removal or
+**Pfam in the restricting rules we have.** Before the four rules above, none of
+the eleven curated rules used a Pfam condition; they used InterPro, taxon, CDD
+and FunFam conditions. The 35 InterPro entries with a proposed removal or
 narrowing in `projects/INTERPRO/interpro2go.sssom.yaml` mention Pfam only in
-comments. For thirteen of those entries a Pfam family is found on between 5% and
-95% of the reviewed members and could serve as a splitting condition, for example
+comments. For 17 of those entries a Pfam family is found on between 5% and 95% of
+the reviewed members and could serve as a splitting condition, for example
 PF00069 against PF07714 within the protein kinase domain entry. Whether any of
 them separates right from wrong members is untested; the
-[census](PFAM/HIGH_VALUE_UNIQUE.md) lists them.
+[census](PFAM/HIGH_VALUE_UNIQUE.md) lists them (refreshed 2026-11-25).
 
 Limits: purity is measured on reviewed members only; a Swiss-Prot term may itself
 be electronic; only molecular function is tested; and several headline families

@@ -404,7 +404,7 @@ def main() -> int:
         """Most specific non-binding function of a member that is neither the term nor an ancestor of it."""
         rest = [t for t in prot_truth[acc] - closure(term)
                 if t != MF_ROOT and closure(t) & functional_tops]
-        return max(rest, key=depth) if rest else None
+        return max(sorted(rest), key=depth) if rest else None
 
     ipr2mf = {
         ipr: {g for g in (norm(t) for t in terms) if g and is_mf(g)}
@@ -499,7 +499,7 @@ def main() -> int:
                 shared = sup & ancestors
                 if shared:
                     n_general += 1
-                    general_terms[max(shared, key=depth)] += 1
+                    general_terms[max(sorted(shared), key=depth)] += 1
         counter_examples = []
         for acc in members:
             if term not in prot_truth[acc]:
@@ -508,7 +508,7 @@ def main() -> int:
                     counter_examples.append({"accession": acc, "function": f"{other} {go_name[other]}"})
         partner_counts: collections.Counter[str] = collections.Counter()
         for acc in members:
-            partner_counts.update(set(prot_pfams[acc]) - {pf})
+            partner_counts.update(sorted(set(prot_pfams[acc]) - {pf}))
         partners = [
             {"pfam": p, "name": pfam_name.get(p, ""), "reviewed_members": len(pfam_members[p])}
             for p, c in partner_counts.most_common(6) if c >= 0.9 * n
@@ -582,7 +582,7 @@ def main() -> int:
         covered_by_descendant: set[str] = set()
         for t in passing:
             covered_by_descendant |= closure(t) - {t}
-        for t in passing - covered_by_descendant:
+        for t in sorted(passing - covered_by_descendant):
             if term_count[t] / n_sprot <= args.max_freq:
                 all_rows.append(describe(pf, t, members))
 
@@ -605,7 +605,7 @@ def main() -> int:
         if n_all is not None and n_term is not None:
             r["unreviewed_lacking_term"] = n_all - n_term
             r["unreviewed_already_covered"] = round(n_term / n_all, 3) if n_all else None
-    shortlist.sort(key=lambda r: (-(r.get("unreviewed_lacking_term") or -1), r["pfam"]))
+    shortlist.sort(key=lambda r: (-(r.get("unreviewed_lacking_term") or -1), r["pfam"], r["go_id"]))
     # Families that hit the same proteins (several domains of one enzyme) are one candidate, not many.
     by_term: dict[str, list[dict]] = collections.defaultdict(list)
     for r in shortlist:
@@ -718,7 +718,7 @@ def negative_census(pf2ipr, ipr_sigs, ipr_name, ipr_type, ipr_members, prot_pfam
             accs = ipr_members.get(ipr, [])
             pf_counts: collections.Counter[str] = collections.Counter()
             for acc in accs:
-                pf_counts.update(set(prot_pfams[acc]))
+                pf_counts.update(sorted(set(prot_pfams[acc])))
             splitters = [
                 {"pfam": pf, "name": pfam_name.get(pf, ""), "share": round(c / len(accs), 3)}
                 for pf, c in pf_counts.most_common()
@@ -745,6 +745,7 @@ def write_report(prov, n_families, all_rows, shortlist, illustrations, census, a
     A = L.append
     A("---")
     A('title: "High-Value, Unique Pfam → GO Candidates"')
+    A("autolink_gene_symbols: false")
     A("---")
     A("")
     A("# High-Value, Unique Pfam → GO Candidates")
