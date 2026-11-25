@@ -33,8 +33,10 @@ from PDZ-domain experiments should be represented as `GO:0030165` PDZ domain bin
 ADRB1 molecular functions; these specialized receptor-complex observations are peripheral to the
 core catecholamine receptor activity.
 
-Protein-binding policy: bare PDZ-domain protein binding rows map to PDZ domain binding, while
-bare non-PDZ receptor-complex protein binding rows are removed as uninformative.
+Protein-binding policy: bare PDZ-domain protein binding rows map to PDZ domain binding; the
+PMID:16533813 DLG4/MAGI2 bare rows are removed because direct ADRB1 evidence already asserts the
+specific child term for those PDZ scaffolds. Bare non-PDZ receptor-complex protein binding rows are
+removed as uninformative.
 
 ADRB1 also has real but secondary physiological outputs. Human ADRB1 variants associate with
 resting heart rate and natural short sleep, mouse Adrb1 loss impairs cold-induced adaptive
