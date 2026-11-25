@@ -45,6 +45,11 @@ coupled in the biology: the functional sensor is the MICU1-MICU3 heterodimer on
 the IMS side of the MCU/EMRE pore, and Ca2+ binding changes how that regulatory
 dimer gates MCU-dependent import into the matrix.
 
+UniProt records MICU3 as expressed in the central nervous system and skeletal
+muscle, and infers a skeletal-muscle uptake role by similarity from mouse Micu3
+[file:human/MICU3/MICU3-uniprot.txt "CC       also required to increase
+mitochondrial calcium uptake in skeletal"].
+
 The cellular component rows are complementary rather than conflicting. MICU3 is
 a soluble intermembrane-space regulator, but it acts while associated with the
 mitochondrial inner membrane through the uniplex complex.
@@ -69,6 +74,14 @@ mitochondrial inner membrane through the uniplex complex.
   fuel conditions by disrupting mitochondrial Ca2+ uptake and local ATP
   flexibility, but the clearest vesicle-cycle phenotype is slowed recycling
   rather than direct regulation of neurotransmitter exocytosis.
+
+## Upstream source defects
+
+The UniProt MICU3 `CC:DOMAIN` note says EF-hand domains 1 and 3 "act as sensors
+of mitochondrial matrix calcium levels". That appears to name the wrong side of
+the inner membrane: MICU3 is an intermembrane-space regulator associated with
+MCU/EMRE, and it senses the extramitochondrial Ca2+ that will enter the matrix.
+The review records this as a `PROBABLE` `UNIPROT` `WRONG_STATEMENT` defect.
 
 ## GO-CAM consistency
 
