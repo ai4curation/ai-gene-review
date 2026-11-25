@@ -74,3 +74,18 @@ did not alter the GO action calls.
   more specific, live `GO:0090114` process. The retired `GO:0006888` IBA remains
   acceptable historical curation supported by COPII packaging evidence; UniProt
   entry version 184 still lists the old IBA even though current GOA/PAINT do not.
+
+## 2026-11-25 shepherd follow-up
+
+- Reviewer point 4 (the one item from the 2026-10-01 review still open): the
+  `GO:0005783` HDA row cited PMID:26928762 with a quote about the SWAT-GFP
+  library's methods. Checked the cached publication: `full_text_available: true`
+  and zero occurrences of either "Shr3" or "YDL212W", so the quote passed the
+  verbatim-substring validator while supporting nothing about this gene. The
+  screen's localization call for Shr3 lives in the library dataset, not in the
+  manuscript text.
+- Repointed that `supported_by` to PMID:37477900, which states Shr3 is "an ER
+  membrane-localized chaperone in Saccharomyces cerevisiae", and recorded in
+  `reason` why the HDA row's own paper cannot be quoted for the claim. The
+  action stays ACCEPT: the ER localization is well supported, and the HDA row
+  itself is sound curation of a screen hit.
