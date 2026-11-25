@@ -1,0 +1,27 @@
+# ESR1 manual literature notes
+
+Provider deep research was not available for this review, so these notes summarize the evidence used to review the seeded ESR1 GOA rows and the ESR1 activity in GO-CAM model 6606056e00000678.
+
+## Core receptor activity
+
+ESR1 encodes estrogen receptor alpha, a ligand-regulated nuclear hormone receptor transcription factor. The cloned human cDNA expressed a 595 aa receptor in CHO cells that bound radiolabeled estradiol and was recognized by a primate ER-specific monoclonal antibody [PMID:3753802, "transformed Chinese hamster ovary cells containing a protein that bound [3H]estradiol"]. The UniProt record summarizes the canonical function as direct homodimer binding to estrogen response elements or indirect DNA association via AP-1, Sp1, Sp3 and other factors, followed by ligand-dependent association with LXXLL-motif coactivator complexes [file:human/ESR1/ESR1-uniprot.txt, "Ligand-dependent nuclear transactivation involves either direct homodimer binding to a palindromic estrogen response element (ERE) sequence or association with other DNA-binding transcription factors"].
+
+The GO-CAM ESR1 node in `gocams/6606056e00000678` represents ligand-bound ESR1 nuclear receptor activity on chromatin in the estrogen receptor signaling pathway. That is supported by the same sources that support the corresponding GOA rows: the Brzozowski et al. structure showed the estradiol-bound ligand-binding domain and explained agonist positioning of the activation helix [PMID:9338790, "Here we report the crystal structures of the LBD of ER in complex with the endogenous oestrogen, 17beta-oestradiol"], and Laganiere et al. showed ERalpha recruitment to chromatin, direct ERE binding by EMSA, estrogen-dependent reporter activation, and estrogen-dependent recruitment of NCOA1/SRC-1 to an ERalpha-bound intronic module in MCF-7 cells [PMID:15831516, "Direct binding of ERalpha to the ERE was shown using EMSAs"].
+
+The seeded rows to `GO:0005496 steroid binding` are true but less specific than the evidence permits. ESR1 binds the steroid 17beta-estradiol as its endogenous estrogen agonist; the estradiol-bound LBD structure and the cloned receptor's radiolabeled estradiol binding support refining those rows to `GO:1903924 estradiol binding` rather than adding a separate NEW row.
+
+## DNA binding and transcriptional regulation
+
+ESR1 recognizes estrogen response elements through its nuclear-receptor DNA-binding domain and can activate RNA polymerase II promoters. Stedronsky et al. used the human oxytocin promoter to show that ERalpha can bind a classic ERE even though the native oxytocin HRE was probably not directly occupied at physiological receptor levels [PMID:12047722, "low to moderate amounts of either oestrogen receptor, while being able to interact directly with a classic oestrogen response element (ERE)"]. Van de Stolpe et al. found ERalpha and ERbeta binding to three ERE half-sites in the human CRH-BP promoter by EMSA and showed ERE-site dependence of ERalpha promoter enhancement [PMID:15345745, "Three ERE half-sites in the CRH-BP promoter bound ERalpha and ERbeta in an EMSA"].
+
+ESR1 also represses genes in particular promoter contexts. The miR-221/222 paper reported ERalpha-dependent recruitment of NCOR and SMRT to the miR-221/222 transcription unit, supporting direct negative regulation of transcription on chromatin rather than a generic loss of expression [PMID:20388878, "ERalpha negatively modulates miR-221 and -222 through the recruitment of transcriptional corepressor partners"]. Two NF-kappaB papers support non-core ESR1 transrepression of IL6/NF-kappaB signaling [PMID:16043358, "In transfection experiments, both ERalpha and ERbeta inhibited NF-kappaB-mediated expression in a hormone dependent manner"; PMID:7651415, "This inhibition is mediated by the transcription factors NF-kappa B and C/EBP beta"].
+
+## Non-nuclear and non-core signaling
+
+Most ESR1 function is nuclear/chromatin-localized, but the seeded cytosol, Golgi, membrane and plasma membrane annotations are plausible as non-core locations. UniProt describes isoform 1 in nucleus, cytoplasm and at the cytoplasmic side of the cell membrane, and a non-isoform-specific Golgi/cell-membrane population that colocalizes with ZDHHC7/ZDHHC21 and is probably palmitoylated in the Golgi [file:human/ESR1/ESR1-uniprot.txt, "Nucleus. Golgi apparatus. Cell membrane. Note=Colocalizes with ZDHHC7 and ZDHHC21 in the Golgi apparatus where most probably palmitoylation occurs"]. The Watson et al. review records experimental immuno-identification of membrane ERalpha and emphasizes that the membrane receptor fraction is dynamic [PMID:11960618, "Our immuno-identification approaches for the qualitative and quantitative comparison of the membrane form of the estrogen receptor-alpha (mER alpha) to its nuclear counterpart"].
+
+## Row policy notes
+
+Bare `GO:0005515 protein binding` rows were treated uniformly as uninformative interaction records. They were removed under the project protein-binding policy even when the cited interaction is real; where the same evidence supports a more informative row, that more informative row was reviewed separately.
+
+`GO:0006338 chromatin remodeling`, `GO:0034392 negative regulation of smooth muscle cell apoptotic process`, and `GO:0048863 stem cell differentiation` were judged over-annotations. They describe contexts or downstream outcomes of ESR1 perturbation rather than ESR1 executing the work of the process.
