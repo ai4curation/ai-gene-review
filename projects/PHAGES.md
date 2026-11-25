@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [BPT4, 9CAUD, BPZF4, BPBPP, BPPHT, BPD31, ENTM13, ENTPH, SIRV1]
 autolink_gene_symbols: false
+index_group: BACTERIA
 ---
 
 # Bacteriophage Genome Curation & Pathway Hole Filling

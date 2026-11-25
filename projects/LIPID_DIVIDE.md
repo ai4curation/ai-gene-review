@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [BACSU, ECOLI, METJA, METTH, AERPE, GEOSE, FLAJ1]
 genes: [egsA, pcrB, plsY, plsC, gpsA, carS]
+index_group: ARCHAEA
 ---
 
 # The Lipid Divide: enzymes that cross it

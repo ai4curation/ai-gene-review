@@ -9,6 +9,7 @@ manifest:
   slides:
     - href: VESICLE_TARGETING_OBSOLETION/slides/VESICLE_TARGETING_OBSOLETION-slides.html
       description: Vesicle targeting obsoletion slides
+index_group: MAMMAL
 ---
 
 # Vesicle Targeting (GO:0006903) & Descendants — Obsoletion & Replacement

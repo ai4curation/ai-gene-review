@@ -17,9 +17,14 @@ Family-batched review of mammalian keratin-associated proteins (KRTAPs). No deep
 
 ## Curation decisions
 
-- MF: GO:0030281 structural constituent of cutaneous appendage (OLS-verified; child of GO:0005198). ND root and IEA structural molecule activity rows refined to it.
-- CC: GO:0045095 keratin filament (ACCEPT/NEW/MODIFY of ND root).
+- MF: GO:0030281 structural constituent of cutaneous appendage (OLS-verified; child of GO:0005198). IEA structural molecule activity rows refined to it. ND rows: see the ND re-check below.
+- CC: GO:0045095 keratin filament.
 - BP: GO:0031424 keratinization; hair cycle/follicle development not used (KAPs are downstream structural products).
 - ARBA cytosol: KEEP_AS_NON_CORE, harmonized with the human KRTAP reviews (KAPs are synthesized in the cytoplasm of the keratinizing cell but act in the keratin matrix; true but not the site of function).
 - ISO identical protein binding (HuRI Y2H donors): MARK_AS_OVER_ANNOTATED.
 - No bare GO:0005515 rows in this gene's GOA.
+
+## ND re-check (2026-11-14)
+
+- PubMed searched 2026-11-14 through E-utilities, "Krtap8-1" in All Fields: 8 hits: PMID:23791804 (in vitro binding of KAP8.1 to the K85 head domain; the abstract does not state the species), PMID:30125694 (KAP8.1 in human hair), and sheep, goat, cattle and human association or biomarker studies (PMID:41695674, PMID:34666626, PMID:31850197, PMID:25279319, PMID:22044071, PMID:19930592).
+- No paper on mouse Krtap8-1 identifies a molecular function, biological process or cellular component of the protein. The ND rows therefore follow the evidence-code guideline and are ACCEPT with nd_case INFERABLE (projects/NO_DATA.md); the family-level terms they were earlier MODIFYed to are kept as NEW ISS rows. This replaces the MODIFY decisions of the first pass.

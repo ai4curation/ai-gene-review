@@ -280,3 +280,15 @@ evidence and belongs here.
 Validation: `env -u UV_NATIVE_TLS just validate mouse G6pc2` passes with no errors, after
 `just backfill-record-sections genes/mouse/G6pc2` (no changes needed; the new quotes are
 publication quotes, not UniProt).
+
+## 2026-11-15 Source-defect re-review (rr2)
+
+Withdrew the WRONG_REFERENCE source defect on the GO:0005783 (ER) IDA row citing
+PMID:10787428. A QuickGO reference-level view of that PMID shows MGI used it on
+2011-01-12 to annotate a deliberate panel of mouse liver organelle-marker proteins
+(Npc1, Lamp1, Cav1, Lman1, Alpl, G6pc1, G6pc2, G6pc3) to their marker compartments
+with the EMAPA:16846 (liver) extension. G6Pase is the canonical ER marker enzyme and
+the activity assay cannot separate the three paralogs, so annotating all three to the
+ER is the resource's deliberate practice, not a slip. The earlier flag rested on the
+abstract naming only NPC1. Action stays ACCEPT (ER is correct); reference_review updated
+to relevance MEDIUM / VERIFIED.

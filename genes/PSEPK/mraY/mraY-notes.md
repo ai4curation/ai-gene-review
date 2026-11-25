@@ -53,3 +53,27 @@ Ten predicted transmembrane helices (FT TRANSMEM 25..45 through 338..358).
 
 ## References
 - [PMID:12534463] Nelson et al. 2002, Environ Microbiol — KT2440 genome sequence (source of the sequence; no functional MraY characterization).
+
+## 2026-11-17 — review revisited for the peptidoglycan precursor module
+
+The "Annotation-review reasoning" list above is superseded on three rows; it is
+kept as the original journal entry rather than rewritten.
+
+- **GO:0008963 is no longer the core MF, and is no longer ACCEPT.** The term's name
+  is stem-generic (EC 2.7.8.13) but its definition is the L-lysine pentapeptide
+  reaction (RHEA:21920), and the meso-diaminopimelate reaction KT2440 performs is
+  the *sibling* GO:0051992 (RHEA:28386), not a parent or child of it. The row is
+  therefore MODIFYed laterally to GO:0051992, which is the accepted core function.
+  KT2440 MurE inserts meso-diaminopimelate, and unlike MurF this enzyme has no
+  cross-species evidence of accepting either stem form, so the correction is made
+  rather than the row kept as a tolerated side activity.
+- **GO:0016780 is TOO_GENERAL, not MARK_AS_OVER_ANNOTATED.** It is a true is_a
+  parent of the accepted GO:0051992 and the glycosyltransferase family 4 signature
+  behind it is genuinely present; it is uninformative, not over-annotated.
+- **GO:0016020 is MODIFY to GO:0005886** for the same reason the E. coli ortholog is:
+  the specific inner-membrane location is known and already annotated.
+
+The same standard was applied across the module's genes: an entailed generic parent
+becomes TOO_GENERAL, a correct-but-general or wrong-stem term becomes MODIFY with the
+term the gene already carries, and the other-stem row is kept only where that
+organism's enzyme is shown to use both forms (MurF).

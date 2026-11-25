@@ -86,3 +86,9 @@ The independently reviewed follow-up passed focused validation (`just validate h
 - Traced the source via QuickGO: mouse Q6PIE5 GO:0005783 is_active_in IDA PMID:21731499 (MGI). Fetched the paper (full text). Myc-tagged alpha2 overexpressed in HeLa: [PMID:21731499 "Wild type α2 Na,K ATPase showed a typical plasmamembrane and slightly endoplasmic reticulum staining"]; the FHM2 R887 mutant colocalizes with calnexin and [PMID:21731499 "the mutant R887 protein is ineffectively exported from the endoplasmic reticulum-Golgi system"].
 - No pumping activity in the ER is shown, so the is_active_in qualifier is unsupported (qualifier left unchanged per policy).
 - Outcome: KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED (transit pool plus QC retention of an overexpressed mutant). No sub-compartment row. Added PMID:21731499 to references and publications/.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Endosome IEA (Ensembl projection GO_REF:0000107 from rat P06686): KEEP_AS_NON_CORE kept, reason extended.
+- Donor traced (QuickGO 2026-11-23): rat Atp1a2 endosome is an RGD IDA from PMID:16893515 (fetched; abstract only). The abstract states endogenous alpha2 is in an endosome fraction of cultured skeletal muscle cells and moves to the plasma membrane on cyclic stretch (PI3K-dependent). Rat UniProt lists only membrane/cell membrane.
+- Kept non-core on deference to a positive donor abstract (recycling pool under a physiological trigger); UNDECIDED (CD247) is the alternative because fraction markers cannot be read and there is no human line. No stage row.

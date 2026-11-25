@@ -10,7 +10,10 @@ set -euo pipefail
 # `:(glob)` to it later would silently match nothing.
 pathspec=':(glob)genes/**/*-ai-review.html'
 
-base=$(git cat-file -p HEAD | awk '/^parent /{print $2; exit}')
+# Read the parent from the commit object: in a depth-1 clone `git log --pretty=%P`
+# reports no parents, which would turn this check into a silent pass. awk reads
+# all of its input rather than exiting early, so git never gets SIGPIPE.
+base=$(git cat-file -p HEAD | awk '/^parent / && !p {p = $2} END {print p}')
 if [ -z "$base" ]; then
   echo "HEAD has no parent; nothing to compare."
   exit 0

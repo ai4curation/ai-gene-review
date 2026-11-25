@@ -11,6 +11,7 @@ sidecars:
 manifest:
   slides:
     - href: SL/slides/SL-slides.html
+index_group: CROSS_CUTTING
 ---
 
 # UniProt Subcellular Locations (SL) Unique Terms Project

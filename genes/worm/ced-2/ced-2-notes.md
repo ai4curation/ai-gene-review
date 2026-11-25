@@ -60,3 +60,5 @@ UniProt record (`ced-2-uniprot.txt`).
 - ced-2 itself (WBGene00000416) appears in the cell migration IBA WITH/FROM; this is expected and not circular.
 
 Round 6 of projects/INVOLVED_IN_PRECOMPOSITION.md (2026-11-10): the two GO:1902742 MODIFY replacements now use GO:0043065 positive regulation of apoptotic process instead of the precomposed GO:1904747 positive regulation of apoptotic process involved in development, with `decomposed_into.context_dropped`. The sign correction (the gene promotes death from the engulfing cell rather than taking part in the dying cell's program) is unchanged; only the developmental context is dropped. Earlier mentions of GO:1904747 above are superseded.
+
+Round 7 of projects/INVOLVED_IN_PRECOMPOSITION.md (2026-11-18) supersedes the round-6 paragraph above: a MODIFY's replacement must be a claim the review would accept, and this gene's pro-death role is non-core. The two GO:1902742 rows are MARK_AS_OVER_ANNOTATED, with no replacement; the positive-regulation reading is recorded in their reason. The sign correction (regulation from the engulfing cell, not participation) is unchanged.

@@ -10,8 +10,11 @@ from pathlib import Path
 import itertools
 import json
 import yaml
+import functools
 from ai_gene_review.module_logic import compile_module, is_satisfied, enumerate_routes
 from check_module import walk
+# This audit expands protein_complex active_units itself, so it compiles one atom per complex annoton.
+compile_module = functools.partial(compile_module, expand_complexes=False)
 
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent

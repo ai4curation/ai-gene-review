@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [EVALUATION]
 species: [LACLM, LACLA, SALTY, ECOLI, SYNE7, RHIME]
 genes: [sufB, ybbO, yxcA, Synpcc7942_0873, dusA]
+index_group: CROSS_CUTTING
 ---
 
 # LBNL Hackathon: Dark Protein Atlas genes

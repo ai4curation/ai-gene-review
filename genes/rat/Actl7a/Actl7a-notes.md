@@ -39,3 +39,8 @@
   (human 28-45 = rat 33-50, LQTASLRDGPAKRAVWVR) is identical; rat co-IP shows the complex in rat
   testis. This is an MF, not a process. No NEW process terms (actin cytoskeleton organization, egg
   activation) were added: the evidence for them is mouse/human mutant phenotype only.
+
+## ND re-check (2026-11-15)
+
+- PubMed searched 2026-11-15 through E-utilities: (Actl7a OR "actin-like 7a" OR "Arp7A" OR "T-actin 2") AND (rat OR rats OR Rattus), All Fields: 1 hit, PMID:21278383 (Tes LIM2-3 recognition by Arp7A, with a Tes co-IP from rat testis extracts).
+- No paper on rat Actl7a identifies a biological process of the protein; the process rows (acrosome assembly, spermatid development, fertilization) rest on mouse knockouts and are carried here by ISO/ISS. The BP ND row therefore follows the evidence-code guideline and is ACCEPT with nd_case INFERABLE (projects/NO_DATA.md), replacing the earlier REMOVE.

@@ -5,6 +5,7 @@ tags: [PIPELINE]
 species: [human, yeast, DROME, worm, SCHPO, mouse, ECOLI, ARATH, rat]
 genes: [gaa1, CHMP3, BAK1, DFFB, ced-3, PPP3CA, SDHB, ESPL1, MBL2, PDGFA, CLCN7, TERT, CAC2, pstS, DYNC2H1, RPL18A, Actb]
 autolink_gene_symbols: false
+index_group: CROSS_CUTTING
 ---
 
 # Complex Portal Annotation Correctness

@@ -18,6 +18,7 @@ import yaml
 from ai_gene_review.validation import ValidationSeverity, validate_gene_review
 from ai_gene_review.validation.uniprot_quote_source import (
     UNVETTED_CHECK,
+    _part_variants,
     EXISTENCE_CHECK,
     classify_quote,
     FIELD_CHECK,
@@ -247,10 +248,23 @@ def test_feature_quote_with_key_and_location_is_located(reference_id, quote, top
     assert [(s.field, s.topic) for s in statements] == [("FT", topic)]
 
 
-def test_editorial_bracket_is_a_gap():
-    """[protein] is dropped as editorial; the words either side are not adjacent in the record."""
+def test_bracket_in_the_record_is_read_as_text():
+    """UniProt writes [protein] into the reaction, so the quote is located as written."""
     quote = "CC       Reaction=L-seryl-[protein] + ATP = O-phospho-L-seryl-[protein] + ADP +"
+    assert _part_variants(quote)[0] == ["reaction l seryl protein atp o phospho l seryl protein adp"]
     statements = locate_quote(quote, _path(AURKB))
+    assert {(s.field, s.topic) for s in statements} == {("CC", "CATALYTIC ACTIVITY")}
+
+
+def test_editorial_bracket_not_in_the_record_is_a_gap():
+    """[a histone] is not in the record, so the literal reading fails and the bracket
+    becomes a gap; the words either side are then located on their own."""
+    quote = "Reaction=L-seryl-[a histone] + ATP"
+    literal, gapped = _part_variants(quote)
+    path = _path(AURKB)
+    assert not locate_quote(" ".join(literal), path)
+    assert gapped == ["reaction l seryl", "atp"]
+    statements = locate_quote(quote, path)
     assert {(s.field, s.topic) for s in statements} == {("CC", "CATALYTIC ACTIVITY")}
 
 
@@ -306,3 +320,36 @@ def test_word_also_outside_the_pe_line_is_not_protein_existence():
     ('Evidence at protein level') but also in feature qualifiers: not a PE quote."""
     data = _review([{"reference_id": STK36, "supporting_text": '/evidence="ECO:0000250|UniProtKB:P23647,'}])
     assert EXISTENCE_CHECK not in [f.check_type for f in quote_source_findings(data)]
+
+
+SDH2 = "file:SCHPO/sdh2/sdh2-uniprot.txt"
+
+
+@pytest.mark.parametrize("quote", [
+    # brackets that are part of the name, not editorial insertions
+    "RecName: Full=Succinate dehydrogenase [ubiquinone] iron-sulfur subunit, mitochondrial",
+    # a name cut off mid-word
+    "RecName: Full=Succinate dehydrogenase [ubiquinone] iron-sulfur subu",
+    "RecName: Full=Succinate dehydrogena",
+])
+def test_protein_name_with_brackets_or_cut_off_is_restating(quote):
+    """A DE name is still a label when it carries literal brackets or is cut off mid-word.
+
+    Treating ``[ubiquinone]`` as an editorial gap splits the name into fragments that
+    also occur in other sections, so the quote went unflagged; a cut-off last word
+    left the quote unlocated."""
+    result = classify_quote(quote, _path(SDH2))
+    assert result is not None
+    unvetted, restating, existence, statements = result
+    assert restating and [(s.field, s.topic) for s in statements] == [("DE", "")]
+
+
+def test_cut_off_word_needs_a_whole_word_beside_it():
+    """A single cut-off word could match inside any longer word, so it is not located."""
+    assert classify_quote("dehydrogena", _path(SDH2)) is None
+
+
+def test_bracketed_name_quote_is_reported_with_its_section():
+    data = _review([{"reference_id": SDH2, "supporting_text":
+                     "RecName: Full=Succinate dehydrogenase [ubiquinone] iron-sulfur subunit, mitochondrial"}])
+    assert FIELD_CHECK in [f.check_type for f in quote_source_findings(data)]

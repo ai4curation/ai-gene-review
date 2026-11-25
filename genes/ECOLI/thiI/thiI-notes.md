@@ -16,9 +16,10 @@ InterPro2GO IPR020536 maps every ThiI to GO:0004810 CCA tRNA nucleotidyltransfer
 The UniProt queries `rhea:24176 AND reviewed:true` and `rhea:24176 AND reviewed:true AND
 go:0004810` both return 287 entries (2026-11-11), so every reviewed ThiI is affected. Reported
 as https://github.com/geneontology/go-annotation/issues/6646 and recorded as a
-`source_defects` entry on the GO:0004810 row. The schema's `SourceResourceEnum` has no
-INTERPRO value, so that defect uses `resource: OTHER` with `record: InterPro:IPR020536`,
-`slot: interpro2go` (as in genes/ECOLI/hemW).
+`source_defects` entry on the GO:0004810 row, as `resource: INTERPRO` with
+`record: InterPro:IPR020536`, `slot: interpro2go` (as in genes/ECOLI/hemW). That defect
+was originally filed `resource: OTHER` because `SourceResourceEnum` had no INTERPRO
+value; #6027 added the value and #6518 re-filed this row onto it.
 
 ## What is established for E. coli ThiI
 

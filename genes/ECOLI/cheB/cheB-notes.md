@@ -55,3 +55,10 @@
 - PMID:4895809 has no cached abstract; ACCEPTed by deferring to the curator, quoting PMID:353036
   and the UniProt disruption phenotype.
 - No NEW rows.
+
+
+## 2026-11-06 taxonomic module audit
+
+Preserved the methylesterase, deamidase and receiver-domain functions. Changed experimental deaminase binding from REMOVE to UNDECIDED: PMID15916610 remains abstract-only after normal refetch and publisher search, so a suspected reversed participant cannot be confirmed. Routed its suspected source defect to CAFA. Qualified family-wide architecture/output statements.
+
+Reviewed all existing rows, references and core functions. Current PAINT-loss checks found no IRD or IKR on this target lineage. A normal Falcon research attempt failed with HTTP 403 authentication; no provider report was fabricated or overwritten. Existing source payloads, raw files and inherited NEW rows are preserved; no new annotation rows were added. Comparative scope was checked against the full text of PMID33684668: the E. coli ligand-response direction and optional adaptation/termination components are not universal.

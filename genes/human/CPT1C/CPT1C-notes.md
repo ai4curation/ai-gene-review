@@ -88,3 +88,113 @@ Despite retaining the carnitine palmitoyltransferase family fold and name, CPT1C
 - Different enzymatic mechanism (hydrolysis vs transfer)
 - Different substrate (palmitoylated proteins vs acyl-CoA + carnitine)
 - Different biological role (synaptic regulation vs energy metabolism)
+
+---
+
+**Correction (2026-11-23, issue #6783)**
+
+The review carried a `NEW` biological-process row on **GO:0002084 "protein
+depalmitoylation"** (IDA, PMID:30135643), and listed the same id under
+`core_functions[].directly_involved_in`. That term is **obsolete** in the current
+ontology (verified against QuickGO, GO release 2026-11-21, where it resolves as
+"obsolete protein depalmitoylation"). GO's obsoletion comment: *"The reason for
+obsoletion is that this term represents a molecular function, not a biological
+process. Consider instead annotating to the molecular function
+'palmitoyl-(protein) hydrolase activity' (GO:0008474)."* There is no `replaced_by`.
+
+Three things were checked before deciding:
+
+1. **The `consider` target is already annotated.** GO:0008474
+   palmitoyl-(protein) hydrolase activity is live, and CPT1C already carries it
+   twice in GOA — by **IDA from the very same PMID:30135643** (ECO:0000314) and by
+   IEA (GO_REF:0000120). Both rows are `ACCEPT` in this review, and GO:0008474 is
+   already the review's `core_functions[].molecular_function`. A `NEW` row is by
+   definition "a proposed annotation, not one that exists in the existing GO
+   annotations", so re-proposing GO:0008474 is not available: it would be a
+   duplicate, and CLAUDE.md's `NEW` bar explicitly rejects a term "the gene already
+   carries".
+2. **The suggested BP fallback is also obsolete.** GO:0098734 "macromolecule
+   depalmitoylation", which the old `reason` cited as the broader IEA row that
+   GO:0002084 would refine, has *also* been obsoleted in the current release, for
+   the same stated reason (*"this term represents a molecular function, not a
+   biological process. Consider instead ... 'palmitoyl hydrolase activity'
+   (GO:0098599), or, for protein substrates, 'palmitoyl-(protein) hydrolase
+   activity' (GO:0008474)"*). Note that this is recent: the 2026-07-26 go-basic
+   release still has both terms live (GO:0002084 flagged
+   `subset: gocheck_obsoletion_candidate`), and OLS and api.geneontology.org were
+   both still serving them as non-obsolete when checked on 2026-11-23. QuickGO,
+   on the 2026-11-21 release, is the current source. So "fall back to GO:0098734"
+   is not an option either.
+3. **No other live BP term states the claim.** The surviving ancestors
+   (GO:0035601 protein deacylation, GO:0098732 macromolecule deacylation) are live,
+   but asserting one would reintroduce exactly the aspect error GO obsoleted the
+   branch to remove — the chemistry CPT1C performs is a molecular function, and the
+   biological process it serves is already asserted on this gene as GO:0099072
+   regulation of postsynaptic membrane neurotransmitter receptor levels and as the
+   `NEW` row GO:1904719 positive regulation of AMPA glutamate receptor clustering
+   (both verified live).
+
+**Decision: the `NEW` GO:0002084 row was dropped**, and GO:0002084 was removed
+from `core_functions[].directly_involved_in` (leaving GO:0099072 there). Nothing
+is lost: the depalmitoylation chemistry is carried by the existing GO:0008474 IDA
+row from the same paper, and the biological consequence by GO:0099072 /
+GO:1904719. No replacement BP term was invented, and no `proposed_new_terms` entry
+was added, because GO's obsoletion was a deliberate decision that this chemistry
+belongs in the molecular-function aspect, not an accidental gap.
+
+**Left alone, deliberately** — *superseded; see the addendum at the end of this
+file, where the row became `MODIFY` to GO:0008474.* The *existing* GOA row on
+GO:0098734 (IEA, GO_REF:0000108) is still present in `GENE-goa.tsv` and was at
+the time `ACCEPT` here.
+Per CLAUDE.md, `existing_annotations[].term.id` comes from GOA and is not
+rewritten by this review; the obsoletion is upstream GOA's to propagate. Its
+`reason` prose ("correctly captures the core molecular function of CPT1C") does
+read oddly for a BP-aspect row, and is arguably the same aspect confusion GO
+obsoleted the term for — worth revisiting in a review of that row, which is out of
+scope for this correction.
+
+## Review follow-up (2026-11-23, PR #6790 round 2)
+
+Reviewer suggestion 7: two rows whose `reason` argued against their own action. Only the
+action and reason are the review's own; neither GOA-sourced term id was touched.
+
+- `GO:0003824 catalytic activity` (IEA, GO_REF:0000117) was `ACCEPT` with a reason reading
+  "this is a root-level term that provides minimal information". CLAUDE.md forbids
+  accepting a term while arguing that it is too general. The action is now `TOO_GENERAL`,
+  which is exactly the case the enum describes: the term is true of the gene but
+  uninformative because a more specific term asserted elsewhere in this review already
+  entails it — `GO:0008474 palmitoyl-(protein) hydrolase activity`, which CPT1C carries by
+  IDA from PMID:30135643 (`CPT1C-goa.tsv`, ECO:0000314). `MODIFY` is not used: this row's
+  own evidence is an ARBA electronic call that reaches only the root of the
+  molecular-function branch, and CLAUDE.md requires a MODIFY to rest on this row's own
+  evidence for the deeper term. The action judges the term, not the evidence; the claim is
+  not called false.
+- `GO:0098734 macromolecule depalmitoylation` (IEA, GO_REF:0000108) is a biological-process
+  row whose reason called it "the core molecular function of CPT1C". At this point it
+  stayed `ACCEPT`, on the reasoning that the claim and the aspect were right. *That
+  parenthetical is wrong and is reversed by the addendum below: the aspect is precisely
+  what GO's obsoletion rejects, and the row is now `MODIFY` to `GO:0008474`.* The round-2
+  edit did correct the reason to call it the core biological process and to point at
+  `GO:0008474` for the molecular function.
+
+**Addendum (2026-11-23, PR #6790 review).** The GOA IEA row on `GO:0098734` is
+now `MODIFY` to `GO:0008474`, not `ACCEPT`. Four merged reviews carry the
+identical GOA row (`GO:0098734` + IEA + `GO_REF:0000108` + `WITH/FROM
+GO:0008474`) and none accepts it: `genes/DANRE/abhd10a` and
+`genes/DANRE/abhd10b` modify it to `GO:0008474`, `genes/human/ABHD12` removes it
+citing the GO editors' own tracker threads, and `genes/human/CLN5` marks it
+over-annotated on substrate-scope grounds. An `ACCEPT` here would have recorded
+the obsoletion in the `reason` while still asserting in the same breath the
+aspect the obsoletion denies. The id itself is untouched — the action and the
+proposed replacement are the review's own, which is the same distinction that
+let `GO:0003824` become `TOO_GENERAL`.
+
+**Correction to the round-2 note.** That note claimed the `GO:0098734`
+obsoletion was "visible only in QuickGO". That is wrong, and the repository
+itself refutes it: the GOA files of ABHD12, CLN5, abhd10a and abhd10b all carry
+the obsolete-prefixed label `obsolete macromolecule depalmitoylation`, and
+ABHD12's `reason` cites the GO editors' threads. The obsoletion was discoverable
+from committed content. What is true is narrower: CPT1C's *own* `CPT1C-goa.tsv`
+is a stale fetch, dated `20260106` against `20260727` for the other four, so this
+gene's GOA file alone still shows the pre-obsoletion label. A later
+`just fetch-gene human CPT1C` will surface the prefix on this row.

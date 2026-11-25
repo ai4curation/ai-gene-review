@@ -21,3 +21,9 @@
   Bare protein binding removed (policy). NEW protein heterodimerization activity from
   the PMID:37926922 abstract (heterodimerization with family members).
 - No NEW BP terms: OX-derived stress/photosynthesis enrichment is indirect.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0006355 / PMID:11970900: defect withdrawn (evidence depth: ABSTRACT). QuickGO shows TAIR made the identical TAS row from this paper on the same day for all six family members (BZR1, BZR2, BEH1-4), i.e. a deliberate family-level author-statement annotation, not a mis-keyed PMID. The defect rested only on the abstract not naming homologs; nothing in the record is identifiably wrong. Full text (Dev Cell 2002) could not be obtained (403), so the family statement itself was not seen.

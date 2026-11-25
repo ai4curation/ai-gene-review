@@ -1,0 +1,7 @@
+# BBOX1 Notes
+
+BBOX1 catalyzes the cytosolic terminal step of L-carnitine biosynthesis. Vaz et al. cloned the human cDNA and showed that the open reading frame encodes gamma-butyrobetaine hydroxylase [PMID:9753662]. The human recombinant structure confirmed the dimeric 2-oxoglutarate oxygenase fold, the catalytic Fe(II)-binding His-X-Asp-X(n)-His triad, and a separate N-terminal structural zinc site [PMID:20599753].
+
+The GOA file is complete, not header-only: it carries 25 rows. The exact `GO:0008336 gamma-butyrobetaine dioxygenase activity`, `GO:0045329 carnitine biosynthetic process`, and `GO:0005829 cytosol` rows are correct. `GO:0016491 oxidoreductase activity` and `GO:0005737 cytoplasm` are too broad. `GO:0008270 zinc ion binding` is real but non-core because Zn sits in the N-terminal domain and is not the catalytic Fe(II). `GO:0005515 protein binding` is removed under the generic protein-binding policy; the IntAct SHMT1 isoform row from a binary interactome map does not identify a BBOX1 molecular function. The two `GO:0042802 identical protein binding` rows are kept as non-core because BBOX1 self-association is independently supported by the dimeric structure.
+
+Li et al. provide the main in vivo support for BBOX1 in carnitine synthesis: biallelic BBOX1 variants in patients were associated with low L-carnitine and elevated gamma-butyrobetaine, and C. elegans gbh-1 variants modelled after patient alleles reproduced the biochemical block [PMID:41022783].

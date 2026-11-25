@@ -43,3 +43,7 @@ cached publications in `publications/` and the UniProt record `uvrA-uniprot.txt`
 - Generic terms (DNA binding, DNA repair, DNA damage response, catalytic activity,
   cytoplasm, DNA repair complex, identical protein binding) are MODIFIED to the specific
   terms; same choices applied to P. putida KT2440 UvrA (Q88QK7) for shared terms.
+
+## 2026-11-15 re-review: PMID:19458048 source defect withdrawn
+
+The suspected `WRONG_REFERENCE` defect on the UvrA-UvrB protein binding IPI row citing PMID:19458048 (Sung et al. 2009, PBP1b crystal structure) was withdrawn; the earlier note that the paper is unrelated to the interaction is superseded. The IntAct web service lists five interactions for this publication, all in vitro pull-downs imported from DIP: UvrB-UvrA (EBI-15781646), and PBP1b (mrcB) with UvrA, FtsN, MltA and FtsI. QuickGO shows the reciprocal UvrB row and the PBP1b rows from the same paper. So the paper did assay UvrA-UvrB (presumably in connection with the UvrB-domain-2-like fold in PBP1b; the full text was not read), and the abstract's silence was not evidence against it. The row is still REMOVE under the protein-binding policy only.

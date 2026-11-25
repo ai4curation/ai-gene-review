@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [OBSOLETION]
 species: [XENLA, human]
 genes: [pax3-a, zic1, gbx2, MSX1, PAX7, TFAP2A, TFAP2C, hes4-a, id3-a, myc-a, pou5f1.1, sox8, sox9-a, sox10, snai1, snai2, twist1, LRP6]
+index_group: PLANT
 ---
 
 # Neural Crest Formation (GO:0014029) — Obsoletion Proposal
