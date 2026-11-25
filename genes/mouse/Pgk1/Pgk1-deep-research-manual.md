@@ -32,9 +32,11 @@ plasmin disulfide reductase that promotes angiostatin release and inhibits tumor
 [PMID:11130727]. Li et al. showed that hypoxia or oncogenic signaling induces mitochondrial PGK1
 translocation, where PGK1 phosphorylates PDHK1 at Thr338 and inhibits mitochondrial pyruvate
 utilization [PMID:26942675]. These are context-specific and non-core relative to cytosolic PGK
-activity. The supporting human kinase site is threonine, so the generic
-`protein serine/threonine kinase activity` transfer is safer than the RHEA-based
-`protein serine kinase activity` rows.
+activity. Qian et al. subsequently showed that PGK1 phosphorylates Beclin1 Ser30 during
+glutamine deprivation- and hypoxia-induced autophagy [PMID:28238651], so the RHEA-based
+`protein serine kinase activity` rows are probably true; the defect is narrower, on the human
+UniProt serine-kinase catalytic-activity line that cites the PDHK1 Thr338 paper rather than the
+Beclin1 Ser30 paper.
 
 The remaining human-derived context rows are weaker. Buhrke et al. found PGK1 in a proteomic
 comparison of proliferating and differentiated Caco-2 cells, which is correlative expression
