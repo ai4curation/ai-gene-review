@@ -38,8 +38,9 @@ lipopeptide as input.
   but the wrong molecular-function term. LBP is a soluble mobile carrier for
   lipidated cargo, not a stable signaling coreceptor; the row is therefore
   modified to molecular carrier activity.
-- `GO:0005102` signaling receptor binding similarly over-interprets an
-  opsonic receptor contact on macrophages.
+- `GO:0005102` signaling receptor binding is generic but supported by
+  opsonic receptor contact on macrophages and transient cargo handoff to
+  CD14/TLR1-TLR2, so it was kept as non-core.
 
 ## Process And Location Rows
 
