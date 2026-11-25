@@ -34,9 +34,10 @@ translocation, where PGK1 phosphorylates PDHK1 at Thr338 and inhibits mitochondr
 utilization [PMID:26942675]. These are context-specific and non-core relative to cytosolic PGK
 activity. Qian et al. subsequently showed that PGK1 phosphorylates Beclin1 Ser30 during
 glutamine deprivation- and hypoxia-induced autophagy [PMID:28238651], so the RHEA-based
-`protein serine kinase activity` rows are probably true; the defect is narrower, on the human
-UniProt serine-kinase catalytic-activity line that cites the PDHK1 Thr338 paper rather than the
-Beclin1 Ser30 paper.
+`protein serine kinase activity` rows are probably true. The remaining UniProt issue on human
+P00558 is additive: the record has the seryl RHEA:17989 EC 2.7.11.1 block but should also
+carry the paired threonyl RHEA:46608 block for the PDHK1 Thr338 paper and PMID:28238651 on the
+seryl line for the Beclin1 Ser30 paper.
 
 The remaining human-derived context rows are weaker. Buhrke et al. found PGK1 in a proteomic
 comparison of proliferating and differentiated Caco-2 cells, which is correlative expression
