@@ -25,6 +25,13 @@ C1P transfer: the structures captured one ceramide molecule in a long
 amphiphilic cavity and explained how CERT distinguishes ceramide from other
 lipids [PMID:18184806, "one ceramide molecule is buried in a long amphiphilic
 cavity"].
+Kumagai et al. also detected very-low-efficiency transfer of diacylglycerol by
+the START domain, but under the promiscuous-activity policy this is in vitro
+secondary activity of unclear physiological relevance rather than evidence to
+keep a generic lipid-transfer term: the same assay and Hanada et al.'s cell
+biology identify ceramide as the evolved cargo [PMID:14685229, "We conclude
+that CERT mediates the intracellular trafficking of ceramide in a
+non-vesicular manner"].
 
 CERT1 is part of ceramide metabolism and sphingomyelin biosynthesis because it
 delivers the ceramide pool used at the Golgi/TGN. Down-regulating CERT lowered
