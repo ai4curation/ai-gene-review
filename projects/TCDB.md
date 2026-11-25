@@ -1,5 +1,6 @@
 ---
 title: "TCDB → GO Transporter-Activity Mapping & Gap Project"
+collections: [MAPPINGS]
 maturity: IN_PROGRESS
 last_reviewed: 2026-10-05
 autolink_gene_symbols: false
@@ -12,6 +13,7 @@ sidecars:
 manifest:
   slides:
     - href: TCDB/slides/TCDB-slides.html
+index_group: CROSS_CUTTING
 ---
 
 # TCDB → GO Transporter-Activity Mapping & Gap Project

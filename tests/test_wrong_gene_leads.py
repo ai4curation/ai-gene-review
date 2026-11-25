@@ -5,6 +5,7 @@ citing entries, so they need no network. One integration test exercises the
 UniProt lookup against a recorded cassette.
 """
 
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -13,10 +14,21 @@ from ai_gene_review.tools.wrong_gene_leads import (
     CitingEntry,
     GeneRecord,
     MAX_CITING_ENTRIES,
+    MAX_RANGE,
+    SHARED_ANNOTATION_GENES,
+    UNREVIEWED_PENALTY,
     candidate_rows,
     fetch_citing_entries,
     find_leads,
+    gene_specific_names,
+    lead_kind,
+    named_in_abstract,
+    parse_uniprot_flatfile,
+    pombase_names,
     score_lead,
+    shared_annotation_counts,
+    shared_annotation_carriers,
+    token_forms,
 )
 
 GENES = Path(__file__).resolve().parents[1] / "genes"
@@ -387,3 +399,295 @@ def test_group_author_matching_does_not_swallow_sentences(paragraph, expected):
     from ai_gene_review.tools.wrong_gene_leads import _is_author_list
 
     assert _is_author_list(paragraph) is expected
+
+
+PUBLICATIONS = GENES.parent / "publications"
+
+
+@pytest.mark.parametrize(
+    "gene, pmid",
+    [
+        ("DROME/spz", "19018662"),  # "Spätzle": diacritic, name is "Protein spatzle"
+        ("DROME/btl", "16831830"),  # "Breathless": name is "Protein breathless"
+        ("SCHPO/cds1", "11027263"),  # "Cds1p-dependent": yeast protein suffix
+        ("SCHPO/fas2", "9693066"),  # "lsd1+/fas2+": allele mark, slash pair
+        ("SCHPO/idh1", "7903653"),  # "glu3": old name only PomBase lists
+        ("human/ABL1", "18280240"),  # "c-Abl": cellular-homolog prefix
+        ("human/AKR1C4", "21851338"),  # "AKR1C1-AKR1C4": a range
+        ("human/ACADVL", "16020546"),  # "very-long-chain acyl-CoA dehydrogenase"
+    ],
+)
+def test_name_forms_found_in_fourth_lead_batch(gene, pmid):
+    """Each paper names the gene in a form the fourth lead review found missed."""
+    own, _ = candidate_rows(GENES / gene)
+    assert named_in_abstract(pmid, own.gene_names, PUBLICATIONS, own.protein_names)
+
+
+@pytest.mark.parametrize(
+    "gene, pmid",
+    [
+        ("human/ADAM17", "24990881"),  # "ADAM proteases" only
+        ("human/ALDOB", "6696436"),  # muscle aldolase (ALDOA)
+        ("DROME/rl", "8946916"),  # DJNK/basket
+        ("mouse/Rbpj", "23571214"),  # BEND6
+    ],
+)
+def test_confirmed_leads_stay_unnamed(gene, pmid):
+    """Papers found to be about another gene must still not name the annotated one."""
+    own, _ = candidate_rows(GENES / gene)
+    assert (
+        named_in_abstract(pmid, own.gene_names, PUBLICATIONS, own.protein_names)
+        is False
+    )
+
+
+@pytest.mark.parametrize(
+    "text, names, expected",
+    [
+        ("proteins (AKR1C1-AKR1C3) were assayed", {"AKR1C4"}, False),
+        ("proteins (AKR1C1-AKR1C3) were assayed", {"AKR1C2"}, True),
+        ("isoforms AKR1C1-4 were assayed", {"AKR1C4"}, True),
+        ("phosphorylation by c-Abl", {"ABL2"}, False),
+        ("phosphorylation by c-Abl", {"ABL"}, True),
+        ("Rad21p was cleaved", {"RAD21"}, True),
+        ("the Hsp70 chaperone", {"HSP7"}, False),
+        ("GFP-tagged GDI/D4 was diffuse", {"GDID4"}, True),
+    ],
+)
+def test_token_name_forms(tmp_path, text, names, expected):
+    """Ranges, prefixes and suffixes are expanded without matching neighbours."""
+    (tmp_path / "PMID_1.md").write_text(f"title: X\n## Abstract\n{text}\n")
+    assert named_in_abstract("1", names, tmp_path) is expected
+
+
+@pytest.mark.parametrize(
+    "shared, expected",
+    [
+        (1, (1, "few_citing_entries")),
+        (SHARED_ANNOTATION_GENES - 1, (1, "few_citing_entries")),
+        (SHARED_ANNOTATION_GENES, (-1, "few_citing_entries;shared_by_many_genes")),
+    ],
+)
+def test_rows_shared_by_many_genes_are_down_weighted(shared, expected):
+    """A row its source gave to many genes (a complex, a proteomics list) ranks lower."""
+    own = GeneRecord("P1", "9606", frozenset(), frozenset({"ABC1"}), frozenset())
+    others = [CitingEntry("P2", "X", "10090", frozenset())]
+    assert score_lead(own, others, None, shared) == expected
+
+
+def test_shared_annotation_counts_real_complex_rows():
+    """ComplexPortal's bBAF rows reach several local subunits; ALDOB's row does not."""
+    dirs = list(GENES.glob("human/*"))
+    counts = shared_annotation_counts(dirs)
+    assert (
+        counts[("PMID:12192000", "GO:0000785", "ComplexPortal")]
+        >= SHARED_ANNOTATION_GENES
+    )
+    assert (
+        1
+        <= counts[("PMID:6696436", "GO:0004332", "Reactome")]
+        < SHARED_ANNOTATION_GENES
+    )
+    assert (
+        1
+        <= counts[("PMID:24990881", "GO:0004175", "UniProt")]
+        < SHARED_ANNOTATION_GENES
+    )
+
+
+def test_paralog_sharing_a_base_name_does_not_cancel_the_lead(tmp_path):
+    """MDH1 and MDH2 differ only in their location qualifier, so the base name is shared."""
+    own, _ = candidate_rows(GENES / "human/MDH2")
+    mdh1 = CitingEntry(
+        "P40925",
+        "MDH1",
+        "9606",
+        frozenset(),
+        frozenset({"Malate dehydrogenase, cytoplasmic"}),
+    )
+    (tmp_path / "PMID_1.md").write_text(
+        "title: X\n## Abstract\nCytosolic malate dehydrogenase was purified.\n"
+    )
+    forms = gene_specific_names(own, [mdh1])
+    assert named_in_abstract("1", own.gene_names, tmp_path, forms) is False
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("Similar results were seen. Levels were similar in mutants.", False),
+        ("We find that Similar binds Tango in the nucleus.", True),
+    ],
+)
+def test_one_word_short_name_needs_a_capitalised_mention(tmp_path, text, expected):
+    """DROME/sima is "Protein similar": prose "similar" must not name it."""
+    own, _ = candidate_rows(GENES / "DROME/sima")
+    (tmp_path / "PMID_1.md").write_text(f"title: X\n## Abstract\n{text}\n")
+    assert (
+        named_in_abstract("1", own.gene_names, tmp_path, own.protein_names) is expected
+    )
+
+
+def test_pombase_names_union_genes_sharing_an_accession():
+    """Three histone H4 genes share P09322; every name must be kept."""
+    names = pombase_names()["P09322"]
+    assert {"hhf1", "hhf2", "hhf3", "h4.1", "h4.3"} <= names
+
+
+@pytest.mark.parametrize("token, expanded", [("X1-X20", True), ("X1-X21", False)])
+def test_range_expansion_is_capped(token, expanded):
+    """A range is expanded only when it names at most MAX_RANGE (20) genes."""
+    assert MAX_RANGE == 20
+    assert ("X10" in token_forms(token)) is expanded
+
+
+def test_short_name_that_cannot_be_prose_matches_case_insensitively(tmp_path):
+    """rat/Jag1 is "Protein jagged-1": a hyphenated, numbered name needs no capital."""
+    own, _ = candidate_rows(GENES / "rat/Jag1")
+    (tmp_path / "PMID_1.md").write_text(
+        "title: X\n## Abstract\nNotch signalling requires jagged-1 in the ear.\n"
+    )
+    assert named_in_abstract("1", own.gene_names, tmp_path, own.protein_names)
+
+
+def test_title_case_title_does_not_name_a_one_word_gene():
+    """DROME/tub is "Protein Tube"; "Polar Tube Proteins" in a Title-Case title is not it.
+
+    Only the protein-name path is tested: tub also has the gene synonym "tube",
+    which the gene-name token check matches in "polar tube" (a known limitation).
+    """
+    own, _ = candidate_rows(GENES / "DROME/tub")
+    assert named_in_abstract("28031263", [], PUBLICATIONS, own.protein_names) is False
+
+
+def test_reviewed_status_is_parsed():
+    """The ID line says whether the annotated protein's own entry is reviewed."""
+    own = parse_uniprot_flatfile(
+        "ID   D3ZAQ8_RAT              Unreviewed;       189 AA.\nAC   D3ZAQ8;\n"
+    )
+    assert own.reviewed is False
+    own = parse_uniprot_flatfile(
+        "ID   SRPRB_HUMAN             Reviewed;         271 AA.\nAC   Q9Y5M8;\n"
+    )
+    assert own.reviewed is True
+
+
+def test_unreviewed_own_entry_is_down_weighted():
+    """An unreviewed entry cites few papers, so its silence about one says little."""
+    others = [CitingEntry("P2", "X", "10090", frozenset())]
+    reviewed = GeneRecord("P1", "9606", frozenset(), frozenset({"ABC1"}), frozenset())
+    unreviewed = replace(reviewed, reviewed=False)
+    assert score_lead(reviewed, others, None) == (1, "few_citing_entries")
+    assert score_lead(unreviewed, others, None) == (
+        1 - UNREVIEWED_PENALTY,
+        "few_citing_entries;own_entry_unreviewed",
+    )
+
+
+@pytest.mark.parametrize(
+    "others,evidence,expected",
+    [
+        # SRPRB: the crystal pairs human SRalpha with mouse SRbeta.
+        (
+            [
+                CitingEntry("P08240", "SRPRA", "9606", frozenset()),
+                CitingEntry("P47758", "Srprb", "10090", frozenset()),
+            ],
+            "EXP",
+            "evidence_code",
+        ),
+        # An author statement may rest on the ortholog; it is not an assay claim.
+        ([CitingEntry("P47758", "Srprb", "10090", frozenset())], "TAS", "wrong_gene"),
+        ([CitingEntry("P08240", "SRPRA", "9606", frozenset())], "EXP", "wrong_gene"),
+        # A combinatorial manual assertion with an experimental component counts as EXP.
+        (
+            [CitingEntry("P47758", "Srprb", "10090", frozenset())],
+            "ECO:0007744",
+            "evidence_code",
+        ),
+    ],
+)
+def test_lead_kind(others, evidence, expected):
+    """A direct assay row whose paper the ortholog's entry cites is an evidence-code lead."""
+    own = GeneRecord("Q9Y5M8", "9606", frozenset(), frozenset({"SRPRB"}), frozenset())
+    assert lead_kind(own, others, evidence) == expected
+
+
+def test_srprb_lead_is_an_evidence_code_lead():
+    """The SRPRB EXP row from the mixed-species structure paper is reported as such."""
+    citing = {
+        "16439358": [
+            CitingEntry("P08240", "SRPRA", "9606", frozenset({"PTHR43134"})),
+            CitingEntry("P47758", "Srprb", "10090", frozenset({"PTHR45909"})),
+        ]
+    }
+    leads = find_leads([GENES / "human" / "SRPRB"], citing=citing)
+    exp = [r for r in leads if r["evidence"] == "EXP"]
+    assert exp and all(r["lead_kind"] == "evidence_code" for r in exp)
+    nas = [r for r in leads if r["evidence"] == "NAS"]
+    assert nas and all(r["lead_kind"] == "wrong_gene" for r in nas)
+
+
+def test_row_shared_with_a_local_paralog_is_down_weighted():
+    """GstO1 and GstO2 carry the same FlyBase rows from the Omega GST paper."""
+    se = CitingEntry("Q9VSL3", "se", "7227", frozenset({"PTHR43968"}))
+    dirs = [GENES / "DROME" / "GstO1", GENES / "DROME" / "GstO2"]
+    leads = find_leads(dirs, citing={"16712527": [se]})
+    assert leads
+    assert all("shared_with_local_paralog" in r["reasons"] for r in leads)
+    alone = find_leads(dirs[:1], citing={"16712527": [se]})
+    assert alone and not any("shared_with_local_paralog" in r["reasons"] for r in alone)
+
+
+def test_paralog_share_needs_a_shared_family(tmp_path):
+    """The same row on a gene of another family is not a family annotation."""
+    a = _gene_folder(
+        tmp_path / "a",
+        "AC   P00001;\nOX   NCBI_TaxID=9606;\nDR   PANTHER; PTHR1; X; 1.\n",
+    )
+    b = _gene_folder(
+        tmp_path / "b",
+        "AC   P00002;\nOX   NCBI_TaxID=9606;\nDR   PANTHER; PTHR2; X; 1.\n",
+        acc="P00002",
+    )
+    shared = shared_annotation_carriers([a, b])
+    key = ("PMID:1", "GO:0003674", "UniProt")
+    assert sorted((c.accession, sorted(c.families), c.taxon) for c in shared[key]) == [
+        ("P00001", ["PTHR1"], "9606"),
+        ("P00002", ["PTHR2"], "9606"),
+    ]
+    citing = {"1": [CitingEntry("P9", "X", "9606", frozenset({"PTHR1"}))]}
+    (lead,) = find_leads([a, b], citing=citing, publications_dir=tmp_path)[:1]
+    assert "shared_with_local_paralog" not in lead["reasons"]
+
+
+def test_copy_on_the_citing_paralog_keeps_the_lead():
+    """CNGB3's row from the CNGA3 screen sits beside CNGA3's own copy of it.
+
+    CNGA3 cites the paper, so its copy is the row on the right gene: evidence
+    for the wrong-gene lead, not a family-wide annotation.
+    """
+    cnga3 = CitingEntry("Q16281", "CNGA3", "9606", frozenset({"PTHR45638"}))
+    dirs = [GENES / "human" / "CNGB3", GENES / "human" / "CNGA3"]
+    leads = find_leads(dirs, citing={"11536077": [cnga3]})
+    cngb3 = [r for r in leads if r["gene"] == "human/CNGB3"]
+    assert cngb3
+    assert not any("shared_with_local_paralog" in r["reasons"] for r in cngb3)
+
+
+def test_same_family_ortholog_folder_is_not_a_paralog(tmp_path):
+    """A same-family carrier in another species is an ortholog, not a family annotation."""
+    human = _gene_folder(
+        tmp_path / "a",
+        "AC   P00001;\nOX   NCBI_TaxID=9606;\nDR   PANTHER; PTHR1; X; 1.\n",
+    )
+    mouse = _gene_folder(
+        tmp_path / "b",
+        "AC   P00002;\nOX   NCBI_TaxID=10090;\nDR   PANTHER; PTHR1; X; 1.\n",
+        acc="P00002",
+        taxon="10090",
+    )
+    citing = {"1": [CitingEntry("P9", "X", "9606", frozenset({"PTHR1"}))]}
+    leads = find_leads([human, mouse], citing=citing, publications_dir=tmp_path)
+    assert leads
+    assert not any("shared_with_local_paralog" in r["reasons"] for r in leads)

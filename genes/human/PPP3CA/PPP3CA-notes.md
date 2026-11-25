@@ -107,3 +107,5 @@ No annotation action changed because of the report.
 - Coordinator follow-up: the two GO:0070886 positive regulation of calcineurin-NFAT signaling cascade (NAS) rows were changed from MARK_AS_OVER_ANNOTATED to MODIFY -> GO:0033173, matching the PPP3CB review.
 
 - Coordinator follow-up: the GO:1905665 positive regulation of calcium ion import (NAS, PMID:17640527) row was changed from MARK_AS_OVER_ANNOTATED to REMOVE, since the cited study contradicts the direction; this matches PPP3R1.
+
+- 2026-11-15 re-review of source defects: the two WRONG_REFERENCE defects on the TAS rows citing PMID:2556704 (GO:0016311, GO:0033192) were withdrawn. QuickGO by reference shows UniProt made the same two TAS rows on the same day (2011-12-20) for human PPP3CA (Q08209), human PPP3CB (P16298) and bovine PPP3CA (P48452). A TAS needs only an author statement, and the abstract calls calcineurin "a calmodulin-regulated protein phosphatase" [PMID:2556704 "the large (A) subunit of calcineurin, a calmodulin-regulated protein phosphatase"], so the family-wide rows are deliberate practice and not a mis-keyed reference. Actions unchanged (MODIFY, ACCEPT); only the abstract was read.

@@ -35,3 +35,9 @@
   as a question.
 
 No NEW rows proposed (nucleus localization is ortholog-only and not shown for rat).
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0007528 / GO_REF:0000121: defect retyped (evidence depth: DB_RECORD). The mouse donor row is an export of GO-CAM gomodel:64c3044100000125 (activity 64c3044100000344: Map2k4 MAPKK activity part_of MAPK cascade part_of ERBB2-ERBB3 signaling part_of NMJ development); the IMP/PMID:10521398/Erbb2-allele evidence belongs to the last part_of link, and QuickGO shows the identical row on Erbb2, Erbb3, Nrg1, Map2k1, Mapk8, Raf1 and Gabpa. Erbb2 already has the row, so REPOINT to Erbb2 was wrong. Retyped to WRONG_EVIDENCE_CODE (slot Evidence_Code, asserted ECO:0000315, CHECK, cause OVER_PROPAGATION, record = the model activity, resource MGI); corrected_value removed. Action changed REMOVE to KEEP_AS_NON_CORE with a quote from PMID:10493750 (dominant-negative MKK4 blocks neuregulin-induced AChR epsilon promoter activation), propagation_review, reference_review and the related suggested_question updated.

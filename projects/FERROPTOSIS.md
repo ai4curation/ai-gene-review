@@ -12,6 +12,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/7nSuCeq7xETTYoc6zrZeoG
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Ferroptosis Project

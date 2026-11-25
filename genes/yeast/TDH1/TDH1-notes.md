@@ -15,3 +15,10 @@ TDH1-specific:
 - IPI mitochondrion rows are with ENO1 (SGD:S000003486) and ENO2 (SGD:S000001217): co-IP with anti-enolase [PMID:16962558 "enolase takes part in a large macromolecular complex associated to mitochondria"].
 
 Decisions: ACCEPT GAPDH activity, glycolysis, gluconeogenesis, cytosol/cytoplasm; MODIFY generic oxidoreductase -> GO:0004365 and obsolete GO:0061620 -> GO:0006096; REMOVE bifid shunt; MARK_AS_OVER_ANNOTATED NADP binding, melatonin binding; KEEP_AS_NON_CORE mitochondrion, lipid droplet, cell wall, PM, NAD binding, glucose metabolic process.
+
+## QA pass (2026-11-19)
+
+- Note on the Decisions line above: glucose metabolic process is TOO_GENERAL in the review (glycolysis and gluconeogenesis, both ACCEPTed, entail it), not KEEP_AS_NON_CORE.
+- Extended the truncated UniProt CC:FUNCTION quotes so they state the claim [UniProt:P00360 "Glyceraldehyde-3-phosphate dehydrogenase (GAPDH) involved in glycolysis and gluconeogenesis (PubMed:2999100)."].
+- Corrected the PMID:24292082 finding: the abstract says mixed cultures with single tdh1-3 deletion mutants support GAPDH-peptide involvement, not that each deletion has an effect.
+- Cross-paralog check: shared evidence (PMID:3905788, 11158358, 16962558, 10515935, 31708896, ARBA/InterPro/PAINT rows) is actioned identically in TDH1-3. TDH1 lacks the TDH2/TDH3 IMP rows (PMID:17726063) and the TDH3-only heme/RNA rows, which is paralog-specific in GOA. Status set to COMPLETE.

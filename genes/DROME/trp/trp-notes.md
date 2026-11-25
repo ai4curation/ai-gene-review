@@ -31,3 +31,9 @@
   immunohistochemistry; proposed NEW axon location (IDA). The exocytosis requirement
   is mutant-phenotype evidence; no NEW process term proposed.
 - No GO-CAM model contains trp (gocams/index.tsv).
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0008355 / PMID:10995445: defect downgraded (evidence depth: FULL_TEXT). PMID:10995445 full text (photoreceptor TRP-INAD signalplex) has no olfaction content, so it does not support olfactory learning. But the prior REPOINT to PMID:10366618 is improper: that paper shows olfactory ADAPTATION, not learning, so it would not support GO:0008355 either. Changed REPOINT->CHECK and dropped the corrected_value; the term itself is flagged for reconsideration (action stays MARK_AS_OVER_ANNOTATED).

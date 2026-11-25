@@ -72,3 +72,11 @@
   GO:0120014 seeded by P63386.
 - PTN000655704 (taxon Bacteria): GO:1990531, GO:0120010 seeded by P63386.
   (interpro/panther/PTHR43023/PTHR43023-paint.tsv)
+
+
+## 2026-11-07 Mla comparative re-review
+
+- Narrow full-carrier activity overannotation rationale to the exact GO definition; retain collective contribution and positive subunit function without universal alone-inactivity logic.
+- Every original annotation row, source payload, qualifier, historical NEW action and lifecycle state is retained in order; no additional rows were proposed.
+- Genuine default Falcon attempt failed with HTTP403 authentication; no provider report was generated. Manual consultation used cached primary papers and current ontology snapshots.
+- Source scope and official API provenance: `analysis/module_audits/bacterial_mla_intermembrane_phospholipid_transport/existing-review-consultation/evidence.md`. Existing notes above are historical; this dated entry supersedes narrower claims corrected here.

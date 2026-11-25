@@ -24,3 +24,12 @@
 - Kinase activity / ferroptosis (ISO/IEA from human, one study) kept as non-core.
 - IEP rows kept as non-core.
 - Sequence note: F1LQJ7 starts at "TLLPSPP..." without Met; rat Met28 aligns to the human start.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0004611 / PMID:11440903: defect withdrawn (evidence depth: ABSTRACT). Abstract only. RGD's record RGD:2302970 annotates the same activity/process rows to both Pck1 and Pck2 (and Fbp1/Fbp2, G6pc1/G6pc3): a deliberate practice of assigning unfractionated tissue activity to each isozyme gene, not a Pck1 result on the wrong gene. Pck1 already has the row, so there is nothing to repoint; this is an evidence-resolution caveat, not a source defect. Defect deleted, reason reworded.
+- GO:0004611 / PMID:4353083: defect withdrawn (evidence depth: ABSTRACT). As above for RGD:2302851 (PMC copy is a scanned PDF with no extractable body text, so abstract depth). Rows exist on both Pck1 and Pck2; defect deleted, reason reworded.
+- GO:0006094 / PMID:11440903: defect withdrawn (evidence depth: ABSTRACT). Same paper and reasoning as the GO:0004611 row; defect deleted, reason reworded.
+- GO:0006094 / PMID:4353083: defect withdrawn (evidence depth: ABSTRACT). Same paper and reasoning as the GO:0004611 row; defect deleted, reason reworded.

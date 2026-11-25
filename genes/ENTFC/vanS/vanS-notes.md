@@ -111,3 +111,9 @@ from PMID:8494882, a paper that assayed only the VanS cytosolic domain and never
 tested vancomycin. That defect is recorded here as a `source_defects` entry on
 the `GO:0000155` row (resource `GO_CAM`, `requested_change: CHECK`) and is also
 raised as a question.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0000155 / GO_REF:0000120: defect downgraded (evidence depth: ABSTRACT). Defect is on GO-CAM gomodel:671ae02600002832, not the GOA row. Model TTL confirms the edge and its ECO:0000314/PMID:8494882 evidence, but the predicate is RO:0012005 "is small molecule activator of" (not RO:0012001) and the model state is now "delete". "Never tested vancomycin" rests on the abstract only (no full text), so CONFIRMED -> PROBABLE; record id added, slot corrected, model state noted.

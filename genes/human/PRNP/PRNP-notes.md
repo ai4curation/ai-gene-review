@@ -43,3 +43,11 @@ the cached publications, the UniProt record and the cached Reactome entry.
   `GO:0009897 external side of plasma membrane`; `GO:0046872 metal ion binding` modified to
   `GO:0005507 copper ion binding`.
 - `GO:1903136 cuprous ion binding` left UNDECIDED: the cited study used Cu(2+).
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- Both GO:0005794 rows (IEA GO_REF:0000120 and ISS GO_REF:0000024, both by similarity to mouse P04925) stay KEEP_AS_NON_CORE; the summary and reason (previously "transit") were rewritten.
+- Donor trace: mouse P04925's Golgi item is ECO:0000269 from PMID:11756421, which is also the only mouse Golgi annotation in QuickGO (MGI IDA; queried 2026-11-18). That paper is abstract-only (no PMC record per PubMed ID conversion); its abstract describes a GFP-tagged mouse PrP model with wild-type PrP on a secretory pathway to the cell membrane and does not describe the Golgi signal. Alone, that would be the CD247 unreadable-donor case (UNDECIDED).
+- Independent line: PMID:14511113 (abstract-only, newly cached) reports immunofluorescence showing copper and zinc redistributing surface PrPC to transferrin-positive early endosomes and to Golgi compartments [PMID:14511113 "both of these metals stimulate redistribution of surface PrPC to a subset of transferrin-containing early endosomes as well as to Golgi compartments"]. A ligand-driven retrograde pool (ADRB2/CD14 pattern), kept on deference to the abstract. Close call; UNDECIDED is the alternative.
+- A PubMed title search (prion protein AND Golgi in title) also found PMID:15671025, on a CtmPrP mutant (L9R-3AV) concentrated in neuronal Golgi; a mutant-retention result, not cited.
+- No sub-compartment row. The ER row was not touched.

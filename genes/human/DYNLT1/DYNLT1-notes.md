@@ -89,3 +89,16 @@
   constitutive, best-supported function, and the resorption role second. The module should treat
   DYNLT1 as pleiotropic: the resorption function is a regulated, dynein-independent activity (PMID:28607034) of a
   phospho-pool, and dynein-2 membership also links it to retrograde IFT and length control.
+
+## 2026-11-15 ORGANELLES Golgi batch 2 (Golgi apparatus rows)
+
+- Row: IEA GO_REF:0000044 (SL-0132), `located_in`, stays KEEP_AS_NON_CORE.
+- Traced the UniProt Golgi item: human, mouse and rat entries are all ECO:0000250 with no named source; the only
+  ECO:0000269 Golgi item is on bovine Tctex-1 (P63171), from Tai et al. 1998 (PMID:9677391). Bovine and human
+  sequences are identical (113 aa, checked from the UniProt FASTA files).
+- PMID:9677391 is abstract-only (fetched 2026-11-15; no PMC record). Its abstract reports co-localization with
+  Golgi compartment markers, redistribution with Golgi-disrupting drugs and co-fractionation with Golgi
+  membranes in interphase fibroblasts. Kept on curator deference rather than UNDECIDED (CD247), because every
+  reading of the abstract supports the Golgi. Markers not named, so no sub-compartment.
+- PubMed search "Tctex-1 Golgi apparatus dynein light chain localization" returned PMID:9677391 and PMID:20463241
+  (rat neurons, Lfc at the Golgi; Tctex-1 colocalizes with Lfc), not cited.

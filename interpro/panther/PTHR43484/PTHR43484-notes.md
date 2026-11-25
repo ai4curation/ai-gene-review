@@ -1,0 +1,7 @@
+# FliN/FliY family consistency follow-up — 2026-11-06
+
+The older review already correctly distinguishes FliY phosphatase activity from structural FliN. The added GO:0004721 term assessment makes the boundary explicit, with PMID12920116 primary evidence: FliY increases CheY-P hydrolysis and differs from E.coli FliN by an additional N-terminal region. The frozen Bacillus FliY record carries two CheC PF04509 matches and FliMN_C PF01052, while both FliN and FliY remain in SF1. The official FLIN label is not a reason to reject the experimentally demonstrated FliY activity.
+
+The existing phosphatase IBD at PTN000504261 remains TOO_DEEP. Its positive seed is valid; the architectural difference limits propagation, not the number of seeds. No replacement node was guessed. The term assessment is UNRESOLVED at whole-family/SF1 scope because the current schema cannot directly express the architecture-dependent subset and no mapped residue-site assessment has been established. FAMILY_WIDE/SUBFAMILY_ONLY would overgrant FliN, while NOT_APPLICABLE would incorrectly deny FliY. RESIDUE_DETERMINED cannot be used without an actual anchored site. Module selectors should require FliY catalytic architecture plus functional evidence, and a mixed-family scope advisory may appropriately remain.
+
+Primary publication caches were already available and were not modified. No gene review, PAINT data, member index or ontology cache was changed. Focused family and history validation logs are under .cache/module-audit-logs/chemotaxis-20261106/.

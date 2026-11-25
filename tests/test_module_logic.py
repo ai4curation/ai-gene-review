@@ -32,6 +32,7 @@ from ai_gene_review.module_logic import (
     step_id,
     unsatisfied_steps,
     abduce,
+    gap_report,
 )
 
 #: Anchor module paths to the repository, not the invoking cwd, so the
@@ -310,9 +311,14 @@ def test_ketolysis_structure():
         "acetoacetate_activation",
         "acetoacetyl_coa_thiolysis",
     ]
-    assert len(enumerate_routes(circuit)) == 4  # optional import x two activation routes
+    # optional import x two dehydrogenase lineages (bacterial HbdH, animal BDH1)
+    # x two activation routes (SCOT, ATP-dependent ligase)
+    assert len(enumerate_routes(circuit)) == 8
     core_symbols = {symbol for atom in core_atoms(circuit) for symbol in atom.gene_symbols}
-    assert {"BDH1", "ACAT1"} <= core_symbols
+    # the thiolase is required on every route; the dehydrogenase is a choice of
+    # lineage, so neither HbdH nor BDH1 is core on its own
+    assert "ACAT1" in core_symbols
+    assert not {"BDH1", "HbdH"} & core_symbols
 
 
 @pytest.mark.skipif(not KETOLYSIS.exists(), reason="module file absent")
@@ -337,16 +343,25 @@ def test_ketolysis_abduction(present, active, classification, gaps):
     assert ab.classification == classification
     assert ab.gap_steps == gaps
     if classification == "CONSISTENT_INACTIVE":
-        # the liver gap pinpoints the SCOT step
-        assert ab.gap_candidates["acetoacetate_activation"] == ["Aacs", "OXCT1"]
+        # the liver gap pinpoints the activation step; its candidates are SCOT
+        # and the ATP-dependent ligases (bacterial Aacs, human AACS)
+        assert ab.gap_candidates["acetoacetate_activation"] == ["AACS", "Aacs", "OXCT1"]
 
 
 def test_family_atom_uses_concrete_representatives():
     circuit = compile_module_file(KETOLYSIS)
-    hbdh = next(atom for atom in iter_atoms(circuit) if atom.node_id == "hbdh_activity")
-    assert hbdh.gene_symbol == "HbdH"
-    assert hbdh.gene_symbols == ("HbdH", "BDH1")
-    assert hbdh.uniprots == ("Q88IC6", "Q02338")
+    atoms = {atom.node_id: atom for atom in iter_atoms(circuit)}
+    # a family with several representatives keeps all of them, first one names it
+    ligase = atoms["aacs_ligase_activity"]
+    assert ligase.gene_symbol == "Aacs"
+    assert ligase.gene_symbols == ("Aacs", "AACS")
+    assert ligase.uniprots == ("Q88IC8", "Q86V21")
+    # the bacterial and animal dehydrogenases are separate lineage variants,
+    # since BDH1 (SDR9C) is not a member of the bacterial IPR011294 family
+    assert atoms["hbdh_activity"].gene_symbols == ("HbdH",)
+    assert atoms["hbdh_activity"].uniprots == ("Q88IC6",)
+    assert atoms["bdh1_activity"].gene_symbols == ("BDH1",)
+    assert atoms["bdh1_activity"].uniprots == ("Q02338",)
 
 
 @pytest.mark.parametrize("representative_label", ["Species B", "B"])
@@ -507,20 +522,19 @@ def test_apoptotic_execution_requires_a_principal_executioner(
 #: Participant slots `_atom_from_annoton` reads for a symbol or accession. An
 #: ungrounded atom whose participant carries a *usable* descriptor in one of
 #: these is an engine defect: the grounding was there to be read and was not.
-READ_GROUNDING_SLOTS = ("gene", "gene_product", "family")
+READ_GROUNDING_SLOTS = ("gene", "gene_product", "family", "protein_complex")
 
 #: Slots the engine knowingly does not read, so an atom grounded only through
 #: one of them is expected to come out ungrounded until that is fixed.
-#: `protein_complex` holds its subunits one level deeper, at
-#: ``active_units[].participant.gene_product``, and reading them raises an
-#: any-of versus all-of question (a complex needs every subunit, while the
-#: representative slots are any-of) that wants a curator's decision.
+#: (`protein_complex` used to be listed here. The engine now compiles a complex
+#: with ``active_units`` into an AND over one atom per unit, settling the
+#: any-of versus all-of question as all-of: a complex needs every subunit.)
 #: `ortholog_of`/`homolog_of` name a reference gene rather than the ortholog
 #: actually required in context, so grounding on it would assert the presence
 #: of the wrong gene. `domain` names a region, not a gene product. A
 #: participant with none of these slots, such as a descriptor-less
 #: ANY_WITH_FUNCTION step, needs an activity-keyed oracle.
-UNREAD_GROUNDING_SLOTS = ("protein_complex", "ortholog_of", "homolog_of", "domain")
+UNREAD_GROUNDING_SLOTS = ("ortholog_of", "homolog_of", "domain")
 
 #: Every entity-grounding slot on `ParticipantSelector`, i.e. those whose range
 #: is a Descriptor naming *what plays the role* rather than constraining it
@@ -544,13 +558,25 @@ def _descriptor_is_usable(slot: str, descriptor: dict) -> bool:
     grounding, which is why `family` reads its `representative_members` rather
     than the family descriptor itself. **Any slot moved into
     `READ_GROUNDING_SLOTS` needs its case added here in the same change.**
-    A `protein_complex` descriptor, for instance, usually carries a
-    non-symbol-first `preferred_term` and no `term`, so it evaluates False;
-    that is harmless only while the slot is unread. Reclassify it without
-    adding an `active_units` case and every complex whose subunits are
-    perfectly groundable reports as "unusable descriptor" instead of as the
-    dropped grounding it is -- silencing the population this guard exists for.
+    A `protein_complex` descriptor usually carries a non-symbol-first
+    `preferred_term` and no `term`, so read as a plain descriptor it would
+    evaluate False and every complex with groundable subunits would report as
+    "unusable descriptor" instead of as a dropped grounding. Its case therefore
+    reads `active_units`, as the engine does.
     """
+    if slot == "protein_complex":
+        # A complex grounds through its units, each compiled to its own atom and
+        # checked under its own id: the per-unit entries `_participant_slots`
+        # adds are what guard a dropped unit grounding. A complex with units
+        # produces no atom under the annoton id, so this case only classifies
+        # the slot (usable when any unit carries a usable read-slot descriptor)
+        # for the partition test and for complexes compiled without units.
+        return any(
+            _descriptor_is_usable(unit_slot, (unit.get("participant") or {})[unit_slot])
+            for unit in as_list(descriptor.get("active_units"))
+            for unit_slot in ("gene", "gene_product", "family")
+            if (unit.get("participant") or {}).get(unit_slot)
+        )
     candidates = (
         as_list(descriptor.get("representative_members"))
         if slot == "family"
@@ -580,6 +606,16 @@ def _participant_slots(document: dict) -> dict[str, dict[str, bool]]:
                 for slot in ENTITY_GROUNDING_SLOTS
                 if participant.get(slot)
             }
+            # Each active unit compiles to an atom under its own id, named as
+            # the engine names a unit without one.
+            units = as_list((participant.get("protein_complex") or {}).get("active_units"))
+            for index, unit in enumerate(units, start=1):
+                unit_participant = unit.get("participant") or {}
+                slots[str(unit.get("id") or f"{annoton.get('id', '?')}_unit{index}")] = {
+                    slot: _descriptor_is_usable(slot, unit_participant[slot])
+                    for slot in ENTITY_GROUNDING_SLOTS
+                    if unit_participant.get(slot)
+                }
         for part in as_list(node.get("parts")):
             walk(part["node"])
         for variant_set in as_list(node.get("variant_sets")):
@@ -699,3 +735,128 @@ def test_report_corpus_grounding_counts(curated_corpus, capsys):
             f"{len(dead)} of {len(curated_corpus)} modules unsatisfiable in "
             "every context"
         )
+
+
+# --------------------------------------------------------------------------- #
+# Protein complexes compile to an AND over their active units                 #
+# --------------------------------------------------------------------------- #
+
+COMPLEX_DOC = {
+    "module": {
+        "id": "m",
+        "parts": [{"node": {"id": "step", "annotons": [{
+            "id": "cx",
+            "participant": {"protein_complex": {"active_units": [
+                {"id": "u1", "participant": {"gene_product": {"term": {"id": "UniProtKB:P11111"}}}},
+                {"id": "u2", "participant": {"family": {"term": {"id": "PANTHER:PTHR9"}}}},
+            ]}},
+        }]}}],
+    }
+}
+
+
+@pytest.mark.parametrize(
+    "present, expected",
+    [
+        ({"u1", "u2"}, True),
+        ({"u1"}, False),
+        ({"u2"}, False),
+        (set(), False),
+    ],
+)
+def test_complex_needs_every_active_unit(present, expected):
+    """A complex holds only when every active unit holds (all-of, not any-of)."""
+    circuit = compile_module(COMPLEX_DOC)
+    assert is_satisfied(circuit, lambda atom: atom.node_id in present) is expected
+
+
+def test_complex_units_are_atoms_and_gaps_name_the_unit():
+    """Each unit is its own grounded atom, and a missing unit is the reported gap."""
+    circuit = compile_module(COMPLEX_DOC)
+    atoms = {atom.node_id: atom for atom in iter_atoms(circuit)}
+    assert set(atoms) == {"u1", "u2"}
+    assert atoms["u1"].uniprot == "P11111"
+    assert atoms["u2"].family_ids == ("PANTHER:PTHR9",)
+    gaps = gap_report(circuit, lambda atom: atom.node_id == "u1")
+    assert [g.path for g in gaps] == [("step", "cx", "u2")]
+
+
+def test_complex_without_units_stays_one_atom():
+    """A complex that lists no active units keeps compiling to a single atom."""
+    doc = {"module": {"id": "m", "parts": [{"node": {"id": "step", "annotons": [
+        {"id": "cx", "participant": {"protein_complex": {"preferred_term": "some complex"}}}
+    ]}}]}}
+    assert [atom.node_id for atom in iter_atoms(compile_module(doc))] == ["cx"]
+
+
+def test_shared_unit_with_different_functions_stays_two_steps():
+    """One subunit in two complexes with different functions is two core steps."""
+    unit = {"id": "pop1", "participant": {"gene": {"term": {"id": "UniProtKB:P1"}}}}
+    doc = {"module": {"id": "m", "annotons": [
+        {"id": "rnase_p", "function": {"term": {"id": "GO:0004526"}},
+         "participant": {"protein_complex": {"active_units": [unit]}}},
+        {"id": "rnase_mrp", "function": {"term": {"id": "GO:0000171"}},
+         "participant": {"protein_complex": {"active_units": [unit]}}}]}}
+    circuit = compile_module(doc)
+    assert sorted(a.function_ids for a in core_atoms(circuit)) == [("GO:0000171",), ("GO:0004526",)]
+    assert [len(route) for route in enumerate_routes(circuit)] == [2]
+
+
+def test_complex_can_compile_to_one_atom_for_step_level_oracles():
+    """``expand_complexes=False`` keeps one atom per complex annoton, under its id.
+
+    Committed audit scripts written before units became atoms expand
+    ``active_units`` themselves and key their oracles on the annoton id.
+    """
+    doc = {"module": {"id": "m", "parts": [{"node": {"id": "step", "annotons": [
+        {"id": "cx", "participant": {"protein_complex": {"active_units": [
+            {"id": "u1", "participant": {"gene": {"term": {"id": "UniProtKB:P1"}}}},
+            {"id": "u2", "participant": {"gene": {"term": {"id": "UniProtKB:P2"}}}}]}}}
+    ]}}]}}
+    assert [a.node_id for a in iter_atoms(compile_module(doc))] == ["u1", "u2"]
+    assert [a.node_id for a in iter_atoms(compile_module(doc, expand_complexes=False))] == ["cx"]
+
+
+def test_complex_units_carry_their_own_or_the_complex_function():
+    """A unit atom carries the unit's own function, else the complex annoton's.
+
+    Function-keyed oracles and REALIZER inference read ``function_ids``, so a
+    complex step compiled to units must not lose the function it asserted.
+    """
+    doc = {"module": {"id": "m", "parts": [{"node": {"id": "step", "annotons": [{
+        "id": "cx",
+        "function": {"term": {"id": "GO:0005085"}},
+        "participant": {"protein_complex": {"active_units": [
+            {"id": "u1", "function": {"term": {"id": "GO:0003924"}},
+             "participant": {"gene_product": {"term": {"id": "UniProtKB:P11111"}}}},
+            {"id": "u2", "participant": {"family": {"term": {"id": "PANTHER:PTHR9"}}}},
+        ]}},
+    }]}}]}}
+    atoms = {atom.node_id: atom for atom in iter_atoms(compile_module(doc))}
+    assert atoms["u1"].function_ids == ("GO:0003924",)
+    assert atoms["u2"].function_ids == ("GO:0005085",)
+
+
+def test_atoms_sharing_an_id_share_their_selector(curated_corpus):
+    """Atom ids are one namespace for annotons and complex units within a module.
+
+    The same unit id legitimately recurs when one subunit sits in several
+    complexes of a module, and route merging, core-atom detection, the organelle
+    census and context detectors all key atoms on ``node_id``. That is safe only
+    while every atom with a given id names the same participant; two different
+    selectors under one id would be read as one step by every consumer that
+    keys on the id. Route merging and core detection compare atoms by value,
+    so a unit that inherits different functions from two complexes (RNase P
+    and MRP subunits) stays two steps there; the key therefore leaves out
+    ``function_ids`` and checks only that the id names one participant. It
+    includes ``label``, which is part of an atom's value: a shared unit whose
+    label differed between two complexes would otherwise stop being merged.
+    """
+    offenders = []
+    for path, circuit in curated_corpus.items():
+        selectors: dict[str, set] = {}
+        for atom in iter_atoms(circuit):
+            key = (atom.label, atom.gene_symbols, atom.uniprots, atom.family_ids, atom.domain_ids)
+            selectors.setdefault(atom.node_id, set()).add(key)
+        offenders += [f"{path.name}:{node_id}" for node_id, keys in selectors.items() if len(keys) > 1]
+    assert offenders == [], "these atom ids name more than one selector: " + ", ".join(offenders[:10])

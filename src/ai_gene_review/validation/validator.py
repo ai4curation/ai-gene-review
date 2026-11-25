@@ -43,6 +43,10 @@ from ai_gene_review.validation.decomposition import (
     go_is_a_ancestors,
     go_names,
 )
+from ai_gene_review.validation.ec_class_consistency import (
+    check_ec_class_consistency,
+    go_term_ecs,
+)
 from ai_gene_review.validation.protein_binding_policy import (
     check_protein_binding_policy,
 )
@@ -60,6 +64,10 @@ from ai_gene_review.validation.uniprot_quote_source import (
     validate_uniprot_quote_sources,
 )
 from ai_gene_review.validation.goa_support import validate_goa_support
+from ai_gene_review.validation.obsolete_authored_terms import (
+    build_label_lookup,
+    check_obsolete_authored_terms,
+)
 from ai_gene_review.validation.source_statement_defects import validate_statement_defects
 from ai_gene_review.mod_providers import is_mod_description_file
 from ai_gene_review.taxon import is_ncbitaxon_curie
@@ -507,6 +515,14 @@ def check_best_practices_rules(
     check_protein_binding_policy(data, report)
     check_nd_policy(data, report, yaml_file)
     check_ontology_change_policy(data, report)
+    # Author-supplied GO ids are checked for obsoletion here because neither the
+    # (deliberately absent) existing-annotation id check nor the core_functions
+    # dynamic enums reach it: an obsoleted term is still branch-reachable.
+    check_obsolete_authored_terms(
+        data,
+        report,
+        build_label_lookup(get_project_root(), use_ontology=check_ontology),
+    )
     check_decomposition(
         data,
         report,
@@ -517,6 +533,8 @@ def check_best_practices_rules(
     check_action_consistency(
         data, report, ancestors=go_ancestors() if check_ontology else None
     )
+    if check_ontology and yaml_file is not None:
+        check_ec_class_consistency(data, report, Path(yaml_file), go_term_ecs())
     if has_paint_losses(data):
         from ai_gene_review.validation.module_validator import load_paint_index
 
@@ -726,6 +744,12 @@ def check_best_practices_rules(
                         action = review["action"]
                         # Skip PENDING actions in consistency check
                         if action == "PENDING":
+                            continue
+                        # A NOT row asserts the opposite claim to the positive
+                        # rows on the same term, so its action is not expected
+                        # to match theirs (accepting a function and removing
+                        # its contradicting negation is consistent).
+                        if annotation.get("negated"):
                             continue
                         evidence_code = annotation.get("evidence_type", "unknown")
 

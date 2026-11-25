@@ -1,6 +1,6 @@
 ---
 title: "NCBIFAM / CDD → GO Contribution & Gap Project"
-collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
+collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION, MAPPINGS]
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 autolink_exclude: [ParB, parB]
@@ -15,6 +15,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/PRhzN8YSgWkDn7ifMW8qur
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # NCBIFAM / CDD → GO Contribution & Gap Project

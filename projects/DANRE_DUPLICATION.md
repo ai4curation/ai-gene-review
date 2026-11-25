@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [DANRE]
 genes: [cryaba, cryabb]
+index_group: OTHER_ORGANISM
 ---
 
 # Zebrafish Genome Duplication and Paralog Pairs

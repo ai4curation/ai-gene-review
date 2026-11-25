@@ -37,6 +37,8 @@ def commit(repo: Path, change: str) -> None:
         path = repo / "genes/human/B/B-ai-review.html"
         path.parent.mkdir(parents=True)
         path.write_text("<p>new</p>")
+    elif change == "add_top_level":
+        (repo / "genes/Z-ai-review.html").write_text("<p>new</p>")
     elif change == "add_other_html":
         (repo / "genes/human/A/A-pathway.html").write_text("<p>pathway</p>")
     elif change == "modify":
@@ -55,6 +57,8 @@ def commit(repo: Path, change: str) -> None:
     "change,fails",
     [
         ("add_nested", True),
+        # `:(glob)genes/**/` also matches zero directories; a bare `genes/*` would not.
+        ("add_top_level", True),
         # A folder rename re-adds the HTML at the new path; it should be untracked.
         ("rename_folder", True),
         ("modify", False),
@@ -69,6 +73,21 @@ def test_guard_rejects_only_added_review_html(repo: Path, change: str, fails: bo
     assert (result.returncode != 0) == fails, result.stdout + result.stderr
     if fails:
         assert "Rendered HTML added" in result.stdout
+
+
+def test_guard_still_fires_in_a_depth_one_clone(repo: Path, tmp_path: Path):
+    # CI checks out with fetch-depth: 1, where history-walking commands such as
+    # `git log --pretty=%P` see no parent and would make the guard pass silently.
+    commit(repo, "add_nested")
+    clone = tmp_path / "shallow"
+    subprocess.run(
+        ["git", "clone", "-q", "--depth=1", repo.as_uri(), str(clone)],
+        check=True,
+        capture_output=True,
+    )
+    result = run_guard(clone)
+    assert result.returncode != 0, result.stdout + result.stderr
+    assert "genes/human/B/B-ai-review.html" in result.stdout
 
 
 def test_guard_passes_on_root_commit(tmp_path: Path):
