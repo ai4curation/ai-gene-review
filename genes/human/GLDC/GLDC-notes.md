@@ -116,3 +116,9 @@ The retained UniProt record already carries GO:0030170 and GO:0016594 (glycine b
 with GO_Central evidence. Neither observation adds a NEW row to the retained GOA set.
 Family research supplies context, not an independent human oligomer measurement.
 The existing JSON records preserve machine/context provenance; the curation remains YAML.
+
+## 2026-11-10 glycine cleavage module completion pass (Claude, AI-assisted)
+
+- Every row now carries a verbatim supporting quote; truncated UniProt quotes were completed to the end of the claim.
+- Broad parent rows shared across the module's P/H/T/L reviews were harmonized: glycine metabolic/catabolic process (and amino acid metabolic process) -> MODIFY to GO:0019464; for the L proteins 2-oxoglutarate metabolic process and tricarboxylic acid cycle -> MODIFY to GO:0120551, generic oxidoreductase parents -> MODIFY to GO:0004148, FAD binding ACCEPT.
+- Former UNDECIDED rows resolved: electron transfer activity (TAS) and response to methylamine / response to lipoic acid (ISS from chicken P15505) -> MARK_AS_OVER_ANNOTATED (redox chemistry is the GO:0004375 reaction; donor data are in vitro activity regulation, not cellular response processes); protein homodimerization (ISS) -> KEEP_AS_NON_CORE, with the monomer/dimer question kept as a knowledge gap.

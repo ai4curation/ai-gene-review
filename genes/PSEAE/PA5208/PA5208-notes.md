@@ -59,3 +59,47 @@ as for the seed.
   IMP (screen phenotypes), with PSEUDOCAP defects.
 - No core function: the molecular activity is unknown (PhoU-like domain,
   putative Pit regulator).
+
+## Leaf evidence check (2026-11-06)
+
+Audit of the `GO_CENTRAL` defect on PTN002194937, which made two claims that
+needed separating: that the family is "a putative Pit phosphate transporter
+accessory/regulator" (a prediction) and that two leaves are in organisms that
+lack flagella (a taxon fact, and the load-bearing one). Leaf membership
+confirmed with `panther_tree.py node PTN002194937 --leaves`: 5 leaves, all
+PTHR36536:SF3.
+
+| Leaf | Name and its evidence | Experimental annotations found | Verdict |
+|---|---|---|---|
+| P44271 (Haemophilus influenzae HI_1603) | Curated `RecName` "UPF0111 protein HI_1603" — a family placeholder, asserting no function; PE 1 | None. `GO:0071978` IBA is its **only** GO row | Taxon claim SURVIVES (verified below) |
+| Q83FC5 (Coxiella burnetii CBU_0015) | `SubName` "Pit accessory protein" ECO:0000313|EMBL:AAO89585.2 — submitter name, unvetted; PE 3 | None. `GO:0071978` IBA is its only GO row | Taxon claim SURVIVES; the "Pit accessory" phosphate role is **not** used as evidence |
+| Q9KPD1 (Vibrio cholerae VC_2441) | `RecName` "Phosphate transport regulator" ECO:0008006|Google:ProtNLM — machine-generated name | None. `GO:0071978` IBA only | Phosphate claim dropped as an unvetted prediction |
+| Q8EAX1 (Shewanella oneidensis SO_3770) | `RecName` ECO:0008006|Google:ProtNLM; PE 1 | None. `GO:0071978` IBA only | Flagellated organism; no objection from this leaf |
+| Q9HTY2 (PA5208, the seed) | `RecName` "TIGR00153 family protein" ECO:0008006|Google:ProtNLM | PseudoCAP IMP rows only (screen phenotypes) | Seed assessment unchanged |
+
+**Family description, marked as predicted.** All five leaves match Pfam
+PF01865 `PhoU_div`, NCBIfam TIGR00153 and InterPro IPR018445, whose own name
+is "putative phosphate transport regulator". No leaf has any experimental
+annotation, and two of the five "phosphate" names are a submitter SubName and
+a ProtNLM name. The entry no longer asserts that the family regulates
+phosphate transport; it asserts only that no leaf carries a flagellar
+component or motor domain.
+
+**Taxon fact, verified.** UniProt proteome query (`rest.uniprot.org`,
+2026-11-06) for the six core flagellar structural and motor genes `fliF`,
+`flgB`, `flgE`, `flhA`, `fliC`, `motA`:
+
+| Organism (taxon) | Entries | Core flagellar genes found |
+|---|---|---|
+| Haemophilus influenzae Rd KW20 (71421) | 1704 | 0 |
+| Coxiella burnetii RSA 493 (227377) | 1812 | 0 |
+| Pseudomonas aeruginosa PAO1 (208964) | 5583 | 6 (all) |
+| Shewanella oneidensis MR-1 (211586) | 4070 | 6 (all) |
+
+A free-text `flagell*` search over the H. influenzae and C. burnetii
+proteomes likewise returns no flagellar structural protein. Both organisms are
+non-motile. So two of the five leaves cannot perform a flagellum-dependent
+process at all.
+
+Confidence raised PROBABLE -> CONFIRMED: the decisive fact is a live resource
+query run here, not an inference from a protein name.

@@ -83,3 +83,14 @@ Short primary findings are now quoted once and explicitly referenced by the rele
 The categorical UniProt homodimer statement is recorded as a probable overstatement for upstream checking: the structure paper leaves physiological assembly unresolved and the earlier kinetic paper reports monomeric gel filtration with data not shown. No definitive monomer correction is asserted. Reference notes now emphasize biological judgments and inspected scope.
 
 The compact evidence preserves all original raw fields, actual joins, NOT and urine extension, product sequence, PAINT/ontology/model and target-table evidence. The full older review/journal, all 23 historical quote associations and detailed access records remain available at the exact published 9fc2999 Git locator. All 26 actions, 28 source bytes and prior history remain unchanged. Ontology-loaded target validation passed without errors and retained three advisories: a cached GO label, optional IBA propagation metadata and the differently signed membrane contexts. Strict GOA matching passed for all 26 original contexts, and computed status remains DRAFT. Native EDIT history, private render/link checks and scoped whitespace checks passed. All 28 scientific source bytes and the derived term caches remain unchanged.
+
+## 2026-11-12: completion audit
+
+All 26 rows re-audited against the cached publications and the project rules. Changes:
+
+- GO:0033499 label updated to the current ontology label ("beta-D-galactose catabolic process via UDP-galactose, Leloir pathway") in `core_functions` and in the three MODIFY replacement terms; the existing-annotation rows keep the label as supplied by GOA.
+- The IBA GO:0006012 galactose metabolic process MODIFY row now carries a structured `propagation_review` (TERM_SCOPING_PROBLEM / GRANULARITY_MISMATCH; PTN000048421 supports the transfer, only the granularity is coarse).
+- The positive HDA GO:0016020 membrane row (YTS NK-cell membrane proteome, PMID:19946888) changed from UNDECIDED to REMOVE. Judgement: a bulk membrane-fraction detection does not establish membrane residence; the survey's own abstract says only "approximately 40% of the identified proteins were predicted as plausible membrane proteins" [PMID:19946888], GALK1 has no membrane anchor, and the targeted experiment on the human protein concluded it "is cytosolic and not associated with the endoplasmic reticulum membrane" [PMID:8908517], which UniProt recorded as the NOT located_in membrane row (kept as ACCEPT). The removal does not deny co-purification. The GALK1-specific peptide table was still not inspected.
+- The core function's PMID:8908517 support now carries the verbatim localization quote.
+
+No other action changed. Status set to COMPLETE.

@@ -298,9 +298,10 @@ def validate_local_source_quotes(
             message = f"Cannot check supporting text: {reference_id} does not resolve to a file"
             if local_prefix(reference_id) == "Reactome":
                 suggestion = (
-                    "Cache the Reactome entry: uv run python -c \"from "
+                    'Cache the Reactome entry: uv run python -c "from '
                     "ai_gene_review.etl.reactome import cache_reactome_pathway; "
-                    f"cache_reactome_pathway('{reference_id}')\""
+                    f"cache_reactome_pathway('{reference_id}', "
+                    'include_participants=True)"'
                 )
             else:
                 suggestion = "Point reference_id at an existing file under genes/ or the repository root"

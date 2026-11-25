@@ -60,7 +60,7 @@ Explicitly listed multiple source loci contribute candidates for each resolved p
 
 ## Existing review coverage
 
-Inspected **998 review files**. Full-file mapping results are in [review_coverage.tsv](review_coverage.tsv). No gene validators were run for this inventory; `validation_status` is `not_run`. A declared COMPLETE status, zero PENDING rows, or a core-function section does not certify biological accuracy.
+Inspected **1029 review files**. Full-file mapping results are in [review_coverage.tsv](review_coverage.tsv). No gene validators were run for this inventory; `validation_status` is `not_run`. A declared COMPLETE status, zero PENDING rows, or a core-function section does not certify biological accuracy.
 
 - Candidates with PENDING rows: 0.
 - Candidates with UNDECIDED rows: 4.

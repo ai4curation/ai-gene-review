@@ -338,7 +338,10 @@ slots:
   proposed_new_terms:
     range: ProposedOntologyTerm
     multivalued: true
-    description: Proposed new ontology terms that should exist but don't
+    description: >-
+      Proposed new ontology terms that should exist but don't. Gene reviews and
+      modules both carry this list. Record a new-term request here rather than
+      only in prose (notes, reasons), so that it can be exported.
   proposed_ontology_changes:
     range: ProposedOntologyChange
     multivalued: true
@@ -1399,6 +1402,7 @@ classes:
       - description
       - references
       - knowledge_gaps
+      - proposed_new_terms
       - proposed_ontology_changes
     attributes:
       status:
@@ -1597,6 +1601,14 @@ classes:
         range: ModuleTypeEnum
       description:
         range: string
+      intentionally_ungrounded:
+        range: boolean
+        description: >-
+          Whether this terminal node intentionally represents a distributed or
+          open-ended role that cannot be grounded to a single representative
+          protein without misrepresenting the module. Set this only on leaf
+          nodes whose abstract participant selector is part of the biological
+          model, not a placeholder awaiting curation.
       concepts:
         range: Descriptor
         multivalued: true
@@ -2788,11 +2800,167 @@ classes:
         range: float
         minimum_value: 0.0
         maximum_value: 1.0
-        description: Overall confidence in the rule (0.0 to 1.0)
+        description: >-
+          Confidence that the recommended action is right (0.0 to 1.0). It is
+          confidence in the verdict, never confidence in the rule: a DEPRECATE
+          at 0.95 means "almost certainly should be retired". A verdict the
+          reviewer holds below 0.5 should be UNDECIDED instead.
       supported_by:
         range: SupportingTextInReference
         multivalued: true
         description: Supporting text from literature for this review
+      biological_meaning:
+        range: BiologicalMeaningAssessment
+        inlined: true
+        description: >-
+          Whether the rule is a sensible biological statement: do its condition
+          sets pick out recognisable biological units, and is the consequent the
+          most informative true statement about them? This is judged separately
+          from accuracy (annotation_assessments): a rule can be true for every
+          protein it matches and still say almost nothing.
+      biological_units:
+        range: BiologicalUnit
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          The biological units (families, complexes, pathway steps) the condition
+          sets resolve into, each with the most informative term that is true
+          of it. This is the evidence for biological_meaning, and the plan for a
+          SPLIT.
+      corrections:
+        range: RuleReviewCorrection
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Claims an earlier version of this review made that a later check
+          showed to be wrong, each with the evidence that refuted it. The
+          wrong claim is removed from the review's prose and recorded here, so
+          that review errors stay countable and can become test cases.
+      source_defects:
+        range: SourceDefect
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Defects found, while reviewing the rule, in an annotation record the
+          review cites as a receipt (for example a curated GOA row whose
+          reference looks mis-keyed), in reportable structured form. Set
+          `record` to the row (subject, term, evidence code, reference). A
+          defect of the rule itself is the review's verdict, not a source
+          defect. See docs/source_defects.md.
+
+  BiologicalMeaningAssessment:
+    description: >-
+      Rule-level judgement of biological meaning, with the measurements it rests on.
+    attributes:
+      assessment:
+        range: RuleMeaningEnum
+        required: true
+        description: The judgement
+      notes:
+        range: string
+        description: Reasoning, naming the units and terms in biological_units
+      consequent_descendant_count:
+        range: integer
+        minimum_value: 0
+        description: >-
+          Number of is_a/part_of descendants of the consequent GO term, as a measure
+          of how general it is (projects/ARBA_REVIEW/rule_redundancy.tsv
+          go_descendants, or QuickGO). The project treats more than 200 as very general.
+      sets_covered_by_more_specific_rule:
+        range: integer
+        minimum_value: 0
+        description: >-
+          Number of this rule's condition sets that a rule asserting a more
+          specific term also matches (rule_redundancy.tsv covered_sets). UniProt
+          keeps only the most specific ARBA term on a protein, so a covered set
+          emits nothing.
+      covering_terms:
+        range: string
+        multivalued: true
+        description: GO ids of the more specific terms that cover sets of this rule
+      sets_examined_for_meaning:
+        range: integer
+        minimum_value: 0
+        description: >-
+          How many condition sets were assigned to a biological unit. When this is
+          less than the rule's set count, the judgement is from a sample and
+          notes must say how the sample was taken.
+
+  BiologicalUnit:
+    description: >-
+      A recognisable biological unit that one or more condition sets select, with
+      the most informative GO term that is true of it.
+    attributes:
+      name:
+        range: string
+        required: true
+        description: Name of the unit (e.g. "Dicer", "ESCRT-III", "PI synthase")
+      unit_kind:
+        range: BiologicalUnitKindEnum
+        description: What kind of unit it is
+      condition_sets:
+        range: integer
+        multivalued: true
+        description: Numbers of the condition sets that select this unit
+      example_proteins:
+        range: string
+        multivalued: true
+        description: UniProt accessions of members that match those sets
+      most_informative_term_id:
+        range: string
+        description: >-
+          GO id of the most informative term that curated annotation supports for
+          this unit, in the same aspect as the rule's consequent
+      most_informative_term_label:
+        range: string
+        description: Official label of that term (checked against the label cache)
+      term_relation:
+        range: UnitTermRelationEnum
+        description: How that term relates to the rule's consequent
+      evidence:
+        range: string
+        multivalued: true
+        description: >-
+          Checkable facts: accession, GO id, evidence code and reference for the
+          curated annotation that supports the term on a member
+      notes:
+        range: string
+        description: Anything else, e.g. why no better term exists
+
+  RuleReviewCorrection:
+    description: >-
+      One withdrawn claim of a rule review and what replaced it. A correction
+      is a receipt for a reviewing error: it names the claim, the check that
+      refuted it, and a source a validator or a person can look up.
+    attributes:
+      date:
+        range: string
+        description: Date the correction was made (YYYY-MM-DD)
+      withdrawn_claim:
+        range: string
+        required: true
+        description: The claim as the earlier review made it (short quote or paraphrase)
+      correction:
+        range: string
+        required: true
+        description: What the check showed instead
+      error_type:
+        range: RuleReviewErrorTypeEnum
+        description: The kind of reviewing error
+      evidence:
+        range: string
+        multivalued: true
+        description: >-
+          Checkable facts behind the correction, one per item, each naming its
+          source: a UniProt accession with a GO id, evidence code and reference
+          (P0CX53 GO:0034517 IGI PMID:39934334), an InterPro id with its official
+          name, a UniProtKB query with its count and release, or a GO id with
+          its label and parent.
+      supported_by:
+        range: SupportingTextInReference
+        multivalued: true
+        inlined_as_list: true
+        description: Supporting text from literature or files
 
   EmbeddedRule:
     description: >-
@@ -2855,6 +3023,22 @@ classes:
       modified_date:
         range: string
         description: Date the rule was last modified
+      retrieved_date:
+        range: string
+        description: >-
+          Date (YYYY-MM-DD) the rule was fetched from UniProt for this review.
+          Rules change and are withdrawn, so a review describes the rule as of
+          this date.
+      source_condition_set_count:
+        range: integer
+        minimum_value: 0
+        description: >-
+          Number of condition sets in the rule as fetched. When it exceeds the
+          number recorded in condition_sets, the review examined only part of
+          the rule and its verdict must say so.
+      withdrawn:
+        range: boolean
+        description: True when UniProt no longer serves the rule (HTTP 404 at retrieved_date)
 
   RuleConditionSet:
     description: >-
@@ -2875,6 +3059,26 @@ classes:
       notes:
         range: string
         description: Reviewer notes on this specific condition set
+      uniprot_query:
+        range: string
+        description: UniProtKB query equivalent to this condition set
+      uniprot_release:
+        range: string
+        description: UniProtKB release the counts below were taken from (e.g. 2026_04)
+      matched_count:
+        range: integer
+        minimum_value: 0
+        description: UniProtKB entries matching the set
+      reviewed_matched_count:
+        range: integer
+        minimum_value: 0
+        description: Reviewed (Swiss-Prot) entries matching the set
+      reviewed_supported_count:
+        range: integer
+        minimum_value: 0
+        description: >-
+          Reviewed matches that carry the consequent, or a descendant, on evidence
+          other than this rule (not IEA GO_REF:0000117)
       pairwise_overlap:
         range: PairwiseOverlap
         multivalued: true
@@ -3027,7 +3231,24 @@ classes:
       incorrect_examples:
         range: string
         multivalued: true
-        description: UniProt accessions for which the consequent is incorrect
+        description: >-
+          UniProt accessions that carry the consequent from this rule and for
+          which it is incorrect. A protein that only matches the conditions goes
+          in would_match_examples.
+      would_match_examples:
+        range: string
+        multivalued: true
+        description: >-
+          UniProt accessions that match the rule's conditions and should not
+          carry the consequent, but that the rule does not annotate (typically
+          reviewed entries). They show what the rule does to unreviewed
+          relatives; they are weaker evidence than incorrect_examples.
+      consequent_obsolete:
+        range: boolean
+        description: >-
+          True when the consequent itself no longer exists (an obsolete GO
+          term). This is a ground for DEPRECATE that needs no wrongly
+          annotated protein; the online receipt check confirms it against GO.
       gene_reviews:
         range: string
         multivalued: true
@@ -3969,6 +4190,52 @@ enums:
           The GO Consortium's ontology editors, for a defect in a term itself -
           its label, definition, or placement in the graph - rather than in any
           annotation using it.
+      SYNGO:
+        description: >-
+          SynGO expert curation of synaptic genes (assigned_by SynGO in GOA). SynGO
+          annotates the species studied and maps the annotation to the human
+          ortholog, so a defect can sit on the rodent row, the human row, or both.
+      AGBASE:
+        description: AgBase curation (assigned_by AgBase in GOA).
+      HGNC_UCL:
+        description: >-
+          The HGNC-UCL curation group (assigned_by HGNC-UCL in GOA). A separate
+          group from ARUK_UCL: both are at UCL, but a report has to reach the
+          team that made the row.
+      PARKINSONSUK_UCL:
+        description: >-
+          The ParkinsonsUK-UCL curation group (assigned_by ParkinsonsUK-UCL in
+          GOA). As for HGNC_UCL, distinct from ARUK_UCL despite the shared
+          institution.
+      GDB:
+        description: >-
+          The legacy GDB annotation set (assigned_by GDB in GOA), largely TAS rows
+          on human entries.
+      YUBIOLAB:
+        description: YuBioLab curation (assigned_by YuBioLab in GOA).
+      MENGO:
+        description: >-
+          MENGO, the microbial energy processes GO curation project (assigned_by
+          MENGO in GOA).
+      PROSITE:
+        description: >-
+          A PROSITE pattern or its ProRule (e.g. PS00161 / PRU10119), where the
+          rule places a protein name, EC number or feature on every match of a
+          motif too broad to support it. The fix is to the rule's scope. Distinct
+          from UNIPROT, which only applies the rule, and from INTERPRO, whose
+          InterPro2GO mappings are a different mechanism; PROSITE assigns no GOA
+          rows of its own.
+      RCSB_PDB:
+        description: >-
+          RCSB PDB entry or entity metadata - a deposition's description strings
+          rather than its sequences or coordinates.
+      AFFINAGE:
+        description: >-
+          An Affinage gene record (the Cheeseman Lab LLM synthesis served at
+          affinage.wi.mit.edu and cached here as GENE-deep-research-affinage.md).
+          The defect is in the synthesis itself - a wrong grounding, an omitted
+          complex, a malformed citation - not in any GOA row, so `record` is the
+          record's URL and `slot` is the field within it.
       OTHER:
         description: Name the resource in the explanation.
 
@@ -4014,6 +4281,21 @@ enums:
           shares a defect that is not a per-row judgement (e.g. a qualifier used
           consistently across one campaign's output). Fixable in bulk, and the
           explanation should give the date range and row count.
+      ORTHOLOG_TRANSFER_AS_EXPERIMENTAL:
+        description: >-
+          An annotation made from an experiment in another species was recorded on
+          the gene with an experimental evidence code (IDA, IMP, ...) rather than as
+          an orthology transfer (ISO). The experiment can be sound; the row
+          misstates how its evidence reaches this gene. Usually a resource's
+          documented convention, so raise it once rather than per row.
+      CONTEXT_NOT_ASSAYED:
+        description: >-
+          The cited work shows the activity but not the biological context the term
+          asserts. Typical case: a precomposed "X involved in Y" term (for example a
+          channel activity involved in regulation of presynaptic membrane potential)
+          annotated from a protein expressed in heterologous cells, which can
+          support X but cannot reach Y. The correction is usually the plain
+          activity term.
       OTHER: {}
       UNKNOWN: {}
 
@@ -4920,6 +5202,86 @@ enums:
       COMPLETE:
         description: Review is complete
 
+  RuleMeaningEnum:
+    description: Whether a rule is a sensible biological statement
+    permissible_values:
+      COHERENT:
+        description: >-
+          The condition sets select one biological unit, or closely related ones,
+          and the consequent is the most informative term true of all of them
+      TRUE_BUT_UNINFORMATIVE:
+        description: >-
+          The consequent is true of what the sets select, but it is an umbrella
+          term: the units carry more specific terms (descendants of the
+          consequent) that say what they do. The remedy is to split toward those terms.
+      HETEROGENEOUS:
+        description: >-
+          The sets select unrelated units and the consequent fits only some of
+          them, or fits them for unrelated reasons (e.g. a term copied from a
+          pathway mapping onto enzymes that do different things)
+      NOT_ASSESSED:
+        description: Not judged, with the reason in notes
+
+  BiologicalUnitKindEnum:
+    description: Kinds of biological unit a condition set can select
+    permissible_values:
+      FAMILY:
+        description: A protein family or subfamily
+      COMPLEX:
+        description: Subunits of one complex
+      PATHWAY:
+        description: Enzymes or components of one pathway
+      ARCHITECTURE:
+        description: A domain architecture shared by several families
+      OTHER:
+        description: Something else, described in notes
+
+  UnitTermRelationEnum:
+    description: How a unit's most informative term relates to the rule's consequent
+    permissible_values:
+      SAME_AS_CONSEQUENT:
+        description: The consequent is already the most informative term
+      DESCENDANT_OF_CONSEQUENT:
+        description: A more specific term under the consequent
+      OUTSIDE_CONSEQUENT:
+        description: A term that is not under the consequent (the consequent does not fit this unit)
+      NONE_KNOWN:
+        description: No curated term was found for the unit
+
+  RuleReviewErrorTypeEnum:
+    description: Kinds of reasoning error found in rule reviews
+    permissible_values:
+      WRONG_IDENTIFIER_MEANING:
+        description: An InterPro, FunFam, GO or EC identifier was given the name or meaning of a different entry
+      CONJUNCTION_IGNORED:
+        description: A condition was judged alone although the rule requires it together with other signatures or a taxon
+      REFUTED_BY_CURATED_ANNOTATION:
+        description: A match called a false positive carries the annotation, or a descendant, on experimental or curated evidence
+      SIZE_AS_EVIDENCE:
+        description: The number of condition sets, or a tool limit, was used as evidence that the annotation is wrong
+      GENERAL_IS_NOT_WRONG:
+        description: A true but general or redundant consequent was treated as false
+      ONTOLOGY_MISREAD:
+        description: The GO hierarchy or a term's scope was misread (a descendant called unrelated, a non-descendant offered as more specific, a process term replaced by function terms)
+      UNEXAMINED_RULE:
+        description: A verdict was given on condition sets the review never recorded or read
+      MEANING_NOT_JUDGED:
+        description: >-
+          The review checked that annotations were true but did not judge whether the
+          rule is a meaningful or parsimonious biological statement
+      UNSUPPORTED_SOURCE:
+        description: The claim cited the review's own notes, an AI research file, a missing file or an unresolvable reference as literature
+      TAXON_MISREAD:
+        description: Taxon conditions were misstated, or a restriction that keeps a set precise was called arbitrary
+      SAMPLE_OVERGENERALISED:
+        description: A count from reviewed (Swiss-Prot) entries, or one example, was generalised to everything the rule matches
+      LOW_RECALL_IS_NOT_WRONG:
+        description: Missing coverage (false negatives) was treated as making the rule's annotations false
+      STALE_RULE_VERSION:
+        description: The claim described a version of the rule that differs from the one served at retrieved_date
+      OTHER:
+        description: Another kind of error, described in the correction
+
   RuleActionEnum:
     description: Recommended action for the rule
     permissible_values:
@@ -4931,6 +5293,11 @@ enums:
         description: Rule should be removed or retired
       SPLIT:
         description: Rule should be split into multiple more specific rules
+      WITHDRAWN:
+        description: >-
+          UniProt no longer serves the rule (rule.withdrawn is true). This is a
+          fact about the rule's state, not a judgement that it was wrong; use
+          DEPRECATE for a rule that is still served and should be retired.
       MERGE:
         description: Rule should be merged with another related rule
       UNDECIDED:
@@ -5611,6 +5978,12 @@ enums:
           consequence specified (use catalytic/receptor/adaptor/sequestering MF).
       GENERIC_MF:
         description: An overly generic MF term is used where a specific child term applies.
+      WRONG_MF_TERM:
+        description: >-
+          The MF term is wrong rather than vague: the gene product does not have
+          the asserted activity (e.g. a too-specific or lateral term), so the fix
+          is a different term, possibly a parent. Pairs with a WRONG_TERM source
+          defect.
       HAS_INPUT_MISUSE:
         description: >-
           'has input' used incorrectly, e.g. a receptor's ligand or a TF's DNA
@@ -5621,6 +5994,11 @@ enums:
           vice versa.
       INCORRECT_DIRECTIONALITY:
         description: Causal edge directionality (subject -> object) appears reversed.
+      WRONG_CAUSAL_SIGN:
+        description: >-
+          A causal edge has the wrong sign (positive where the evidence shows
+          inhibition, or vice versa). Pairs with a WRONG_CAUSAL_RELATION source
+          defect.
       MISSING_LOCATION:
         description: Activity lacks an 'occurs in' cellular component.
       MISSING_PROCESS:

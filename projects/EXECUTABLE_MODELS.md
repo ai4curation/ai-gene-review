@@ -9,6 +9,7 @@ manifest:
     - href: https://claude.ai/artifact/RvU9kSUAsvoz17LfaKWAXw
       title: Executable modules brief
       description: AI generated
+index_group: CROSS_CUTTING
 ---
 
 # Executable models

@@ -113,3 +113,11 @@ fields remain unchanged. No lockfile or local runtime was created or modified.
 Eight of the twenty calibration cases now have full re-reviews in this TF campaign;
 twelve retain their original scoped-assessment status. Existing files elsewhere
 are not counted as newly validated campaign work.
+
+## 2026-11-25 — Parent merge and review follow-up
+
+Merged parent #6208 at e317312796, retaining both branches' baseline removals and both GacA note histories. GacA now also retains the incoming ortholog phosphotransfer/genetic evidence and KT2440 rsmY/rsmZ motif evidence. Motif conservation is not a GacA occupancy assay; the ten sidecar relationships retain their original directness limits. The response-regulator proposal uses ISS from E. coli BarA/UvrY biochemistry. The consolidated TF replacement and conservative localization decision remain, with explicit reconciliation in the gene notes.
+
+Addressed the remaining evidence-reference suggestions: Hfq cytosol cites its PAINT ancestral annotation, and the authored FleQ flagellum-regulation IMP cites the KT2442 mutant paper. GacA explicitly distinguishes its lateral TF correction from the separately retained cis-regulatory binding row.
+
+Census limitation: `existing_review_tf_row` counts annotation-row term IDs only, excluding replacement terms and core functions. Consolidating GacA's duplicate NEW TF row into the DNA-binding replacement reduced that signal from 29 to 28 even though TF activity remains asserted. Other independent signals retain GacA in the census; this count measures row representation, not loss of biological coverage.

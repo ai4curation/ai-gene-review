@@ -3,6 +3,12 @@
 This document describes the complete post-enrichment workflow for reviewing ARBA annotation rules.
 Review initialization also supports UniRule rules, but the analysis-dependent steps do not yet do so.
 
+> **Receipts.** A rule review is checked for receipts as well as schema:
+> recorded condition sets, official identifier labels, sources that exist, and a
+> named wrongly annotated protein behind a DEPRECATE. See
+> [Receipts for rule reviews](rule_review_receipts.md) before writing a verdict,
+> and run `just rules-validate` (add `--online` before marking a review COMPLETE).
+
 ## Overview
 
 The rule review workflow consists of several distinct phases, each with specific dependencies:

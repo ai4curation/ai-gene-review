@@ -21,3 +21,7 @@ All five machine-seeded rows and three existing authored proposals were re-revie
 The LinkML sidecar now explicitly distinguishes RNA stability from transcription and translation. CrcZ/CrcY antagonize CCR by protein titration, not by base-pairing with catabolic mRNAs. Description/core wording was narrowed accordingly. Translation-repressor MF and negative translation-regulation proposals retain their ISS donor Q9HUM0 and P. aeruginosa evidence [PMID:34139006, Stabilization of Hfq-mediated translational repression by the co-repressor Crc in Pseudomonas aeruginosa]. The P. aeruginosa structural study is not KT2440 localization microscopy. By contrast, Hfq itself performs the RNA-recognition/repression step of CCR, unlike upstream CbrB; its existing CCR proposal is retained.
 
 No provider research or existing UniProt/GOA/publication text was changed. FEBA lookup failed without writing an artifact; PSEPK has no applicable MOD-description source.
+
+## 2026-11-25 — Review follow-up
+
+Added the cached PAINT cytosol ancestor (PTN002164223, E. coli Hfq seed P0A6X3) to the cytosol row, retaining the distinction between a family inference and KT2440 microscopy.

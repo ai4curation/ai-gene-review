@@ -10,6 +10,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/MivpKQ5kSzXjx2C5kqUYqs
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Miscitation Audit
@@ -102,6 +103,8 @@ uv run python projects/MISCITATION_AUDIT/harvest_citations.py
 Outputs to [`MISCITATION_AUDIT/reports/`](MISCITATION_AUDIT/reports/REPORT.md):
 `citation_flags.tsv` (one row per gene × citation, with the GOA/ours split),
 `bad_citations.tsv` (one row per distinct defective citation) and `REPORT.md`.
+The anomaly detectors are described in
+[ANOMALIES.md](MISCITATION_AUDIT/reports/ANOMALIES.md).
 
 Its most useful column is **contamination spread**: citations flagged
 `WRONG_IDENTIFIER` in one review that are *still cited without a flag* elsewhere.

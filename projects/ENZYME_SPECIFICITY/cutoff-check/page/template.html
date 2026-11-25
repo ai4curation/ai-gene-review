@@ -1,0 +1,343 @@
+<title>Enzyme Cutoff Check</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column (~68ch) with a wider band for the score chart; sections stacked, no hero. */
+:root {
+  --bg: #f7f8f7;
+  --surface: #fcfcfb;
+  --ink: #15201f;
+  --ink-2: #4c5856;
+  --ink-3: #75807e;
+  --rule: #d9dfdd;
+  --accent: #1f5f73;
+  --accent-soft: #e2edef;
+  --cut: #15201f;
+  --s-accept: #2a78d6;
+  --s-remove: #eb6834;
+  --s-undecided: #1baf7a;
+  --f-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121615; --surface: #1a1a19; --ink: #eef1f0; --ink-2: #b9c2c0; --ink-3: #8a9492;
+    --rule: #2e3634; --accent: #7fc0d2; --accent-soft: #1d2b2f; --cut: #eef1f0;
+    --s-accept: #3987e5; --s-remove: #d95926; --s-undecided: #199e70;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121615; --surface: #1a1a19; --ink: #eef1f0; --ink-2: #b9c2c0; --ink-3: #8a9492;
+  --rule: #2e3634; --accent: #7fc0d2; --accent-soft: #1d2b2f; --cut: #eef1f0;
+  --s-accept: #3987e5; --s-remove: #d95926; --s-undecided: #199e70;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body);
+  font-size: 16px; line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 980px; margin: 0 auto; padding-block: 40px 64px; display: grid; gap: 56px; }
+.col { max-width: 68ch; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 650; text-wrap: balance; line-height: 1.2; margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 2.75rem); letter-spacing: -0.01em; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.1rem; }
+p { margin: 0; }
+section { display: grid; gap: 16px; min-width: 0; }
+.eyebrow { font-family: var(--f-mono); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+.lead { font-size: 1.15rem; color: var(--ink-2); }
+.lead strong { color: var(--ink); }
+header { display: grid; gap: 14px; }
+code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
+code { background: var(--accent-soft); padding: 1px 5px; border-radius: 3px; }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* protocol steps */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.step { border-top: 3px solid var(--rule); padding-top: 12px; display: grid; gap: 6px; align-content: start; }
+.step.on { border-top-color: var(--accent); }
+.step .n { font-family: var(--f-mono); font-size: 0.8rem; color: var(--ink-3); }
+.step .q { font-weight: 600; line-height: 1.35; }
+.step .here { font-size: 0.85rem; color: var(--ink-2); }
+.step.on .here { color: var(--accent); font-weight: 500; }
+.share { font-size: 0.9rem; color: var(--ink-2); }
+
+/* crosstab */
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.92rem; }
+th, td { padding: 7px 14px; text-align: right; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+thead th { font-weight: 600; font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-3); }
+td.v { font-family: var(--f-mono); font-size: 0.82rem; }
+td.zero { color: var(--ink-3); }
+td.hl { font-weight: 600; color: var(--ink); background: var(--accent-soft); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px 32px; }
+.stat { display: grid; gap: 2px; }
+.stat b { font-family: var(--f-display); font-size: 2rem; font-weight: 650; font-variant-numeric: tabular-nums; line-height: 1; }
+.stat span { font-size: 0.88rem; color: var(--ink-2); }
+
+/* chart */
+.chart-card { background: var(--surface); border: 1px solid var(--rule); border-radius: 6px; padding: 20px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; min-width: 0; }
+.chart-card > * { min-width: 0; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 0.86rem; color: var(--ink-2); align-items: center; }
+.legend .k { display: inline-flex; align-items: center; gap: 6px; }
+.chartwrap { overflow-x: auto; position: relative; }
+svg text { font-family: var(--f-body); }
+.tick { fill: var(--ink-3); font-size: 11px; font-family: var(--f-mono); }
+.rowlab { fill: var(--ink); font-size: 12.5px; }
+.rowsub { fill: var(--ink-3); font-size: 11px; }
+.grid { stroke: var(--rule); stroke-width: 1; }
+.cutline { stroke: var(--cut); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.stem { stroke: var(--rule); stroke-width: 2; }
+.hit { cursor: default; }
+.hit:hover .bg, .hit:focus .bg { fill: var(--accent-soft); }
+.hit:focus { outline: none; }
+.comp { fill: none; stroke: var(--ink-2); stroke-width: 1.5; }
+#tip { position: absolute; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--rule); border-radius: 6px; padding: 10px 12px; font-size: 0.82rem; line-height: 1.45; max-width: 300px; box-shadow: 0 4px 16px rgb(0 0 0 / 0.12); }
+#tip .t { font-weight: 600; }
+#tip .m { font-family: var(--f-mono); font-size: 0.78rem; color: var(--ink-2); }
+.nohit { display: grid; gap: 8px; }
+.nohit ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--rule); border-radius: 4px; padding: 4px 8px; font-size: 0.82rem; background: var(--bg); display: inline-flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; max-width: 100%; }
+.chip .g { font-weight: 600; }
+.chip .tag { font-family: var(--f-mono); font-size: 0.72rem; color: var(--ink-3); }
+.note { font-size: 0.86rem; color: var(--ink-2); }
+
+/* disagreements */
+.cases { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 32px; }
+.case { display: grid; gap: 6px; align-content: start; }
+.case .why { font-family: var(--f-mono); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+.case p { color: var(--ink-2); font-size: 0.95rem; }
+.rules { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; }
+.rules li::marker { color: var(--ink-3); }
+footer { border-top: 1px solid var(--rule); padding-top: 16px; font-size: 0.85rem; color: var(--ink-3); display: grid; gap: 4px; }
+@media (max-width: 760px) {
+  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cases { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 420px) { .steps { grid-template-columns: minmax(0, 1fr); } }
+</style>
+
+<main>
+  <header class="col">
+    <div class="eyebrow">ai-gene-review · Enzyme Specificity project</div>
+    <h1>Enzyme Cutoff Check</h1>
+    <p class="lead">Most enzyme misannotation in automatically annotated databases is overprediction: a protein looks like a family but does not belong to it. Scoring the protein against the family's HMM and its curated trusted cutoff catches much of it. <strong id="headline"></strong></p>
+  </header>
+
+  <section>
+    <div class="col" style="display:grid;gap:10px">
+      <h2>The Schnoes protocol</h2>
+      <p>Schnoes et al. (2009) judged an enzyme annotation correct only if the sequence passed four checks in order. The tool built here mechanises the two that cover the family. The other two remain where they already were in this repository.</p>
+    </div>
+    <ol class="steps">
+      <li class="step"><span class="n">Step 1 · NSA</span><span class="q">Matches the superfamily?</span><span class="here">Not attempted: only known matches are scored, so no hit is not evidence.</span></li>
+      <li class="step on"><span class="n">Step 2 · SFA</span><span class="q">Matches the annotated family, not just the superfamily?</span><span class="here">Checked: verdict <span class="mono">SFA</span> when no target family is hit.</span></li>
+      <li class="step"><span class="n">Step 3 · MFR</span><span class="q">Keeps the functionally important residues?</span><span class="here">Separate: <span class="mono">family_residue_validator</span> and the Pseudoenzymes project.</span></li>
+      <li class="step on"><span class="n">Step 4 · BTC</span><span class="q">Scores above the family's trusted cutoff?</span><span class="here">Checked: verdict <span class="mono">BTC</span> when below the noise cutoff.</span></li>
+    </ol>
+    <p class="share col">In GenBank NR, 54% of the misannotations Schnoes found failed step 4 and 31% failed step 2. Only 6% were missing catalytic residues.</p>
+  </section>
+
+  <section>
+    <div class="col" style="display:grid;gap:10px">
+      <h2>How it did on reviewed rows</h2>
+      <p>The test set is every IEA or IBA molecular-function row mapping to one specific reaction, in 20 <i>Pseudomonas putida</i> KT2440 reviews plus human HADH. The genes were chosen because each has a REMOVE on a paralog or wrong-reaction call, so the set is enriched for removals. Treat the counts as agreement on this set, not as an error rate.</p>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="tablewrap"><table id="xtab"></table></div>
+  </section>
+
+  <section>
+    <div class="col" style="display:grid;gap:10px">
+      <h2>Score against the trusted cutoff</h2>
+      <p>Each row is one annotated activity. The dot sits at the protein's best score for a family that carries that activity, divided by the family's trusted cutoff (TC); where several families carry it, the one with the highest ratio is shown. At or right of the dashed line, the protein qualifies as a family member. An open ring marks rows where the protein also passes a family for a different reaction.</p>
+    </div>
+    <div class="chart-card">
+      <div class="legend" id="legend"></div>
+      <div class="chartwrap" id="chartwrap"><svg id="chart" role="img" aria-label="Score divided by trusted cutoff for each reviewed row, coloured by reviewer action"></svg><div id="tip" hidden></div></div>
+      <div class="nohit">
+        <h3>Rows with no target-family hit</h3>
+        <ul id="nohit"></ul>
+        <p class="note"><span class="mono">NO_MODEL</span>: no NCBIfam model carries the activity, so the check is silent. <span class="mono">SFA</span>: a model exists, but the protein matches other families only. Several rows still name a family the protein fits instead.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="col" style="display:grid;gap:10px">
+      <h2>Where the check and the reviewer disagree</h2>
+      <p>Four rows disagree. Each one marks a limit of what family scores can show.</p>
+    </div>
+    <div class="cases">
+      <div class="case"><span class="why">Pseudoenzyme · needs step 3</span><h3>pyrC′, dihydroorotase</h3><p>Passes the dihydroorotase family (<span data-fam="pyrC'|GO:0004151|NF006838.0"></span>) but lacks the catalytic histidines and does not complement a <i>pyrC</i> mutant. Family membership is real; catalysis is lost.</p></div>
+      <div class="case"><span class="why">Overlapping families</span><h3>metXS, homoserine O-acetyltransferase</h3><p>Passes both the acetyltransferase MetX model (<span data-fam="metXS|GO:0004414|NF001209.0"></span>) and the succinyltransferase MetX model (<span data-fam="metXS|GO:0008899|NF047916.1"></span>). The check flags the pair but cannot rank them. The curated UniProt entry decides.</p></div>
+      <div class="case"><span class="why">Experiment outranks HMM</span><h3>PP_2325, 2-dehydropantoate 2-reductase</h3><p>Passes two 2-dehydropantoate 2-reductase models (<span data-fam="PP_2325|GO:0008677|TIGR00745.1"></span>; "putative", <span data-fam="PP_2325|GO:0008677|NF004887.0"></span>). Its <i>P. aeruginosa</i> ortholog is inactive on ketopantoate in structural and biochemical work.</p></div>
+      <div class="case"><span class="why">Cutoff set on bacteria</span><h3>Human HADH, 3-hydroxyacyl-CoA dehydrogenase</h3><p>A correct, experimentally supported function scores below every 3-hydroxyacyl-CoA dehydrogenase model; the closest is <span data-fam="HADH|GO:0003857|NF006143.0"></span>. NCBIfam cutoffs are calibrated on prokaryotes, so divergent eukaryotic orthologs fall below them.</p></div>
+    </div>
+    <p class="col note" id="undecided"></p>
+  </section>
+
+  <section class="col">
+    <h2>Using it in a review</h2>
+    <ul class="rules">
+      <li>Run it on electronic enzyme rows (EC2GO, InterPro2GO, ARBA, UniRule, IBA), especially in superfamilies where families catalyse different reactions: enolase, HAD, amidohydrolase, crotonase, VOC.</li>
+      <li>A <span class="mono">BTC</span> or <span class="mono">SFA</span> verdict with a competing family that passes supports replacing the term. Record the scores in the review reason.</li>
+      <li>A <span class="mono">BTC</span> with no competitor points to <span class="mono">MODIFY</span> toward a more general activity, the paper's own remedy.</li>
+      <li>A pass does not prove activity. Check catalytic residues and whether the family is broader than the specificity at issue.</li>
+      <li>Never use the check alone to remove an experimental annotation.</li>
+    </ul>
+    <p>Command: <code>just enzyme-cutoff-check Q88KF6 --go GO:0004451</code></p>
+  </section>
+
+  <footer>
+    <span>Method: Schnoes AM, Brown SD, Dodevski I, Babbitt PC. Annotation error in public databases: misannotation of molecular function in enzyme superfamilies. <i>PLoS Comput Biol</i> 2009;5:e1000605. PMID:20011109, <a href="https://doi.org/10.1371/journal.pcbi.1000605">doi:10.1371/journal.pcbi.1000605</a> (metadata via PubMed).</span>
+    <span>Family models and cutoffs: NCBIfam __RELEASE__. Scores computed with pyhmmer; data from <span class="mono">projects/ENZYME_SPECIFICITY/cutoff-check/results.yaml</span> on branch <span class="mono">claude/enzyme-cutoff-check</span>, page built by <span class="mono">page/build_page.py</span>.</span>
+  </footer>
+</main>
+
+<script>
+const ROWS = __DATA__;
+const ACTIONS = [
+  { key: "ACCEPT", label: "Reviewer accepted", color: "var(--s-accept)", shape: "circle" },
+  { key: "REMOVE", label: "Reviewer removed", color: "var(--s-remove)", shape: "square" },
+  { key: "UNDECIDED", label: "Reviewer undecided", color: "var(--s-undecided)", shape: "diamond" },
+];
+const byKey = Object.fromEntries(ACTIONS.map(a => [a.key, a]));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// "score / TC (accession)" for one target family of one row, read from the data
+function famScore(gene, go, acc) {
+  const row = ROWS.find(r => r.gene === gene && r.go === go);
+  const t = row && row.target_scores.find(s => s.family.startsWith(acc + " "));
+  if (!t || t.score == null) return `${acc}: no hit`;
+  return `${acc}, ${t.score} / ${t.trusted_cutoff}`;
+}
+document.querySelectorAll("[data-fam]").forEach(el => {
+  const [gene, go, acc] = el.dataset.fam.split("|");
+  el.textContent = famScore(gene, go, acc);
+});
+
+// summary numbers, headline and crosstab, computed from the rows
+(function summary() {
+  const modelled = ROWS.filter(r => r.verdict !== "NO_MODEL");
+  const pass = r => r.verdict === "ABOVE_TC";
+  const flagged = r => r.verdict === "BTC" || r.verdict === "SFA";
+  const acc = modelled.filter(r => r.action === "ACCEPT");
+  const rem = modelled.filter(r => r.action === "REMOVE");
+  const agree = acc.filter(pass).length + rem.filter(flagged).length;
+  document.getElementById("headline").textContent =
+    `On the ${acc.length + rem.length} accepted or removed rows that had a family model, it reached the reviewer's call ${agree} times.`;
+  const stats = [
+    [ROWS.length, "electronic enzyme rows checked"],
+    [`${acc.filter(pass).length} / ${acc.length}`, "accepted rows with a model that pass the cutoff"],
+    [`${rem.filter(flagged).length} / ${rem.length}`, "removed rows with a model that fail it"],
+    [ROWS.filter(r => r.verdict === "NO_MODEL").length, "rows with no NCBIfam model (inconclusive)"],
+  ];
+  document.getElementById("stats").innerHTML = stats.map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
+
+  const verdicts = ["ABOVE_TC", "BETWEEN_NC_TC", "BTC", "SFA", "NO_TARGET_HIT", "NO_MODEL"].filter(v => ROWS.some(r => r.verdict === v));
+  const actions = ["ACCEPT", "REMOVE", "UNDECIDED", "MARK_AS_OVER_ANNOTATED"].filter(a => ROWS.some(r => r.action === a));
+  const hl = (v, a) => (v === "ABOVE_TC" && a === "ACCEPT") || ((v === "BTC" || v === "SFA") && a === "REMOVE");
+  const head = `<thead><tr><th>Verdict</th>${actions.map(a => `<th>${a.replaceAll("_", " ").toLowerCase()}</th>`).join("")}</tr></thead>`;
+  const body = verdicts.map(v => `<tr><td class="v">${v}</td>${actions.map(a => {
+    const n = ROWS.filter(r => r.verdict === v && r.action === a).length;
+    return `<td class="${n === 0 ? "zero" : ""} ${n && hl(v, a) ? "hl" : ""}">${n}</td>`;
+  }).join("")}</tr>`).join("");
+  document.getElementById("xtab").innerHTML = head + `<tbody>${body}</tbody>`;
+
+  const und = ROWS.filter(r => r.action === "UNDECIDED" && r.verdict === "BTC");
+  if (und.length) {
+    document.getElementById("undecided").textContent =
+      `${und.length} rows the reviewers left undecided fall well below their family's cutoff with no competing family above its own: ` +
+      und.map(r => `${r.gene} ${r.label.replace(/ activity$/, "")} (${r.best_target_score} / ${r.best_target_tc})`).join("; ") +
+      `. These are the reviews to revisit; a BTC with no competitor points to a more general term, not a removal on its own.`;
+  }
+})();
+
+function marker(shape, x, y, r, color) {
+  if (shape === "square") return `<rect x="${x - r}" y="${y - r}" width="${2 * r}" height="${2 * r}" rx="1.5" fill="${color}"/>`;
+  if (shape === "diamond") return `<path d="M${x} ${y - r - 1.5}L${x + r + 1.5} ${y}L${x} ${y + r + 1.5}L${x - r - 1.5} ${y}Z" fill="${color}"/>`;
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="${color}"/>`;
+}
+
+document.getElementById("legend").innerHTML = ACTIONS.filter(a => ROWS.some(r => r.action === a.key && r.best_target_score != null)).map(a =>
+  `<span class="k"><svg width="14" height="14" aria-hidden="true">${marker(a.shape, 7, 7, 5, a.color)}</svg>${a.label}</span>`).join("") +
+  `<span class="k"><svg width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" class="comp"/></svg>Also passes another reaction's family</span>` +
+  `<span class="k"><svg width="20" height="14" aria-hidden="true"><line x1="10" y1="0" x2="10" y2="14" class="cutline"/></svg>Trusted cutoff</span>`;
+
+// chart: log-scaled score / TC
+(function chart() {
+  const hits = ROWS.filter(r => r.best_target_score != null)
+    .map(r => ({ ...r, ratio: r.best_target_score / r.best_target_tc }))
+    .sort((a, b) => b.ratio - a.ratio);
+  const W = 900, labW = 300, padR = 24, rowH = 26, top = 28, bottom = 30;
+  const H = top + hits.length * rowH + bottom;
+  const lo = 0.04, hi = 3;
+  const x = v => labW + (Math.log(v) - Math.log(lo)) / (Math.log(hi) - Math.log(lo)) * (W - labW - padR);
+  const ticks = [0.05, 0.1, 0.25, 0.5, 1, 2];
+  let s = "";
+  ticks.forEach(t => {
+    s += `<line class="grid" x1="${x(t)}" x2="${x(t)}" y1="${top - 6}" y2="${H - bottom}"/>`;
+    s += `<text class="tick" x="${x(t)}" y="${H - bottom + 18}" text-anchor="middle">${t}×</text>`;
+  });
+  s += `<text class="tick" x="${x(1) + 6}" y="${top - 12}">TC</text>`;
+  s += `<text class="tick" x="${labW}" y="${top - 12}">score ÷ trusted cutoff (log)</text>`;
+  hits.forEach((r, i) => {
+    const y = top + i * rowH + rowH / 2;
+    const a = byKey[r.action] || byKey.UNDECIDED;
+    const cx = x(Math.min(Math.max(r.ratio, lo), hi));
+    const label = r.label.replace(/ activity$/, "");
+    const short = label.length > 34 ? label.slice(0, 33) + "…" : label;
+    s += `<g class="hit" tabindex="0" data-i="${i}" aria-label="${esc(`${r.gene} ${label}: ${r.best_target_score} of ${r.best_target_tc}, ${r.verdict}, ${r.action}`)}">`;
+    s += `<rect class="bg" x="0" y="${y - rowH / 2}" width="${W}" height="${rowH}" fill="transparent"/>`;
+    s += `<text class="rowlab" x="0" y="${y + 4}"><tspan font-weight="600">${esc(r.gene)}</tspan><tspan class="rowsub" dx="8">${esc(short)}</tspan></text>`;
+    s += `<line class="stem" x1="${x(1)}" x2="${cx}" y1="${y}" y2="${y}"/>`;
+    if (r.better_fitting_families.length) s += `<circle class="comp" cx="${cx}" cy="${y}" r="9"/>`;
+    s += marker(a.shape, cx, y, 5, a.color);
+    s += `</g>`;
+  });
+  s += `<line class="cutline" x1="${x(1)}" x2="${x(1)}" y1="${top - 6}" y2="${H - bottom}"/>`;
+  const svg = document.getElementById("chart");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("width", W); svg.setAttribute("height", H);
+  svg.style.minWidth = "640px"; svg.style.width = "100%"; svg.style.height = "auto";
+  svg.innerHTML = s;
+
+  const tip = document.getElementById("tip"), wrap = document.getElementById("chartwrap");
+  const show = (g, ev) => {
+    const r = hits[+g.dataset.i];
+    tip.innerHTML = `<div class="t">${esc(r.gene)} · ${esc(r.label)}</div>
+      <div class="m">${esc(r.go)} · EC ${esc(r.ec.join(", "))}</div>
+      <div>Best family: ${esc(r.best_target_family)}</div>
+      <div class="m">score ${r.best_target_score} / TC ${r.best_target_tc} (${r.ratio.toFixed(2)}×)</div>
+      <div>Verdict <b>${esc(r.verdict)}</b> · reviewer <b>${esc(r.action)}</b></div>
+      ${r.better_fitting_families.length ? `<div>Also passes: ${esc(r.better_fitting_families.join("; "))}</div>` : ""}`;
+    tip.hidden = false;
+    const wr = wrap.getBoundingClientRect(), gr = g.getBoundingClientRect();
+    let left = (ev && ev.clientX ? ev.clientX : gr.left + gr.width * 0.6) - wr.left + wrap.scrollLeft + 14;
+    left = Math.min(left, wrap.scrollWidth - tip.offsetWidth - 4);
+    tip.style.left = Math.max(4, left) + "px";
+    tip.style.top = (gr.bottom - wr.top + 4) + "px";
+  };
+  svg.querySelectorAll(".hit").forEach(g => {
+    g.addEventListener("mousemove", ev => show(g, ev));
+    g.addEventListener("focus", () => show(g));
+    g.addEventListener("mouseleave", () => { tip.hidden = true; });
+    g.addEventListener("blur", () => { tip.hidden = true; });
+  });
+
+  const none = ROWS.filter(r => r.best_target_score == null);
+  document.getElementById("nohit").innerHTML = none.map(r => {
+    const alt = r.better_fitting_families.length ? ` → fits ${esc(r.better_fitting_families[0].replace(/^\S+\s/, ""))}` : "";
+    return `<li class="chip" title="${esc(r.go)} · reviewer ${esc(r.action)}"><span class="g">${esc(r.gene)}</span>${esc(r.label.replace(/ activity$/, ""))}<span class="tag">${esc(r.verdict)} · ${esc(r.action.replaceAll("_", " ").toLowerCase())}${alt}</span></li>`;
+  }).join("");
+})();
+</script>

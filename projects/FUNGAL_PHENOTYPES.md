@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [BIOLOGY_DOMAIN]
 species: [SCHPO, yeast]
 autolink_gene_symbols: false
+index_group: OTHER_ORGANISM
 ---
 
 # Fungal growth and knockout phenotype resources

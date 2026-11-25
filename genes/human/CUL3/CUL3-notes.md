@@ -99,3 +99,11 @@ The core explicitly incorporates BTB/POZ adaptor engagement within the scaffold 
 The new CUL3-primary-source-notes.md gives DOI, printed-page and section locators for the adult renal study and both KLHL22 letters, with short exact anchors from the original PDFs. It corrects the previous row 65 statement: nephron qPCR maps Klhl3/Cul3 expression, whereas the adult-deletion work mainly measures protein abundance, phosphorylation and renal physiology. This does not establish CUL3 performing gene expression, so the source-specific over-annotation remains; no contrary experiment is invented. The independent stem-cell and cleavage source is PMID:22358839. Original publication caches and previous notes are unchanged.
 
 GO_REF assessments now describe their particular mapping or inference methods. The screen-table access task formerly posed as the third expert question belongs here: unresolved interactions, homomeric binding and autoubiquitination require the original target assays before their uncertainty can be closed. Existing biological isoform and KLHL22 questions remain. Authored index spacing is corrected without changing literal source identifiers. The historical notes prefix and history records remain intact; prior text is superseded only where this appendix explicitly corrects it.
+
+## 2026-11-15 ORGANELLES Golgi batch 2 (Golgi apparatus rows)
+
+- Rows: GO:0005794 IEA (GO_REF:0000120, mouse ortholog plus SL-0132) and IDA is_active_in (PMID:24145166); both stay KEEP_AS_NON_CORE.
+- UniProt Golgi item is ECO:0000269 from PMID:10500095 (Singer et al. 1999). Abstract-only in the cache; the PMC copy (PMC317026, DOI 10.1101/gad.13.18.2375) returned no full text through the PubMed full-text tool, so curator deference.
+- PMID:24145166 (full text): transfected FLAG-CUL3 colocalizes with GFP-RhoBTB3 and GCC185 in HeLa; "exogenous CUL3 was detected on the Golgi only when cotransfected with RhoBTB3". An adaptor-recruited pool of a soluble scaffold, so root only.
+- is_active_in: ligase activity at the Golgi is proposed (RhoBTB3 presents cyclin E to a Golgi-localized CUL3 complex), not assayed on Golgi membranes.
+- Judgement call: MARK_AS_OVER_ANNOTATED would be the alternative if RhoBTB3 co-overexpression is treated as a perturbation.

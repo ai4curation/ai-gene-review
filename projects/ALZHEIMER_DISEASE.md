@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/UnNzWTgnMmSE5mZaEPUCuG
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Alzheimer Disease Gene Review Project

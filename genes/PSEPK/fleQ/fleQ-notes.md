@@ -47,3 +47,7 @@ Re-reviewed all three machine-seeded GO rows and the previous proposals. Unsigne
 [PMID:27503246, FleQ of Pseudomonas putida KT2440 is a multimeric cyclic diguanylate binding protein that differentially regulates expression of biofilm matrix components] explicitly reports calorimetry and supports direct ligand binding. Precise pocket/ATPase-inhibition statements chiefly derived from P. aeruginosa were removed from the unqualified KT2440 core description. [PMID:27636892, Complex Interplay between FleQ, Cyclic Diguanylate and Multiple σ Factors Coordinately Regulates Flagellar Motility and Biofilm Development in Pseudomonas putida] mainly uses KT2442; this derivative-strain provenance is explicit.
 
 Existing provider reports/artifacts and machine sources were preserved. FEBA retrieval failed without writing a fitness artifact; PSEPK has no applicable MOD-description provider. GO:0001217 identity was checked against the ontology, and no new biological-process proposal was introduced solely from an indirect phenotype.
+
+## 2026-11-25 — Review follow-up
+
+Aligned the authored GO:1902210 IMP proposal with PMID:28968917, the KT2442 mutant study already cited in its support. The PMID:30177764 KT2440 ChIP-seq study remains contextual evidence; occupancy alone does not establish a signed functional sidecar edge.

@@ -116,9 +116,15 @@ def test_init_baseline_refuses_partial_scope_and_existing_file(tmp_path, monkeyp
 
 
 def test_committed_baseline_uses_known_outcomes():
-    """Every committed entry is filed under not_found or unresolved."""
+    """Every committed entry is filed under not_found or unresolved.
+
+    The file must exist, but it may be empty: the baseline only shrinks, and it
+    reached zero entries when the rule reviews that held all of them were corrected.
+    """
+    from ai_gene_review.validation import quote_check
+
+    assert quote_check.BASELINE_PATH.exists(), "conf/quote_check_baseline.yaml should exist"
     baseline = load_baseline()
-    assert baseline, "conf/quote_check_baseline.yaml should exist"
     assert all(set(v) <= {"not_found", "unresolved"} for v in baseline.values())
 
 
@@ -132,9 +138,9 @@ def test_main_exit_code(tmp_path: Path):
 
 
 def test_default_scope_covers_every_non_gene_review_kind():
-    """The gate reaches modules, families, GO-CAM reviews, rules and projects."""
+    """The gate reaches shared review kinds, sidecars and shadow issues."""
     rel = {p.relative_to(PROJECT_ROOT).as_posix() for p in default_files()}
-    for prefix in ("modules/", "interpro/panther/", "interpro/pfam/", "gocams/", "rules/", "projects/"):
+    for prefix in ("modules/", "interpro/panther/", "interpro/pfam/", "gocams/", "rules/", "projects/", "issues/"):
         assert any(r.startswith(prefix) for r in rel), prefix
     assert not any(r.endswith("-ai-review.yaml") and r.startswith("genes/") for r in rel)
     assert not any("recapitulation-experiment" in r for r in rel)

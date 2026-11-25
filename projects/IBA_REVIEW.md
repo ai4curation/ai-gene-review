@@ -118,7 +118,10 @@ manifest:
       title: Project brief
     - href: https://claude.ai/artifact/4MLfbbbWWnLchDvspwdPuM
       title: JAK-STAT briefing
+    - href: https://claude.ai/artifact/44UaWpaBByrMaZcALkgq5R
+      title: PseudoCAP seed audit
       description: AI generated
+index_group: CROSS_CUTTING
 ---
 
 # IBA Annotation Quality Project

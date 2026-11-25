@@ -7,6 +7,7 @@ manifest:
   slides:
     - href: RETRACTIONS/slides/RETRACTIONS-slides.html
       description: AI generated
+index_group: CROSS_CUTTING
 ---
 
 # Retracted Literature Behind Annotations

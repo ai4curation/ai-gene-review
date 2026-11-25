@@ -8,3 +8,13 @@
 - Iron homeostasis (IMP) is a downstream consequence of Fe-S deficiency (iron regulon derepression) -> non-core.
 - PANTHER PTHR48467 is named after glutamate synthase (module notes this; no PANTHER term asserted in the module).
 - Not in YeastCyc pathways.
+
+## Audit to COMPLETE (2026-11-11)
+
+- Deep research: no provider deep-research file is available (no API keys in this session).
+- Oxidoreductase IBA/IEA rows changed from MODIFY to TOO_GENERAL (entailed by the accepted GO:0004324),
+  consistent with the human FDXR review.
+- NEW iron-sulfur cluster assembly kept after a comparator check (QuickGO, 2026-11-11): S. pombe arh1
+  (O59710) carries GO:0044571 [2Fe-2S] cluster assembly (IC, PomBase) and Yah1 carries GO:0016226; human
+  FDXR (P22570) carries no Fe-S assembly term. Arh1 supplies the electrons the step depends on
+  [PMID:12970193 "the requirement of an electron transfer chain consisting of ferredoxin (yeast Yah1p) and ferredoxin reductase (yeast Arh1p) is well established"].

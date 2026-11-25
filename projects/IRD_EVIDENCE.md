@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [EVALUATION, PIPELINE]
 species: [human, mouse, rat, yeast, SCHPO, DROME, NEUCR, ARATH]
 genes: [SSA1, SSA2, SSA3, SSA4, SSB1, SSB2, SSZ1, SLC52A1, CFLAR, HDAC6, PIP4K2A, FZD9, ATG16L2, pmp20, cia30]
+index_group: CROSS_CUTTING
 ---
 # IRD Evidence: How PAINT Uses Inferred from Rapid Divergence
 

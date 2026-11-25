@@ -8,6 +8,7 @@ genes: [NTN1, NTN3, HDAC4, RPS3, RFXAP, RFXANK, NME2]
 manifest:
   slides:
     - href: TRANSCRIPTION_FACTORS/slides/TRANSCRIPTION_FACTORS-slides.html
+index_group: MAMMAL
 ---
 
 # Transcription Factor Annotation Review Project

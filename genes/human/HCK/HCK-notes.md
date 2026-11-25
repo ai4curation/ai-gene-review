@@ -40,3 +40,10 @@ cached publications, and Reactome.
   over-annotation -> MARK_AS_OVER_ANNOTATED.
 - GO:0005515 bare protein binding (many IPI): REMOVE per protein-binding policy; informative
   binding captured by phosphotyrosine residue binding and signaling receptor binding.
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- Row: GO:0005794 IEA (GO_REF:0000044, SL-0132). Action unchanged: KEEP_AS_NON_CORE, reason rewritten.
+- The UniProt Golgi item is only in the isoform 2 (p59Hck) location line, ECO:0000269 from PMID:11904303 (abstract-only; Europe PMC lists no PMC copy; publisher page 403 on 2026-11-18). The abstract describes overexpressed constitutively active GFP-p59Hck in HeLa cells and does not mention the Golgi.
+- Kept on curator deference (rule 7: curated human line, unreadable paper). MARK_AS_OVER_ANNOTATED would follow if the figure shows only unmarked perinuclear signal.
+- Added a source_defects entry (OTHER, Gene_Product_Form_ID, ADD P08631-2, PROBABLE) for the isoform restriction, as in ABCA7. No sub-compartment row.

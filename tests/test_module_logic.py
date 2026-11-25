@@ -310,9 +310,14 @@ def test_ketolysis_structure():
         "acetoacetate_activation",
         "acetoacetyl_coa_thiolysis",
     ]
-    assert len(enumerate_routes(circuit)) == 4  # optional import x two activation routes
+    # optional import x two dehydrogenase lineages (bacterial HbdH, animal BDH1)
+    # x two activation routes (SCOT, ATP-dependent ligase)
+    assert len(enumerate_routes(circuit)) == 8
     core_symbols = {symbol for atom in core_atoms(circuit) for symbol in atom.gene_symbols}
-    assert {"BDH1", "ACAT1"} <= core_symbols
+    # the thiolase is required on every route; the dehydrogenase is a choice of
+    # lineage, so neither HbdH nor BDH1 is core on its own
+    assert "ACAT1" in core_symbols
+    assert not {"BDH1", "HbdH"} & core_symbols
 
 
 @pytest.mark.skipif(not KETOLYSIS.exists(), reason="module file absent")
@@ -337,16 +342,25 @@ def test_ketolysis_abduction(present, active, classification, gaps):
     assert ab.classification == classification
     assert ab.gap_steps == gaps
     if classification == "CONSISTENT_INACTIVE":
-        # the liver gap pinpoints the SCOT step
-        assert ab.gap_candidates["acetoacetate_activation"] == ["Aacs", "OXCT1"]
+        # the liver gap pinpoints the activation step; its candidates are SCOT
+        # and the ATP-dependent ligases (bacterial Aacs, human AACS)
+        assert ab.gap_candidates["acetoacetate_activation"] == ["AACS", "Aacs", "OXCT1"]
 
 
 def test_family_atom_uses_concrete_representatives():
     circuit = compile_module_file(KETOLYSIS)
-    hbdh = next(atom for atom in iter_atoms(circuit) if atom.node_id == "hbdh_activity")
-    assert hbdh.gene_symbol == "HbdH"
-    assert hbdh.gene_symbols == ("HbdH", "BDH1")
-    assert hbdh.uniprots == ("Q88IC6", "Q02338")
+    atoms = {atom.node_id: atom for atom in iter_atoms(circuit)}
+    # a family with several representatives keeps all of them, first one names it
+    ligase = atoms["aacs_ligase_activity"]
+    assert ligase.gene_symbol == "Aacs"
+    assert ligase.gene_symbols == ("Aacs", "AACS")
+    assert ligase.uniprots == ("Q88IC8", "Q86V21")
+    # the bacterial and animal dehydrogenases are separate lineage variants,
+    # since BDH1 (SDR9C) is not a member of the bacterial IPR011294 family
+    assert atoms["hbdh_activity"].gene_symbols == ("HbdH",)
+    assert atoms["hbdh_activity"].uniprots == ("Q88IC6",)
+    assert atoms["bdh1_activity"].gene_symbols == ("BDH1",)
+    assert atoms["bdh1_activity"].uniprots == ("Q02338",)
 
 
 @pytest.mark.parametrize("representative_label", ["Species B", "B"])

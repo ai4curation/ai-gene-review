@@ -3,6 +3,7 @@ title: "Innate Immune System Pathways Across Animals"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human, mouse, CHICK, DANRE, XENTR, DROME, ANOGA, worm, NEMVE, TACTR]
+index_group: MAMMAL
 ---
 
 # Innate Immune System Pathways Across Animals

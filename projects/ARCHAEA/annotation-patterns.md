@@ -1,6 +1,7 @@
 ---
 title: "Archaeal GO annotation error patterns"
-species: [METTH, METS5, SACS2, ACIAM, SULAC]
+species: [METTH, METS5, SACS2, ACIAM, SULAC, 9EURY]
+autolink_exclude: [Delta]
 ---
 
 # Archaeal GO annotation error patterns
@@ -164,8 +165,9 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
 - **Scale:** about 888 of the 910 archaeal GO:0006511 rows in QuickGO come
   from this mapping.
 - **Possible fix:** add a Eukaryota taxon restriction to the mapping.
-- **Implemented as CR-0003 (2026-10-31).** Evaluated on all 610 archaeal
-  proteomes with an IPR000426 member: the ubiquitin relay is absent from 501
+- **Implemented as CR-0003 (2026-10-31, with a module-context condition; changed to a
+  Eukaryota condition on 2026-11-12, which removes all archaeal rows).** The module
+  version was evaluated on all 610 archaeal proteomes with an IPR000426 member: the ubiquitin relay is absent from 501
   complete proteomes, so the rule removes 733 of the 888 archaeal rows (83%).
   It keeps the term in two Asgard archaea and *Candidatus* Methanoplasma
   termitum, which encode a UBC E2, a ubiquitin-like protein and a RING
@@ -254,6 +256,25 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   protein matching it binds the cofactor but does not catalyse alone (active
   enzyme needs both subunits, PMID:22752162).
 
+## 17. Methanogenesis and a methyl-specific activity on non-methanogenic MCR homologs
+
+- **Pipeline:** InterPro2GO. All seven MCR alpha entries (the family IPR016212 and
+  the domain entries IPR003183, IPR008924, IPR009024, IPR009047, IPR015811,
+  IPR015823) map to GO:0015948 methanogenesis and GO:0050524
+  coenzyme-B sulfoethylthiotransferase activity. ARBA adds the EC 2.8.4.1 name,
+  reaction, pathway and methane-forming direction to unreviewed entries.
+- **Example (methanotroph):** 9EURY/mcrA__A0A284VQI9, the ANME-2d McrA of
+  *Ca.* Methanoperedens. The activity is right (the reaction is reversible); the
+  process is wrong, because the organism oxidizes methane (corrected to GO:0046188).
+  ANME-2 MCRs sit inside IPR016212, so only a taxon condition can separate them.
+- **Example (alkane oxidizer):** 9EURY/mcrA__A0A7R9R780, the ethyl-coenzyme M
+  reductase of *Ca.* Ethanoperedens. It lacks IPR016212 and receives both terms from
+  the domain entries alone. Process corrected to GO:0043448; activity to a proposed
+  ethyl-coenzyme M reductase activity (parent GO:0050497).
+- **Fix:** restrict the domain-level mappings to proteins that also match IPR016212
+  (or map them to GO:0050497 only), and add a taxon exclusion for ANME lineages to
+  the methanogenesis mapping. See [mcrA across clades](mcrA-across-clades.md).
+
 ## Related findings from round 2
 
 - **Under-annotation reaches the best-studied archaeal proteins too.**
@@ -284,7 +305,7 @@ send to the resource that owns them:
 | 3 (ESCRT-III vacuolar transport) | `projects/INTERPRO/interpro2go.sssom.yaml`, IPR005024 to GO:0007034 | broadMatch | CR-0001 (Eukaryota), CR-0002 (archaeal Cdv cytokinesis) |
 | 6 (default NAD binding) | same file, IPR000534 to GO:0051287 | broadMatch, narrow | none yet |
 | 8 (catalytic activity on proteasome alpha) | same file, IPR019982 to GO:0004298 | REMOVE | not needed |
-| 9 (ubiquitin terms in archaea) | same file, IPR000426 to GO:0006511 | broadMatch | CR-0003 (module context, evaluated per proteome) |
+| 9 (ubiquitin terms in archaea) | same file, IPR000426 to GO:0006511 | broadMatch | CR-0003 (Eukaryota; a module-context version was evaluated per proteome) |
 | 10 (rhodopsin pumps as channels) | same file, IPR018229 to GO:0005216 and IPR017402 to GO:0010461 | REMOVE | not needed |
 
 The replacement rules live in [rules/curated](../../rules/curated/README.md).

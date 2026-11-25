@@ -64,3 +64,15 @@
   receptor signalling at focal adhesions, with basal-body AURKA-HDAC6 cilium resorption, centrosomal AURKA
   regulation at mitotic entry, and T-cell signalling as experimentally supported additional, context-dependent
   functions [file:human/NEDD9/NEDD9-deep-research-falcon.md "assign human NEDD9 primarily as a **phosphorylation-regulated CAS-family intracellular adaptor/scaffold for integrin- and receptor-initiated signaling at focal adhesions**"].
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- Two Golgi rows (EXP PMID:8668148, IEA GO_REF:0000044), both resting on the UniProt item "Golgi
+  apparatus {ECO:0000269|PubMed:8668148}". The paper (Law et al. 1996) is abstract-only; PMC231327
+  full text could not be retrieved from PMC or Europe PMC on 2026-11-18. The abstract reports
+  immunofluorescence at the cell periphery and nucleus and does not mention the Golgi.
+- Both rows stay KEEP_AS_NON_CORE on curator deference (curated human line from an unreadable paper);
+  the earlier "presumably documented in the full text" reasoning was replaced, and the Golgi rows now
+  quote the UniProt location item instead of the periphery/nucleus sentence.
+- If the full text becomes readable and shows no Golgi marker, both rows should become
+  MARK_AS_OVER_ANNOTATED (CABP2 precedent).

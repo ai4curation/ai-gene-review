@@ -52,3 +52,16 @@
   `modules/death_receptor_apoptotic_signaling.yaml`.
 - Added `GO:0005125` (*cytokine activity*) alongside `GO:0005123` (*death receptor binding*)
   in `core_functions`, with both `GO:0036337` and `GO:0008625` in `directly_involved_in`.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0005576 / Reactome:R-HSA-139952: defect withdrawn (evidence depth: DB_RECORD). Reactome ContentService shows FASLG (P48023; entity R-HSA-66212 "FASLG(1-281) [extracellular region]") is a participant of this event as a DISC component. The row is Reactome's standard per-event export of the entity's compartment, so the reference is the intended one and nothing in the record is wrong. Defect deleted; reason reworded.
+- GO:0005576 / Reactome:R-HSA-3465429: defect withdrawn (evidence depth: DB_RECORD). Same as R-HSA-139952. FASLG is a participant (DISC:procaspase-8 complexes) in the Reactome record; the row is a faithful compartment export, not a wrong reference. Defect deleted.
+- GO:0005576 / Reactome:R-HSA-3465448: defect withdrawn (evidence depth: DB_RECORD). Same as R-HSA-139952. FASLG is a participant (DISC:procaspase-8:FLIP(L)) in the Reactome record. Defect deleted.
+- GO:0005576 / Reactome:R-HSA-5675456: defect withdrawn (evidence depth: DB_RECORD). Same as R-HSA-139952. FASLG is a participant (DISC:procaspase-8) in the Reactome record. Defect deleted.
+- GO:0005576 / Reactome:R-HSA-6797245: defect withdrawn (evidence depth: DB_RECORD). The Reactome gene-expression event's output is "FASLG(1-281) [extracellular region]" (R-HSA-66212), so the exported location is the product's modelled compartment in that event. This is Reactome's export convention, not an error in the record. Defect deleted.
+- GO:0005576 / Reactome:R-HSA-8870698: defect withdrawn (evidence depth: DB_RECORD). Same as R-HSA-6797245; event output is FASLG(1-281) [extracellular region]. Defect deleted.
+- GO:0005576 / Reactome:R-HSA-9614669: defect withdrawn (evidence depth: DB_RECORD). Same as R-HSA-6797245; event output is FASLG(1-281) [extracellular region]. Defect deleted.
+- GO:0005886 / PMID:12201652: defect retyped (evidence depth: ABSTRACT). The PMID is the intended paper (AgBase put the same IDA on three human FASLG accessions), so the question is whether its data concern human FasL, which is WRONG_GENE_PRODUCT, not WRONG_REFERENCE. The abstract is about tilapia/catfish cells and says they were negative for membrane FasL, but only the abstract is available (no PMC copy) and a human-cell control in the body cannot be excluded, so confidence was lowered to SUSPECTED with CHECK, slot DB_Object_ID, asserted UniProtKB:P48023, cause UNKNOWN, plus an abstract quote. Resource stays OTHER (no AgBase enum value; named in the explanation).
