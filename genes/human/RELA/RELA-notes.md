@@ -4,7 +4,7 @@
 
 Model `5fce9b7300000030`, "Diacyl lipopeptide and bacteriocin activation of TLR6_TLR2 receptor (Human)", names RELA (`UniProtKB:Q04206`) as the downstream DNA-binding transcription factor activity in the TLR6:TLR2 signaling pathway. The cached model uses `PMID:3091258` as the enabled_by evidence for the RELA node; that paper describes the original NF-kappaB activity as nuclear factors bound to immunoglobulin enhancer sequences before RELA/p65 had been cloned, so it supports the NF-kappaB activity generally but not the RELA gene product specifically. The 1992 recombinant-p65 DNA-binding paper is the better RELA-specific activity support: "Using purified recombinant p50, p65, and c-Rel proteins, optimal DNA-binding motifs were selected from a pool of random oligonucleotides" [PMID:1406630].
 
-The GO-CAM's TLR2/TLR6-to-RELA connection is a defensible pathway synthesis, but the lactic-acid-bacteria paper used by the model measures NF-kappaB/AP-1 reporter output rather than RELA biochemistry. The GOA `GO:0038124` row is therefore accepted as a pathway synthesis supported jointly by TLR2/TLR6 reporter activation and the primary p65/NF-kappaB papers instead of treating `PMID:27708357` as direct RELA evidence.
+The GO-CAM's TLR2/TLR6-to-RELA connection is a defensible pathway synthesis, but the lactic-acid-bacteria paper used by the model measures NF-kappaB/AP-1 reporter output rather than RELA biochemistry. The GOA `GO:0038124` row is therefore kept as a non-core pathway synthesis supported jointly by TLR2/TLR6 reporter activation and the primary p65/NF-kappaB papers instead of treating `PMID:27708357` as direct RELA evidence.
 
 ## Automated research
 
