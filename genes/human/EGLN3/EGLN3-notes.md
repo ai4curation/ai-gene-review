@@ -58,6 +58,6 @@ ferroptosis; IDA:UniProtKB."].
 
 That first empty GOA file was a transient fetch failure, not evidence that the
 annotations were missing upstream. A forced re-fetch on 2026-11-25 recovered 75
-GOA rows and seeded 73 current GOA annotations for full review. The final
+GOA rows and seeded 75 current GOA annotations for full review. The final
 `EGLN3-ai-review.yaml` therefore reviews those existing rows directly rather
 than proposing the GPX4 and HIF chemistry as `NEW`.
