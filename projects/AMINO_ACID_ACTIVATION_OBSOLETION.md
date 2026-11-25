@@ -128,6 +128,7 @@ proposed_ontology_changes:
   upstream_tracker_issue: https://github.com/geneontology/go-ontology/issues/15375
   see_also:
   - https://github.com/geneontology/go-annotation/issues/6525
+index_group: CROSS_CUTTING
 ---
 
 # Amino Acid Activation Terms — Obsoletion of 43 Substrate-Specific tRNA Aminoacylation BPs

@@ -9,3 +9,14 @@ Pathway context: aromatic aminotransferase I, final step of Phe/Tyr biosynthesis
 - Robot Scientist Adam confirmed YGL202W 2-aminoadipate aminotransferase (PMID:19342587, IDA accepted).
 - Mapping errors flagged: GO:0004400 histidinol-phosphate transaminase (RCA; from EC 2.6.1.9 listed on RXN-10814) REMOVE; GO:0052656 L-isoleucine:2-oxoglutarate transaminase (RCA, from R15-RXN EC 2.6.1.88 methionine transamination) MODIFY -> GO:0010326. Chorismate metabolic process (superpathway) REMOVE.
 - YeastCyc also attaches HIS5 to RXN-10814 (Phe:2-OG transamination) - see HIS5 review; no yeast evidence for HIS5 in Phe synthesis.
+
+## Audit to COMPLETE (2026-11-11)
+
+- Deep research: no provider deep-research file is available (no API keys in this session).
+- Every row had an action but most lacked a written reason; reasons were added for all 46 rows and reference
+  reviews for the key papers. No action changed.
+- CoQ: the module uses Aro8/Aro9 for tyrosine to 4-hydroxyphenylpyruvate in the 4-HB route
+  [PMID:27693056 "the deamination of tyrosine to 4-hydroxyphenylpyruvate by Aro8 and Aro9"]. No ubiquinone
+  process term is proposed for Aro8: 4-HPP is a shared intermediate of tyrosine catabolism and the Ehrlich
+  pathway, and the abstract-only cache does not show a CoQ defect attributable to Aro8 alone (the double
+  mutant is a Tyr auxotroph). Raised as a suggested question.

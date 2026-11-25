@@ -38,6 +38,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/Wi9WbyuGcFMPSKNmXX1UoP
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # TreeGrafter Inference Evaluation

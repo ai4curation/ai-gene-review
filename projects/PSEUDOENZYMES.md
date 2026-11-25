@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/Uz7bzb99at7dysAB1HZSqy
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Pseudoenzymes Project

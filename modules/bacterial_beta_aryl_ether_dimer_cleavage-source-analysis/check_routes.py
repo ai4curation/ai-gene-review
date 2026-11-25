@@ -6,7 +6,10 @@ the compiler does not infer those from family membership or GO terms.
 """
 from pathlib import Path
 import yaml
+import functools
 from ai_gene_review.module_logic import compile_node, is_satisfied
+# This audit expands protein_complex active_units itself, so it compiles one atom per complex annoton.
+compile_node = functools.partial(compile_node, expand_complexes=False)
 
 ROOT = Path(__file__).resolve().parents[2]
 SLUG = 'bacterial_beta_aryl_ether_dimer_cleavage'

@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [SALRS, MONBE, CAPO3, OSCPE, AMPQE, human]
 genes: [rosetteless, jumble, couscous, hippo, warts, yorkie, coHpo, coWts, coYki, VIN1, TLN, LATS1, STK3, YAP1, TEAD1, TLN1, VCL, TBXT, CSK, CTNNB1, SRC, ITGB1, PTK2, CTNNA1, COL4A1, CDH1, ABL1, MYC, NOTCH1, TP53, SrSeptin2, SrSeptin6, CoBra, coITGB2, coVIN]
+index_group: OTHER_ORGANISM
 ---
 
 # Project ORIGINS_OF_MULTICELLULARITY: Gene Function at the Origin of Animals

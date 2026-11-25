@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/RLHL9r41LvokY2PpeEuBzu
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Anti-CRISPR Proteins Project

@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [human]
 genes: [CYP4F3, CYP4F2, CYP4A11, CYP4F22, CYP3A4, CYP1B1, CYP2J2, CYP2E1, CYP11B2, CYP19A1, CYP24A1, CYP26C1, CYP51A1, CYP27A1]
+index_group: MAMMAL
 ---
 
 # Cytochrome P450 Project

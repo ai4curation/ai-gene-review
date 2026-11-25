@@ -15,6 +15,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/Atsg3qcaESE4Psj7FDs2Um
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Function Knowledge Gaps

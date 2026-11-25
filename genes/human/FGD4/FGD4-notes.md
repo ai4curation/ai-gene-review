@@ -35,3 +35,16 @@ The current ontology explicitly includes an exchange-defined process, GO:0090630
 Make the existing human UniProt FUNCTION and PMID:15133042 cellular evidence explicit in the exchange-activity reviews and core, preserving the distinction from purified biochemical assays. Refine the existing Reactome process row to GO:0032489 and retain the positive is_active_in cytoplasm IBA separately from located_in cytosol coverage. The 25 imported source objects, 17 prior references, three splice records and source caches remain unchanged; the sole additional reference is the existing UniProt file. No new annotation or quotation is added.
 
 Computed status remains DRAFT with two advisory action differences. The cytoplasm decisions distinguish is_active_in from located_in. The process decisions distinguish the specific Reactome CDC42 catalytic route, refined to GO:0032489, from the broader ARBA assertion. These source/relation distinctions are retained rather than forcing identical decisions solely to remove warnings.
+
+## 2026-11-15 ORGANELLES Golgi batch 2 (Golgi apparatus rows)
+
+- Row: ISS GO_REF:0000024 from mouse Fgd1 (P52734), `located_in`. UNDECIDED -> MARK_AS_OVER_ANNOTATED.
+- The donor is the paralog FGD1, in a different PANTHER subfamily (FGD1 PTHR12673:SF79, FGD4
+  PTHR12673:SF98). FGD1's Golgi pool is real (PMID:19261807, see the FGD1 notes), but FGD4's own data (rat
+  Frabin-GFP with F-actin in microspikes, PMID:17564959) and its current UniProt location line (cytoskeleton
+  and filopodium, by similarity) do not include the Golgi. PubMed "(frabin OR FGD4) AND Golgi" returned no
+  hits (2026-11-15).
+- Same pattern as CEPT1 in Golgi batch 1 (paralog-seeded transfer, target's own data elsewhere). The
+  propagation review now reads PROPAGATION_BAD with WRONG_ORTHOLOG_OR_PARALOG and COMPARTMENT_OR_COMPLEX_MISMATCH.
+- The UniProt DR GO line still carries the 2005 Golgi ISS while the CC line has dropped it: a stale UniProt
+  GO assertion worth reporting upstream.

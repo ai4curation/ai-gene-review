@@ -13,3 +13,20 @@
 
 ## Pathway
 - Yeast makes PLP de novo via Snz1/Sno1 (directly), so Pdx3 functions in salvage (PNP/PMP -> PLP), downstream of the kinase Bud16. InterPro2GO "pyridoxine biosynthetic process" reflects bacterial PdxH context and is not appropriate here.
+
+## 2026-11 completion
+
+- Status set to COMPLETE. All summaries were left verbatim (the PTHR10851
+  family review quotes two of them); `reason` added to every row that lacked
+  one, and the PAINT IBD rows are now quoted from
+  `interpro/panther/PTHR10851/PTHR10851-paint.tsv` on the three IBA rows.
+- Cytosol (RCA, YeastPathways default compartment) resolved from UNDECIDED to
+  MARK_AS_OVER_ANNOTATED: the only localization assay places Pdx3 in the IMS,
+  and the IMS proteome paper notes [PMID:22984289 "So far only the superoxide
+  dismutase Sod1 has been dually localized in the IMS and the cytosol"]. A
+  cytosolic pool stays an open question (suggested_questions).
+- Mitochondrion IBA kept (ACCEPT) after the organelle-policy check: the node is
+  seeded by Pdx3 itself and the IMS proteome supports the organelle claim.
+- GO:0042823 IBA kept ACCEPT as the family-level process; the yeast-specific
+  route is GO:0009443 salvage. FMN binding ACCEPT, matching the bacterial PdxH
+  reviews completed in the same batch.

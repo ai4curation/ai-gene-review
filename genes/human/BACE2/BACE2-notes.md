@@ -21,3 +21,10 @@
 - Check: in the UniProt subcellular-location line the PubMed:11423558 tag belongs to the Golgi item; the "Endoplasmic reticulum" item has no evidence tag [file:human/BACE2/BACE2-uniprot.txt "CC       {ECO:0000269|PubMed:11423558}. Endoplasmic reticulum. Endosome."]. The same paper's abstract reports an ER pool directly [PMID:11423558 "BACE2 localizes in the endoplasmic reticulum, Golgi, trans-Golgi network, endosomes, and plasma membrane"].
 - Topology: type I membrane protease (signal 1-20, propeptide 21-62, TM 474-494); no ER-retention motif, no ER-resident function; substrates are cleaved in endosomes/melanosomes and at the surface.
 - Outcome: kept KEEP_AS_NON_CORE (real, transient biosynthetic pool shown directly). No NEW ER membrane row: the only ER-specific line is transit, not residence.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Rows: GO:0005768 IBA (is_active_in, GO_REF:0000033) and IEA (GO_REF:0000044, SL-0101); no endosome sub-compartment row. GOA and review agree.
+- Trace: the PAINT IBD at PTN002299446 (interpro/panther/PTHR47965) is seeded by BACE1 only (P56817, MGI:1346542, RGD:2191). In the UniProt location line the PubMed:11423558 tag belongs to the Golgi item; the Endosome item is untagged, so the old UniProt quote on these rows was dropped.
+- Lines: PMID:11423558 abstract states an endosomal pool (abstract-only; cells and markers unknown); PMID:23754390 abstract puts PMEL cleavage in endosomal precursors of melanosomes, and UniProt records BACE2 with PMEL in stage I and II melanosomes from it (ECO:0000269). Tried PMC3696817 through the PubMed full-text tool: PMC sent no text.
+- Outcome: both rows stay ACCEPT (core) for the function at endosomal melanosome precursors; KEEP_AS_NON_CORE is the close alternative because core_functions records that location as melanosome. is_active_in judged defensible (abstract depth). No stage row.

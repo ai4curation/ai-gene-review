@@ -12,7 +12,10 @@ its only seed: if the PseudoCAP annotation is wrong, so is the IBD.
 
 Inputs are downloaded into the git-ignored ``.cache/paint/`` directory:
 
-* PAINT ``IBD.gaf`` and ``gene_association.paint_uniprot.gaf.gz`` (PANTHER FTP)
+* PAINT ``IBD.gaf`` and ``gene_association.paint_uniprot.gaf.gz`` from the pinned
+  snapshot (``PAINT_BASE``), in a ``paint-<release>-<snapshot>/`` subfolder. Copies
+  that earlier runs left directly in ``.cache/paint/`` are no longer read and can be
+  deleted; the snapshot's files are downloaded afresh.
 * PAO1 proteome (UniProt REST, organism_id 208964)
 * PAO1 experimental annotations (QuickGO, ECO:0000269/ECO:0000006 descendants)
 * ``go-basic.obo``
@@ -36,15 +39,19 @@ from pathlib import Path
 import requests
 import yaml
 
+from ai_gene_review.etl.panther_families import PAINT_BASE, paint_cache_dir
+
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / ".cache" / "paint"
 OUT = Path(__file__).resolve().parent / "iba_seed_worklist.yaml"
 TAXON = "208964"
 
-PAINT = "https://data.pantherdb.org/ftp/downloads/paint/current"
+# PAINT files come from the repo's pinned release and snapshot, cached per snapshot.
+PAINT_CACHE = paint_cache_dir(CACHE)
+PAINT_DIR = PAINT_CACHE.relative_to(CACHE).as_posix()
 SOURCES = {
-    "IBD.gaf": f"{PAINT}/IBD.gaf",
-    "leaf.gaf.gz": f"{PAINT}/gene_association.paint_uniprot.gaf.gz",
+    f"{PAINT_DIR}/IBD.gaf": f"{PAINT_BASE}/IBD.gaf",
+    f"{PAINT_DIR}/leaf.gaf.gz": f"{PAINT_BASE}/gene_association.paint_uniprot.gaf.gz",
     "go-basic.obo": "https://purl.obolibrary.org/obo/go/go-basic.obo",
     "pao1.tsv": (
         "https://rest.uniprot.org/uniprotkb/stream?query=organism_id:"
@@ -61,7 +68,7 @@ SOURCES = {
 def fetch(name: str) -> Path:
     path = CACHE / name
     if not path.exists():
-        CACHE.mkdir(parents=True, exist_ok=True)
+        path.parent.mkdir(parents=True, exist_ok=True)
         headers = {"Accept": "text/tsv"} if "QuickGO" in SOURCES[name] else {}
         with requests.get(SOURCES[name], headers=headers, stream=True, timeout=600) as r:
             r.raise_for_status()
@@ -116,7 +123,7 @@ def main() -> None:
     # node-term seedings by PAO1 proteins
     seedings = []
     n_seeds: dict[tuple[str, str], int] = {}
-    for line in open(CACHE / "IBD.gaf"):
+    for line in open(PAINT_CACHE / "IBD.gaf"):
         if line.startswith("!"):
             continue
         f = line.rstrip("\n").split("\t")
@@ -131,7 +138,7 @@ def main() -> None:
     nodes = {k[0] for k in keys}
     leaf = collections.Counter()
     leaf_taxa = collections.defaultdict(set)
-    with gzip.open(CACHE / "leaf.gaf.gz", "rt") as fh:
+    with gzip.open(PAINT_CACHE / "leaf.gaf.gz", "rt") as fh:
         for line in fh:
             if line.startswith("!"):
                 continue

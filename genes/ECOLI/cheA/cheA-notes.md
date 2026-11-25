@@ -27,3 +27,23 @@
 - Swimming motility (GO:0071977): MODIFY to GO:1902021, because swim plates measure chemotaxis and not the ability to swim.
 - GO:0031400 (in vitro inhibition of acetylation): MARK_AS_OVER_ANNOTATED.
 - GO:0007165 and GO:0035556: MODIFY to GO:0000160.
+
+
+## 2026-11-06 taxonomic module audit
+
+Refined both cytoplasm rows to cytosol using explicit fractionation of both CheA products in PMID334749; the core array-associated catalytic function is unchanged. Retained the carefully qualified histidine kinase versus direct sensor distinction, CheA-S recruitment function and inherited NEW cell-pole assertion.
+
+Reviewed all existing rows, references and core functions. Current PAINT-loss checks found no IRD or IKR on this target lineage. A normal Falcon research attempt failed with HTTP 403 authentication; no provider report was fabricated or overwritten. Existing source payloads, raw files and inherited NEW rows are preserved; no new annotation rows were added. Comparative scope was checked against the full text of PMID33684668: the E. coli ligand-response direction and optional adaptation/termination components are not universal.
+
+### Coordinated correction of the sensor-kinase interpretation
+
+The current QuickGO GO:0000155 definition requires autophosphorylation in response to signal detection, not direct ligand binding by the kinase. Receptor-controlled CheA fits that definition. The three sensor-kinase rows are therefore ACCEPT, the broad kinase and phosphorus-transferase rows are refined to GO:0000155, and the core uses that more specific MF. Removed the earlier suspected source defect and question based on the unsupported direct-binding requirement. This supersedes the sensor judgement above and agrees with the independently assessed KT2440 CheA review. PMID1326408 directly reports receptor ligand control of kinase activity, complementing the histidine phosphotransfer assays in PMID3280143.
+
+
+## 2026-11-06 — PR #6100 review follow-up
+
+QuickGO checked 2026-11-06 confirms GO:0000155 is_a GO:0140299 molecular sensor activity, as well as GO:0004673. The sensor parent describes ligand binding with an activity change in response to intracellular ligand level. Receptor-controlled histidine phosphorylation is established, but the experiments do not establish that sensor activity on CheA itself: chemoreceptors detect the stimulus and control CheA through the coupling complex. The child definition alone had obscured this inherited requirement. Retain the demonstrated kinase chemistry as GO:0004673 and the receptor-controlled phosphorelay in the process/core description; ask GO to resolve the term-scope mismatch rather than asserting an experimentally disproven kinase or a wrong PAINT node.
+
+Purified CheA autophosphorylation and preferential transfer to CheY/CheB are established by PMID:3280143 and PMID:16176121; PMID:1326408 separates receptor ligand binding from CheA kinase regulation.
+
+This supersedes the earlier direct-binding-only rationale. Exact QuickGO endpoints and is_a results are preserved in analysis/module_audits/bacterial_chemotaxis_signal_transduction/chea-ontology-check.yaml. Original annotation IDs, evidence codes and source entities remain unchanged.

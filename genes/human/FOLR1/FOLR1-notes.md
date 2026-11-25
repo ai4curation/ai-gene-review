@@ -42,3 +42,10 @@ as non-core.
   arch artery morphogenesis, anterior neural tube closure, axon regeneration, Wnt and
   TGF-beta regulation) are kept as non-core, since the receptor's contribution is folate
   supply.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Two GO:0005768 rows (EXP PMID:8567728; IEA SL-0101 tagged ECO:0000269 to the same paper). Both ACCEPT, core (endocytic receptor; folate release in the acidic endosome and receptor recycling are part of the activity).
+- Read the full text of PMID:8567728 outside the cache: PMCID PMC2120708, DOI 10.1083/jcb.132.1.35 (Rijnboutt et al. 1996). Endogenous receptor in human KB cells grown in low folate; immunogold on ultrathin cryosections; Table I: about 88% of gold at the plasma membrane (including coated pits and caveolae), 9.3% in the endocytic compartment (tubulo-vesicular structures, endosomes, multivesicular endosomes, identified with internalised BSA-gold), about 2% biosynthetic (ER, Golgi, TGN). No stage marker (EEA1, Rab5, Rab7, Rab11, transferrin) was used. Not quoted beyond the cached abstract.
+- Folate release in the acidic endosome is stated in [PMID:23851396 "Inside of the cell, the acidic environment of the endosome promotes the release of folate from receptors"] (author statement in the introduction).
+- NEW GO:0010008 endosome membrane (IC) added beside the root: own GPI anchor [PMID:2527252] plus endogenous immunogold in endosomes [PMID:8567728]. No stage row. The two GO:0016020 rows stay MODIFY to plasma membrane only, because their evidence is about the cell-surface receptor.

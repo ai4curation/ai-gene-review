@@ -12,3 +12,9 @@ Inputs: UniProt Q05738, GOA (52 rows), the OpenScientist report (leads only), ca
 Judgement calls (summary): generic DNA binding -> DNA binding, bending plus cis-regulatory sequence-specific binding; protein-binding rows -> transcription corepressor binding (KRAB-O), PDZ domain binding (NHERF2), DNA-binding TF binding (Oct4), REMOVE for the far-western GO:0005515 row (bare protein binding; its PR:Q9JHL1/Nherf2 WITH/FROM looks like a conflation of Lau's 94-kDa far-western Sip-1 [PMID:10410901] with Poulat's separately isolated SIP-1/NHERF2 [PMID:16166090], flagged WRONG_WITH_FROM/SUSPECTED/CHECK); spermatogenesis kept KEEP_AS_NON_CORE (acts_upstream_of_or_within); the Sry-Oct4 "transcription regulator complex" marked over-annotated; enzyme binding (rat ISO, source untraceable) UNDECIDED.
 
 Possible source defects (MGI): PMID:15879091 (a mast-cell TGF-beta1 paper) cited for male sex determination, and PMID:22514746 (a Tgif1 paper whose full text does not mention Sry) cited for nucleus. Both rows are accepted on other evidence and flagged as SUSPECTED WRONG_REFERENCE.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0005654 / Reactome:R-MMU-9690410: defect withdrawn (evidence depth: DB_RECORD). The live Reactome record lists Sry as a participant of R-MMU-9690410 (input complex Sry:Nr5a1:Sox9 gene, output Sry [nucleoplasm]); only the name and summary omit it. Defect deleted; summary and reason corrected.

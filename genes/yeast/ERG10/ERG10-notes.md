@@ -20,3 +20,14 @@
 
 ## Expression / phenotype
 - Induced by low sterol and by cold; deletion/disruption gives cold and freeze sensitivity [UniProt:P41338 "Leads to cold and freeze sensitivity."].
+
+## Genome-scale metabolic models (2026-11-21)
+- iMM904 constrains both Erg10 reactions to the condensation direction (ACACT1r, ACACT1m; lower bound 0). yeast-GEM 9.1.1 keeps them reversible (r_0103, r_0104) [file:gocams/YeastPathways_PWY-5177/YeastPathways_PWY-5177-bioinformatics/gem_reactions.md].
+- Both models also place an Erg10 reaction in the mitochondrion. The reviewed evidence is cytosolic [PMID:7989303 "was demonstrated to encode cytoplasmic aceto-acetyl-CoA thiolase"]. The same paper found no other acetoacetyl-CoA thiolase activity [PMID:7989303 "null alleles of ERG10 produced no detectable acetoacetyl-CoA thiolase enzyme activity"], so a mitochondrial activity, if real, would also be Erg10. Whole-cell extracts cannot resolve location: the mitochondrial reaction is unsupported, not refuted.
+- The current UniProt record carries an IBA mitochondrion line (DR GO:0005739) that is not in this gene's GOA snapshot; worth checking at the next fetch-gene.
+
+## Source defects filed (2026-11-23)
+- PWY-5177 carboxylic acid catabolic process RCA (MARK_AS_OVER_ANNOTATED): `SGD` `CHECK` (PROBABLE, `SCOPE_OVER_REACH`), matching the GO-CAM part_of CHECK on gomodel:YeastPathways_PWY-5177/ACETYL-COA-ACETYLTRANSFER-RXN.
+- Vacuole NAS from PMID:28904410 (REMOVE): `UNIPROT` `CHECK` (PROBABLE). UniProt's own subcellular location for ERG10 is cytosol. The cached review text (about 1,300 words) mentions neither Erg10 nor the vacuole, so the claim may be in a figure; filed as a query. ERG8 and MVD1 remove the same NAS but file no defect.
+- The mitochondrial Erg10 reaction in iMM904 and yeast-GEM is a model-side finding, not a GOA error. ERG10 has no mitochondrion row in this GOA snapshot.
+- (PR #6796 review) The vacuole NAS defect now names the UniProt batch from PMID:28904410: five vacuole rows dated 2022-02-18 (ERG10, ERG8, MVD1, ERG20, IDI1; checked by QuickGO reference query) plus ERG13's mitochondrion row dated 2022-07-07. The query covers the whole batch. ERG19 is the same protein as MVD1 (P32377), not a sixth row.
