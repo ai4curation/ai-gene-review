@@ -117,9 +117,14 @@ ubiquitin-dependent RQT/ASCC route and the A-site-vacancy PELO-HBS1L-ABCE1 route
 NEMF-LTN1-TCF25 nascent-chain ubiquitination with NEMF CAT tailing; ANKZF1
 cleavage of the 60S-bound P-site tRNA; and VCP/p97 extraction of the chain. Every
 molecular function is the participant's own reviewed core function, so the module
-QC function-consistency check reports `CORE_SUPPORTED` throughout. EIF4E2, which
-is not one of the 13 candidates below, is included because the GIGYF2 arm is not
-a complete repression step without it; its review already exists. Curation
+QC function-consistency check reports `CORE_SUPPORTED` throughout. Two reviewed
+genes beyond the 13 candidates below are included: EIF4E2, because the GIGYF2 arm
+is not a complete repression step without the cap-binding protein it recruits,
+and TRIP4, the third subunit of the RQT complex, which carries a role rather than
+a function because its review asserts complex membership and ribosome rescue
+without a molecular function of its own. ASCC1, the fourth RQT component, is
+named but unmodelled: it is reviewed, but both of its core functions are nuclear.
+Curation
 decisions, the GO-CAM cross-check table and the open items are in
 [`modules/ribosome_quality_control-notes.md`](../modules/ribosome_quality_control-notes.md).
 
@@ -134,8 +139,8 @@ decisions, the GO-CAM cross-check table and the open items are in
   ([#3952](https://github.com/ai4curation/ai-gene-review/issues/3952))
 - [ ] Generate a module-level deep research report
   (`just module-deep-research-perplexity ribosome-quality-control`)
-- [ ] Review ASCC1 and TRIP4 so the RQT complex descriptor can carry all four
-  subunits as active units
+- [ ] Review PTRH1 so part 5 can carry the non-ubiquitinated peptidyl-tRNA
+  release route beside ANKZF1 ([PMID:30244831](https://pubmed.ncbi.nlm.nih.gov/30244831/))
 - [ ] Report the three GO-CAM divergences upstream (ABCE1 `GO:0017111` vs
   `GO:0016887`; ANKZF1 `GO:0004521` vs `GO:0004549`; and the EDF1/TCF25/VCP
   coverage gaps)
