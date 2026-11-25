@@ -12,14 +12,14 @@ The core role is cytosolic Hippo-pathway scaffolding. The GO-CAM activity models
 
 The earlier WWC-family study supports shared WWC2/KIBRA/WWC3 behavior, including that WWC proteins can "form homo- and heterodimers" and that "all WWC proteins negatively regulate cell proliferation and organ growth" by repressing YAP transcriptional activity [PMID:24682284]. That justifies keeping the antiproliferative, organ-growth and YAP-transcription rows as downstream non-core consequences rather than elevating them to WWC2's molecular core function.
 
-UniProt records WWC2 in the cytosol and records direct kinase interactions: "Interacts with DLC1 and PRKCZ. Interacts (via WW domains) with LATS1 and LATS2" [file:genes/human/WWC2/WWC2-uniprot.txt]. The PRKCZ binding row is therefore not Hippo core, but kinase binding is correct for both the Hippo LATS interaction and that peripheral PRKCZ interaction.
+UniProt records WWC2 in the cytosol and records direct kinase interactions: "Interacts with DLC1 and PRKCZ. Interacts (via WW domains) with LATS1 and LATS2" [file:genes/human/WWC2/WWC2-uniprot.txt]. The direct PRKCZ and LATS2 IPI rows name protein kinases in their WITH/FROM fields, so they support `GO:0019901` protein kinase binding; the PRKCZ branch is peripheral to Hippo, while LATS binding is part of the core Hippo adaptor mechanism.
 
 ### Annotation decisions
 
 - Bare `GO:0005515` protein binding rows were removed under the project protein-binding policy. The review does not assert that the reported YWHAZ interactions are false.
 - `GO:0035331` negative regulation of Hippo signaling has the regulatory sign inverted for WWC2. WWC2 promotes the LATS/YAP-inhibitory Hippo kinase cascade, so the direct and ARBA negative-regulation rows were changed to `MODIFY` with `GO:0035332` positive regulation of Hippo signaling as the replacement.
 - `GO:0035330` regulation of Hippo signaling and `GO:0060090` molecular adaptor activity were marked `TOO_GENERAL` because the more specific signed Hippo and signaling-adaptor claims are asserted in the review.
-- The PAINT `GO:0016477` cell migration row was marked `MARK_AS_OVER_ANNOTATED`. The PANTHER row for node `PTN002308339` shows the IBD cell-migration transfer, but the accessible human WWC2 evidence supports SAV/LATS Hippo scaffolding rather than a WWC2-specific migration role [file:interpro/panther/PTHR14791/PTHR14791-paint.tsv].
+- The PAINT `GO:0016477` cell migration row was marked `MARK_AS_OVER_ANNOTATED`. In `PTHR14791-paint.tsv`, `GO:0016477` is the only IBD at node `PTN002308339` whose seeds exclude both human WWC2 and WWC3; this is a specific node-placement concern, while the accessible human WWC2 evidence supports SAV/LATS Hippo scaffolding rather than a WWC2-specific migration role [file:interpro/panther/PTHR14791/PTHR14791-paint.tsv].
 
 ### GO-CAM consistency
 
