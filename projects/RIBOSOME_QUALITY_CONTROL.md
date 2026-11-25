@@ -125,8 +125,7 @@ and TRIP4, the third subunit of the RQT complex, which carries a role rather tha
 a function because its review asserts complex membership and ribosome rescue
 without a molecular function of its own. ASCC1, the fourth RQT component, is
 named but unmodelled: it is reviewed, but both of its core functions are nuclear.
-Curation
-decisions, the GO-CAM cross-check table and the open items are in
+Curation decisions, the GO-CAM cross-check table and the open items are in
 [`modules/ribosome_quality_control-notes.md`](../modules/ribosome_quality_control-notes.md).
 
 ## Project Status
