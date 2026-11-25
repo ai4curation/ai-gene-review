@@ -222,3 +222,7 @@ without checking. Findings:
 ## Session 2026-11-21: consistency with the retromer-pathway batch
 
 The PEP8/VPS29 and MVP1 reviews cite Suzuki et al. 2021 [PMID:34524084 "the SNX-BAR protein, Mvp1, mediates an endosomal recycling pathway that is mechanistically distinct from the retromer and Snx4 pathways" ... "Subsequently, Mvp1 recruits the dynamin-like GTPase Vps1 to catalyze membrane scission and release of the recycling tubule."]. The VPS1 description had followed Chi et al. 2014 (PMID:24567361) in placing Vps1 "with retromer and the SNX-BAR protein Mvp1" on the same tubules. It now names two routes, retromer and a separate Mvp1 route on which Mvp1 recruits Vps1. The open question on Vps1 recruitment now records that Mvp1 recruits Vps1 on its own route (with conflicting reports on direct binding) and asks only about the retromer route. The annotation actions are unchanged. The two Chi 2014 summaries describing "retromer/Mvp1-decorated" tubules are kept, because they report that paper accurately.
+
+## GO-CAM pointer removed (2026-11-25)
+
+The GO:0099051 decomposition no longer points at the S. pombe clathrin-dependent endocytosis GO-CAM (gomodel:6918f23700004722). Its vps1 part_of edge is an ISO from S. cerevisiae Vps1, so it repeats this review's claim instead of supporting it. The endocytosis context is recorded in core_functions, on the endocytosis-specific mutant papers (PMID:25772449, PMID:26711254, PMID:31009484).
