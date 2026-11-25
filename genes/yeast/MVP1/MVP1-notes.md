@@ -199,3 +199,7 @@
 The automated PR review found that the batch argued both sides of some cross-gene questions. These are the calls it now makes:
 
 - Endosome rows: endosome is a series organelle, which the organelle policy does not yet cover, so the ordinary refinement rule applies. A row whose own evidence puts the protein on the endosomal membrane (a peripheral membrane-associated complex, immunogold at the endosome rims, PI3P-dependent puncta) is MODIFY to GO:0010008 endosome membrane. IBA and ARBA rows, whose evidence stops at the organelle, stay ACCEPT at endosome. The resulting inconsistent_review_actions warning for GO:0005768 is the same per-row pattern as the VPS1 GTPase activity rows.
+
+## GO-CAM question removed (2026-11-25)
+
+The suggested question about the PomBase mvp1 activity in gomodel:6918f23700004102, which is typed as cargo adaptor activity, was removed from the review. It is feedback on a GO-CAM rather than a question about Mvp1. The observation stays here: Mvp1 is itself the coat and bends the membrane, which is how this review's core function records it (GO:0180020 membrane bending activity).
