@@ -27,10 +27,9 @@ Current PAINT annotations in PANTHER family PTHR43016 place
 metalloendopeptidase activity and protein catabolism at PTN000220482 and
 mitochondrial matrix localization at PTN000220483. The PAINT
 metalloendopeptidase and matrix IBDs are sound for S. pombe cym1. The process
-IBD is directionally right but uses GO:0030163 protein catabolic process, which
-overstates the substrate class for a protease that degrades released peptides;
-PomBase already has the better transferred term GO:0043171 peptide catabolic
-process.
+IBD is also defensible as a pathway-level parent backed by direct donor rows on
+S. cerevisiae Cym1 and Plasmodium falcilysin, but the core S. pombe process is
+the PomBase-transferred GO:0043171 peptide catabolic process.
 
 ## Annotation decisions
 
@@ -40,12 +39,14 @@ process.
   organelle call is true and informative beside the specific matrix rows.
 - Accept both GO:0006508 proteolysis rows as broad but true assertions of the
   peptide-bond hydrolysis carried out by Cym1.
-- Modify GO:0030163 protein catabolic process to GO:0043171 peptide catabolic
-  process because Cym1 degrades released peptides rather than intact proteins.
+- Keep GO:0030163 protein catabolic process as a non-core pathway-level M16
+  protease process beside the precise core GO:0043171 peptide catabolic
+  process row.
 - Keep GO:0008270 zinc ion binding as a non-core cofactor property and mark
   the generic IPR011249 metal-ion-binding IEA as too general beside the
   separately supported zinc term.
-- Mark the mitochondrial intermembrane-space ISS row from budding-yeast Cym1 as
-  over-annotated because it lacks S. pombe-specific or inspected donor evidence
-  beyond the same homology transfer that also supports matrix localization; all
-  specific PreP-family evidence supports the matrix.
+- Leave the mitochondrial intermembrane-space ISS row from budding-yeast Cym1
+  undecided because Kambacheld et al. initially localized S. cerevisiae
+  Mop112/Cym1 to the intermembrane space, Alikhani et al. later placed
+  endogenous Cym1/Mop112 in the matrix, and S. pombe lacks direct
+  submitochondrial localization data.
