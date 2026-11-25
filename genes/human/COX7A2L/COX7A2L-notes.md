@@ -38,15 +38,14 @@ distinguish CIII2+IV, minor SCAFI-dependent respirasomes, and canonical COX7A2-d
 ## GO-CAM 66b5638000001589 Consistency
 
 The model's COX7A2L activity node correctly uses `GO:0030674` protein-macromolecule adaptor activity with
-complex III and complex IV as inputs and occurs in the mitochondrial inner membrane. Its `part_of`
-`GO:0097250` mitochondrial respirasome assembly edge is the remaining mismatch: this gene review modifies the
-four GOA `GO:0097250` rows to the broader existing `GO:0033108` mitochondrial respiratory chain complex
-assembly term, with a CIII2+IV-specific supercomplex assembly NTR, because GO:0097250 is defined for assembly
-of complexes I, III, and IV into a respirasome.
+complex III and complex IV as inputs and occurs in the mitochondrial inner membrane. This gene review retains
+the `GO:0097250` mitochondrial respirasome assembly rows because later evidence supports a minor
+SCAFI-dependent complex-I-containing respirasome subset, but the direct CIII2+IV role is sharper and needs a
+new GO term.
 
 Record for the final GO-CAM consistency PR after this gene PR merges:
 
-- `gomodel:66b5638000001589/66b5638000001650` should be revisited. Consider replacing `part_of GO:0097250`
-  with a CIII2+IV respiratory supercomplex assembly term after GO adds one, or otherwise documenting that the
-  GO-CAM process term is broader/different than the direct COX7A2L process in PMID:27545886 and
-  PMID:30428348.
+- `gomodel:66b5638000001589/66b5638000001650` no longer conflicts with the gene-level review, but the model's
+  citation set should be tightened: PMID:27545886 supports CIII2+IV while explicitly saying COX7A2L acts
+  "without affecting respirasome formation"; later evidence is needed for a SCAFI-dependent
+  complex-I-containing respirasome subset.
