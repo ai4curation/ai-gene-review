@@ -59,11 +59,33 @@ their own function instead of for each other's. The `GO:0016987` shared claim th
 the five sigmas the abstract names, PA1912 among them.
 
 `GO:0015891 siderophore transport` is handled differently from `GO:0015344`, and the
-distinction matters. It is **kept**, as `KEEP_AS_NON_CORE`: a sigma factor that induces the
-uptake genes does belong to the biology of siderophore transport, but it performs none of the
-transport itself, so it is not core here. This slightly sharpens what the batch-4 `femA`
-review said — that the row is "defensible on both" — which is true, but it is core on femA
-and peripheral on femI, and only this review could say which.
+distinction matters. It is **corrected**, as `MODIFY` to `GO:0034758 positive regulation of
+iron ion transport`: a sigma factor that induces the uptake genes belongs to the biology of
+siderophore transport, but it performs none of the transport itself, so the participation
+claim is wrong rather than merely peripheral.
+
+This paragraph first said the row was **kept** as `KEEP_AS_NON_CORE`, on the reasoning that the
+role is real but not core. The PR review was right that the reasoning does not reach that
+action: the sentence "FemI performs no step of siderophore transport" is the participation test
+failing, and `KEEP_AS_NON_CORE` is for a claim as precise as warranted but away from the core
+function, not for one that places the protein inside a process it does no work in. The same
+correction is made on `fpvA` in this batch (`GO:0002049` to `GO:1900706`), and merged `foxI`
+sets the direction for a Fem-type ECF sigma.
+
+It also sharpens what the batch-4 `femA` review said — that the row is "defensible on both" —
+but not in the way first written here. The row is a participation claim the transducer earns
+and the sigma factor does not; it is not the same claim held at two levels of centrality, and
+only reviewing both genes could establish that.
+
+GO has no regulation-of-siderophore-transport term, which makes the replacement a trade. That
+was checked against GO through OLS rather than against `cache/go/terms.csv`, which holds only
+terms the corpus already uses and so says nothing about GO: a search for one returns nothing,
+while "siderophore transport" returns 18 classes and "regulation of iron ion transport" returns
+7, so the query can return a positive and the absence is real. `GO:0034758` therefore regulates
+`GO:0006826 iron ion transport`, an ancestor of `GO:0015891`, trading siderophore specificity
+for a correct relation to the gene product. `GO:1904440 positive regulation of iron ion import
+across plasma membrane` was rejected: "plasma membrane" names the inner membrane in a
+Gram-negative, and the uptake this sigma switches on is TonB-dependent at the outer membrane.
 
 ## A divergence in the merged corpus that the audit cannot see
 
