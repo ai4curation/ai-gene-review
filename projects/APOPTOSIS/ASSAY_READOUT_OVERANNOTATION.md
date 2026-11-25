@@ -110,32 +110,35 @@ those papers attribute the extra corpses to the engulfment defect.
 the death of cells that receive weak death signals, and ced-1 expressed in
 engulfing cells rescues this (PMID:11449278, PMID:11449279). So for ced-1 the
 *positive regulation* term is right (kept, but sourced to the right papers),
-while the process term is not (changed to positive regulation).
+while the process term is not (marked as over-annotated; see the update below).
 
 | Species/gene | Term | Evidence | Source | Action |
 |---|---|---|---|---|
-| worm ced-1 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:0043065` |
-| worm ced-1 | `GO:1904747` positive regulation of apoptotic process involved in development | IMP, IGI | PMID:23505386 (background genotype) | `MODIFY` → `GO:0043065`, non-core (supported by PMID:11449278) |
+| worm ced-1 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MARK_AS_OVER_ANNOTATED` (the gene promotes death from the engulfing cell; it does not take part in the dying cell's program) |
+| worm ced-1 | `GO:1904747` positive regulation of apoptotic process involved in development | IMP, IGI | PMID:23505386 (background genotype) | `KEEP_AS_NON_CORE` (supported by PMID:11449278) |
 | worm ced-1 | `GO:0012501` programmed cell death | IMP | PMID:6857247 | `MARK_AS_OVER_ANNOTATED` (the paper finds cells still die) |
-| worm ced-6 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:0043065` |
-| worm ced-6 | `GO:1904747` positive regulation of apoptotic process involved in development | IMP, IGI | PMID:23505386 (background genotype) | `MODIFY` → `GO:0043065`, non-core (supported by PMID:11449278) |
+| worm ced-6 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MARK_AS_OVER_ANNOTATED` (the gene promotes death from the engulfing cell; it does not take part in the dying cell's program) |
+| worm ced-6 | `GO:1904747` positive regulation of apoptotic process involved in development | IMP, IGI | PMID:23505386 (background genotype) | `KEEP_AS_NON_CORE` (supported by PMID:11449278) |
 | worm ced-6 | `GO:0012501` programmed cell death | IMP | PMID:9635426 | `MARK_AS_OVER_ANNOTATED` (the phenotype is persistent corpses) |
-| worm ced-7 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:0043065` |
-| worm ced-7 | `GO:1904747` positive regulation of apoptotic process involved in development | IMP, IGI | PMID:23505386 (background genotype) | `MODIFY` → `GO:0043065`, non-core (supported by PMID:11449278) |
+| worm ced-7 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MARK_AS_OVER_ANNOTATED` (the gene promotes death from the engulfing cell; it does not take part in the dying cell's program) |
+| worm ced-7 | `GO:1904747` positive regulation of apoptotic process involved in development | IMP, IGI | PMID:23505386 (background genotype) | `KEEP_AS_NON_CORE` (supported by PMID:11449278) |
 | worm ced-7 | `GO:0012501` programmed cell death | IMP | PMID:9635425 | `MARK_AS_OVER_ANNOTATED` (the phenotype is persistent corpses) |
 | worm ttr-52 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `REMOVE` (no evidence that ttr-52 promotes death, so no positive-regulation fallback) |
-| worm ced-2 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:0043065` |
+| worm ced-2 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MARK_AS_OVER_ANNOTATED` (the gene promotes death from the engulfing cell; it does not take part in the dying cell's program) |
 | worm ced-2 | `GO:0006915` apoptotic process; `GO:0012501` programmed cell death | IMP | PMID:6857247, PMID:10707082 | `MARK_AS_OVER_ANNOTATED` (cells still die; corpses persist) |
-| worm ced-5 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:0043065` |
+| worm ced-5 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MARK_AS_OVER_ANNOTATED` (the gene promotes death from the engulfing cell; it does not take part in the dying cell's program) |
 | worm ced-5 | `GO:1902742` apoptotic process involved in development | IMP | PMID:22801495 (engulfment-defective comparison; unengulfed cells still die by CED-3-mediated apoptosis) | `REMOVE` |
-| worm ced-12 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MODIFY` → `GO:0043065` |
+| worm ced-12 | `GO:1902742` apoptotic process involved in development | IMP, IGI | PMID:24225442 (background genotype) | `MARK_AS_OVER_ANNOTATED` (the gene promotes death from the engulfing cell; it does not take part in the dying cell's program) |
 
-**Precomposition update (2026-11-10).** The positive-regulation replacements and the kept
-`GO:1904747` rows above now use `GO:0043065` positive regulation of apoptotic process.
-`GO:1904747` is that term plus the developmental context of `GO:1902742`, and round 6 of
-[INVOLVED_IN_PRECOMPOSITION](../INVOLVED_IN_PRECOMPOSITION.md) drops that context for the
-engulfment genes. The sign correction this page argues for (regulation from the engulfing
-cell, not participation in the dying cell's program) is unchanged.
+**Precomposition updates (2026-11-10, 2026-11-18).** Round 6 of
+[INVOLVED_IN_PRECOMPOSITION](../INVOLVED_IN_PRECOMPOSITION.md) moved these rows to
+`GO:0043065` positive regulation of apoptotic process. Round 7 reversed that: a
+MODIFY's replacement must be a claim the review would accept, and the engulfment
+genes' pro-death role is non-core. The `GO:1902742` rows are therefore
+`MARK_AS_OVER_ANNOTATED`, and the `GO:1904747` rows on ced-1, ced-6 and ced-7 stay
+`KEEP_AS_NON_CORE`. The sign correction this page argues for (regulation from the
+engulfing cell, not participation in the dying cell's program) is unchanged; it is
+recorded in each row's reason.
 
 **The background-genotype rows come in batches.** A QuickGO query by reference
 (2026-10-05) shows that the CED-8 paper (PMID:24225442) gave `GO:1902742`
@@ -143,12 +146,13 @@ cell, not participation in the dying cell's program) is unchanged.
 ced-2, ced-5, ced-6, ced-7, ced-12 and ttr-52. The CSP-1 paper
 (PMID:23505386) gave `GO:1904747` to ced-1, ced-6 and ced-7 alongside the
 genuine death genes (ced-3, ced-4, egl-1, csp-1/2/3). ced-1, ced-6,
-ced-7 and ttr-52 are reviewed. The replacement depends on the gene: the
-positive-regulation term needs its own evidence that the gene promotes death
-(Reddien 2001 and Hoeppner 2001 cover the classic engulfment genes). ttr-52,
-identified later, has none, so its rows are removed rather than modified.
+ced-7 and ttr-52 are reviewed. The outcome depends on the gene: a
+positive-regulation reading needs its own evidence that the gene promotes death
+(Reddien 2001 and Hoeppner 2001 cover the classic engulfment genes), and then the
+row is an over-annotation of a real regulatory role. ttr-52, identified later, has
+none, so its rows are removed.
 All seven genes are now reviewed. For ced-2, ced-5 and ced-12 the
-positive-regulation replacement (now `GO:0043065`) rests on Reddien 2001, whose abstract defines the
+positive-regulation reading (recorded in the row reasons) rests on Reddien 2001, whose abstract defines the
 engulfment genes it studies as ced-1, ced-2, ced-5, ced-6, ced-7, ced-10 and
 ced-12 and states that "mutations in engulfment genes alone allow the
 survival and differentiation of some cells that would normally die".

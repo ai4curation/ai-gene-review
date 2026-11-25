@@ -104,3 +104,9 @@ CMGC group, CDC2/CDKX subfamily. EC 2.7.11.22. Gene on chromosome 12.
   histone H1 kinase as a primary function; weak).
 - Ras protein signal transduction GO:0007265 IEP (PMID:9054499) — IEP/senescence context;
   KEEP_AS_NON_CORE (correlative).
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Rows: GO:0005768 IEA (GO_REF:0000044) and IDA (PMID:21262353); no sub-compartment row. GOA and review agree.
+- UniProt's Endosome item has no evidence tag. PMID:21262353 is abstract-only (no PMC): [PMID:21262353 "Here we show that Cdk2 present in hepatic endosome fractions is strictly located in a Triton X-100-resistant environment."] No marker or fraction control is named; the liver species is not stated in the abstract.
+- Outcome: both rows stay KEEP_AS_NON_CORE on curator deference; a weak fraction-only line for a nuclear/cytosolic kinase. No stage row. Added full_text_unavailable and a reference_review on PMID:21262353.

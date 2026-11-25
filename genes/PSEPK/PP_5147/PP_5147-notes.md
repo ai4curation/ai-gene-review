@@ -11,3 +11,18 @@
 - Added NEW GO:0000105 (ISS) because the GOA set has only the activity row.
 - The OpenScientist recommendation to treat PP_5147 as "the principal" HolPase ignores PP_3157 (a
   TIGR02067 HisN member); not adopted. Both are retained as HolPases; in-vivo flux sharing unknown.
+- 2026-11-18: added substrate-specificity evidence with
+  `PP_5147-bioinformatics/holpase_fingerprint.py` (output `FINGERPRINT.md`). The catalytic Asp
+  residues above are HAD motif I and Mg2+ ligands, shared with phosphoserine phosphatases, so they do
+  not separate the two reactions. Kinateder et al. 2024 did, by alanine scanning PA0335
+  [PMID:38284491 "Taken together, the residues D16 and D18 form a DxD motif, which is indicative for
+  a HolPase, whereas an ExI motif indicates a PSPase."]; Y47 is the third required residue, and Y57
+  and T113 support the call. PP_5147 carries all five. The paper scopes its conclusion to the PA0335
+  cluster of its similarity network (edges at 45.8% identity); PP_5147 is 67.7% identical to PA0335,
+  so it falls in that cluster without rebuilding the network.
+  Of the two SerB-type PSPase models, only TIGR00338.1 separates the activities: the characterized
+  M. jannaschii SerB passes it, while PP_5147 and PA0335 are below its noise cutoff. NF008350.0 shows
+  nothing here, because SerB itself is below its cutoff. SerB is too distant from PA0335 (24%
+  identity) for its fingerprint residues to be read, so it serves as a family-model control only.
+  Neither PA0335 nor PP_5147 passes the second HolPase model NF052359.1, presumably another HolPase
+  lineage.

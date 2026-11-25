@@ -9,6 +9,7 @@ genes: [Camk2a]
 manifest:
   slides:
     - href: SYNAPTIC_VESICLE_DOCKING_OBSOLETION/slides/SYNAPTIC_VESICLE_DOCKING_OBSOLETION-slides.html
+index_group: MAMMAL
 ---
 
 # Regulation of Synaptic Vesicle Docking — Obsoletion & MF Refactor

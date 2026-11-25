@@ -10,3 +10,11 @@ A retrospective audit of the succinyl-CoA synthetase reviews found the points be
 - GO:0042709 succinate-CoA ligase complex: TOO_GENERAL changed back to ACCEPT. The generic term is the one that covers an enzyme forming ATP or GTP. The earlier reason said the TOO_GENERAL action matched the other reviewed members of the family; it did not match the partner subunit SucC. QuickGO (checked 2026-11-12) shows PseudoCAP annotated the P. aeruginosa subunits to GO:0042709 by IDA from PMID:10671455. GO:0009361 stays ACCEPT; the enzyme forms ATP.
 - GO:0003824 catalytic activity: MARK_AS_OVER_ANNOTATED changed to TOO_GENERAL. The term is true and is entailed by the accepted ligase activities.
 - Two findings on the UniProt reference quoted CATALYTIC ACTIVITY lines whose only evidence is an ARBA rule. They now quote the HAMAP-rule FUNCTION statement.
+
+## Reconciliation with the P. aeruginosa and E. coli reviews (2026-11-18)
+
+- The 2026-11-12 entry above says only the abstract of PMID:10671455 was read. The full text has been cached since (PMC94420) and was read for this update. The conclusion is unchanged: neither activity is ranked above the other for the P. putida enzyme. The grounds are corrected.
+- The assayed P. aeruginosa enzyme was recombinant, so copurification with Ndk is not the reason the result is weak [PMID:10671455 "Both the constructs pKV153 (encoding the Scs α subunit) and pKV152 (encoding the Scs β subunit) were introduced into E. coli BL21(pLysS) for protein expression."]. Copurification is an earlier observation on the native enzyme [PMID:10671455 "The Scs protein was shown to copurify with Ndk in P. aeruginosa"].
+- GTP was formed from GDP alone [PMID:10671455 "either ADP or GDP could act as a substrate at the lowest concentration tested (50 μM)"].
+- The equimolar result is a 10-minute end-point without kinetic constants [PMID:10671455 "At equal concentrations, both GTP and ATP were synthesized in essentially equal amounts."], and the same preparation moves phosphate between ATP and GDP [PMID:10671455 "the Scs complex transferred the terminal phosphate from [γ- 32 P]ATP to GDP to form GTP"]. An equimolar end-point therefore cannot rank ADP against GDP; that is this review's inference, not the paper's.
+- The reference notes, the Ndk finding and the GO:0004776 reason in the review were updated to match.

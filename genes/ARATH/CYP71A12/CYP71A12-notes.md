@@ -190,3 +190,9 @@ cyanohydrin. Involved in the biosynthetic pathway to 4-hydroxyindole-3-carbonyl 
 cyp71A12 ICN derivatives at ~10% of wild type [PMID:26352477 "all ICN derivatives with the exception of A6
 are at ~10% of WT levels in the cyp71A12 mutant, but unaffected in the cyp71A13 and cyp71A18 mutants"];
 ICOOH methyl ester at 12% of wild type in AgNO3-challenged cyp71a12 leaves [PMID:25953104].
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0009617 / PMID:17573535: defect withdrawn (evidence depth: FULL_TEXT). Full text (PMC1955726, read online) reports in its microarray Results that CYP71A12 expression was induced by infection (lower than PAD3/CYP71A13/CYP79B2); the reference supports the IEP row. Defect deleted, summary/reason and the reference_review note updated.

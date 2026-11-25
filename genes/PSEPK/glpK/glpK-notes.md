@@ -36,3 +36,10 @@
 ## 2026-11-04 (PR #5936 second review round)
 
 - GO:0006072 -> GO:0046167 reason now cites the PAINT GO:0046167 IBD on the eukaryotic glycerol kinase node PTN000023394 as corroboration (not propagated to this bacterial protein).
+
+
+## 2026-11-07 comparative glycerol audit
+
+Rechecked all 11 rows. Corrected the old claim that PMID25827416 does not assay the kinase: its full Methods and Results measure coupled GlpK activity in KT2440 cell extracts and a threefold increase after glpFK overexpression. This supports the target-strain catalytic assignment but supplies neither purified Q88NX8 kinetic constants nor direct E. coli-type FBP/EIIA-Glc regulation. The latter is stated only where supported as homology prediction. Existing Asta retrieval is genuine but off-topic; no provider file was edited.
+
+Existing genuine provider research was inspected and preserved byte-for-byte; conclusions were checked against primary sources. All original ordered annotation payloads are preserved, with no new GO rows. Focused validation, source preservation, and helper-history results are recorded in analysis/module_audits/bacterial_glycerol_uptake_catabolism/existing-member-consultation/. COMPLETE denotes completed adjudication, including explicit unresolved claims.

@@ -76,3 +76,12 @@ PMIDs consulted: 1567896, 3512540, 9693004, 3007935, 3902503, 9756872,
 - GO:0031402 sodium ion binding: PSEPK marked over-annotated (IEA only); in
   E. coli there is direct biochemical evidence that Na+ binds the carrier
   independently of proline, so kept as non-core here.
+
+
+## 2026-11-06 comparative PutA-module audit
+
+All original annotation payloads/order and historical NEW actions retained. All rows and core functions were re-read; only evidence/role inconsistencies were changed. Retained sodium binding as a central transport interaction, with direct E. coli evidence distinguished from the KT2440 family/RuleBase inference. Existing transport/CC refinements remain supported; no extra process or coupling assertions added.
+
+A genuine default Falcon attempt was run and failed with HTTP403 authentication; no provider report was fabricated. Manual review used existing primary/review caches plus explicitly scoped independent PMC captures where recorded. PAINT loss checks found no IRD/IKR on the target lineage.
+
+The propionate source was read in full via official PMC without refreshing the publication cache. Existing source-defect metadata retains the original erroneous PMID and identifies the intended PMID17088549; inferred peripheral cargo is not upgraded to measured flux.

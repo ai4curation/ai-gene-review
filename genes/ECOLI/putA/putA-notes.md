@@ -60,3 +60,12 @@
 - Generic DNA binding / sequence-specific DNA binding / transcription cis-regulatory region binding: MODIFY to GO:0000987, which the gene carries by IDA.
 - Plasma membrane and cytoplasmic side of membrane: MODIFY to GO:0009898 cytoplasmic side of plasma membrane (IDA on the gene).
 - Identical protein binding: MODIFY to protein homodimerization activity (GO:0042803), kept as non-core.
+
+
+## 2026-11-06 comparative PutA-module audit
+
+All original annotation payloads/order and historical NEW actions retained. All rows and core functions were re-read; only evidence/role inconsistencies were changed. Refined true anion/heterocyclic binding to supported FAD/proline/NAD interactions after official GO ancestor checks; no new annotation rows. Binding need not be a separate autonomous activity. Retained both catalytic reactions without assigning a universal quinone species or channeling mechanism.
+
+GO0097054 directly describes formation of the central product L-glutamate and does not require de novo anabolism; existing product-formation rows are ACCEPT alongside proline catabolism. Specific cofactor/self-association/inducer-binding claims central to catalysis or repression are retained as core where already present. No universal RHH repression or channeling inference is made across all PutAs. [PMID:28712849; exact catalytic reactions in the protected UniProt record.]
+
+A genuine default Falcon attempt was run and failed with HTTP403 authentication; no provider report was fabricated. Manual review used existing primary/review caches plus explicitly scoped independent PMC captures where recorded. PAINT loss checks found no IRD/IKR on the target lineage.

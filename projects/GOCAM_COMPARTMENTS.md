@@ -4,6 +4,8 @@ maturity: SCOPING
 tags: [PIPELINE]
 species: [human, mouse, SCHPO]
 autolink_exclude: [PM, ER, IMS, MOM, MIM]
+index_group: CROSS_CUTTING
+description: Do GO-CAM activity locations resolve to a distinct compartment, and do causal edges join adjacent compartments?
 ---
 
 # GO-CAM compartments

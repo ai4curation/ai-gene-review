@@ -1,6 +1,6 @@
 ---
 title: "InterPro Mapping Review Project"
-collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION]
+collections: [HOMOLOGY_PROPAGATION, FUNCTION_PREDICTION, MAPPINGS]
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 sidecars:
@@ -14,6 +14,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/NaAEVgdB1TnJUKnBWWt69N
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # InterPro Mapping Review Project
@@ -100,7 +101,7 @@ Eukaryota restriction for IPR000426 to ubiquitin-dependent protein catabolic
 process and IPR005024 to vacuolar transport; and narrowing IPR000534 to NAD
 binding. interpro2go has no conditions, so the two restriction rows each name a
 curated replacement rule in [rules/curated](../rules/curated/README.md) (CR-0001,
-CR-0003) that couples the InterPro condition with a taxon or module condition.
+CR-0003) that couples the InterPro condition with a taxon condition.
 
 ## What curators can act on
 

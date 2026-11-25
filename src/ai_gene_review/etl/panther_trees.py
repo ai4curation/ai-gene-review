@@ -3,19 +3,25 @@
 PAINT annotates internal tree nodes (``PTN`` ids), but ``IBD.gaf`` carries no tree, so
 asking "which proteins sit below node X" or "which nodes sit above protein P" needs the
 family tree from the PANTHER API (``treeinfo``). Trees are cached as a compact JSON under
-``.cache/panther_trees/`` (git-ignored): ``{"leaves": {ptn: info}, "under": {ptn: [leaf ptns]}}``.
+``.cache/panther_trees/<release>/`` (git-ignored):
+``{"leaves": {ptn: info}, "under": {ptn: [leaf ptns]}}``. The release is the repo's pinned
+``PANTHER_RELEASE``; a tree the API serves for any other release is refused, so node claims
+are never checked against a tree from a different release than the rest of the PANTHER data.
 """
 
 from __future__ import annotations
 
 import gzip
 import json
+import re
 import sys
 import time
 from pathlib import Path
 from typing import Any
 
 import requests
+
+from ai_gene_review.etl.panther_families import PANTHER_RELEASE, same_release
 
 TREE_URL = "https://pantherdb.org/services/oai/pantherdb/treeinfo"
 DEFAULT_CACHE = Path(".cache") / "panther_trees"
@@ -70,13 +76,49 @@ def compact_tree(tree: dict) -> dict[str, Any]:
     return {"leaves": leaves, "under": under}
 
 
+def _reported_version(payload: Any) -> Any:
+    """The raw ``search.product.version`` of a ``treeinfo`` response, or None if absent.
+
+    >>> _reported_version({"search": {"product": {"version": "beta"}}})
+    'beta'
+    >>> _reported_version({"search": None}) is None, _reported_version([]) is None
+    (True, True)
+    """
+    for key in ("search", "product", "version"):
+        if not isinstance(payload, dict):
+            return None
+        payload = payload.get(key)
+    return payload
+
+
+def served_release(payload: Any) -> str | None:
+    """The release a ``treeinfo`` response says it serves, or None if it names none usable.
+
+    >>> served_release({"search": {"product": {"version": 19}}})
+    '19'
+    >>> served_release({"search": {}}) is None
+    True
+    >>> served_release({"search": {"product": {"version": "beta"}}}) is None
+    True
+    >>> served_release({"search": None}) is None
+    True
+    """
+    version = _reported_version(payload)
+    if version is None or not re.fullmatch(r"\d+(\.\d+)*", str(version)):
+        return None
+    return str(version)
+
+
 def load_family(family: str, cache_dir: Path = DEFAULT_CACHE) -> dict[str, Any] | None:
     """Return the compact tree for a PANTHER family, from cache or the PANTHER API.
 
-    Returns ``None`` when the tree cannot be fetched (the API is retried four times).
+    Trees are cached under ``cache_dir/<PANTHER_RELEASE>/``. Returns ``None`` when the
+    tree cannot be fetched (the API is retried four times), or when the API serves a
+    different release from the pinned one (not retried, not cached).
     """
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    path = cache_dir / f"{family}.json.gz"
+    release_dir = cache_dir / PANTHER_RELEASE
+    release_dir.mkdir(parents=True, exist_ok=True)
+    path = release_dir / f"{family}.json.gz"
     if path.exists():
         with gzip.open(path, "rt") as fh:
             return json.load(fh)
@@ -84,7 +126,24 @@ def load_family(family: str, cache_dir: Path = DEFAULT_CACHE) -> dict[str, Any] 
         try:
             r = requests.get(TREE_URL, params={"family": family}, timeout=300)
             if r.status_code == 200:
-                data = compact_tree(r.json())
+                payload = r.json()
+                served = served_release(payload)
+                if served is None:
+                    # Not a transient failure: refuse at once rather than retry.
+                    print(
+                        f"{family}: the PANTHER API response names no usable release "
+                        f"(version {_reported_version(payload)!r}); tree not used",
+                        file=sys.stderr,
+                    )
+                    return None
+                if not same_release(served, PANTHER_RELEASE):
+                    print(
+                        f"{family}: the PANTHER API serves release {served}, but this repo "
+                        f"is pinned to {PANTHER_RELEASE}; tree not used",
+                        file=sys.stderr,
+                    )
+                    return None
+                data = compact_tree(payload)
                 with gzip.open(path, "wt") as fh:
                     json.dump(data, fh)
                 return data

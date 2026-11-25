@@ -5,6 +5,8 @@ last_reviewed: 2026-10-15
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
 genes: [ADRB2, ADGRV1, FZD7, GPR101, GPR161, CASR, GNAS, OPRM1]
+index_group: MAMMAL
+description: GPCR family reviews, transducer pathway modules, and receptor gene reviews; paired with dismech GPCR drug-mechanism and disease modules
 ---
 
 # G protein-coupled receptors (GPCRs): families, modules and functions

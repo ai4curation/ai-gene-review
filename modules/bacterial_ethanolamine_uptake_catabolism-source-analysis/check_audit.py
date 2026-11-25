@@ -12,8 +12,11 @@ import argparse
 import json
 import yaml
 
+import functools
 from ai_gene_review.module_logic import compile_node, is_satisfied
 from ai_gene_review.validation.local_source_text import quote_matches
+# This audit expands protein_complex active_units itself, so it compiles one atom per complex annoton.
+compile_node = functools.partial(compile_node, expand_complexes=False)
 
 ROOT = Path(__file__).resolve().parents[2]
 SLUG = "bacterial_ethanolamine_uptake_catabolism"

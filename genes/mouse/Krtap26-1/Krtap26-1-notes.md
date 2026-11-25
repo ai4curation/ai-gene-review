@@ -16,9 +16,14 @@ Family-batched review of mammalian keratin-associated proteins (KRTAPs). No deep
 
 ## Curation decisions
 
-- MF: GO:0030281 structural constituent of cutaneous appendage (OLS-verified; child of GO:0005198). ND root and IEA structural molecule activity rows refined to it.
-- CC: GO:0045095 keratin filament (ACCEPT/NEW/MODIFY of ND root).
+- MF: GO:0030281 structural constituent of cutaneous appendage (OLS-verified; child of GO:0005198). IEA structural molecule activity rows refined to it. ND rows: see the ND re-check below.
+- CC: GO:0045095 keratin filament.
 - BP: GO:0031424 keratinization; hair cycle/follicle development not used (KAPs are downstream structural products).
 - ARBA cytosol: KEEP_AS_NON_CORE, harmonized with the human KRTAP reviews (KAPs are synthesized in the cytoplasm of the keratinizing cell but act in the keratin matrix; true but not the site of function).
 - ISO identical protein binding (HuRI Y2H donors): MARK_AS_OVER_ANNOTATED.
 - No bare GO:0005515 rows in this gene's GOA.
+
+## ND re-check (2026-11-14)
+
+- PubMed searched 2026-11-14 through E-utilities, "Krtap26-1" in All Fields: 4 hits, none on mouse: PMID:18647308 (human KAP26.1 in the hair cuticle), PMID:28902131 (ovine), PMID:38293707 and PMID:30544028 (human biomarker studies).
+- No paper on mouse Krtap26-1 identifies a molecular function, biological process or cellular component of the protein. The ND rows therefore follow the evidence-code guideline and are ACCEPT with nd_case INFERABLE (projects/NO_DATA.md); the family-level terms they were earlier MODIFYed to are kept as NEW ISS rows. This replaces the MODIFY decisions of the first pass.

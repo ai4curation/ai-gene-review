@@ -12,6 +12,8 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/FaLey8iR7RmW4B56haRQ5C
       title: Project brief
+index_group: CROSS_CUTTING
+description: ISO, ISS/ISA, IBA, and electronic orthology transfers, with a donor → target browser
 ---
 # Propagation by Homology
 

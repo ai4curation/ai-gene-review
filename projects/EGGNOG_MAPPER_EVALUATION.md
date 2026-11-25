@@ -11,6 +11,8 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/5Le1BXcjqJRPs26BDPuuBb
       title: Project brief
+index_group: CROSS_CUTTING
+description: Orthology-based GO transfer by eggNOG-mapper 2.1, scored against 520 reviewed proteins
 ---
 
 # eggNOG-mapper Evaluation

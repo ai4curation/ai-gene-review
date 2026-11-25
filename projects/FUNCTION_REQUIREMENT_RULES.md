@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [ECOLI, METEA, PSEPK, human]
 genes: [ftsI, mdcD, traB, yjdM, kguE, GCH1, AYR1, RAM1, CAD, TGFBR3, HDAC5, MEN1, GPER1, ADRB3, CSGALNACT1, ARHGDIB, TBCC]
+index_group: CROSS_CUTTING
 ---
 
 # Function Requirement (NOT) Rules
