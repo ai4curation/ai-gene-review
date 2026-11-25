@@ -17,3 +17,16 @@ Rat `Abhd14a` (`Q5I0C4`, 242 aa, `sequence_version: 1`) is the 1:1 mammalian ort
    - Retained consistently across all `SF1` orthologs with the explicit topological caveat that only the short N-terminal tail of this type II membrane protein is cytoplasmic whereas the Ser142-Asp193-His220 catalytic domain faces the Golgi/secretory lumen.
 4. **`GO:0016407` (`acetyltransferase activity`, `ISS` `GO_REF:0000024` from `UniProtKB:Q9BUJ0`) -> `MARK_AS_OVER_ANNOTATED`**:
    - Based on CoA-enhanced cleavage of synthetic *p*-nitrophenyl acetate by an engineered N-terminally truncated human ABHD14A construct in vitro (`PMID:42469586`), with no physiological acetyl donor or acceptor identified; marked `MARK_AS_OVER_ANNOTATED` per `projects/ENZYME_SPECIFICITY.md` and harmonized with mouse `Abhd14a`.
+
+## 2026-11-15 Source-defect re-review (rr2)
+
+Withdrew the WRONG_GENE_PRODUCT source defect on the GO:0000139 (Golgi membrane) IDA
+row (UniProt, rat Q5I0C4) citing PMID:42469586. The study's open-access preprint
+(bioRxiv 2025.11.28.691245, same authors/title) states in Methods that the HEK293T
+overexpression and Golgi-localization experiment used "the full length WT rat ABHD14A
+(UniProt ID: Q5I0C4)", whereas the truncated soluble recombinant enzyme used for the
+esterase/acetyltransferase biochemistry was human Q9BUJ0. UniProt's split (Golgi IDA on
+rat, acetyltransferase IDA on human) matches the actual constructs, so the rat IDA is
+correctly attributed; the abstract's "human enzyme" wording foregrounds the biochemistry.
+Removed the defect, the corresponding suggested_question, and updated summary/reason and
+the reference_review notes. Action stays KEEP_AS_NON_CORE.

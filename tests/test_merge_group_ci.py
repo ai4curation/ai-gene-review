@@ -28,11 +28,16 @@ def test_queue_runs_required_check_without_cancelling_other_groups():
     assert next(s for s in steps if s.get("id") == "changes")["uses"] == "dorny/paths-filter@v4"
     for name in ("Run test suite", "Test valid/invalid examples", "Check agentic automation",
                  "Validate modules (scoped)", "Validate family reviews (scoped)",
+                 "Validate incoming local-source quotes",
                  "Validate history records (scoped)",
                  "Fetch benchmark baseline and review snapshot commits",
                  "Validate all gene schemas (merge queue)"):
         step = next(s for s in steps if s.get("name") == name)
-        assert "github.event_name == 'merge_group'" in step["if"]
+        if name == "Validate incoming local-source quotes":
+            assert "if" not in step
+            assert 'just validate-incoming-quotes "$base" HEAD' in step["run"]
+        else:
+            assert "github.event_name == 'merge_group'" in step["if"]
     paint = next(s for s in steps if s.get("name", "").startswith("Verify PAINT slices"))
     assert "merge_group" not in paint["if"]
 

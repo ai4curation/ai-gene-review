@@ -16,6 +16,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/VKu1DkAxygSJMd4VvmN5Mn
       title: Project brief
+index_group: BACTERIA
 ---
 
 # P. putida Gene Annotation Review Project

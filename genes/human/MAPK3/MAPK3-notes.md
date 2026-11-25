@@ -96,3 +96,23 @@ Checks:
 
 Outcome: both rows MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE. Stays at root (transient trafficking,
 disagreeing sub-mitochondrial lines). References added: PMID:18545666, PMID:15030409, PMID:19847302.
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- Two GO:0005794 rows: IEA GO_REF:0000117 (ARBA00028708) and TAS PMID:19565474 (UniProt), both
+  `located_in`. Changed MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE on both.
+- Check: PMID:16533948 (full text cached) - endogenous ERK1c, an alternatively spliced ERK1 cloned
+  from human cells, co-stains with GM130 and p58 in synchronized mitotic HeLa cells (isoform-specific
+  antibody; signal reduced by ERK1c siRNA), earlier also seen in the Golgi of confluent cells, and
+  drives mitotic Golgi fragmentation. Canonical ERK1 was not detected in the Golgi at any stage ["the
+  Golgi localization was specific to ERK1c, as the more abundant ERK1 isoform was not detected in the
+  Golgi during prophase"]. So the MAPK3 gene product has a real, recruited, functional Golgi pool, but
+  only in the ERK1c form; non-core for the gene.
+- Source defect (UniProt, CHECK, SUSPECTED) on the TAS row: the rows name no isoform. Candidate
+  isoform P27361-3 (named ERK1b in UniProt; 357 aa, C-terminal 40 residues replaced by 18) matches the
+  described structure of human ERK1c, but the mapping was inferred, not checked against the ERK1c
+  cloning paper (Aebersold et al. 2004, not cached). If ERK1c is not among the entry's isoforms the
+  case is MISSING_ISOFORM.
+- PMID:37208329 (Golgi-enrichment-kit fraction in MOLT-4 with a pan-ERK antibody) adds little.
+- MARK_AS_OVER_ANNOTATED was the close alternative (canonical ERK1 is shown absent).
+- No sub-compartment row (p58 and GM130 are one cis line; p58 does not separate ERGIC from cis-Golgi).

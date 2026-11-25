@@ -55,3 +55,7 @@ Belongs to the GPI family (COG0166; Pfam PF00342 PGI; SIS domains; HAMAP MF_0047
 - GO:0048029 monosaccharide binding (MF) — KEEP_AS_NON_CORE; substrate (G6P/F6P) binding; subsumed by catalytic activity, generic.
 - GO:0097367 carbohydrate derivative binding (MF) — MARK_AS_OVER_ANNOTATED; very broad binding parent, uninformative when catalytic MF present.
 - GO:1901135 carbohydrate derivative metabolic process (BP) — MARK_AS_OVER_ANNOTATED; broad parent of glucose-6-phosphate metabolic process.
+
+## 2026-11-13 update: harmonized glycolytic-process decision
+
+The GO:0006096 glycolytic process row changes from MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE. The same action is now used on pgi2 (PP_4701) and on the class II aldolase fba (PP_4960). The reaction is a glycolytic reaction, and in KT2440 Pgi works within the glucose-catabolic EDEMP cycle, which recycles part of the ED-derived triose phosphate to hexose phosphates [PMID:26350459 "about 10% of the triose phosphates were found to be recycled back to form hexose phosphates"]. Its physiological direction stays gluconeogenic [PMID:26350459 "the EMP (operating in a gluconeogenic fashion)"], so the term is true but not core. The view above, that the term is a pure over-annotation, is superseded. The cytoplasm row is now TOO_GENERAL (cytosol is accepted), as is the carbohydrate derivative metabolic process row (entailed by the accepted glucose 6-phosphate metabolic process).

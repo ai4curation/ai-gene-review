@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [PIPELINE]
 species:
   - human
+index_group: MAMMAL
 ---
 
 # Reactome-GO Alignment Project

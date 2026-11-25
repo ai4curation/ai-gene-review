@@ -9,6 +9,7 @@ manifest:
   slides:
     - href: YEAST_CELL_CYCLE/slides/YEAST_CELL_CYCLE-slides.html
       description: Yeast cell-cycle translation-control slides
+index_group: YEAST
 ---
 
 # Yeast Cell Cycle & Translation Control

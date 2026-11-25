@@ -11,3 +11,10 @@ Deep research (falcon / perplexity-lite) failed (providers unavailable). Notes f
 - GHR binding/GH signaling IBA from JAK family node; JAK3 is gamma c-specific -> marked over-annotated.
 
 Localization: cytoplasmic, peripheral on cytoplasmic face of PM bound to gamma c; no extracellular exposure.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Two GO:0005768 rows: IEA ARBA00028568 (unvetted ML rule) and Reactome TAS R-HSA-8983335 (black-box IL15/IL15RA recycling event; JAK3 included as part of the modelled complex).
+- Line found and cached: [PMID:15143194 "Without gamma(c), Jak3 localized in the cytosol, whereas in the presence of the receptor, it colocalized with gamma(c) in endosomes and at the plasma membrane."] Abstract only; PMC416416 returned no full text. MeSH lists COS and HeLa cells, so probably co-expression in non-lymphoid cells.
+- Both rows KEEP_AS_NON_CORE (unchanged) on abstract deference (rule 9), recorded as the weakest of the three JAK lines; MARK_AS_OVER_ANNOTATED if the full text shows only co-overexpression in foreign cells. PMID:26306492 (IL-4R dimers in endosomes) does not localise JAK3 in its abstract and was not used.
+- The endomembrane-system row's supported_by no longer uses the shared YAML alias of the endosome rows (content unchanged).

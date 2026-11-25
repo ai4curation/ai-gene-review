@@ -18,6 +18,7 @@ from ai_gene_review.render_projects import (
     render_project,
     render_project_bundle,
     render_all_projects,
+    render_projects_index,
     render_projects_table,
     resolve_frontmatter_gene_links,
     should_autolink_gene_symbols,
@@ -1585,3 +1586,35 @@ def test_a_self_proposed_change_renders_its_request_status_not_its_adoption(tmp_
     assert "SELF_PROPOSED" in html
     assert "FILED" in html
     assert "NOT_REPORTED" not in html
+
+
+def test_render_projects_index_groups_from_frontmatter(tmp_path: Path) -> None:
+    """The index is grouped by ``index_group``; ungrouped projects are listed last."""
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    (projects / "WORM_A.md").write_text(
+        '---\ntitle: "Worm A"\nindex_group: WORM\nmaturity: IN_PROGRESS\n'
+        "description: Worm things\n---\n# Worm A\n"
+    )
+    (projects / "WORM_A").mkdir()
+    (projects / "WORM_A" / "WORM_A-pathway.md").write_text("# Pathway\n")
+    (projects / "CROSS.md").write_text(
+        '---\ntitle: "Cross"\nindex_group: CROSS_CUTTING\n---\n# Cross\n'
+    )
+    (projects / "NEW.md").write_text('---\ntitle: "Brand New"\n---\n# New\n')
+    (projects / "README.md").write_text("# Projects\n")
+
+    html = render_projects_index(projects, tmp_path / "out").read_text()
+
+    headings = [line.strip() for line in html.splitlines() if "<h2>" in line]
+    assert headings == [
+        "<h2>C. elegans Projects</h2>",
+        "<h2>Cross-Cutting &amp; Methodology</h2>",
+        "<h2>Not yet grouped</h2>",
+    ]
+    assert html.index("Worm A") < html.index("Cross") < html.index("Brand New")
+    assert "<p>Worm things</p>" in html
+    assert 'href="WORM_A/WORM_A-pathway.html" class="pathway-link"' in html
+    assert html.count('class="pathway-link"') == 1
+    assert "3 curated gene annotation review projects" in html
+    assert "README" not in html

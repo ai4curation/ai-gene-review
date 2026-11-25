@@ -4,6 +4,7 @@ maturity: SCOPING
 tags: [EVALUATION]
 species: [human, DROME, ARATH, worm]
 genes: [GNAI1, GNAI2, NTSR1, NLRP3, LRP5, CD47, CLYBL, CIB2, MCL1, ced-9, FLC, SVP]
+index_group: CROSS_CUTTING
 ---
 
 # Regulation Sign Errors: Activator vs Inhibitor

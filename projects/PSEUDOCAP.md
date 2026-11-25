@@ -11,6 +11,7 @@ manifest:
     - href: https://claude.ai/artifact/44UaWpaBByrMaZcALkgq5R
       title: Seed audit visual
       description: AI generated
+index_group: BACTERIA
 ---
 
 # PseudoCAP annotation review: P. aeruginosa seeds of PAINT IBAs
@@ -596,6 +597,109 @@ gene is where parallel batches drifted apart in tier 2. The largest are
 `GO:0015385` from PMID:16030218 across PA1054-PA1059, `GO:0016987` from
 PMID:18086184 across five sigma factors including femA, and `GO:0015562` on
 opmQ/pvdR/pvdT, which carries three separate references for the same term.
+
+### Auditing shared claims automatically
+
+The "re-read as groups" step is now mechanical:
+[`check_shared_claim_consistency.py`](PSEUDOCAP/check_shared_claim_consistency.py)
+compares the review actions on each shared term across its members and reports
+the groups that disagree.
+
+Divergence is a prompt to read, not a verdict. All three *full* divergences — those
+whose every member could be compared — are deliberate: `ccoQ1`/`ccoQ2` sit at
+`MARK_AS_OVER_ANNOTATED` on `GO:0004129` while the six catalytic cbb3 subunits are
+`ACCEPT`, because the Q chains are accessory and absent from the cryo-EM
+models; `tse6` is `REMOVE` against `tsi6`'s `ACCEPT` on
+`GO:0097351` because of a recorded `WRONG_GENE_PRODUCT` defect; and on `GO:0016757`
+`wbpL` modifies to `GO:0016780` phosphotransferase activity while `wbpX` and `wbpY`
+accept, because `wbpL` is a WecA-type initiating enzyme that transfers a
+sugar-1-phosphate and is not a glycosyltransferase in GO's sense at all. Each is
+argued in the rows themselves, which is what makes them fine. The fourth divergence,
+among the comparable members of an incomplete group, is not deliberate; it is the
+`tatA`/`tatC` case described below.
+
+The verdict the script compares is the action *plus the replacement term* where the
+action is MODIFY, and prefixed with `NOT:` where the row is negated. Comparing bare
+actions would have called `wbpL` and `wbpY` consistent back when both read MODIFY,
+even though they were moving to different branches of the ontology; and an `ACCEPT`
+of `NOT|enables X` against an `ACCEPT` of `enables X` is the sharpest disagreement a
+shared claim can hold while looking identical on the action alone. No current shared
+claim has a negated member — `thrH`'s `GO:0004413` row is the corpus's only one — so
+this changes no output today.
+
+Each group lands in one of four buckets, and the two empty-ish ones mean different
+things to a reader:
+
+- **divergent** — every member ruled on the claim, and they disagree. Read it.
+- **consistent** — every member ruled, and they agree.
+- **incomplete** — a member cannot be compared because its review does not exist.
+  That is curation backlog: someone has to review the gene. The *other* members are
+  still compared, and the line says so — most of these groups have three or more
+  reviewed members, so waiting for the backlog before comparing them would hide a
+  live divergence. An incomplete group whose comparable members disagree is marked
+  on its line and counted in the summary.
+- **no verdict** — every member is reviewed, but none rules on the claim (the only
+  rows on the term are `NEW` proposals, which assert an addition rather than judge
+  the shared claim). Nothing to chase; the group is complete and simply has no
+  verdict to compare.
+
+Conflating the last two would send a reader looking for a missing review that is not
+missing, which is why they are counted separately.
+
+**The audit covers molecular function only**, because it reads the MF worklist, whose
+builder selects IMP rows on molecular-function terms. A clean run means a pair agrees
+about molecular function, not that it agrees. That limit has already cost something
+real: `wbpX` and `wbpY` also share `GO:0009103` lipopolysaccharide biosynthetic process
+from PMID:9680202 and had it as `TOO_GENERAL` against `MODIFY`, with no argument for the
+difference — the same drift, invisible to the script because the term is a process. A
+reviewer reading the diff caught it, and a second reviewer pass caught that the first
+fix had reached only the IMP rows while `wbpY` carries an IBA row on the same term
+too. All three rows across the two genes now read `TOO_GENERAL`, which is what
+`action_consistency.yaml` calls the intended use: a broad term subsumed by a more
+specific accepted term, here `GO:0009243` O antigen biosynthetic process, which both
+genes already carry. Widening the audit means building a process-aspect worklist (the
+builder takes `--all-aspects`) or reading shared claims from GOA directly.
+
+Comparing the reviewed members of incomplete groups found a third case immediately.
+`GO:0008320` protein transmembrane transporter activity from PMID:16621825 is
+`MODIFY`→`GO:0009977` on `tatA` and `TOO_GENERAL` on `tatC`, with `tatB` unreviewed.
+This is the `liuB`/`liuD` shape exactly: `tatC` carries `GO:0009977` as its own IBA
+row and accepts it, so the ancestor term is `TOO_GENERAL` there, while `tatA` has no
+`GO:0009977` row in GOA at all and its reviewer refined to reach the same level.
+`tatA` does carry `GO:0009977` as its core-function molecular function, so both
+reviews agree about what the protein does; what differs is only whether GOA already
+asserts it. The two verdicts
+agree about what the supported term is, and the asymmetry is in GOA. What is open is
+whether `tatA`'s rows pass the 2026-11-14 bar — a `MODIFY` needs that row's own
+evidence for the deeper term, and its IMP reason says the evidence is an export
+phenotype. That is a judgement about three merged reviews of genes this PR does not
+touch (and `tatB` is in the QuickGO-blocked batch), so it is recorded here rather
+than fixed opportunistically.
+
+The check has now paid for itself three times. It is the generalisation of the
+`liuB`/`liuD` drift caught in review on PR #6341, and run across the corpus it
+found a second instance: `wbpX` and `wbpY` share the `GO:0016757` claim from
+PMID:9680202, and `wbpY` had refined it to `GO:0016758` citing direct enzymology
+in PMID:35166992 **for both enzymes**, while `wbpX` accepted the generic term on
+the stated ground that the donor and linkage "have not been shown biochemically"
+and never cited that paper. The paper is titled for both enzymes and its full text
+is cached.
+
+Reconciling them exposed a second question: *which* encoding is right. Under the
+2026-11-14 ruling a `MODIFY` needs the row's own evidence for the deeper term, and
+none of the three `GO:0016757` rows has it — the IBA inherits a node typed at the
+general term, the IEA rests on a generic GT1 fold signature, and the 1998 IMP is a
+mutant phenotype. So the rows stay `ACCEPT` on both genes and the assayed activity is
+asserted where its evidence lives, as a `NEW` `GO:0016758` IDA row on PMID:35166992.
+Harmonising the pair meant changing `wbpY` as well as `wbpX`, which is a deliberate
+revisit of a merged review rather than an opportunistic sweep: the shared claim is the
+unit this audit works on, and fixing one half only would have re-created the
+divergence.
+
+Note what the automated checks could not see here. `just validate` and
+`quote_check` passed on both reviews throughout: every quote was verbatim and every
+term resolved. What was wrong was a claim about the state of the evidence, visible
+only by reading two files against each other.
 
 ### The cbb3 oxidases: one phenotype, eight subunits
 

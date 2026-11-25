@@ -85,3 +85,13 @@ Does APLP1 bind and internalize alpha-synuclein fibrils in LAG3-null neurons? An
 single-knockout uptake/spreading experiment, replicated outside the originating
 laboratories, would settle whether APLP1 is a receptor in its own right or only a
 co-factor of a partner that may not be expressed in neurons at all.
+
+## 2026-11-13 ORGANELLES Golgi batch 1 (Golgi apparatus rows)
+
+- Rows: GO:0005794 IBA (GO_REF:0000033, `is_active_in`) and IEA (GO_REF:0000120, `located_in`). No Golgi sub-compartment rows.
+- IBA: PAINT node PTN002749597 (PTHR23103) has a single seed, mouse Aplp1 (MGI:88046). QuickGO shows mouse Q03157 GO:0005794 IDA PMID:1279693 (UniProt). That paper is abstract-only here: [PMID:1279693 "Polyclonal antibodies raised against a peptide derived from the C terminus of APLP stain the cytoplasm in a pattern reminiscent of Golgi staining."] No marker stated.
+- IEA GO_REF:0000120: ARBA00028708 plus mouse Q03157, i.e. the same basis.
+- Human endogenous protein: HPA immunofluorescence (Approved) gives Golgi apparatus and plasma membrane as main locations (HPA API, queried 2026-11-13; also the UniProt DR GO IDA:HPA line). Pattern-based, no Golgi marker co-stain.
+- Counter-evidence for residence: [PMID:19126676 "we show by live cell imaging that APLP1 mainly localizes to the cell surface, whereas APP and APLP2 are mostly found in intracellular compartments"] (abstract only).
+- The UniProt C30 note ("C-terminally processed in the Golgi complex") has no evidence tag; dropped as support.
+- Outcome: both rows stay KEEP_AS_NON_CORE, reasons rewritten (endogenous-protein Golgi pattern of a plasma-membrane protein = non-core biosynthetic/processing pool; close call with MARK_AS_OVER_ANNOTATED, no marker). `is_active_in` not supported by any APLP1 activity at the Golgi. No sub-compartment row (only the type I TM line). Added PMID:1279693 and PMID:19126676 to references.

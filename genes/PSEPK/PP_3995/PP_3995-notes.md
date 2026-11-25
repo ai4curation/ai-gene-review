@@ -17,3 +17,14 @@ heterotrimer."] The complete *E. coli* relay was also reconstituted with TusBCD.
 [PMID:16387657 "Efficient 2-thiouridine formation in vitro was reconstituted
 with recombinant TusA, a TusBCD complex, TusE, and previously identified IscS
 and MnmA."]
+
+
+## 2026-11-07 — complete source-aware review
+
+All original rows and historical NEW proposals are retained in their original order and source payload. The review now distinguishes target-specific family/curated-site inference from E. coli experiments; no KT2440 assay is invented. The soluble location is inferred from the conserved reaction/complex context, not ARBA-only annotation. Broad true rows are refined where ontology ancestry supports it; covalent sulfur-carrier and sulfurtransferase terms are not treated as a false hierarchy.
+
+TusB-family structural participant in the inferred KT2440 TusBCD complex that supports sulfur delivery to the tRNA U34 thiolation pathway.
+
+Evidence and exact source/access limits are in [the consultation](../../../analysis/module_audits/bacterial_mnma_trna_thiolation/existing-review-consultation/evidence.md). A reproducible frozen-sequence alignment independently checks conserved sites rather than quoting generated provider claims. Existing OpenScientist material is discovery provenance. A normal Falcon attempt for this gene failed HTTP403 authentication; the actual log is retained at `analysis/module_audits/bacterial_mnma_trna_thiolation/existing-review-consultation/falcon-PP_3995.log`. No provider report was fabricated.
+
+The earlier notes are preserved as historical text. Where they describe C5 modification as obligatorily downstream, assert a directly established KT2440 reaction or operon expression, or equate carrier with a catalytic GO descendant, this append and the current review supersede that wording. No NEW annotation was added to fill a core-coverage warning.

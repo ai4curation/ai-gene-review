@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [ARATH]
 genes: [MYB122, MYB51, MYB34, CYP71A12, CYP71A13, FRK1]
+index_group: PLANT
 ---
 
 # Arabidopsis Single-Cell Response to Fungal Infection

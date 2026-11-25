@@ -10,6 +10,7 @@ This is reviewed-panel capacity, not a genome-wide absence or viability predicto
 from __future__ import annotations
 
 import argparse
+import functools
 import copy
 import hashlib
 import json
@@ -23,6 +24,8 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 from ai_gene_review.module_logic import compile_node, is_satisfied, iter_atoms  # noqa: E402
+# This audit expands protein_complex active_units itself, so it compiles one atom per complex annoton.
+compile_node = functools.partial(compile_node, expand_complexes=False)
 
 SLUG = "bacterial_divisome_peptidoglycan_transpeptidation"
 MODULE = ROOT / "modules" / f"{SLUG}.yaml"

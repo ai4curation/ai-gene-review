@@ -37,3 +37,9 @@ Sources checked:
   in G2 cells, not replication forks; better captured as DSB processing.
 - PMID:2414623 (protein binding, MLH1) resolves to a 1985 German paper on ulcer disease:
   wrong identifier in the UniProt-assigned GOA row.
+
+## Source-defect re-review (2026-11-10)
+
+An independent re-review of this gene's wrong-gene / wrong-reference source defects changed the following; where earlier notes above say otherwise, this section supersedes them.
+
+- GO:0090656 / PMID:27918544: defect withdrawn (evidence depth: FULL_TEXT). The cached full text names "Exonuclease 1 (Exo1)" among "factors that have previously been implicated in C-circle production" (refs 29, 35); BHF-UCL made the same TAS for every factor in that sentence (TERF1, BLM, WRN, DNA2, SMARCAL1), and C-circles fall within the GO t-circle definition. The row is a legitimate TAS on the intended gene, so the defect was deleted. Action set to UNDECIDED because the cited primary studies were not read and the paper's own EXO1 knockdown did not change C-circles. The reference_review for PMID:27918544 in the same file (MISCITED/NONE) was corrected to VERIFIED/LOW to match.

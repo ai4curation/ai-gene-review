@@ -19,3 +19,9 @@ Remaining questions:
   - 2026-10-16 (issue #4246): full text still inaccessible (no PMC/Europe PMC copy; cell.com returns HTTP 403), so the GO:0006468 TAS row stays UNDECIDED. UniProt's citation scope for this paper lists phosphorylation and MEK1/PLK1 binding [file:human/BIRC6/BIRC6-uniprot.txt "BIRC5/SURVIVIN; MAP2K1/MEK1; RAB8A/RAB8; RAB11A/RAB11; PLK1"]; the BRUCE-MEK1 interaction is the thing to check for a scaffolding role.
 
 The project audit records all changed row indices and decisions in `projects/IBA_REVIEW/rereview-2026-09-20/localization.yaml`.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Rows: GO:0005768 IEA (GO_REF:0000044) and IDA (PMID:18329369); no sub-compartment row. GOA and review agree.
+- The only source is UniProt's curated interphase location from PMID:18329369 (ECO:0000269), "In interphase cells, localizes to the trans-Golgi network membrane and endosomes". The paper is abstract-only (no PMC; publisher 403) and its abstract only says BRUCE moves "from the vesicular system" to the midbody ring. PubMed MeSH lists rab11 GTP-binding proteins and endosomes, but MeSH is not a read figure.
+- Outcome: both rows ACCEPT to KEEP_AS_NON_CORE on curator deference (rule 9); no core activity is shown at endosomes. The supported_by reference id on these rows was changed from UniProtKB:Q9NR09 to the local UniProt file. Added full_text_unavailable on PMID:18329369.

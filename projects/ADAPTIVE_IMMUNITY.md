@@ -3,6 +3,8 @@ title: "Adaptive Immunity"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [human]
+index_group: MAMMAL
+description: Antigen presentation, V(D)J recombination, T and B cell receptor signaling, co-stimulation and antibody diversification
 ---
 
 # Adaptive Immunity

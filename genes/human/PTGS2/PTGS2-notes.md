@@ -1,0 +1,3 @@
+# PTGS2 notes
+
+PTGS2/COX-2 is the inducible human prostaglandin G/H synthase in PTHR11903:SF8. Human COX-2 cDNA expression in Cos-7 cells generated cyclooxygenase activity (PMID:1380156), purified human PGHS-2 has cyclooxygenase and peroxidase activities (PMID:7947975), and native protein localizes to the lumenal surfaces of the ER and nuclear envelope (PMID:9545330). PTGS2 also has supported non-core biology: iNOS binding/S-nitrosylation activates COX-2 (PMID:16373578), aspirin-acetylated COX-2 oxygenates DHA into 17R-HDHA (PMID:12391014), and mouse/cancer studies support several prostanoid-dependent physiological outputs that are downstream of the core PGH2-forming reaction.
