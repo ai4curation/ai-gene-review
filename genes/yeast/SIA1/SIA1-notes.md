@@ -50,17 +50,20 @@ Journal / working notes for the AI GO-annotation review of *Saccharomyces cerevi
   **IPR029052 (Metallo-depent_PP-like)**; Gene3D **3.60.21.10**; SUPFAM **SSF56300 Metallo-dependent
   phosphatases**. → SIA1 has a calcineurin-like metallophosphoesterase (MPE) fold.
 - PANTHER family **PTHR32440**, subfamily **SF0 "PHOSPHATASE DCR2-RELATED"**. Reviewed SF0 members
-  (from PTHR32440-entries.csv): S. cerevisiae **DCR2** (Q05924, "Phosphatase DCR2"), the K. lactis
-  SIA1 ortholog (Q6CPQ2), S. pombe SPCC1020.05, and several **Arabidopsis "probable INACTIVE purple
-  acid phosphatase"** proteins (PAP14/16/28/29). The local PTHR32440 PAINT cache has
+  (from PTHR32440-entries.csv) are S. cerevisiae **DCR2** (Q05924, "Phosphatase DCR2"), SIA1,
+  the K. lactis SIA1 ortholog (Q6CPQ2), S. pombe SPCC1020.05, and the Arabidopsis **probable
+  INACTIVE purple acid phosphatase 29**. The other reviewed probable-inactive Arabidopsis PAPs
+  sit in sibling subfamilies, not SF0. The local PTHR32440 PAINT cache has
   `GO:0004721 phosphoprotein phosphatase activity` on **PANTHER:PTN001286392**, seeded from
   **SGD:S000004353 / DCR2**, matching the 2017 IBA node in SIA1 GOA.
 - Metallophosphatase catalytic signature (the conserved metal-coordinating blocks
   D-x-H…GD-x-x-D…GNH[D/E]…GH-x-H). Manual inspection of the SIA1 sequence finds candidate motifs:
   `QITDFHF` (~315, DxH), `VVITGDLLDS` (~350, GD..D), and `SCGHEHNNDCC` (~575, GH-x-H). So at least
-  part of the metal-binding scaffold appears retained. HOWEVER: (a) no phosphatase substrate or
-  catalytic activity has ever been demonstrated for SIA1 experimentally; (b) its nearest orthologs
-  cluster with "inactive purple acid phosphatases"; (c) SGD lists Molecular Function = Unknown.
+  part of the metal-binding scaffold appears retained, but the Falcon report records the GNHD/E motif
+  only for Cdc1p, Gps1p, and Dcr2p among the four budding-yeast calcineurin-like phosphoesterases.
+  HOWEVER: (a) no phosphatase substrate or catalytic activity has ever been demonstrated for SIA1
+  experimentally; (b) the GNHD/E comparison is consistent with a divergent active site in Sia1p;
+  (c) SGD lists Molecular Function = Unknown.
   → The molecular activity of SIA1 is UNRESOLVED. The IBA "phosphoprotein phosphatase activity" is
   a plausible family-level inference but is NOT experimentally supported for SIA1, and may reflect a
   degenerate / pseudophosphatase domain. I treat catalytic phosphatase activity as a knowledge gap,
@@ -97,7 +100,7 @@ Pma1 H+-ATPase; molecular mechanism unknown. I will use the BP "regulation of pr
    requirement, not a mechanism, and explicitly proposes "at least two independent mechanisms."
 2. **Is SIA1 a catalytically active phosphatase or a pseudophosphatase?** The MPE/calcineurin-like
    fold and the IBA annotation suggest possible phosphatase activity, but no substrate/activity has
-   been demonstrated and the closest orthologs are "inactive purple acid phosphatases." If active,
+   been demonstrated and motif evidence leaves catalytic status unresolved. If active,
    its physiological substrate (Pma1? a Pma1 kinase/phosphatase relay?) is unknown.
 3. **Direct physical partners.** BioGRID lists interactions but no validated Pma1 physical
    interaction is curated in UniProt (IntAct=1). Direct binding partners are unknown.
@@ -129,6 +132,23 @@ Pma1 H+-ATPase; molecular mechanism unknown. I will use the BP "regulation of pr
   largely redundant Ptk1 and Ptk2 kinase paralogs. Dephosphorylation of S911-T912, as occurs under
   glucose starvation, is dependent on the Glc7 PP1 phosphatase."]. It still does not close the SIA1
   mechanistic gap.
+
+## 2026-10-01 current-GOA refresh
+
+- Refreshed GOA/UniProt for SIA1. The live GOA snapshot still contains the same
+  five rows: the `GO:0004721` IBA phosphatase assertion, the `GO:0016787`
+  InterPro2GO hydrolase assertion, SGD's IMP `GO:1902600` Pma1-related process
+  row, and the two SGD ND placeholders for molecular function and cellular
+  component.
+- Confirmed that the current `PTHR32440` PAINT cache still places the live
+  `GO:0004721` phosphoprotein phosphatase IBD on `PTN001286392` from the
+  `SGD:S000004353` DCR2 seed. The only other cached IBD is the
+  `GO:0016788` phosphoric ester hydrolase activity row on `PTN000793892`, which
+  is not in the current SIA1 GOA snapshot.
+- Searched current literature for SIA1/YOR137C/Pma1/eIF5A papers beyond the
+  2024 Pma1 phosphoregulation study already in the review; no newer direct
+  SIA1 paper was found that demonstrates catalytic phosphatase activity, a SIA1
+  substrate, direct Pma1 binding, or experimental localization.
 
 ## Files / provenance
 
