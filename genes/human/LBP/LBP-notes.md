@@ -22,7 +22,7 @@ lipopeptide as input.
   the human protein as secreted, and the original cloning paper described LBP
   as a "trace plasma protein" that binds bacterial LPS.
 - LPS binding and delivery are core. PMID:11739189 summarizes the low-dose
-  role directly: "LBP, an acute-phase protein recognizing lipopolysaccharide
+  role directly: "an acute-phase protein recognizing lipopolysaccharide
   (LPS), catalyzes in low concentrations its transfer to the cellular LPS
   receptor consisting of CD14 and Toll-like receptor-4".
 - The cytokine-effect papers from the early 1990s support the same biochemical
@@ -70,3 +70,13 @@ current environment (`agentapi` was unavailable, and the configured fallback
 provider was also unavailable). The review therefore uses the cached GOA-cited
 publications, Reactome records, UniProt record, GO-CAM review, and manual notes
 rather than a provider-authored `LBP-deep-research-*.md` artifact.
+
+## PR review follow-up
+
+- Oxidized phospholipid binding is modeled in Reactome:R-HSA-8869683; because
+  LBP also handles other negatively charged amphiphiles in PMID:8985160, the
+  generic `GO:0008289` lipid binding row was kept as non-core rather than
+  marked too general.
+- The same carrier-participation logic supports NEW `GO:0034142` TLR4
+  signaling and NEW `GO:0038123` TLR1:TLR2 signaling rows; LBP catalytically
+  delivers the ligand cargo that the receptor complex detects in each model.
