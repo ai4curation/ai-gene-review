@@ -22,8 +22,9 @@ knockdown of AKAP8 or inhibition of AKAP95 in KGN and primary cultured human
 luteinised granulosa cells "reduced the amount of PKA anchored in the nucleus
 and attenuated the phosphorylation of CREB" after FSH or cAMP/PKA stimulation.
 The same abstract reports reduced FSH-induced CYP19A1 expression and estrogen
-synthesis. I therefore added a conservative IC `NEW` row for ovarian follicle
-development to align the gene review with the model's PRKACA process context.
+synthesis. This supports the GO-CAM pathway context, but it does not distinguish
+which PKA catalytic isoform phosphorylates CREB in granulosa cells strongly
+enough to add a PRKACA-specific ovarian follicle development row.
 
 ## GO-CAM consistency notes
 
@@ -37,8 +38,10 @@ development to align the gene review with the model's PRKACA process context.
   not support a CREB1 edge; the model review correctly points to `PMID:2573431`
   or the granulosa-cell `PMID:29397057` instead.
 - The GO-CAM process evidence for PRKACA uses malformed `GO_REF:000024` with no
-  with/from. The new row in this gene review uses `PMID:29397057` because human
-  granulosa cells are a direct context for the model.
+  with/from. The final GO-CAM consistency PR should either point this context to
+  granulosa-cell evidence such as `PMID:29397057` or keep the follicle
+  development term at the model level rather than as a direct PRKACA gene
+  annotation.
 - The incoming GNAS-to-PRKACA edge intentionally compresses adenylyl cyclase,
   cAMP production and release of PRKACA from the PKA regulatory subunit dimer.
   That compression should be noted in the final GO-CAM consistency PR, but it is
