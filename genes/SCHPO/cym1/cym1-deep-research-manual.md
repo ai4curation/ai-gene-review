@@ -42,8 +42,9 @@ process.
   peptide-bond hydrolysis carried out by Cym1.
 - Modify GO:0030163 protein catabolic process to GO:0043171 peptide catabolic
   process because Cym1 degrades released peptides rather than intact proteins.
-- Keep GO:0008270 zinc ion binding as a non-core cofactor property and narrow
-  the generic IPR011249 metal-ion-binding IEA to that zinc term.
+- Keep GO:0008270 zinc ion binding as a non-core cofactor property and mark
+  the generic IPR011249 metal-ion-binding IEA as too general beside the
+  separately supported zinc term.
 - Mark the mitochondrial intermembrane-space ISS row from budding-yeast Cym1 as
   over-annotated because it lacks S. pombe-specific or inspected donor evidence
   beyond the same homology transfer that also supports matrix localization; all
