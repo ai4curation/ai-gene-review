@@ -12,8 +12,9 @@ enzyme with an N-terminal hexose-6-phosphate dehydrogenase domain and a C-termin
   mutants in HEK293 microsomes, measuring NADPH generation from G6P plus NADP+. Four
   disease variants had no detectable H6PDH activity above background.
 - PMID:12858176 originally tied H6PD to ER-lumenal NADPH regeneration and reported that
-  CRD-associated H6PD exon 5 mutations attenuated or abolished H6PDH activity; UniProt
-  uses this paper for the direct human galactose 6-phosphate/NADP+ reaction.
+  CRD-associated H6PD exon 5 mutations attenuated or abolished H6PDH activity in
+  cell-lysate assays with surrogate galactose 6-phosphate; PMID:18628520 later
+  re-tested R453Q and reported no detectable H6PDH catalytic defect for that variant.
 - PMID:23132696 identified further H6PD alleles in two girls with apparent cortisone
   reductase deficiency and confirmed loss of H6PDH activity in mutant expression
   studies.
