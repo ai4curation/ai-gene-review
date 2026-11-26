@@ -56,7 +56,8 @@ model and, where known, the model's training cutoff.
 `min_reference_date` keeps only targets whose supporting PubMed references
 were all published on or after a date. A target that also rests on an older
 paper is dropped whole, and the earliest supporting paper becomes the target's
-`reference`. This matters more for language models than it did for CAFA. A
+`reference`. A target with any non-PubMed supporting reference (GO_REF,
+Reactome) has no checkable date, so it is dropped when the floor is set. This matters more for language models than it did for CAFA. A
 GO time split only shows that the GO record is new. A model may have read the
 paper. A feature quota can set its own `min_reference_date` when the feature
 is too rare to fill from the main window.
@@ -89,7 +90,7 @@ review-derived benchmark is held to the same tests as a drawn one.
 | `present_in_current` | the row is in the current release (FAIL for GOA targets) |
 | `date_window` | the GAF date is on or after the cutoff (WARN only; see below) |
 | `prior_prediction` | the term or a descendant was predicted on the protein at baseline (IBA/PAN-GO, IEA, ISS, ...) |
-| `homolog_leakage` | the term or a descendant was experimentally annotated at baseline on a protein in the same PANTHER subfamily (INFO when the protein has no subfamily: not checked) |
+| `homolog_leakage` | the term or a descendant was experimentally annotated at baseline on a protein in the same PANTHER subfamily (INFO when the subfamily has no other member in the species: not checked) |
 | `near_duplicate` | the closest baseline experimental term in the same aspect has Lin similarity at or above the threshold (IC from baseline annotation frequencies; INFO when there is no baseline term to compare) |
 | `uniprot_leakage` | the current UniProt entry carries the target in a DR GO line (INFO) or its label in comment text (WARN) |
 | `header_leakage` | the protein name shown in FULL conditions shares most of the target label's words |
@@ -169,8 +170,12 @@ annotation only in another aspect) and `PARTIAL_KNOWLEDGE`.
 
 ## Limits
 
-- The homolog check uses same-species PANTHER subfamilies only. Cross-species
-  ortholog knowledge enters through IBA, ISS and ISO rows (`prior_prediction`).
+- The homolog check uses same-species PANTHER subfamilies only, and most human
+  subfamilies have one human member, so it seldom applies: in the example it
+  checked 3 of 51 targets and reports the rest as INFO. Cross-species ortholog
+  knowledge enters through IBA, ISS and ISO rows (`prior_prediction`).
+- Decoy aspects cycle through the item's sorted target aspects, so an item
+  whose targets are mostly one aspect draws its decoys from that aspect.
 - PANTHER subfamilies, UniProt entries, sequences and feature queries come from
   current UniProt (release recorded), not from the baseline date.
 - A decoy is a term the protein is not annotated to, not one it is known to

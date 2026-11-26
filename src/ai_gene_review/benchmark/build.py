@@ -449,10 +449,15 @@ def aspect_matched(
 
 
 def repo_relative(path: Path) -> str:
-    """Path relative to the working directory when it lies inside it."""
+    """Path relative to the enclosing Git checkout's root (``.git`` dir or worktree file).
+
+    Falls back to the path as given when it is not inside a checkout.
+    """
     resolved = path.resolve()
-    cwd = Path.cwd().resolve()
-    return str(resolved.relative_to(cwd)) if resolved.is_relative_to(cwd) else str(path)
+    for root in resolved.parents:
+        if (root / ".git").exists():
+            return str(resolved.relative_to(root))
+    return str(path)
 
 
 def finish(

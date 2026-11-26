@@ -155,6 +155,8 @@ def ctx() -> Context:
         ic=InformationContent.from_terms(onto, experimental),
         subfamily={
             "UniProtKB:P1": "PTHR2:SF1",
+            "UniProtKB:P6": "PTHR2:SF1",
+            "UniProtKB:P3": "PTHR3:SF1",
             "UniProtKB:P4": "PTHR1:SF1",
             "UniProtKB:P5": "PTHR1:SF1",
         },
@@ -481,8 +483,10 @@ def test_uniprot_stream_cache_is_keyed_by_query(tmp_path: Path) -> None:
     assert uniprot_stream("q2", "f", tmp_path, "feat")[0] == [{"Entry": "P2"}]
 
 
-def test_homolog_check_without_subfamily_is_info(ctx: Context) -> None:
+def test_homolog_check_without_other_members_is_info(ctx: Context) -> None:
+    # P3 is alone in its subfamily, P7 has none: nothing to check either way
     assert homolog_leakage(ctx, "UniProtKB:P3", "GO:0004713")["status"] == "INFO"
+    assert homolog_leakage(ctx, "UniProtKB:P7", "GO:0004713")["status"] == "INFO"
 
 
 def test_decoys_follow_target_aspects(ctx: Context) -> None:
@@ -535,3 +539,29 @@ def test_example_report_has_no_failures() -> None:
     )
     assert all(s["failed"] == 0 for s in report["summary"])
     assert json.dumps(report["stats"])  # serialisable
+
+
+@pytest.mark.parametrize("suffix", ["-check-report.yaml", "-scores.yaml"])
+def test_committed_reports_match_their_benchmark(suffix: str) -> None:
+    """A committed report must describe the committed benchmark, not an earlier draw."""
+    for bench_path in sorted(Path("benchmarks").glob("*/*.yaml")):
+        if bench_path.stem != bench_path.parent.name:
+            continue
+        report_path = bench_path.with_name(bench_path.stem + suffix)
+        if not report_path.exists():
+            continue
+        bench = yaml.safe_load(bench_path.read_text())
+        report = yaml.safe_load(report_path.read_text())
+        assert report["benchmark_id"] == bench["id"]
+        items = bench["items"]
+        targets = [t for i in items for t in i["target_annotations"]]
+        if suffix == "-check-report.yaml":
+            assert report["stats"]["n_items"] == len(items)
+            assert report["stats"]["n_targets"] == len(targets)
+        else:
+            ids = {i["id"] for i in items}
+            assert {r["item_id"] for r in report["item_scores"]} <= ids
+            decoys = sum(len(i.get("decoys") or []) for i in items)
+            for row in report["condition_scores"]:
+                if row["role"] == "DECOY":
+                    assert row["n"] == decoys

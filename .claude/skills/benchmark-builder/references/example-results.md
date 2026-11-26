@@ -12,7 +12,7 @@ The four pseudoenzyme items use their own paper floor of 2023-01-01. The full re
 | present_in_current | 51 | 0 | 0 | 0 |
 | date_window | 45 | 0 | 6 | 0 |
 | prior_prediction | 43 | 0 | 7 | 0 |
-| homolog_leakage | 44 | 6 | 0 | 0 |
+| homolog_leakage | 3 | 47 | 0 | 0 |
 | near_duplicate | 33 | 15 | 2 | 0 |
 | uniprot_leakage | 49 | 48 | 5 | 0 |
 | reference_recency | 0 | 153 | 153 | 0 |
@@ -40,6 +40,10 @@ The four pseudoenzyme items use their own paper floor of 2023-01-01. The full re
   only on isoform-2 text.
 - **One paper can tie items together.** PMID:40446798 supplies 10 targets to
   three items (`balance` WARN).
+- **The same-species homolog check rarely applies.** Most human PANTHER
+  subfamilies have one human member, so `homolog_leakage` could check only 3 of
+  the 51 targets (the other 47 are INFO, not checked). Cross-species ortholog
+  knowledge enters through IBA, ISS and ISO rows (`prior_prediction`).
 - **The FULL header can give the answer away.** TGDS's name contains its target
   activity (`header_leakage`).
 
@@ -56,7 +60,7 @@ sequence, while each item here has its own claims.
 
 | condition | targets yes | decoys yes | shuffled targets yes | NOT target yes |
 |---|---|---|---|---|
-| blind, Fable 5.2 | 32/50 | 1/72 | 4/50 (2 refused) | 1/1 |
+| blind, Fable 5.2 | 32/50 | 1/72 | 4/50 (5 uncertain, 2 refused) | 1/1 |
 | organism, Fable 5.2 | 31/50 (1 refused) | 1/72 | n/a | 1/1 |
 | blind, Opus 5.5 | 28/50 (5 uncertain) | 3/72 (6 uncertain) | 0/50 (10 uncertain) | 1/1 |
 | organism, Opus 5.5 | 28/50 (7 uncertain) | 6/72 (3 uncertain) | n/a | 1/1 |
@@ -69,5 +73,8 @@ explicitly allows. In the LRP4 canary, for example, the model said the
 sequence "looks like LRP4". With 50 targets, the blind-versus-organism
 differences (8 items change by one target) are within noise. Both models
 answered yes to TGDS's one NOT target (dTDP-glucose 4,6-dehydratase activity).
-The bio classifier refused five Fable calls, four of them on shuffled
-sequences; these score as missing.
+The bio classifier refused five Fable calls. Four were on shuffled sequences:
+two on target terms, which score as missing (the 2 refused above), and two on
+decoy terms, which are not scored for shuffled sequences. The fifth was on an
+organism-condition target (LRP4 virus receptor activity), which also scores
+as missing. Opus refused none.

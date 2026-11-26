@@ -196,11 +196,11 @@ def homolog_leakage(
             term,
             [row_text(a) for a in hits[:5]],
         )
-    if protein not in ctx.subfamily:
+    if not ctx.members(protein):
         return result(
             "homolog_leakage",
             "INFO",
-            "not checked: no PANTHER subfamily for this protein",
+            f"not checked: {sf} has no other member in this species",
             item_id,
             term,
         )

@@ -19,7 +19,7 @@ from ai_gene_review.benchmark.run import (
     score,
     score_markdown,
 )
-from ai_gene_review.benchmark.sources import DEFAULT_CACHE
+from ai_gene_review.benchmark.sources import DEFAULT_CACHE, sha256
 
 benchmark_app = typer.Typer(
     help="Time-split protein annotation benchmarks (see docs/benchmarks.md)."
@@ -194,7 +194,7 @@ def score_cmd(
     """Tally verdicts per condition, role (target, NOT target, decoy, shuffled) and item."""
     benchmark = load_yaml(benchmark_file)
     verdicts = peptalk_verdicts(benchmark, read_jsonl(peptalk or []))
-    inputs = [str(p) for p in peptalk or []]
+    inputs = [f"{p} sha256:{sha256(p)}" for p in peptalk or []]
     if reviews_dir:
         ctx, _ = load_context(benchmark["spec"], cache)
         verdicts.update(review_verdicts(benchmark, ctx, reviews_dir, review_condition))

@@ -1,6 +1,6 @@
 # Check report: human-goa-2025-06
 
-Generated 2026-11-25.
+Generated 2026-11-26.
 
 | check | pass | info | warn | fail |
 |---|---|---|---|---|
@@ -10,7 +10,7 @@ Generated 2026-11-25.
 | date_window | 45 | 0 | 6 | 0 |
 | review_agreement | 12 | 6 | 0 | 0 |
 | prior_prediction | 43 | 0 | 7 | 0 |
-| homolog_leakage | 44 | 6 | 0 | 0 |
+| homolog_leakage | 3 | 47 | 0 | 0 |
 | near_duplicate | 33 | 15 | 2 | 0 |
 | uniprot_leakage | 49 | 48 | 5 | 0 |
 | reference_recency | 0 | 153 | 153 | 0 |
