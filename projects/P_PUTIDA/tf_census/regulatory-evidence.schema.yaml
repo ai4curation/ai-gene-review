@@ -1,0 +1,162 @@
+id: https://ai4curation.io/ai-gene-review/schema/putida_regulatory_evidence
+name: putida_regulatory_evidence
+title: KT2440 TF regulatory evidence sidecar
+description: >-
+  Experimental regulatory assertions and pathway context for KT2440 transcription
+  factors. These are not GO annotations or inferred iModulon targets. Each class
+  can also be used as the target of standalone snippet validation.
+prefixes:
+  linkml: https://w3id.org/linkml/
+  reg: https://ai4curation.io/ai-gene-review/putida_regulatory_evidence/
+  GO: http://purl.obolibrary.org/obo/GO_
+  NCBITaxon: http://purl.obolibrary.org/obo/NCBITaxon_
+imports:
+  - linkml:types
+default_prefix: reg
+default_range: NonEmptyString
+
+types:
+  NonEmptyString:
+    typeof: string
+    description: Text containing at least one non-whitespace character.
+    pattern: '\S'
+  PutidaLocus:
+    typeof: string
+    description: A KT2440 reference locus tag.
+    pattern: '^PP_[0-9]{4,5}$'
+
+classes:
+  RegulatoryEvidence:
+    tree_root: true
+    description: Evidence-supported subset of a regulator's targets and pathway context.
+    attributes:
+      regulator:
+        range: RegulatorIdentity
+        required: true
+        inlined: true
+      relationships:
+        range: RegulatoryRelationship
+        required: true
+        multivalued: true
+        inlined_as_list: true
+      pathway_context:
+        range: PathwayContext
+        multivalued: true
+        inlined_as_list: true
+  RegulatorIdentity:
+    description: Accession, locus and taxon of the KT2440 reference regulator.
+    attributes:
+      accession:
+        required: true
+      locus:
+        range: PutidaLocus
+        required: true
+      taxon:
+        range: string
+        equals_string: 'NCBITaxon:160488'
+        required: true
+  RegulatoryRelationship:
+    description: One target-specific effect with experimental context and limitations.
+    attributes:
+      id:
+        required: true
+        description: Assertion identifier, checked for uniqueness by the project validator.
+      target:
+        range: RegulatoryTarget
+        required: true
+        inlined: true
+      effect:
+        range: RegulatoryEffect
+        required: true
+      directness:
+        range: RegulatoryDirectness
+        required: true
+      experimental_strain:
+        required: true
+      condition:
+        required: true
+      evidence:
+        range: RegulatoryEvidenceItem
+        required: true
+        multivalued: true
+        inlined_as_list: true
+        minimum_cardinality: 1
+      interpretation:
+        required: true
+      limitations:
+        required: true
+        multivalued: true
+        minimum_cardinality: 1
+  RegulatoryTarget:
+    description: Target promoter, gene or operon; a locus anchors the associated gene.
+    attributes:
+      name:
+        required: true
+      type:
+        range: RegulatoryTargetType
+        required: true
+      locus:
+        range: PutidaLocus
+  RegulatoryEvidenceItem:
+    description: Primary reference, assay and quoted support for a regulatory assertion.
+    attributes:
+      reference_id:
+        range: string
+        pattern: '^(PMID:[0-9]+|DOI:.+)$'
+        required: true
+      assay:
+        required: true
+      supporting_text:
+        required: true
+      source_url:
+        range: string
+        pattern: '^https://'
+  PathwayContext:
+    description: How the regulator controls a pathway, without asserting participation in it.
+    attributes:
+      name:
+        required: true
+      relationship:
+        range: string
+        equals_string: regulates
+        required: true
+      mechanism:
+        required: true
+      evidence:
+        range: RegulatoryEvidenceItem
+        required: true
+        multivalued: true
+        inlined_as_list: true
+        minimum_cardinality: 1
+      process:
+        range: RegulatoryProcessTerm
+        inlined: true
+  RegulatoryProcessTerm:
+    description: GO identifier and label of the process being regulated.
+    attributes:
+      id:
+        range: string
+        pattern: '^GO:[0-9]{7}$'
+        required: true
+      label:
+        required: true
+
+enums:
+  RegulatoryTargetType:
+    permissible_values:
+      gene:
+      promoter:
+      operon:
+  RegulatoryEffect:
+    permissible_values:
+      activates:
+      represses:
+      unknown:
+  RegulatoryDirectness:
+    permissible_values:
+      direct:
+        description: Both binding evidence and a functional regulatory effect support this target.
+      indirect:
+        description: Evidence supports regulation through an intervening mechanism.
+      unresolved:
+        description: Regulation is supported but physical directness is unestablished.

@@ -129,7 +129,7 @@ although MCR is cytoplasmic in methane-oxidizing biofilms (PMID:23533332) and EC
 was purified as a soluble enzyme.
 
 These are recorded as `source_defects` (resource `INTERPRO` on the process and activity
-rows, `UNIPROT` on the cited UniProt text) and are listed as pattern 17 in
+rows, `UNIPROT` on the cited UniProt text) and are listed as pattern 24 in
 [annotation-patterns](annotation-patterns.md).
 
 ### 4. The active site tracks the substrate, not the lineage

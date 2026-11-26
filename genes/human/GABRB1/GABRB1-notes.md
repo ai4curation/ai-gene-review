@@ -101,6 +101,9 @@ PMID:11498050, PMID:15174078, PMID:23934111, PMID:27273810, PMID:10449790.
   the swap alone.
 - Mouse Gabbr1 is UniProtKB:Q9WV18 and rat Gabbr1 is UniProtKB:Q9Z0U4 (UniProt REST,
   2026-11-17).
+- Mouse Gabbr1 (Q9WV18) carries the same 12 SynGO records from PMID:11498050 as the swapped
+  mouse Gabrb1 seed (GO:0098685, GO:0098982, GO:0099528; QuickGO, 2026-11-17, rechecked
+  2026-11-25), which is why the Gabrb1 defects request DELETE_ROW rather than a repoint.
 - The GO:0098982 GABA-ergic synapse IBA (PTN008566841) lists eleven donors (Alliance gene API,
   2026-11-17): mouse Gabrr3 MGI:3588203, Gabrb1 MGI:95619, Gabrb2 MGI:95620, Gabrb3 MGI:95621,
   Gabrd MGI:95622, Gabrr1 MGI:95625; rat Gabrb1 RGD:2649, Gabrb2 RGD:2650, Gabrb3 RGD:2651,

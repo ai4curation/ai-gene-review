@@ -4,7 +4,70 @@ description: "Modules and gene reviews for parasitic nematode cuticle, host-inte
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [BRUMA, HAECO, ONCVO, ASCSU, STRRB, STRER, TOXCA, TRITR, STECR, 9BILA, worm]
-genes: [dpy-31, bma-dpy-18.1, bma-dpy-18.2, far-1, lev-1, unc-38, unc-63, lev-8, ric-3, cpi-2, gp29, mf1]
+genes:
+  - BRUMA/dpy-31
+  - worm/dpy-31
+  - HAECO/dpy-31
+  - BRUMA/bma-dpy-18.1
+  - BRUMA/bma-dpy-18.2
+  - worm/dpy-18
+  - worm/phy-2
+  - worm/pdi-2
+  - worm/bli-4
+  - worm/unc-29
+  - worm/lev-1
+  - worm/unc-38
+  - worm/unc-63
+  - worm/lev-8
+  - worm/ric-3
+  - worm/unc-50
+  - worm/unc-74
+  - worm/acr-8
+  - HAECO/acr-8
+  - worm/glc-1
+  - worm/glc-2
+  - worm/glc-3
+  - worm/glc-4
+  - worm/avr-14
+  - worm/avr-15
+  - HAECO/P91730
+  - BRUMA/A0A0K0J2Q9
+  - BRUMA/A0A894KDR7
+  - BRUMA/A0A894KHH9
+  - BRUMA/A0A894KBQ5
+  - ONCVO/Q25634
+  - ONCVO/A0A8R1XRX4
+  - ONCVO/A0A8R1TV31
+  - worm/ben-1
+  - BRUMA/bma-ben-1
+  - BRUMA/Q66T51
+  - HAECO/A2TF56
+  - HAECO/Q25022
+  - TRITR/O44388
+  - STRER/Q4KS25
+  - ASCSU/F1L8A5
+  - ASCSU/F1L5R2
+  - TOXCA/A0A0B2VD78
+  - TOXCA/A0A0B2V7F6
+  - TOXCA/A0A0B2VSH4
+  - TOXCA/A0A0B2VUK1
+  - STRER/A0A0K0DXA9
+  - STRER/A0A0K0EJ28
+  - STRER/A0AAF5DAP5
+  - ONCVO/O61358
+  - ONCVO/O61359
+  - BRUMA/far-1
+  - worm/far-1
+  - worm/far-2
+  - ONCVO/far-1
+  - BRUMA/cpi-2
+  - worm/cpi-2
+  - BRUMA/mf1
+  - worm/cht-1
+  - STECR/nas-8
+  - BRUMA/gp29
+  - worm/gpx-3
+  - worm/gpx-5
 index_group: OTHER_ORGANISM
 ---
 
@@ -76,6 +139,14 @@ sensitive glutamate-gated chloride channels, and beta-tubulin microtubules.
 The first anthelmintic draft is
 `modules/nematode_levamisole_sensitive_nachr.yaml`, centered on the C. elegans
 five-subunit L-AChR and the RIC-3/UNC-50/UNC-74 expression factors.
+The second draft is
+`modules/nematode_glutamate_gated_chloride_channels.yaml`, a C. elegans
+realization of the ivermectin-sensitive GluCl channel set. HAECO, BRUMA, and
+ONCVO GluCl-family gene reviews are cross-checked parasite exemplars for now;
+add parasite GluCl orthologs to the module once their reviewed UniProt records
+or parasite-specific orthology are resolved. Beta-tubulin/benzimidazole targets
+were handled as a conserved target-family lane rather than forced into a
+multi-part module.
 
 Levamisole-sensitive nicotinic acetylcholine receptor:
 
@@ -85,16 +156,19 @@ Levamisole-sensitive nicotinic acetylcholine receptor:
 - [x] `worm` `unc-63` / Q9N587 - fetched and reviewed as an alpha L-AChR/ACR-2R pore subunit
 - [x] `worm` `lev-8` / Q93329 - fetched and reviewed as the fifth C. elegans L-AChR pore subunit
 - [x] `worm` `ric-3` / Q22472 - fetched and reviewed as an ER-membrane nAChR maturation factor
-- [ ] `worm` `unc-50` / Q10045 - fetch and review as an L-AChR trafficking ancillary factor
-- [ ] `worm` `unc-74` / Q9N4L6 - fetch and review as the thioredoxin-domain L-AChR ancillary factor
+- [x] `worm` `unc-50` / Q10045 - fetched and reviewed as an L-AChR trafficking ancillary factor
+- [x] `worm` `unc-74` / Q9N4L6 - fetched and reviewed as the thioredoxin-domain L-AChR ancillary factor
+- [x] `worm` `acr-8` / Q23355 - fetched and reviewed as an ACR-8-family pore subunit relevant to levamisole-sensitive receptor composition
+- [x] `HAECO` `acr-8` / A9XX24 - fetched and reviewed as the experimentally characterized H. contortus ACR-8 subunit
 
 Parasite L-AChR candidates to resolve before fetching: BRUMA A0A1P6C5A7,
 A0A4E9EUJ4, A0A4E9FKF9 and the short UniProt `Bma-acr-8.1` record A0A4E9EXN3;
 HAECO D6MYE9, D6MYF0, D6MYF1, D6MYF2, D6MYF3, D6MYF4, D6MYF5, D6MYF6,
-A0A7I4XYK7, A0A7I4Z1Z2, A0A7I4Z2R2, A0A7I4XVV4, A0A7I4XVC3, A9XX24,
+A0A7I4XYK7, A0A7I4Z1Z2, A0A7I4Z2R2, A0A7I4XVV4, A0A7I4XVC3,
 A0A7I4YXE5, A0A7I4YWD8, D2XI63, P92039, G0XFE0, G0XFE1, G0XFD9 and G0XFD8;
-ONCVO P54247 and the A0A8R1* PTHR18945 candidates, with the ACR-8-like member
-still unresolved from anonymous live UniProt labels; ASCSU A0A2I6TEN1,
+ONCVO P54247 and remaining PTHR18945 candidates outside reviewed GluCl-family
+accessions, with the ACR-8-like member still unresolved from anonymous live
+UniProt labels; ASCSU A0A2I6TEN1,
 A0ACT4VCM3, A0ACT4VCM4, A0ACT4VCM5, A0ACT4VCM6, A0ACT4VCM7, F1KYN0,
 F1L123, F1L348, F1L897 and O96760. Resolve broad PTHR18945 Cys-loop
 membership, ACR-8 placement, cloned paralogs, truncated entries and gene-model
@@ -102,12 +176,41 @@ duplicates before choosing review folders.
 
 Avermectin-sensitive glutamate-gated chloride channels:
 
-- [ ] `worm` `glc-1` / G5EBR3 - fetch if the GluCl module proceeds
-- [ ] `worm` `glc-2` / Q17328 - fetch if the GluCl module proceeds
+- [x] `worm` `glc-1` / G5EBR3 - fetched and reviewed as a GluCl alpha subunit
+- [x] `worm` `glc-2` / Q17328 - fetched and reviewed as the GluCl beta subunit
+- [x] `worm` `glc-3` / G5EEZ3 - fetched and reviewed as a GluCl alpha subunit
+- [x] `worm` `glc-4` / Q95QT7 - fetched and reviewed as a GluCl subunit
+- [x] `worm` `avr-14` / Q8IFY7 - fetched and reviewed as a GluCl alpha subunit
+- [x] `worm` `avr-15` / G5ECH3 - fetched and reviewed as a GluCl alpha subunit
+- [x] `HAECO` `P91730` / P91730 - fetched and reviewed as the H. contortus HG4 GluCl beta subunit
+- [x] `BRUMA` `A0A0K0J2Q9` / A0A0K0J2Q9 - fetched and reviewed as a BRUMA AVR-14B-like GluCl
+- [x] `BRUMA` `A0A894KDR7` / A0A894KDR7 - fetched and reviewed as a Brugia GluCl-family channel
+- [x] `BRUMA` `A0A894KHH9` / A0A894KHH9 - fetched and reviewed as a Brugia GluCl-family channel
+- [x] `BRUMA` `A0A894KBQ5` / A0A894KBQ5 - fetched and reviewed as a Brugia GluCl-family channel
+- [x] `ONCVO` `Q25634` / Q25634 - fetched and reviewed as an O. volvulus GluClX channel
+- [x] `ONCVO` `A0A8R1XRX4` / A0A8R1XRX4 - fetched and reviewed as an O. volvulus GluCl-family channel
+- [x] `ONCVO` `A0A8R1TV31` / A0A8R1TV31 - fetched and reviewed as an O. volvulus GluCl-family channel
 
 Beta-tubulin/benzimidazole target biology:
 
-- [ ] C. elegans beta-tubulins - decide whether the benzimidazole target is a multi-part microtubule module or a gene-family review lane before fetching
+- [x] `worm` `ben-1` / Q18817 - fetched and reviewed as the C. elegans benzimidazole-sensitive beta-tubulin
+- [x] `BRUMA` `bma-ben-1` / A0A1U7F2B2 - fetched and reviewed as the Brugia beta-tubulin ben-1 candidate
+- [x] `BRUMA` `Q66T51` / Q66T51 - fetched and reviewed as a Brugia beta-tubulin
+- [x] `HAECO` `A2TF56` / A2TF56 - fetched and reviewed as an H. contortus beta-tubulin
+- [x] `HAECO` `Q25022` / Q25022 - fetched and reviewed as the H. contortus tub12-16 beta-tubulin
+- [x] `TRITR` `O44388` / O44388 - fetched and reviewed as a T. trichiura beta-tubulin
+- [x] `STRER` `Q4KS25` / Q4KS25 - fetched and reviewed as the S. stercoralis btub beta-tubulin
+- [x] `ASCSU` `F1L8A5` / F1L8A5 - fetched and reviewed as an A. suum beta-tubulin
+- [x] `ASCSU` `F1L5R2` / F1L5R2 - fetched and reviewed as an A. suum beta-tubulin
+- [x] `TOXCA` `A0A0B2VD78` / A0A0B2VD78 - fetched and reviewed as a T. canis beta-tubulin
+- [x] `TOXCA` `A0A0B2V7F6` / A0A0B2V7F6 - fetched and reviewed as a T. canis beta-tubulin
+- [x] `TOXCA` `A0A0B2VSH4` / A0A0B2VSH4 - fetched and reviewed as a T. canis beta-tubulin
+- [x] `TOXCA` `A0A0B2VUK1` / A0A0B2VUK1 - fetched and reviewed as a T. canis beta-tubulin
+- [x] `STRER` `A0A0K0DXA9` / A0A0K0DXA9 - fetched and reviewed as an S. stercoralis beta-tubulin
+- [x] `STRER` `A0A0K0EJ28` / A0A0K0EJ28 - fetched and reviewed as an S. stercoralis beta-tubulin
+- [x] `STRER` `A0AAF5DAP5` / A0AAF5DAP5 - fetched and reviewed as an S. stercoralis beta-tubulin
+- [x] `ONCVO` `O61358` / O61358 - fetched and reviewed as an O. volvulus beta-tubulin
+- [x] `ONCVO` `O61359` / O61359 - fetched and reviewed as an O. volvulus beta-tubulin
 
 ### 3. Secreted fatty-acid and retinol binding
 
@@ -116,27 +219,32 @@ still to be decided. If FAR-1 remains a single binding role rather than a
 multi-part process, keep it as gene/family curation until it can be joined to a
 broader host lipid-scavenging module.
 
-- [x] `BRUMA` `far-1` / Q93142 - cross-check existing review
-- [x] `worm` `far-1` / P34382 - fetch and review the same PANTHER subfamily exemplar
-- [ ] `worm` `far-2` / P34383 - fetch only if needed for paralog-specific comparison
+- [x] `BRUMA` `far-1` / Q93142 - cross-checked the existing review
+- [x] `worm` `far-1` / P34382 - fetched and reviewed the same PANTHER subfamily exemplar
+- [x] `worm` `far-2` / P34383 - fetched and reviewed as a C. elegans FAR
+  paralog outside the FAR-1 PANTHER subfamily
+- [x] `ONCVO` `far-1` / Q25619 - fetched and reviewed as the O. volvulus
+  FAR-1/Ov20 filarial FAR exemplar
 
 ### 4. Secreted immune modulators and exsheathment enzymes
 
 These are strong parasite-interface genes but do not yet form one reusable
 module. Split them by mechanism unless literature supports a shared pathway.
 
-- [ ] `BRUMA` `cpi-2` / A0A0K0IP23 - existing cystatin review; C. elegans same-subfamily comparator is `worm` `cpi-2` / G5ECM9
-- [ ] `BRUMA` `mf1` / P29030 - existing GH18 endochitinase review; C. elegans same-subfamily comparator is `worm` `cht-1` / Q11174
-- [ ] `STECR` `nas-8` / D2KBH9 - existing secreted astacin review in the DPY-31/NAS PANTHER family but not the DPY-31 subfamily
+- [x] `BRUMA` `cpi-2` / A0A0K0IP23 - cross-checked existing filarial cystatin review
+- [x] `worm` `cpi-2` / G5ECM9 - fetched and reviewed the C. elegans same-subfamily cystatin comparator
+- [x] `BRUMA` `mf1` / P29030 - cross-checked existing GH18 endochitinase review
+- [x] `worm` `cht-1` / Q11174 - fetched and reviewed the C. elegans same-subfamily chitinase comparator
+- [x] `STECR` `nas-8` / D2KBH9 - cross-checked existing secreted astacin review in the DPY-31/NAS PANTHER family but not the DPY-31 subfamily
 
 ### 5. Surface antioxidant defense
 
 Start as a small extracellular glutathione peroxidase lane and merge only after
 the extracellular oxidant-detoxification boundary is clear.
 
-- [ ] `BRUMA` `gp29` / P67877 - existing cuticular glutathione peroxidase review
-- [ ] `worm` `gpx-3` / Q95003 - fetch and review the same PANTHER subfamily exemplar
-- [ ] `worm` `gpx-5` / Q93204 - cross-check existing review as a secreted-gpx comparator, not as an established one-to-one ortholog
+- [x] `BRUMA` `gp29` / P67877 - cross-checked existing cuticular glutathione peroxidase review
+- [x] `worm` `gpx-3` / Q95003 - fetched and reviewed the same PANTHER subfamily exemplar
+- [x] `worm` `gpx-5` / Q93204 - cross-checked existing review as a secreted-gpx comparator, not as an established one-to-one ortholog
 
 # STATUS
 
@@ -188,7 +296,39 @@ the extracellular oxidant-detoxification boundary is clear.
 - [x] Fetch and review the `worm` `ric-3` Q22472 RIC-3-family
   nAChR maturation factor
 
+## 2026-11-24
+
+- [x] Reconcile the project page after content PRs that left `projects/` and
+  rendered `pages/` untouched to avoid merge-queue conflicts
+- [x] Check off merged L-AChR ancillary and ACR-8 reviews through `worm`
+  `unc-50`, `worm` `unc-74`, `worm` `acr-8`, and `HAECO` `acr-8`
+- [x] Check off the merged GluCl module lane, including six C. elegans GluCl
+  reviews and HAECO, BRUMA, and ONCVO parasite exemplars
+- [x] Record the merged GluCl parasite-exemplar module cross-check (#6858)
+- [x] Check off the beta-tubulin/benzimidazole target-family reviews through
+  the ONCVO `O61359` review
+- [x] Check off the merged FAR reviews through `worm` `far-2` and `ONCVO`
+  `far-1`
+- [x] Check off the merged cystatin/chitinase/astacin and surface-GPX
+  host-interface reviews through `STECR` `nas-8`
+
 # NOTES
+
+## 2026-11-24
+
+- The FAR reviews stayed split as ligand-binding gene-family curation: BRUMA
+  and ONCVO FAR-1 plus worm FAR-1 share PANTHER subfamily `PTHR31418:SF7`,
+  while worm FAR-2 is a distinct C. elegans paralog in `PTHR31418:SF19`.
+  These FAR proteins have not yet been joined to a broader multi-part host
+  lipid-scavenging module.
+- The beta-tubulin/benzimidazole target set behaved as a conserved
+  target-family lane rather than a reusable multi-step module. The completed
+  reviews now cover the C. elegans BEN-1 anchor plus BRUMA, HAECO, TRITR,
+  STRER, ASCSU, TOXCA, and ONCVO parasite beta-tubulins.
+- The cystatin, GH18 chitinase, STECR astacin, and extracellular
+  glutathione-peroxidase reviews did not expose a single shared mechanism. Keep
+  them split by molecular mechanism unless later literature supports a
+  parasite-interface module around a concrete process.
 
 ## 2026-11-20
 

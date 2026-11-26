@@ -52,6 +52,7 @@ import yaml
 
 from ai_gene_review.evidence import (
     LITERATURE_EVIDENCE_CODES as LITERATURE_CODES,
+    evidence_matches,
     source_evidence_code,
 )
 
@@ -89,6 +90,21 @@ MAX_RANGE = 20
 # complex, every protein of a proteomics list), not a single-gene claim.
 SHARED_ANNOTATION_GENES = 4
 ShareKey = tuple[str, str, str]
+# An unreviewed entry has few literature citations of its own (mostly its
+# sequence submissions), so that it does not cite a paper is weak evidence that
+# the paper studied another gene. In the seventh lead batch every unreviewed
+# top-tier lead (rat Dusp21, fly GstO1, GstO2, Prx4) was a false positive.
+UNREVIEWED_PENALTY = 3
+# The same term from the same paper and source on a local gene of the same
+# PANTHER family, when that gene does not itself cite the paper, is a family-wide
+# annotation (the Omega GSTs), even when too few genes carry it to reach
+# SHARED_ANNOTATION_GENES. When the paralog does cite the paper, its copy is the
+# row on the right gene and the lead stands (CNGA3 beside CNGB3).
+PARALOG_SHARE_PENALTY = 2
+# Evidence codes that claim an assay of the annotated protein itself. A row with
+# one of these, from a paper the ortholog's entry cites, is first a question of
+# evidence code (IDA on the human protein from a mouse experiment), not of gene.
+DIRECT_ASSAY_CODES = frozenset({"EXP", "IDA", "IPI", "IMP", "IGI", "IEP"})
 
 
 @dataclass(frozen=True)
@@ -101,6 +117,7 @@ class GeneRecord:
     gene_names: frozenset[str]
     cited_pmids: frozenset[str]
     protein_names: frozenset[str] = frozenset()
+    reviewed: bool = True
 
 
 @dataclass(frozen=True)
@@ -123,13 +140,18 @@ def parse_uniprot_flatfile(text: str) -> GeneRecord:
     ...     "DR   PANTHER; PTHR12369:SF11; X; 1.\\nDR   PANTHER; PTHR12369; Y; 1.\\n")
     >>> r.accession, r.taxon, sorted(r.gene_names), sorted(r.panther_families), sorted(r.cited_pmids)
     ('Q8TDX6', '9606', ['CSGALNACT', 'CSGALNACT1'], ['PTHR12369'], ['11788602'])
+    >>> parse_uniprot_flatfile("ID   D3ZAQ8_RAT   Unreviewed;   189 AA.\\n").reviewed
+    False
     """
     accession = ""
     taxon = ""
+    reviewed = True
     families: set[str] = set()
     gn_lines: list[str] = []
     for line in text.splitlines():
-        if line.startswith("AC   ") and not accession:
+        if line.startswith("ID   "):
+            reviewed = "Unreviewed;" not in line
+        elif line.startswith("AC   ") and not accession:
             accession = line[5:].split(";")[0].strip()
         elif line.startswith("OX   ") and not taxon:
             m = re.search(r"NCBI_TaxID=(\d+)", line)
@@ -152,6 +174,7 @@ def parse_uniprot_flatfile(text: str) -> GeneRecord:
         frozenset(n for n in names if n),
         pmids,
         parse_protein_names(text),
+        reviewed,
     )
 
 
@@ -658,13 +681,16 @@ def score_lead(
     citing: list[CitingEntry],
     abstract_names_gene: bool | None,
     shared_genes: int = 1,
+    shared_with_paralog: bool = False,
 ) -> tuple[int, str]:
     """Score how likely the cited paper is about one of the citing entries instead.
 
     A paralog in the same species +3, another gene in the same species +2, the
     same-named gene in another species +2, three or fewer citing entries +1, and an
     abstract that does not name the annotated gene +2 (or -3 if it does). A row
-    whose source gave it to ``SHARED_ANNOTATION_GENES`` or more local genes -2.
+    whose source gave it to ``SHARED_ANNOTATION_GENES`` or more local genes -2, or
+    else to a local paralog that does not cite the paper ``-PARALOG_SHARE_PENALTY``. An
+    unreviewed own entry ``-UNREVIEWED_PENALTY``.
     """
     reasons = []
     score = 0
@@ -693,7 +719,37 @@ def score_lead(
     if shared_genes >= SHARED_ANNOTATION_GENES:
         score -= 2
         reasons.append("shared_by_many_genes")
+    elif shared_with_paralog:
+        score -= PARALOG_SHARE_PENALTY
+        reasons.append("shared_with_local_paralog")
+    if not own.reviewed:
+        score -= UNREVIEWED_PENALTY
+        reasons.append("own_entry_unreviewed")
     return score, ";".join(reasons)
+
+
+def lead_kind(own: GeneRecord, citing: list[CitingEntry], evidence: str) -> str:
+    """Whether a lead is first a wrong-gene or a wrong-evidence-code question.
+
+    A direct assay row (``DIRECT_ASSAY_CODES``) whose paper is cited by the same
+    gene in another species most likely reports an experiment on that ortholog,
+    as in a crystal of human SR-alpha with mouse SR-beta, so it is an
+    ``evidence_code`` lead. Everything else is a ``wrong_gene`` lead.
+
+    >>> own = GeneRecord("Q9Y5M8", "9606", frozenset(), frozenset({"SRPRB"}), frozenset())
+    >>> mouse = CitingEntry("P47758", "Srprb", "10090", frozenset())
+    >>> lead_kind(own, [mouse], "EXP"), lead_kind(own, [mouse], "TAS")
+    ('evidence_code', 'wrong_gene')
+    """
+    ortholog = any(
+        c.taxon != own.taxon and same_gene_symbol(c.gene, own.gene_names)
+        for c in citing
+    )
+    return (
+        "evidence_code"
+        if ortholog and evidence_matches(evidence, DIRECT_ASSAY_CODES)
+        else "wrong_gene"
+    )
 
 
 def _share_key(row: dict[str, str]) -> ShareKey:
@@ -704,14 +760,43 @@ def _share_key(row: dict[str, str]) -> ShareKey:
     )
 
 
-def shared_annotation_counts(gene_dirs: Iterable[Path]) -> Counter[ShareKey]:
-    """How many of the given gene folders carry each (reference, GO term, assigned-by) row.
+class Carrier(NamedTuple):
+    """A local gene folder carrying a shared row: its accession, PANTHER families and taxon."""
 
+    accession: str
+    families: frozenset[str]
+    taxon: str = ""
+
+
+def _folder_carrier(gene_dir: Path) -> Carrier:
+    """Accession, PANTHER families and taxon from a gene folder's UniProt file (empty if none)."""
+    accession = ""
+    taxon = ""
+    families: set[str] = set()
+    for uniprot in gene_dir.glob("*-uniprot.txt"):
+        with uniprot.open(errors="replace") as fh:
+            for line in fh:
+                if line.startswith("AC   ") and not accession:
+                    accession = line[5:].split(";")[0].strip()
+                elif line.startswith("OX   ") and not taxon:
+                    m = re.search(r"NCBI_TaxID=(\d+)", line)
+                    taxon = m.group(1) if m else ""
+                elif line.startswith("DR   PANTHER; "):
+                    families.add(line.split(";")[1].strip().split(":")[0])
+    return Carrier(accession, frozenset(families), taxon)
+
+
+def shared_annotation_carriers(
+    gene_dirs: Iterable[Path],
+) -> dict[ShareKey, list[Carrier]]:
+    """For each (reference, GO term, assigned-by) row, the gene folders carrying it.
+
+    One entry per carrying folder, so the list length is the number of folders.
     Only the folders passed in are counted, so a sweep of one species or one gene
     sees fewer shared rows than the default sweep of every folder. Only literature
     references are counted; GO_REF rows are shared by design.
     """
-    counts: Counter[ShareKey] = Counter()
+    shared: dict[ShareKey, list[Carrier]] = {}
     for gene_dir in gene_dirs:
         keys: set[ShareKey] = set()
         for goa in gene_dir.glob("*-goa.tsv"):
@@ -720,8 +805,56 @@ def shared_annotation_counts(gene_dirs: Iterable[Path]) -> Counter[ShareKey]:
                     key = _share_key(row)
                     if key[0].startswith("PMID:"):
                         keys.add(key)
-        counts.update(keys)
-    return counts
+        if keys:
+            carrier = _folder_carrier(gene_dir)
+            for key in keys:
+                shared.setdefault(key, []).append(carrier)
+    return shared
+
+
+def shared_annotation_counts(gene_dirs: Iterable[Path]) -> Counter[ShareKey]:
+    """How many of the given gene folders carry each (reference, GO term, assigned-by) row."""
+    return Counter(
+        {k: len(v) for k, v in shared_annotation_carriers(gene_dirs).items()}
+    )
+
+
+def shared_with_local_paralog(
+    carriers: list[Carrier], own: GeneRecord, citing: Iterable[CitingEntry]
+) -> bool:
+    """Whether a local paralog carries the same row without itself citing the paper.
+
+    A paralog is a gene of the same PANTHER family in the same species; a carrier in
+    another species is an ortholog, whose copy of the row is the evidence-code case
+    (``lead_kind``), not a family annotation.
+
+    That is a family-wide annotation, as for the Omega GSTs, whose paper is cited
+    by a third gene. A paralog that does cite the paper is the opposite case: the
+    row's copy on the right gene, which is evidence for a wrong-gene lead (CNGA3
+    beside CNGB3), so it does not count.
+
+    >>> own = GeneRecord("P1", "1", frozenset({"PTHR1"}), frozenset(), frozenset())
+    >>> mine, para = Carrier("P1", frozenset({"PTHR1"}), "1"), Carrier("P2", frozenset({"PTHR1"}), "1")
+    >>> other_family = Carrier("P3", frozenset({"PTHR2"}), "1")
+    >>> ortholog = Carrier("P4", frozenset({"PTHR1"}), "2")
+    >>> shared_with_local_paralog([mine, ortholog], own, [])
+    False
+    >>> cites_p2 = [CitingEntry("P2", "B", "1", frozenset({"PTHR1"}))]
+    >>> shared_with_local_paralog([mine, para], own, [])
+    True
+    >>> shared_with_local_paralog([mine, para], own, cites_p2)
+    False
+    >>> shared_with_local_paralog([mine, other_family], own, [])
+    False
+    """
+    citing_accessions = {c.accession for c in citing}
+    return any(
+        c.accession != own.accession
+        and c.taxon == own.taxon
+        and c.families & own.panther_families
+        and c.accession not in citing_accessions
+        for c in carriers
+    )
 
 
 @cache
@@ -911,7 +1044,7 @@ def find_leads(
     from UniProt for every candidate PMID.
     """
     gene_dirs = sorted(gene_dirs)
-    shared = shared_annotation_counts(gene_dirs)
+    shared = shared_annotation_carriers(gene_dirs)
     candidates = [(d, c) for d in gene_dirs if (c := candidate_rows(d)) and c[1]]
     if citing is None:
         citing = fetch_citing_entries(
@@ -950,7 +1083,8 @@ def find_leads(
                     publications_dir,
                     gene_specific_names(own, others),
                 ),
-                shared[_share_key(row)],
+                len(shared.get(_share_key(row), [])),
+                shared_with_local_paralog(shared.get(_share_key(row), []), own, others),
             )
             leads.append(
                 {
@@ -962,6 +1096,13 @@ def find_leads(
                     "reference": row["REFERENCE"],
                     "assigned_by": row["ASSIGNED BY"],
                     "score": score,
+                    "lead_kind": lead_kind(
+                        own,
+                        others,
+                        source_evidence_code(
+                            row["GO EVIDENCE CODE"], row.get("ECO ID")
+                        ),
+                    ),
                     "reasons": reasons,
                     "citing_entries": ";".join(
                         f"{c.accession}:{c.gene}" for c in others
@@ -990,6 +1131,8 @@ def main(argv: list[str] | None = None) -> None:
     print(
         f"{len(reviewed)} on reviewed rows; {len(agreed)} already REMOVE or WRONG_GENE_PRODUCT"
     )
+    kinds = Counter(r["lead_kind"] for r in leads)
+    print(", ".join(f"{n} {kind} leads" for kind, n in sorted(kinds.items())))
     for score, n in sorted(Counter(r["score"] for r in leads).items(), reverse=True):
         print(f"score {score}: {n}")
 

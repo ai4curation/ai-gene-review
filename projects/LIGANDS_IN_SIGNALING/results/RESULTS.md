@@ -111,7 +111,7 @@ GO version: releases/2026-07-26. GAFs: current.geneontology.org at run time.
 | rat | collagen-activated tyrosine kinase receptor signaling pathway (GO:0038063) | C | Col1a1: A; Col1a2: A; Col2a1: A; Col3a1: A; Col4a2: C |
 | rat | interleukin-34-mediated signaling pathway (GO:0061514) | C | Il34: C |
 | rat | urokinase plasminogen activator signaling pathway (GO:0038195) | C | Plau: A (ligand MF); Slurp1: C |
-| zebrafish | phospholipase C-activating G protein-coupled receptor signaling pathway (GO:0007200) | A | agt: A; calca: A (ligand MF); ccka: A (ligand MF); cckb: A (ligand MF); edn2: A (ligand MF); hcrt: A (ligand MF); il2: A; kiss1: A; nmu: A; tac1: A |
+| zebrafish | phospholipase C-activating G protein-coupled receptor signaling pathway (GO:0007200) | A | agt: A; calca: A (ligand MF); ccka: A (ligand MF); cckb: A (ligand MF); edn2: A (ligand MF); hcrt: A (ligand MF); il2: A; kiss1: A; nmu: A; tac1: A; tac3a: A; tac3b: A; vegfaa: A (ligand MF); vegfab: A (ligand MF); wnt5a: A (ligand MF) |
 | zebrafish | G protein-coupled receptor signaling pathway, coupled to cyclic nucleotide second messenger (GO:0007187) | A | agt: A; npy: A (ligand MF) |
 | zebrafish | insulin receptor signaling pathway (GO:0008286) | A | igf1: A (ligand MF); igf2a: A (ligand MF); igf2b: A (ligand MF); ins: A (ligand MF); insb: A (ligand MF) |
 | zebrafish | tumor necrosis factor-mediated signaling pathway (GO:0033209) | A | tnfa: A (ligand MF); tnfb: A (ligand MF); tnfsf11: A (ligand MF); tnfsf13b: A (ligand MF) |
@@ -179,7 +179,7 @@ GO version: releases/2026-07-26. GAFs: current.geneontology.org at run time.
 ## Ligand-activity genes in no signaling term
 
 - **human**: ALKBH1, CCL17, CCL27, CCL28, CKLF, CXCL16, CXCL2, CXCL3, DEFB103A, DEFB104A, DEFB109B, DEFB110, DEFB114, DEFB130A, DEFB130B, DEFB133, DPP4, LGALS3, MT-RNR2, PF4V1, PPBP, S100A4
-- **mouse**: AI182371, Alkbh1, Ccl17, Ccl28, Cd48, Chlsn, Cklf, Colec10, Cxcl1, Cxcl14, Cxcl15, Cxcl16, Cxcl2, Cxcl3, Defb14, Defb3, Defb33, Defb4, Defb46, Defb47, Defb48, Defb5, Defb6, Defb7, Defb8, Dpp4, Enho, Erfe, Fgf12, Fgf14, Gm6040, Hamp, Hc, Hmgb2, Itpripl1, Kitl, Lama1, Lgals3, Ppbp, Reg3a, Rln1, S100a4, S100a7a, Saa3, Sectm1a, Sectm1b, Stc2, mFGF13/iso:2
+- **mouse**: AI182371, Alkbh1, Ccl17, Ccl28, Cd48, Chlsn, Cklf, Colec10, Cxcl1, Cxcl14, Cxcl15, Cxcl16, Cxcl2, Cxcl3, Defb14, Defb3, Defb33, Defb4, Defb46, Defb47, Defb48, Defb5, Defb6, Defb7, Defb8, Dpp4, Enho, Erfe, Fgf12, Fgf13, Fgf14, Gm6040, Hamp, Hc, Hmgb2, Itpripl1, Kitl, Lama1, Lgals3, Ppbp, Reg3a, Rln1, S100a4, S100a7a, Saa3, Sectm1a, Sectm1b, Stc2
 - **rat**: AABR07001348.1, AABR07016805.1, Alkbh1, C5, Ccl17, Ccl22, Ccl27, Ccl28, Cd48, Cklf, Colec10, Cxcl1, Cxcl14, Cxcl16, Cxcl2, Cxcl3, Defb14, Defb17, Defb3, Defb33, Defb4, Defb41, Defb42, Defb5, Dpp4, ENSRNOG00000070971, Fgf12, Fgf13, Fgf14, H60al, Hamp, Hmgb2, Hmgb2l1, Hmgb2l2, LOC108353456, LOC120093164, LOC120102174, Lama1, Lgals3, Mifl2, Mifl3, Mifl4, Ppbp, Rln1, S100a4, Stc2
 - **zebrafish**: LOC567978, cckb, ccl19a.2, ccl19b, ccl20a.3, ccl20a.4, ccl20b, ccl20l, ccl25b, ccl27a, ccl27b, ccl32b.3, ccl33.2, ccl33.3, ccl34a.3, ccl34a.4, ccl34b.1, ccl34b.4, ccl34b.9, ccl35.1, ccl35.2, ccl36.1, ccl38.1, ccl38a.3, ccl38a.4, ccl38a.5, ccl39.1, ccl39.2, ccl39.3, ccl44, cxcl11.1, cxcl11.3, cxcl11.4, cxcl11.6, cxcl11.8, cxcl12a, cxcl12b, cxcl13, cxcl14, cxcl18a.1, cxcl18b, cxcl19, cxcl32b.1, cxcl8a, cxcl8b.3, cxl34b.11, cxl34c, edn3b, fam19a1, fbn3, fgl1, ghrh, grem2a, grem2b, igfbp7, izumo1, kazald2, osgn1, si:ch73-330k17.3, tafa1a, tnfsf13, vip
 - **fly**: orion

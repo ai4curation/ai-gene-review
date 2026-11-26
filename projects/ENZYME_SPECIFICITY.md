@@ -272,7 +272,8 @@ would only duplicate it. See `genes/SACEN/eryCIII/`.
    score the protein against the NCBIfam family models for the annotated reaction
    (`just enzyme-cutoff-check ACC --go GO:...`). A score below the trusted cutoff,
    especially when a family for a different reaction passes, is the overprediction
-   pattern of Schnoes et al. 2009 [PMID:20011109]. See the
+   pattern of Schnoes et al. 2009 [PMID:20011109]. Add `--library` to see the protein's
+   closest families from the whole NCBIfam library. See the
    [trusted-cutoff check](ENZYME_SPECIFICITY/cutoff-check/RESULTS.md).
 6. **Check a specificity fingerprint where one is curated**: In superfamilies where
    close paralogs catalyse different reactions, family membership does not fix the
@@ -323,9 +324,64 @@ Worked pair (both from the same ML-prediction paper, PMID:37963869):
 ## Pending Reviews
 - (none)
 
-Last updated: 2026-11-21
+Last updated: 2026-11-24
 
 # NOTES
+
+## 2026-11-24
+
+**Extended the NCBIfam check through Rhea and triaged its class-term leads.**
+
+GO now cross-references many reaction terms only to Rhea, so the
+[release-table check](ENZYME_SPECIFICITY/ncbifam-metadata/RESULTS.md) maps them to EC numbers
+through Rhea's own EC table. It uses the route only when a term's Rhea reactions reach exactly
+one EC, so generic terms such as ATP hydrolysis activity (nine ECs) are left out. That makes 72
+more pairs comparable; 68 agree with the model's EC and the 4 that do not are triaged (one new
+wrong-reaction entry, on two acetyl-CoA transferase models carrying the Kce term). The adenosine
+deaminase models now list GO:0004000 as their replacement candidate. All 84 class-term leads
+(GO terms that carry only a partial EC, such as hydrolase activity) are now triaged: 31 pairs
+name the wrong kind of reaction, mostly following the protein family's fold rather than its
+reaction (glycoside hydrolase terms on the branching enzyme GlgB, aminoacyl-tRNA ligase on the
+EF-P modifier EpmA); 2 keep the reaction but change the electron donor (the BchX iron
+protein, the H₂O₂-using CYP152 peroxygenases); 35 are acceptable, mostly EC cross-reference
+artifacts; and 16 need the family's literature. They are listed in
+[FEEDBACK.md](ENZYME_SPECIFICITY/ncbifam-metadata/FEEDBACK.md) beside the earlier change list.
+No review action changes.
+
+## 2026-11-23
+
+**Checked the whole NCBIfam release table for GO terms that contradict the model's own
+reaction.**
+
+The [release-table check](ENZYME_SPECIFICITY/ncbifam-metadata/RESULTS.md) extends the
+sweep's six models to all of NCBIfam 20.0. Of 18691 (model, GO term) pairs, 2847 have EC
+numbers on both sides and 263 of those disagree. The 231 that are not simply broader
+terms, together with four models from the sweep that are not among them, were triaged by hand
+in 134 entries, each grouping one or more models that share a term: 64 entries name another enzyme's reaction (PurK carrying PurE's AIR carboxylase,
+adenosine deaminase carrying adenine deaminase), 11 a different cofactor, 4 point to a
+wrong EC number, 32 need family knowledge and 23 are acceptable as stated. The change list for
+NCBIfam curators is [FEEDBACK.md](ENZYME_SPECIFICITY/ncbifam-metadata/FEEDBACK.md), ranked
+by RefSeq reach. Verdicts come from names and GO definitions, not literature. GO terms with
+no EC cross-reference, often Rhea-only, are not compared, and 84 class-term leads are
+listed in [CANDIDATES.md](ENZYME_SPECIFICITY/ncbifam-metadata/CANDIDATES.md) untriaged. No
+review action changes.
+
+## 2026-11-22
+
+**Swept the cutoff check, with a whole-library scan, over the KT2440 and E. coli reviews.**
+
+The check now scans each protein against every function-level NCBIfam model, so a
+below-cutoff verdict comes with the families the protein does fit. The
+[sweep](ENZYME_SPECIFICITY/cutoff-check/sweep/RESULTS.md) covers 1306 live electronic
+enzyme rows on 1043 proteins. 82% of the 1014 kept rows pass a family carrying the
+activity, but so do 47% of the 169 removed rows. The removed rows that pass are subunit
+models carrying the complex's EC number, pseudoenzymes and paralogs the reviews identified,
+broader substrate terms, and six NCBIfam models whose GO metadata names the sister
+reaction (models for PurT, ADP-glucose glycogen synthase, PS synthase and NrdG). The kept rows that fit
+another family are mostly partial reactions, cofactor variants and complex activities on a
+subunit. The ranked lists are in
+[DISAGREEMENTS.md](ENZYME_SPECIFICITY/cutoff-check/sweep/DISAGREEMENTS.md). No review
+action changes.
 
 ## 2026-11-21
 

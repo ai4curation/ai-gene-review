@@ -1233,6 +1233,10 @@ validate organism gene:
     set -e
     file="genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml"
     uv run ai-gene-review validate --verbose --terms "$file"
+    sidecar="${file%-ai-review.yaml}-regulatory-evidence.yaml"
+    if [[ -f "$sidecar" ]]; then
+        uv run --group dev python projects/P_PUTIDA/validate_regulatory_evidence.py "$sidecar"
+    fi
     echo ""
     echo "Checking PMID references in markdown files..."
     uv run python src/ai_gene_review/tools/validate_pmid_references.py "genes/{{organism}}/{{gene}}/"
@@ -1461,6 +1465,24 @@ local-quote-baseline *args:
 [group('QC')]
 ec-class-audit *files:
     uv run python -m ai_gene_review.validation.ec_class_consistency {{files}}
+
+# List author-supplied GO ids (NEW rows and their extensions, core_functions,
+# proposed_replacement_terms, proposed_parent, isoform_specific_terms) that an
+# offline signal marks obsolete. Same rule as the
+# obsolete_authored_term warning in `just validate`. The signals are incomplete --
+# a hit is informative, a clean result does not prove the ids are live -- so this
+# exits 0 by default; pass --strict to fail, --no-ontology to skip the GO snapshot.
+# Example: just obsolete-term-audit genes/human/CPT1C/CPT1C-ai-review.yaml
+[group('QC')]
+obsolete-term-audit *files:
+    uv run python -m ai_gene_review.validation.obsolete_authored_terms {{files}}
+
+# List processes that modules assert for a gene and that neither GOA nor the
+# gene's review carries: leads for NEW annotations, not annotations. Writes
+# reports/module-annotation-leads.tsv (git-ignored). See modules/README.md.
+[group('QC')]
+module-annotation-leads *args:
+    uv run python -m ai_gene_review.module_annotation_leads {{args}}
 
 # Validate all gene review files (schema + references + best practices).
 # Uses batch mode for schema and advisory term validation, then the CLI for
@@ -2073,6 +2095,13 @@ export-annotations-tsv output_file="exports/exported_annotations.tsv":
     @mkdir -p exports
     uv run python -c "from ai_gene_review.export import TabularExporter; from pathlib import Path; exporter = TabularExporter(); files = list(Path('genes').glob('**/*-ai-review.yaml')); print(f'Found {len(files)} files'); exporter.export_to_tsv(files, '{{output_file}}'); print(f'Exported to {{output_file}}')"
 
+# Export reviews as a GOA change set (one row per reviewed annotation + NEW rows),
+# consumed by the genesets enrichment eval (evals/aigr_changeset in monarch-initiative/genesets)
+export-goa-changeset organism="human" output_file="":
+    @mkdir -p exports
+    uv run python scripts/export_goa_changeset.py --organism {{organism}} \
+        -o {{ if output_file == "" { "exports/goa_changeset_" + organism + ".tsv" } else { output_file } }}
+
 # Export existing_annotations to JSON format (for linkml-browser)
 export-annotations-json output_file="exports/exported_annotations.json":
     @mkdir -p exports
@@ -2541,10 +2570,10 @@ family-msa family_id:
 
 # ============== iModulonDB Integration ==============
 
-# Compare gene review with iModulonDB data (for bacterial transcription factors)
+# Summarize published iModulon evidence with matched gene-review context
 # Examples:
 #   just compare-imodulondb PSEPK BenR
-#   just compare-imodulondb ecoli FliA
+#   just compare-imodulondb p_putida PP_3159
 compare-imodulondb organism gene *args="":
     @echo "Comparing {{organism}}/{{gene}} with iModulonDB..."
     uv run python scripts/compare_with_imodulondb_v2.py {{organism}} {{gene}} {{args}}
