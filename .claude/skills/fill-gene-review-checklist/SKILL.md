@@ -20,14 +20,15 @@ uv tool install git+ssh://git@github.com/ai4curation/linkml-checklist-validator 
 
 1. Finish the review first: `just validate <org> <GENE>` passes and the
    history record exists (`just new-history ... --agent-tool <tool> --model <model-id>`).
-   Checklist keys follow the review's annotations, so if you edit the review
-   afterwards, regenerate or re-check.
-2. Write the skeleton next to the history record, using the record's session id:
+   Checklist keys follow the review's annotations, including WITH/FROM, so if you
+   edit or refetch the review afterwards, regenerate or re-check.
+2. Write the skeleton under `rubrics/checklists/`, named by the history record's session id
+   (not under `history/`, where every YAML file is validated as a history record):
 
    ```bash
    SID=<session id of this PR's history record, e.g. 2026-11-25T151334Z-claude-code-51526b>
    lcv skeleton rubrics/gene_review.yaml genes/<org>/<GENE>/<GENE>-ai-review.yaml \
-     -o history/genes/<org>/<GENE>/$SID.checklist.yaml
+     -o rubrics/checklists/genes/<org>/<GENE>/$SID.checklist.yaml
    ```
 
    One checklist per changed gene review. Never retype or invent keys.
@@ -38,7 +39,7 @@ uv tool install git+ssh://git@github.com/ai4curation/linkml-checklist-validator 
 4. Check it, and fix every line it prints:
 
    ```bash
-   lcv check rubrics/gene_review.yaml history/genes/<org>/<GENE>/$SID.checklist.yaml \
+   lcv check rubrics/gene_review.yaml rubrics/checklists/genes/<org>/<GENE>/$SID.checklist.yaml \
      genes/<org>/<GENE>/<GENE>-ai-review.yaml
    ```
 
@@ -75,7 +76,14 @@ uv tool install git+ssh://git@github.com/ai4curation/linkml-checklist-validator 
 - `annotation_reviews`: one entry per judged row. `decision_has_evidence` repeats
   a `supporting_text` quote verbatim; `supporting_text_not_title` fails if a quote
   is only the cited paper's (or Reactome event's) title; `action_matches_reason`
-  fails if, say, an ACCEPT's reason argues the term is too general.
+  fails if, say, an ACCEPT's reason argues the term is too general. A row whose
+  quotes all come from a source other than its own `original_reference_id` fails
+  `decision_has_evidence` unless the reason explains why.
+- `new_annotation_reviews`: one entry per `NEW` row, for the CLAUDE.md bar (the
+  gene does the work, comparators checked with a query shown able to return a
+  positive, parents and GO-CAMs read, no redundancy). `{}` when there are none.
+- `source_defects_confident_enough`: CONFIRMED wrong-gene or wrong-reference
+  claims need a full read or an obvious abstract/record.
 
 ## Reasons and evidence
 
@@ -83,7 +91,10 @@ uv tool install git+ssh://git@github.com/ai4curation/linkml-checklist-validator 
   were tested against DDAH1, so the row has the direction reversed", not "Checked".
 - `reference_id` + `excerpt`: copy the excerpt verbatim from the source. Do not
   paraphrase, tidy or join sentences, and never use a title as the excerpt.
-- `file_path` + `line`: a real path and line number.
+- `file_path` + `line` + `excerpt`: a real path, line number and the line's text, so
+  the receipt still checks if a refetch moves the line. Nothing in the repo checks
+  excerpts for you (`just validate-quotes` reads only `supporting_text`): copy tabs
+  as tabs.
 - `command` + `output_digest`: a command you actually ran and part of its real output.
 - `entity_id` + `entity_label`: the label as the source gives it.
 

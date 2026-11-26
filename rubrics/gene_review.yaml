@@ -131,6 +131,34 @@ classes:
           lcv:rationale: Abstract-only reviews should be weighted differently from full-text ones.
           lcv:severity: minor
           lcv:check_kind: judgment
+      source_defects_confident_enough:
+        range: Check
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            Each review.source_defects entry's confidence matches the depth of evidence
+            behind it: a WRONG_GENE_PRODUCT or WRONG_REFERENCE claim, or a REPOINT or
+            DELETE_ROW request, is CONFIRMED only when the whole paper was read or the
+            error is obvious from the abstract or record; otherwise it is SUSPECTED or
+            PROBABLE with requested_change CHECK, and explanation states the depth.
+            not_applicable when the review records no source defects.
+          lcv:rationale: Source defects go upstream as correction requests, so over-confident ones cost curators time.
+          lcv:severity: major
+          lcv:check_kind: judgment
+          lcv:definition: https://github.com/ai4curation/ai-gene-review/blob/main/docs/source_defects.md
+      new_annotation_reviews:
+        range: NewAnnotationDecision
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        description: >-
+          One entry per NEW row, for the bar in CLAUDE.md "Do not add what curators
+          deliberately declined to add". Empty when the review proposes nothing new.
+        annotations:
+          lcv:parametrize_over: existing_annotations[] | select(.review.action == "NEW")
+          lcv:parametrize_key: >-
+            {term.id}|{evidence_type}|{original_reference_id?}|{supporting_entities?}|{qualifier?}|{isoform?}|{negated?}|{extensions[].term.id}
       annotation_reviews:
         range: AnnotationDecision
         multivalued: true
@@ -169,7 +197,10 @@ classes:
             The action is backed by review.supported_by entries whose supporting_text is a
             verbatim quote from the cited source (publication, UniProt curated line, PAINT
             node, file), or, for an UNDECIDED row, the reason says what could not be
-            accessed. The checklist evidence repeats at least one such quote.
+            accessed. At least one quote comes from the row's own original_reference_id;
+            when that is a GO_REF method reference, from the source the method rests on
+            (PAINT node, ortholog record, UniProt line). If not, the reason says why. The
+            checklist evidence repeats at least one such quote.
           lcv:rationale: Unbacked actions cannot be audited.
           lcv:severity: critical
           lcv:check_kind: deterministic
@@ -196,6 +227,62 @@ classes:
           lcv:rationale: Contradictory action/reason pairs are a recurring editing error.
           lcv:severity: critical
           lcv:check_kind: judgment
+
+  NewAnnotationDecision:
+    description: The extra bar a NEW annotation must clear.
+    attributes:
+      key:
+        identifier: true
+        description: The annotation's parametrize_key (written by `lcv skeleton`; do not retype it).
+      gene_does_the_work:
+        range: SourcedCheck
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            For a process term, the gene product itself does some of the work of the
+            process (catalyses a step, or supplies the structure, scaffold or cofactor
+            activity a step depends on); the reason names the entity that performs the
+            step. Necessity evidence (knockout, rescue, disease) alone does not pass.
+            not_applicable for MF or CC terms.
+          lcv:rationale: Substrates and necessary inputs have been proposed as process participants.
+          lcv:severity: critical
+          lcv:check_kind: judgment
+      comparators_checked:
+        range: SourcedCheck
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            Two or three gene products in the same role were checked for the term by term
+            id, and the query was shown able to return a positive; a systematic absence was
+            read as a convention, not a gap. The evidence is the query and its result.
+          lcv:rationale: A malformed query returns a clean, false absence.
+          lcv:severity: major
+          lcv:check_kind: judgment
+      parents_and_gocams_read:
+        range: Check
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            The term's parents were read for what kind of entity carries it, and
+            gocams/index.tsv was checked for a model that already places the gene in
+            another role.
+          lcv:rationale: Curated models often contain the gene in the role GO intends for it.
+          lcv:severity: major
+          lcv:check_kind: judgment
+      not_redundant:
+        range: Check
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            The term is not an ancestor or descendant of another proposed term or of a term
+            the gene already carries.
+          lcv:rationale: Redundant NEW rows add no coverage.
+          lcv:severity: minor
+          lcv:check_kind: deterministic
 
   # Check classes are kept as leaves (no is_a between them): a range class
   # with subclasses becomes a JSON Schema anyOf, and validation errors
@@ -303,6 +390,15 @@ classes:
       - preconditions:
           slot_conditions:
             reference_id:
+              value_presence: PRESENT
+        postconditions:
+          slot_conditions:
+            excerpt:
+              required: true
+      - description: A file receipt quotes the line, so it still checks after a refetch moves it.
+        preconditions:
+          slot_conditions:
+            file_path:
               value_presence: PRESENT
         postconditions:
           slot_conditions:
