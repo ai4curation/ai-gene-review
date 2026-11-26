@@ -39,7 +39,7 @@ KD = {
     "P": -1.6, "S": -0.8, "T": -0.7, "W": -0.9, "Y": -1.3, "V": 4.2,
 }
 THRESHOLD = 1.0
-TRANSMEM = re.compile(r"TRANSMEM (\d+)\.\.(\d+);([^T]*?)(?=TRANSMEM|\Z)")
+TRANSMEM = re.compile(r"TRANSMEM (\d+)\.\.(\d+);(.*?)(?=TRANSMEM \d|\Z)", re.S)
 
 
 def mean_hydropathy(segment: str) -> float:
@@ -61,6 +61,8 @@ def rule_segments(ft_transmem: str, rule: str) -> list[tuple[int, int]]:
     [(102, 118)]
     >>> rule_segments('TRANSMEM 5..25; /note="Helical"; /evidence="ECO:0000256|SAM:Phobius"', "MF_01093")
     []
+    >>> rule_segments('TRANSMEM 3..21; /note="Helical; Name=TM1"; /evidence="ECO:0000255|HAMAP-Rule:MF_00001"; TRANSMEM 40..60; /note="Helical; Name=TM2"; /evidence="ECO:0000255|HAMAP-Rule:MF_00001"', "MF_00001")
+    [(3, 21), (40, 60)]
     """
     out = []
     for m in TRANSMEM.finditer(ft_transmem or ""):

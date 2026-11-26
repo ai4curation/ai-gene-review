@@ -6,7 +6,7 @@ tags: [PIPELINE, EVALUATION]
 index_group: CROSS_CUTTING
 description: Reviews of HAMAP (UniRule) family rules, starting with rules that gene reviews caught misfiring.
 species: [METTH, METJA]
-genes: [mtrA2, mtrA1, mtrH, mtrA]
+genes: [mtrA1, mtrH, mtrA]
 ---
 
 # HAMAP Rule Review
@@ -51,13 +51,14 @@ the rule combine:
 | Unconditional location | `SUBCELLULAR LOCATION: Cell membrane; Single-pass membrane protein`, outside any `case` | every member is placed in the membrane |
 | Transmembrane trigger | `DR General; Transmembrane; ...; trigger=yes` | a transmembrane segment is predicted on every member and written as a feature |
 
-The gene review of METTH/mtrA2 (O27134) shows the result: a 183-residue protein
+The gene review of METTH/mtrA2 (O27134), in PR #7088, shows the result: a 183-residue protein
 aligned only to the soluble cobamide domain of the operon subunit, with no
 counterpart to its C-terminal anchor, is given a transmembrane segment at
 residues 102-118 (mean Kyte-Doolittle hydropathy 0.49, with charged residues),
-the Na+-coupled reaction and complex membership
-(genes/METTH/mtrA2/mtrA2-bioinformatics/RESULTS.md). This is pattern 24 in the
-[ARCHAEA error catalogue](ARCHAEA/annotation-patterns.md).
+the Na+-coupled reaction and complex membership (the review's bioinformatics
+RESULTS.md, in the same PR). It will be added to the
+[ARCHAEA error catalogue](ARCHAEA/annotation-patterns.md) in a status update
+once that PR merges.
 
 ## Scan of all HAMAP rules
 
@@ -84,12 +85,16 @@ hydropathy of each segment whose evidence names the rule. Weak helices in
 multi-pass proteins often fall below a 1.0 threshold, so the test that matters
 is an entry with **no** rule-assigned segment above it
 ([summary](HAMAP/rule_tm_summary.yaml); the per-segment table is regenerated
-by the script and not committed).
+by the script and not committed). An earlier version of the script's
+TRANSMEM pattern stopped at the first capital T in a feature, so a segment
+with a note such as `Name=TM1` would have been dropped. After the fix the
+rerun (2026-11-26) gave the same 141,582 segments and an identical summary:
+the rule-assigned segments in current UniProt carry only `Helical` notes.
 
 | Rule | Entries | Entries with no hydrophobic segment | Notes |
 |---|---|---|---|
 | MF_01093 MtrA | 159 | 4 | O27134, D9PXT1 and D3E0P6, three of the soluble homologues (the rule review confirms all three); A6UWH7 (*Methanococcus aeolicus*, 240 residues) is an anchored subunit whose rule-placed segment is slightly off its C-terminal helix |
-| MF_01944 LpxM | 4 | 2 | *E. coli* and *Shigella* LpxM (segment 23-43, 0.85). Not an error: the inner-membrane location has experimental support (PMID:9099672), so this is a weakly hydrophobic real anchor and a false positive of the test |
+| MF_01944 LpxM | 4 | 2 | *E. coli* and *Shigella* LpxM (segment 23-43, 0.85). Not an error: UniProt P24205's SUBCELLULAR LOCATION line gives Cell inner membrane with experimental evidence (ECO:0000269 from PubMed:9099672; the cached abstract of that paper does not show it), so this is a weakly hydrophobic real anchor and a false positive of the test |
 | the other 16 | 24,320 | 0 | |
 
 So among HAMAP rules that allow paralogs and put a transmembrane segment on
@@ -104,7 +109,7 @@ location. Plan item 2 extends the check to location-only cases.
 
 | Rule | UniRule | Review | Verdict |
 |---|---|---|---|
-| MF_01093 MtrA | UR000100608 | [rules/unirule/UR000100608](../rules/unirule/UR000100608/UR000100608-review.yaml) | MODIFY: 22 of 219 annotated proteins are soluble homologues that receive the anchored subunit's statements; wrap those in `case <Length>215>` |
+| MF_01093 MtrA | UR000100608 | pending: `rules/unirule/UR000100608` is in PR #7088 | MODIFY: 22 of 219 annotated proteins are soluble homologues that receive the anchored subunit's statements; wrap those in `case <Length>215>` |
 | MF_01501 MtrH | UR000038407 | [rules/unirule/UR000038407](../rules/unirule/UR000038407/UR000038407-review.yaml) | MODIFY: conditions sound, activity consequents describe the complex |
 
 MF_01501 is the complex-activity case (pattern 16 in the ARCHAEA catalogue).
