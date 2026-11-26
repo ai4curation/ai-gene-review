@@ -25,7 +25,7 @@ enzyme with an N-terminal hexose-6-phosphate dehydrogenase domain and a C-termin
 - H6PD has broad dehydrogenase specificity, including free-glucose and other
   sugar-phosphate reactions inherited from mouse H6pd or characterized on human H6PD
   in UniProt/RHEA rows. These are kept as non-core or removed when GOA projects them
-  to overly generic or wrong-direction activities, rather than made core functions.
+  to overly generic EC-bucket activities, rather than made core functions.
 
 ## PANTHER PTHR23429
 
