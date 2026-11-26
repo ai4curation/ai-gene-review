@@ -78,3 +78,24 @@ Yeast two-hybrid records support the tested constructs; copurification supports 
 Query response: 1120791 bytes; SHA-256 `a00fee1f45baf490ad8103a71e7a1b47acab92aa15c10b7f9c170d49b94e156f`. The selected record locators in the annotation rationales retain the relevant assay and construct caveats.
 
 The PDLIM4 structure in PMID:20120020 contains an engineered ESDL extension on a PDZ construct; it is not a full-length ACTN1–PDLIM4 co-crystal. ESDL matches ACTN1’s C terminus, and independent HuRI pair records corroborate the interaction. The original OpenCell table for ACTN1–C14orf119 remains uninspected; independent HuRI evidence resolves the shared binding claim.
+
+## Follow-up source access and PAINT evidence
+
+[PMID:16807302, publisher article](https://journals.physiology.org/doi/full/10.1152/ajpcell.00113.2006) remains abstract-only in the cache. Publisher-indexed Methods identify full-length and truncated human ACTN1 (M95178), GFP-tagged and expressed in rat UMR106.01 and primary calvarial cells. Indexed Results/Discussion report conditional TNF/CHX susceptibility and full-length protection in UMR106 cells. Direct article opening returned 403; these inspected sections resolve construct identity without establishing endogenous human physiology. The Methods and Discussion were retrieved by targeted searches of that publisher URL for `MATERIALS construct` and `ROD-GFP caspase`.
+
+The committed [PTHR11915 PAINT slice](../../../interpro/panther/PTHR11915/PTHR11915-paint.tsv) contains all 17 annotations on the 610 nodes present in the retained PANTHER 19.0 family tree. It was emitted by the repository's native `parse_ibd_gaf` and `write_family_paint` functions from the existing [2026-08-28 IBD source](https://data.pantherdb.org/ftp/downloads/paint/19.0/2026-08-28/IBD.gaf). Each exported node retains all its source annotations; an independent source-key comparison found zero unbacked or pruned rows. No full PAINT download, cache copy or family-wide biological review was introduced.
+
+Slice SHA-256: `fd2acce29b95f918dc2f0a1816d847afee119924a856e6171e19ad9d81edc0e8`. The full IBD and compact-tree hashes above identify the retained source versions. Family-tree source: [PANTHER treeinfo](https://pantherdb.org/services/oai/pantherdb/treeinfo?family=PTHR11915). Its leaf `PTN002539723` maps to P12814; the node-to-descendant relation places the following exact IBD assertions on that leaf's lineage.
+
+| Native index | GO term | IBD node |
+| --- | --- | --- |
+| 0 | GO:0001725 stress fiber | PTN002629552 |
+| 67 | GO:0005886 plasma membrane | PTN004321300 |
+| 83 | GO:0030018 Z disc | PTN000937127 |
+| 86 | GO:0030036 actin cytoskeleton organization | PTN001566526 |
+| 87 | GO:0030054 cell junction | PTN004321300 |
+| 90 | GO:0030864 cortical actin cytoskeleton | PTN001566526 |
+| 110 | GO:0051015 actin filament binding | PTN001566526 |
+| 115 | GO:0055001 muscle cell development | PTN000937127 |
+
+All retained lineage nodes, including the leaf: `PTN000747389`, `PTN000747492`, `PTN000747493`, `PTN000747517`, `PTN000747518`, `PTN000747519`, `PTN000747520`, `PTN000747521`, `PTN000747522`, `PTN000937127`, `PTN001566526`, `PTN001728337`, `PTN002276594`, `PTN002539723`, `PTN002629455`, `PTN002629537`, `PTN002629552`, `PTN004321300`, `PTN008332442`, `PTN008529925`, `PTN008529926`, `PTN008985492`. No IRD, IKR or NOT source row was found on these nodes. This is bounded to the pinned tree and IBD snapshot; it does not assert completeness for absent nodes, later releases or other family members.
