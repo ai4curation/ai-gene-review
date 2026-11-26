@@ -24,7 +24,7 @@ annotations, which reach many other proteins as IBAs, so an error in a seed is
 copied to every descendant. Of 471 PAO1 proteins that seed an IBD, 398 have a
 PseudoCAP annotation supporting at least one seeding; for 139 node terms (109
 proteins) the PAO1 protein is the only seed. We reviewed all 109 of those
-proteins: 106 have full reviews, and the review files for pvdE, pqsA and PA2403
+proteins: 107 have full reviews, and the review files for pqsA and PA2403
 are still to be written. For 21 genes the seed is wrong or
 is an indirect mutant phenotype, and the IBD it supports should be withdrawn or
 repointed. Examples are catalase activity on a heme exporter (ccmC), lipid
@@ -132,10 +132,11 @@ produces one report for PseudoCAP and one for PAINT.
 
 ## Results: tier 1 (sole seeds)
 
-All 109 tier 1 proteins have been assessed, and 106 have full reviews. The
-review files for pvdE, pqsA and PA2403 still need writing (see below), so they
-are tallied separately; pvdE's notes and seed assessment (seed sound, node too
-broad) are committed. Each gene is classified by the outcome for
+All 109 tier 1 proteins have been assessed, and 107 have full reviews. The
+review files for pqsA and PA2403 still need writing (see below), so they are
+tallied separately. pvdE was in that list and is no longer: its review was
+written in tier-3 batch 5 (PR #6754), so the count moved from 106 to 107 and
+this page did not follow it. Each gene is classified by the outcome for
 its sole-seeded node terms. Leaf IBA counts are the worklist's
 reference-proteome counts for those terms, so they are lower bounds.
 
@@ -367,10 +368,11 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 
 ### Not completed
 
-The review files for pvdE, pqsA and PA2403 were not written: the agent's write
-of each review YAML was blocked by a safety classifier (pvdE, pqsA), and the
-agent stopped before PA2403. pvdE's notes, seed assessment and node analysis
-are committed. The research findings for the other two:
+The review files for pqsA and PA2403 are still not written: the agent's write of
+the pqsA review YAML was blocked by a safety classifier, and the agent stopped
+before PA2403. pvdE was blocked the same way and has since been written, in
+tier-3 batch 5 (PR #6754, commit `a3073d800f`), so it is no longer listed here.
+The research findings for the two that remain:
 
 - **pqsA:** the cited paper (PMID:12426334) attributes the PA0996 result to a
   different study; PMID:18728009 shows a pqsA mutant makes no quinolines. The
