@@ -53,8 +53,10 @@ feature quotas (for example `PSEUDOENZYME`, with a UniProt query), the number of
 decoys per item, and the evaluation conditions. Each condition records its
 model and, where known, the model's training cutoff.
 
-`min_reference_date` keeps only targets whose PubMed reference was published on
-or after a date. This matters more for language models than it did for CAFA. A
+`min_reference_date` keeps only targets whose supporting PubMed references
+were all published on or after a date. A target that also rests on an older
+paper is dropped whole, and the earliest supporting paper becomes the target's
+`reference`. This matters more for language models than it did for CAFA. A
 GO time split only shows that the GO record is new. A model may have read the
 paper. A feature quota can set its own `min_reference_date` when the feature
 is too rare to fill from the main window.
@@ -87,15 +89,16 @@ review-derived benchmark is held to the same tests as a drawn one.
 | `present_in_current` | the row is in the current release (FAIL for GOA targets) |
 | `date_window` | the GAF date is on or after the cutoff (WARN only; see below) |
 | `prior_prediction` | the term or a descendant was predicted on the protein at baseline (IBA/PAN-GO, IEA, ISS, ...) |
-| `homolog_leakage` | the term or a descendant was experimentally annotated at baseline on a protein in the same PANTHER subfamily |
-| `near_duplicate` | the closest baseline experimental term in the same aspect has Lin similarity at or above the threshold (IC from baseline annotation frequencies) |
+| `homolog_leakage` | the term or a descendant was experimentally annotated at baseline on a protein in the same PANTHER subfamily (INFO when the protein has no subfamily: not checked) |
+| `near_duplicate` | the closest baseline experimental term in the same aspect has Lin similarity at or above the threshold (IC from baseline annotation frequencies; INFO when there is no baseline term to compare) |
 | `uniprot_leakage` | the current UniProt entry carries the target in a DR GO line (INFO) or its label in comment text (WARN) |
 | `header_leakage` | the protein name shown in FULL conditions shares most of the target label's words |
-| `reference_recency` | the target paper was published after each condition's model training cutoff |
+| `reference_recency` | the earliest supporting paper was published after each condition's model training cutoff |
 | `decoy` | decoys neither entail nor are entailed by any current annotation of the protein |
 | `feature_label` | a query-derived feature (pseudoenzyme) is supported by the UniProt protein name, not only by comment text |
 | `review_agreement` | an ai-gene-review review of the gene keeps (PASS) or contests (WARN) the target |
-| `balance` | requested size, aspects and feature quotas met; no single reference supplies more than 25% of targets |
+| `balance` | requested size, aspects and feature quotas met; no single reference supplies more than 25% of targets or targets to more than 10% of items |
+| `difficulty` | a recorded difficulty agrees with the grading checks |
 
 Difficulty follows from three of these checks. A target is EASY if
 `prior_prediction` or `homolog_leakage` fires, MEDIUM if `near_duplicate`
@@ -125,14 +128,16 @@ annotation only in another aspect) and `PARTIAL_KNOWLEDGE`.
   Novelty is therefore keyed on term and qualifier, not evidence code.
 - **New to GO is not new knowledge.** In the example window, 10,771 rows on
   4,420 human proteins passed the novelty test (after the high-throughput
-  filter). Only 476 rows on 202 proteins rest on papers published since
-  2025-06-01, and 11 rows on 7 proteins on papers since 2026-06-01.
+  filter). Only 393 rows on 182 proteins rest wholly on papers published since
+  2025-06-01, and 10 rows on 6 proteins on papers since 2026-06-01.
 - **GO moved its per-species files** to `annotations/gaf/<CODE>-uniprot.gaf.gz`
   in 2026. The loader tries both layouts.
-- **Feature labels from UniProt queries are not literature checks.** SMARCA1
-  matched a pseudoenzyme query only through isoform-2 text, and WHR1 (formerly
-  STK19) only through an AltName. Both are recorded with
-  `literature_checked: false`, and `feature_label` flags the first. This is the
+- **Feature labels from UniProt queries are not literature checks.** In draws
+  of the example, SMARCA1 matched a pseudoenzyme query only through isoform-2
+  text, KLK11 (an active protease) only through the names of its cleavage
+  chains ("inactive chain 1"), and WHR1 (formerly STK19) only through an
+  AltName. All are recorded with `literature_checked: false`. `feature_label`
+  reads only the protein's own names and flags the first two. This is the
   lesson of fs2f's `NAMED_INACTIVE_LABELS.md`.
 
 ## Related practice
@@ -170,6 +175,17 @@ annotation only in another aspect) and `PARTIAL_KNOWLEDGE`.
   current UniProt (release recorded), not from the baseline date.
 - A decoy is a term the protein is not annotated to, not one it is known to
   lack, so a yes on a decoy is not necessarily wrong.
+- `min_reference_date` and `reference_recency` use the PubMed record date. A
+  preprint, accepted manuscript or author copy may have been readable, and in a
+  model's training data, a year earlier. A preprint-date lookup would tighten
+  both.
+- Decoys are scored only where a predictor is asked about them. A review is
+  never asked about decoys, so the agent-review condition records them as
+  missing, and its decoy rate is not comparable with the peptalk conditions.
+  Compare conditions on targets, and on decoys only among the peptalk runs.
+- Review verdicts count ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL and MODIFY
+  rows (including MODIFY's replacement terms) and every core-function term
+  slot as assertions. REMOVE and MARK_AS_OVER_ANNOTATED count as "no".
 - Existing ai-gene-review reviews were written with current GOA in view. Scoring
   them with `--reviews-dir genes` measures agreement, not an AGENT_REVIEW run.
   A real run seeds each review with `run-inputs/baseline-goa/<ACC>-goa.tsv` and

@@ -124,7 +124,8 @@ def check_cmd(
     stem.with_suffix(".md").write_text(report_markdown(report))
     for row in report["summary"]:
         typer.echo(
-            f"{row['check']:20} pass/info {row['passed']:4}  warn {row['warned']:4}  fail {row['failed']:4}"
+            f"{row['check']:20} pass {row['passed']:4}  info {row['info']:4}  "
+            f"warn {row['warned']:4}  fail {row['failed']:4}"
         )
     failed = sum(row["failed"] for row in report["summary"])
     if strict and failed:
@@ -155,8 +156,15 @@ def export_cmd(
     """Write FASTA, peptalk claims TSV, and per-protein baseline GOA files for the conditions."""
     benchmark = load_yaml(benchmark_file)
     ctx, _ = load_context(benchmark["spec"], cache)
-    written = export(benchmark, ctx, out_dir or benchmark_file.parent / "run-inputs")
+    written, skipped = export(
+        benchmark, ctx, out_dir or benchmark_file.parent / "run-inputs"
+    )
     typer.echo(f"wrote {len(written)} files, starting {written[0]}")
+    if skipped:
+        typer.echo(
+            f"skipped {len(skipped)} item(s) with no pinned sequence: {', '.join(skipped)}",
+            err=True,
+        )
 
 
 @benchmark_app.command("score")

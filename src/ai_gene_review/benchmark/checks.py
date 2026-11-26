@@ -33,6 +33,8 @@ SCHEMA = Path(__file__).resolve().parents[1] / "schema" / "benchmark.yaml"
 REVIEW_KEEPS = frozenset({"ACCEPT", "KEEP_AS_NON_CORE", "NEW", "TOO_GENERAL"})
 REVIEW_CONTESTS = frozenset({"REMOVE", "MARK_AS_OVER_ANNOTATED"})
 TOP_REFERENCE_SHARE_LIMIT = 0.25
+#: A reference supplying targets to more than this fraction of items is flagged.
+ITEM_SHARE_LIMIT = 0.1
 
 Result = dict[str, Any]
 
@@ -112,13 +114,13 @@ def novelty(
 
     A positive target is not new when a baseline experimental row is to the
     term, to a descendant, or to an alt_id or obsolete id that the current
-    ontology maps onto either. A NOT target is not new when a baseline NOT row
-    is to the term or an ancestor.
+    ontology maps onto either. A NOT target is not new when a baseline
+    experimental NOT row is to the term or an ancestor.
     """
     if negated:
         hits = [
             a
-            for a in ctx.baseline_rows(protein, negated=True)
+            for a in ctx.baseline_rows(protein, experimental=True, negated=True)
             if ctx.ontology.resolve(a.term) in ctx.ontology.ancestors(term)
         ]
     else:
@@ -194,6 +196,14 @@ def homolog_leakage(
             term,
             [row_text(a) for a in hits[:5]],
         )
+    if protein not in ctx.subfamily:
+        return result(
+            "homolog_leakage",
+            "INFO",
+            "not checked: no PANTHER subfamily for this protein",
+            item_id,
+            term,
+        )
     return result(
         "homolog_leakage", "PASS", f"not on {sf} homologs at baseline", item_id, term
     )
@@ -216,8 +226,8 @@ def near_duplicate(
     if not scored:
         return result(
             "near_duplicate",
-            "PASS",
-            "no baseline experimental term in this aspect",
+            "INFO",
+            "not applicable: no baseline experimental term in this aspect",
             item_id,
             term,
         )
@@ -404,7 +414,7 @@ def uniprot_leakage(
 def reference_recency(
     target: dict, conditions: list[dict], item_id: str
 ) -> list[Result]:
-    """Was the target's reference published after each condition's model training cutoff?
+    """Was the target's earliest supporting reference published after each condition's model training cutoff?
 
     >>> t = {"term": {"id": "GO:1"}, "reference": "PMID:1", "reference_date": "2025-09-01"}
     >>> [r["status"] for r in reference_recency(t, [{"name": "blind", "model_training_cutoff": "2026-06-01"}], "x")]
@@ -556,15 +566,27 @@ FEATURE_KEYWORDS = {
 
 
 def uniprot_names_and_comments(entry_text: str) -> tuple[str, list[str]]:
-    r"""DE name text and CC paragraphs (one string per ``-!-`` topic) of a UniProt flat file.
+    r"""The protein's own DE names and its CC paragraphs (one string per ``-!-`` topic).
+
+    Names of chains or domains (after ``Contains:`` or ``Includes:``) are left
+    out: "Kallikrein-11 inactive chain 1" names a cleavage product, not the
+    protein.
 
     >>> names, cc = uniprot_names_and_comments("DE   RecName: Full=Inactive kinase X;\nCC   -!- FUNCTION: Binds ATP.\nCC       More.\nCC   -!- DOMAIN: Pseudo.\n")
     >>> names, cc
     ('RecName: Full=Inactive kinase X;', ['FUNCTION: Binds ATP. More.', 'DOMAIN: Pseudo.'])
+    >>> uniprot_names_and_comments("DE   RecName: Full=Kallikrein-11;\nDE   Contains:\nDE     RecName: Full=Kallikrein-11 inactive chain 1;\n")[0]
+    'RecName: Full=Kallikrein-11;'
     """
-    names = " ".join(
-        line[5:].strip() for line in entry_text.splitlines() if line.startswith("DE   ")
-    )
+    own: list[str] = []
+    for line in entry_text.splitlines():
+        if not line.startswith("DE   "):
+            continue
+        text = line[5:].strip()
+        if text in ("Contains:", "Includes:"):
+            break
+        own.append(text)
+    names = " ".join(own)
     paragraphs: list[str] = []
     for line in entry_text.splitlines():
         if line.startswith("CC   -!- "):
@@ -605,8 +627,8 @@ def feature_label(entry_text: str, feature: str, item_id: str) -> Result:
     return result(
         "feature_label",
         "WARN",
-        f"current UniProt entry no longer supports the {feature} label "
-        "(renamed or revised since the query matched)",
+        f"neither the protein's own names nor its comments support the {feature} label "
+        "(the query may have matched a chain or domain name, or the entry was revised)",
         item_id,
     )
 
@@ -742,6 +764,19 @@ def stats(benchmark: dict, ic: InformationContent) -> tuple[dict, list[Result]]:
                     f"{got} {quota['feature']} items, {quota['count']} requested",
                 )
             )
+    items_by_reference: dict[str, set[str]] = defaultdict(set)
+    for item, t in targets:
+        items_by_reference[t["reference"]].add(item["id"])
+    for ref, item_ids in sorted(items_by_reference.items()):
+        if len(item_ids) > max(1, ITEM_SHARE_LIMIT * len(items)):
+            findings.append(
+                result(
+                    "balance",
+                    "WARN",
+                    f"{ref} supplies targets to {len(item_ids)}/{len(items)} items, "
+                    "so their scores are not independent",
+                )
+            )
     if top_share > TOP_REFERENCE_SHARE_LIMIT:
         ref, n = references.most_common(1)[0]
         findings.append(
@@ -773,8 +808,14 @@ def run_checks(
         if entry is not None:
             results += [
                 feature_label(entry, f["feature"], item_id)
-                for f in item.get("features") or []
                 if f["feature"] in FEATURE_KEYWORDS
+                else result(
+                    "feature_label",
+                    "INFO",
+                    f"no label check implemented for {f['feature']}",
+                    item_id,
+                )
+                for f in item.get("features") or []
             ]
         for target in item["target_annotations"]:
             term = target["term"]["id"]
@@ -796,7 +837,7 @@ def run_checks(
                 if recorded and recorded != difficulty(graded):
                     results.append(
                         result(
-                            "near_duplicate",
+                            "difficulty",
                             "WARN",
                             f"recorded difficulty {recorded} but checks give {difficulty(graded)}",
                             item_id,
@@ -826,7 +867,8 @@ def run_checks(
         summary.append(
             {
                 "check": check,
-                "passed": statuses["PASS"] + statuses["INFO"],
+                "passed": statuses["PASS"],
+                "info": statuses["INFO"],
                 "warned": statuses["WARN"],
                 "failed": statuses["FAIL"],
             }
@@ -848,11 +890,11 @@ def report_markdown(report: dict) -> str:
         "",
         f"Generated {report['generated']}.",
         "",
-        "| check | pass/info | warn | fail |",
-        "|---|---|---|---|",
+        "| check | pass | info | warn | fail |",
+        "|---|---|---|---|---|",
     ]
     lines += [
-        f"| {s['check']} | {s['passed']} | {s['warned']} | {s['failed']} |"
+        f"| {s['check']} | {s['passed']} | {s['info']} | {s['warned']} | {s['failed']} |"
         for s in report["summary"]
     ]
     st = report["stats"]

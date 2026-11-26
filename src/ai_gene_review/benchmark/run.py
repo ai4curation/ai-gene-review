@@ -134,11 +134,18 @@ def goa_row(a: Annotation, ctx: Context, taxon: dict) -> str:
     )
 
 
-def export(benchmark: dict, ctx: Context, out_dir: Path) -> list[Path]:
-    """Write the FASTA, claims TSV and baseline GOA files; return the paths written."""
+def export(
+    benchmark: dict, ctx: Context, out_dir: Path
+) -> tuple[list[Path], list[str]]:
+    """Write the FASTA, claims TSV and baseline GOA files.
+
+    Returns the paths written and the ids of items skipped for lack of a
+    pinned sequence (they will score as missing).
+    """
     out_dir.mkdir(parents=True, exist_ok=True)
     taxon = benchmark["spec"]["taxon"]
     items = [i for i in benchmark["items"] if i.get("sequence")]
+    skipped = [i["id"] for i in benchmark["items"] if not i.get("sequence")]
     fasta = out_dir / f"{benchmark['id']}.fasta"
     fasta.write_text("".join(fasta_record(i, taxon) for i in items))
     claims = out_dir / f"{benchmark['id']}-claims.tsv"
@@ -154,7 +161,7 @@ def export(benchmark: dict, ctx: Context, out_dir: Path) -> list[Path]:
             + "\n"
         )
         written.append(path)
-    return written
+    return written, skipped
 
 
 def condition_name(conditions: list[dict], context: str, model: str | None) -> str:
@@ -201,12 +208,62 @@ def peptalk_verdicts(benchmark: dict, records: Iterable[dict]) -> Verdicts:
     return verdicts
 
 
+CORE_FUNCTION_SLOTS = (
+    "molecular_function",
+    "contributes_to_molecular_function",
+    "directly_involved_in",
+    "locations",
+    "in_complex",
+)
+
+
+def review_claims(review: dict) -> tuple[set[str], set[str]]:
+    """Terms a review asserts (kept rows, MODIFY rows and their replacements, core functions) and contests.
+
+    >>> kept, contested = review_claims({
+    ...     "existing_annotations": [
+    ...         {"term": {"id": "GO:1"}, "review": {"action": "MODIFY",
+    ...          "proposed_replacement_terms": [{"id": "GO:2"}]}},
+    ...         {"term": {"id": "GO:3"}, "review": {"action": "REMOVE"}}],
+    ...     "core_functions": [{"in_complex": {"id": "GO:4"}}]})
+    >>> sorted(kept), sorted(contested)
+    (['GO:1', 'GO:2', 'GO:4'], ['GO:3'])
+    """
+    kept: set[str] = set()
+    contested: set[str] = set()
+    for row in review.get("existing_annotations") or []:
+        decision = row.get("review") or {}
+        action = decision.get("action")
+        term = (row.get("term") or {}).get("id")
+        if not term or row.get("negated"):
+            continue
+        if action in REVIEW_KEEPS or action == "MODIFY":
+            kept.add(term)
+            kept |= {
+                t["id"]
+                for t in decision.get("proposed_replacement_terms") or []
+                if t.get("id", "").startswith("GO:")
+            }
+        elif action in REVIEW_CONTESTS:
+            contested.add(term)
+    for core in review.get("core_functions") or []:
+        for slot in CORE_FUNCTION_SLOTS:
+            values = core.get(slot) or []
+            for value in values if isinstance(values, list) else [values]:
+                if isinstance(value, dict) and value.get("id"):
+                    kept.add(value["id"])
+    return kept, contested - kept
+
+
 def review_verdicts(
     benchmark: dict, ctx: Context, genes_dir: Path, condition: str
 ) -> Verdicts:
-    """Verdicts from ai-gene-review reviews: yes when a kept row or core function entails the term.
+    """Verdicts from ai-gene-review reviews on targets and NOT targets.
 
-    A term is "no" when the review contests a row to it, or asserts nothing that entails it.
+    A term is "yes" when an asserted term entails it, "no" when the review
+    contests a row to it or asserts nothing that entails it. Decoys are
+    recorded as "missing": a review is not asked about them, so its silence
+    is not a measured "no" comparable with the peptalk conditions.
     """
     verdicts: Verdicts = {}
     for item in benchmark["items"]:
@@ -215,33 +272,18 @@ def review_verdicts(
         )
         if path is None:
             continue
-        review = yaml.safe_load(path.read_text())
-        kept, contested = set(), set()
-        for row in review.get("existing_annotations") or []:
-            action = (row.get("review") or {}).get("action")
-            term = (row.get("term") or {}).get("id")
-            if term and action in REVIEW_KEEPS and not row.get("negated"):
-                kept.add(term)
-            elif term and action in REVIEW_CONTESTS:
-                contested.add(term)
-        for core in review.get("core_functions") or []:
-            for slot in ("molecular_function", "directly_involved_in", "locations"):
-                values = core.get(slot) or []
-                for value in values if isinstance(values, list) else [values]:
-                    if isinstance(value, dict) and value.get("id"):
-                        kept.add(value["id"])
-        for term, _, _ in queries(item):
-            if term in contested:
+        kept, contested = review_claims(yaml.safe_load(path.read_text()))
+        for term, _, role in queries(item):
+            if role == "DECOY":
+                verdict = "missing"
+            elif term in contested:
                 verdict = "no"
+            elif any(
+                term in ctx.ontology.ancestors(ctx.ontology.resolve(k)) for k in kept
+            ):
+                verdict = "yes"
             else:
-                verdict = (
-                    "yes"
-                    if any(
-                        term in ctx.ontology.ancestors(ctx.ontology.resolve(k))
-                        for k in kept
-                    )
-                    else "no"
-                )
+                verdict = "no"
             verdicts[(condition, "", item["id"], term)] = verdict
     return verdicts
 

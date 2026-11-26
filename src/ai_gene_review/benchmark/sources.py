@@ -98,7 +98,11 @@ def read_gaf(path: Path) -> list[Annotation]:
     """Read a (possibly gzipped) GAF into annotations."""
     opener = gzip.open if path.suffix == ".gz" else open
     with opener(path, "rt") as handle:
-        return [Annotation.from_gaf_line(line) for line in handle if line[0] != "!"]
+        return [
+            Annotation.from_gaf_line(line)
+            for line in handle
+            if line.strip() and not line.startswith("!")
+        ]
 
 
 def sha256(path: Path) -> str:
@@ -283,9 +287,13 @@ class Ontology:
             return cls.parse(handle)
 
     def resolve(self, term: str) -> str:
-        """Map an alt_id or replaced obsolete id to the live primary id."""
+        """Map an alt_id or replaced obsolete id to the live primary id, following chains."""
+        seen = set()
         term = self.alt_ids.get(term, term)
-        return self.replaced_by.get(term, term)
+        while term in self.replaced_by and term not in seen:
+            seen.add(term)
+            term = self.alt_ids.get(self.replaced_by[term], self.replaced_by[term])
+        return term
 
     def ancestors(self, term: str) -> frozenset[str]:
         """Reflexive is_a/part_of ancestors of a term."""
@@ -345,8 +353,11 @@ class InformationContent:
         return cls(ontology, dict(counts), dict(totals))
 
     def ic(self, term: str) -> float:
-        """Information content in bits."""
-        total = self.totals.get(self.ontology.aspect(term) or "", 0)
+        """Information content in bits; a term outside the three aspects is an error."""
+        aspect = self.ontology.aspect(term)
+        if aspect is None:
+            raise ValueError(f"{term} has no GO namespace in this ontology release")
+        total = self.totals.get(aspect, 0)
         return abs(math.log2((self.counts.get(term, 0) + 1) / (total + 1)))
 
     def lin(self, a: str, b: str) -> float:
@@ -363,10 +374,15 @@ class InformationContent:
 def uniprot_stream(
     query: str, fields: str, cache: Path, name: str
 ) -> tuple[list[dict[str, str]], str]:
-    """Run a UniProtKB stream query (TSV), cached by ``name``; return rows and UniProt release."""
+    """Run a UniProtKB stream query (TSV); return rows and UniProt release.
+
+    The cache file is named by ``name`` plus a hash of the query and fields,
+    so editing a query misses the cache instead of reusing stale rows.
+    """
     folder = cache / "uniprot"
-    path = folder / f"{name}.tsv"
-    release_path = folder / f"{name}.release"
+    key = hashlib.sha256(f"{query}\t{fields}".encode()).hexdigest()[:12]
+    path = folder / f"{name}-{key}.tsv"
+    release_path = folder / f"{name}-{key}.release"
     if not path.exists():
         response = requests.get(
             f"{UNIPROT_REST}/stream",

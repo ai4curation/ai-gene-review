@@ -153,7 +153,11 @@ def ctx() -> Context:
         baseline=base,
         current=by_protein(current),
         ic=InformationContent.from_terms(onto, experimental),
-        subfamily={"UniProtKB:P4": "PTHR1:SF1", "UniProtKB:P5": "PTHR1:SF1"},
+        subfamily={
+            "UniProtKB:P1": "PTHR2:SF1",
+            "UniProtKB:P4": "PTHR1:SF1",
+            "UniProtKB:P5": "PTHR1:SF1",
+        },
         cutoff="2025-06-01",
         excluded_terms=frozenset({"GO:0003674", "GO:0005575"}),
     )
@@ -240,8 +244,12 @@ def test_candidates_filter_evidence_novelty_and_negation(ctx: Context) -> None:
     ]
     no_not = goa_candidates(ctx, {**SPEC, "include_negated": False})
     assert "UniProtKB:P6" not in no_not
-    targets = collapse_rows(ctx, candidates["UniProtKB:P1"])
-    assert len(targets) == 1 and targets[0]["notes"] == "also supported by PMID:11"
+    dates = {"10": "2026-01-01", "11": "2025-07-01"}
+    targets = collapse_rows(ctx, candidates["UniProtKB:P1"], dates)
+    assert len(targets) == 1
+    # earliest-published reference represents the target; all are kept
+    assert targets[0]["reference"] == "PMID:11"
+    assert targets[0]["supporting_references"] == ["PMID:10", "PMID:11"]
 
 
 def build_items(ctx: Context, tmp_path: Path) -> list[dict]:
@@ -255,7 +263,7 @@ def build_items(ctx: Context, tmp_path: Path) -> list[dict]:
             protein,
             rows[0].symbol,
             rows[0].name,
-            collapse_rows(ctx, rows),
+            collapse_rows(ctx, rows, {}),
             [],
             rng,
             tmp_path,
@@ -322,7 +330,8 @@ def test_check_catches_hand_edited_old_target(ctx: Context, tmp_path: Path) -> N
 
 def test_export_and_score_peptalk(ctx: Context, tmp_path: Path) -> None:
     benchmark = toy_benchmark(ctx, tmp_path)
-    written = export(benchmark, ctx, tmp_path / "inputs")
+    written, skipped = export(benchmark, ctx, tmp_path / "inputs")
+    assert skipped == []
     assert (
         (tmp_path / "inputs" / "toy.fasta").read_text().startswith(">sp|P1|GP1_HUMAN")
     )
@@ -404,6 +413,86 @@ def test_review_derived_targets_and_review_verdicts(
     benchmark = toy_benchmark(ctx, tmp_path)
     verdicts = review_verdicts(benchmark, ctx, tmp_path, "agent-review")
     assert verdicts[("agent-review", "", "toy-P1", "GO:0106310")] == "yes"
+    decoy_roles = {
+        verdicts[("agent-review", "", item["id"], d["term"]["id"])]
+        for item in benchmark["items"]
+        if item["protein"] == "UniProtKB:P1"
+        for d in item.get("decoys", [])
+    }
+    assert decoy_roles <= {"missing"}  # a review is never asked about decoys
+
+
+def test_review_verdicts_count_modify_replacements(
+    ctx: Context, tmp_path: Path
+) -> None:
+    rows = [
+        {
+            "term": {"id": "GO:0004672"},
+            "evidence_type": "IEA",
+            "original_reference_id": "GO_REF:1",
+            "review": {
+                "action": "MODIFY",
+                "proposed_replacement_terms": [{"id": "GO:0106310"}],
+            },
+        }
+    ]
+    write_review(tmp_path, "P1", "GP1", rows)
+    verdicts = review_verdicts(
+        toy_benchmark(ctx, tmp_path), ctx, tmp_path, "agent-review"
+    )
+    assert verdicts[("agent-review", "", "toy-P1", "GO:0106310")] == "yes"
+
+
+def test_date_filter_drops_targets_with_any_old_reference(
+    ctx: Context, tmp_path: Path
+) -> None:
+    from ai_gene_review.benchmark.build import date_filtered
+
+    (tmp_path / "pubmed-dates.json").write_text(
+        json.dumps(
+            {
+                "10": "2026-01-01",
+                "11": "2020-01-01",
+                "12": "2026-02-01",
+                "13": "2026-02-01",
+                "14": "2026-02-01",
+                "15": "2026-02-01",
+            }
+        )
+    )
+    kept = date_filtered(goa_candidates(ctx, SPEC), "2025-06-01", tmp_path)
+    # P1's ser-kinase target has PMID:11 from 2020, so the whole target goes
+    assert "UniProtKB:P1" not in kept
+    assert "UniProtKB:P5" in kept
+
+
+def test_uniprot_stream_cache_is_keyed_by_query(tmp_path: Path) -> None:
+    from ai_gene_review.benchmark.sources import uniprot_stream
+
+    folder = tmp_path / "uniprot"
+    folder.mkdir()
+    import hashlib
+
+    for query, accession in (("q1", "P1"), ("q2", "P2")):
+        key = hashlib.sha256(f"{query}\tf".encode()).hexdigest()[:12]
+        (folder / f"feat-{key}.tsv").write_text(f"Entry\n{accession}\n")
+        (folder / f"feat-{key}.release").write_text("2026_04")
+    assert uniprot_stream("q1", "f", tmp_path, "feat")[0] == [{"Entry": "P1"}]
+    assert uniprot_stream("q2", "f", tmp_path, "feat")[0] == [{"Entry": "P2"}]
+
+
+def test_homolog_check_without_subfamily_is_info(ctx: Context) -> None:
+    assert homolog_leakage(ctx, "UniProtKB:P3", "GO:0004713")["status"] == "INFO"
+
+
+def test_decoys_follow_target_aspects(ctx: Context) -> None:
+    from ai_gene_review.benchmark.build import aspect_matched
+
+    item = {"target_annotations": [{"aspect": "C"}]}
+    eligible = [("GO:0004713", "a"), ("GO:0005634", "b")]
+    assert aspect_matched(ctx, item, eligible, 1, random.Random(0)) == [
+        ("GO:0005634", "b")
+    ]
 
 
 SUFFIX_CLASSES = {

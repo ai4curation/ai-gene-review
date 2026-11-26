@@ -53,15 +53,33 @@ from ai_gene_review.evaluation.cafa import DEFAULT_EXCLUDED_TERMS
 REVIEW_TARGET_ACTIONS = frozenset({"ACCEPT", "NEW"})
 
 
+def check_release_order(spec: dict) -> None:
+    """Require baseline release <= cutoff < current release (ISO dates compare as strings).
+
+    >>> check_release_order({"baseline_release": "2025-06-01", "cutoff_date": "2025-06-01", "current_release": "2026-08-05"})
+    >>> check_release_order({"baseline_release": "2025-07-01", "cutoff_date": "2025-06-01", "current_release": "2026-08-05"})
+    Traceback (most recent call last):
+    ...
+    ValueError: need baseline_release <= cutoff_date < current_release, got 2025-07-01, 2025-06-01, 2026-08-05
+    """
+    baseline, cutoff, current = (
+        str(spec["baseline_release"]),
+        str(spec["cutoff_date"]),
+        str(spec["current_release"]),
+    )
+    if not baseline <= cutoff < current:
+        raise ValueError(
+            "need baseline_release <= cutoff_date < current_release, "
+            f"got {baseline}, {cutoff}, {current}"
+        )
+
+
 def load_context(spec: dict, cache: Path = DEFAULT_CACHE) -> tuple[Context, list[dict]]:
     """Fetch and load the spec's pinned sources; return the context and SourceSnapshots."""
     code = spec["taxon"]["gaf_code"]
+    check_release_order(spec)
     baseline_files = fetch_release(spec["baseline_release"], code, cache)
     current_files = fetch_release(spec["current_release"], code, cache)
-    if spec["baseline_release"] > str(spec["cutoff_date"]):
-        raise ValueError(
-            f"baseline release {spec['baseline_release']} is after cutoff {spec['cutoff_date']}"
-        )
     ontology = Ontology.load(current_files.ontology)
     baseline = by_protein(read_gaf(baseline_files.gaf))
     current = by_protein(read_gaf(current_files.gaf))
@@ -159,7 +177,7 @@ def goa_candidates(ctx: Context, spec: dict) -> dict[str, list[Annotation]]:
 
 
 def target_from_row(
-    ctx: Context, a: Annotation, extra_refs: list[str]
+    ctx: Context, a: Annotation, references: list[str]
 ) -> dict[str, Any]:
     """TargetAnnotation dict from a current-release GAF row."""
     target: dict[str, Any] = {
@@ -176,21 +194,35 @@ def target_from_row(
         target["negated"] = True
     if a.with_from:
         target["with_from"] = a.with_from
-    if extra_refs:
-        target["notes"] = "also supported by " + ", ".join(extra_refs)
+    if len(references) > 1:
+        target["supporting_references"] = references
     return target
 
 
-def collapse_rows(ctx: Context, rows: list[Annotation]) -> list[dict[str, Any]]:
-    """One target per (term, negated); the first reference in sort order represents the rest."""
+def collapse_rows(
+    ctx: Context, rows: list[Annotation], dates: dict[str, str]
+) -> list[dict[str, Any]]:
+    """One target per (term, negated), represented by its earliest-published reference.
+
+    The earliest paper is the leakage-relevant one: it is when the knowledge
+    became readable. Undated references (Reactome, GO_REF) sort first, so an
+    unknown date is never mistaken for a recent one.
+    """
     grouped: dict[tuple[str, bool], list[Annotation]] = defaultdict(list)
     for a in rows:
         grouped[(a.term, a.negated)].append(a)
     targets = []
     for key in sorted(grouped):
-        ordered = sorted(grouped[key], key=lambda a: (a.reference, a.evidence))
-        others = sorted({a.reference for a in ordered[1:]} - {ordered[0].reference})
-        targets.append(target_from_row(ctx, ordered[0], others))
+        ordered = sorted(
+            grouped[key],
+            key=lambda a: (
+                dates.get(pmid(a.reference) or "", ""),
+                a.reference,
+                a.evidence,
+            ),
+        )
+        references = sorted({a.reference for a in ordered})
+        targets.append(target_from_row(ctx, ordered[0], references))
     return targets
 
 
@@ -211,7 +243,7 @@ def attach_review(genes_dir: Path, item: dict) -> None:
     if review is None:
         return
     for target in item["target_annotations"]:
-        target["review_file"] = str(review)
+        target["review_file"] = repo_relative(review)
         actions = review_actions(review, target["term"]["id"])
         if actions and "review_action" not in target:
             target["review_action"] = ",".join(actions)
@@ -302,7 +334,11 @@ def recent_enough(floor: str | None, references: list[str], cache: Path) -> set[
 def date_filtered(
     candidates: dict[str, list[Annotation]], floor: str | None, cache: Path
 ) -> dict[str, list[Annotation]]:
-    """Candidates restricted to rows whose reference passes ``recent_enough``."""
+    """Candidates restricted to targets all of whose references pass ``recent_enough``.
+
+    A (protein, term) target with one recent and one older paper is dropped
+    whole: the older paper made the knowledge readable before the floor.
+    """
     if not floor:
         return candidates
     keep = recent_enough(
@@ -310,11 +346,13 @@ def date_filtered(
         sorted({a.reference for rows in candidates.values() for a in rows}),
         cache,
     )
-    return {
-        p: kept
-        for p, rows in candidates.items()
-        if (kept := [a for a in rows if a.reference in keep])
-    }
+    out = {}
+    for protein, rows in candidates.items():
+        stale = {(a.term, a.negated) for a in rows if a.reference not in keep}
+        kept = [a for a in rows if (a.term, a.negated) not in stale]
+        if kept:
+            out[protein] = kept
+    return out
 
 
 def add_sequences(items: list[dict], cache: Path) -> None:
@@ -372,15 +410,49 @@ def add_decoys(ctx: Context, spec: dict, items: list[dict], rng: random.Random) 
                 and not any(related(ctx, term, k) for k in known)
             }.items()
         )
-        decoys = rng.sample(eligible, min(count, len(eligible)))
         item["decoys"] = [
             {
                 "term": {"id": term, "label": ctx.ontology.label(term)},
                 "aspect": ctx.ontology.aspect(term),
                 "drawn_from": source,
             }
-            for term, source in sorted(decoys)
+            for term, source in sorted(aspect_matched(ctx, item, eligible, count, rng))
         ]
+
+
+def aspect_matched(
+    ctx: Context,
+    item: dict,
+    eligible: list[tuple[str, str]],
+    count: int,
+    rng: random.Random,
+) -> list[tuple[str, str]]:
+    """Draw ``count`` decoys whose aspects follow the item's positive targets, cycling.
+
+    An aspect with no eligible term left falls back to any aspect, so an
+    item still gets ``count`` decoys when the pool allows.
+    """
+    aspects = sorted(
+        t["aspect"] for t in item["target_annotations"] if not t.get("negated")
+    ) or ["F", "P", "C"]
+    remaining = list(eligible)
+    drawn: list[tuple[str, str]] = []
+    for slot in range(count):
+        if not remaining:
+            break
+        wanted = aspects[slot % len(aspects)]
+        same = [e for e in remaining if ctx.ontology.aspect(e[0]) == wanted]
+        choice = rng.choice(same or remaining)
+        drawn.append(choice)
+        remaining.remove(choice)
+    return drawn
+
+
+def repo_relative(path: Path) -> str:
+    """Path relative to the working directory when it lies inside it."""
+    resolved = path.resolve()
+    cwd = Path.cwd().resolve()
+    return str(resolved.relative_to(cwd)) if resolved.is_relative_to(cwd) else str(path)
 
 
 def finish(
@@ -458,10 +530,14 @@ def build_goa(
             rows_of[protein] = quota_candidates[protein]
     remaining = sorted(set(candidates) - set(chosen))
     for protein in rng.sample(
-        remaining, min(spec["size"] - len(chosen), len(remaining))
+        remaining, max(0, min(spec["size"] - len(chosen), len(remaining)))
     ):
         chosen[protein] = features_of(protein)
         rows_of[protein] = candidates[protein]
+    dates = pubmed_dates(
+        [p for rows in rows_of.values() for a in rows if (p := pmid(a.reference))],
+        cache,
+    )
     items = []
     for protein in sorted(chosen):
         rows = rows_of[protein]
@@ -472,7 +548,7 @@ def build_goa(
                 protein,
                 rows[0].symbol,
                 rows[0].name,
-                collapse_rows(ctx, rows),
+                collapse_rows(ctx, rows, dates),
                 chosen[protein],
                 rng,
                 genes_dir,
@@ -516,7 +592,7 @@ def review_targets(ctx: Context, spec: dict, review: dict, path: Path) -> list[d
             "reference": reference,
             "source": "AIGR_REVIEW",
             "review_action": action,
-            "review_file": str(path),
+            "review_file": repo_relative(path),
         }
         if negated:
             target["negated"] = True

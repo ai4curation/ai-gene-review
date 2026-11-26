@@ -10,8 +10,9 @@ The class is `BenchmarkSpec` in `src/ai_gene_review/schema/benchmark.yaml`.
   as `current_release` unless told otherwise.
 - **`min_reference_date`**: a GO time split only shows that the GO record is new;
   a model may still have read the paper. Set this floor on or after the training
-  cutoff of the models to be evaluated. In the example window, 202 human
-  proteins have papers from 2025-06 or later and only 7 from 2026-06 or later,
+  cutoff of the models to be evaluated. A target passes only if all its
+  supporting papers do. In the example window, 182 human proteins have such
+  papers from 2025-06 or later and only 6 from 2026-06 or later,
   so report the counts before you settle on a date. A feature quota may set its
   own `min_reference_date`. When it does, say so in the spec description.
 - **Aspects, `go_branches`, `evidence_codes`**: the evidence default is CAFA's EXP,

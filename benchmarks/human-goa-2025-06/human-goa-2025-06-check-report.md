@@ -2,62 +2,64 @@
 
 Generated 2026-11-25.
 
-| check | pass/info | warn | fail |
-|---|---|---|---|
-| schema | 1 | 0 | 0 |
-| novelty | 68 | 0 | 0 |
-| present_in_current | 68 | 0 | 0 |
-| date_window | 62 | 6 | 0 |
-| prior_prediction | 59 | 8 | 0 |
-| homolog_leakage | 66 | 1 | 0 |
-| near_duplicate | 63 | 4 | 0 |
-| uniprot_leakage | 125 | 11 | 0 |
-| reference_recency | 204 | 68 | 0 |
-| header_leakage | 63 | 5 | 0 |
-| decoy | 72 | 0 | 0 |
-| review_agreement | 12 | 0 | 0 |
-| feature_label | 3 | 1 | 0 |
-| balance | 1 | 0 | 0 |
+| check | pass | info | warn | fail |
+|---|---|---|---|---|
+| schema | 1 | 0 | 0 | 0 |
+| novelty | 51 | 0 | 0 | 0 |
+| present_in_current | 51 | 0 | 0 | 0 |
+| date_window | 45 | 0 | 6 | 0 |
+| review_agreement | 12 | 6 | 0 | 0 |
+| prior_prediction | 43 | 0 | 7 | 0 |
+| homolog_leakage | 44 | 6 | 0 | 0 |
+| near_duplicate | 33 | 15 | 2 | 0 |
+| uniprot_leakage | 49 | 48 | 5 | 0 |
+| reference_recency | 0 | 153 | 51 | 0 |
+| header_leakage | 45 | 0 | 6 | 0 |
+| decoy | 72 | 0 | 0 | 0 |
+| feature_label | 3 | 0 | 1 | 0 |
+| balance | 0 | 0 | 1 | 0 |
 
 ## Stats
 
-24 items, 68 targets; targets per item 1/2.0/7 (min/median/max); mean IC 8.728 bits; top reference share 0.176.
+24 items, 51 targets; targets per item 1/1.0/7 (min/median/max); mean IC 9.494 bits; top reference share 0.196.
 
 | dimension | value | count |
 |---|---|---|
-| aspect | C | 14 |
-| aspect | F | 22 |
-| aspect | P | 32 |
-| assigned_by | UOS_MCB | 4 |
-| assigned_by | UniProt | 64 |
-| difficulty | EASY | 8 |
-| difficulty | HARD | 56 |
-| difficulty | MEDIUM | 3 |
+| aspect | C | 11 |
+| aspect | F | 16 |
+| aspect | P | 24 |
+| assigned_by | ComplexPortal | 2 |
+| assigned_by | IntAct | 1 |
+| assigned_by | UOS_MCB | 1 |
+| assigned_by | UniProt | 47 |
+| difficulty | EASY | 7 |
+| difficulty | HARD | 41 |
+| difficulty | MEDIUM | 2 |
 | difficulty | UNSET | 1 |
-| evidence_code | EXP | 5 |
-| evidence_code | IDA | 57 |
-| evidence_code | IMP | 6 |
+| evidence_code | EXP | 3 |
+| evidence_code | IDA | 38 |
+| evidence_code | IMP | 7 |
+| evidence_code | IPI | 3 |
 | feature | NONE | 20 |
 | feature | PSEUDOENZYME | 4 |
-| knowledge_category | LIMITED_KNOWLEDGE | 9 |
-| knowledge_category | NO_KNOWLEDGE | 14 |
-| knowledge_category | PARTIAL_KNOWLEDGE | 45 |
-| negated | False | 67 |
+| knowledge_category | LIMITED_KNOWLEDGE | 4 |
+| knowledge_category | NO_KNOWLEDGE | 12 |
+| knowledge_category | PARTIAL_KNOWLEDGE | 35 |
+| negated | False | 50 |
 | negated | True | 1 |
-| source | GOA_RELEASE | 68 |
+| source | GOA_RELEASE | 51 |
 | split | TEST | 24 |
-| top_reference | PMID:40446798 | 12 |
-| top_reference | PMID:41167449 | 7 |
-| top_reference | PMID:40963017 | 6 |
-| top_reference | PMID:40836090 | 5 |
-| top_reference | PMID:40593606 | 5 |
+| top_reference | PMID:40446798 | 10 |
+| top_reference | PMID:40108300 | 5 |
+| top_reference | PMID:40836090 | 4 |
+| top_reference | PMID:40963017 | 3 |
+| top_reference | PMID:39353615 | 3 |
 
-## Warnings and failures (104)
+## Warnings and failures (79)
 
 | check | status | item | term | message |
 |---|---|---|---|---|
-| uniprot_leakage | WARN | human-goa-2025-06-O95455 | GO:0005783 | label 'endoplasmic reticulum' appears in UniProt comment text |
-| reference_recency | WARN | human-goa-2025-06-O95455 | GO:0005783 | agent-review: PMID:40836090 published 2025-10-01, before model cutoff 2026-06-01 |
+| reference_recency | WARN | human-goa-2025-06-O75096 | GO:0001618 | agent-review: PMID:41162706 published 2026-01-01, before model cutoff 2026-06-01 |
 | uniprot_leakage | WARN | human-goa-2025-06-O95455 | GO:0005794 | label 'Golgi apparatus' appears in UniProt comment text |
 | reference_recency | WARN | human-goa-2025-06-O95455 | GO:0005794 | agent-review: PMID:40836090 published 2025-10-01, before model cutoff 2026-06-01 |
 | reference_recency | WARN | human-goa-2025-06-O95455 | GO:0006024 | agent-review: PMID:40836090 published 2025-10-01, before model cutoff 2026-06-01 |
@@ -69,63 +71,44 @@ Generated 2026-11-25.
 | reference_recency | WARN | human-goa-2025-06-P05164 | GO:0006337 | agent-review: PMID:40963017 published 2025-11-01, before model cutoff 2026-06-01 |
 | near_duplicate | WARN | human-goa-2025-06-P05164 | GO:0031491 | closest baseline term GO:0003682 chromatin binding (Lin 0.84) |
 | reference_recency | WARN | human-goa-2025-06-P05164 | GO:0031491 | agent-review: PMID:40963017 published 2025-11-01, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-P05164 | GO:0070944 | agent-review: PMID:40963017 published 2025-11-01, before model cutoff 2026-06-01 |
-| uniprot_leakage | WARN | human-goa-2025-06-P05164 | GO:0140644 | label 'neutrophil extracellular trap' appears in UniProt comment text |
-| reference_recency | WARN | human-goa-2025-06-P05164 | GO:0140644 | agent-review: PMID:40963017 published 2025-11-01, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-P05164 | GO:0140645 | agent-review: PMID:40963017 published 2025-11-01, before model cutoff 2026-06-01 |
 | reference_recency | WARN | human-goa-2025-06-P05164 | GO:0140776 | agent-review: PMID:40963017 published 2025-11-01, before model cutoff 2026-06-01 |
-| prior_prediction | WARN | human-goa-2025-06-P0C7U0 | GO:0016020 | predicted before cutoff by IBA,IEA |
-| uniprot_leakage | WARN | human-goa-2025-06-P0C7U0 | GO:0016020 | label 'membrane' appears in UniProt comment text |
-| reference_recency | WARN | human-goa-2025-06-P0C7U0 | GO:0016020 | agent-review: PMID:40576023 published 2025-09-01, before model cutoff 2026-06-01 |
-| prior_prediction | WARN | human-goa-2025-06-P0DMS8 | GO:0001609 | predicted before cutoff by IBA,IEA |
-| reference_recency | WARN | human-goa-2025-06-P0DMS8 | GO:0001609 | agent-review: PMID:40825947 published 2025-08-18, before model cutoff 2026-06-01 |
-| feature_label | WARN | human-goa-2025-06-P28370 |  | PSEUDOENZYME label rests on comment text only (check it is about this protein's canonical form) |
-| prior_prediction | WARN | human-goa-2025-06-P28370 | GO:0016887 | predicted before cutoff by IEA |
-| reference_recency | WARN | human-goa-2025-06-P28370 | GO:0016887 | agent-review: PMID:39413208 published 2024-11-27, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-P31749 | GO:0051897 | agent-review: PMID:40285646 published 2025-07-01, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-P32754 | GO:0001734 | agent-review: PMID:41317403 published 2026-02-01, before model cutoff 2026-06-01 |
-| uniprot_leakage | WARN | human-goa-2025-06-P32754 | GO:0005634 | label 'nucleus' appears in UniProt comment text |
-| reference_recency | WARN | human-goa-2025-06-P32754 | GO:0005634 | agent-review: PMID:41317403 published 2026-02-01, before model cutoff 2026-06-01 |
+| date_window | WARN | human-goa-2025-06-P13473 | GO:0160020 | GAF date 20250520 before cutoff yet absent from baseline (late export or filtered from the baseline release) |
+| reference_recency | WARN | human-goa-2025-06-P13473 | GO:0160020 | agent-review: PMID:40281343 published 2025-09-01, before model cutoff 2026-06-01 |
+| prior_prediction | WARN | human-goa-2025-06-P16260 | GO:1990559 | predicted before cutoff by IBA |
+| reference_recency | WARN | human-goa-2025-06-P16260 | GO:1990559 | agent-review: PMID:40925986 published 2025-09-01, before model cutoff 2026-06-01 |
+| header_leakage | WARN | human-goa-2025-06-P16260 | GO:1990559 | protein name 'Mitochondrial coenzyme A transporter SLC25A16' shares ['a', 'coenzyme', 'mitochondrial'] with the target label (FULL-header conditions) |
 | reference_recency | WARN | human-goa-2025-06-P43405 | GO:0034165 | agent-review: PMID:40980882 published 2025-11-12, before model cutoff 2026-06-01 |
 | reference_recency | WARN | human-goa-2025-06-P49407 | GO:0001678 | agent-review: PMID:40446798 published 2025-08-21, before model cutoff 2026-06-01 |
 | reference_recency | WARN | human-goa-2025-06-P49407 | GO:0007166 | agent-review: PMID:40446798 published 2025-08-21, before model cutoff 2026-06-01 |
-| near_duplicate | WARN | human-goa-2025-06-P49407 | GO:0030674 | closest baseline term GO:0060090 molecular adaptor activity (Lin 0.97) |
-| reference_recency | WARN | human-goa-2025-06-P49407 | GO:0030674 | agent-review: PMID:40384633 published 2025-10-15, before model cutoff 2026-06-01 |
 | reference_recency | WARN | human-goa-2025-06-P49407 | GO:0035721 | agent-review: PMID:40384633 published 2025-10-15, before model cutoff 2026-06-01 |
 | reference_recency | WARN | human-goa-2025-06-P49407 | GO:1903568 | agent-review: PMID:40384633 published 2025-10-15, before model cutoff 2026-06-01 |
+| reference_recency | WARN | human-goa-2025-06-P49841 | GO:0032374 | agent-review: PMID:41741634 published 2026-04-01, before model cutoff 2026-06-01 |
 | date_window | WARN | human-goa-2025-06-P49842 | GO:0000993 | GAF date 20250117 before cutoff yet absent from baseline (late export or filtered from the baseline release) |
 | reference_recency | WARN | human-goa-2025-06-P49842 | GO:0000993 | agent-review: PMID:39353615 published 2024-11-27, before model cutoff 2026-06-01 |
 | date_window | WARN | human-goa-2025-06-P49842 | GO:0006283 | GAF date 20250117 before cutoff yet absent from baseline (late export or filtered from the baseline release) |
 | reference_recency | WARN | human-goa-2025-06-P49842 | GO:0006283 | agent-review: PMID:39353615 published 2024-11-27, before model cutoff 2026-06-01 |
 | date_window | WARN | human-goa-2025-06-P49842 | GO:0008023 | GAF date 20250117 before cutoff yet absent from baseline (late export or filtered from the baseline release) |
-| reference_recency | WARN | human-goa-2025-06-P49842 | GO:0008023 | agent-review: PMID:39547223 published 2024-12-19, before model cutoff 2026-06-01 |
+| reference_recency | WARN | human-goa-2025-06-P49842 | GO:0008023 | agent-review: PMID:39547228 published 2024-12-12, before model cutoff 2026-06-01 |
 | date_window | WARN | human-goa-2025-06-P49842 | GO:0062058 | GAF date 20250117 before cutoff yet absent from baseline (late export or filtered from the baseline release) |
 | reference_recency | WARN | human-goa-2025-06-P49842 | GO:0062058 | agent-review: PMID:39353615 published 2024-11-27, before model cutoff 2026-06-01 |
-| uniprot_leakage | WARN | human-goa-2025-06-P49903 | GO:0005694 | label 'chromosome' appears in UniProt comment text |
-| reference_recency | WARN | human-goa-2025-06-P49903 | GO:0005694 | agent-review: PMID:40608935 published 2025-07-03, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-P63092 | GO:0001678 | agent-review: PMID:40446798 published 2025-08-21, before model cutoff 2026-06-01 |
-| near_duplicate | WARN | human-goa-2025-06-P63092 | GO:0035774 | closest baseline term GO:0050796 regulation of insulin secretion (Lin 0.84) |
-| reference_recency | WARN | human-goa-2025-06-P63092 | GO:0035774 | agent-review: PMID:40446798 published 2025-08-21, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-P98161 | GO:0007005 | agent-review: PMID:41166294 published 2025-10-30, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-P98161 | GO:0044233 | agent-review: PMID:41166294 published 2025-10-30, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-Q14258 | GO:0010507 | agent-review: PMID:40542578 published 2025-06-20, before model cutoff 2026-06-01 |
-| uniprot_leakage | WARN | human-goa-2025-06-Q494V2 | GO:0000922 | label 'spindle pole' appears in UniProt comment text |
-| reference_recency | WARN | human-goa-2025-06-Q494V2 | GO:0000922 | agent-review: PMID:40593606 published 2025-07-01, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-Q494V2 | GO:0007052 | agent-review: PMID:40593606 published 2025-07-01, before model cutoff 2026-06-01 |
-| uniprot_leakage | WARN | human-goa-2025-06-Q494V2 | GO:0007059 | label 'chromosome segregation' appears in UniProt comment text |
-| reference_recency | WARN | human-goa-2025-06-Q494V2 | GO:0007059 | agent-review: PMID:40593606 published 2025-07-01, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-Q494V2 | GO:0008017 | agent-review: PMID:40593606 published 2025-07-01, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-Q494V2 | GO:0043616 | agent-review: PMID:40593606 published 2025-07-01, before model cutoff 2026-06-01 |
-| date_window | WARN | human-goa-2025-06-Q6UXB2 | GO:0008009 | GAF date 20250505 before cutoff yet absent from baseline (late export or filtered from the baseline release) |
-| reference_recency | WARN | human-goa-2025-06-Q6UXB2 | GO:0008009 | agent-review: PMID:40279398 published 2025-11-01, before model cutoff 2026-06-01 |
-| header_leakage | WARN | human-goa-2025-06-Q6UXB2 | GO:0008009 | protein name 'C-X-C motif chemokine 17' shares ['chemokine'] with the target label (FULL-header conditions) |
-| prior_prediction | WARN | human-goa-2025-06-Q6UXB2 | GO:0016477 | predicted before cutoff by IBA,IEA |
-| reference_recency | WARN | human-goa-2025-06-Q6UXB2 | GO:0016477 | agent-review: PMID:41167449 published 2026-01-01, before model cutoff 2026-06-01 |
-| date_window | WARN | human-goa-2025-06-Q6UXB2 | GO:0030595 | GAF date 20250505 before cutoff yet absent from baseline (late export or filtered from the baseline release) |
-| prior_prediction | WARN | human-goa-2025-06-Q6UXB2 | GO:0030595 | predicted before cutoff by IBA,IEA |
-| reference_recency | WARN | human-goa-2025-06-Q6UXB2 | GO:0030595 | agent-review: PMID:40279398 published 2025-11-01, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-Q6UXB2 | GO:0042056 | agent-review: PMID:41167449 published 2026-01-01, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-Q6UXB2 | GO:0070098 | agent-review: PMID:41167449 published 2026-01-01, before model cutoff 2026-06-01 |
+| uniprot_leakage | WARN | human-goa-2025-06-P51553 | GO:0001917 | label 'photoreceptor inner segment' appears in UniProt comment text |
+| reference_recency | WARN | human-goa-2025-06-P51553 | GO:0001917 | agent-review: PMID:40119724 published 2025-06-01, before model cutoff 2026-06-01 |
+| prior_prediction | WARN | human-goa-2025-06-P53597 | GO:0004776 | predicted before cutoff by IBA,IEA |
+| reference_recency | WARN | human-goa-2025-06-P53597 | GO:0004776 | agent-review: PMID:40108300 published 2025-06-01, before model cutoff 2026-06-01 |
+| header_leakage | WARN | human-goa-2025-06-P53597 | GO:0004776 | protein name 'Succinate--CoA ligase [ADP/GDP-forming] subunit alpha, mitochondrial' shares ['coa', 'forming', 'gdp', 'ligase', 'succinate'] with the target label (FULL-header conditions) |
+| reference_recency | WARN | human-goa-2025-06-P53597 | GO:0006108 | agent-review: PMID:40108300 published 2025-06-01, before model cutoff 2026-06-01 |
+| prior_prediction | WARN | human-goa-2025-06-P53597 | GO:0016878 | predicted before cutoff by IBA,IEA |
+| reference_recency | WARN | human-goa-2025-06-P53597 | GO:0016878 | agent-review: PMID:40108300 published 2025-06-01, before model cutoff 2026-06-01 |
+| reference_recency | WARN | human-goa-2025-06-P53597 | GO:0050074 | agent-review: PMID:40108300 published 2025-06-01, before model cutoff 2026-06-01 |
+| header_leakage | WARN | human-goa-2025-06-P53597 | GO:0050074 | protein name 'Succinate--CoA ligase [ADP/GDP-forming] subunit alpha, mitochondrial' shares ['coa', 'ligase'] with the target label (FULL-header conditions) |
+| reference_recency | WARN | human-goa-2025-06-P53597 | GO:0110052 | agent-review: PMID:40108300 published 2025-06-01, before model cutoff 2026-06-01 |
+| reference_recency | WARN | human-goa-2025-06-P98155 | GO:0001618 | agent-review: PMID:41162706 published 2026-01-01, before model cutoff 2026-06-01 |
+| prior_prediction | WARN | human-goa-2025-06-Q13263 | GO:0000785 | predicted before cutoff by IEA |
+| uniprot_leakage | WARN | human-goa-2025-06-Q13263 | GO:0000785 | label 'chromatin' appears in UniProt comment text |
+| reference_recency | WARN | human-goa-2025-06-Q13263 | GO:0000785 | agent-review: PMID:41109928 published 2025-12-01, before model cutoff 2026-06-01 |
+| reference_recency | WARN | human-goa-2025-06-Q13263 | GO:0043124 | agent-review: PMID:39920527 published 2025-06-01, before model cutoff 2026-06-01 |
+| reference_recency | WARN | human-goa-2025-06-Q15477 | GO:0070481 | agent-review: PMID:40441874 published 2025-07-16, before model cutoff 2026-06-01 |
+| reference_recency | WARN | human-goa-2025-06-Q68DK2 | GO:0042802 | agent-review: PMID:40175557 published 2025-08-01, before model cutoff 2026-06-01 |
 | reference_recency | WARN | human-goa-2025-06-Q86SM8 | GO:0001678 | agent-review: PMID:40446798 published 2025-08-21, before model cutoff 2026-06-01 |
 | prior_prediction | WARN | human-goa-2025-06-Q86SM8 | GO:0005886 | predicted before cutoff by IBA,IEA |
 | reference_recency | WARN | human-goa-2025-06-Q86SM8 | GO:0005886 | agent-review: PMID:40446798 published 2025-08-21, before model cutoff 2026-06-01 |
@@ -135,31 +118,26 @@ Generated 2026-11-25.
 | reference_recency | WARN | human-goa-2025-06-Q86SM8 | GO:0038182 | agent-review: PMID:40446798 published 2025-08-21, before model cutoff 2026-06-01 |
 | header_leakage | WARN | human-goa-2025-06-Q86SM8 | GO:0038182 | protein name 'Mas-related G protein-coupled receptor member E' shares ['coupled', 'g', 'receptor'] with the target label (FULL-header conditions) |
 | reference_recency | WARN | human-goa-2025-06-Q86SM8 | GO:0038184 | agent-review: PMID:40446798 published 2025-08-21, before model cutoff 2026-06-01 |
+| reference_recency | WARN | human-goa-2025-06-Q86WV6 | GO:0015485 | agent-review: PMID:41639452 published 2026-04-01, before model cutoff 2026-06-01 |
+| reference_recency | WARN | human-goa-2025-06-Q86WV6 | GO:0036020 | agent-review: PMID:40973797 published 2025-11-01, before model cutoff 2026-06-01 |
+| reference_recency | WARN | human-goa-2025-06-Q86WV6 | GO:0080025 | agent-review: PMID:41639452 published 2026-04-01, before model cutoff 2026-06-01 |
 | reference_recency | WARN | human-goa-2025-06-Q8N7P1 | GO:0005739 | agent-review: PMID:39423811 published 2024-11-27, before model cutoff 2026-06-01 |
-| uniprot_leakage | WARN | human-goa-2025-06-Q8NAG6 | GO:0030496 | label 'midbody' appears in UniProt comment text |
-| reference_recency | WARN | human-goa-2025-06-Q8NAG6 | GO:0030496 | agent-review: PMID:41361016 published 2025-12-08, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-Q8WU10 | GO:0000968 | agent-review: PMID:40069351 published 2025-07-01, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-Q8WU10 | GO:0003954 | agent-review: PMID:40069351 published 2025-07-01, before model cutoff 2026-06-01 |
-| uniprot_leakage | WARN | human-goa-2025-06-Q8WU10 | GO:0003959 | label 'NADPH dehydrogenase activity' appears in UniProt comment text |
-| reference_recency | WARN | human-goa-2025-06-Q8WU10 | GO:0003959 | agent-review: PMID:40069351 published 2025-07-01, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-Q8WU10 | GO:0140299 | agent-review: PMID:40069351 published 2025-07-01, before model cutoff 2026-06-01 |
 | reference_recency | WARN | human-goa-2025-06-Q96C45 | GO:0030674 | agent-review: PMID:38096226 published 2023-12-14, before model cutoff 2026-06-01 |
 | reference_recency | WARN | human-goa-2025-06-Q96C45 | GO:0045880 | agent-review: PMID:38096226 published 2023-12-14, before model cutoff 2026-06-01 |
 | uniprot_leakage | WARN | human-goa-2025-06-Q96C45 | GO:0097542 | label 'ciliary tip' appears in UniProt comment text |
 | reference_recency | WARN | human-goa-2025-06-Q96C45 | GO:0097542 | agent-review: PMID:38096226 published 2023-12-14, before model cutoff 2026-06-01 |
-| prior_prediction | WARN | human-goa-2025-06-Q96LB2 | GO:0004930 | predicted before cutoff by IBA,IEA |
-| homolog_leakage | WARN | human-goa-2025-06-Q96LB2 | GO:0004930 | known on 1 PTHR11334:SF22 homolog(s) at baseline |
-| near_duplicate | WARN | human-goa-2025-06-Q96LB2 | GO:0004930 | closest baseline term GO:0004888 transmembrane signaling receptor activity (Lin 0.86) |
-| reference_recency | WARN | human-goa-2025-06-Q96LB2 | GO:0004930 | agent-review: PMID:41167449 published 2026-01-01, before model cutoff 2026-06-01 |
-| header_leakage | WARN | human-goa-2025-06-Q96LB2 | GO:0004930 | protein name 'Mas-related G protein-coupled receptor member X1' shares ['coupled', 'g', 'receptor'] with the target label (FULL-header conditions) |
-| reference_recency | WARN | human-goa-2025-06-Q96LB2 | GO:0016477 | agent-review: PMID:41167449 published 2026-01-01, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-Q96LB2 | GO:0016493 | agent-review: PMID:41167449 published 2026-01-01, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-Q96LB2 | GO:0070098 | agent-review: PMID:41167449 published 2026-01-01, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-Q9P0L0 | GO:0032374 | agent-review: PMID:41741634 published 2026-04-01, before model cutoff 2026-06-01 |
-| prior_prediction | WARN | human-goa-2025-06-Q9P0L0 | GO:0043495 | predicted before cutoff by IBA |
-| reference_recency | WARN | human-goa-2025-06-Q9P0L0 | GO:0043495 | agent-review: PMID:41856286 published 2026-05-01, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-Q9P0L0 | GO:0140284 | agent-review: PMID:41741634 published 2026-04-01, before model cutoff 2026-06-01 |
-| reference_recency | WARN | human-goa-2025-06-Q9P0L0 | GO:0170016 | agent-review: PMID:41741634 published 2026-04-01, before model cutoff 2026-06-01 |
+| reference_recency | WARN | human-goa-2025-06-Q96DZ1 | GO:0000836 | agent-review: PMID:40593878 published 2025-07-01, before model cutoff 2026-06-01 |
+| reference_recency | WARN | human-goa-2025-06-Q96DZ1 | GO:0034099 | agent-review: PMID:40593878 published 2025-07-01, before model cutoff 2026-06-01 |
+| near_duplicate | WARN | human-goa-2025-06-Q99836 | GO:0034162 | closest baseline term GO:0034158 toll-like receptor 8 signaling pathway (Lin 0.82) |
+| reference_recency | WARN | human-goa-2025-06-Q99836 | GO:0034162 | agent-review: PMID:40980882 published 2025-11-12, before model cutoff 2026-06-01 |
+| prior_prediction | WARN | human-goa-2025-06-Q9HBU9 | GO:0002027 | predicted before cutoff by ISS |
+| reference_recency | WARN | human-goa-2025-06-Q9HBU9 | GO:0002027 | agent-review: PMID:40409267 published 2025-07-03, before model cutoff 2026-06-01 |
+| feature_label | WARN | human-goa-2025-06-Q9UBX7 |  | neither the protein's own names nor its comments support the PSEUDOENZYME label (the query may have matched a chain or domain name, or the entry was revised) |
+| date_window | WARN | human-goa-2025-06-Q9UBX7 | GO:0005794 | GAF date 20240313 before cutoff yet absent from baseline (late export or filtered from the baseline release) |
+| prior_prediction | WARN | human-goa-2025-06-Q9UBX7 | GO:0005794 | predicted before cutoff by IEA |
+| uniprot_leakage | WARN | human-goa-2025-06-Q9UBX7 | GO:0005794 | label 'Golgi apparatus' appears in UniProt comment text |
+| reference_recency | WARN | human-goa-2025-06-Q9UBX7 | GO:0005794 | agent-review: PMID:36689511 published 2023-01-23, before model cutoff 2026-06-01 |
+| balance | WARN |  |  | PMID:40446798 supplies targets to 3/24 items, so their scores are not independent |
 
 ## Sources
 
