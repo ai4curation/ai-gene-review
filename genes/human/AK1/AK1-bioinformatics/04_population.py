@@ -101,6 +101,8 @@ def main() -> None:
         if hom:
             mis_hom.append({"hgvsp": v["hgvsp"], "allele_count": ac, "allele_number": an, "homozygotes": hom,
                             "allele_frequency": ac / an if an else None})
+    # gnomAD returns rows whose alleles all failed filters (allele count 0); they are not observations
+    lof_rows = [r for r in lof_rows if r["allele_count"] > 0]
     hc_lof = [r for r in lof_rows if r["loftee"] == "HC"]
     clin = gene["clinvar_variants"] or []
     clin_plp = [c for c in clin if re.search(r"athogenic", c["clinical_significance"] or "")

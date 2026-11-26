@@ -88,7 +88,7 @@ The common polymorphism Glu123Gln, the classical AK1*2 electrophoretic allele po
 
 gnomAD v4 constraint for AK1: pLI 0.009, loss-of-function observed/expected 0.54 (90 percent interval 0.35 to 0.86), missense Z 1.10.
 AK1 is therefore not constrained against heterozygous loss of function, which fits a recessive disorder with healthy carriers.
-gnomAD holds 39 high-confidence predicted loss-of-function variants on the MANE transcript with 98 alleles in total and no homozygote.
+gnomAD holds 31 observed (allele count above zero) high-confidence predicted loss-of-function variants on the MANE transcript with 98 alleles in total and no homozygote.
 None of the reported disease variants is homozygous in gnomAD; the most frequent is Arg97Trp (40 alleles in 1,461,858), then Arg132His (23) and Arg138His (10).
 Two published indels are in gnomAD under their 3'-shifted names and are matched by protein consequence: Asp141del as c.421_423del (6 alleles) and Val47SerfsTer45 as c.139del (1 allele).
 Published variants absent from gnomAD v4 are Gln24Arg, Met75AsnfsTer19, Lys155ArgfsTer39 and Val173Gly.

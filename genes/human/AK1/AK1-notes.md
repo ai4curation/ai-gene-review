@@ -132,7 +132,7 @@ Reported alleles, all checked against NM_000476.3 by `01_variant_consequences.py
   It is also the most frequent disease allele in gnomAD (40 alleles, no homozygotes).
 - Inheritance and dosage: carriers have about half-normal activity and are well
   [PMID:9432020 "Her parents and brother had approximately 50% normal AK activity"]. gnomAD:
-  pLI 0.009, LoF o/e 0.54, 39 high-confidence LoF variants and no LoF homozygote. So:
+  pLI 0.009, LoF o/e 0.54, 31 observed high-confidence LoF variants (98 alleles) and no LoF homozygote. So:
   recessive loss of function; no hint of dominant-negative or gain of function, and the
   enzyme is a monomer.
 - Clinical picture across reports: chronic non-spherocytic haemolytic anaemia from the
