@@ -138,12 +138,13 @@ def test_main_exit_code(tmp_path: Path):
 
 
 def test_default_scope_covers_every_non_gene_review_kind():
-    """The gate reaches modules, families, GO-CAM reviews, rules and projects."""
+    """The gate reaches shared review kinds, sidecars and shadow issues."""
     rel = {p.relative_to(PROJECT_ROOT).as_posix() for p in default_files()}
-    for prefix in ("modules/", "interpro/panther/", "interpro/pfam/", "gocams/", "rules/", "projects/"):
+    for prefix in ("modules/", "interpro/panther/", "interpro/pfam/", "gocams/", "rules/", "projects/", "issues/"):
         assert any(r.startswith(prefix) for r in rel), prefix
     assert not any(r.endswith("-ai-review.yaml") and r.startswith("genes/") for r in rel)
     assert not any("recapitulation-experiment" in r for r in rel)
+    assert "genes/PSEPK/BenR/BenR-regulatory-evidence.yaml" in rel
 
 
 def test_main_reports_unparseable_yaml_and_fails(tmp_path: Path, capsys):
