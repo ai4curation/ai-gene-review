@@ -80,11 +80,13 @@ An OpenScientist hypothesis job on this question was launched (see `KRT9-hypothe
 - Dominant, fully penetrant, almost all variants are missense or small in-frame changes in the rod.
   First reports: [PMID:7512862 "Three KRT9 mutations, N160K, R162Q, and R162W, were identified. All the
   mutations are in the highly conserved coil 1A of the rod domain"].
-- **Numbering.** The 1994-2005 papers number from the residue after the initiator Met; their
-  R162 is Arg163 of P35527, N160 is Asn161, M156 is Met157, L159 is Leu160, Q171 is Gln172,
-  L457 is Leu458. The later literature uses the UniProt numbering
-  [PMID:22262370 "The most common mutation of KRT9, c.C487T (p.R163W)"]. The bioinformatics
-  folder checks every variant against the canonical sequence.
+- **Numbering.** The 1994-2005 papers follow the original cDNA sequence, which is one residue
+  shorter upstream of the rod (UniProt sequence conflict at 12-13, canonical SR against a single
+  T); their R162 is Arg163 of P35527, N160 is Asn161, M156 is Met157, L159 is Leu160, Q171 is
+  Gln172, L457 is Leu458. The later literature uses the UniProt numbering
+  [PMID:22262370 "The most common mutation of KRT9, c.C487T (p.R163W)"]. Checked in
+  `KRT9-bioinformatics/` (findings N1-N3): all 22 UniProt, 211 ClinVar and 1,496 gnomAD
+  protein-level variants match the canonical sequence at their reference residue.
 - Dominant-negative, shown three ways:
   1. Mutant K9 collapses the network of cells that also make wild-type keratins.
      [PMID:8647270 "These results indicate that the point mutation seen in our patients had a
@@ -149,3 +151,28 @@ not removed, because the supplementary data were not read.
 
 - No GO-CAM contains KRT9 (`gocams/index.tsv` has no P35527 row on 2026-11-26).
 - The UniProt record's two phosphoserines (Ser14, Ser57) are by similarity to K10 only.
+
+## Bioinformatics (KRT9-bioinformatics/RESULTS.md), summary of what it adds
+
+- 28 disease missense variants at 11 positions; 24 in the first 20 residues of coil 1A
+  (Fisher odds ratio 433 against gnomAD missense), 3 in the last 20 residues of coil 2, none
+  outside the rod coils.
+- Fifteen sit at heptad a/d core positions (M157, L160, Y167, V171, Y454, L458), eleven at
+  core-flanking e/g positions of the initiation segment (N161, R163, L168); Q172 is a surface b
+  position hit only by proline.
+- KRT9 is loss-of-function tolerant in gnomAD v4 (pLI 5.5e-8, LOEUF 0.88, 84 high-confidence
+  pLoF variants, cumulative allele frequency 2.3e-4). With the normal heterozygous null mouse,
+  this argues against haploinsufficiency and for a dominant-negative mechanism.
+- p.Cys406Arg (UniProt VAR, EPPK1) has 835 gnomAD alleles and 5 homozygotes, conflicting ClinVar
+  classifications, low conservation and an exposed position: not credible as a penetrant
+  dominant allele. This is a variant-level disagreement with the UniProt record, noted here; it
+  does not touch a GO annotation, so no `source_defects` entry is recorded.
+- No experimental K9 structure; no keratin heterodimer structure covers coil 1A, so the
+  structural reading of the hotspot rests on lamin A and vimentin homodimers.
+- The agent's first `uv add` briefly modified the root `pyproject.toml`/`uv.lock`; both were
+  restored and are clean in git. Scripts now carry inline pinned dependencies.
+
+## Not done
+
+- The gene-review checklist (`lcv`) could not be filled: the validator's repository is outside
+  this session's GitHub scope and is not on PyPI.
