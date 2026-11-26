@@ -76,6 +76,15 @@ excluding Korarchaeum (or the Korarchaeum branch marked as loss/divergence).
 ## Decisions
 
 - IBA GO:0051912: REMOVE (over-propagation; no heterodisulfide in this organism).
-- IEA oxidoreductase activity: ACCEPT (as precise as the evidence allows; substrate unknown).
+- IEA oxidoreductase activity: KEEP_AS_NON_CORE (changed 2026-11-26 from ACCEPT; as precise as the evidence allows, substrate unknown, but not the core function, which is electron transfer).
 - IEA cytoplasm: KEEP_AS_NON_CORE (corrected 2026-11-26 from an earlier ACCEPT, to match the review; soluble flavoprotein, no TM/signal features; cytoplasmic in methanogens).
 - NEW: 4 iron, 4 sulfur cluster binding; FAD binding; electron transfer activity.
+
+## 2026-11-26: comparator check for the three NEW rows
+
+QuickGO by term id: the methanogen HdrA proteins P60200, Q8TLB0 and Q8TM02 carry no
+GO:0051539, GO:0050660 or GO:0009055 row. The same query shape returns their GO:0051912
+rows, so it can find a positive and the absence is real. It does not read as a convention:
+no GO practice keeps cofactor-binding terms off a subunit that holds the cofactor, and
+UniProt itself gives B1L4Y3 a UniRule GO line for GO:0051539 and the 4Fe-4S and FAD
+keywords from RuleBase RU366072. The NEW rows stand; the comparators look under-annotated.
