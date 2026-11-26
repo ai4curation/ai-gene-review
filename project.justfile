@@ -394,6 +394,41 @@ litscan-module-member *args="":
 sync-shadow-issues tracker="go-annotation" *args="":
     uv run ai-gene-review shadow-issues sync {{tracker}} {{args}}
 
+# --- Time-split annotation benchmarks (docs/benchmarks.md) ---
+#   just benchmark-build benchmarks/human-goa-2025-06/human-goa-2025-06-spec.yaml
+#   just benchmark-check benchmarks/human-goa-2025-06/human-goa-2025-06.yaml
+#   just benchmark-export benchmarks/human-goa-2025-06/human-goa-2025-06.yaml
+#   just benchmark-score benchmarks/human-goa-2025-06/human-goa-2025-06.yaml --peptalk blind.jsonl
+
+# Draw a benchmark from a BenchmarkSpec into the spec's folder
+benchmark-build spec *args="":
+    uv run ai-gene-review benchmark build {{spec}} -o $(dirname {{spec}}) {{args}}
+
+# Run the deterministic checks; writes <id>-check-report.yaml and .md beside the benchmark
+benchmark-check benchmark *args="":
+    uv run ai-gene-review benchmark check {{benchmark}} {{args}}
+
+# Write FASTA, peptalk claims and baseline GOA files for the benchmark's conditions
+benchmark-export benchmark *args="":
+    uv run ai-gene-review benchmark export {{benchmark}} {{args}}
+
+# Score condition results (peptalk JSONL, agent-review genes folders) per item
+benchmark-score benchmark *args="":
+    uv run ai-gene-review benchmark score {{benchmark}} {{args}}
+
+# Validate every committed benchmark spec, benchmark, check report and agent evaluation
+validate-benchmarks:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+    for spec in benchmarks/*/*-spec.yaml; do
+        dir=$(dirname "$spec"); id=$(basename "$spec" -spec.yaml)
+        uv run ai-gene-review benchmark validate "$spec" --class BenchmarkSpec
+        uv run ai-gene-review benchmark validate "$dir/$id.yaml" --class Benchmark
+        for f in "$dir/$id"-check-report.yaml; do uv run ai-gene-review benchmark validate "$f" --class CheckReport; done
+        for f in "$dir"/*-agent-evaluation.yaml; do uv run ai-gene-review benchmark validate "$f" --class AgentEvaluation; done
+    done
+
 # List shadow issues waiting for triage, shadow work, or rating
 outstanding-shadow-issues tracker="go-annotation" *args="":
     uv run ai-gene-review shadow-issues outstanding {{tracker}} {{args}}

@@ -1,0 +1,95 @@
+benchmark_id: human-goa-2025-06
+evaluator: >-
+  claude-opus-5-5, the agent that built the benchmark (not independent). It read
+  the benchmark, the check report and the current UniProt entries, not the
+  target papers.
+date: '2026-11-25'
+overall_assessment: >-
+  Usable as a worked example and a pipeline test, not yet as an evaluation of
+  any current Claude model. Every target is new to GO and rests on a paper
+  published after the 2025-06-01 cutoff, but all 68 references predate the
+  agent-review model's June 2026 training cutoff (reference_recency), so a
+  model may have read the papers. The fix is a later current_release, not a
+  code change: only 7 human proteins had post-2026-06-01 papers in the
+  2026-08-05 release. One paper (PMID:40446798) supplies 12 of the 68 targets
+  across four items. One of the four pseudoenzyme labels is wrong, and one is
+  arguable. The items are mostly HARD (no prior prediction, no near-duplicate),
+  which suits the blind-versus-combined comparison. Each finding below names the
+  deterministic check that confirms or would confirm it.
+findings:
+  - item_id: human-goa-2025-06-P28370
+    category: WRONG_TARGET
+    severity: WARN
+    explanation: >-
+      SMARCA1 matched the pseudoenzyme query only through "[Isoform 2]:
+      Catalytically inactive" and complex-level text. The canonical protein is
+      an active ATP-dependent chromatin remodeller, and its target is ATP
+      hydrolysis activity, so the PSEUDOENZYME label is wrong for this item.
+    proposed_check: >-
+      feature_label already WARNs here. Tighten it to FAIL when the only matching
+      comment paragraph is isoform-scoped ("[Isoform N]").
+  - item_id: human-goa-2025-06-P49842
+    category: AMBIGUOUS_TARGET
+    severity: INFO
+    explanation: >-
+      WHR1 (formerly STK19) carries the AltName "Inactive serine/threonine-protein
+      kinase 19". The 2024 papers recast it as a winged-helix transcription-coupled
+      repair factor, not a degenerate kinase, so it tests a misassigned family
+      rather than a pseudoenzyme. It is still a good item for asking whether a
+      sequence-only reader calls a kinase fold.
+    proposed_check: >-
+      Compare the protein's InterPro/PANTHER family with the enzyme family the
+      label implies (no kinase-domain signature means no pseudokinase).
+  - term_id: GO:0035774
+    category: IMBALANCE
+    severity: WARN
+    explanation: >-
+      PMID:40446798 contributes 12 targets to ALDOA, ARRB1, GNAS and MRGPRE,
+      mostly the same broad process terms (intracellular glucose homeostasis,
+      insulin secretion). max_proteins_per_reference: 20 does not catch a paper
+      that annotates four sampled proteins, so per-item scores on these terms are
+      not independent.
+    proposed_check: >-
+      Add a balance WARN when one reference supplies targets to more than 10% of
+      items, and a spec option capping items per reference at sampling time.
+  - item_id: human-goa-2025-06-P0C7U0
+    category: TRIVIAL_TARGET
+    severity: WARN
+    explanation: >-
+      The ELFN1 target is "membrane" (EXP), which IBA and IEA already predicted
+      at baseline. It is uninformative, and any predictor gets it from a signal
+      peptide or TM segment.
+    proposed_check: >-
+      prior_prediction already WARNs. Consider excluding shallow CC terms by
+      information content (IC below a floor) in the spec.
+  - item_id: human-goa-2025-06-P32754
+    category: AMBIGUOUS_TARGET
+    severity: INFO
+    explanation: >-
+      HPD (4-hydroxyphenylpyruvate dioxygenase) has an IDA target "mRNA m(6)A
+      methyltransferase activity" from one 2026 paper. It is a moonlighting
+      claim with no methyltransferase fold. A blind reader is expected to say no,
+      and a "no" is not clearly wrong. The ai-gene-review review keeps it as
+      non-core.
+    proposed_check: >-
+      Flag targets whose MF term has no InterPro2GO-compatible domain in the
+      protein (a domain-architecture mismatch) for manual adjudication.
+  - item_id: human-goa-2025-06-O95455
+    category: OK
+    severity: INFO
+    explanation: >-
+      TGDS pairs a positive UDP-glucose 4,6-dehydratase target with a NOT
+      dTDP-glucose 4,6-dehydratase target from the same paper. It is a good
+      substrate-specificity test, but the FULL header names the enzyme
+      (header_leakage WARN), so only the blind and organism conditions test it.
+  - category: LEAKAGE
+    severity: WARN
+    explanation: >-
+      The agent-review condition is seeded with baseline GOA, but an agent that
+      can fetch current UniProt, QuickGO or the target papers sees the answers.
+      11 targets' labels appear in current UniProt comment text, and DR GO
+      lines carry most targets.
+    proposed_check: >-
+      uniprot_leakage already reports these. For agent runs, block the UniProt,
+      QuickGO and PubMed tools or pin them to the baseline date, and record the
+      tool policy in the condition.
