@@ -567,7 +567,8 @@ showed".
 
 The first cut takes IMP rows on **molecular-function** terms: **142** of the 930
 PAO1 proteins carrying a PseudoCAP row. Of those, 98 were already reviewed
-through tiers 1 and 2, 12 are reviewed here, and **32 remain**. An IMP is a mutant phenotype, which is evidence
+through tiers 1 and 2 when the list was built, and the remaining 44 have since been
+reviewed in tier-3 batches, so **all 142 are now complete and none remain**. An IMP is a mutant phenotype, which is evidence
 about what the cell does without the gene, not about what the protein does. Using
 one for a molecular function asserts an activity from an absence, so each row is
 either grounded in a paper that also assayed the protein or it is the kind of
@@ -595,8 +596,19 @@ The rest span reviewed and unreviewed members, and those are worth re-reading as
 groups even where the members are done, because a shared claim reviewed gene by
 gene is where parallel batches drifted apart in tier 2. The largest are
 `GO:0015385` from PMID:16030218 across PA1054-PA1059, `GO:0016987` from
-PMID:18086184 across five sigma factors including femA, and `GO:0015562` on
+PMID:18086184 across five genes, and `GO:0015562` on
 opmQ/pvdR/pvdT, which carries three separate references for the same term.
+
+The `GO:0016987` group is now reviewed and is the sharpest vindication of reading
+shared claims as groups, because an earlier version of this page described it as
+"five sigma factors including femA" and that was wrong about the one member that
+matters. Four of the five -- PA0149, PA2050, PA2093 and PA4896 -- are ECF sigma
+factors and `ACCEPT` the row. The fifth, `femA`, is not a sigma factor at all: it is
+an 804-residue outer-membrane TonB-dependent beta-barrel receptor, the sigma factor
+activity the paper describes belongs to PA1912, and its review `REMOVE`s the row. So
+the group does not agree, and calling its members "five sigma factors" asserted the
+very thing the group review disproved. The count of five rows is right; `femI` also
+carries PMID:18086184 but on `GO:0015344` and `GO:0015891`, not on `GO:0016987`.
 
 ### Auditing shared claims automatically
 
@@ -662,7 +674,11 @@ builder takes `--all-aspects`) or reading shared claims from GOA directly.
 
 Comparing the reviewed members of incomplete groups found a third case immediately.
 `GO:0008320` protein transmembrane transporter activity from PMID:16621825 is
-`MODIFY`→`GO:0009977` on `tatA` and `TOO_GENERAL` on `tatC`, with `tatB` unreviewed.
+`MODIFY`→`GO:0009977` on `tatA` and `TOO_GENERAL` on `tatC`. `tatB` was unreviewed
+when that was written and is now reviewed, and it settles the case the way this
+passage predicted: it reproduces `tatC` exactly, accepting its own `GO:0009977` IBA
+row and marking both `GO:0008320` rows `TOO_GENERAL`. All three core functions are
+`GO:0009977`.
 This is the `liuB`/`liuD` shape exactly: `tatC` carries `GO:0009977` as its own IBA
 row and accepts it, so the ancestor term is `TOO_GENERAL` there, while `tatA` has no
 `GO:0009977` row in GOA at all and its reviewer refined to reach the same level.
@@ -673,8 +689,10 @@ agree about what the supported term is, and the asymmetry is in GOA. What is ope
 whether `tatA`'s rows pass the 2026-11-14 bar — a `MODIFY` needs that row's own
 evidence for the deeper term, and its IMP reason says the evidence is an export
 phenotype. That is a judgement about three merged reviews of genes this PR does not
-touch (and `tatB` is in the QuickGO-blocked batch), so it is recorded here rather
-than fixed opportunistically.
+touch, so it is recorded here rather than fixed opportunistically. It is the one
+item in this group still open: `tatA`'s three rows all `MODIFY` to `GO:0009977`, and
+whether an export phenotype is that row's own evidence for the proton-motive-force
+term is a judgement about a merged review, not a status-page edit.
 
 The check has now paid for itself three times. It is the generalisation of the
 `liuB`/`liuD` drift caught in review on PR #6341, and run across the corpus it
@@ -811,8 +829,9 @@ is the line the `involved_in` rule draws, so that row is marked over-annotated.
    reasonable.
 6. The rest of the PseudoCAP corpus (2,069 rows on PAO1 in QuickGO),
    prioritising IMP rows on molecular-function terms. Started: see
-   "Tier 3" below. 142 proteins carry such a row: 98 were covered by tiers 1-2,
-   12 are reviewed here, 32 remain.
+   "Tier 3" below. 142 proteins carry such a row: 98 were covered by tiers 1-2
+   when the list was built, and the remaining 44 have since been reviewed. All 142
+   are complete; none remain.
 
 Re-run the builder when PAINT or QuickGO data change; it only re-downloads
 files missing from `.cache/paint/`, so delete that folder to refresh.
