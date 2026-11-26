@@ -180,6 +180,12 @@ def main() -> None:
         "plof_HC_nonsense_frameshift_by_domain": dict(by_dom),
         "clinvar_truncating_records": clin_lof,
         "disease_set_variant_types": dict(disease_types),
+        "disease_missense_by_heptad_position": dict(Counter(r["heptad"] or "none" for r in sets["disease"])),
+        "gnomad_missense_by_heptad_position": dict(Counter(r["heptad"] or "none" for r in sets["gnomad"])),
+        "disease_missense_to_proline": sorted(r["variant"] for r in sets["disease"] if r["variant"].endswith("Pro")),
+        "gnomad_missense_to_proline_in_coil_segments": sorted(
+            f"{r['variant']} (AC {r['ac']})" for r in sets["gnomad"]
+            if r["variant"].endswith("Pro") and r["domain"].startswith("Coil")),
         "set_sizes": {k: {"variants": len(v), "positions": len({r['pos'] for r in v})} for k, v in sets.items()},
         "disease_variants_also_in_gnomad": [{"variant": r["variant"], "gnomad_ac": r["ac"], "gnomad_af": r["gnomad_af"],
                                              "gnomad_homozygotes": r["gnomad_homozygotes"],

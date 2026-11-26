@@ -264,38 +264,38 @@ Keratin type I / type II heterodimers:
 
 | template | resolution_A | chain_gene | partner_chain | partner_keratin_gene | partner_description | template_first_resnum | template_last_resnum | target_start | target_end | n_aligned_pairs | identity_to_target | target_domains_covered | n_disease_positions_covered | pubmed |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 6E2J:B | 2.39 | KRT10 | A | KRT1 | Keratin, type II cytoskeletal 1 | 195 | 294 | 200 | 299 | 100 | 0.64 | Coil 1B:92,Linker 1:8 | 0 | 3.10e+07 |
-| 6EC0:B | 2.98 | KRT10 | A | KRT1 | Keratin 1 | 195 | 294 | 200 | 299 | 100 | 0.64 | Coil 1B:92,Linker 1:8 | 0 | 3.10e+07 |
-| 4ZRY:A | 3.3 | KRT10 | B | KRT1 | Keratin, type II cytoskeletal 1 | 350 | 455 | 355 | 460 | 106 | 0.557 | Coil 2:106 | 3 | 2.76e+07 |
-| 6UUI:X | 2.07 | KRT10 | C | KRT1 | Keratin, type II cytoskeletal 1 | 350 | 455 | 355 | 460 | 106 | 0.547 | Coil 2:106 | 3 | 3.22e+07 |
-| 6JFV:A | 2.6 | KRT14 | B | KRT5 | Keratin, type II cytoskeletal 5 | 330 | 419 | 369 | 458 | 90 | 0.589 | Coil 2:90 | 3 | 3.20e+07 |
-| 6JFV:C | 2.6 | KRT14 | D | KRT5 | Keratin, type II cytoskeletal 5 | 330 | 421 | 369 | 460 | 92 | 0.598 | Coil 2:92 | 3 | 3.20e+07 |
-| 3TNU:A | 3 | KRT14 | B | KRT5 | Keratin, type II cytoskeletal 5 | 332 | 421 | 371 | 460 | 90 | 0.611 | Coil 2:90 | 3 | 2.27e+07 |
+| 6E2J:B | 2.39 | KRT10 | A | KRT1 | Keratin, type II cytoskeletal 1 | 195 | 294 | 200 | 299 | 100 | 0.64 | Coil 1B:92,Linker 1:8 | 0 | 31036554 |
+| 6EC0:B | 2.98 | KRT10 | A | KRT1 | Keratin 1 | 195 | 294 | 200 | 299 | 100 | 0.64 | Coil 1B:92,Linker 1:8 | 0 | 31036554 |
+| 4ZRY:A | 3.3 | KRT10 | B | KRT1 | Keratin, type II cytoskeletal 1 | 350 | 455 | 355 | 460 | 106 | 0.557 | Coil 2:106 | 3 | 27595935 |
+| 6UUI:X | 2.07 | KRT10 | C | KRT1 | Keratin, type II cytoskeletal 1 | 350 | 455 | 355 | 460 | 106 | 0.547 | Coil 2:106 | 3 | 32226330 |
+| 6JFV:A | 2.6 | KRT14 | B | KRT5 | Keratin, type II cytoskeletal 5 | 330 | 419 | 369 | 458 | 90 | 0.589 | Coil 2:90 | 3 | 31995743 |
+| 6JFV:C | 2.6 | KRT14 | D | KRT5 | Keratin, type II cytoskeletal 5 | 330 | 421 | 369 | 460 | 92 | 0.598 | Coil 2:92 | 3 | 31995743 |
+| 3TNU:A | 3 | KRT14 | B | KRT5 | Keratin, type II cytoskeletal 5 | 332 | 421 | 371 | 460 | 90 | 0.611 | Coil 2:90 | 3 | 22705788 |
 
 Non-keratin IF homodimers aligned without gaps and covering disease-set positions:
 
 | template | resolution_A | chain_gene | partner_chain | partner_keratin_gene | partner_description | template_first_resnum | template_last_resnum | target_start | target_end | n_aligned_pairs | identity_to_target | target_domains_covered | n_disease_positions_covered | pubmed |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 6YF5:A | 1.83 | LMNA | B |  | Prelamin-A/C,Microtubule-associated protein RP/EB family member 1 | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 | 3.26e+07 |
-| 6YF5:B | 1.83 | LMNA | A |  | Prelamin-A/C,Microtubule-associated protein RP/EB family member 1 | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 | 3.26e+07 |
-| 6YF5:C | 1.83 | LMNA | D |  | Prelamin-A/C,Microtubule-associated protein RP/EB family member 1 | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 | 3.26e+07 |
-| 6YF5:D | 1.83 | LMNA | C |  | Prelamin-A/C,Microtubule-associated protein RP/EB family member 1 | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 | 3.26e+07 |
-| 6YSH:A | 2.83 | LMNA | B |  | Prelamin-A/C,Microtubule-associated protein RP/EB family member 1 | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 | 3.26e+07 |
-| 6YSH:B | 2.83 | LMNA | A |  | Prelamin-A/C,Microtubule-associated protein RP/EB family member 1 | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 | 3.26e+07 |
+| 6YF5:A | 1.83 | LMNA | B |  | Prelamin-A/C,Microtubule-associated protein RP/EB family member 1 | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 | 32645958 |
+| 6YF5:B | 1.83 | LMNA | A |  | Prelamin-A/C,Microtubule-associated protein RP/EB family member 1 | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 | 32645958 |
+| 6YF5:C | 1.83 | LMNA | D |  | Prelamin-A/C,Microtubule-associated protein RP/EB family member 1 | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 | 32645958 |
+| 6YF5:D | 1.83 | LMNA | C |  | Prelamin-A/C,Microtubule-associated protein RP/EB family member 1 | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 | 32645958 |
+| 6YSH:A | 2.83 | LMNA | B |  | Prelamin-A/C,Microtubule-associated protein RP/EB family member 1 | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 | 32645958 |
+| 6YSH:B | 2.83 | LMNA | A |  | Prelamin-A/C,Microtubule-associated protein RP/EB family member 1 | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 | 32645958 |
 | 8I33:A | 1.62 | LMNA | C |  | Prelamin-A/C | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 |  |
 | 8I33:B | 1.62 | LMNA | D |  | Prelamin-A/C | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 |  |
 | 8I33:C | 1.62 | LMNA | A |  | Prelamin-A/C | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 |  |
 | 8I33:D | 1.62 | LMNA | B |  | Prelamin-A/C | 26 | 65 | 148 | 187 | 40 | 0.45 | Coil 1A:35,Head:5 | 8 |  |
-| 3G1E:A | 1.83 | VIM | B |  | Vimentin | 102 | 131 | 152 | 181 | 30 | 0.533 | Coil 1A:29,Head:1 | 8 | 1.94e+07 |
-| 3G1E:B | 1.83 | VIM | A |  | Vimentin | 102 | 131 | 152 | 181 | 30 | 0.533 | Coil 1A:29,Head:1 | 8 | 1.94e+07 |
-| 1GK4:A | 2.3 | VIM | B |  | VIMENTIN | 329 | 406 | 383 | 460 | 78 | 0.295 | Coil 2:78 | 3 | 1.19e+07 |
-| 1GK4:B | 2.3 | VIM | A |  | VIMENTIN | 329 | 406 | 383 | 460 | 78 | 0.295 | Coil 2:78 | 3 | 1.19e+07 |
-| 1GK4:C | 2.3 | VIM | D |  | VIMENTIN | 339 | 406 | 393 | 460 | 68 | 0.324 | Coil 2:68 | 3 | 1.19e+07 |
-| 1GK4:D | 2.3 | VIM | C |  | VIMENTIN | 339 | 406 | 393 | 460 | 68 | 0.324 | Coil 2:68 | 3 | 1.19e+07 |
-| 1GK4:E | 2.3 | VIM | F |  | VIMENTIN | 339 | 406 | 393 | 460 | 68 | 0.324 | Coil 2:68 | 3 | 1.19e+07 |
-| 1GK4:F | 2.3 | VIM | E |  | VIMENTIN | 339 | 406 | 393 | 460 | 68 | 0.324 | Coil 2:68 | 3 | 1.19e+07 |
-| 1GK6:A | 1.9 | VIM | B |  | VIMENTIN | 355 | 406 | 409 | 460 | 52 | 0.288 | Coil 2:52 | 2 | 1.19e+07 |
-| 1GK6:B | 1.9 | VIM | A |  | VIMENTIN | 355 | 406 | 409 | 460 | 52 | 0.288 | Coil 2:52 | 2 | 1.19e+07 |
+| 3G1E:A | 1.83 | VIM | B |  | Vimentin | 102 | 131 | 152 | 181 | 30 | 0.533 | Coil 1A:29,Head:1 | 8 | 19422834 |
+| 3G1E:B | 1.83 | VIM | A |  | Vimentin | 102 | 131 | 152 | 181 | 30 | 0.533 | Coil 1A:29,Head:1 | 8 | 19422834 |
+| 1GK4:A | 2.3 | VIM | B |  | VIMENTIN | 329 | 406 | 383 | 460 | 78 | 0.295 | Coil 2:78 | 3 | 11889032 |
+| 1GK4:B | 2.3 | VIM | A |  | VIMENTIN | 329 | 406 | 383 | 460 | 78 | 0.295 | Coil 2:78 | 3 | 11889032 |
+| 1GK4:C | 2.3 | VIM | D |  | VIMENTIN | 339 | 406 | 393 | 460 | 68 | 0.324 | Coil 2:68 | 3 | 11889032 |
+| 1GK4:D | 2.3 | VIM | C |  | VIMENTIN | 339 | 406 | 393 | 460 | 68 | 0.324 | Coil 2:68 | 3 | 11889032 |
+| 1GK4:E | 2.3 | VIM | F |  | VIMENTIN | 339 | 406 | 393 | 460 | 68 | 0.324 | Coil 2:68 | 3 | 11889032 |
+| 1GK4:F | 2.3 | VIM | E |  | VIMENTIN | 339 | 406 | 393 | 460 | 68 | 0.324 | Coil 2:68 | 3 | 11889032 |
+| 1GK6:A | 1.9 | VIM | B |  | VIMENTIN | 355 | 406 | 409 | 460 | 52 | 0.288 | Coil 2:52 | 2 | 11889032 |
+| 1GK6:B | 1.9 | VIM | A |  | VIMENTIN | 355 | 406 | 409 | 460 | 52 | 0.288 | Coil 2:52 | 2 | 11889032 |
 
 ## T11 Predicted heptad position vs observed partner contact (05_heptad_vs_contact.tsv)
 
@@ -366,10 +366,10 @@ Non-keratin IF homodimers aligned without gaps and covering disease-set position
 | clinvar_KRT9 | 2026-11-26T19:08:50Z |  | https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=clinvar&term=KRT9%5Bgene%5D&retmax=10000&retmode |
 | experimental_structure_check | 2026-11-26T19:09:33Z |  | search.rcsb.org + www.ebi.ac.uk/pdbe/api/mappings/best_structures |
 | gnomad_KRT9 | 2026-11-26T19:08:51Z | gnomad_r4 | https://gnomad.broadinstitute.org/api |
-| human_if_family | 2026-11-26T19:09:33Z | 202604 | https://rest.uniprot.org/uniprotkb/search?query=%28organism_id%3A9606%29+AND+%28reviewed%3Atrue%29+AND+%28fami |
-| human_keratins | 2026-11-26T19:08:18Z | 202604 | https://rest.uniprot.org/uniprotkb/search?query=%28organism_id%3A9606%29+AND+%28reviewed%3Atrue%29+AND+%28fami |
+| human_if_family | 2026-11-26T19:09:33Z | 2026_04 | https://rest.uniprot.org/uniprotkb/search?query=%28organism_id%3A9606%29+AND+%28reviewed%3Atrue%29+AND+%28fami |
+| human_keratins | 2026-11-26T19:08:18Z | 2026_04 | https://rest.uniprot.org/uniprotkb/search?query=%28organism_id%3A9606%29+AND+%28reviewed%3Atrue%29+AND+%28fami |
 | interpro_P35527 | 2026-11-26T19:08:51Z |  | https://www.ebi.ac.uk/interpro/api/entry/all/protein/uniprot/P35527?page_size=100 |
 | panther_orthologs | 2026-11-26T19:08:28Z | 19 | https://pantherdb.org/services/oai/pantherdb/ortholog/matchortho?geneInputList=P35527&organism=9606&orthologTy |
 | rcsb_if_entries | 2026-11-26T19:09:34Z |  | https://search.rcsb.org/rcsbsearch/v2/query + https://data.rcsb.org/graphql |
-| uniprot_P35527 | 2026-11-26T19:08:17Z | 202604 | https://rest.uniprot.org/uniprotkb/P35527.json |
+| uniprot_P35527 | 2026-11-26T19:08:17Z | 2026_04 | https://rest.uniprot.org/uniprotkb/P35527.json |
 

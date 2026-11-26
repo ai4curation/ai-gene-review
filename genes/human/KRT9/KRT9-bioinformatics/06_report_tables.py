@@ -11,6 +11,7 @@ Usage: uv run 06_report_tables.py [--tag KRT9]
 from __future__ import annotations
 
 import argparse
+import re
 from collections import Counter, defaultdict
 
 from common import DATA, RESULTS, load_json, read_tsv
@@ -19,6 +20,10 @@ from common import DATA, RESULTS, load_json, read_tsv
 def f(v, nd=3):
     if v in ("", None):
         return ""
+    if isinstance(v, str) and re.fullmatch(r"-?\d+", v):
+        return v
+    if isinstance(v, str) and not re.fullmatch(r"-?\d+(\.\d+)?([eE][-+]?\d+)?", v):
+        return v
     try:
         x = float(v)
     except (TypeError, ValueError):
