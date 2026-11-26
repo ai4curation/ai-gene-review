@@ -1,0 +1,647 @@
+id: https://w3id.org/ai4curation/ai-gene-review/benchmark
+name: benchmark
+title: Time-split protein annotation benchmarks
+description: >-
+  Benchmarks of protein function annotations, built CAFA-style by time split:
+  target annotations are those present in a later GO release and absent from a
+  baseline release on or before a cutoff date. A BenchmarkSpec states the
+  request (species, window, aspects, evidence, size, feature quotas); a
+  Benchmark holds the drawn items with their target annotations, provenance and
+  the pinned sources they were drawn from; a CheckReport records the
+  deterministic checks run over a Benchmark; an AgentEvaluation records an
+  optional agent's reading of it. Classes are reusable so a single item or
+  target annotation can be validated on its own. See docs/benchmarks.md.
+license: CC0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  bench: https://w3id.org/ai4curation/ai-gene-review/benchmark/
+  GO: http://purl.obolibrary.org/obo/GO_
+  UniProtKB: http://purl.uniprot.org/uniprot/
+default_prefix: bench
+default_range: string
+imports:
+  - linkml:types
+
+classes:
+  BenchmarkSpec:
+    description: >-
+      The request a benchmark is built from. Everything the builder needs is
+      here, so the spec plus its pinned sources reproduce the benchmark.
+    attributes:
+      id:
+        identifier: true
+        required: true
+        description: Short benchmark identifier, used for the folder and file names.
+      title:
+        required: true
+      description:
+      taxon:
+        range: Taxon
+        required: true
+      cutoff_date:
+        range: date
+        required: true
+        description: >-
+          Knowledge cutoff. The baseline release must be on or before this
+          date; annotations absent from it are candidates.
+      baseline_release:
+        required: true
+        pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+        description: >-
+          GO release date (YYYY-MM-DD) used as the pre-cutoff snapshot. Must be
+          on or before cutoff_date.
+      current_release:
+        required: true
+        pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+        description: >-
+          GO release date (YYYY-MM-DD) the target annotations are drawn from.
+          Must be after cutoff_date.
+      aspects:
+        range: AspectEnum
+        multivalued: true
+        description: Aspects to draw targets from; all three if omitted.
+      go_branches:
+        multivalued: true
+        description: >-
+          Optional GO ids; when given, a target term must be the id or a
+          descendant (is_a/part_of) of one of them.
+      evidence_codes:
+        multivalued: true
+        description: >-
+          Evidence codes that qualify a target. Defaults to the CAFA
+          experimental set EXP IDA IPI IMP IGI IEP TAS IC.
+      excluded_terms:
+        multivalued: true
+        description: >-
+          Terms never used as targets. Defaults to the aspect roots, binding
+          and protein binding.
+      include_negated:
+        range: boolean
+        description: Also take NOT annotations as (negative) targets.
+      max_proteins_per_reference:
+        range: integer
+        description: >-
+          A reference that adds new annotations to more proteins than this is
+          treated as high-throughput and its rows are not used as targets.
+      size:
+        range: integer
+        required: true
+        description: Number of items (proteins) to draw, including feature quotas.
+      dev_fraction:
+        range: float
+        description: Fraction of items assigned to the DEV split (seeded); the rest are TEST.
+      seed:
+        range: integer
+        description: Random seed for sampling and split assignment.
+      features:
+        range: FeatureQuota
+        multivalued: true
+        inlined_as_list: true
+      mode:
+        range: BuildModeEnum
+      near_duplicate_threshold:
+        range: float
+        description: Lin similarity at or above which a target counts as a near-duplicate of a baseline term.
+      min_reference_date:
+        range: date
+        description: >-
+          Optional. Keep only targets whose PubMed reference was published on
+          or after this date (targets with non-PMID references are dropped).
+      decoys_per_item:
+        range: integer
+        description: >-
+          Decoy terms per item: terms drawn from other items' targets that are
+          not entailed by, and do not entail, any current annotation of the
+          protein. They measure a predictor's tendency to say yes.
+      conditions:
+        range: EvaluationCondition
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          The evaluation conditions a run compares per item, for example a
+          sequence-only blind read against an agent reasoning over sequence,
+          knowledge and context.
+
+  EvaluationCondition:
+    description: >-
+      One way of asking a predictor about each item. Conditions differ in what
+      the predictor is shown, so comparing them per item separates reading the
+      sequence from recalling or retrieving knowledge about the named protein.
+    attributes:
+      name:
+        identifier: true
+        required: true
+      context:
+        range: ConditionContextEnum
+        required: true
+      tool:
+        description: Program that runs the condition, for example peptalk.
+      task:
+        description: Tool task, for example ask-function.
+      model:
+      model_training_cutoff:
+        range: date
+        description: >-
+          Training data cutoff of the model. Targets whose reference predates
+          it may be known to the model from the literature, whatever the GO
+          release dates say.
+      effort:
+        description: Reasoning effort or thinking level, in the provider's own labels (peptalk --effort).
+      shuffle_control:
+        range: boolean
+        description: Also ask of a shuffled copy of each sequence.
+      description:
+
+  FeatureQuota:
+    description: >-
+      Request that some items carry a feature, such as being a pseudoenzyme.
+      Candidates come from a UniProt query; the label is UniProt's, not a
+      literature check, and is recorded as such.
+    attributes:
+      feature:
+        range: ItemFeatureEnum
+        required: true
+      uniprot_query:
+        required: true
+        description: UniProtKB query whose hits are the feature's candidate proteins.
+      count:
+        range: integer
+        required: true
+        description: Maximum number of items with this feature.
+      min_reference_date:
+        range: date
+        description: >-
+          Overrides the spec's min_reference_date for this quota, for features
+          too rare to fill from the main window.
+
+  Taxon:
+    attributes:
+      id:
+        required: true
+        pattern: "^NCBITaxon:\\d+$"
+      label:
+      gaf_code:
+        description: >-
+          Species code used in GO release file names (HUMAN for
+          annotations/gaf/HUMAN-uniprot.gaf.gz; goa_human in older releases).
+
+  Benchmark:
+    tree_root: true
+    description: A drawn benchmark.
+    attributes:
+      id:
+        identifier: true
+        required: true
+      title:
+        required: true
+      description:
+      created:
+        range: date
+        required: true
+      spec:
+        range: BenchmarkSpec
+        required: true
+        inlined: true
+      sources:
+        range: SourceSnapshot
+        multivalued: true
+        inlined_as_list: true
+        description: Every external input, pinned by release and checksum.
+      items:
+        range: BenchmarkItem
+        multivalued: true
+        inlined_as_list: true
+        required: true
+
+  SourceSnapshot:
+    description: One pinned input file or query.
+    attributes:
+      name:
+        required: true
+        description: Role of the source, for example baseline_gaf or current_ontology.
+      url:
+        required: true
+      release:
+        description: Release identifier (GO release date, UniProt release).
+      sha256:
+      retrieved:
+        range: date
+      query:
+        description: For a query source, the query string.
+
+  BenchmarkItem:
+    description: One protein with its target annotations.
+    attributes:
+      id:
+        identifier: true
+        required: true
+      protein:
+        required: true
+        pattern: "^UniProtKB:[A-Z0-9]+(-\\d+)?$"
+      gene_symbol:
+      protein_name:
+      entry_name:
+        description: UniProtKB entry name (mnemonic), used in the FASTA header.
+      taxon:
+        pattern: "^NCBITaxon:\\d+$"
+      sequence:
+        description: Canonical UniProtKB sequence at sequence_version.
+      sequence_version:
+        range: integer
+      split:
+        range: SplitEnum
+        required: true
+      features:
+        range: ItemFeature
+        multivalued: true
+        inlined_as_list: true
+      target_annotations:
+        range: TargetAnnotation
+        multivalued: true
+        inlined_as_list: true
+        required: true
+      decoys:
+        range: DecoyTerm
+        multivalued: true
+        inlined_as_list: true
+      difficulty:
+        range: DifficultyEnum
+        description: The hardest difficulty among the item's targets.
+      notes:
+
+  ItemFeature:
+    attributes:
+      feature:
+        range: ItemFeatureEnum
+        required: true
+      source:
+        required: true
+        description: Where the label came from, for example the UniProt query that matched.
+      literature_checked:
+        range: boolean
+        description: >-
+          True only when someone read the literature behind the label. A
+          UniProt name containing "inactive" is not a literature check.
+      notes:
+
+  TargetAnnotation:
+    description: An annotation a predictor should recover (or, if negated, should not assert).
+    attributes:
+      term:
+        range: Term
+        required: true
+        inlined: true
+      aspect:
+        range: AspectEnum
+        required: true
+      qualifier:
+      negated:
+        range: boolean
+      evidence_code:
+        required: true
+      reference:
+        required: true
+      with_from:
+      assigned_by:
+      date:
+        description: The GAF date column (YYYYMMDD). GO re-stamps it, so it is not proof of newness.
+      reference_date:
+        range: date
+        description: >-
+          PubMed publication date (sortpubdate) of the reference. The builder
+          picks the earliest-published supporting reference as the target's
+          reference, since that is when the knowledge became readable. The
+          record date can be later than a preprint of the same work.
+      supporting_references:
+        multivalued: true
+        description: >-
+          Every reference in the current release supporting this term on this
+          protein (including reference), when there is more than one.
+      source:
+        range: TargetSourceEnum
+        required: true
+      review_action:
+        description: Action an ai-gene-review review gave this annotation, when one exists.
+      review_file:
+      knowledge_category:
+        range: KnowledgeCategoryEnum
+      difficulty:
+        range: DifficultyEnum
+      notes:
+
+  DecoyTerm:
+    description: >-
+      A term the protein is not annotated to, used as a negative control.
+      Absence of an annotation is not a measurement that the protein lacks the
+      function, so a yes on a decoy is not necessarily wrong.
+    attributes:
+      term:
+        range: Term
+        required: true
+        inlined: true
+      aspect:
+        range: AspectEnum
+        required: true
+      drawn_from:
+        description: Item whose target supplied the term.
+
+  Term:
+    attributes:
+      id:
+        required: true
+        pattern: "^GO:\\d{7}$"
+      label:
+
+  CheckReport:
+    description: Results of the deterministic checks over one benchmark.
+    attributes:
+      benchmark_id:
+        required: true
+      generated:
+        range: date
+        required: true
+      sources:
+        range: SourceSnapshot
+        multivalued: true
+        inlined_as_list: true
+      summary:
+        range: CheckSummary
+        multivalued: true
+        inlined_as_list: true
+      results:
+        range: CheckResult
+        multivalued: true
+        inlined_as_list: true
+      stats:
+        range: BenchmarkStats
+        inlined: true
+
+  CheckSummary:
+    attributes:
+      check:
+        range: CheckEnum
+        required: true
+      passed:
+        range: integer
+      info:
+        range: integer
+        description: INFO results, including checks that could not be performed.
+      warned:
+        range: integer
+      failed:
+        range: integer
+
+  CheckResult:
+    description: One check on one target annotation, item, or the whole benchmark.
+    attributes:
+      check:
+        range: CheckEnum
+        required: true
+      status:
+        range: CheckStatusEnum
+        required: true
+      item_id:
+      term_id:
+      message:
+        required: true
+      evidence:
+        multivalued: true
+        description: Rows or values the result rests on, for example a baseline GAF row.
+
+  BenchmarkStats:
+    attributes:
+      n_items:
+        range: integer
+      n_targets:
+        range: integer
+      counts:
+        range: CountTable
+        multivalued: true
+        inlined_as_list: true
+      targets_per_item_min:
+        range: integer
+      targets_per_item_median:
+        range: float
+      targets_per_item_max:
+        range: integer
+      mean_information_content:
+        range: float
+        description: Mean IC (bits, from baseline annotation frequencies) of target terms.
+      top_reference_share:
+        range: float
+        description: Fraction of targets that come from the most frequent reference.
+
+  CountTable:
+    attributes:
+      dimension:
+        required: true
+      value:
+        required: true
+      count:
+        range: integer
+        required: true
+
+  ScoreReport:
+    description: >-
+      Verdicts of each condition on each item's targets, NOT targets and
+      decoys, tallied overall and per item so conditions can be compared item
+      by item.
+    attributes:
+      benchmark_id:
+        required: true
+      generated:
+        range: date
+        required: true
+      inputs:
+        multivalued: true
+        description: Result files scored, each with its sha256 when it is a file.
+      condition_scores:
+        range: ConditionScore
+        multivalued: true
+        inlined_as_list: true
+      item_scores:
+        range: ConditionScore
+        multivalued: true
+        inlined_as_list: true
+
+  ConditionScore:
+    description: Verdict counts for one condition (and, in item_scores, one item) and one query role.
+    attributes:
+      condition:
+        required: true
+      model:
+      item_id:
+      role:
+        range: QueryRoleEnum
+        required: true
+      n:
+        range: integer
+        required: true
+      n_yes:
+        range: integer
+      n_no:
+        range: integer
+      n_uncertain:
+        range: integer
+      n_missing:
+        range: integer
+        description: Queries with no verdict (not asked, failed, or null).
+
+  AgentEvaluation:
+    description: >-
+      An agent's reading of a finished benchmark. These are judgements, not
+      expert review; each finding should name a deterministic check that would
+      confirm it, so objections are tested against the data.
+    attributes:
+      benchmark_id:
+        required: true
+      evaluator:
+        required: true
+      date:
+        range: date
+        required: true
+      overall_assessment:
+        required: true
+      findings:
+        range: AgentFinding
+        multivalued: true
+        inlined_as_list: true
+
+  AgentFinding:
+    attributes:
+      item_id:
+      term_id:
+      category:
+        range: AgentFindingCategoryEnum
+        required: true
+      severity:
+        range: CheckStatusEnum
+        required: true
+      explanation:
+        required: true
+      proposed_check:
+        description: A deterministic test that would confirm or refute the finding.
+
+enums:
+  AspectEnum:
+    permissible_values:
+      F:
+        description: molecular_function
+      P:
+        description: biological_process
+      C:
+        description: cellular_component
+
+  BuildModeEnum:
+    permissible_values:
+      GOA_TIME_SPLIT:
+        description: Targets drawn from new rows in the current GO release.
+      REVIEW_DERIVED:
+        description: >-
+          Targets drawn from ACCEPT and NEW annotations of ai-gene-review
+          reviews, kept only if absent from the baseline release.
+
+  ConditionContextEnum:
+    permissible_values:
+      BLIND:
+        description: Sequence only; the header is withheld (peptalk --context blind, the fs2f protocol).
+      ORGANISM:
+        description: Sequence plus organism and taxon (peptalk --context organism).
+      FULL:
+        description: Sequence plus the full header, accession and name included (peptalk --context full).
+      AGENT_REVIEW:
+        description: >-
+          Combined reasoning: an agent reads the sequence and reasons over
+          knowledge and context, as in an ai-gene-review review seeded with
+          baseline-release annotations only.
+
+  QueryRoleEnum:
+    permissible_values:
+      TARGET:
+        description: A positive target; yes is correct.
+      NEGATED_TARGET:
+        description: A NOT target; no is correct.
+      DECOY:
+        description: A decoy term; no is expected.
+      SHUFFLED_TARGET:
+        description: A positive target asked of a shuffled sequence; no is expected.
+
+  SplitEnum:
+    permissible_values:
+      DEV:
+      TEST:
+
+  ItemFeatureEnum:
+    permissible_values:
+      PSEUDOENZYME:
+        description: Catalytically inactive member of an enzyme family (pseudokinase, pseudophosphatase, ...).
+
+  TargetSourceEnum:
+    permissible_values:
+      GOA_RELEASE:
+      AIGR_REVIEW:
+
+  KnowledgeCategoryEnum:
+    description: CAFA knowledge categories, judged at the baseline release on experimental evidence.
+    permissible_values:
+      NO_KNOWLEDGE:
+        description: No experimental annotation in any aspect.
+      LIMITED_KNOWLEDGE:
+        description: Experimental annotation in another aspect, none in this one.
+      PARTIAL_KNOWLEDGE:
+        description: Experimental annotation already in this aspect; the target adds to it.
+
+  DifficultyEnum:
+    permissible_values:
+      EASY:
+        description: The term or a descendant was already predicted on the protein (IBA, IEA, ISS, ...) or experimentally annotated on a close homolog before the cutoff.
+      MEDIUM:
+        description: A baseline experimental term on the protein is a near-duplicate (Lin similarity at or above the threshold).
+      HARD:
+        description: None of the above.
+
+  CheckEnum:
+    permissible_values:
+      schema:
+      novelty:
+        description: Target (or a descendant, or an obsolete term mapped to it) absent from the baseline release with experimental evidence.
+      present_in_current:
+        description: The target row is in the current release.
+      date_window:
+        description: GAF date on or after the cutoff (informational; GO re-stamps dates).
+      near_duplicate:
+      homolog_leakage:
+      prior_prediction:
+        description: Term or a descendant predicted on the protein before the cutoff (IBA/PAN-GO, IEA, ISS, ...).
+      uniprot_leakage:
+        description: Current UniProt entry exposes the target (DR GO line or label in comments).
+      review_agreement:
+        description: Agreement with an ai-gene-review review of the gene, where one exists.
+      reference_recency:
+        description: Target reference published after each condition's model training cutoff.
+      header_leakage:
+        description: The protein name shown in FULL-header conditions does not give the target label away.
+      feature_label:
+        description: A query-derived feature label is supported by the UniProt protein name, not only by comment text.
+      decoy:
+        description: Decoy terms are unrelated (neither way) to the protein's current annotations.
+      balance:
+      difficulty:
+        description: A recorded difficulty disagrees with the grading checks.
+
+  CheckStatusEnum:
+    permissible_values:
+      PASS:
+      INFO:
+      WARN:
+      FAIL:
+
+  AgentFindingCategoryEnum:
+    permissible_values:
+      OK:
+      AMBIGUOUS_TARGET:
+      WRONG_TARGET:
+      TRIVIAL_TARGET:
+      LEAKAGE:
+      IMBALANCE:
+      OTHER:

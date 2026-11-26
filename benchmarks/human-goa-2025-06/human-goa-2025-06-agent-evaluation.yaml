@@ -1,0 +1,87 @@
+benchmark_id: human-goa-2025-06
+evaluator: >-
+  claude-opus-5-5, the agent that built the benchmark (not independent). It read
+  the benchmark, the check report and the current UniProt entries, not the
+  target papers.
+date: '2026-11-25'
+overall_assessment: >-
+  The example is usable as a worked example and a pipeline test, but not yet as
+  an evaluation of any current Claude model. Every target is new to GO. The 20
+  main-draw items rest only on papers published on or after 2025-06-01. The
+  four PSEUDOENZYME items are the exception: their quota sets a 2023-01-01
+  floor, so their nine targets cite papers from January 2023 to December 2024
+  (ULK4, PLD5, WHR1, KLK11). All 24 papers cited by the 51 targets predate the agent-review model's
+  June 2026 training cutoff (reference_recency), so a model may have read every
+  paper. The fix is a later current_release, not a code change: only 7 human
+  proteins had papers from 2026-06-01 or later in the 2026-08-05 release. One
+  paper (PMID:40446798) supplies 10 targets across three items. One of the four
+  pseudoenzyme labels is wrong and one is arguable. Each finding below names
+  the deterministic check that confirms or would confirm it.
+findings:
+  - item_id: human-goa-2025-06-Q9UBX7
+    category: WRONG_TARGET
+    severity: WARN
+    explanation: >-
+      KLK11 is an active serine protease (EC 3.4.21.-). It matched the
+      pseudoenzyme query only through the names of its cleavage products
+      ("Kallikrein-11 inactive chain 1/2", under DE Contains:). Its PSEUDOENZYME
+      label is wrong, and its one target (Golgi apparatus) was already predicted
+      by IEA.
+    proposed_check: >-
+      feature_label now reads only the protein's own DE names and WARNs here.
+      The UniProt query itself should exclude chain names, but no UniProt field
+      separates them, so the check is what catches this.
+  - item_id: human-goa-2025-06-P49842
+    category: AMBIGUOUS_TARGET
+    severity: INFO
+    explanation: >-
+      WHR1 (formerly STK19) carries the AltName "Inactive serine/threonine-protein
+      kinase 19". The 2024 papers recast it as a winged-helix transcription-coupled
+      repair factor, not a degenerate kinase, so it tests a misassigned family
+      rather than a pseudoenzyme. It is still a good item for asking whether a
+      sequence-only reader calls a kinase fold.
+    proposed_check: >-
+      Compare the protein's InterPro/PANTHER family with the enzyme family the
+      label implies (no kinase-domain signature means no pseudokinase).
+  - term_id: GO:0035774
+    category: IMBALANCE
+    severity: WARN
+    explanation: >-
+      PMID:40446798 contributes 10 targets to ALDOA, ARRB1 and MRGPRE, mostly the
+      same broad process terms (intracellular glucose homeostasis, insulin
+      secretion). Per-item scores on these terms are not independent.
+    proposed_check: >-
+      The balance check now WARNs when one reference supplies targets to more than
+      10% of items. A spec option capping items per reference at sampling time
+      would prevent this.
+  - item_id: human-goa-2025-06-P53597
+    category: TRIVIAL_TARGET
+    severity: WARN
+    explanation: >-
+      SUCLG1's MF targets (succinate-CoA ligase activities) were predicted by IBA
+      and IEA at baseline, and the FULL header names the enzyme. They are easy
+      in every condition and give nothing away only in the blind one.
+    proposed_check: >-
+      prior_prediction and header_leakage already WARN. Report scores per
+      difficulty grade so that EASY targets do not dominate the comparison.
+  - item_id: human-goa-2025-06-O95455
+    category: OK
+    severity: INFO
+    explanation: >-
+      TGDS pairs a positive UDP-glucose 4,6-dehydratase target with a NOT
+      dTDP-glucose 4,6-dehydratase target from the same paper. It is a good
+      substrate-specificity test, but the FULL header names the enzyme
+      (header_leakage WARN), so only the blind and organism conditions test it.
+  - category: LEAKAGE
+    severity: WARN
+    explanation: >-
+      The agent-review condition is seeded with baseline GOA, but an agent that
+      can fetch current UniProt, QuickGO or the target papers sees the answers.
+      Five targets' labels appear in current UniProt comment text, and DR GO
+      lines carry most targets. PubMed dates also postdate preprints, so a paper
+      dated after a model's cutoff may have been readable before it.
+    proposed_check: >-
+      uniprot_leakage already reports the UniProt exposure. For agent runs,
+      block or date-pin the UniProt, QuickGO and PubMed tools and record the tool
+      policy in the condition. A preprint-date lookup (bioRxiv, Europe PMC)
+      would tighten reference_recency.
