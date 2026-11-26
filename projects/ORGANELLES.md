@@ -676,9 +676,8 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 Recorded from the review of ai4curation/ai-gene-review#7075. PROC (protein C) is the first
 review in the corpus with *direct* ER and Golgi rows (EXP and IDA) on a secreted protein's
 biosynthetic pool. Wild-type as well as mutant protein C co-localises with PDI and GM130 in
-transfected HEK293T and COS-7 cells (PMID:25748729); PMID:22531345 reports only the retained
-mutant. Rule 7's first clause covers
-them, so they are `KEEP_AS_NON_CORE`. The UniProt-keyword IEA rows (GO_REF:0000044), which
+transfected HEK293T cells (PMID:25748729); PMID:22531345 (HEK293T and COS-7 cells) reports
+only the retained mutant. Rule 7's first clause covers them, so they are `KEEP_AS_NON_CORE`. The UniProt-keyword IEA rows (GO_REF:0000044), which
 restate the same two transfection papers, and every ER-lumen and Golgi-lumen row (ARBA and
 Reactome biosynthesis events) are synthesis rows resting on transit, so they stay
 `MARK_AS_OVER_ANNOTATED`. The split is by evidence type, not by term: a direct row on a
