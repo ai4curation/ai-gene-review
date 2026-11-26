@@ -11,6 +11,9 @@ enzyme with an N-terminal hexose-6-phosphate dehydrogenase domain and a C-termin
 - PMID:18628520 assayed wild-type and apparent cortisone reductase deficiency H6PD
   mutants in HEK293 microsomes, measuring NADPH generation from G6P plus NADP+. Four
   disease variants had no detectable H6PDH activity above background.
+- PMID:12858176 originally tied H6PD to ER-lumenal NADPH regeneration and reported that
+  CRD-associated H6PD exon 5 mutations attenuated or abolished H6PDH activity; UniProt
+  uses this paper for the direct human galactose 6-phosphate/NADP+ reaction.
 - PMID:23132696 identified further H6PD alleles in two girls with apparent cortisone
   reductase deficiency and confirmed loss of H6PDH activity in mutant expression
   studies.
@@ -19,9 +22,9 @@ enzyme with an N-terminal hexose-6-phosphate dehydrogenase domain and a C-termin
   apparent cortisone reductase deficiency through cofactor deprivation rather than by
   directly converting a steroid.
 - H6PD has broad dehydrogenase specificity, including free-glucose and other
-  sugar-phosphate reactions inherited from mouse H6pd in UniProt/RHEA rows. These
-  are kept as non-core or over-annotated when GOA projects them to overly generic
-  activities, rather than made core functions.
+  sugar-phosphate reactions inherited from mouse H6pd or characterized on human H6PD
+  in UniProt/RHEA rows. These are kept as non-core or removed when GOA projects them
+  to overly generic or wrong-direction activities, rather than made core functions.
 
 ## PANTHER PTHR23429
 
@@ -47,4 +50,5 @@ the module now has an H6PD NADPH-supply part feeding HSD11B1.
 No provider-generated H6PD deep-research file was available in this checkout. The
 review was grounded in the fetched GOA/UniProt records, the PTHR23429 PAINT table,
 the existing G6PD family review, the cortisol-cortisone shuttle module, and the two
-GOA-cited full-text H6PD papers cached as PMID:18628520 and PMID:23132696.
+GOA-cited full-text H6PD papers cached as PMID:18628520 and PMID:23132696, plus the
+UniProt-cited human H6PD enzymology paper PMID:12858176.
