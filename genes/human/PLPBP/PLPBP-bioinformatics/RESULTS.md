@@ -55,13 +55,13 @@ Every truncating variant removes the phosphate-binding residues S226 and G243/S2
 
 ### Missense variants at the PLP site (≤ 4.5 Å)
 
-- **p.Val45Asp** (3.7 Å, RSA 0.07, identity 0.83): buried strand residue two positions before K47; places a carboxylate against the pyridine ring face and next to the Schiff-base lysine.
+- **p.Val45Asp** (3.7 Å, RSA 0.07, identity 0.83): buried strand residue two positions before K47; places a carboxylate against the pyridine ring face and next to the Schiff-base lysine. The recombinant mutant carried no cofactor (PMID:31825581).
 - **p.Ile94Phe** (3.1 Å, RSA 0.07, identity 0.86): packs on the PLP methyl (C2A); +23 Å3 in a closed pocket.
 - **p.Arg241Gln** (2.7 Å, RSA 0.05, identity 1.00): the guanidinium sits 2.9 Å from the pyridine N1 and is hydrogen-bonded to the T182, S222 and M223 backbone. Loss of this arginine fits the experimental loss of PLP from the purified mutant (PMID:29689137) and failure to complement E. coli ΔyggS (PMID:27912044).
 
 ### Second shell and barrel core (buried, RSA < 0.2)
 
-- **p.Glu67Lys** (6.8 Å, RSA 0.00, identity 1.00): the carboxylate is bonded to the K47 backbone N, S46 OG and K76 NZ; charge reversal in a buried position beside the Schiff-base strand.
+- **p.Glu67Lys** (6.8 Å, RSA 0.00, identity 1.00): the carboxylate is bonded to the K47 backbone N, S46 OG and K76 NZ; charge reversal in a buried position beside the Schiff-base strand. This was the one mutant that could not be obtained by E. coli expression (PMID:31825581).
 - **p.His92Arg** (8.5 Å, RSA 0.00, identity 1.00): buried; contacts R41, T64, F65, M113 and E115.
 - **p.Thr116Ile** (5.9 Å, RSA 0.00, identity 0.59): buried; side chain hydroxyl bonded to the G95 backbone, next to I94 and M181 of the pocket.
 - **p.Gly224Ala** (5.2 Å, RSA 0.03, identity 1.00): invariant glycine immediately before M225-S226 of the phosphate loop.
@@ -72,8 +72,8 @@ Every truncating variant removes the phosphate-binding residues S226 and G243/S2
 
 ### Solvent-exposed positions
 
-- **p.Arg41Gln / p.Arg41Trp** (10.3 Å, RSA 0.24, identity 0.24): in the model the guanidinium forms a salt bridge with E220 and a hydrogen bond with N239, tying the first strand to the segment that carries the phosphate loop (G224-S226) and R241.
-- **p.Tyr69Cys** (7.4 Å, RSA 0.28, identity 0.62): exposed position after N68; consistent with the reported intermolecular disulfide dimers and reduced PLP content (PMID:29689137).
+- **p.Arg41Gln / p.Arg41Trp** (10.3 Å, RSA 0.24, identity 0.24): in the model the guanidinium forms a salt bridge with E220 and a hydrogen bond with N239, tying the first strand to the segment that carries the phosphate loop (G224-S226) and R241. Recombinant R41Q was saturated with PLP but less stable (melting temperature 49.5 °C against 56.1 °C for wild type, PMID:31825581), which fits a stability effect and not loss of the cofactor site.
+- **p.Tyr69Cys** (7.4 Å, RSA 0.28, identity 0.62): exposed position after N68. The two biochemical studies disagree. PMID:29689137 reports intermolecular disulfide dimers and reduced PLP content. PMID:31825581 reports a mutant fully saturated with PLP, slightly more stable than wild type (59.2 °C against 56.1 °C), with no dimers even under non-reducing conditions, and places Y69 at the proposed dimer interface. An exposed position is compatible with either account, so the model cannot choose between them and the functional effect of this variant is uncertain.
 - **p.Pro87Leu** (22.2 Å, RSA 0.50, identity 0.24) and **p.Ala107Thr** (19.8 Å, RSA 0.46, identity 0.34): exposed, poorly conserved, far from the cofactor. The model gives no structural reason for loss of function. P87L lowered solubility and yield of recombinant protein but the purified protein was folded (PMID:29689137).
 - **p.His275Asp** (C-terminal residue, pLDDT 44, identity 0.10): in the disordered tail, 57 Å from PLP in the model. The structure gives no support for pathogenicity.
 
@@ -104,5 +104,5 @@ Residues 1-30 (`MWRAGSMSAELGVGCALRAVNERVQQAVAR`): net charge +2, two acidic resi
 
 1. PLPBP is a single-domain fold-type III (alanine racemase N-terminal-like) barrel with PLP held as a Schiff base on K47, the phosphate by S226 and G243-S244, and the ring by R241 and N68. This is the only molecular function the structure supports directly; the barrel lacks the second domain that fold-type III enzymes use to complete an active site.
 2. Disease is loss of function. Truncating alleles delete the phosphate and ring-binding residues; most missense alleles are at buried, conserved positions, at the cofactor or in its second shell, or are core substitutions with experimentally shown misfolding or instability. Heterozygous loss is tolerated in the population, as expected for a recessive disorder, and there is no clustering pattern that suggests gain of function or a dominant-negative effect.
-3. Two classes remain unexplained by fold or cofactor contacts: the exposed variants P87L and A107T, and the C-terminal H275D. The model cannot say whether they affect an interaction surface, expression or splicing, or whether (for H275D in particular) the variant is causal.
+3. Two classes remain unexplained by fold or cofactor contacts: the exposed variants P87L and A107T, and the C-terminal H275D. For Y69C the published biochemistry is contradictory (section 3), so its mechanism is also open. The model cannot say whether they affect an interaction surface, expression or splicing, or whether (for H275D in particular) the variant is causal.
 4. R41, H92 and M113 form a contact cluster about 10 Å from PLP that links strand 1 to the C-terminal phosphate-binding segment. Variants there are expected to act through the cofactor site rather than a separate surface.

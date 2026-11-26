@@ -147,3 +147,14 @@ section 4). The two analyses agree that most missense alleles act through stabil
   request is separate. Also: the cytoplasm IEA and NAS rows now state the same umbrella
   argument as the IBA row; the deep-research quote was moved off the PLP-binding row; a paper
   title was corrected in the family review.
+
+## 2026-11-26 (21:50 UTC): correction on p.Tyr69Cys, from reconciliation with the dismech session
+
+My earlier notes and RESULTS.md gave only the PMID:29689137 account of p.Tyr69Cys (disulfide
+dimers, less PLP). The second recombinant study disagrees:
+[PMID:31825581 "Y69C and R41Q mutants are fully saturated with PLP after purification"] and
+[PMID:31825581 "the Y69C mutant did not form dimers contrary to previous postulations"]. Both
+accounts are now recorded in RESULTS.md and the variant's functional effect is stated as
+uncertain. The same paper adds direct data that agree with the structural placement:
+[PMID:31825581 "R241Q and V45D did not bear any cofactor"], R41Q bound PLP but was less stable,
+and E67K could not be expressed. No annotation action in the review depends on Y69C.
