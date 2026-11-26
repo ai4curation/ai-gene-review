@@ -11,6 +11,11 @@ beta1,4 GlcNAc branch that contributes to tri- and tetra-antennary N-glycans. MG
 has lower Km values than MGAT4B in the 2006 enzyme comparison, so the review treats it
 as a core GnT-IV isozyme rather than as a marginal paralog.
 
+UniProt records by similarity to mouse Mgat4a that MGAT4A participates in glucose transport by
+glycosylating SLC2A2/GLUT2 and controlling its cell-surface expression in pancreatic beta cells. This
+downstream physiology belongs in the gene summary, but it is not a new GO process annotation for
+glucose transport because the direct MGAT4A chemistry is still N-glycan branching.
+
 Four 2021 UniProt ISS rows are clearly imported from UniProtKB:P21549, the human AGXT
 alanine:glyoxylate aminotransferase, and should not be on MGAT4A: peroxisome,
 L-alanine:glyoxylate transaminase activity, glyoxylate metabolic process, and
