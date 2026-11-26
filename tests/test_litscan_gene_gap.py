@@ -212,7 +212,11 @@ def test_score_paper_rules(config: dict[str, Any], title: str, rule: str) -> Non
     fired = {
         c["rule"]
         for c in gene_gap.score_paper(
-            title, "", config["paper_scoring"], gene_in_title=False
+            title,
+            "",
+            config["paper_scoring"],
+            gene_in_title=False,
+            matched_symbol="FOO1",
         )
     }
     assert rule in fired
@@ -314,7 +318,7 @@ def test_packet_and_issue_bodies(tmp_path: Path, config: dict[str, Any]) -> None
     }
     json_path, md_path = gene_gap.write_packet(packet, tmp_path)
     assert gene_gap.validate_files([json_path]) == []
-    bodies = sorted((tmp_path / "issues").glob("*.md"))
+    bodies = sorted((tmp_path / "issues" / packet["date_to"]).glob("*.md"))
     assert len(bodies) == 2
     first = next(b for b in bodies if b.name.endswith("-P45944.md")).read_text()
     assert first.rstrip().endswith(
@@ -328,7 +332,7 @@ def test_packet_and_issue_bodies(tmp_path: Path, config: dict[str, Any]) -> None
     assert "medium_effort" in md_path.read_text()
     # A re-run writes the same issue body files, not extra ones.
     gene_gap.write_packet(json.loads(json_path.read_text()), tmp_path)
-    assert sorted((tmp_path / "issues").glob("*.md")) == bodies
+    assert sorted((tmp_path / "issues" / packet["date_to"]).glob("*.md")) == bodies
 
 
 def test_cli_validate_gene_gap() -> None:
@@ -480,3 +484,24 @@ def test_publisher_rejects_unapproved_ranks_and_skips_newly_filed_papers(
     run_with([1, 1])
     gh.assert_called_once()
     assert gh.call_args.args[0][-2:] == ["--body-file", "issues/01-X.md"]
+
+
+@pytest.mark.parametrize(
+    "abstract,expected",
+    [
+        ("FOO1 lacks catalytic activity.", True),
+        ("The catalytically inactive FOO1 mutant served as a control.", False),
+        ("We measured FOO1 abundance. BAR2 is a pseudokinase.", False),
+    ],
+)
+def test_refutation_must_concern_candidate_not_mutant_or_neighbor(
+    config, abstract, expected
+):
+    fired = gene_gap.score_paper(
+        "A study of FOO1",
+        abstract,
+        config["paper_scoring"],
+        gene_in_title=True,
+        matched_symbol="FOO1",
+    )
+    assert ("refutation" in {r["rule"] for r in fired}) == expected

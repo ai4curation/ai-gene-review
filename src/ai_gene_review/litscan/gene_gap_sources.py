@@ -234,7 +234,11 @@ def resolve_symbol(
 ) -> dict[str, Any] | None:
     """Resolve one gene symbol in a taxon, reviewed or not."""
     entries = _uniprot_gene_search(client, [symbol], taxon_id, "", max_hits + 1)
-    return choose_entry(entries, symbol, max_hits)
+    return choose_entry(
+        [entry for entry in entries if symbol.lower() in entry["names"]],
+        symbol,
+        max_hits,
+    )
 
 
 def resolve_symbols(

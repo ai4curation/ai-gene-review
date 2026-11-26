@@ -25,6 +25,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import re
+import shlex
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -312,7 +313,12 @@ def score_gene(gene: dict[str, Any], scoring: dict[str, Any]) -> list[dict[str, 
 
 
 def score_paper(
-    title: str, abstract: str, rules: list[dict[str, Any]], *, gene_in_title: bool
+    title: str,
+    abstract: str,
+    rules: list[dict[str, Any]],
+    *,
+    gene_in_title: bool,
+    matched_symbol: str = "",
 ) -> list[dict[str, Any]]:
     """Paper-side score components; each rule fires at most once.
 
@@ -322,10 +328,22 @@ def score_paper(
     >>> [c["rule"] for c in score_paper("A review", "", rules, gene_in_title=True)]
     ['t', 'r']
     """
+    symbol_re = re.compile(rf"(?<![\w]){re.escape(matched_symbol)}(?![\w])", re.I)
+    contexts = [
+        sentence
+        for sentence in [title, *re.split(r"(?<=[.!?])\s+", abstract)]
+        if matched_symbol and symbol_re.search(sentence)
+    ]
     components = []
     for rule in rules:
         if rule["field"] == "gene_title":
             fired = gene_in_title
+        elif rule["field"] == "gene_sentence":
+            fired = any(
+                _matches_any(rule["patterns"], sentence)
+                and not _matches_any(rule.get("exclude_patterns", []), sentence)
+                for sentence in contexts
+            )
         elif rule["field"] == "title":
             fired = _matches_any(rule["patterns"], title)
         else:
@@ -455,6 +473,8 @@ def run(
             profiles_by_key.setdefault(key, []).append(profile["name"])
         log(f"{profile['name']}: {hit_count} hits, fetched {len(pubs)}")
 
+    paper_count = len(papers)
+
     # 2. ledger
     suppressed: list[dict[str, Any]] = []
     seen_refs = ledger_references(ledger or [])
@@ -495,6 +515,14 @@ def run(
         symbols = candidate_symbols(
             pub.title, mentions[key]["genes"], stoplist, limits["max_symbols_per_paper"]
         )
+        non_gene = {
+            rule["symbol"].casefold()
+            for rule in config.get("non_gene_expansions", [])
+            if _matches_any(rule["patterns"], text)
+        }
+        symbols = [
+            (s, in_title) for s, in_title in symbols if s.casefold() not in non_gene
+        ]
         title_symbols = {s.lower() for s, in_title in symbols if in_title}
         for taxon, _ in taxa:
             todo = [
@@ -584,8 +612,7 @@ def run(
                 entry["pfam_names"], scoring
             ),
             "review_path": reviews.paths.get(accession),
-            "paper_in_goa": bool(pub.pmid)
-            and f"PMID:{pub.pmid}" in profiles[accession].references,
+            "paper_in_goa": bool(paper_ids(pub) & profiles[accession].references),
         }
         gene = {k: v for k, v in gene.items() if v is not None}
         components = score_gene(gene, scoring) + score_paper(
@@ -593,6 +620,7 @@ def run(
             pub.abstract,
             config["paper_scoring"],
             gene_in_title=in_title,
+            matched_symbol=symbol,
         )
         paper = _paper_record(pub, profiles_by_key[key])
         candidates.append(
@@ -619,7 +647,7 @@ def run(
         "include_preprints": include_preprints,
         "config_path": config_path,
         "queries": queries,
-        "paper_count": len(papers),
+        "paper_count": paper_count,
         "resolved_gene_count": len({p[1]["accession"] for p in pairs}),
         "suppressed": suppressed,
         "candidates": ranked,
@@ -723,10 +751,20 @@ def issue_body(cand: dict[str, Any]) -> str:
             "flag any it refutes."
         )
     else:
+        fetch = shlex.join(
+            [
+                "just",
+                "fetch-gene",
+                gene["folder"],
+                gene["symbol"],
+                "--uniprot-id",
+                gene["accession"],
+            ]
+        )
         objective = (
             f"Review gene {gene['symbol']} ({gene['organism']}, "
             f"UniProtKB:{gene['accession']}) using {ref}: "
-            f"`just fetch-gene {gene['folder']} {gene['symbol']} --uniprot-id {gene['accession']}`, then review its "
+            f"`{fetch}`, then review its "
             "existing annotations and propose what the paper supports."
         )
     preprint = (
@@ -835,19 +873,20 @@ def render_markdown(packet: dict[str, Any]) -> str:
 
 
 def write_packet(packet: dict[str, Any], output_dir: Path) -> tuple[Path, Path]:
-    """Write ``<date>-gene-gap.{json,md}`` and ``issues/<rank>-<acc>.md`` bodies."""
+    """Write a dated packet and the corresponding generated issue bodies."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    issues_dir = output_dir / "issues"
-    issues_dir.mkdir(exist_ok=True)
-    for stale in issues_dir.glob("*.md"):
-        stale.unlink()
+    stamp = packet["date_to"]
+    issues_dir = output_dir / "issues" / stamp
+    issues_dir.mkdir(parents=True, exist_ok=True)
+    for stale in issues_dir.glob("[0-9]*-*.md"):
+        if f"<!-- {MARKER_PREFIX}: " in stale.read_text(encoding="utf-8"):
+            stale.unlink()
     for cand in packet["candidates"]:
         if not cand.get("issue_eligible"):
             continue
         path = issues_dir / f"{cand['rank']:02d}-{cand['gene']['accession']}.md"
         path.write_text(issue_body(cand), encoding="utf-8")
         cand["issue_body_path"] = str(path)
-    stamp = packet["date_to"]
     json_path = output_dir / f"{stamp}-{JOB}.json"
     md_path = output_dir / f"{stamp}-{JOB}.md"
     json_path.write_text(json.dumps(packet, indent=2, sort_keys=True) + "\n")

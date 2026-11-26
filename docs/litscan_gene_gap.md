@@ -26,8 +26,8 @@ Manual workflow dispatch defaults to a dry run and uploads the packet artifact.
 
 The [configuration](../conf/litscan/gene_gap.yaml) lists the search terms,
 recognized model organisms and strains, limits, scoring bands, and weights.
-Three capped searches cover unknown function, refutation and biochemical
-characterization. They use first publication date, exclude reviews and errata,
+Four capped searches cover unknown function, named uncharacterized proteins,
+refutation and biochemical characterization. They use first publication date, exclude reviews and errata,
 and can include Europe PMC preprints with `--include-preprints`.
 
 Each ranked row represents one paper and one UniProt accession. The score adds
@@ -38,7 +38,7 @@ the matching rules and the issue body shows each contribution.
 | Experimental gap | QuickGO annotation rows by source evidence code. Bare protein binding is subtracted from the informative experimental total and molecular-function count. Zero informative experimental rows scores +5, compared with −4 above 40. |
 | Electronic or phylogenetic support only | A nonempty record consisting entirely of IEA and IBA earns +1. |
 | Unknown protein or family | UniProt protein names, Pfam DUF/UPF domains, and the number of UniProtKB entries with experimental GO cross-references in an assigned PANTHER family. A family with indexed members and zero experimental members earns +3. |
-| New primary evidence | First-characterization, changed-function and direct assay language add points. High-throughput, review-like and clinical language subtract points. |
+| New primary evidence | First-characterization and changed-function language must share a sentence with the candidate symbol. Target-specific functional experiments add three points. High-throughput, review-like and clinical language subtract points. |
 | Review impact | An existing review missing the reference earns +2. A reference already used by GOA on this product loses 6 points. |
 
 These counts describe what the databases currently contain. An absent family
@@ -53,7 +53,7 @@ the triage step must check the experimental subject.
    closed. Suppress papers already mentioned there and candidates whose gene
    review already cites their PMID, DOI or Europe PMC preprint ID.
 2. Match gene symbols from the title or repeated abstract mentions to UniProt
-   entries in the configured species. Prefer reviewed entries and allow an
+   entries in the configured species. Drop explicit non-gene acronym expansions. Prefer reviewed entries and allow an
    unreviewed title match if it resolves uniquely. Gene aliases, model species,
    expression hosts and cross-species studies can produce false matches.
 3. Rank by score, then by informative experimental count, reference and

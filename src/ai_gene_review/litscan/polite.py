@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
+from email.utils import parsedate_to_datetime
 from typing import Any, Callable
 from urllib.parse import urlparse
 
@@ -29,6 +30,13 @@ def retry_delay(attempt: int, backoff: float, retry_after: str | None) -> float:
     """
     if retry_after and retry_after.strip().isdigit():
         return float(retry_after)
+    if retry_after:
+        try:
+            return max(
+                0.0, parsedate_to_datetime(retry_after).timestamp() - time.time()
+            )
+        except (ValueError, TypeError, OverflowError):
+            pass
     return backoff * 2 ** (attempt - 1)
 
 
