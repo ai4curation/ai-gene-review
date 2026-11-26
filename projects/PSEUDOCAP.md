@@ -37,12 +37,14 @@ defects for PseudoCAP and 75 for PAINT, written up in
 [`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md).
 
 Tier 2, the 289 proteins whose node terms have other seeds as well, is now
-reviewed too: 284 of 289 genes, 342 seedings and 43,061 leaf IBAs. There most
+reviewed too: 286 of 289 genes, 342 seedings and 43,061 leaf IBAs. There most
 seeds hold and most nodes stand on their other seeds, but the reviews still
 record 156 PseudoCAP defects and 41 for PAINT, including eleven seed rows that
 describe a different gene or organism and a pair of choline transporters whose
-annotations are swapped. Across all PAO1 reviews the reports now hold 272
-PseudoCAP, 116 PAINT, 15 UniProt and 12 other defects.
+annotations are swapped. Across all PAO1 reviews the reports now hold 307
+PseudoCAP, 120 PAINT/GO Central, 30 UniProt, 9 InterPro, 2 GOA at EBI and 1
+CACAO -- 469 in all, counted 2026-11-26 from
+[`export_pseae_defects.py`](PSEUDOCAP/export_pseae_defects.py).
 
 ## Why start with IBA seeds
 
@@ -241,7 +243,10 @@ The PAINT report moved from 17 CONFIRMED, 82 PROBABLE and 17 SUSPECTED to **37 C
 77 PROBABLE and 2 SUSPECTED** (116 entries in all). The 32/83/1 split quoted here earlier was
 exact when first written, but the leaf-evidence audit in `1f556e0` regenerated the reports and
 changed it; the totals still summed to 116, which is why the stale figures survived several
-reading passes. The check does three different things:
+reading passes. That 37/77/2 is itself now the 2026-11-05 snapshot and not the present state --
+the report stands at 38 CONFIRMED, 80 PROBABLE and 2 SUSPECTED, 120 in all, counted 2026-11-26 --
+so this paragraph fell to the mechanism it describes, and the lesson it draws is the one the
+set-wide figures above now avoid by being the exporter's output rather than a copy of it. The check does three different things:
 
 - **It names the target.** A request to move an IBD can now give the node to move it to:
   astA's dihydrolase term to PTN000764522 (the node is a duplication whose two children
@@ -481,15 +486,20 @@ These are catalogued for PAINT as pattern 17 of [IBA_REVIEW](IBA_REVIEW.md), nex
 ## Results: tier 2 (nodes with other seeds)
 
 Tier 2 is the 289 PAO1 proteins whose PseudoCAP-supported node terms also have
-other seeds, so a wrong seed does not by itself sink the IBD. 284 are reviewed;
-the five Xcp/Hxc secretion genes below are not. Together they cover 342
+other seeds, so a wrong seed does not by itself sink the IBD. 286 are reviewed;
+the three secretion genes below are not. Together they cover 342
 seedings and 43,061 leaf IBAs (reference-proteome counts, so lower bounds).
 
 Most seeds hold up, and most nodes stand on their other seeds, which is the
 expected result for this tier: the question here is less "does the IBD
 survive" than "is the PseudoCAP row itself right". The reviews record 156
-PseudoCAP defects (60 CONFIRMED, 70 PROBABLE, 26 SUSPECTED) on 130 of the 284
-genes, 41 for PAINT/GO Central (11, 26, 4), 10 for UniProt and 1 elsewhere.
+PseudoCAP defects (60 CONFIRMED, 70 PROBABLE, 26 SUSPECTED) on 130 of the then
+284 genes, 41 for PAINT/GO Central (11, 26, 4), 10 for UniProt and 1 elsewhere.
+Those are the figures as they stood before xcpT and xcpU were reviewed, and each
+of those two adds a PseudoCAP defect, so they are a lower bound now. They are
+scoped to tier 2 rather than to the corpus, and this page carries no derivable
+list of which genes are tier 2, so they are left as the dated snapshot they are
+rather than re-estimated; the set-wide figures above are the derived ones.
 By kind, the PseudoCAP defects are 77 wrong term, 43 wrong evidence code, 22
 wrong reference, 6 wrong gene product and 6 wrong qualifier.
 
@@ -566,10 +576,13 @@ rpoS's RNA polymerase activity).
 
 ### Not completed (tier 2)
 
-xcpT, xcpU, PA0681 (HxcT), PA0685 (HxcQ) and xqhA are fetched but unreviewed:
-the agent's draft was stopped by a safety classifier. Its analysis, which is
-not in any review file, found the tier-1 Xcp pattern again (the 1998 review
-PMID:9818381 cited as IDA, which should be TAS) and judged both nodes sound.
+PA0681 (HxcT), PA0685 (HxcQ) and xqhA are fetched but unreviewed: the agent's
+draft was stopped by a safety classifier. xcpT and xcpU were in that list and are
+now reviewed, which also retires the claim that the analysis exists in no review
+file: the tier-1 Xcp pattern it found is recorded as a `WRONG_EVIDENCE_CODE`
+defect on `GO:0015628` in each, `ECO:0000314` to `ECO:0000304` at `CONFIRMED` --
+the 1998 review PMID:9818381 cited as IDA where it supports only TAS. Both judged
+their nodes sound.
 The algC audit in the same batch also went unwritten; it found the
 PMID:22513190 IMP seed to be an indirect phenotype, since that paper measures
 polysaccharide output and never assays phosphomannomutase.
@@ -839,7 +852,7 @@ is the line the `involved_in` rule draws, so that row is marked over-annotated.
    withdraw-or-repoint cases. The PAINT report now names a target node for each
    relocatable IBD (see "Checked against the tree").
 4. ~~Tier 2 (289 proteins that share each node with other seeds).~~ Done for
-   284; the five Xcp/Hxc genes above still need review files.
+   286; PA0681, PA0685 and xqhA still need review files.
 5. Reconcile tier-2 inconsistencies between parallel batches: MODIFY versus
    TOO_GENERAL for the same general term (rpoS against algU/pvdS; wbpE against
    wbpD/wbpY; nrdA against nrdJa), whether an IDA code resting on a mutant
