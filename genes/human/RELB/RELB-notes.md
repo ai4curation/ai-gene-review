@@ -23,6 +23,10 @@ that RelB is required for T- and B-lymphocyte maturation and function
 but stimulus-specific RelB/c-Rel regulatory context [PMID:22065573, "RelB and
 cRel negatively regulate Toll-like receptor 3-mediated"].
 
+The broad PAINT canonical NF-kappaB signaling row was kept as non-core because
+RelB can work in p50-containing transcriptional complexes, but the curated core
+process for this subunit is the noncanonical p100:RelB to p52:RelB pathway.
+
 The NEK6 centrosome rows were kept as peripheral interaction/localization
 evidence. The synapse and osmotic-stress IEA rows were treated as
 over-annotations because their supporting transfers do not identify a direct

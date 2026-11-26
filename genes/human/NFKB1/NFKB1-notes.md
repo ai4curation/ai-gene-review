@@ -25,6 +25,13 @@ MAPK1/3 activation [Reactome:R-HSA-451634; Reactome:R-HSA-5684273]. The
 MAPK-cascade rows are therefore biologically real for p105 but secondary to the
 core NF-kappaB DNA-binding and cytoplasmic-sequestration functions.
 
+The ACTN4-binding row is similarly direct but specialized: PMID:25411248 assayed
+ACTN4 binding to the NFKB1 p50 subunit and recruitment to NF-kappaB promoters in
+podocytes, making the row real but not one of the general Rel-family activities.
+PMID:20018240 supports collagen I/ILK-induced NF-kappaB activation upstream of
+Snail and LEF1 expression; that is a downstream transcriptional output rather
+than NFKB1 itself executing a canonical Wnt-signaling step.
+
 Many of the GOA process rows are stimulus-specific outputs of NFKB1-containing
 NF-kappaB dimers in macrophages, cancer cells, vascular cells or virus/host
 models. They were kept as non-core when they were compatible with direct NFKB1
