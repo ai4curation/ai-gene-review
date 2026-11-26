@@ -4,7 +4,11 @@ Reports rows of inventory.tsv with no verdict, verdicts for rows not in the inve
 verdicts whose recorded action disagrees with the gene review as it now stands, and
 nodes whose rows were given different PAINT fixes in different records.
 
-    uv run python projects/IBA_REVIEW/rereview-2026-11-21/summarize.py
+    uv run python projects/IBA_REVIEW/rereview-2026-11-21/summarize.py [PASS_DIR]
+
+PASS_DIR is another pass that uses the same record format (inventory.tsv and batches/),
+such as ../overannotated-2026-11-24. There the upheld verdict is OVER_ANNOTATION_UPHELD,
+and a row moved to REMOVE also carries a PAINT request.
 """
 
 from __future__ import annotations
@@ -12,6 +16,7 @@ from __future__ import annotations
 import collections
 import csv
 import glob
+import sys
 from pathlib import Path
 
 import yaml
@@ -22,7 +27,14 @@ HERE = Path(__file__).parent
 
 
 def main() -> None:
+    global HERE
+    if len(sys.argv) > 1:
+        HERE = Path(sys.argv[1])
+    over = HERE.name.startswith("overannotated")
+    upheld, upheld_action = ("OVER_ANNOTATION_UPHELD", "MARK_AS_OVER_ANNOTATED") if over else ("REMOVE_UPHELD", "REMOVE")
     inv = {(r["gene_file"], r["go_id"]): r for r in csv.DictReader(open(HERE / "inventory.tsv"), delimiter="\t")}
+    if over:  # rows PAINT no longer propagates are listed, not re-judged
+        inv = {k: r for k, r in inv.items() if r["status"] == "LIVE_IBD"}
     seen: dict[tuple[str, str], dict] = {}
     for path in sorted(glob.glob(str(HERE / "batches" / "*.yaml"))):
         for gene in yaml.safe_load(open(path))["genes"]:
@@ -59,7 +71,8 @@ def main() -> None:
     for (gene_file, go), row in sorted(seen.items()):
         i = inv.get((gene_file, go), {})
         fix = row.get("paint_fix") or {}
-        if row["verdict"] != "REMOVE_UPHELD" or fix.get("paint_action") in (None, "NONE"):
+        asks_paint = row["verdict"] == upheld or (over and row.get("new_action") == "REMOVE")
+        if not asks_paint or fix.get("paint_action") in (None, "NONE"):
             continue
         key = (i.get("family"), i.get("ibd_node"), go, i.get("go_label"),
                fix["paint_action"], fix.get("target_node_id") or "")
@@ -81,7 +94,7 @@ def main() -> None:
             for a in doc["existing_annotations"]
             if a.get("evidence_type") == "IBA" and a["term"]["id"] == go
         }
-        want = "REMOVE" if row["verdict"] == "REMOVE_UPHELD" else row.get("new_action")
+        want = upheld_action if row["verdict"] in (upheld, "UNRESOLVED") else row.get("new_action")
         if want not in actions:
             print(f"MISMATCH {gene_file} {go}: record says {want}, review has {sorted(map(str, actions))} ({row['_batch']})")
 
