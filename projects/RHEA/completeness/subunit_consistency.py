@@ -110,7 +110,7 @@ for (m, g), prots in pairs.items():
     row = collections.Counter(); ex = collections.defaultdict(list)
     for s in ("cur", "all"):
         ok = [b for b, k in cls[s].items() if k == "consistent"]
-        for ac, k in cls[s].items():
+        for ac, k in sorted(cls[s].items()):
             if k == "consistent" and s == "cur":
                 hits = {t for t, ev in native[ac] if not ev.startswith("IEA") and g in A(t)}
                 if hits and hits <= ct.get(ac, set()):
@@ -140,7 +140,7 @@ for (m, g), prots in pairs.items():
                      "examples_subunit": ",".join(ex["subunit_ct"] + ex["subunit_partner"]),
                      "examples_disagreement": ",".join(ex["disagreement"])})
 
-rows.sort(key=lambda r: -(r["cur_subunit_ct"] + r["cur_subunit_partner"]))
+rows.sort(key=lambda r: (-(r["cur_subunit_ct"] + r["cur_subunit_partner"]), -r["cur_complex_only"], int(r["rhea"]), r["go"]))
 with open(f"{D}/subunit_consistency.tsv", "w") as f:
     w = csv.DictWriter(f, fieldnames=list(rows[0].keys()), delimiter="\t"); w.writeheader(); w.writerows(rows)
 
@@ -162,3 +162,34 @@ for s, name in (("cur", "Curated sources only"), ("all", "All non-circular sourc
 print("top mappings by subunit-practice pairs (curated):")
 for r in rows[:15]:
     print(f"  {r['cur_subunit_ct']+r['cur_subunit_partner']:5d}  RHEA:{r['rhea']} {r['go']} {r['label']}")
+
+# Per-entry output, and the channel by which the 1,228 collision pairs (subunit_projection.tsv: projection
+# `enables`, native `contributes_to` on the term or a descendant) enter the metric. The metric is qualifier-blind,
+# so a collision pair can only add to disagreement through `disjoint` or `ancestor_only` (the entry's curated
+# rows hold a different, e.g. subunit-level, activity); otherwise it is `consistent` (the contributes_to row
+# is read as agreement) or `none` (outside the denominator).
+import os
+entry_cls = {}
+with open(f"{D}/consistency_entries.tsv", "w") as f:
+    w = csv.writer(f, delimiter="\t"); w.writerow(["rhea", "go", "accession", "curated_class", "all_class"])
+    for (m, g), prots in sorted(pairs.items()):
+        ga = A(g)
+        for ac in sorted(prots):
+            if ac not in native:
+                continue
+            kc = classify({t for t, ev in native[ac] if not ev.startswith("IEA")}, g, ga)
+            ka = classify({t for t, _ in native[ac]}, g, ga)
+            w.writerow([m, g, ac, kc, ka]); entry_cls[(ac, g)] = kc
+coll = f"{D}/subunit_projection.tsv"
+if os.path.exists(coll):
+    cc = collections.Counter(); dis = collections.Counter()
+    for r in csv.DictReader(open(coll), delimiter="\t"):
+        k = entry_cls.get((r["accession"], r["projected_go"]), "not_in_metric")
+        cc[k] += 1
+        if k in ("disjoint", "ancestor_only"):
+            dis[(r["projected_go"], r["projected_label"])] += 1
+    print(f"collision pairs from subunit_projection.tsv ({sum(cc.values())}) by curated consistency class: "
+          + ", ".join(f"{k} {v}" for k, v in cc.most_common()))
+    print("  collision pairs counted as disagreement, by projected term:")
+    for (g, n), c in dis.most_common(10):
+        print(f"    {c:5d}  {g} {n}")

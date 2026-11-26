@@ -72,6 +72,26 @@ Results (`subunit_consistency_summary.txt`; per-mapping counts in `subunit_consi
 Setting aside `subunit_ct` and `subunit_partner` lowers the curated-only disagreement rate only from
 18.0% to 17.8%.
 
+**Where the 1,228 collision pairs land.** The collision pairs are those from `SUBUNIT-PROJECTION.md`,
+where the projection says `enables` and a curator says `contributes_to`. Because the metric cannot
+see the qualifier, a collision pair can add to disagreement only through `disjoint` or
+`ancestor_only`, where the entry's curated rows hold a different, often subunit-level, activity.
+Joining per-entry classes (`consistency_entries.tsv`, in the data directory) to
+`subunit_projection.tsv`:
+
+| Curated class | Collision pairs | Effect on the metric |
+|---|---:|---|
+| consistent | 665 | the `contributes_to` row is read as agreement |
+| none | 528 | outside the denominator |
+| disjoint | 19 | counted as disagreement |
+| ancestor_only | 16 | counted as disagreement |
+
+So the collisions add only 35 pairs to disagreement (0.25% of the 14,255), led by anthranilate
+synthase (7). The 528 `none` pairs reveal a second input defect. UniProt's GO cross-references show
+one evidence code per term, and on 511 of these pairs the curated `contributes_to` row, mostly PAINT
+IBA, appears only under an IEA code (UniRule 359, EC 144). The curated-only metric therefore drops
+it. A qualifier-aware metric fed from GOA/QuickGO rows would fix both defects.
+
 **Spot-check of `subunit_partner`.** The class is mixed, so 167 is an upper bound.
 
 - Real subunit cases: anthranilate synthase component 2 (TrpG), and the subunits of heteromeric
@@ -243,7 +263,7 @@ replaces:
 
 | File | Content |
 |---|---|
-| `subunit_consistency.py` | sub-classes for the curated-only non-consistent pairs |
+| `subunit_consistency.py` | sub-classes for the curated-only non-consistent pairs; per-entry classes (`consistency_entries.tsv`, data directory only) and the collision-pair breakdown |
 | `subunit_consistency_summary.txt`, `subunit_consistency.tsv` | its summary and per-mapping counts |
 | `subunit_flag_eval.py` | signal precision and recall against curated qualifiers, and the convention check |
 | `subunit_flag_eval_summary.txt`, `subunit_flag_spotcheck.tsv` | its summary and the spot-check families in seven model organisms |
