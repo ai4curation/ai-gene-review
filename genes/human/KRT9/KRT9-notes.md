@@ -11,7 +11,10 @@ Journal of the review session of 2026-11-26. Quotes are verbatim from the cached
 - `KRT9-deep-research-asta.md` was generated (retrieval-only). It returned 20 papers,
   the top hits being off-target proteomics and protocol papers that mention keratin 9
   only as an identified protein. It is preserved verbatim and not used as support.
-- `just deep-research-openscientist human KRT9` was launched in the same session.
+- `just deep-research-openscientist human KRT9` completed (`KRT9-deep-research-openscientist.md`,
+  artifacts alongside). It agrees on the structural role and the rod-end clustering. It asserts K1
+  as the in vivo partner more firmly than the primary data allow, and garbles some residue names
+  in its hotspot list; both points are recorded in that reference's `reference_review`.
 - Literature search of my own: PubMed queries
   `(KRT9 OR "keratin 9"[Title/Abstract]) AND (palmoplantar OR keratoderma OR knockout OR filament)`
   (134 hits, first 60 screened), `(Krt9 OR "keratin 9") AND (mouse OR mice) AND (knockout OR null OR knock-in OR siRNA)`
