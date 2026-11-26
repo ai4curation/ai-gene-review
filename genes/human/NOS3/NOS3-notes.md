@@ -30,3 +30,10 @@ Main curation decisions:
   evolved NOS3 activity, and remove every bare `GO:0005515` row under the
   project protein-binding policy while preserving each high-throughput
   interaction row separately.
+- Remove `GO:0019430 removal of superoxide radicals` because the cited BH4
+  recycling paper reports eNOS uncoupling with increased eNOS-dependent
+  superoxide and reduced NO production, the reverse of superoxide radical
+  removal [PMID:19666465].
+- Remove the legacy cadmium-binding row because the cited NOS-III mutagenesis
+  paper establishes Cys-99 involvement in tetrahydrobiopterin binding and heme
+  retention, not cadmium as a NOS3 cofactor [PMID:7488039].

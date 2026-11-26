@@ -32,3 +32,12 @@ Main curation decisions:
 - Mark broad ARBA/Compara transfers such as generic signaling, broad blood
   circulation, LPS response, hormone response and transcriptional regulation as
   over-annotations because they do not name a direct NOS1 execution step.
+- The `GO:0032991 protein-containing complex` ISS row was changed to MODIFY because
+  the informative complex is the sarcolemmal dystrophin scaffold: the Cell paper
+  showed that "nNOS partitions with skeletal muscle membranes owing to association
+  of nNOS with dystrophin" [PMID:7545544].
+- The `GO:0035605 peptidyl-cysteine S-nitrosylase activity` row was left
+  UNDECIDED: the Alzheimer's disease paper shows NOS1-dependent changes in
+  S-nitrosylation after miR-132/212 depletion, but does not separate direct
+  transnitrosylase activity from excess diffusible NO produced by NOS1
+  [PMID:28089352].

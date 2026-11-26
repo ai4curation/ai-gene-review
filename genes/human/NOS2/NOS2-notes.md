@@ -27,3 +27,11 @@ Main curation decisions:
   a durable NOS2 protein compartment.
 - Remove every bare `GO:0005515` interaction row while preserving the distinct
   SPSB, HSP90 and GAPDH `WITH/FROM` entities.
+- Treat bactericidal NO production as a NOS2 core output: human alveolar
+  macrophages inoculated with Mycobacterium bovis BCG upregulated iNOS and lost
+  killing activity after L-arginine-pathway inhibition [PMID:9284131], and
+  enterohemorrhagic Escherichia coli modulated IFN-gamma-induced human enterocyte
+  NOS2/iNOS expression and NO production [PMID:18390757].
+- Keep the Leishmania major IgE immune-complex paper as a protozoan/macrophage
+  iNOS context but not as support for bacterial defense or Fc-gamma receptor
+  signaling [PMID:7544003].
