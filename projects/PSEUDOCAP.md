@@ -29,12 +29,13 @@ are still to be written. For 21 genes the seed is wrong or
 is an indirect mutant phenotype, and the IBD it supports should be withdrawn or
 repointed. Examples are catalase activity on a heme exporter (ccmC), lipid
 biosynthesis on an esterase (estA), DNA endonuclease activity from a mistyped
-GO id (pilU), and signal transduction on a signal synthase (lasI). For 23 the
+GO id (pilU), and signal transduction on a signal synthase (lasI). For 24 the
 seed is right for PAO1 but the node carries the term to proteins or lineages it
 does not fit. For 30 the claim is true but the PseudoCAP row misstates the
-evidence code, qualifier or reference, and 32 are sound. The reviews record 116
-defects for PseudoCAP and 75 for PAINT, written up in
-[`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md).
+evidence code, qualifier or reference, and 32 are sound. These 107 reviews
+record 113 defects for PseudoCAP and 74 for PAINT, part of the 307 and 120
+across the whole PSEAE corpus (counted 2026-11-26 from the exporter output, as
+below), written up in [`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md).
 
 Tier 2, the 289 proteins whose node terms have other seeds as well, is now
 reviewed too: 286 of 289 genes, 342 seedings and 43,061 leaf IBAs. There most
