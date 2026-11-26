@@ -56,17 +56,17 @@ def answer_of(record: dict) -> dict:
 
 
 def condition_for(conditions: list[dict], context: str) -> str:
-    """The spec condition with this context level, else the context in lower case.
+    """The single spec condition with this context level.
 
     >>> condition_for([{"name": "seq-only", "context": "BLIND"}], "blind")
     'seq-only'
-    >>> condition_for([], "organism")
-    'organism'
     """
     names = [c["name"] for c in conditions if c["context"] == context.upper()]
     if len(names) > 1:
         raise ValueError(f"several conditions have context {context}: {names}")
-    return names[0] if names else context.lower()
+    if not names:
+        raise ValueError(f"no declared condition has context {context!r}")
+    return names[0]
 
 
 def predictions(benchmark: dict, records: Iterable[tuple[Path, dict]]) -> list[dict]:

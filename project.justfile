@@ -438,7 +438,7 @@ validate-benchmarks:
 
 # Regenerate the benchmark schema's JSON Schema and Pydantic model (commit both)
 gen-benchmark-models:
-    uv run gen-json-schema src/ai_gene_review/schema/benchmark.yaml > assets/jsonschema/benchmark.schema.json
+    uv run gen-json-schema src/ai_gene_review/schema/benchmark.yaml > assets/jsonschema/benchmark.schema.json.tmp && mv assets/jsonschema/benchmark.schema.json.tmp assets/jsonschema/benchmark.schema.json
     uv run gen-pydantic src/ai_gene_review/schema/benchmark.yaml > src/ai_gene_review/datamodel/benchmark_model.py.tmp && mv src/ai_gene_review/datamodel/benchmark_model.py.tmp src/ai_gene_review/datamodel/benchmark_model.py
 
 # List shadow issues waiting for triage, shadow work, or rating

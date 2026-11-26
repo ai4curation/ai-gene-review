@@ -13,10 +13,13 @@ that role is looked up from the benchmark only when scoring.
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 
 import yaml
+
+from ai_gene_review.benchmark.yaml_io import load_yaml
 
 SHUFFLED = "SHUFFLED|"
 VERDICTS = ("yes", "no", "uncertain")
@@ -78,15 +81,20 @@ def claims(items: Iterable[dict]) -> list[dict]:
     return out
 
 
-def read_predictions(paths: Iterable[Path]) -> list[dict]:
-    """Prediction records from PredictionSet YAML files or JSONL files (one Prediction per line)."""
-    out: list[dict] = []
-    for path in paths:
-        if path.suffix == ".jsonl":
-            out += [json.loads(line) for line in path.read_text().splitlines() if line]
-        else:
-            out += (yaml.safe_load(path.read_text()) or {}).get("predictions") or []
-    return out
+def read_prediction_set(path: Path) -> dict:
+    """Read a generic PredictionSet or one JSON Prediction per nonblank line."""
+    if path.suffix == ".jsonl":
+        return {
+            "predictions": [
+                json.loads(line)
+                for line in path.read_text().splitlines()
+                if line.strip()
+            ]
+        }
+    data = load_yaml(path)
+    if not isinstance(data, dict) or not isinstance(data.get("predictions"), list):
+        raise ValueError("expected a PredictionSet with a predictions list")
+    return data
 
 
 def write_predictions(benchmark_id: str, predictions: list[dict], path: Path) -> None:
@@ -110,12 +118,27 @@ def write_predictions(benchmark_id: str, predictions: list[dict], path: Path) ->
 def prediction_term(prediction: dict) -> str:
     """The GO term a prediction answers, from ``term`` or from ``claim_id``.
 
-    >>> prediction_term({"claim_id": "toy-P1/GO:1"}), prediction_term({"term": "GO:2"})
-    ('GO:1', 'GO:2')
+    >>> prediction_term({"item_id": "toy-P1", "claim_id": "toy-P1/GO:1"})
+    'GO:1'
     """
-    if prediction.get("term"):
-        return prediction["term"]
-    return prediction["claim_id"].rsplit("/", 1)[1]
+    item = prediction["item_id"]
+    term = prediction.get("term")
+    identifier = prediction.get("claim_id")
+    if identifier is not None:
+        owner, separator, claim_term = identifier.rpartition("/")
+        if (
+            not separator
+            or owner != item
+            or not claim_term
+            or (term is not None and term != claim_term)
+        ):
+            raise ValueError(
+                f"claim_id {identifier!r} does not match item {item} and term {term!r}"
+            )
+        return claim_term
+    if not term:
+        raise ValueError(f"prediction on {item} needs a claim_id or term")
+    return term
 
 
 def verdict_of(prediction: dict, threshold: float | None = None) -> str:
@@ -137,6 +160,9 @@ def verdicts(
 ) -> Verdicts:
     """Verdicts keyed for scoring. Predictions on unknown items or terms raise ValueError."""
     asked = {(i["id"], t) for i in benchmark["items"] for t, _, _ in queries(i)}
+    conditions = {
+        c["name"]: c["context"] for c in benchmark["spec"].get("conditions") or []
+    }
     out: Verdicts = {}
     for p in predictions:
         term = prediction_term(p)
@@ -145,7 +171,27 @@ def verdicts(
                 f"prediction on {p['item_id']} {term} matches no claim of the benchmark"
             )
         key_term = SHUFFLED + term if p.get("sequence_control") == "SHUFFLED" else term
-        out[(p["condition"], p["predictor"], p["item_id"], key_term)] = verdict_of(
-            p, threshold
-        )
+        condition, predictor = p["condition"], p["predictor"]
+        if conditions and condition not in conditions:
+            raise ValueError(
+                f"unknown condition {condition!r}; declared conditions: {sorted(conditions)}"
+            )
+        if (
+            condition in conditions
+            and p.get("context", conditions[condition]) != conditions[condition]
+        ):
+            raise ValueError(
+                f"context {p['context']} disagrees with condition {condition!r}"
+            )
+        key = (condition, predictor, p["item_id"], key_term)
+        if key in out:
+            raise ValueError(f"duplicate prediction for {key}")
+        out[key] = verdict_of(p, threshold)
+    declared = {p["name"] for p in benchmark["spec"].get("predictors") or []}
+    if declared:
+        for name in sorted({key[1] for key in out} - declared):
+            logging.getLogger(__name__).warning(
+                "Predictor %r is absent from the spec; its reference recency has not been assessed.",
+                name,
+            )
     return out

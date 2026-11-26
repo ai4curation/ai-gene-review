@@ -32,7 +32,7 @@ from ai_gene_review.benchmark.checks import (
 from ai_gene_review.benchmark.cli import benchmark_app
 from ai_gene_review.benchmark.importers import peptalk as peptalk_importer
 from ai_gene_review.benchmark.importers import reviews as reviews_importer
-from ai_gene_review.benchmark.predictions import read_predictions, verdicts
+from ai_gene_review.benchmark.predictions import read_prediction_set, verdicts
 from ai_gene_review.benchmark.run import export, score
 from ai_gene_review.benchmark.sources import (
     Annotation,
@@ -220,9 +220,15 @@ SPEC = {
     "include_negated": True,
     "decoys_per_item": 1,
     "seed": 1,
-    "conditions": [{"name": "blind", "context": "BLIND", "shuffle_control": True}],
+    "conditions": [
+        {"name": "blind", "context": "BLIND", "shuffle_control": True},
+        {"name": "agent-review", "context": "AGENT_REVIEW"},
+    ],
     "predictors": [
-        {"name": "peptalk:m1", "model": "m1", "model_training_cutoff": "2025-01-01"}
+        {"name": "peptalk:m1", "model": "m1", "model_training_cutoff": "2025-01-01"},
+        {"name": "ai-gene-review:m1"},
+        {"name": "ai-gene-review"},
+        {"name": "deepgo"},
     ],
 }
 
@@ -460,6 +466,106 @@ def test_score_only_predictions(
     }
 
 
+@pytest.mark.parametrize(
+    "overrides, message",
+    [
+        ({"claim_id": "other/GO:0106310"}, "claim_id"),
+        ({"claim_id": "toy-P1/GO:2"}, "claim_id"),
+        ({"term": None, "claim_id": "missing-separator"}, "claim_id"),
+        ({"term": None}, "claim_id or term"),
+        ({"condition": "blnid"}, "unknown condition"),
+        ({"context": "FULL"}, "disagrees with condition"),
+    ],
+)
+def test_prediction_identifiers(ctx, tmp_path, overrides, message):
+    benchmark = toy_benchmark(ctx, tmp_path)
+    record = {
+        "item_id": "toy-P1",
+        "term": "GO:0106310",
+        "condition": "blind",
+        "predictor": "deepgo",
+        **overrides,
+    }
+    with pytest.raises(ValueError, match=message):
+        verdicts(benchmark, [record])
+
+
+def test_prediction_needs_term_or_claim_in_schema():
+    record = {
+        "item_id": "x",
+        "condition": "blind",
+        "predictor": "test",
+        "verdict": "yes",
+    }
+    assert validate_schema(record, "Prediction")
+    assert validate_schema({"predictions": [record]}, "PredictionSet")
+
+
+def test_undeclared_predictors_are_reported(ctx, tmp_path, caplog):
+    benchmark = toy_benchmark(ctx, tmp_path)
+    benchmark["spec"] = {
+        k: v for k, v in benchmark["spec"].items() if k != "predictors"
+    }
+    report = run_checks(benchmark, ctx, tmp_path, uniprot=False)
+    assert (
+        next(r for r in report["summary"] if r["check"] == "reference_recency")["info"]
+        == 1
+    )
+    record = {
+        "item_id": "toy-P1",
+        "term": "GO:0106310",
+        "condition": "blind",
+        "predictor": "new",
+    }
+    assert verdicts(benchmark, [record])
+    benchmark["spec"] = SPEC
+    assert verdicts(benchmark, [record])
+    assert "Predictor 'new' is absent from the spec" in caplog.text
+
+
+def test_peptalk_unknown_context(ctx, tmp_path):
+    benchmark = toy_benchmark(ctx, tmp_path)
+    with pytest.raises(ValueError, match="no declared condition"):
+        peptalk_importer.predictions(
+            benchmark,
+            [(tmp_path / "run", {**PEPTALK_RECORDS[0], "context": "organism"})],
+        )
+
+
+def test_score_checks_each_yaml_input(ctx, tmp_path):
+    benchmark = toy_benchmark(ctx, tmp_path)
+    bench_file = tmp_path / "toy.yaml"
+    bench_file.write_text(yaml.safe_dump(benchmark))
+    path = tmp_path / "run.yaml"
+    document = """benchmark_id: toy
+predictions:
+  - item_id: toy-P1
+    term: GO:0106310
+    prediction_date: 2026-11-26
+    condition: blind
+    predictor: deepgo
+    verdict: "yes"
+"""
+    path.write_text(document)
+    runner = CliRunner()
+    args = ["score", str(bench_file), "-p", str(path)]
+    assert runner.invoke(benchmark_app, args).exit_code == 0
+    for args_, content, error in [
+        (args + ["-p", str(path)], document, "duplicate prediction"),
+        (args, document + document.split("predictions:\n")[1], "duplicate prediction"),
+        (
+            args,
+            document.replace("benchmark_id: toy", "benchmark_id: other"),
+            "benchmark_id",
+        ),
+        (args, bench_file.read_text(), "expected a PredictionSet"),
+    ]:
+        path.write_text(content)
+        result = runner.invoke(benchmark_app, args_)
+        assert result.exit_code != 0
+        assert error in result.output
+
+
 @pytest.mark.parametrize("suffix", [".jsonl", ".yaml"])
 def test_import_and_score_cli(ctx: Context, tmp_path: Path, suffix: str) -> None:
     """End to end through the CLI: native peptalk output -> predictions -> scores."""
@@ -475,7 +581,7 @@ def test_import_and_score_cli(ctx: Context, tmp_path: Path, suffix: str) -> None
         ["import", str(bench_file), str(native), "--from", "peptalk", "-o", str(out)],
     )
     assert result.exit_code == 0, result.output
-    assert len(read_predictions([out])) == 3
+    assert len(read_prediction_set(out)["predictions"]) == 3
     result = runner.invoke(
         benchmark_app, ["validate", str(out), "--class", "PredictionSet"]
     )
@@ -707,7 +813,7 @@ def test_committed_predictions_validate(path: Path) -> None:
 def test_committed_predictions_parse_with_pydantic(path: Path) -> None:
     from ai_gene_review.datamodel.benchmark_model import Prediction
 
-    for record in read_predictions([path]):
+    for record in read_prediction_set(path)["predictions"]:
         assert Prediction.model_validate(record).item_id == record["item_id"]
 
 
@@ -718,7 +824,10 @@ def test_committed_scores_reproduce_from_committed_predictions() -> None:
         bench_path = scores_path.with_name(f"{report['benchmark_id']}.yaml")
         files = [Path(i.split(" sha256:")[0]) for i in report["inputs"]]
         benchmark = yaml.safe_load(bench_path.read_text())
-        again = score(benchmark, verdicts(benchmark, read_predictions(files)), [])
+        predictions = [
+            p for path in files for p in read_prediction_set(path)["predictions"]
+        ]
+        again = score(benchmark, verdicts(benchmark, predictions), [])
         assert again["condition_scores"] == report["condition_scores"]
         assert again["item_scores"] == report["item_scores"]
 

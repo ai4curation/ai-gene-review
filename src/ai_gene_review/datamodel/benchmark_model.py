@@ -158,8 +158,17 @@ class SequenceControlEnum(str, Enum):
 
 class VerdictEnum(str, Enum):
     yes = "yes"
+    """
+    The predictor affirms the claim.
+    """
     no = "no"
+    """
+    The predictor rejects the claim.
+    """
     uncertain = "uncertain"
+    """
+    The predictor explicitly abstains from deciding the claim.
+    """
 
 
 class QueryRoleEnum(str, Enum):
@@ -701,9 +710,17 @@ class ClaimSet(ConfiguredBaseModel):
 
 class Prediction(ConfiguredBaseModel):
     """
-    One predictor's answer to one claim under one condition. This is the only format `benchmark score` reads; importers convert each predictor's native output into it. A prediction names its claim by claim_id or by item_id plus term.
+    One predictor's answer to one claim under one condition. This is the only format `benchmark score` reads; importers convert each predictor's native output into it. A prediction names its claim by claim_id or by item_id plus term. If a recorded attempt returned no answer, omit both verdict and score to count the attempt as missing.
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/ai-gene-review/benchmark'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://w3id.org/ai4curation/ai-gene-review/benchmark',
+         'rules': [{'postconditions': {'any_of': [{'slot_conditions': {'claim_id': {'name': 'claim_id',
+                                                                                    'pattern': '.+/.+',
+                                                                                    'required': True}}},
+                                                  {'slot_conditions': {'term': {'name': 'term',
+                                                                                'pattern': '.+',
+                                                                                'required': True}}}]},
+                    'preconditions': {'slot_conditions': {'item_id': {'name': 'item_id',
+                                                                      'required': True}}}}]})
 
     item_id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CheckResult',
                        'Claim',
@@ -721,7 +738,7 @@ class Prediction(ConfiguredBaseModel):
     sequence_control: Optional[SequenceControlEnum] = Field(default=None, description="""Whether the native or a shuffled sequence was shown (default NATIVE).""", json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction']} })
     verdict: Optional[VerdictEnum] = Field(default=None, description="""The predictor's answer; absent when it gave none.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction']} })
     score: Optional[float] = Field(default=None, description="""A numeric score for the claim, for predictors that give one (a probability, an E-value-derived score). Scored as a verdict only with an explicit threshold.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction']} })
-    confidence: Optional[float] = Field(default=None, description="""The predictor's stated confidence in its verdict, 0 to 1.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction']} })
+    confidence: Optional[float] = Field(default=None, description="""The predictor's stated confidence in its verdict, 0 to 1.""", ge=0, le=1, json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction']} })
     evidence: Optional[str] = Field(default=None, description="""The predictor's stated reasoning or evidence, verbatim or abridged.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CheckResult', 'Prediction']} })
     cost_usd: Optional[float] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction']} })
     prediction_date: Optional[date] = Field(default=None, description="""When the prediction was made.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Prediction']} })

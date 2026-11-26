@@ -46,14 +46,20 @@ a Pydantic model in `src/ai_gene_review/datamodel/benchmark_model.py`):
   any), the condition, a verdict (`yes`, `no`, `uncertain`) and/or a score,
   and optional confidence, evidence, cost and provenance. Files are JSONL (one
   record per line) or a `PredictionSet` YAML. `benchmark score` reads only
-  this format. A score without a verdict counts only with `--threshold`.
+  this format. In YAML, quote `"yes"` and `"no"` so they remain strings.
+  An attempt that returned no answer counts as missing. A score without a verdict counts only with `--threshold`.
 
 An **importer** converts a predictor's native output into predictions
 (`src/ai_gene_review/benchmark/importers/`). Two exist: `peptalk` (the JSONL
 of `peptalk ask`, an example LLM predictor; `export --for peptalk` also writes
 its claims TSV) and `reviews` (a folder of ai-gene-review reviews). To evaluate
 another tool, add a small importer module, or have the tool write predictions
-directly.
+directly. Use the declared condition names. New predictors can run against a frozen
+benchmark. The scorer warns when a predictor is absent from a declared roster
+because the check report has no training-cutoff assessment for that predictor.
+Use distinct predictor names for configurations you want scored separately.
+Each condition, predictor, item, GO term and sequence control identifies one
+answer across all input files.
 
 ## Workflow
 
@@ -218,6 +224,8 @@ annotation only in another aspect) and `PARTIAL_KNOWLEDGE`.
   preprint, accepted manuscript or author copy may have been readable, and in a
   model's training data, a year earlier. A preprint-date lookup would tighten
   both.
+- The shuffled-sequence control tallies positive targets. Imported predictions
+  retain shuffled decoy and shuffled NOT-target answers for separate analyses.
 - Decoys are scored only where a predictor is asked about them. A review is
   never asked about decoys, so the reviews importer writes no predictions for
   them; they count as missing, and the agent-review decoy rate is not
@@ -227,6 +235,6 @@ annotation only in another aspect) and `PARTIAL_KNOWLEDGE`.
   rows (including MODIFY's replacement terms) and every core-function term
   slot as assertions. REMOVE and MARK_AS_OVER_ANNOTATED count as "no".
 - Existing ai-gene-review reviews were written with current GOA in view. Importing
-  them with `benchmark import genes --from reviews` measures agreement, not an AGENT_REVIEW run.
+  them with `benchmark import benchmarks/<id>/<id>.yaml genes --from reviews` measures agreement, not an AGENT_REVIEW run.
   A real run seeds each review with `run-inputs/baseline-goa/<ACC>-goa.tsv` and
   keeps the agent away from post-cutoff sources.

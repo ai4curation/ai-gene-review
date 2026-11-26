@@ -86,9 +86,7 @@ def predictions(
         if path is None:
             continue
         kept, contested = review_claims(yaml.safe_load(path.read_text()))
-        for term, _, role in queries(item):
-            if role == "DECOY":
-                continue
+        for term in dict.fromkeys(t for t, _, role in queries(item) if role != "DECOY"):
             if term in contested:
                 verdict = "no"
             elif any(

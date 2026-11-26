@@ -801,6 +801,15 @@ def run_checks(
         result("schema", "FAIL", problem)
         for problem in validate_schema(benchmark, "Benchmark")
     ] or [result("schema", "PASS", "Benchmark validates against schema/benchmark.yaml")]
+    predictors = benchmark["spec"].get("predictors") or []
+    if not predictors:
+        results.append(
+            result(
+                "reference_recency",
+                "INFO",
+                "No predictors declared. Training cutoff fairness is unassessed.",
+            )
+        )
     for item in benchmark["items"]:
         protein, item_id = item["protein"], item["id"]
         accession = protein.split(":", 1)[1]
@@ -848,9 +857,7 @@ def run_checks(
                 results += uniprot_leakage(
                     entry, term, target["term"].get("label"), item_id
                 )
-            results += reference_recency(
-                target, benchmark["spec"].get("predictors") or [], item_id
-            )
+            results += reference_recency(target, predictors, item_id)
             if item.get("protein_name"):
                 results.append(
                     header_leakage(
