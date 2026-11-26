@@ -4,3 +4,4 @@
 - `just fetch-gene-pmids human TET2` confirmed all 12 PMIDs in the seeded review were cached.
 - `just paint-losses human TET2` reported no IRD or IKR losses on the `TET2` lineage.
 - The review accepts TET2's nuclear/chromatin DNA 5-methylcytosine dioxygenase activity as core, keeps OGT recruitment and hematopoietic differentiation as non-core contexts, modifies the generic 2-oxoglutarate dioxygenase row to `DNA 5-methylcytosine dioxygenase activity`, and removes only bare protein-binding rows.
+- O-linked glycosylation rows are kept as non-core because `PMID:23222540` and `PMID:23353889` support TET2-dependent recruitment and positioning of OGT on chromatin; OGT remains the glycosyltransferase that catalyzes the transfer reaction.
