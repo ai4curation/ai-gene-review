@@ -127,3 +127,23 @@ The report's own variant test used only five ClinVar pathogenic missense variant
 enrichment near Lys47; my test with the 18 literature variants on modelled residues does find
 patient variants closer to PLP, more buried and more conserved (bioinformatics RESULTS.md,
 section 4). The two analyses agree that most missense alleles act through stability.
+
+## 2026-11-26 (21:25 UTC): OpenScientist job status and PR review follow-up
+
+- Gene deep research: completed, committed.
+- Hypothesis job on the `GO:0005739` row: the process ended after about two hours without
+  writing a report (empty output directory, nothing in the wrapper log). Not relaunched: the
+  presequence question it asked was answered inside the deep-research report (no canonical
+  cleavable presequence), and that does not change the organelle row.
+- Hypothesis job `surface-variant-interface`: same failure (no report after about two hours).
+  Relaunched once in narrowed form (p.Pro87Leu and p.Ala107Thr only, surface conservation only,
+  two iterations). The outcome will be appended here if it returns; until then the two
+  variants stay "unexplained by structure".
+- PR review (automated reviewer): the `GO:0042816` row's reason wrongly said it was the most
+  specific term available. `GO:0042822` pyridoxal 5'-phosphate metabolic process is an is_a
+  child (QuickGO ancestors query, 2026-11-26). The row stays ACCEPT, with the reason rewritten:
+  the evidence concerns the balance of several vitamers (PLP down, PNP and PMP up), which is
+  the scope of the vitamin B6-wide term and not of the PLP-only child. The homeostasis term
+  request is separate. Also: the cytoplasm IEA and NAS rows now state the same umbrella
+  argument as the IBA row; the deep-research quote was moved off the PLP-binding row; a paper
+  title was corrected in the family review.
