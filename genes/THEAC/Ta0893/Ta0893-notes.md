@@ -68,3 +68,13 @@ P. torridus ortholog (PTO0478, Q6L1T9). Upstream enzymes: PMID:24914732, PMID:24
 
 GO:0004163 or GO:0090710 must not be applied to Ta0893: both are ATP-dependent reactions on a
 different substrate.
+
+## 2026-11-26: superseded negative finding recorded
+
+PMID:24914732 reported no activity of recombinant Ta0893 on mevalonate 3,5-bisphosphate
+[PMID:24914732 "We tested apparent mevalonate pyrophosphate decarboxylase homologues Ta0461 and Ta0893
+for activity on mevalonate 3,5-bisphosphate, but none was detected in our hands."]. PMID:28004831 found
+that full-length Ta0893 forms inclusion bodies [PMID:28004831 "Ta0893 consistently formed inclusion
+bodies"] and that truncated or chaperone-co-expressed protein is active [PMID:28004831 "Ta0893 shows
+decarboxylase activity when truncated or co-expressed with chaperones"]. Recorded in the review as a
+finding on PMID:24914732 with finding_status OVERTURNED, superseded_by PMID:28004831.

@@ -37,8 +37,11 @@ no GO term, so this review records the third request in structured form.
 - Requested as `mevalonate-3-phosphate 5-kinase activity` under GO:0016773, with exactMatch mappings to
   RHEA:42888 and EC:2.7.1.186.
 
-### Aside for the Ta0893 review
+### Aside for the Ta0893 review (resolved 2026-11-26)
 
 PMID:24914732 also reports that Ta0893 showed no activity on mevalonate 3,5-bisphosphate, which
 PMID:28004831 later overturned with truncated or chaperone-co-expressed protein. The Ta0893 review does
 not yet record that superseded negative finding.
+
+Resolved 2026-11-26: the Ta0893 review now records the negative as an OVERTURNED finding on
+PMID:24914732, superseded by PMID:28004831.
