@@ -35,13 +35,13 @@ evidence digest: every `QUOTE:` there is a verbatim substring of the cached
 
 Launched 2026-11-26 through `just gene-hypothesis-research openscientist human LDHD ...` (three iterations, 7200 s timeout). Local bioinformatics results were not passed to the prompts.
 
-| Slug | Question | Status at 2026-11-26 22:40 UTC |
+| Slug | Question | Final status, 2026-11-26 23:25 UTC |
 |---|---|---|
 | `isoform1-insert-dispensable` | Is the isoform-1-only segment a lineage-restricted, dispensable insertion? | First run stopped by the 2 h job limit; narrowed rerun (2 iterations) cancelled at its 5400 s timeout (job 5fb612b8-25f0-40f5-9950-900a81e054fb). No report; not retried |
 | `t463m-catalytic-loop-destabilisation` | Does p.Thr463Met act by destabilising the catalytic loop? | First run stopped by the 2 h job limit; narrowed rerun (2 iterations) cancelled at its 5400 s timeout (job 64afe1f1-463d-4eb8-8a50-89678e5d471c). No report; not retried |
-| `ims-facing-inner-membrane-topology` | Does the catalytic domain face the intermembrane space? | First run cancelled at the 7200 s OpenScientist ceiling (job be69918f-f9fd-4ebc-8593-1d4173b20b88); relaunched as a proteomics-lookup-only question, running |
+| `ims-facing-inner-membrane-topology` | Does the catalytic domain face the intermembrane space? | First run cancelled at the 7200 s OpenScientist ceiling (job be69918f-f9fd-4ebc-8593-1d4173b20b88); narrowed proteomics-lookup rerun cancelled at its 5400 s timeout (job b71b2653-3cca-4c5d-97fc-9af377e0e353). No report; not retried |
 
-The OpenScientist gene-level deep-research run (`just deep-research-openscientist human LDHD`) was also stopped at the 2 h limit and wrote nothing; it was not restarted. No conclusion in the review depends on any of these runs.
+The OpenScientist gene-level deep-research run (`just deep-research-openscientist human LDHD`) was also stopped at the 2 h limit and wrote nothing; it was not restarted. Seven OpenScientist jobs were launched in all and none returned a report, including single-question reruns, which points to an upstream problem on the day and not to scope. No conclusion in the review depends on any of these runs; the three questions remain open and are recorded as knowledge gaps or suggested experiments.
 
 Topology follow-up done locally while the run was pending: MitoCarta3.0 lists LDHD as MIM with no APEX_matrix and no APEX_IMS evidence (`LDHD-bioinformatics/RESULTS.md`, section 6), so the proteomics resource most likely to settle the face does not.
 
