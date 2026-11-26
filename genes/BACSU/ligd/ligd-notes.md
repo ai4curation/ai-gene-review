@@ -37,3 +37,8 @@ Strengthen ATP, duplex/end-binding and multistep rNMP-extension support where ap
 ## 2026-11-25 — primer-process scope correction
 
 GO:0006269 remains part_of DNA-templated DNA replication. Its damage clause changes the allowed primer chemistry and does not establish a replication role for LigD. The target inherits the LigD polymerase/primase machinery at PTN001627042, and the seed experiment is legitimate; donor count and absence of target-specific loss are not the problem. The target assays demonstrate repair gap filling, while the replication-process context of this IBD is not established. Mark the process as over-annotated without denying inherited catalytic capacity. The shared node-level PROBABLE GO_CENTRAL CHECK is recorded in the PAO1 ligD review. This supersedes the earlier reading that the damage clause itself justified a repair-process interpretation.
+
+
+## 2026-11-25 — evidence-scope correction
+
+The PMID:17293412 finding records spore radiation/vacuum sensitivity; PAINT topology is independent evidence and is not a finding of that paper. Earlier notes implying that an unavailable full primary article was read are superseded by the reference_review access limits. For LigD, unresolved replication-primer context in the M. tuberculosis seed remains unresolved in the derived IBA.

@@ -28,3 +28,8 @@ Construct and assay context retained from the prior description: LigD is a multi
 ## 2026-11-25 — primer-process scope correction
 
 The PMID:16023671 abstract directly demonstrates unprimed RNA synthesis by H37Rv LigD and Ku-stimulated primer extension in an NHEJ context. This establishes primase chemistry, but GO:0006269 is part_of DNA-templated DNA replication; the definition's DNA-damage clause does not by itself establish that process for LigD. The full article remains unavailable here, so the experimental process annotation is UNDECIDED rather than rejected from an abstract-only reading. Apply the same unresolved process judgment to its IBA; the target's appearance as a seed is legitimate and not circular. The biochemical activity itself remains supported. This supersedes the earlier reading that the damage clause itself justified a repair-process interpretation.
+
+
+## 2026-11-25 — nucleotide hierarchy recheck
+
+Live QuickGO ancestor queries (is_a and part_of) confirm that GO:0032553 reaches GO:0000166, while GO:0032552 currently returns only itself, GO:0005488 and GO:0003674. Both terms are non-obsolete. The deoxyribonucleotide refinement is justified by its chemical definition, not an asserted graph edge. The actual responses are committed under analysis/module_audits/bacterial_nonhomologous_end_joining/review-round10-20261126/; the earlier myctu-review-20261107 path citation is superseded.

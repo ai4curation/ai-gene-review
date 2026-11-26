@@ -25,3 +25,8 @@ Replace functional methods-only quotes with result statements; retain construct 
 ## 2026-11-08 — source-specific evidence follow-up
 
 Strengthen ATP, duplex/end-binding and multistep rNMP-extension support where applicable; remove duplicate evidence entries. Explicit NEW MF proposals record measured AP/5′-dRP chemistry without assigning a general native BER process. Abstract-only PMID:17293412 is scoped to the quoted mutant-spore phenotype, with no unverified strain details. Original source annotation payloads are unchanged. See the evidence-followup-20261108 receipt for the exact file scope.
+
+
+## 2026-11-25 — evidence-scope correction
+
+The PMID:17293412 finding records spore radiation/vacuum sensitivity; PAINT topology is independent evidence and is not a finding of that paper. Earlier notes implying that an unavailable full primary article was read are superseded by the reference_review access limits. For LigD, unresolved replication-primer context in the M. tuberculosis seed remains unresolved in the derived IBA.
