@@ -163,3 +163,7 @@ The review therefore does not depend on an automated deep-research file.
   pseudophosphatases, including Oca6, due to active-site substitutions.
 - The IBA should therefore be treated as a pseudoenzyme propagation failure for OCA6, not as a
   weak-source or short-donor-list problem.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[5], GO:0008150 biological_process (ND, GO_REF:0000015), ACCEPT: the ND may be stale. These notes cite PMID:21409566, a study of the yeast OCA family that reports oca6 deletion strains are caffeine-sensitive and that Oca6 is "involved in the yeast response to caffeine and rapamycin stresses", and PMID:14671320, a genome-wide deletion screen in which loss of OCA6 changes Brome mosaic virus RNA replication. Both are phenotypes for this gene product in S. cerevisiae tied to a process, so a curator should decide whether either supports a BP annotation (for example a caffeine-response term from PMID:21409566). The review action was left unchanged.

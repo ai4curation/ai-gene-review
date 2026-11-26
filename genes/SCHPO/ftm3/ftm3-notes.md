@@ -96,3 +96,8 @@ Taxon: *Schizosaccharomyces pombe* (strain 972 / ATCC 24843), NCBITaxon:284812.
 Deep research: falcon and perplexity-lite both failed (falcon template-variable error;
 perplexity 401 quota). Review grounded in UniProt + GOA + PomBase + cached literature per
 CLAUDE.md fallback guidance; no fabricated content.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[3], GO:0008150 biological_process (ND, ACCEPT): may be stale. PomBase carries GO:0042149 cellular response to glucose starvation (RNA level decreased) for ftm3 from the genome-wide RNA-seq study PMID:34460892 (Tarhan and Cakir 2021). That is an expression-based process annotation from S. pombe literature, so the root BP ND may be stale, although it is transcript-level only and the paper text does not name ftm3. Action left unchanged pending curator review.
+- existing_annotations[2], GO:0003674 molecular_function: cited to ftm3-notes.md (molecular function unknown).

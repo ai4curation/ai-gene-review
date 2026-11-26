@@ -11,19 +11,20 @@ from ai_gene_review.validation.validation_report import ValidationSeverity
 CHECK = "core_function_molecular_function_not_in_annotations"
 
 
-def _review(with_gap: bool) -> dict:
+def _review(gap_at: str | None, n_core: int = 1) -> dict:
     core = {
         "description": "Proposed isomerase (activity disputed).",
         "molecular_function": {"id": "GO:0051750", "label": "delta(3,5)-delta(2,4)-dienoyl-CoA isomerase activity"},
         "supported_by": [{"reference_id": "PMID:1", "supporting_text": "x"}],
     }
-    if with_gap:
-        core["knowledge_gaps"] = [{
-            "gap_statement": "Whether the protein has the activity at all.",
-            "gap_kind": ["BIOLOGY"],
-            "dark_aspect": "MF_DARK",
-        }]
-    return {
+    gap = {
+        "gap_statement": "Whether the protein has the activity at all.",
+        "gap_kind": ["BIOLOGY"],
+        "dark_aspect": "MF_DARK",
+    }
+    if gap_at == "core":
+        core["knowledge_gaps"] = [gap]
+    review = {
         "id": "Q12345",
         "gene_symbol": "TEST",
         "taxon": {"id": "NCBITaxon:559292", "label": "Saccharomyces cerevisiae"},
@@ -35,15 +36,25 @@ def _review(with_gap: bool) -> dict:
             "original_reference_id": "PMID:1",
             "review": {"action": "UNDECIDED"},
         }],
-        "core_functions": [core],
+        "core_functions": [dict(core) for _ in range(n_core)],
     }
+    if gap_at == "top":
+        review["knowledge_gaps"] = [gap]
+    return review
 
 
 @pytest.mark.parametrize(
-    "with_gap,severity", [(False, ValidationSeverity.WARNING), (True, ValidationSeverity.INFO)]
+    "gap_at,n_core,severity",
+    [
+        (None, 1, ValidationSeverity.WARNING),
+        ("core", 1, ValidationSeverity.INFO),
+        ("top", 1, ValidationSeverity.INFO),
+        # With several core functions, a top-level gap cannot be tied to one of them.
+        ("top", 2, ValidationSeverity.WARNING),
+    ],
 )
-def test_contested_core_mf(tmp_path: Path, with_gap: bool, severity: ValidationSeverity):
+def test_contested_core_mf(tmp_path: Path, gap_at: str | None, n_core: int, severity: ValidationSeverity):
     f = tmp_path / "TEST-ai-review.yaml"
-    f.write_text(yaml.dump(_review(with_gap)))
+    f.write_text(yaml.dump(_review(gap_at, n_core)))
     report = validate_gene_review(f, check_best_practices=True)
-    assert [i.severity for i in report.issues if i.check_type == CHECK] == [severity]
+    assert [i.severity for i in report.issues if i.check_type == CHECK] == [severity] * n_core

@@ -5,6 +5,7 @@ tags: [BIOLOGY_DOMAIN]
 collections: [HOMOLOGY_PROPAGATION]
 species: [human, yeast]
 genes: [FH, CRLS1, CLPP, NDI1, MMM1, MDM10, MDM12, MDM34, ATAD3A, MICU1, TOMM40, SAMM50, SLC25A4, ATP5IF1, COQ7, SUOX, DHODH, ETFDH, GPD2, PRODH, CLPX, NFS1, ISCU, FXN, HSCB, AIFM1]
+index_group: MAMMAL
 ---
 
 # MitoTOL: Mitochondrial Proteomes Across the Tree of Life

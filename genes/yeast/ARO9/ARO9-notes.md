@@ -8,3 +8,12 @@ Pathway context: aromatic aminotransferase II; catabolic (Ehrlich) Phe/Tyr/Trp t
 - Redundant contribution to Phe/Tyr biosynthesis [PMID:9491082 "aro8 and aro9 double mutants which are auxotrophic for both phenylalanine and tyrosine"] - kept non-core.
 - Methionine salvage KMTB [PMID:18625006 "The aromatic amino acid transaminases, Aro8p and Aro9p, and the branched chain amino acid transaminases, Bat1p and Bat2p, seemed to be the main enzymes exhibiting 4-methylthio-2-oxobutyrate transaminase activity."]; L-isoleucine:2-OG RCA rows MODIFY -> GO:0010326.
 - Kradolfer 1982 (PMID:6763508) has no cached abstract; specificity claims rely on UniProt's curation of it.
+
+## Audit to COMPLETE (2026-11-11)
+
+- Deep research: no provider deep-research file is available (no API keys in this session).
+- Most rows had actions but no written reason; reasons added for all 40 rows, reference reviews for the
+  key papers. No action changed. The description (quoted by the PTHR42790 family review) was left verbatim.
+- GO:0016212 kynurenine:2-oxoglutarate transaminase kept as non-core: closest existing term for the
+  demonstrated KAT activity [PMID:9491082 "In particular, it is responsible for all the measured kynurenine aminotransferase activity."];
+  the pyruvate-acceptor gap is raised as a suggested question.

@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [DROME]
 genes: [Sgs1, Sgs3, Sgs4, Sgs5, Sgs5bis, Sgs7, Sgs8, Eig71Ee]
+index_group: CROSS_CUTTING
 ---
 
 # FlyBase gene groups as review sets

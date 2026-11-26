@@ -14,3 +14,7 @@
 - Replace free molybdenum-ion binding with GO:0043546 molybdopterin cofactor binding.
 - Add `contributes_to` rows for GO:0070674 hypoxanthine dehydrogenase activity and GO:0004854 xanthine dehydrogenase activity, because the complete NAD+-dependent activities are properties of the assembled XdhAB enzyme.
 - Add direct hypoxanthine catabolism, xanthine catabolism, and urate biosynthesis process rows, all grounded in the same two-step XDH chemistry.
+
+## Completion pass
+
+- Completion pass (2026-11-09): recorded the IPR016208 iron-ion mapping that crosses into the Mo subunit as a source defect on the REMOVE row; restored GOA's `enables` qualifier on any GO:0004854 row with a WRONG_QUALIFIER defect; replaced label-only UniProt quotes with the NCBIfam TIGR02965 family line. UniProt's ARBA cofactor comments (FAD, [2Fe-2S]) belong to XdhA, not XdhB, and were not used as evidence. Status set to COMPLETE.

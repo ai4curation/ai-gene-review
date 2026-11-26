@@ -78,3 +78,19 @@ Primary_Carnitine_Deficiency.yaml].
 python); no falcon DR file generated. Grounded review in UniProt record, GOA, cached
 publications/PMID_*.md, and dismech Primary_Carnitine_Deficiency.yaml. Did NOT fabricate
 a -deep-research-*.md.
+
+## 2026-11-05 ORGANELLES ER batch 3 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 EXP (PMID:17509700) and IEA (GO_REF:0000044, SL-0095), both located_in, both
+KEEP_AS_NON_CORE. No ER sub-compartment rows.
+
+Checks:
+- UniProt O76082: "[Isoform 3]: Endoplasmic reticulum {ECO:0000269|PubMed:17509700}"; canonical
+  isoform at the cell membrane. The IEA derives from this line.
+- PMID:17509700 (abstract-only): [PMID:17509700 "OCTN2 was expressed on the plasma membrane with robust N-glycosylation, whereas OCTN2VT was retained in the endoplasmic reticulum (ER) with poor N-glycosylation."]
+- GOA rows carry no isoform although the ER location is isoform 3 (O76082-3) only.
+
+Outcome: actions unchanged (KEEP_AS_NON_CORE; ABCA7/ATP7A precedent for a natural splice form
+retained in the ER). Source defect (Gene_Product_Form_ID -> O76082-3) on the EXP row. No NEW
+GO:0005789: ER retention of a transport-dead variant is quality control, not residence
+(ABCA4/ABCA7 precedent). Stays at the root.

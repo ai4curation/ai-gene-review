@@ -1,11 +1,16 @@
 """Offline cache-progress and diagnostic regression tests; no upstream calls."""
 
+import http.client
+import http.server
 import importlib.util
 import io
 import json
+import ssl
 import subprocess
 import sys
+import threading
 import urllib.error
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -29,10 +34,19 @@ validator = load_file(
 )
 
 
-def test_preserve_download_before_later_failure(tmp_path, monkeypatch):
+@pytest.fixture
+def retry_sleeps(monkeypatch):
+    """Record timing only; local-server tests still use real urllib transport."""
+    waits = []
+    monkeypatch.setattr(validator.time, "sleep", waits.append)
+    return waits
+
+
+def test_preserve_download_before_later_failure(tmp_path, monkeypatch, retry_sleeps):
     cache_dir = tmp_path / "cache"
     before = manifest_module.manifest(cache_dir)
     calls = []
+    errors = []
 
     def fetch(req, timeout):
         calls.append((req.full_url, timeout))
@@ -41,7 +55,9 @@ def test_preserve_download_before_later_failure(tmp_path, monkeypatch):
                 "sequence": {"value": "MACDEFGHIK"},
                 "entryAudit": {"sequenceVersion": 2},
             }).encode())
-        raise urllib.error.HTTPError(req.full_url, 503, "unavailable", {}, None)
+        error = urllib.error.HTTPError(req.full_url, 503, "unavailable", {}, None)
+        errors.append(error)
+        raise error
 
     monkeypatch.setattr(validator.urllib.request, "urlopen", fetch)
     cache = validator.SequenceCache(cache_dir)
@@ -49,8 +65,11 @@ def test_preserve_download_before_later_failure(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError, match="P54321.*https://rest.uniprot.org/uniprotkb/P54321.json") as caught:
         cache.get("P54321")
     assert isinstance(caught.value.__cause__, urllib.error.HTTPError)
-    assert len(calls) == 2  # one request per accession, no retry
+    assert len(calls) == 4  # successful accession, then three failed attempts
+    assert retry_sleeps == [2, 4]
+    assert caught.value.__cause__ is errors[-1]
     assert not (cache_dir / "P54321.seq").exists()
+    assert not (cache_dir / "P54321.sv").exists()
     after = manifest_module.manifest(cache_dir)
     changed, digest = manifest_module.generation(before, after)
     assert changed and len(digest) == 64
@@ -58,12 +77,12 @@ def test_preserve_download_before_later_failure(tmp_path, monkeypatch):
     assert (cache_dir / "P12345.seq").read_bytes() == b"MACDEFGHIK"
     # Reusing the saved generation does not fetch or create another generation.
     assert validator.SequenceCache(cache_dir).get("P12345") == "MACDEFGHIK"
-    assert len(calls) == 2
+    assert len(calls) == 4
     assert manifest_module.generation(after, after)[0] is False
 
 
 @pytest.mark.parametrize("error", [TimeoutError("read timed out"), urllib.error.URLError("DNS unavailable")])
-def test_failure_context_keeps_original_cause(tmp_path, monkeypatch, error):
+def test_failure_context_keeps_original_cause(tmp_path, monkeypatch, error, retry_sleeps):
     calls = []
 
     def fail(req, timeout):
@@ -74,7 +93,8 @@ def test_failure_context_keeps_original_cause(tmp_path, monkeypatch, error):
     with pytest.raises(RuntimeError, match="Q12345.*https://") as caught:
         validator.SequenceCache(tmp_path).get("Q12345")
     assert caught.value.__cause__ is error
-    assert len(calls) == 1 and calls[0][1] == 60
+    assert len(calls) == 3 and all(timeout == 60 for _, timeout in calls)
+    assert retry_sleeps == [2, 4]
     assert not list(tmp_path.iterdir())
 
 
@@ -187,3 +207,166 @@ def test_before_refusal_warns_without_changing_files_or_outputs(tmp_path, name):
     assert failed.stderr == ""  # no unescaped filename in a traceback
     if "%" in name:
         assert "unexpected%25file%0D%0A::error::injected.txt" in failed.stdout
+
+
+@pytest.fixture
+def uniprot_server(monkeypatch):
+    """Exercise real urllib against deterministic local HTTP responses."""
+    @contextmanager
+    def serve(responses):
+        requests = []
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                index = len(requests)
+                requests.append((self.path, self.headers.get("User-Agent")))
+                if index >= len(responses):
+                    self.send_error(500, "unexpected extra request")
+                    return
+                status, body, declared_length = responses[index]
+                if status is None:
+                    # Emit malformed protocol bytes through a real socket.
+                    self.wfile.write(body)
+                    self.wfile.flush()
+                    self.close_connection = True
+                    return
+                self.send_response(status)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(
+                    len(body) if declared_length is None else declared_length
+                ))
+                self.end_headers()
+                self.wfile.write(body)
+                self.wfile.flush()
+                self.close_connection = True
+
+            def log_message(self, format, *args):
+                pass
+
+        with http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler) as server:
+            thread = threading.Thread(
+                target=server.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True
+            )
+            thread.start()
+            url = f"http://127.0.0.1:{server.server_port}/uniprotkb/{{acc}}.json"
+            monkeypatch.setattr(validator, "UNIPROT_JSON", url)
+            try:
+                yield requests, url
+            finally:
+                server.shutdown()
+                thread.join(timeout=5)
+                assert not thread.is_alive()
+    return serve
+
+
+VALID_RECORD = b'{"sequence":{"value":"MACD"},"entryAudit":{"sequenceVersion":7}}'
+
+
+@pytest.mark.parametrize("status", [408, 429, 500, 502, 503, 504])
+def test_transient_http_recovers_and_populates_cache(tmp_path, uniprot_server, status, retry_sleeps):
+    with uniprot_server([(status, b"temporary failure", None), (200, VALID_RECORD, None)]) as (requests, _):
+        cache = validator.SequenceCache(tmp_path)
+        assert cache.get("P12345") == "MACD"
+        assert cache.sequence_version("P12345") == 7
+        assert requests == [("/uniprotkb/P12345.json", "ai-gene-review")] * 2
+        assert (tmp_path / "P12345.seq").read_text() == "MACD"
+        assert (tmp_path / "P12345.sv").read_text() == "7"
+        assert cache.get("P12345") == "MACD"
+        assert validator.SequenceCache(tmp_path).get("P12345") == "MACD"
+        assert validator.SequenceCache(tmp_path).sequence_version("P12345") == 7
+        assert len(requests) == 2
+        assert retry_sleeps == [2]
+
+
+def test_transient_http_exhaustion_preserves_final_cause(tmp_path, uniprot_server, retry_sleeps):
+    with uniprot_server([(503, b"first", None), (503, b"second", None), (504, b"final", None)]) as (requests, url):
+        with pytest.raises(RuntimeError, match="P12345.*http://127.0.0.1") as caught:
+            validator.SequenceCache(tmp_path).get("P12345")
+        cause = caught.value.__cause__
+        assert isinstance(cause, urllib.error.HTTPError)
+        assert cause.code == 504 and cause.url == url.format(acc="P12345")
+        try:
+            assert cause.read() == b"final"
+        finally:
+            cause.close()
+        assert len(requests) == 3
+        assert retry_sleeps == [2, 4]
+        assert not list(tmp_path.iterdir())
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 404, 501])
+def test_permanent_http_failure_is_not_retried(tmp_path, uniprot_server, status, retry_sleeps):
+    with uniprot_server([(status, b"permanent failure", None)]) as (requests, _):
+        with pytest.raises(RuntimeError, match="P12345.*http://127.0.0.1") as caught:
+            validator.SequenceCache(tmp_path).get("P12345")
+        cause = caught.value.__cause__
+        assert isinstance(cause, urllib.error.HTTPError) and cause.code == status
+        cause.close()
+        assert len(requests) == 1
+        assert retry_sleeps == []
+        assert not list(tmp_path.iterdir())
+
+
+def test_invalid_json_fails_without_retry_or_cache(tmp_path, uniprot_server, retry_sleeps):
+    with uniprot_server([(200, b"<html>not JSON</html>", None)]) as (requests, _):
+        with pytest.raises(RuntimeError, match="P12345.*http://127.0.0.1") as caught:
+            validator.SequenceCache(tmp_path).get("P12345")
+        assert isinstance(caught.value.__cause__, json.JSONDecodeError)
+        assert len(requests) == 1
+        assert retry_sleeps == []
+        assert not list(tmp_path.iterdir())
+
+
+def test_truncated_response_recovers(tmp_path, uniprot_server, retry_sleeps):
+    with uniprot_server([(200, b'{"sequence":', 100), (200, VALID_RECORD, None)]) as (requests, _):
+        assert validator.SequenceCache(tmp_path).get("P12345") == "MACD"
+        assert len(requests) == 2
+        assert (tmp_path / "P12345.seq").read_text() == "MACD"
+        assert (tmp_path / "P12345.sv").read_text() == "7"
+        assert retry_sleeps == [2]
+
+
+def test_cached_sequence_stays_offline_and_version_fetch_retries(tmp_path, uniprot_server, retry_sleeps):
+    (tmp_path / "P12345.seq").write_bytes(b"MACD\n")
+    with uniprot_server([(503, b"temporary", None), (200, VALID_RECORD, None)]) as (requests, _):
+        cache = validator.SequenceCache(tmp_path)
+        assert cache.get("P12345") == "MACD"
+        assert requests == []
+        assert retry_sleeps == []
+        assert cache.sequence_version("P12345") == 7
+        assert len(requests) == 2
+        assert (tmp_path / "P12345.seq").read_bytes() == b"MACD\n"
+        assert validator.SequenceCache(tmp_path).sequence_version("P12345") == 7
+        assert len(requests) == 2
+        assert retry_sleeps == [2]
+
+
+@pytest.mark.parametrize("error, retry", [
+    (TimeoutError("read timed out"), True),
+    (ConnectionResetError("connection reset"), True),
+    (http.client.IncompleteRead(b"partial", 100), True),
+    (http.client.BadStatusLine("not HTTP"), False),
+    (http.client.LineTooLong("status line"), False),
+    (urllib.error.URLError("DNS unavailable"), True),
+    (ssl.SSLCertVerificationError("certificate invalid"), False),
+    (urllib.error.URLError(ssl.SSLCertVerificationError("certificate invalid")), False),
+    (PermissionError("not a transient network failure"), False),
+])
+def test_network_exception_classification(error, retry):
+    assert validator._retryable_uniprot_error(error) is retry
+
+
+@pytest.mark.parametrize("body, error_type", [
+    (b"not-an-http-response\r\n\r\n", http.client.BadStatusLine),
+    (b"HTTP/1.1 200 " + b"x" * 65537 + b"\r\n\r\n", http.client.LineTooLong),
+], ids=["bad-status-line", "overlong-status-line"])
+def test_malformed_http_preserves_context_without_retry(
+    tmp_path, uniprot_server, retry_sleeps, body, error_type
+):
+    with uniprot_server([(None, body, None)]) as (requests, url):
+        with pytest.raises(RuntimeError, match="P12345.*http://127.0.0.1") as caught:
+            validator.SequenceCache(tmp_path).get("P12345")
+        assert url.format(acc="P12345") in str(caught.value)
+        assert isinstance(caught.value.__cause__, error_type)
+        assert len(requests) == 1 and retry_sleeps == []
+        assert not list(tmp_path.iterdir())

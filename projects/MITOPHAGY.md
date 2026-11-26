@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/6cKsT95CWm1eYy7upcA6HU
       title: Project brief
+index_group: MAMMAL
 ---
 
 # PINK1-Parkin Mitophagy Project

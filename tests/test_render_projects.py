@@ -18,6 +18,7 @@ from ai_gene_review.render_projects import (
     render_project,
     render_project_bundle,
     render_all_projects,
+    render_projects_index,
     render_projects_table,
     resolve_frontmatter_gene_links,
     should_autolink_gene_symbols,
@@ -425,6 +426,18 @@ class TestReplaceGeneSymbols:
 
         assert "[CHE-2](../../genes/worm/che-2/che-2-ai-review.html)" in result
         assert "[DAF-16](../../genes/worm/daf-16/daf-16-ai-review.html)" in result
+        assert warnings == []
+
+    def test_numeric_symbols_do_not_link_scores(self):
+        """Purely numeric gene names (phage genes such as BPT7 ``4.2``) never link.
+
+        Project pages quote scores like 4.2 and 4.5, which must stay plain text.
+        """
+        index = {"4.2": ["BPT7"], "4.5": ["BPT7"], "gp4.5": ["BPT7"]}
+        result, warnings = replace_gene_symbols("Correctness 4.2 (UniProt 4.5); gp4.5", index)
+
+        assert "Correctness 4.2 (UniProt 4.5)" in result
+        assert "[gp4.5](../../genes/BPT7/gp4.5/gp4.5-ai-review.html)" in result
         assert warnings == []
 
     def test_case_variants_do_not_link_common_words(self):
@@ -1493,3 +1506,115 @@ def test_batch_symbol_index_preserves_individual_page_output(tmp_path):
         batch = (tmp_path / "batch" / individual.name).read_text()
         assert batch == individual.read_text()
         assert f"genes/{source.stem}/TP53/TP53-ai-review.html" in batch
+
+
+def test_proposed_ontology_changes_render_the_slots_the_schema_actually_has(tmp_path):
+    """The ontology-change table must read live slot names, not renamed ones.
+
+    This exists because a rename reached the schema, the policy module and the
+    exporter but not `project.html.j2`, which kept reading `report_status` and
+    `term_tracker_issue`. Every page therefore showed a Status of `NOT_REPORTED`
+    -- a value in no current enum -- and a blank Tracker for records linking a
+    real ticket. The three existing tests over `proposed_ontology_changes` all
+    assert at the `project_ontology_changes()` data level and passed throughout,
+    because the bug was in Jinja. Asserting on the rendered HTML is what catches
+    the next rename.
+    """
+    from ai_gene_review.render_projects import render_project
+
+    source = tmp_path / "projects/OC.md"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "---\n"
+        "title: Ontology changes\n"
+        "proposed_ontology_changes:\n"
+        "- change_type: NODE_OBSOLETION_WITH_DIRECT_REPLACEMENT\n"
+        "  ontology: GO\n"
+        "  about_node:\n"
+        "    id: GO:0006419\n"
+        "    label: alanyl-tRNA aminoacylation\n"
+        "  has_direct_replacement:\n"
+        "    id: GO:0006418\n"
+        "    label: tRNA aminoacylation for protein translation\n"
+        "  justification: Restates an existing molecular function.\n"
+        "  origin: UPSTREAM_COMPLETED\n"
+        "  stance: AGREE\n"
+        "  ontology_state_verified: '2026-11-01'\n"
+        "  adoption_status: IN_PROGRESS\n"
+        "  upstream_tracker_issue: https://example.invalid/go/15375\n"
+        "---\n\n# Body\n"
+    )
+    output, _ = render_project(source, tmp_path / "pages/projects", tmp_path / "genes")
+    html = output.read_text()
+
+    # the renamed slots are read
+    assert "https://example.invalid/go/15375" in html
+    assert "IN_PROGRESS" in html
+    # origin and stance are surfaced, since they decide how to read the status
+    assert "UPSTREAM_COMPLETED" in html
+    assert "AGREE" in html
+    # and the value that only the stale template could produce is gone
+    assert "NOT_REPORTED" not in html
+
+
+def test_a_self_proposed_change_renders_its_request_status_not_its_adoption(tmp_path):
+    """Status is keyed on direction: an outbound request has no adoption status."""
+    from ai_gene_review.render_projects import render_project
+
+    source = tmp_path / "projects/OC2.md"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "---\n"
+        "title: Ontology changes\n"
+        "proposed_ontology_changes:\n"
+        "- change_type: NODE_RENAME\n"
+        "  ontology: GO\n"
+        "  about_node:\n"
+        "    id: GO:0000001\n"
+        "    label: old label\n"
+        "  old_value: old label\n"
+        "  new_value: new label\n"
+        "  justification: The label is miscased.\n"
+        "  origin: SELF_PROPOSED\n"
+        "  confidence: PROBABLE\n"
+        "  request_status: FILED\n"
+        "  upstream_tracker_issue: https://example.invalid/go/2\n"
+        "---\n\n# Body\n"
+    )
+    output, _ = render_project(source, tmp_path / "pages/projects", tmp_path / "genes")
+    html = output.read_text()
+    assert "SELF_PROPOSED" in html
+    assert "FILED" in html
+    assert "NOT_REPORTED" not in html
+
+
+def test_render_projects_index_groups_from_frontmatter(tmp_path: Path) -> None:
+    """The index is grouped by ``index_group``; ungrouped projects are listed last."""
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    (projects / "WORM_A.md").write_text(
+        '---\ntitle: "Worm A"\nindex_group: WORM\nmaturity: IN_PROGRESS\n'
+        "description: Worm things\n---\n# Worm A\n"
+    )
+    (projects / "WORM_A").mkdir()
+    (projects / "WORM_A" / "WORM_A-pathway.md").write_text("# Pathway\n")
+    (projects / "CROSS.md").write_text(
+        '---\ntitle: "Cross"\nindex_group: CROSS_CUTTING\n---\n# Cross\n'
+    )
+    (projects / "NEW.md").write_text('---\ntitle: "Brand New"\n---\n# New\n')
+    (projects / "README.md").write_text("# Projects\n")
+
+    html = render_projects_index(projects, tmp_path / "out").read_text()
+
+    headings = [line.strip() for line in html.splitlines() if "<h2>" in line]
+    assert headings == [
+        "<h2>C. elegans Projects</h2>",
+        "<h2>Cross-Cutting &amp; Methodology</h2>",
+        "<h2>Not yet grouped</h2>",
+    ]
+    assert html.index("Worm A") < html.index("Cross") < html.index("Brand New")
+    assert "<p>Worm things</p>" in html
+    assert 'href="WORM_A/WORM_A-pathway.html" class="pathway-link"' in html
+    assert html.count('class="pathway-link"') == 1
+    assert "3 curated gene annotation review projects" in html
+    assert "README" not in html

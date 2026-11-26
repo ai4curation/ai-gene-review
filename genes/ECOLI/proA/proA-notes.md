@@ -37,3 +37,16 @@ exposed kinase active centers in a geometry proposed to support G5P channeling
 to the ProA active centers [PMID:17321544]. Stable physiological complex
 formation has not yet been established strongly enough to add a new complex
 annotation.
+
+
+## 2026-11-07 evidence re-audit
+
+All original annotation payloads and row order are preserved. No NEW annotation was added. The catalytic reaction and proline-biosynthetic participation remain supported. Direct E. coli primary studies and newer experiments are distinguished from inferred KT2440 function.
+
+The normal Falcon research attempt failed with HTTP 403 authentication/access error; no provider report was fabricated. Manual source review used the protected existing caches and normally fetched new publications.
+
+PMID:39514317 (full text) challenges required ProA–ProB channeling: heterologous kinase replacements and overexpressed alternative reductases support E. coli growth; failed crosslinking alone is not universal proof of no interaction. ProA is reduced glutamyl-phosphate chemistry; spontaneous GSA cyclization supplies P5C. The computed GP half-life and diffusion times are calculations, not intracellular measurements. Native-locus monomeric-GFP fusions show dispersed cytoplasmic localization. Expression/purification used engineered BL21 derivatives, while growth experiments used K-12 BW25113 derivatives. No matched-protein complex requirement is imposed.
+
+NADP binding includes both NADP+ and NADPH under the verified current GO definition and directly supports ProA catalysis; it is not peripheral simply because the catalytic term is more informative.
+
+PAINT loss checks reported no IRD/IKR on the target lineage. Existing abstract-only primary caches were not refreshed. Curated experimental annotations remain supported where independent evidence agrees; no target-table detail was invented. Complete validation, ontology snapshots and preservation proof are in the member-review audit and ignored existing-review logs.

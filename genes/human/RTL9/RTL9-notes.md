@@ -19,3 +19,16 @@ orthologs are strongly conserved across the functional Gag module.
 - Defense response to fungus is NOT proposed: only zymosan (a PAMP), not live
   fungal infection, was tested.
 - The standalone GO:0045087 innate immune response proposal was dropped.
+
+## 2026-11-22 ORGANELLES lysosome batch 2
+
+- RTL9-goa.tsv is empty (no GOA rows at all). The two GO:0005764 entries in the review are the
+  review's own NEW ISS row (from mouse PMID:37834332) and its mirror in core_functions.locations:
+  not drift, nothing added or deleted.
+- PMID:37834332 (full text cached, PMC10573853): RTL9-mCherry knock-in at the endogenous mouse locus
+  is in microglial "lysosomes" in the unperturbed neonatal brain, before any zymosan challenge, and
+  RTL9 is required for zymosan degradation there. The only organelle marker is LysoTracker Red
+  ("lysosome-specific marker" in the paper's words), which marks acidic compartments generally;
+  no LAMP1 or cathepsin co-staining. Resident with a function, not cargo; root kept on the authors'
+  assignment plus the degradative function; NEW row and core location unchanged, reason extended.
+- No sub-compartment: no signal peptide or TM in UniProt, lysosomal targeting route unknown.

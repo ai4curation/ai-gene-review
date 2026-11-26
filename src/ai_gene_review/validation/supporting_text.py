@@ -23,7 +23,8 @@ def build_supporting_text_validator(publications_dir: Optional[Path] = None):
     bracketed chemical notation such as ``[4Fe-4S]`` or ``[Na(+)]`` from being
     stripped as citation markers, and ``skip_prefixes`` / ``unknown_prefix_severity``.
     ``cache_dir`` is taken from ``publications_dir`` and ``fetch_full_text`` is
-    forced off regardless of what the config declares.
+    forced off regardless of what the config declares. A literature quote may
+    also match the cached record's title (see ``title_matching``).
     """
     project_root = Path(__file__).resolve().parents[3]
     if publications_dir is None:
@@ -35,6 +36,9 @@ def build_supporting_text_validator(publications_dir: Optional[Path] = None):
         )
     except ImportError:
         return None, publications_dir
+    from ai_gene_review.validation.title_matching import install_title_matching
+
+    install_title_matching()
 
     config_data: dict = {}
     config_path = project_root / "conf" / "reference_validator_config.yaml"

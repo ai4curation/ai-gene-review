@@ -17,3 +17,19 @@
 - Secreted: SignalP 1-17, no TM, ISS to mouse secreted Cys-GPX5 (P21765) - accept
   extracellular region.
 - No NEW terms proposed.
+
+## 2026-11-24 nematode GP29 cross-check
+
+- Rechecked the existing GPX-5 review after the Brugia malayi GP29 review landed. The
+  same conservative boundary still holds for both proteins: Q93204 and P67877 are
+  cysteine-type PTHR11592:SF88 GPx-fold proteins with signal peptides, so peroxidase
+  activity and extracellular-region annotation are reasonable, but neither has a direct
+  glutathione-versus-thioredoxin reductant assay.
+- The frozen `PTHR11592-entries.csv` reviewed-member list contains filarial GP29 proteins
+  from Wuchereria, Dirofilaria, Brugia malayi and Brugia pahangi plus C. elegans GPX-3, but
+  it does not list Q93204/GPX-5. The current Q93204 UniProt record itself supplies the
+  PTHR11592:SF88 assignment for GPX-5.
+- Falcon and Perplexity Lite deep-research providers were unavailable in this checkout; the
+  2026 cross-check used the cached 2026-10 manual notes, the Q93204 UniProt update, the
+  Luersen et al. full text, the PTHR11592 family review, and the freshly curated BRUMA GP29
+  comparison.

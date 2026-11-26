@@ -117,3 +117,12 @@ that mtl3 is "functionally and structurally unrelated" to the Mtr4-like MTREC he
 not appear in the retrieved primary literature (dark gene), so identity is anchored to the
 systematic ID + UniProt accession. This is independent confirmation of the review's central
 finding; no fabricated function was introduced.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[3], GO:0008150 biological_process (ND, GO_REF:0000015), currently ACCEPT: may be stale.
+  The notes above record mtl3 deletion phenotypes from the genome-wide phenomics screen PMID:37787768
+  (cell-wall/membrane and ionic stress sensitivities, loss of viability in stationary phase), and PomBase
+  sets the characterisation status to "biological role published". A genome-wide screen on this gene in
+  S. pombe that PomBase treats as establishing a biological role means the ND may no longer hold; a curator
+  should check whether PomBase now has a BP for mtl3. The action was not changed.

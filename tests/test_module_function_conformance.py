@@ -155,6 +155,60 @@ def test_contributes_to_cannot_support_independent_activity(tmp_path):
     assert findings(module(), index)[0]["status"] == "CONTRIBUTES_ONLY"
 
 
+def wrong_qualifier_defect(corrected="contributes_to"):
+    return {
+        "defect_type": "WRONG_QUALIFIER",
+        "resource": "UNIPROT",
+        "slot": "Qualifier",
+        "asserted_value": "enables",
+        "corrected_value": corrected,
+        "confidence": "CONFIRMED",
+        "explanation": "subunit of a complex",
+    }
+
+
+def test_recorded_contributes_to_correction_is_honoured(tmp_path):
+    """An enables row whose review records a contributes_to correction is a contribution."""
+    core = [{"contributes_to_molecular_function": {"id": MF}}]
+    ann = annotation("ACCEPT", qualifier="enables")
+    ann["review"]["source_defects"] = [wrong_qualifier_defect()]
+    index = write_review(tmp_path, core=core, annotations=[ann])
+    assert findings(module(), index)[0]["status"] == "CONTRIBUTES_ONLY"
+    # A different correction leaves the row as independent enabling.
+    ann["review"]["source_defects"] = [wrong_qualifier_defect("located_in")]
+    index = write_review(tmp_path, core=core, annotations=[ann])
+    assert findings(module(), index)[0]["status"] == "ANNOTATION_SUPPORTED"
+    # So does an unconfirmed correction.
+    unconfirmed = {**wrong_qualifier_defect(), "confidence": "PROBABLE"}
+    ann["review"]["source_defects"] = [unconfirmed]
+    index = write_review(tmp_path, core=core, annotations=[ann])
+    assert findings(module(), index)[0]["status"] == "ANNOTATION_SUPPORTED"
+
+
+def test_contribution_inside_a_complex_unit_is_expected(tmp_path):
+    """A subunit that contributes to its complex's activity is not asked to become a complex."""
+    index = write_review(
+        tmp_path,
+        core=[{"contributes_to_molecular_function": {"id": MF}}],
+        annotations=[annotation("ACCEPT", qualifier="contributes_to")],
+    )
+    gene = module()["module"]["annotons"][0]["participant"]
+    gene["required_function"] = {"term": {"id": MF}}
+    doc = module(
+        {
+            "selector_type": "PROTEIN_COMPLEX",
+            "protein_complex": {
+                "active_units": [{"id": "hemoprotein", "participant": gene}]
+            },
+        },
+        function_id=OTHER,
+    )
+    rows = [r for r in findings(doc, index) if r["scope"] == "complex_unit"]
+    assert [(r["function_id"], r["status"], r["severity"]) for r in rows] == [
+        (MF, "CONTRIBUTES_IN_COMPLEX", "info")
+    ]
+
+
 def test_more_specific_review_supports_broader_module_but_not_reverse(tmp_path):
     # A tiny explicitly supplied ontology relation, not a mocked remote service.
     def subclass(child, parent):

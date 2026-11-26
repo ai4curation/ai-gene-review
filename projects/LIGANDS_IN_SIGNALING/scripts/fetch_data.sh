@@ -5,7 +5,7 @@
 set -euo pipefail
 DATA_DIR="${1:-.cache/ligands_in_signaling}"
 mkdir -p "$DATA_DIR"
-for f in goa_human mgi rgd zfin fb sgd pombase; do
+for f in goa_human mgi rgd zfin fb wb sgd pombase tair dictybase; do
   curl -sSfL -o "$DATA_DIR/$f.gaf.gz" "https://current.geneontology.org/annotations/$f.gaf.gz"
   echo "fetched $f.gaf.gz ($(gzip -dc "$DATA_DIR/$f.gaf.gz" | head -40 | grep -m1 'date-generated' || true))"
 done

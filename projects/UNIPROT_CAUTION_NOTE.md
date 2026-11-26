@@ -8,6 +8,7 @@ genes: [RHBDF1, SUMF2, PANK4, DPYSL5, NAALADL2, DPYSL2, DPYSL3, DPYSL4, CRMP1, I
 manifest:
   slides:
     - href: UNIPROT_CAUTION_NOTE/slides/UNIPROT_CAUTION_NOTE-slides.html
+index_group: CROSS_CUTTING
 ---
 
 # UniProt CAUTION Note Project
