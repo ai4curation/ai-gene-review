@@ -42,8 +42,11 @@ ORGANISMS = {
     "rat": "rgd",
     "zebrafish": "zfin",
     "fly": "fb",
+    "worm": "wb",
     "yeast": "sgd",
     "pombe": "pombase",
+    "arabidopsis": "tair",
+    "dicty": "dictybase",
 }
 CELL_SURFACE = "GO:0007166"
 GPCR = "GO:0007186"
@@ -65,13 +68,18 @@ def read_gaf(path: Path):
 
 
 def check_organism(go: GO, gaf: Path, pathways: set[str], or_receptor_binding: bool) -> dict:
-    symbol: dict[str, str] = {}
+    # A gene id can carry more than one symbol: MGI files proteoform rows (mVEGFA/iso:4) under
+    # the gene's own id. Name each id by its most frequent symbol, which is the gene symbol.
+    symbols: dict[str, collections.Counter] = collections.defaultdict(collections.Counter)
     ligand, binding, extracellular, in_signal = set(), set(), set(), set()
+    complexes = set()  # Complex Portal entries: never matchable as a gene in another species
     genes_in = collections.defaultdict(set)
     direct = collections.defaultdict(set)
     for c in read_gaf(gaf):
         gene, sym, qual, term, aspect = c[1], c[2], c[3], c[4], c[8]
-        symbol[gene] = sym
+        symbols[gene][sym] += 1
+        if "complex" in c[11]:
+            complexes.add(gene)
         if aspect == "F" and qual == "enables":
             anc = go.ancestors(term)
             if LIGAND_ACTIVITY in anc:
@@ -87,6 +95,7 @@ def check_organism(go: GO, gaf: Path, pathways: set[str], or_receptor_binding: b
                 in_signal.add(gene)
             for a in anc & pathways:
                 genes_in[a].add(gene)
+    symbol = {g: max(c.items(), key=lambda kv: (kv[1], kv[0]))[0] for g, c in symbols.items()}
     counted = ligand | (binding & extracellular) if or_receptor_binding else ligand
     rows = []
     for p in pathways:
@@ -100,18 +109,22 @@ def check_organism(go: GO, gaf: Path, pathways: set[str], or_receptor_binding: b
                 name=go.name[p],
                 n_genes=len(genes),
                 n_ligand_genes=len(lig),
-                # Symbol lists are capped (8/6/12) to keep gapcheck-*.json compact; note that
-                # scripts/triage.py reads ligand_genes as the cross-species donor pool.
-                ligand_genes=sorted(symbol[g] for g in lig)[:8],
-                binding_only_genes=sorted(symbol[g] for g in (genes & binding) - ligand)[:6],
-                genes=sorted(symbol[g] for g in genes)[:12],
+                # Display lists are deduplicated (two ids can share a symbol) and capped
+                # (8/6/12) to keep gapcheck-*.json compact.
+                ligand_genes=sorted({symbol[g] for g in lig})[:8],
+                # scripts/triage.py reads donor_genes as the cross-species donor pool, so it is
+                # not capped. Complex Portal entries are left out because they can never match
+                # a gene symbol in another species.
+                donor_genes=sorted({symbol[g] for g in lig - complexes}),
+                binding_only_genes=sorted({symbol[g] for g in (genes & binding) - ligand})[:6],
+                genes=sorted({symbol[g] for g in genes})[:12],
                 evidence=sorted({e for _, e in direct[p]}),
             )
         )
-    rows.sort(key=lambda r: (r["n_ligand_genes"] > 0, -r["n_genes"]))
+    rows.sort(key=lambda r: (r["n_ligand_genes"] > 0, -r["n_genes"], r["term"]))
     return dict(
         n_ligand_activity_genes=len(ligand),
-        ligand_genes_not_in_any_signaling=sorted(symbol[g] for g in ligand - in_signal),
+        ligand_genes_not_in_any_signaling=sorted({symbol[g] for g in ligand - in_signal}),
         rows=rows,
     )
 

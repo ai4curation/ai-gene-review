@@ -28,7 +28,9 @@ edits only that row's review block:
 The restore step reads the pre-pass rows from git. ``ORIGINAL_COMMITS`` were
 squash-merged into ``main`` (PR 5416), so they are reachable only from the
 history of the ``claude/happy-cray-yngr26`` branch; fetch it before
-re-running for genes from the first passes.
+re-running for genes from the first passes. ``1593c9d31e`` is on ``main``: it
+holds the pre-pass rows of the reviews merged after the pass and swept on
+2026-11-15.
 
 Pass gene prefixes to apply only those decisions. Run from the repository
 root, then ``just backfill-record-sections`` on the changed reviews to restore
@@ -58,7 +60,7 @@ DECISIONS = ROOT / "projects" / "NO_DATA" / "data" / "nd-decisions.yaml"
 #: Krtap reviews (2026-11-06, from main after the squash merge of PR 5416; the
 #: two earlier commits are no longer on main, so re-run those genes only from a
 #: clone that still has them).
-ORIGINAL_COMMITS = ("589ca34bd7", "d2fa590c5f", "ce73640bac")
+ORIGINAL_COMMITS = ("589ca34bd7", "d2fa590c5f", "ce73640bac", "1593c9d31e")
 
 ROOT_ASPECT = {"GO:0003674": "MF", "GO:0008150": "BP", "GO:0005575": "CC"}
 ASPECT_NAME = {"MF": "molecular function", "BP": "biological process", "CC": "cellular component"}

@@ -41,3 +41,8 @@ A retrospective audit of the succinyl-CoA synthetase reviews found the points be
 - The quote from the bioinformatics RESULTS.md on the GO:0004776 IBA row was removed. The sentence it quoted ("Fungi lost the G-type beta paralog") was wrong at kingdom level and no longer exists; the row is supported by the kinetic constants and PMID:22751660.
 - GO:0009361 IBA reason reworded: SucD is the seed. An ATP-forming succinate-CoA ligase complex of alpha and beta subunits is found in bacteria (alpha2beta2 in E. coli) and in eukaryotes that have an A-type beta subunit (an alpha-beta heterodimer in the animal and yeast enzymes).
 - Review status changed from INITIALIZED to DRAFT; no row is pending.
+
+## Reconciliation with the Pseudomonas reviews (2026-11-18)
+
+- GO:0046777 protein autophosphorylation: action unchanged (MARK_AS_OVER_ANNOTATED). The 2026-11-12 entry above and the review reason listed "P. aeruginosa SucC" among proteins that carry an autophosphorylation row for a phosphoenzyme intermediate. The row exists, but it is not a comparable case: it is on the beta subunit, and the phosphorylated protein in the cited paper is the alpha subunit [PMID:10671455 "During enzymatic catalysis, Scs undergoes an intermediate Scs-α subunit phosphorylation."]. The P. aeruginosa sucC review removes it on those grounds, and P. aeruginosa SucD (Q51567) has no such row (QuickGO, 2026-11-18). The review reason now says so. The comparable cases that carry the term are E. coli ppk and glmM.
+- No other change. Differences from the Pseudomonas reviews that remain are species or GOA differences: GO:0004776 non-core here (measured preference for ATP), GO:0042709 TOO_GENERAL beside the IDA-supported GO:0009361, and rows that exist only in one species.

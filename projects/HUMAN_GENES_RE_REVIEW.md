@@ -17,6 +17,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/Gu6CuxB6PcEA9pzAh8hfzV
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Human Genes Annotation Re-Review

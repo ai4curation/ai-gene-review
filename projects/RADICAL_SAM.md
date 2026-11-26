@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [human, ECOLI]
 genes: [LIAS, RSAD2, MOCS1, CDKAL1, CDK5RAP1, ELP3, TYW1, TYW1B, RSAD1, bioB, lipA, moaA, nrdG, pflA, rlmN, miaB, rimO, thiH, hemN, hemW, queE, epmB, pflC, ybiY, yjjW, aslB, ydeM, ygiQ, yhcC]
+index_group: MAMMAL
 ---
 
 # Radical SAM Enzymes

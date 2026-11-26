@@ -2,8 +2,9 @@
 title: "Wrong-Gene Leads"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
-species: [human, ECOLI, ARATH, DICDI, DROME, mouse, SCHPO]
-genes: [CSGALNACT1, ARHGDIB, traB, PAPSS1, FLNC, SOCS3, NLRP3, AURKC, POFUT1, tagC, AHK2, GLN2, SYP121, BEH2, CYP71A12, statA, PARD6B, DLG3, GNAQ, JAK1, PPP3CA, AP2M1, Rbpj, EloC, Med, Septin1, Septin2, Septin4, ADAM17, ALDOB, spz, rl, ttv__Q9V730, rad21, ABCB7, ABL1, ACVR2A, CACNB2, CHRNB1, CDK1, BDKRB1, CHD4, CDK16, CAMK2A, BAX, COQ8B, CHRNB4, CNGA1, CNGB1, CNGB3, COL1A2, EZH2, CUL1]
+species: [human, ECOLI, ARATH, DICDI, DROME, mouse, SCHPO, rat, DANRE, ORYSJ]
+genes: [CSGALNACT1, ARHGDIB, traB, PAPSS1, FLNC, SOCS3, NLRP3, AURKC, POFUT1, tagC, AHK2, GLN2, SYP121, BEH2, CYP71A12, statA, PARD6B, DLG3, GNAQ, JAK1, PPP3CA, AP2M1, Rbpj, EloC, Med, Septin1, Septin2, Septin4, ADAM17, ALDOB, spz, rl, ttv__Q9V730, rad21, ABCB7, ABL1, ACVR2A, CACNB2, CHRNB1, CDK1, BDKRB1, CHD4, CDK16, CAMK2A, BAX, COQ8B, CHRNB4, CNGA1, CNGB1, CNGB3, COL1A2, EZH2, CUL1, Dusp21, ALDOA, JAK2, SRPRB, AGO1, ARR5, CCA1, ERS1, FRK1, HSP17.7, HSP17.6A, MLO2, MYB34, RGA, tbx5a, CycA__P14785, GstO1, GstO2, Prx4, RfC4, MADS3]
+index_group: CROSS_CUTTING
 ---
 
 # Wrong-Gene Leads
@@ -67,6 +68,8 @@ protein *can* do what it is annotated with, this asks whether the cited paper wa
    | The cached title and abstract do not name the annotated gene | +2 |
    | The cached title or abstract names the annotated gene | −3 |
    | The same term from the same paper and source is on 4 or more local gene folders | −2 |
+   | Otherwise, it is on a local paralog (same PANTHER family and species) that does not cite the paper | −2 |
+   | The annotated protein's own UniProt entry is unreviewed | −3 |
 
    The name check matters because papers often study several members of a family; a
    paper whose abstract names the annotated gene probably did study it. ARHGDIB's
@@ -95,7 +98,21 @@ protein *can* do what it is annotated with, this asks whether the cited paper wa
    The last signal marks complex-wide and list annotations: ComplexPortal giving one
    term to every subunit, or a proteomics paper annotated to every protein it found.
    It counts the gene folders in the sweep (every folder in a default run), so it
-   undercounts for complexes whose subunits are not reviewed here.
+   undercounts for complexes whose subunits are not reviewed here. The paralog signal
+   catches the small families that fall under that threshold (the Omega GSTs). It
+   ignores a paralog that cites the paper itself, because that copy is the row on the
+   right gene, which is evidence for the lead (CNGA3 beside CNGB3), not against it.
+
+   An unreviewed entry cites few papers beyond its own sequence submissions, so its
+   not citing a paper says little; every unreviewed top-tier lead in the seventh batch
+   was a false positive.
+
+5. Label each lead `evidence_code` or `wrong_gene` in the `lead_kind` column. A
+   direct-assay row (EXP, IDA, IPI, IMP, IGI, IEP) whose paper is cited by the same
+   gene in another species most likely reports an experiment on that ortholog (a
+   crystal of human SRα with mouse SRβ), so it is first a `WRONG_EVIDENCE_CODE`
+   question. This is a guess to check, not a verdict: mouse Rbpj's confirmed wrong-gene
+   row is labelled `evidence_code` because the human ortholog's entry cites its paper.
 
 The report is written to `reports/wrong-gene-leads/leads.tsv`. It is generated and
 git-ignored, never committed, because it aggregates every review. It joins each lead
@@ -372,6 +389,83 @@ Across all six batches (106 leads): 18 wrong-gene annotations, 4 wrong evidence 
 references, 18 queries pending full text, and 58 false positives or no change (genes, each
 counted once under its most severe outcome). No action was changed on an abstract alone.
 
+## Seventh lead review (2026-11-17)
+
+A fresh sweep on current main found 11,243 leads in 3,082 genes, with 394 rows in the top
+tier. The next 20 genes were taken the same way. Few unchecked human genes remain in the top
+tier, so this batch is mostly other organisms: 3 human, 1 rat, 9 Arabidopsis, 5 fly, 1
+zebrafish and 1 rice. It is the first batch under the 2026-11-16 ruling that an annotation
+pattern is a lead, never the proof: a wrong gene is asserted only when the whole paper was
+read or the error is plain from the abstract or the record.
+
+| Gene | Row | Outcome |
+|---|---|---|
+| human/SRPRB | SRP receptor complex EXP (ComplexPortal) | **Probable wrong evidence code.** The paper's crystal, PDB 2FH5, pairs human SRα with mouse SRβ (P47758), so on this paper the human SRPRB row is an ortholog inference. `WRONG_EVIDENCE_CODE` / `CHECK`, `PROBABLE`; the membership claim is true and stays ACCEPT. (Separately, the review's two generic membrane rows move from KEEP_AS_NON_CORE to TOO_GENERAL, matching their reason.) |
+| human/ALDOA | tubulin binding TAS (BHF-UCL) | **Query.** The WASP-binding paper's abstract does not mention tubulin, but a TAS needs only an author statement, which could be in the unread full text. `WRONG_REFERENCE` / `CHECK`, `SUSPECTED`. The review's flat "does not establish" wording and its `MISCITED` reference verdict are softened to match an abstract-only check, and the action moves from MARK_AS_OVER_ANNOTATED to **UNDECIDED**, since nothing else in the row argued the term overshoots. |
+| ARATH/FRK1 | defense response to bacterium IDA (TAIR) | **Query.** FRK1 is the paper's MAMP marker gene, and UniProt gave the other marker genes IEP rows, so the observation is probably induction (IEP). `WRONG_EVIDENCE_CODE` / `CHECK`, `SUSPECTED`; the review was already UNDECIDED on this argument. |
+| DROME/RfC4 | three TAS rows (FlyBase) | **Query.** The abstract names no RfC4 and describes only the fly large subunit, Gnf1, which has no row from the paper; but the TAS matches the abstract's statement about the whole RF-C complex. `WRONG_GENE_PRODUCT` / `CHECK`, `SUSPECTED`, Gnf1 named as a candidate only. |
+| ARATH/HSP17.7, CCA1, ERS1, AGO1, ARR5, MLO2, MYB34, RGA; DROME/CycA, GstO1, GstO2, Prx4; rat/Dusp21; human/JAK2; DANRE/tbx5a; ORYSJ/MADS3 | various | **False positives.** Most name the gene only in the full text ("CCA1-OX", "TAP-RGA", "ATR1 / Myb34", "Tbx5", CG numbers for the GSTs, "dPrx4"), by a family name ("Jak-Tyk kinases", "aldolase", "the five receptor isoforms", "AtMLO gene family"), by a form without the U ("DSP21"), or by a historical synonym ("At-HSP17.6A"). The rest are rows a resource made deliberately across a family or a figure on one day (type-A ARRs, Omega GSTs, the four peroxiredoxins, AgBase's floral MADS genes). CCA1's quote, which was only the paper's title, now quotes the Figure 6 result. |
+
+So of 20 leads: none is a wrong-gene annotation, 1 is a probable wrong evidence code (SRPRB),
+3 are queries (ALDOA, FRK1, RfC4), and 16 are false positives.
+
+**A side lead.** Checking HSP17.7 turned up the reverse case. The HSP17.7 paper (PMID:11576425)
+defines its protein in the abstract as "the cytosolic class II smHSP in Arabidopsis thaliana
+(At-HSP17.6A)", and TAIR annotated it on HSP17.7 (O81822, class II), whose ENA mRNA is titled
+heat shock protein 17.6A. UniProt cites the paper on Q9XIE3, a class I sHSP that UniProt named
+HSP17.6A, and five UniProt rows from it sit on that protein. They now carry a
+`WRONG_GENE_PRODUCT` / `CHECK` query (`PROBABLE`) in the HSP17.6A review, naming O81822 as the
+likely protein; the other class II gene (P29830) is not excluded from the abstract. The
+review no longer relies on the paper for any claim about Q9XIE3: those rows, its core function
+and its description now rest on the family-level evidence, and the reference is marked
+`MISCITED`. The osmotic stress row, whose only other support relays the same paper, moves
+to UNDECIDED. This lead
+is not counted in the tallies, since it was not one of the 20.
+
+**Why the yield fell.** Outside human, the gene's own UniProt entry is often unreviewed
+(Dusp21, GstO1, GstO2, Prx4) and cites no papers, so "the own entry does not cite it" says
+little. And small families annotated together from one paper (three Omega GSTs, four
+peroxiredoxins) fall below the four-folder shared-row threshold.
+
+Across all seven batches (126 leads, each gene counted once under its most severe outcome): 18
+wrong-gene annotations, 5 wrong evidence codes, 8 wrong references, 21 queries pending full
+text, and 74 false positives or no change. No action was changed to REMOVE or MODIFY on an
+abstract alone.
+
+## Detector fixes (2026-11-23)
+
+The three fixes the seventh batch proposed are in the scoring above: the unreviewed-entry
+and local-paralog penalties, and the `lead_kind` column. They were checked against a sweep
+of current main (11,078 leads present in both runs) and against every review row that
+carries a `WRONG_GENE_PRODUCT` or `WRONG_EVIDENCE_CODE` source defect.
+
+| | Before | After |
+|---|---|---|
+| Top-tier rows (score 6 or more) | 389 | 293 |
+| Top-tier genes | 210 | 180 |
+| Recorded wrong-gene or evidence-code rows leaving the top tier | | 1 of 127 |
+
+- The one recorded row to leave is DROME/EloC's `WRONG_EVIDENCE_CODE` query (`SUSPECTED`),
+  whose own entry is unreviewed. All 90 recorded `WRONG_GENE_PRODUCT` rows stay.
+- Of the 96 rows that leave, 82 are on genes not yet checked. Of the other 14, 8 are on
+  genes earlier batches found to be false positives (Dusp21, GstO1, GstO2, Prx4, JAK2,
+  PARD6B), 1 is EloC's query, and 5 are other rows of CHRNB4 and JAK1, whose recorded
+  defects sit on rows that stay.
+- A first version applied the paralog penalty to any local paralog carrying the row. It
+  pushed 8 recorded wrong-gene rows out of the top tier (CNGB3, CNGA1, CHRNB1, CHD4,
+  ADAM17, DLG3), all cases where the right gene carries the same row and cites the
+  paper. The penalty now skips a paralog that cites the paper, and counts only a carrier
+  in the same species: a same-family folder in another species is an ortholog, whose
+  copy of the row is the `evidence_code` case.
+- 594 leads are `evidence_code`, 28 of them in the top tier. Of the recorded defects, 12
+  `WRONG_EVIDENCE_CODE` rows are labelled `evidence_code` and 24 are not: those are
+  mostly family-level conclusions applied to a paralog (COQ8B) or rows whose ortholog
+  entry does not cite the paper, which the label cannot see.
+
+The mixed-species structure check (citing entries that are exactly a PDB entry's chains)
+was not built. The `evidence_code` label already catches SRPRB, since the mouse SRβ entry
+cites the paper, without a PDB lookup.
+
 ## Limitations
 
 - **UniProt citation is incomplete.** An entry not citing a paper does not mean the
@@ -403,6 +497,5 @@ counted once under its most severe outcome). No action was changed on an abstrac
   cases as `WRONG_GENE_PRODUCT` source defects in the gene reviews.
 - Consider scoring IPI rows separately, or requiring that the abstract names a citing
   entry's gene.
-- Report the same-gene-other-species signal separately: a direct evidence code (IDA)
-  on a human protein from a paper on the bovine or mouse ortholog is an evidence-code
-  question (`WRONG_EVIDENCE_CODE`), not a wrong gene.
+- Check the 28 top-tier `evidence_code` leads as their own batch, since they ask a
+  different question from the wrong-gene leads.

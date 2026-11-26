@@ -4,9 +4,13 @@ name: Refresh ontology cache
 # Online maintenance is separate from PR/merge-queue validation. This job does
 # not change CI's validation policy or silently accept unresolved cache misses.
 on:  # yamllint disable-line rule:truthy
-  schedule:
-    - cron: "0 4 * * 0"  # Sundays 04:00 UTC
+  # Enable a monthly schedule only after a successful full-corpus preview.
   workflow_dispatch:
+    inputs:
+      max_enum_removals:
+        description: "Explicit maximum number of removed enum memberships"
+        type: number
+        default: 0
 
 concurrency:
   group: refresh-ontology-cache
@@ -20,7 +24,7 @@ jobs:
     # Only trusted default-branch code can reach the App-token/push steps.
     if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 360
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -41,10 +45,14 @@ jobs:
       - name: Install project
         run: uv sync --frozen --dev
 
-      # Deliberately no restore of the OAK database cache: each scheduled run
+      # Deliberately no restore of the OAK database cache: each maintenance run
       # resolves the available SQLite builds afresh, then records their hashes.
       - name: Refresh and verify ontology caches
-        run: uv run python -m ai_gene_review.tools.ontology_cache_refresh --apply
+        env:
+          MAX_ENUM_REMOVALS: ${{ inputs.max_enum_removals || 0 }}
+        run: >-
+          uv run python -m ai_gene_review.tools.ontology_cache_refresh
+          --apply --max-runtime 18000 --max-enum-removals "$MAX_ENUM_REMOVALS"
 
       - name: Check cache ordering
         run: uv run python -m ai_gene_review.tools.cache_lint

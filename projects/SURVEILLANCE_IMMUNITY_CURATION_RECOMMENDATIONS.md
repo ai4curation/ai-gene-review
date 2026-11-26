@@ -5,6 +5,7 @@ last_reviewed: 2026-10-05
 tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [worm]
 genes: [pmk-1, sek-1, nsy-1, tir-1, atf-7, skn-1, zip-2, cebp-2, irg-1, elt-2, hlh-30, fshr-1, daf-16, dbl-1, sta-2, nipi-3, lys-7, clec-60]
+index_group: CROSS_CUTTING
 ---
 
 # CAEEL Surveillance Immunity Project - Comprehensive Curation Recommendations

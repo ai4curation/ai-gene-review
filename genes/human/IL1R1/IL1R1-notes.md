@@ -36,3 +36,13 @@ Sources checked (2026-11-04):
   IL1R1 is the blocked receptor. Removed.
 - The NAD+ nucleosidase IEA comes from the TIR-domain ProRule. No experimental NADase activity has
   been reported for IL1R1; its TIR domain acts as a signalling scaffold. Marked as over-annotation.
+
+## 2026-11-15 re-review of source defects
+
+- The two `WRONG_GENE_PRODUCT` source defects on the ComplexPortal NAS rows (GO:0050728 from
+  PMID:33391283, GO:2000660 from PMID:23847621) were withdrawn. Both rows are the membership
+  propagation (ECO:0005547) of terms held by the Interleukin-1 antagonist complex CPX-9126, whose
+  participants are IL1RN (P18510) and IL1R1 (P14778) (Complex Portal record checked). The terms are
+  right for the complex and IL1R1 is a real member, so the row is not on the wrong gene product and
+  there is nothing for ComplexPortal to correct. The rows stay `REMOVE` as a review judgement: IL1R1
+  is the receptor that is blocked, not the inhibitor.

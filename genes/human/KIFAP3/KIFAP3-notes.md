@@ -33,3 +33,9 @@ Falcon deep research succeeded (genes/human/KIFAP3/KIFAP3-deep-research-falcon.m
 - TAS source is abstract only [PMID:8900189 "SMAP was ubiquitously expressed and highly concentrated at the endoplasmic reticulum area"].
 - KAP3 is the soluble cargo-binding kinesin-II subunit (no signal peptide, no TM): a recruited cytosolic-face pool, so it stays at the root with no ER-membrane row (cf. TRAF3, A1CF).
 - Outcome: root; both rows stay KEEP_AS_NON_CORE, reasons record the check.
+
+## 2026-11-18 ORGANELLES Golgi batch 3 (Golgi apparatus rows)
+
+- Row: GO:0005794 IEA (GO_REF:0000107, Ensembl projection from mouse P70188). Action unchanged: KEEP_AS_NON_CORE; reason rewritten (it previously cited ER-area staining from PMID:8900189, which does not bear on the Golgi).
+- Donor traced in QuickGO: mouse Kifap3 GO:0005794 IDA, MGI, PMID:19384852. Full text in cache: pre-embedding immuno-EM of endogenous KAP3 in mouse photoreceptors, "localized along ER and Golgi membranes as well as tubulo-vesicular elements within the IS". EM identifies the Golgi by ultrastructure, so the organelle claim holds for the native protein.
+- KAP3 is a soluble kinesin-II cargo adaptor (no signal peptide, no TM): recruited cytosolic-face pool, non-core. One EM line in one cell type, so no sub-compartment row.

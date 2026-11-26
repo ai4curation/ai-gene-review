@@ -110,3 +110,22 @@ partner across a family that predates it. Marked non-core with that reasoning st
 Has anyone ever assayed maspardin for hydrolase activity? The pseudoenzyme call has been repeated for
 twenty-two years on sequence grounds alone, and the retained, mutation-hit nucleophile elbow is exactly
 the configuration in which a fold-retaining protein sometimes turns out to retain residual activity.
+
+## 2026-11-19 ORGANELLES Golgi batch 4 (Golgi apparatus rows)
+
+- One GO:0005794 row (IEA, GO_REF:0000044, SL-0132), from the UniProt item "Golgi apparatus,
+  trans-Golgi network membrane" tagged ECO:0000269 PubMed:11113139. That paper is abstract-only and
+  the abstract is silent on location. KEEP_AS_NON_CORE changed to MARK_AS_OVER_ANNOTATED.
+- The old reason called the row a parent of GO:0030140. It is not: per OLS, GO:0030140 is_a
+  GO:0005798 Golgi-associated vesicle, under cytoplasmic vesicle, and is not part_of GO:0005794.
+- Readable lines: PMID:19184135 (endogenous, fixed HeLa): GM130 overlap "was limited". The overlap
+  was more with gamma-adaptin (AP-1, TGN plus endosomes), CD63 and LAMP1. PMID:40833810 (2025): the
+  fixation protocol attenuates the endogenous signal. Live SPG21-mCherry/GFP is on endolysosomes
+  and "not detectably" at the TGN (ARL1-GFP).
+- UNDECIDED is the close alternative (unreadable 2001 donor). The GO:0030140 rows (IBA, IDA) rest
+  on the same 2001 observation and were left as they are (outside this check). They are worth
+  revisiting.
+
+### Review follow-up (2026-11-19)
+
+- Both GO:0030140 rows now record the readable evidence against a TGN location (PMID:40833810 live imaging with ARL1-GFP; PMID:19184135 limited GM130 overlap). Actions unchanged; MARK_AS_OVER_ANNOTATED is the likely outcome of a later pass.

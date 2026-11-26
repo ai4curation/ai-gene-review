@@ -13,6 +13,7 @@ manifest:
   slides:
     - href: SDH_GP2TERM_CONTRIBUTES_TO/slides/SDH_GP2TERM_CONTRIBUTES_TO-slides.html
       description: AI generated
+index_group: MAMMAL
 ---
 
 # Succinate Dehydrogenase (Complex II) — gp2term Relation Review (`enables` → `contributes_to`)

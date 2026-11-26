@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/92U5hqDhdMw4bNbohBwAKP
       title: Project brief
+index_group: BACTERIA
 ---
 
 # Plant Bioenergy Modules

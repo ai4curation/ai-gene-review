@@ -6,6 +6,12 @@ This project is for managing AI reviews of gene annotations. The overall goal is
 review existing GO annotations using strict defined criteria, and to summarize the resulting
 high quality annotations.
 
+## Schema authoring
+
+Always author schemas in LinkML, including project-local pilot and sidecar formats.
+Do not author JSON Schema schemas. Define reusable classes so both complete records
+and individual snippets can be validated with LinkML tooling.
+
 ## Local parallel work and storage
 
 - Keep at most six unfinished workstreams, including the coordinator. An idle
@@ -47,6 +53,31 @@ high quality annotations.
 - Report measured campaign storage and unfinished workstreams before starting a
   new batch. File allocation and APFS physical free-space changes are different
   measurements; do not claim one proves the other.
+
+## Parallel PRs: avoid shared files
+
+Content PRs should touch only their owned slice: the gene folders, history
+records, publications, modules, GO-CAM reviews, rules, or family reviews that the
+PR is explicitly delivering. Branch each content PR from current `main`; do not
+stack it on another unmerged content branch.
+
+- Update top-level `projects/*.md` status pages in a separate status PR after
+  the content they summarize has merged. Until then, record progress in gene
+  notes, module notes, or append-only history records.
+- Do not commit rendered `pages/**` HTML from content PRs. The
+  `generate-pages` workflow renders `pages/` from `main` with `just render-all`
+  and `just render-projects`, then publishes those outputs. Older rendered
+  `pages/` copies are still tracked while they are untracked in batches; do not
+  stage re-rendered versions of them.
+- Regenerate single-file shared caches, including committed `cache/**/terms.csv`
+  files and `interpro/panther/panther.obo`, in dedicated refresh PRs. If a merge
+  leaves a cache unsorted or duplicated, run the repair command such as
+  `just fix-caches` before staging the cache.
+- If you edit a local file other records may quote, such as a gene review, a
+  family review under `interpro/panther/`, or a bioinformatics `RESULTS.md`,
+  run `just validate-quotes` and fix any incoming `supporting_text` quotes in
+  the same PR. Prefer a primary publication, PAINT node, or stable database
+  record over quoting mutable review prose when it supports the same claim.
 
 ## Repository layout
 
@@ -182,9 +213,16 @@ A deep research file should already be present in the gene folder, e.g. `genes/S
 just deep-research SPECIES GENE --provider perplexity
 ```
 
+The Falcon (FutureHouse/Edison) stack is not in the default install. Run `uv sync --extra edison` once before the recipes that run Falcon through the repo environment: `deep-research-interpro-family` (its default provider is falcon), `rules-deep-research-falcon`, `term-deep-research-falcon`, `family-deep-research-falcon`, `gene-hypothesis-research` with falcon, and `fetch-research-artifacts`. The uvx-based `deep-research-falcon` and `module-*-deep-research-falcon` recipes are unaffected. `uv run` keeps the extra, but an exact sync (plain `uv sync`, or `just install`, which runs `uv sync --group dev`) removes it, so afterwards re-run `uv sync --group dev --extra edison`.
+
 This will create a file like `GENE-deep-research-perplexity.md`. You can also make your own notes in `genes/SPECIES/GENE/GENE-notes.md`.
 
 NEVER write your own content and name it `-deep-research-{provider}.md`. If deep research fails, document in `-notes.md` or `-deep-research-manual.md` instead.
+
+Preserve existing provider research and its artifacts verbatim. Do not manually edit
+them or rerun generation over them as part of routine curation. Generate missing
+research only; refresh existing output only when explicitly requested. Record
+corrections and disagreements in notes, `reference_review`, or `source_defects`.
 
 For worm, fly and yeast genes, also run `just mod-description-deep-research SPECIES GENE`. It writes the model organism database's hand-written gene description verbatim as `GENE-deep-research-<mod>.md` (`wormbase`, `flybase`, `sgd`). Other organisms are skipped: MGI's note summarises mutant phenotypes, and RGD, ZFIN and Xenbase have no hand-written text (see `projects/MOD_DESCRIPTIONS.md`). This is provider content, like an Affinage file, not your own. Treat it as an uncited, often out-of-date source: check its claims, record your verdict in that reference's `reference_review`, and record errors in its text as `source_defects` (see `docs/source_defects.md`).
 
@@ -266,10 +304,24 @@ the organism, is `REMOVE`, even on an IDA row. There is no numeric cutoff; state
 the judgement in `reason`. See the promiscuous-activity tiers in
 `projects/ENZYME_SPECIFICITY.md`.
 
+**A term in another EC class names a different reaction, not a broader one.**
+Watch for synthase/synthetase swaps: `GO:0004321` fatty-acyl-CoA synthase is
+the fatty acid synthase reaction (EC 2.3.1.86), while an acyl-CoA synthetase is
+a ligase (EC 6.2.1). When a kept, MODIFYed or TOO_GENERAL term's EC class differs from every
+EC on the protein's UniProt record, `just validate` warns (`ec_class_conflict`,
+`src/ai_gene_review/validation/ec_class_consistency.py`). Fix it with `REMOVE`
+and `source_defects`, or say in `reason` why the activity is genuine (a
+multifunctional or moonlighting enzyme). `just ec-class-audit` lists every hit
+in the corpus.
+
 **Decomposing precomposed "X involved in Y" terms.** When you MODIFY such a term to its genus X, say where Y
 went in `review.decomposed_into`: `gocam_associations` or `module_associations` (Y is a mechanism with a
 model), `in_core_functions` (Y is central to the gene), or `context_dropped: true` (Y is peripheral context or
-was itself the over-annotation). Do not encode Y as an annotation extension (X plus `part_of(Y)` restates the
+was itself the over-annotation). The replacement must be a claim you would `ACCEPT`: when the claim is
+non-core, keep the row `KEEP_AS_NON_CORE` on the precomposed term, or `MARK_AS_OVER_ANNOTATED` if GO has
+obsoleted it, and do not MODIFY it (the `decomposition_replacement_not_acceptable` check warns when the
+replacement sits on another row as non-core, over-annotated or removed). Ordinary refinements of a general
+term are not decompositions and keep their own rule above. Do not encode Y as an annotation extension (X plus `part_of(Y)` restates the
 retired class), and do not split the term into two unrelated annotations. Modules model reusable mechanisms,
 not tissue or developmental contexts: do not create a module per Y. GO's `consider` is curator advice: check each half against the evidence before using it. Its
 `replaced_by` is an automated mapping, so if it is wrong for your gene, record the correct term and flag the
@@ -404,6 +456,18 @@ unread part of the paper could overturn the claim.
   every isozyme an unfractionated assay cannot separate, is a deliberate practice,
   not a slip. A reference-level view (QuickGO by reference, an RGD or MGI
   reference page) shows this in one query.
+- **An annotation pattern is a lead, never the proof.** How a resource annotated
+  a paper (same-day batches, a reciprocal row, which entry cites the paper, a
+  sequence deposit) can tell you where to look and is reason enough to *drop* an
+  accusation, but it does not by itself show that a curator got the gene wrong.
+  To assert a wrong gene (`CONFIRMED`, `REPOINT` or `DELETE_ROW`, or a `REMOVE`
+  that rests on it) either read the whole paper or have it be very obvious from
+  the abstract or the record itself, as in the first bullet. Otherwise record the
+  lead as a `CHECK` query and name the candidate as a candidate.
+  This bullet is a maintainer ruling (2026-11-16). Reviews merged before it are
+  not retroactively defective: the wrong-gene and wrong-reference claims it
+  affected were audited when it was made, and it applies to new and revisited
+  reviews, not as a condition of any other content PR.
 - **Say in `explanation` what depth the claim rests on**, and name a candidate
   correction as a candidate when the intended paper or gene was inferred and not
   read.
@@ -463,12 +527,38 @@ nothing; renin performs every step of the conversion. So the test is never "is m
 the substrate" but "does my gene do any of the work", and a fibrinogen-shaped case can
 legitimately carry the term.
 
+**The check is a guide, not an oracle, and its negative result is the fragile one.** A
+positive result is cheap to read: comparators in the same role carry the term, so the
+absence on your gene is a gap. A *negative* result is the one that licenses the strong
+conclusion — do not propose — so it carries the weight and deserves the scrutiny.
+**Before trusting a negative, confirm the query can return a positive**: run it against a
+gene you already know carries the term, or query the term id directly and check the
+hit count is non-zero for the cohort as a whole. A malformed query returns a clean,
+confident, entirely false absence, and it does not look like an error.
+
+The failure has happened here. A review declined to propose `GO:0042742 defense response
+to bacterium` for GZMB on the reported grounds that no cytotoxic granule effector carries
+any bacterial-defense term. The query had asked QuickGO for each gene's
+biological-process annotations and filtered the results on the term-name field, which
+that call shape returns empty, so the filter matched nothing whatever the data said. It
+returned 200 results and no error. The only symptom was an unusually clean negative
+across all four genes, which reads as a finding and is in fact the tell. Re-run by term
+id, GNLY carries `GO:0042742` by IDA together with `GO:0031640` and `GO:0061844`, and
+GSDMB carries it by IBA; see the GZMB correction in `history/genes/human/GZMB/`. Read
+that way round, a result too tidy to be curation is usually not curation.
+
+Nor does a positive result compel the annotation. Comparators tell you whether a
+convention exists; they never establish that your gene does the work. The participation
+test above still governs, and a term carried by three same-role comparators is still
+wrong for a gene that is merely necessary for the process.
+
 Therefore, before proposing a `NEW` process term:
 
 - **Name the entity that performs the step.** If the answer is another gene product,
   the term belongs to that one. Necessity evidence does not answer this question.
 - **Run the comparator check** above, and treat a systematic absence as a convention
-  to identify rather than a gap to fill.
+  to identify rather than a gap to fill — after confirming the query can return a
+  positive at all, since a malformed one reports a confident false absence.
 - **Read the term's parents.** They usually say what kind of thing carries the term.
   A process under `GO:0006508 proteolysis` names whatever does the cleaving — which is
   the substrate itself in the autoprocessing case (`GO:0016540`), and otherwise is not.
@@ -525,6 +615,9 @@ action fits the verdict and that the target sits correctly in the family's PANTH
 (below the node for TOO_DEEP, NEEDS_PRUNING and LOSS_TOO_BROAD). PAINT prunes per
 annotation: a loss of a general term does not block a more specific term asserted at an
 ancestral node, so request each change separately.
+`just export-paint-change-requests` turns these rows into one Markdown change request per
+family in `reports/paint-change-requests/` (generated and git-ignored; do not commit), and
+fails if a family asks for incompatible changes to one PAINT row.
 
 ### Term-id validation: GOA ids are trusted, your `core_functions` ids are checked
 
@@ -543,6 +636,23 @@ Validation deliberately treats the two sources of GO term ids differently:
 
 Rule of thumb: machine-sourced ids are trusted (other deterministic steps guarantee they
 are real GOA terms); author-supplied ids are checked hard.
+
+**Neither check catches an obsolete id you wrote**, because the dynamic enums test branch
+*reachability* and a retired term is still reachable. `just validate` therefore warns
+(`obsolete_authored_term`,
+`src/ai_gene_review/validation/obsolete_authored_terms.py`) on every author-supplied GO
+id — a `NEW` row's term and its extensions, `core_functions`,
+`proposed_replacement_terms`, a `proposed_parent`, an isoform's
+`isoform_specific_terms` — that an offline signal marks obsolete; `just obsolete-term-audit`
+lists them. Detection combines the GO sqlite snapshot's `obsolete ` label prefix with the
+same prefix in the corpus' own `GENE-goa.tsv` files, which are refetched per gene and so
+catch obsoletions the snapshot has not picked up (this is how `GO:0098734` was found while
+CPT1C's own GOA file still carried the live label). **A hit is informative; a clean result
+proves nothing** — the two signals together caught four of eight known cases, and a
+*merged* id, which QuickGO resolves silently to a different term, is invisible to both. So
+check a replacement term against a live service when it matters, and do not read silence
+as confirmation. Do not repoint to GO's `replaced_by` without checking it against the gene:
+the mapping is automated and has been wrong here (see `genes/human/FYB1`).
 
 When a core activity has **no GO term yet** (e.g. in-situ holdases after GO:0051082 was
 obsoleted without a replacement), do not put an obsolete or ill-fitting id in
@@ -593,6 +703,8 @@ PANTHER's own HMM classifications. Two rules follow:
 
 PTN ancestral nodes (`PANTHER:PTN...`) are checked separately, against PAINT data — see
 `validate_paint_ptns`. Their label is conventionally just the bare id.
+For where a function sits in a family, cite the PTN; subfamily ids are renumbered and
+renamed between PANTHER releases (see `docs/panther_node_anchoring_plan.md`).
 
 **If you cannot be sure, assert no id.** A family descriptor's `term` is optional.
 When you cannot establish that a PANTHER family corresponds to what the descriptor
@@ -631,12 +743,19 @@ as schema (`src/ai_gene_review/validation/rule_review_receipts.py`); read
   domain)`; the label is the checksum of the id, and it is checked.
 - **Judge the conjunction, not the signature.** A condition set is everything it
   requires together, taxon included. Alternative sets are meant to be disjoint.
-- **Size, generality, redundancy and low recall are not errors.** The "limit of 12
-  condition sets" is the analysis tool's default, not a standard. A true but
-  general term is `MODIFY` or `UNDECIDED`, never `DEPRECATE`.
+- **Judge meaning and parsimony as well as accuracy.** A rule can be true set by
+  set and say nothing. Group the sets into `biological_units`, give each its most
+  informative curated term, and record `biological_meaning`, `parsimony` and
+  `taxonomic_scope` with numbers (`projects/ARBA_REVIEW/rule_redundancy.tsv`).
+  An umbrella term over units with better terms is `SPLIT`.
+- **Size and generality are not evidence that an annotation is false.** The "limit
+  of 12 condition sets" is the analysis tool's default, not a standard. A true but
+  general term is `SPLIT` or `MODIFY`, never `DEPRECATE`; "too many sets" needs a
+  count of sets that do no work.
 - **`DEPRECATE` names a wrongly annotated protein** (accessions in
-  `annotation_assessments[].incorrect_examples`), an obsolete consequent or a
-  withdrawn rule. Before listing a protein as a false positive, look up its
+  `annotation_assessments[].incorrect_examples`), an obsolete consequent, or a rule
+  whose every set is covered by a rule for a more specific term. A rule UniProt no
+  longer serves is `WITHDRAWN`. Before listing a protein as a false positive, look up its
   experimental annotations to the term and its descendants; `--online` does this.
 - **Your notes and deep-research files are not literature.** Cite the paper or
   record they point to, or omit `literature_support`.
@@ -656,7 +775,9 @@ points to the wrong paper).
 The reference validator already catches the *mechanical* citation failures automatically: it
 verifies each cited reference's `title` matches the fetched record (a transposed/wrong PMID whose
 title no longer matches fails) and that every `supporting_text` is a **verbatim substring** of the
-cached publication (a quote from the wrong paper, or a paraphrased/invented quote, fails).
+cached publication (a quote from the wrong paper, or a paraphrased/invented quote, fails);
+for `PMID:` and `DOI:` sources the paper's cached title also counts, as a separate text a quote
+cannot run into the body from (`src/ai_gene_review/validation/title_matching.py`).
 A `supporting_text` value must contain actual verbatim source text. Editorial square
 brackets may clarify part of a real quotation; an empty string or a value consisting
 only of editorial commentary is not a quotation. Omit this optional field when no
@@ -1008,6 +1129,23 @@ link to a review page when its HTML exists on disk, so run `just render-all`
 first if you need those links in a local build. The propagation browser links
 whenever the review YAML exists.
 
+### GO-CAM review pages
+```bash
+just render-gocams     # every gocams/<id>/<id>-review.yaml, plus an index
+```
+Output: `pages/gocams/<id>.html` and `pages/gocams/index.html`. Like gene HTML,
+this is a gitignored build product rendered by the Pages workflow; do not commit it.
+
+### Feedback and rules landing pages
+```bash
+just render-hubs       # pages/feedback/ and pages/rules/index.html
+```
+`pages/feedback/` publishes the exporters' output (`export-ontology-changes`,
+`export-source-defects`, `export_proposed_terms.py`) as HTML reports plus TSV
+downloads, and lists the `OBSOLETION`-tagged and `MAPPINGS` projects.
+`pages/rules/index.html` lists the curated rules (`rules/curated/CR-*.yaml`) and
+links the external rule reviews. Both are gitignored build products.
+
 ### Project pages
 Project docs live in `projects/`. Render with:
 ```bash
@@ -1036,7 +1174,12 @@ renders to `pages/projects/FOO/bar.html`). Use ordinary relative links between a
 project page and its sub-pages (`[x](FOO/bar.md)` from `FOO.md`; `[parent](../FOO.md)`
 from inside `FOO/`); the renderer rewrites `.md`→`.html` and preserves the path.
 
-**Important:** The project index page (`pages/projects/index.html`) is **manually maintained**. When adding a new project, you must manually add a `<div class="project-card">` entry to the index HTML. The `render-projects` command does NOT update the index.
+**Project index.** `render-projects` generates the project index
+(`pages/projects/index.html`) from frontmatter; never edit it by hand, and do not
+commit it (it is gitignored). A project picks its section with `index_group:`, one of
+`WORM`, `YEAST`, `MAMMAL`, `BACTERIA`, `ARCHAEA`, `PLANT`, `OTHER_ORGANISM`, `GO_TRACKER_BACKLOG`, `CROSS_CUTTING` (defined as `INDEX_GROUPS` in `render_projects.py`); a project without one is
+listed under "Not yet grouped". An optional one-line `description:` appears on its card,
+and a `FOO/FOO-pathway.md` page gets a "Pathway diagram" link automatically.
 
 **Collections.** Related projects are grouped under an index page by listing a
 collection key in frontmatter, e.g. `collections: [HOMOLOGY_PROPAGATION]`. Keys
@@ -1045,7 +1188,10 @@ index page gets an auto-generated member table, members get a link back to it,
 and the all-projects table gains a Collection filter. Current collections:
 `FUNCTION_PREDICTION` (index `FUNCTION_PREDICTION_EVALUATION`) and
 `HOMOLOGY_PROPAGATION` (index `HOMOLOGY_PROPAGATION`, with the propagation
-browser at `app/propagation/`).
+browser at `app/propagation/`), and `MAPPINGS` (index `MAPPING_REVIEWS`), for reviews
+of vocabulary-to-GO mappings such as InterPro2GO, Rhea2GO and TC2GO. A mapping review
+project should join `MAPPINGS`; one proposing an obsoletion should carry the
+`OBSOLETION` tag. Both feed the feedback-to-resources page.
 
 **Manual reviews.** A project page may record reviewer sign-offs in frontmatter
 under `manual_reviews` (a list). Each entry needs a `reviewed_by`; `status` (if
@@ -1150,6 +1296,20 @@ GitHub Pages officially supports a 1 GB site. Our existing temporary policy
 allows larger deployments below the 10 GB absolute artifact cutoff; that is not
 a hosting-capacity guarantee. A completed upload can be redeployed without
 rendering via `deploy-existing-pages.yaml`, while the artifact is retained.
+
+## Upstream issue trackers: never notify curators
+
+`issues/<tracker>/` mirrors upstream trackers (first geneontology/go-annotation)
+for retrospective and prospective evaluation; see `projects/GO_ANNOTATION_TRACKER.md`
+and `just outstanding-shadow-issues`. In any commit message, PR title or body, issue,
+or comment, never write an upstream issue URL or the shorthand `geneontology/<repo>#N`,
+and never at-mention anyone except cmungall: GitHub turns these into cross-references
+and notifications on the curators' issues. Name an upstream issue as
+`issues/go-annotation/N` or "go-annotation N". Never paste mirrored thread text into a
+PR body. A Claude Code hook (on Bash and GitHub MCP tools), a commit-msg hook, and a
+check on PR text and comments enforce this
+(`src/ai_gene_review/shadow_issues/guard.py`); `just check-upstream-refs FILE` checks a
+body file first.
 
 ## General guidelines
 

@@ -59,3 +59,14 @@ accessory chains is raised in `suggested_questions`.
 ComplexPortal decoy-complex propagations are now recorded as `source_defects` (resource OTHER,
 ComplexPortal named in the explanation). The soluble isoform (Q9NPH3-2) is recorded in
 `functional_isoforms`.
+
+## 2026-11-15 re-review of source defects
+
+- The three `WRONG_GENE_PRODUCT` defects on the ComplexPortal NAS rows from PMID:23847621
+  (GO:0030224, GO:0032690, GO:0032691) were retyped to `WRONG_TERM` with `resource: COMPLEX_PORTAL`
+  and the complex as `record`. The Complex Portal records show IL1RAP (Q9NPH3) is a curated
+  participant of the decoy complexes CPX-522 (IL1B:IL1R2:IL1RAP) and CPX-9168 (IL1A:IL1R2:IL1RAP),
+  which hold these terms, so the rows are not on the wrong gene product; they follow from complex
+  membership. What can be queried is the term on the complex: monocyte differentiation rests on an
+  expression statement about IL1R2 (PROBABLE), and the two production terms describe soluble IL1R2
+  binding pro-IL-1 without IL1RAP (SUSPECTED). Actions unchanged (`REMOVE`).

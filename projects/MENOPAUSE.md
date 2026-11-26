@@ -4,6 +4,7 @@ maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [human, mouse, worm]
 genes: [TACR3, TAC3, KISS1R, KISS1, FSHR, ESR2, Tacr3, Tac2, Kiss1r, Kiss1, fshr-1]
+index_group: CROSS_CUTTING
 ---
 
 # Menopause and reproductive ageing: the KNDy, gonadotropin and estrogen-receptor genes

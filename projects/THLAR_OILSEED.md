@@ -5,6 +5,7 @@ last_reviewed: 2026-11-04
 tags: [BIOLOGY_DOMAIN]
 species: [THLAR, ARATH]
 genes: [FAE1, TFP, CYP71B1, matK, TAV2_LOCUS3068, TAV2_LOCUS7508, TAV2_LOCUS14099, CSD1, CSD2]
+index_group: PLANT
 ---
 
 # Pennycress (Thlaspi arvense) Oilseed Domestication Genes

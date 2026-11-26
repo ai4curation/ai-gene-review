@@ -23,9 +23,16 @@ LTV reports into:
 
 A file the run did not account for (LTV crashed, could not read it, printed
 something this parser does not recognise, or announced more issues than were
-parsed) is listed under ``unchecked_files``,
-and the report is then ``complete: false``: the tool fails closed, so a coverage
-gate can never pass because nothing was checked.
+parsed) is listed under ``unchecked_files``, and the report is then
+``complete: false``: the tool fails closed, so a coverage gate can never pass
+because nothing was checked.
+
+The report covers the term positions LTV resolves, which is also the whole of
+what an outage can affect. LTV does not look up every id/label pair in a review:
+CHEBI substrates, UBERON and CL anatomical locations and family-review
+``node_taxon`` labels are not resolved at all, online or offline (a wrong label
+there passes and no cache row is written), so they are neither misses nor an
+outage risk.
 
 Not every miss is an outage risk. ``conf/oak_config.yaml`` serves some prefixes
 from a SQLite build that oaklib downloads once and caches (GO, RHEA) and others
@@ -453,8 +460,23 @@ def parse_offline_output(
             )
 
 
+def record_batch_output(
+    output: str, returncode: int, files: list[Path], report: CoverageReport
+) -> None:
+    """Parse a batch and count only files with fully accounted-for results."""
+    unchecked_before = len(report.unchecked_files)
+    parse_offline_output(output, returncode, files, report)
+    report.files_checked += len(files) - (
+        len(report.unchecked_files) - unchecked_before
+    )
+
+
 def ltv_command(
-    kind: DocumentKind, files: list[Path], offline: bool, cache_dir: Path
+    kind: DocumentKind,
+    files: list[Path],
+    offline: bool,
+    cache_dir: Path,
+    config: Path = OAK_CONFIG,
 ) -> list[str]:
     """Build the LTV ``validate-data`` command for one batch of same-kind files.
 
@@ -474,7 +496,7 @@ def ltv_command(
         kind.target_class,
         "--labels",
         "-c",
-        OAK_CONFIG.as_posix(),
+        config.as_posix(),
         "--cache-dir",
         cache_dir.as_posix(),
     ]
@@ -538,11 +560,7 @@ def offline_pass(
             file=sys.stderr,
         )
         output, returncode = run_ltv(kind, batch, offline=True, cache_dir=cache_dir)
-        unchecked_before = len(report.unchecked_files)
-        parse_offline_output(output, returncode, batch, report)
-        report.files_checked += len(batch) - (
-            len(report.unchecked_files) - unchecked_before
-        )
+        record_batch_output(output, returncode, batch, report)
     return report
 
 

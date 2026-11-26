@@ -19,6 +19,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/4zG7wZUT7XK17Bdaocsw2b
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Calcitriol Biosynthesis from Calciol — Obsoletion & Replacement

@@ -65,7 +65,11 @@ See `projects/GOCAM_COMPARTMENTS.md`.
 - Use `FAMILY`, `DOMAIN`, `HOMOLOG_OF`, `ORTHOLOG_OF`, `ANY_WITH_FUNCTION`, or
   `ANY_WITH_DOMAIN` for reusable roles.
 - Use `active_units` inside complex descriptors when a complex has role-bearing
-  subunits that must remain visible to reasoning.
+  subunits that must remain visible to reasoning. The engine reads them as a
+  conjunction: the complex holds only where every listed unit holds, so list
+  only units that must all be present (a discriminating subset is fine), and
+  give each unit its own selector and, where known, its own `function`; a unit
+  without one inherits the complex annoton's function.
 - Keep activation enzymes, cofactor biosynthesis, transport, regulation, and
   upstream/downstream biology outside the module core unless they are required
   parts of the pathway definition.
@@ -76,6 +80,10 @@ See `projects/GOCAM_COMPARTMENTS.md`.
   exemplars that orient the reader and satisfy leaf grounding QC.
 - Representative members are examples, not an exhaustive species list and not a
   claim that the module is limited to those proteins.
+- In `COMPLETE` concrete modules, every terminal participant role must ground to
+  at least one representative UniProt protein or concrete non-protein id.
+  Annoton-less process endpoints are ignored; genuinely distributed/open-ended
+  protein roles can instead be marked `intentionally_ungrounded: true`.
 - Use `ancestral_nodes` for the stronger PAINT claim that a function arose at or
   was present in a PANTHER ancestral node and is inherited by descendants unless
   diverged.

@@ -276,6 +276,19 @@ ensure-panther-members:
 verify-panther-paint *args="":
     uv run ai-gene-review verify-panther-paint --output-dir . {{args}}
 
+# Report whether PANTHER has moved past the pinned release or PAINT snapshot (network).
+[group('QC')]
+check-panther-release:
+    uv run ai-gene-review check-panther-release
+
+# Dry-run report of what a PANTHER release bump would change: cited ids gone or
+# renamed, member-based id proposals for every anchor, and panther.obo quotes the
+# rebuilt artifact would break. Edits nothing.
+# Example: just panther-release-diff 20.0
+[group('QC')]
+panther-release-diff target_release *args="":
+    uv run ai-gene-review panther-release-diff {{target_release}} --output-dir . {{args}}
+
 # Fetch and cache a single GO-CAM model to gocams/<id>/<id>-src.yaml
 # Example: just fetch-gocam gomodel:568b0f9600000284
 fetch-gocam model_id *args="":
@@ -296,6 +309,13 @@ gocam-index *args="":
 # Markdown report per upstream resource in reports/source-defects/. See docs/source_defects.md.
 export-source-defects *args="":
     uv run python -m ai_gene_review.tools.export_source_defects {{args}}
+
+# Writes reports/paint-change-requests.tsv and reports/paint-change-requests/<PTHR>.md
+# from node_assessments[].proposed_action; exits 1 on conflicting requests for one
+# PAINT row. See the IBA section of CLAUDE.md.
+# Collect PAINT change requests from family reviews, one report per family.
+export-paint-change-requests *args="":
+    uv run python -m ai_gene_review.tools.export_paint_change_requests {{args}}
 
 # Collect proposed ontology changes (top-level proposed_ontology_changes on gene
 # and module reviews, and in project-page frontmatter) into
@@ -361,6 +381,39 @@ descriptions-status organism *args="":
 #   just litscan-module-member --date-from 2026-01-01 --date-to 2026-06-19
 litscan-module-member *args="":
     uv run ai-gene-review litscan module-member {{args}}
+
+# Shadow issue trackers (issues/<tracker>/, see projects/GO_ANNOTATION_TRACKER.md).
+# Read-only mirror of upstream issues: never reference them by URL or org/repo#N
+# in commits or PRs, and never at-mention anyone but cmungall.
+#   just sync-shadow-issues                 # fetch new/updated go-annotation issues
+#   just outstanding-shadow-issues          # what needs triage, shadow work, or rating
+#   just outstanding-shadow-issues go-annotation --queue needs_shadow --study PROSPECTIVE
+#   just show-shadow-issue 6606 --as-of 2026-10-20T00:00:00Z
+
+# Fetch new and updated upstream issues into issues/<tracker>/ (read-only)
+sync-shadow-issues tracker="go-annotation" *args="":
+    uv run ai-gene-review shadow-issues sync {{tracker}} {{args}}
+
+# List shadow issues waiting for triage, shadow work, or rating
+outstanding-shadow-issues tracker="go-annotation" *args="":
+    uv run ai-gene-review shadow-issues outstanding {{tracker}} {{args}}
+
+# Print an issue thread, optionally cut at --as-of or --opening-only for blinded work
+show-shadow-issue number *args="":
+    uv run ai-gene-review shadow-issues show {{number}} {{args}}
+
+# Print the table of all shadow-issue ratings, generated from rating.yaml files
+shadow-ratings tracker="go-annotation":
+    uv run ai-gene-review shadow-issues ratings {{tracker}}
+
+# Validate issue.yaml and rating.yaml files against the shadow_issue schema
+[group('QC')]
+validate-shadow-issues tracker="go-annotation":
+    uv run ai-gene-review shadow-issues validate {{tracker}}
+
+# Check a commit message or PR body file for text that would notify upstream curators.
+check-upstream-refs +files:
+    python3 src/ai_gene_review/shadow_issues/guard.py {{files}}
 
 # Generic provider-selecting entry point documented in AGENTS.md and automation prompts.
 # Supports --provider, --alias, --fallback, --timeout, and --extra-args (which must come last).
@@ -1180,6 +1233,10 @@ validate organism gene:
     set -e
     file="genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml"
     uv run ai-gene-review validate --verbose --terms "$file"
+    sidecar="${file%-ai-review.yaml}-regulatory-evidence.yaml"
+    if [[ -f "$sidecar" ]]; then
+        uv run --group dev python projects/P_PUTIDA/validate_regulatory_evidence.py "$sidecar"
+    fi
     echo ""
     echo "Checking PMID references in markdown files..."
     uv run python src/ai_gene_review/tools/validate_pmid_references.py "genes/{{organism}}/{{gene}}/"
@@ -1388,12 +1445,44 @@ validate-changed *files:
 validate-quotes *args:
     uv run python -m ai_gene_review.validation.quote_check {{args}}
 
+# Validate incoming supporting_text quotes affected by changed local source files.
+# Example: just validate-incoming-quotes HEAD^ HEAD
+[group('QC')]
+validate-incoming-quotes *args:
+    uv run python -m ai_gene_review.validation.incoming_quote_dependencies {{args}}
+
 # Example: just local-quote-baseline --prune
 #          just local-quote-baseline --report reports/local-quote-failures.yaml
 # Measure or shrink the baseline of known non-verbatim file:/Reactome: quotes
 [group('QC')]
 local-quote-baseline *args:
     uv run python scripts/local_quote_baseline.py {{args}}
+
+# List kept MF terms whose GO EC class contradicts the protein's UniProt EC
+# (e.g. a "synthase" term on a "synthetase"). Same rule as the ec_class_conflict
+# warning in `just validate`; writes reports/ec-class-conflicts.tsv (git-ignored).
+# Example: just ec-class-audit genes/PSEPK/PP_2213/PP_2213-ai-review.yaml
+[group('QC')]
+ec-class-audit *files:
+    uv run python -m ai_gene_review.validation.ec_class_consistency {{files}}
+
+# List author-supplied GO ids (NEW rows and their extensions, core_functions,
+# proposed_replacement_terms, proposed_parent, isoform_specific_terms) that an
+# offline signal marks obsolete. Same rule as the
+# obsolete_authored_term warning in `just validate`. The signals are incomplete --
+# a hit is informative, a clean result does not prove the ids are live -- so this
+# exits 0 by default; pass --strict to fail, --no-ontology to skip the GO snapshot.
+# Example: just obsolete-term-audit genes/human/CPT1C/CPT1C-ai-review.yaml
+[group('QC')]
+obsolete-term-audit *files:
+    uv run python -m ai_gene_review.validation.obsolete_authored_terms {{files}}
+
+# List processes that modules assert for a gene and that neither GOA nor the
+# gene's review carries: leads for NEW annotations, not annotations. Writes
+# reports/module-annotation-leads.tsv (git-ignored). See modules/README.md.
+[group('QC')]
+module-annotation-leads *args:
+    uv run python -m ai_gene_review.module_annotation_leads {{args}}
 
 # Validate all gene review files (schema + references + best practices).
 # Uses batch mode for schema and advisory term validation, then the CLI for
@@ -1767,7 +1856,7 @@ stage-pages:
     uv run python -m ai_gene_review.tools.stage_pages --manifest _site-manifest.json
 
 # Build the complete disposable publication tree without Git blob limits.
-build-pages: render-all render-projects render-prediction-eval render-bioreason-eval render-modules render-dashboard (deploy-browser "pages") (deploy-predictions-browser "pages") (deploy-propagation-browser "pages") stage-pages
+build-pages: render-all render-projects render-prediction-eval render-bioreason-eval render-modules render-gocams render-hubs render-dashboard (deploy-browser "pages") (deploy-predictions-browser "pages") (deploy-propagation-browser "pages") stage-pages
 
 # Render prediction evaluation table from *-predictions-review.yaml files
 render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM Prediction Evaluation':
@@ -1870,6 +1959,14 @@ render-project project:
 # Render module YAML files to HTML with an inline tree browser
 render-modules:
     uv run ai-gene-review render-modules --all
+
+# Render GO-CAM reviews (gocams/*/*-review.yaml) to pages/gocams/ with an index
+render-gocams:
+    uv run ai-gene-review render-gocams
+
+# Render the feedback-to-resources (pages/feedback/) and rules (pages/rules/) landing pages
+render-hubs:
+    uv run ai-gene-review render-hubs
 
 # Regenerate the gene review status dashboard (pages/dashboard.html)
 render-dashboard:
@@ -1997,6 +2094,13 @@ export-annotations output_file="exports/exported_annotations.csv":
 export-annotations-tsv output_file="exports/exported_annotations.tsv":
     @mkdir -p exports
     uv run python -c "from ai_gene_review.export import TabularExporter; from pathlib import Path; exporter = TabularExporter(); files = list(Path('genes').glob('**/*-ai-review.yaml')); print(f'Found {len(files)} files'); exporter.export_to_tsv(files, '{{output_file}}'); print(f'Exported to {{output_file}}')"
+
+# Export reviews as a GOA change set (one row per reviewed annotation + NEW rows),
+# consumed by the genesets enrichment eval (evals/aigr_changeset in monarch-initiative/genesets)
+export-goa-changeset organism="human" output_file="":
+    @mkdir -p exports
+    uv run python scripts/export_goa_changeset.py --organism {{organism}} \
+        -o {{ if output_file == "" { "exports/goa_changeset_" + organism + ".tsv" } else { output_file } }}
 
 # Export existing_annotations to JSON format (for linkml-browser)
 export-annotations-json output_file="exports/exported_annotations.json":
@@ -2466,10 +2570,10 @@ family-msa family_id:
 
 # ============== iModulonDB Integration ==============
 
-# Compare gene review with iModulonDB data (for bacterial transcription factors)
+# Summarize published iModulon evidence with matched gene-review context
 # Examples:
 #   just compare-imodulondb PSEPK BenR
-#   just compare-imodulondb ecoli FliA
+#   just compare-imodulondb p_putida PP_3159
 compare-imodulondb organism gene *args="":
     @echo "Comparing {{organism}}/{{gene}} with iModulonDB..."
     uv run python scripts/compare_with_imodulondb_v2.py {{organism}} {{gene}} {{args}}
