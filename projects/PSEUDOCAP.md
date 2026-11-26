@@ -4,8 +4,8 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEAE]
-genes: [aer, aguB, alg8, algA, algB, algC, algU, algZ, alr, ampD, ampDh2, ampDh3, ampG, ampR, arcA, arcB, arcC, arcD, argA, arr, aruC, aruG, aruH, astA, astB, atsA, atuR, azoR1, azoR2, azoR3, azu, betT1, bfd, bifA, braC, braD, braF, braG, brlR, cbrA, ccmC, ccmF, ccoP1, ccoP2, ccpA, cdhR, cheZ, cif, cifR, copR, ctpH, ctpL, ctpM, cueR, cupA3, cyaA, cyaB, cysB, cysH, dadA1, dadA2, dadX, dctP, dctQ, dgcB, dgcP, dksA, dsbB1, dsbB2, dsdA, eddB, eraR, estA, exsA, fabA, fabB, fabD, fabV, fadD1, fdnG, fdnH, fdnI, fimU, fiuA, fleN, fleQ, fleS, fliC, fliD, folP, foxA, foxI, foxR, fpr, fpvI, fpvR, fur, galU, gbcB, gbdR, gbuA, glmM, glmR, gltA, gmd, gntR, hemB, hfq, hom, hutF, hutH, hutI, hutU, infB, katA, kynB, lap, lasB, lasI, lhpL, ligD, liuA, liuC, liuE, lolA, lolD, lpxA, lpxC, lpxL, lysA, mcpB, mexA, mexT, mexX, mexZ, mgtE, migA, mltB1, motA, motB, motC, msrA, mucA, mucB, mucD, mucR, nalC, nalD, nbdA, ndk, nfxB, nirJ, nmoA, np20, nrdA, nrdJa, nuh, ohrR, opdP, opmQ, oprB, oprD, oprE, oprG, PA0011, PA0148, PA0149, PA0305, PA0317, PA0471, PA0472, PA0692, PA0845, PA0847, PA0906, PA0920, PA0938, PA0949, PA1014, PA1024, PA1054, PA1055, PA1056, PA1057, PA1058, PA1059, PA1107, PA1204, PA1242, PA1257, PA1340, PA1341, PA1342, PA1486, PA1566, PA1611, PA1810, PA1811, PA2050, PA2057, PA2070, PA2077, PA2078, PA2089, PA2093, PA2126, PA2127, PA2133, PA2200, PA2280, PA2412, PA2580, PA2590, PA2634, PA2870, PA2986, PA2988, PA3047, PA3170, PA3177, PA3271, PA3343, PA3345, PA3677, PA3678, PA3697, PA3760, PA3761, PA3825, PA3859, PA3891, PA3933, PA3992, PA4079, PA4088, PA4156, PA4178, PA4218, PA4332, PA4379, PA4400, PA4503, PA4504, PA4505, PA4506, PA4521, PA4596, PA4624, PA4675, PA4843, PA4896, PA4910, PA4912, PA4921, PA4975, PA5017, PA5082, PA5085, PA5089, PA5134, PA5208, PA5291, PA5359, PA5376, PA5377, PA5384, PA5455, PA5456, PA5458, PA5484, PA5498, PA5504, PA5542, parC, parE, parR, parS, pchA, pchB, pctA, pctB, pctC, pelA, pfeA, pfeE, pfeS, phnB, phr, phzC1, phzM, phzS, pilA, pilB, pilD, pilM, pilN, pilT, pilU, pirA, plcH, pldA, pmpM, pmrB, ppkA, pppA, pprA, ppx, pqsC, pqsH, prc, prpC, pscC, pslC, psrA, ptrB, ptxR, ptxS, putA, putP, pvdD, pvdH, pvdJ, pvdQ, pvdR, pvdS, pvdT, pyrE, Q9HTB8, quiP, recG, relA, rhdA, rmlC, rocA1, rocR, rpoS, rppH, sigX, sltB1, speA, speC, speE2, speH, spuA, spuB, spuD, spuE, spuI, sucC, sucD, tatA, tatC, tesA, tgpA, thiI, thrB, tpbA, tpbB, tpx, trpA, trpC, trpE, trpG, trpI, vgrG1a, vgrG1b, vgrG1c, vreI, waaC, waaF, waaL, wapR, wbpA, wbpD, wbpE, wbpI, wbpL, wbpW, wbpX, wbpY, wspR, wzx, wzz, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX, znuC]
-autolink_exclude: [III, PTS, pvdE, katA, fruB, ptsP, ampD, caiX, dgcA, argJ]
+genes: [aer, aguB, alg8, algA, algB, algC, algU, algZ, alr, ampD, ampDh2, ampDh3, ampG, ampR, arcA, arcB, arcC, arcD, argA, arr, aruC, aruG, aruH, astA, astB, atsA, atuR, azoR1, azoR2, azoR3, azu, betT1, bfd, bifA, braC, braD, braF, braG, brlR, cbrA, ccmC, ccmF, ccoP1, ccoP2, ccpA, cdhR, cheZ, cif, cifR, copR, ctpH, ctpL, ctpM, cueR, cupA3, cyaA, cyaB, cysB, cysH, dadA1, dadA2, dadX, dctP, dctQ, dgcB, dgcP, dksA, dsbB1, dsbB2, dsdA, eddB, eraR, estA, exsA, fabA, fabB, fabD, fabV, fadD1, fdnG, fdnH, fdnI, femA, femI, fimU, fiuA, fleN, fleQ, fleS, fliC, fliD, folP, foxA, foxI, foxR, fpr, fpvI, fpvR, fur, galU, gbcB, gbdR, gbuA, glmM, glmR, gltA, gmd, gntR, hemB, hfq, hom, hutF, hutH, hutI, hutU, infB, katA, kynB, lap, lasB, lasI, lhpL, ligD, liuA, liuC, liuE, lolA, lolD, lpxA, lpxC, lpxL, lysA, mcpB, mexA, mexT, mexX, mexZ, mgtE, migA, mltB1, motA, motB, motC, msrA, mucA, mucB, mucD, mucR, nalC, nalD, nbdA, ndk, nfxB, nirJ, nmoA, np20, nrdA, nrdJa, nuh, ohrR, opdP, opmQ, oprB, oprD, oprE, oprG, PA0011, PA0148, PA0149, PA0305, PA0317, PA0471, PA0472, PA0692, PA0845, PA0847, PA0906, PA0920, PA0938, PA0949, PA1014, PA1024, PA1054, PA1055, PA1056, PA1057, PA1058, PA1059, PA1107, PA1204, PA1242, PA1257, PA1340, PA1341, PA1342, PA1486, PA1566, PA1611, PA1810, PA1811, PA2050, PA2057, PA2070, PA2077, PA2078, PA2089, PA2093, PA2126, PA2127, PA2133, PA2200, PA2280, PA2412, PA2580, PA2590, PA2634, PA2870, PA2986, PA2988, PA3047, PA3170, PA3177, PA3271, PA3343, PA3345, PA3677, PA3678, PA3697, PA3760, PA3761, PA3825, PA3859, PA3891, PA3933, PA3992, PA4079, PA4088, PA4156, PA4178, PA4218, PA4332, PA4379, PA4400, PA4503, PA4504, PA4505, PA4506, PA4521, PA4596, PA4624, PA4675, PA4843, PA4896, PA4910, PA4912, PA4921, PA4975, PA5017, PA5082, PA5085, PA5089, PA5134, PA5208, PA5291, PA5359, PA5376, PA5377, PA5384, PA5455, PA5456, PA5458, PA5484, PA5498, PA5504, PA5542, parC, parE, parR, parS, pchA, pchB, pctA, pctB, pctC, pelA, pfeA, pfeE, pfeS, phnB, phr, phzC1, phzM, phzS, pilA, pilB, pilD, pilM, pilN, pilT, pilU, pirA, plcH, pldA, pmpM, pmrB, ppkA, pppA, pprA, ppx, pqsC, pqsH, prc, prpC, pscC, pslC, psrA, ptrB, ptxR, ptxS, putA, putP, pvdD, pvdH, pvdJ, pvdQ, pvdR, pvdS, pvdT, pyrE, Q9HTB8, quiP, recG, relA, rhdA, rmlC, rocA1, rocR, rpoS, rppH, sigX, sltB1, speA, speC, speE2, speH, spuA, spuB, spuD, spuE, spuI, sucC, sucD, tatA, tatB, tatC, tesA, tgpA, thiI, thrB, tpbA, tpbB, tpx, trpA, trpC, trpE, trpG, trpI, vgrG1a, vgrG1b, vgrG1c, vreI, waaC, waaF, waaL, wapR, wbpA, wbpD, wbpE, wbpI, wbpL, wbpW, wbpX, wbpY, wspR, wzx, wzz, xcpQ, xcpR, xcpS, xcpV, xcpW, xcpX, znuC]
+autolink_exclude: [III, PTS, katA, fruB, ptsP, ampD, caiX, dgcA, argJ]
 manifest:
   artifacts:
     - href: https://claude.ai/artifact/44UaWpaBByrMaZcALkgq5R
@@ -190,8 +190,11 @@ written and false by 46 when read, because the figures were copied rather than
 regenerated -- which is the same failure the tier-3 worklist counts had in this
 PR, and the reason both are now derived. GOA at EBI and CACAO have their own
 reports because the catch-all `OTHER.md` was replaced when the exporter was
-re-run; the two GOA entries are the `WRONG_GENE_PRODUCT` requests from the femA
-and femI reviews discussed above. The tier-1 counts
+re-run. The two GOA entries are not the femA repoint itself, which is a PseudoCAP
+entry: they are the two `GO_REF:0000108` rows inferred from the misplaced ones --
+`GO:2000142` on Q9I2J4 and `GO:0033214` on Q9I2J2 -- each reported at `PROBABLE`
+as a consequence to be re-derived once the repoint lands, the inference being
+sound and only its input wrong. The tier-1 counts
 quoted below are the totals as they stood at the end of tier 1 (116, 75, 5 and
 11).
 
@@ -217,8 +220,11 @@ whole-cell uptake in mutant and overexpressing strains, so IMP) and
 PMID:9224878 (its Fig. 1 is a pilA mutant twitching assay, so pilA's IMP
 stands and that defect was removed). The PseudoCAP report stood at 36
 CONFIRMED, 56 PROBABLE and 24 SUSPECTED at the end of tier 1, and the PAINT
-report at 6, 56 and 13. After tier 2 and the tree check (below) the totals are
-96, 126 and 50 for PseudoCAP and 32, 83 and 1 for PAINT.
+report at 6, 56 and 13. After tier 2 and the tree check (below) they stood at
+96, 126 and 50 for PseudoCAP and 32, 83 and 1 for PAINT, which sum to the 272 and
+116 superseded above. They now stand at 121, 131 and 55 for PseudoCAP and 38, 80
+and 2 for PAINT, summing to the current 307 and 120; counted 2026-11-26 from the
+same exporter output, so re-run it rather than editing these.
 
 ### Checked against the tree
 
