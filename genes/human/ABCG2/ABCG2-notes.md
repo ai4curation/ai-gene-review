@@ -1,0 +1,33 @@
+# ABCG2 (BCRP) curation notes
+
+## Identity and architecture
+- UniProt Q9UNQ0, HGNC:74. 655 aa. "Broad substrate specificity ATP-binding cassette transporter ABCG2"; AltNames: Breast cancer resistance protein (BCRP), Mitoxantrone resistance-associated protein (MXR), Placenta-specific ABC transporter (ABCP), Urate exporter, CD338.
+- ABCG2 is a **half transporter**: a single N-terminal nucleotide-binding domain (NBD, UniProt DOMAIN 37..286) followed by a single 6-TM transmembrane domain (DOMAIN 389..651; six TRANSMEM segments 396-651). It therefore must dimerize to form a functional transporter [PMID:15001581 "ABCG2 has been thought to be a half-transporter that may function as a homodimer"].
+- Oligomerization: minimal functional unit is a disulfide-linked homodimer; the major plasma-membrane form is a homotetramer, with higher-order oligomers [PMID:15001581 "we conclude that human ABCG2 likely exists and functions as a homotetramer"; PMID:17098188 "We interpret the tetrameric structure as comprising four homodimeric ABCG2(R482G) complexes"]. Walker A Lys-86 is required for ATP binding/hydrolysis [PMID:15769853 "known to be critical for ATP binding and/or hydrolysis in ABC transporters"].
+- Multiple cryo-EM structures (2017 onward) define the inward/outward cycle; a catalytic-glutamate mutant E211Q traps states [PMID:30405239 "In the ATP-bound state, the substrate-binding cavity has collapsed while an external cavity has opened to the extracellular side of the membrane"].
+
+## Core molecular function: ATP-driven efflux
+- Original identification from MCF-7/AdrVp multidrug-resistant breast cancer cells; confers resistance to mitoxantrone/doxorubicin/daunorubicin and drives ATP-dependent efflux [PMID:9861027 "BCRP is a xenobiotic transporter that appears to play a major role in the multidrug resistance phenotype of MCF-7/AdrVp human breast cancer cells"].
+- Broad xenobiotic/drug efflux confirmed repeatedly (NB-506/J-107088 topoisomerase-I inhibitors [PMID:11306452]; general multidrug transport inhibited by Ko143/fumitremorgin C [PMID:12477054 "reversing Bcrp1/BCRP-mediated multidrug resistance"]). Structure papers frame it as a constitutive ABC transporter protecting tissues against xenobiotics [PMID:28554189 "ABCG2 is a constitutively expressed ATP-binding cassette (ABC) transporter that protects many tissues against xenobiotic molecules"].
+
+## Physiological substrates
+- **Urate**: ABCG2 is a high-capacity urate efflux transporter located at the kidney proximal-tubule brush border, mediating renal (and intestinal) urate secretion [PMID:19506252 "native ABCG2 is located in the brush border membrane of kidney proximal tubule cells, where it mediates renal urate secretion"; PMID:36749388 "an intestinal and renal urate exporter"]. The common Q141K variant reduces transport (~53%) and causes hyperuricemia/gout; GWAS link rs2231142 to serum urate [PMID:18834626; PMID:19503597; PMID:20053405].
+- **Riboflavin (vitamin B2)**: first identified mammalian active riboflavin efflux transporter; concentrates riboflavin into milk and increases intestinal excretion [PMID:17145775 "BCRP is responsible for pumping riboflavin (vitamin B(2)) into milk"; knockout reduces milk riboflavin >60-fold]. Also exports the riboflavin-derived lumichrome (UniProt, PMID:39337371) and (by similarity) biotin.
+- **Porphyrins/heme**: exports protoporphyrin IX and heme; a mitochondrial pool exports PpIX to cytosol [PMID:23189181 "the mitochondrial ABCG2 regulates ALA-mediated PpIX level through PpIX export from mitochondria to the cytosol"].
+- **Conjugated steroids / anionic conjugates**: sulfate and glucuronide conjugates (estrone-3-sulfate, DHEA-sulfate, estradiol/estriol glucuronides, dihydrotestosterone-17-glucuronate) with measured KM/Vmax (UniProt BIOPHYSICOCHEMICAL PROPERTIES; PMID:12682043, PMID:29175180, PMID:30959153, PMID:39993711). Sphingosine-1-phosphate export (PMID:20110355). Itaconate export in inflammatory macrophages limiting TFEB-dependent lysosome biogenesis (UniProt FUNCTION; PMID:38181789).
+
+## Localization
+- Plasma membrane / apical (cell membrane; apical cell membrane) — curated UniProt SUBCELLULAR LOCATION and many experimental reports [PMID:15807535 "a 72 kDa plasma membrane protein"; PMID:15769853 "ABCG2-wt targets the cell surface"; PMID:23137377 BCRP in plasma-membrane fraction of brain microvascular endothelium]. Enriched in cholesterol-rich lipid rafts of placental microvilli [PMID:28623970].
+- Expressed at apical/luminal membranes of placenta, intestine, hepatocyte canaliculi, kidney brush border, and blood-brain barrier endothelium, where it effluxes xenobiotics [PMID:12958161 "enhanced polarized abluminal to luminal transport of various substrates tested in the in vitro BBB model"].
+- Minor mitochondrial-membrane localization reported [PMID:23189181]; retained as non-core relative to the dominant plasma-membrane pool.
+
+## Curation decisions of note
+- Three bare **GO:0005515 protein binding** (IPI) rows (PIM1/P11309-2, UBC/P0CG48, ENPP1/P22413) → REMOVE as uninformative per protein-binding policy (interactions real but not a molecular function).
+- **GO:0042802 identical protein binding** / **GO:0042803 homodimerization** → ACCEPT: ABCG2 self-association is functionally essential and well supported. PMID:16870176 (cited for two of these) is titled/abstracted about **ABCG1(666) splice variant**, not ABCG2 — flagged in reference_review as UNVERIFIED/likely wrong citation, but the ABCG2 claim is retained and supported by independent references (PMID:15001581, PMID:17098188), per the "do not overrule curators from incomplete evidence" rule.
+- Generic terms refined/flagged: GO:0016020 membrane → MODIFY to GO:0005886 plasma membrane; GO:0022857 transmembrane transporter activity, GO:0046983 protein dimerization activity, GO:0098754 detoxification → TOO_GENERAL (entailed by specific accepted terms).
+- **GO:0030148 sphingolipid biosynthetic process** (Reactome TAS) → MARK_AS_OVER_ANNOTATED: ABCG2 exports S1P but performs no biosynthetic step.
+- **GO:0160244 sulfite export across plasma membrane** (IBA) → MARK_AS_OVER_ANNOTATED: no direct evidence human ABCG2 exports inorganic sulfite (distinct from its organic sulfate/glucuronide conjugate substrates); likely over-propagation.
+- Glutathione transport: originally proposed (PMID:20332504) but subsequently disputed (PMID:24312054); UniProt CAUTION. No GSH-transport GO annotation present to review.
+
+## Disease
+- Loss-of-function variants raise serum urate → hyperuricemia and gout (UAQTL1). Null alleles define the Junior (Jr) blood group. Clinically important for drug pharmacokinetics and multidrug resistance.

@@ -1,0 +1,5 @@
+# RTL10 / Protein Bop / C22orf29 (Q7L3V2) notes
+
+Domesticated sushi-ichi/metaviral Gag capsid gene (22q11.21); uniquely in the family carries a functional BH3 motif (res 114-128; L118, D123 essential) -> pro-apoptotic BH3-only Bcl-2 family protein [PMID:23055042 "a novel human BH3-only protein (designated as Bop) which could induce apoptosis in a BH3 domain-dependent manner"]. Mitochondrial; BH3 contacts VDAC1 loops at OMM; binds pro-survival Bcl-2/BCL-XL/MCL1/A1/BCL-w and effectors BAK/BAX; induces Δψm loss and cytochrome c release; partially required for vincristine-induced death [PMID:23055042]. No mouse ortholog; protein-coding only in a subset of lineages [PMID:38507667 "RTL10, which is only retained as a protein-coding gene in primates, basal glires, and cetaceans"].
+Calls: protein binding rows -> Bcl-2 family (BAX/BAK1/BCL-XL/MCL1/BCL-w) MODIFY to protein heterodimerization activity (GO:0046982); VDAC1 and GPRASP2 REMOVE (policy). mitochondrion IBA/IDA/IEA ACCEPT; regulation of mito membrane potential IMP ACCEPT; MOMP IMP ACCEPT. NEW positive regulation of intrinsic apoptotic signaling pathway (GO:2001244).
+OpenScientist report integrated.

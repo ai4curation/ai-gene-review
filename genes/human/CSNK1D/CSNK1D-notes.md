@@ -105,3 +105,12 @@ ciliogenesis, rRNA processing, AURKA/PLK1 cascades). Cytosol is a genuine CK1δ 
 term is correct, but the long list is redundant Reactome pathway-membership inflation. Keep one
 representative as ACCEPT (core cytosolic kinase); mark the remainder ACCEPT as well since the CC term
 itself is not wrong (they differ only by reference, not by term).
+
+## 2026-11-15 ORGANELLES Golgi batch 2 (Golgi apparatus rows)
+
+- Rows: GO:0005794 IEA (GO_REF:0000044) and IDA (PMID:10826492), both located_in; both stay ACCEPT.
+- The UniProt "Golgi apparatus" location item carries no ECO tag (uncited assertion), so the IEA rests on the IDA row.
+- PMID:10826492 is abstract-only: CK1delta "specifically interacts with the trans Golgi network" in several mammalian cell types; curator deference for the markers.
+- PMID:24648492 (full text, cached): CK1delta and its AKAP450 binding site are required for microtubule nucleation at the GM130-marked Golgi and for Golgi integrity [PMID:24648492 "Our results indicate that CK1δ is required for normal AKAP450 and IFT20 localization and MT nucleation at the Golgi."]. CK1delta itself was not co-stained with a Golgi marker there.
+- Recruited soluble kinase; stays at the root. ACCEPT kept because the Golgi/AKAP450 role is a core function here; KEEP_AS_NON_CORE is the alternative.
+- No trans-Golgi network row: only one line (the 2000 abstract).

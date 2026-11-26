@@ -58,3 +58,10 @@ crystal 6JKG/6JKH with NAD). Rossmann NAD(P)-binding fold (CDD cd09813
 - MF: GO:0000252
 - BP directly_involved_in: GO:0006695 cholesterol biosynthetic process
 - CC located_in: GO:0005789 endoplasmic reticulum membrane
+
+## Revision 2026-10-09
+
+- GO:0005515 protein binding x2 (HuRI; neurodegeneration interactome) -> REMOVE (validator
+  policy for bare protein binding; interaction itself not disputed).
+- Alignment with dismech CHILD_Syndrome: molecular node uses GO:0000252 (LOSS_OF_FUNCTION)
+  and GO:0006695 (DECREASED) with hgnc:13398 -- consistent with core_functions here.

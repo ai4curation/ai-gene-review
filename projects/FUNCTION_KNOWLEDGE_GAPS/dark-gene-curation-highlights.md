@@ -3,6 +3,7 @@ title: "Dark-Gene Batch Reviews: Curation Highlights"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
 species: [worm, yeast]
+last_reviewed: 2026-10-04
 autolink_gene_symbols: false
 ---
 

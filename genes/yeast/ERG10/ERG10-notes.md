@@ -1,0 +1,33 @@
+# ERG10 (YPL028W, P41338) notes
+
+## Identity and activity
+- Acetyl-CoA C-acetyltransferase (acetoacetyl-CoA thiolase, EC 2.3.1.9); condenses 2 acetyl-CoA to acetoacetyl-CoA, step 1 of the mevalonate pathway [UniProt:P41338 "Reaction=2 acetyl-CoA = acetoacetyl-CoA + CoA; Xref=Rhea:RHEA:21036,"].
+- Gene identified in a screen for mevalonate auxotrophs; null alleles have no detectable acetoacetyl-CoA thiolase activity; essential single-copy gene [PMID:7989303 "null alleles of ERG10 produced no detectable acetoacetyl-CoA thiolase enzyme activity"], [PMID:7989303 "The essential, single-copy ERG10 gene was cloned by complementation"].
+- Active-site cysteines C91 and C384 conserved with other thiolases [PMID:7989303 "This identity included the active site cysteines located at amino acids 91 and 384 in the Erg10 protein."].
+- Biochemical characterisation of yeast thiolase forms: PMID:5571829 (abstract not cached; title only). UniProt kinetic data (Km CoA 0.16 mM) attributed to it.
+- Homotetramer [UniProt:P41338 "SUBUNIT: Homotetramer."].
+
+## Location
+- Cytosolic [UniProt:P41338 "SUBCELLULAR LOCATION: Cytoplasm, cytosol"]; cytoplasmic per Hiser et al. [PMID:7989303 "was demonstrated to encode cytoplasmic aceto-acetyl-CoA thiolase"].
+- Huh et al. GFP survey (HDA nucleus); likely nucleocytoplasmic diffuse signal of a soluble enzyme; non-core.
+- Vacuole NAS from a 2017 review (PMID:28904410); cached text has no vacuole statement for Erg10; contradicted by experimental cytosolic location.
+
+## Pathways
+- Mevalonate pathway -> ergosterol; UniProt: [UniProt:P41338 "Metabolic intermediate biosynthesis; (R)-mevalonate"].
+- Physiological direction is condensation (left-to-right) [UniProt:P41338 "PhysiologicalDirection=left-to-right; Xref=Rhea:RHEA:21037;"].
+- YeastPathways also places Erg10 in PWY-5177 (glutaryl-CoA degradation), the thiolytic cleavage of acetoacetyl-CoA. S. cerevisiae has no characterised glutaryl-CoA dehydrogenase/lysine degradation route; no yeast evidence that Erg10 functions in lysine/glutaryl-CoA catabolism. The MF is correct but the catabolic BP is a pathway-template inference.
+- Karst & Lacroute 1977 (PMID:200835) early erg mutants: abstract groups erg10 with squalene synthetase deficiency (historical allele nomenclature differs); curator IMP for ergosterol biosynthesis is consistent with the essential role of Erg10 in sterol synthesis.
+
+## Expression / phenotype
+- Induced by low sterol and by cold; deletion/disruption gives cold and freeze sensitivity [UniProt:P41338 "Leads to cold and freeze sensitivity."].
+
+## Genome-scale metabolic models (2026-11-21)
+- iMM904 constrains both Erg10 reactions to the condensation direction (ACACT1r, ACACT1m; lower bound 0). yeast-GEM 9.1.1 keeps them reversible (r_0103, r_0104) [file:gocams/YeastPathways_PWY-5177/YeastPathways_PWY-5177-bioinformatics/gem_reactions.md].
+- Both models also place an Erg10 reaction in the mitochondrion. The reviewed evidence is cytosolic [PMID:7989303 "was demonstrated to encode cytoplasmic aceto-acetyl-CoA thiolase"]. The same paper found no other acetoacetyl-CoA thiolase activity [PMID:7989303 "null alleles of ERG10 produced no detectable acetoacetyl-CoA thiolase enzyme activity"], so a mitochondrial activity, if real, would also be Erg10. Whole-cell extracts cannot resolve location: the mitochondrial reaction is unsupported, not refuted.
+- The current UniProt record carries an IBA mitochondrion line (DR GO:0005739) that is not in this gene's GOA snapshot; worth checking at the next fetch-gene.
+
+## Source defects filed (2026-11-23)
+- PWY-5177 carboxylic acid catabolic process RCA (MARK_AS_OVER_ANNOTATED): `SGD` `CHECK` (PROBABLE, `SCOPE_OVER_REACH`), matching the GO-CAM part_of CHECK on gomodel:YeastPathways_PWY-5177/ACETYL-COA-ACETYLTRANSFER-RXN.
+- Vacuole NAS from PMID:28904410 (REMOVE): `UNIPROT` `CHECK` (PROBABLE). UniProt's own subcellular location for ERG10 is cytosol. The cached review text (about 1,300 words) mentions neither Erg10 nor the vacuole, so the claim may be in a figure; filed as a query. ERG8 and MVD1 remove the same NAS but file no defect.
+- The mitochondrial Erg10 reaction in iMM904 and yeast-GEM is a model-side finding, not a GOA error. ERG10 has no mitochondrion row in this GOA snapshot.
+- (PR #6796 review) The vacuole NAS defect now names the UniProt batch from PMID:28904410: five vacuole rows dated 2022-02-18 (ERG10, ERG8, MVD1, ERG20, IDI1; checked by QuickGO reference query) plus ERG13's mitochondrion row dated 2022-07-07. The query covers the whole batch. ERG19 is the same protein as MVD1 (P32377), not a sixth row.

@@ -16,6 +16,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/VKu1DkAxygSJMd4VvmN5Mn
       title: Project brief
+index_group: BACTERIA
 ---
 
 # P. putida Gene Annotation Review Project
@@ -54,6 +55,35 @@ Systematic AI-assisted review of GO annotations for *Pseudomonas putida*, focusi
 - **Key biology:** Aromatic compound degradation, solvent tolerance, plant root colonization, polyhydroxyalkanoate (PHA) biosynthesis, rare earth element utilization
 
 ## Genome-wide expansion
+
+### Transcription factors and regulatory evidence
+
+KT2440 is the pilot for the TF project's
+[bacterial regulon evidence workstream](TRANSCRIPTION_FACTORS/bacterial-regulon-evidence.md).
+It will reconcile a whole-proteome TF candidate inventory with existing PSEPK
+reviews, then curate by regulatory system and protein family. TF identity,
+regulatory relationships, and iModulon membership remain separately sourced
+claims. The workstream links RegPrecise, CollecTF, PRODORIC, iModulonDB, genome
+annotations, and TF/effector resources without treating database agreement as
+independent evidence.
+
+- [x] Establish scope, source register, evidence boundaries, and pilot milestones.
+- [x] Audit the existing iModulon prototype and document prerequisites for reuse.
+- [x] Build the provisional TF census and [coverage report](P_PUTIDA/tf_census/data/coverage.md), retaining unresolved identities and role classifications.
+- [x] Select [20 calibration cases](P_PUTIDA/tf_census/data/calibration.tsv) and document [reproducible builds](P_PUTIDA/tf_census/README.md).
+- [x] Repair and validate all 84 PRECISE321 module imports; complete [20 scoped calibration assessments](P_PUTIDA/tf_census/calibration-review.md) and [importer checks](P_PUTIDA/tf_census/imodulon/calibration-results.md).
+- [x] Complete [carbon-utilization batch 1](P_PUTIDA/batches/tf_carbon_utilization_01.md): BenR, HexR, PtxS and CbrB, with structured target evidence and pathway-regulatory context.
+- [ ] Complete full GO reviews for the remaining 16 calibration cases.
+- [ ] Complete regulatory-system batches, followed by remaining family-based batches.
+
+The initial candidate union contains 647 proteins: 422 provisional main-TF
+candidates, 59 related regulators, 141 unresolved roles and 25 boundary cases
+excluded from the main queue by triage. Only 59 candidates have existing review
+files; file presence is not evidence of a current or validated review. The census
+joins RegPrecise and published PRECISE321 regulator identities by accession/locus,
+with source provenance and explicit alias conflicts.
+
+### Pathway coverage
 
 The next phase expands the project from selected genes to a pathway-by-pathway
 review of the KT2440 reference proteome. The working pattern is manual pathway
@@ -390,6 +420,8 @@ or are differently named / fused in *Pseudomonas* (trpG, pheC, tyrA).
 - [x] Open the first module/pathway PR for `ppu00400` / `tryptophan_biosynthesis`: [PR #1874](https://github.com/ai4curation/ai-gene-review/pull/1874).
 - [x] Curate the `ppu00470` D-amino-acid cell-wall precursor-supply boundary,
   preserving the unresolved cytoplasmic D-alanine source as a real hole.
+- [ ] Publish the focused five-part `bacterial_aspartate_to_threonine_biosynthesis`
+  batch with eight reviewed PSEPK pathway/paralog candidates.
 - [ ] For each later module batch, full `fetch-gene` only the genes selected by module review.
 - [ ] Track module satisfiability gaps, over-annotations, missing GO terms, and candidate new module documents.
 - [x] Curate the PP_2842-PP_2849 UreA-G urease biogenesis and urea-hydrolysis batch as a separate three-stage module.
@@ -422,6 +454,19 @@ tested conditions. Q88CB2 DadX is cytoplasmic and alanine-specific, but its
 direct contribution to cell-wall D-alanine has not been tested. The batch
 therefore records DadX as `candidate_uncertain` and does not force either
 racemase into the species-specific module assignment.
+
+Started the focused bacterial aspartate-to-threonine batch from current
+`origin/main`. The new boundary contains five ordered reactions: two shared
+aspartate-family trunk reactions, homoserine formation shared with methionine,
+and the ThrB/ThrC threonine-specific pair. Exact PSEPK representatives are
+Q88EI9, Q88LE4, Q88MU8, Q88RK8, and Q88MU7. Q88LE2, Q88Q34, and Q88Q36 are
+reviewed as paralog candidates without assuming equivalent in-vivo flux.
+
+OpenScientist jobs were started for all eight genes, the reusable module, and
+the module + ppu00260 + PSEPK satisfiability question with the full 8100/7200
+allowances. The annotation-reviewer was consulted explicitly. Historical
+commit `86cf4fd8e9` was inspected read-only; no giant cherry-pick or old broad
+module restoration was used.
 
 ## 2026-07-05
 

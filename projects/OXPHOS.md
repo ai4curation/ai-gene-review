@@ -3,7 +3,7 @@ title: "Oxidative Phosphorylation (OXPHOS) Project"
 maturity: MATURE
 tags: [BIOLOGY_DOMAIN]
 species: [human]
-genes: [NDUFS1, NDUFV1, NDUFS2, NDUFS4, ACAD9, SDHA, SDHB, SDHC, SDHD, SDHAF2, CYC1, UQCRFS1, UQCRC1, BCS1L, COX4I1, COX4I2, COX5B, COX6A1, COX6B1, NDUFA4, SURF1, SCO1, SCO2, COX10, COX15, LRPPRC, ATP5F1A, ATP5F1B, ATP5MC1, ATP5MC2, ATP5MC3, ATP5IF1, TMEM70, CYCS, COQ8A, ETFDH]
+genes: [NDUFS1, NDUFV1, NDUFS2, NDUFS4, ACAD9, SDHA, SDHB, SDHC, SDHD, SDHAF2, CYC1, UQCRFS1, UQCRC1, BCS1L, COX4I1, COX4I2, COX5B, COX6A1, COX6B1, COXFA4, SURF1, SCO1, SCO2, COX10, COX15, LRPPRC, ATP5F1A, ATP5F1B, ATP5MC1, ATP5MC2, ATP5MC3, ATP5IF1, TMEM70, CYCS, COQ8A, ETFDH]
 manifest:
   slides:
     - href: OXPHOS/slides/OXPHOS-slides.html
@@ -169,7 +169,7 @@ Terminal oxidase. 14 subunits. Transfers electrons from cytochrome c to O2, pump
 | COX4I2 | Q96KJ9 | Regulatory | **Reviewed 2026-05-18**; hypoxia/lung isoform |
 | COX6A1 | P12074 | Liver isoform | **Reviewed 2026-05-18**; tissue-specific |
 | COX6B1 | P14854 | Stabilizes holoenzyme | **Reviewed 2026-05-18** |
-| NDUFA4 | O00483 | Confirmed CIV subunit | **Already reviewed**; reclassified from CI |
+| COXFA4 | O00483 | Confirmed CIV subunit (formerly NDUFA4) | **Already reviewed**; reclassified from CI |
 
 ### Key assembly factors (Priority 1-2)
 | Gene | UniProt | Function | Notes |
@@ -264,7 +264,7 @@ mtDNA-encoded genes have limited GO annotations and are lower priority.
 13. SDHD -- membrane anchor, tumor suppressor
 14. UQCRC1 -- Complex III core protein
 15. COX4I1 -- regulatory subunit
-16. NDUFA4 -- reclassified CI->CIV
+16. COXFA4 (formerly NDUFA4) -- reclassified CI->CIV
 17. BCS1L -- GRACILE syndrome
 18. SCO2 -- copper delivery
 19. ACAD9 -- dual function (CI assembly + FAD)
@@ -288,7 +288,7 @@ mtDNA-encoded genes have limited GO annotations and are lower priority.
 - [x] TMEM70 -- already reviewed
 - [x] LRPPRC -- already reviewed
 - [x] COX4I1 -- already reviewed
-- [x] NDUFA4 -- already reviewed
+- [x] COXFA4 -- already reviewed
 - [x] SCO2 -- already reviewed
 - [x] SDHA -- reviewed 2026-02-11 (56 annotations, core_functions with contributes_to)
 - [x] SDHB -- reviewed 2026-02-11 (49 annotations, tumor suppressor role documented)

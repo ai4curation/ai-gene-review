@@ -1,0 +1,188 @@
+"""Read-only verification of reviewed inputs, quoted sources, seed rows and identity."""
+import argparse
+import gzip
+import hashlib
+import io
+import json
+import subprocess
+from pathlib import Path
+
+import yaml
+from Bio import SeqIO
+
+from ai_gene_review.validation.local_source_text import quote_matches, resolve_local_source
+from ai_gene_review.validation.supporting_text import build_supporting_text_validator
+
+HERE = Path(__file__).resolve().parent
+ROOT = HERE.parents[3]
+AUDIT = HERE.parent
+
+
+def sha(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def norm(text):
+    return ' '.join(text.split())
+
+
+def quotes(value, reference=None):
+    if isinstance(value, dict):
+        own = value.get('id', '')
+        if own.startswith(('PMID:', 'file:')):
+            reference = own
+        ref = value.get('reference_id') or value.get('source_id') or reference
+        if value.get('supporting_text'):
+            yield ref, value['supporting_text']
+        for key, child in value.items():
+            if key != 'supporting_text':
+                yield from quotes(child, ref)
+    elif isinstance(value, list):
+        for child in value:
+            yield from quotes(child, reference)
+
+
+def main(draft=False):
+    inputs, manifests, protected, previous_histories = {}, {}, {}, {}
+
+    def add(path, expected=None):
+        path = Path(path)
+        full = path if path.is_absolute() else ROOT / path
+        relative = str(full.relative_to(ROOT))
+        actual = sha(full)
+        assert expected is None or actual == expected, (relative, 'hash mismatch')
+        if relative in inputs:
+            assert inputs[relative] == actual
+        inputs[relative] = actual
+        return actual
+
+    for name in ['ecoli', 'psepk', 'neisseria', 'accessory', 'literature', 'family']:
+        path = AUDIT / f'{name}-consultation/handoff.json'
+        if not path.exists() and name == 'family' and draft:
+            continue
+        handoff = json.loads(path.read_text())
+        manifests[str(path.relative_to(ROOT))] = add(path)
+        files = handoff.get('files', handoff.get('files_sha256'))
+        assert isinstance(files, dict)
+        for relative, expected in files.items():
+            add(relative, expected)
+    reviews = {}
+    for name in ['baseline.json', 'additional-seed-baseline.json', 'accessory-seed-baseline.json']:
+        path = AUDIT / name
+        add(path)
+        baseline = json.loads(path.read_text())
+        reviews.update(baseline.get('reviews', baseline.get('genes')))
+        for relative, expected in baseline.get('protected_files_sha256', baseline.get('protected_sources', {})).items():
+            protected[relative] = add(relative, expected)
+    assert len(reviews) == 19
+    rows, historical_new, active_new = 0, 0, 0
+    quoted, source_paths = [], set()
+    validator, _ = build_supporting_text_validator(ROOT / 'publications')
+    documents = {}
+    for name, before in reviews.items():
+        add(name)
+        doc = yaml.safe_load((ROOT / name).read_text())
+        assert doc['status'] == 'COMPLETE'
+        old = before['document']
+        assert (doc['id'], doc['taxon']) == (old['id'], old['taxon'])
+        assert len(doc['existing_annotations']) == len(old['existing_annotations']), name
+        for index, (a, b) in enumerate(zip(old['existing_annotations'], doc['existing_annotations'], strict=True)):
+            assert {k: v for k, v in a.items() if k != 'review'} == {k: v for k, v in b.items() if k != 'review'}, (name, index)
+            if a.get('review', {}).get('action') == 'NEW':
+                assert b['review']['action'] == 'NEW'
+                historical_new += 1
+                active_new += not b.get('retired', False)
+            else:
+                assert b['review']['action'] != 'NEW', (name, index, 'unexpected new proposal')
+            rows += 1
+        documents[name] = doc
+    assert (rows, historical_new, active_new) == (214, 6, 6)
+    module = ROOT / 'modules/bacterial_lps_transport.yaml'
+    add(module)
+    documents[str(module.relative_to(ROOT))] = yaml.safe_load(module.read_text())
+    for name, doc in documents.items():
+        for reference, text in set(quotes(doc)):
+            assert reference, (name, text)
+            if reference.startswith('file:'):
+                source = resolve_local_source(reference, ROOT)
+                assert source and quote_matches(text, source), (name, reference, text)
+            elif reference.startswith('PMID:'):
+                result = validator.validate(text, reference)
+                assert result.is_valid and not result.skipped, (name, reference, result.message)
+                source = ROOT / 'publications' / (reference.replace(':', '_') + '.md')
+            else:
+                raise AssertionError(('uninspected source kind', name, reference))
+            add(source)
+            source_paths.add(str(source.relative_to(ROOT)))
+            quoted.append({'document': name, 'reference': reference, 'supporting_text': text,
+                           'source': str(source.relative_to(ROOT)), 'source_sha256': sha(source)})
+    ledger_path = AUDIT / 'literature-consultation/ledger.yaml'
+    ledger = yaml.safe_load(ledger_path.read_text())
+    for ref in ledger['references']:
+        access = ref['access']
+        add(access['publication_cache'])
+        add(access['consulted_text'], access['consulted_text_sha256'])
+        assert norm(ref['checked_quote']) in norm((ROOT / access['consulted_text']).read_text()), ref['id']
+    identity_dir = AUDIT / 'literature-consultation/identity'
+    identity = json.loads((identity_dir / 'results.json').read_text())
+    archive = ROOT / '.cache/module-audit-logs/lps-20261107/literature-consultation/AEQZ01.dat.gz'
+    add(archive, identity['source']['sha256'])
+    cds = []
+    for rec in SeqIO.parse(io.StringIO(gzip.decompress(archive.read_bytes()).decode()), 'embl'):
+        for feature in rec.features:
+            if feature.type == 'CDS' and 'translation' in feature.qualifiers:
+                cds.append((rec.id, feature.qualifiers))
+    assert len(cds) == 2423
+    for bridge in identity['bridges']:
+        source = identity_dir / (bridge['uniprot'] + '.json')
+        add(source)
+        target = json.loads(source.read_text())
+        sequence = target['sequence']['value']
+        assert hashlib.sha256(sequence.encode()).hexdigest() == bridge['sequence_sha256']
+        hits = [(contig, q) for contig, q in cds if q['translation'][0] == sequence]
+        assert len(hits) == 1
+        contig, q = hits[0]
+        assert contig == bridge['H44_contig']
+        assert q['locus_tag'] == [bridge['H44_locus']]
+        assert q['protein_id'] == [bridge['H44_protein']]
+        assert target['organism']['taxonId'] == bridge['target_taxon']
+    tree_path = AUDIT / 'family-consultation/tree-snapshot.json'
+    add(tree_path)
+    trees = json.loads(tree_path.read_text())
+    family_controls = {'Q9RS08': 'PTHR36504:SF1', 'Q9RSJ0': 'PTHR45772:SF10',
+                       'Q9RVF4': 'PTHR33529:SF2', 'Q9X257': 'PTHR30189:SF1'}
+    for accession, subfamily in family_controls.items():
+        tree = trees[subfamily.split(':')[0]]
+        add(tree['source'], tree['sha256'])
+        assert any(leaf['uniprot'] == accession and leaf['subfamily'] == subfamily
+                   for leaf in tree['leaves'].values()), accession
+    original = json.loads((AUDIT / 'baseline.json').read_text())
+    history_dirs = [f'history/genes/{Path(p).parts[1]}/{Path(p).parts[2]}' for p in reviews]
+    paths = subprocess.check_output(['git', 'ls-tree', '-r', '--name-only', original['head'], '--', *history_dirs], cwd=ROOT, text=True).splitlines()
+    for path in paths:
+        historic = subprocess.check_output(['git', 'show', f'{original["head"]}:{path}'], cwd=ROOT)
+        previous_histories[path] = add(path, hashlib.sha256(historic).hexdigest())
+    for code in ['src/ai_gene_review/module_logic.py', 'src/ai_gene_review/module_gene_symbols.py',
+                 'src/ai_gene_review/module_qc.py', 'src/ai_gene_review/render_modules.py',
+                 'src/ai_gene_review/validation/local_source_text.py',
+                 'src/ai_gene_review/validation/supporting_text.py']:
+        add(code)
+    result = {'status': 'DRAFT_PASS' if draft else 'PASS', 'review_count': len(reviews),
+              'ordered_source_rows': rows, 'historical_NEW': historical_new, 'active_NEW': active_new,
+              'retired_NEW': 0, 'added_rows': 0, 'protected_seed_sources': len(protected),
+              'previous_histories_verified': len(previous_histories),
+              'quote_count': len(quoted), 'quote_source_count': len(source_paths),
+              'literature_quotes_checked': len(ledger['references']),
+              'identity_bridges_reverified': identity['bridges'], 'family_boundary_controls': family_controls,
+              'manifest_count': len(manifests), 'manifests_sha256': manifests,
+              'module_sha256': sha(module), 'inputs_sha256': dict(sorted(inputs.items())),
+              'protected_sources_sha256': protected, 'previous_histories_sha256': previous_histories}
+    (HERE / 'closure.json').write_text(json.dumps(result, indent=2) + '\n')
+    (HERE / 'quotes.json').write_text(json.dumps(quoted, indent=2, ensure_ascii=False) + '\n')
+    print(json.dumps({k: result[k] for k in ['status', 'review_count', 'ordered_source_rows', 'historical_NEW', 'protected_seed_sources', 'previous_histories_verified', 'quote_count', 'manifest_count']}))
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--draft', action='store_true', help='Permit a pending family handoff; cannot freeze.')
+    main(parser.parse_args().draft)

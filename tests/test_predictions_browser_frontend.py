@@ -7,6 +7,8 @@ from urllib.parse import parse_qs, unquote, urlsplit
 import pytest
 from playwright.sync_api import expect, sync_playwright
 
+from ai_gene_review.tools.build_prediction_browser import encode_prediction_data_js
+
 pytestmark = pytest.mark.integration
 BROWSER = Path(__file__).parents[1] / "src/ai_gene_review/browser"
 
@@ -58,7 +60,7 @@ def prediction_page(tmp_path: Path) -> str:
          "term_type": "GO_MF", "assessment": "CNN", "review_score": 2, "error_type": "",
          "evidence": "Direct assay", "set_link": "?dataset=sets&set_id=current"},
     ]
-    (tmp_path / "data.js").write_text("window.predictionData=" + json.dumps({"sets": sets, "claims": claims, "metadata": {}}) + ";")
+    (tmp_path / "data.js").write_text(encode_prediction_data_js({"sets": sets, "claims": claims, "overlap": [], "metadata": {}}))
     (tmp_path / "index.html").write_text((BROWSER / "index.html").read_text())
     schema = BROWSER / "predictions_schema.js"
     (tmp_path / "schema.js").write_text(schema.read_text() if schema.exists() else "")
@@ -204,7 +206,7 @@ def test_generic_browser_keeps_url_behavior_opt_in(page, tmp_path: Path):
 def test_empty_claim_dataset_is_a_valid_browser_view(page, tmp_path: Path):
     """A valid empty claim list is not a loading or format error."""
     (tmp_path / "index.html").write_text((BROWSER / "index.html").read_text())
-    (tmp_path / "data.js").write_text('window.predictionData={sets:[],claims:[],metadata:{}};')
+    (tmp_path / "data.js").write_text(encode_prediction_data_js({"sets": [], "claims": [], "overlap": [], "metadata": {}}))
     (tmp_path / "schema.js").write_text((BROWSER / "predictions_schema.js").read_text())
     page.goto((tmp_path / "index.html").as_uri() + "?dataset=claims")
     expect(page.locator("#resultsCount")).to_have_text("Showing 0 of 0 claims")
@@ -215,7 +217,8 @@ def test_empty_claim_dataset_is_a_valid_browser_view(page, tmp_path: Path):
 def test_claim_table_distinguishes_seeded_and_reviewed_unc(page, prediction_page):
     """An identical UNC value must not hide whether its claim has been reviewed."""
     data_path = Path(unquote(urlsplit(prediction_page).path)).with_name("data.js")
-    data = json.loads(data_path.read_text().partition("=")[2].removesuffix(";"))
+    page.goto(prediction_page)
+    data = page.evaluate("window.predictionData")
     claim = data["claims"][0]
     data["claims"] = [
         {**claim, "claim_id": "awaiting-1", "assessment": "UNC", "review_score": 1,
@@ -223,7 +226,7 @@ def test_claim_table_distinguishes_seeded_and_reviewed_unc(page, prediction_page
         {**claim, "claim_id": "reviewed-1", "assessment": "UNC", "review_score": 1,
          "review_state": "Reviewed"},
     ]
-    data_path.write_text("window.predictionData=" + json.dumps(data) + ";")
+    data_path.write_text(encode_prediction_data_js(data))
     page.goto(prediction_page + "?dataset=claims")
     rows = page.locator(".results-table tbody tr")
     expect(rows).to_have_count(2)
@@ -254,7 +257,7 @@ def test_gogpt_overlap_view_is_dated_and_filters_by_reference_layer(page, tmp_pa
     payload = {"sets": [], "claims": [], "overlap": overlap,
                "metadata": {"overlap_snapshot_date": "2026-01-02", "overlap_row_defaults": defaults}}
     (tmp_path / "index.html").write_text((BROWSER / "index.html").read_text())
-    (tmp_path / "data.js").write_text("window.predictionData=" + json.dumps(payload) + ";")
+    (tmp_path / "data.js").write_text(encode_prediction_data_js(payload))
     (tmp_path / "schema.js").write_text((BROWSER / "predictions_schema.js").read_text())
     page.goto((tmp_path / "index.html").as_uri() + "?dataset=overlap&in_goa=true")
     expect(page.locator("#datasetTabs")).to_contain_text("GO-GPT overlap (as of 2026-01-02) (3)")

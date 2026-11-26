@@ -142,3 +142,49 @@ neural VLC-PUFA) being physiologically essential.
   structural similarity; VLCFA elongation machinery composition. (abstract only)
 </content>
 </invoke>
+
+
+## 2026-10-21 source-specific reassessment
+
+The entries above are preserved as the historical journal. This reassessment supersedes their blanket rejection of rat physiology and generic interactions, their unqualified MUFA/oligomer claims, their attribution of a shared truncation mechanism to STGD3 and SCA34, and their earlier access/cache status. The current source guide and reviewed YAML state the effective conclusions.
+
+# ELOVL4 evidence notes
+
+The reviewed activity is the ER-membrane condensing step of fatty-acid elongation. Human membrane assays support saturated C24:0/C26:0 elongation-associated output; mouse conditional-loss experiments establish a contribution to retinal polyunsaturated lipid products. These are complementary experiments and do not constitute a purified human substrate-spectrum measurement. Neither other elongation-cycle reactions nor partner functions are transferred to ELOVL4.
+
+The 37 inherited source dictionaries remain exact and collectively cover all 128 current raw and normal contexts. A normal reseeding operation would backfill support fields and create partner-specific rows, but these mechanical output differences were archived rather than silently replacing the inherited boundary. Current support-set changes on rows 8 and 11 and all 92 HuRI partners remain visible in the portable proof. No lifecycle retirement or NEW annotation is proposed.
+
+The final source decisions are 19 ACCEPT, 7 MODIFY, 5 KEEP_AS_NON_CORE, 4 UNDECIDED and 2 REMOVE. The two removals concern the unsupported photoreceptor GPCR/light-detection premise, not a denial of retinal function; source-defect CHECK queries preserve the actual resource, original source and unknown cause. Generic HuRI and CERS2 interactions remain non-core positive evidence. The TECR source remains unresolved because its operative ELOVL4-specific evidence was not recovered.
+
+Three rat-derived physiological annotations require a distinction between observation and the product's normal function. Rhythmic Elovl4 transcript expression does not alone establish participation in the timed process. W246G is a selective disease allele, not a clean null; its opposing excitatory and inhibitory synaptic changes do not fix the normal human protein's signed regulatory effect. Short-term synaptic plasticity remains a supported contextual role. The precise rat assay and access limits are in the source guide.
+
+The 314-aa official natural product is retained. The older disease description conflated C-terminal truncating STGD3 variants with SCA34; their experimental mechanisms are kept distinct. Tagged recombinant constructs, truncations and detergent-associated complexes do not establish additional natural products, a fixed oligomeric stoichiometry or functional equivalence to the current reference insert.
+
+All 32 inherited quotation occurrences are retained exactly. The seven reference-level occurrences remain in place; the three inherited core support objects map explicitly into the independently synthesized integrated core. No new publication quotation is authored. Historical narrow UniProt fragments are preserved as inherited excerpts, with the documented record-format/whitespace normalization audit; they are not expanded into invented text.
+
+Normal caches are immutable. The four-source bibliography gate reuses PMID 20166112 exactly and adds genuine normal caches for 24736612, 32780351 and 37491316. The last remains abstract-only in the normal cache even though genuine PMC main text was separately read. PMID 20166112's body was not read: its use is limited to the verified ELOVL1 donor-record provenance. Genuine provider failures are documented in the private bootstrap; no provider report was fabricated. Article bodies and credential-bearing provider logs are excluded from the public reproducibility package.
+
+The reproducibility directory exposes its code and results directly. Its archive contains only fixed inputs, including database records and source reconciliation data. The offline code checks the complete target path, exact sequence, interaction joins, rule premises and typed term relations; it does not pretend to reproduce biological judgment or unavailable experiments.
+
+
+## Cache-state access flags
+
+The optional `full_text_unavailable` flags follow the normal-cache convention for PMIDs 11138005, 16036915, 20937905, 37491316 and 38422897. The first four have separately recovered original material with the precise read scopes recorded above; their flags do not negate that access. Only 38422897 still lacks operative ELOVL4-specific evidence. No normal publication cache was edited to reconcile these distinct states.
+
+
+## ELOVL4 follow-up evidence clarification
+
+The 37 decisions remain 19 ACCEPT, 7 MODIFY, 5 KEEP_AS_NON_CORE, 4 UNDECIDED and 2 REMOVE. Supported HuRI and CERS2 associations remain non-core under the campaign binding policy; neither an unsupported specific function nor a false interaction is inferred from the generic term. The two generic-binding validator advisories are disclosed.
+
+The circadian UNDECIDED decision records scientific uncertainty despite complete original access: rhythmic rat transcript abundance is positive evidence, but the normal protein's contribution to a recurring process and its transfer to human remain unresolved. The W246G sign question records the apparent tension between the two signed terms and the measured miniature-current changes; this selective missense allele is not treated as a null, and no source defect or reversed annotation is asserted.
+
+The seven IBA reviews now link directly, without quotations, to the visible PAINT results. The single condensation core uses the already accepted saturated and polyunsaturated elongation branches in place of their broad elongation ancestor, alongside the nonredundant very-long-chain biosynthesis term. The chemistry, ER membrane location and all core supports remain unchanged.
+
+All 32 inherited quotation values and their published paths remain exact. The family-level lead excerpt is retained as context, not relabeled as an ELOVL4-specific experimental result; the source-scoped human membrane and mouse conditional-loss evidence is identified in the source guide and reference-only supports. The normal caches remain exact. Original text recovered outside the caches is still external to the repository; Figure 1 pixels were inspected for PMID 20937905, whereas its S2/S8 observations are main-text reports with inaccessible supplementary panels. Formatting of the three visible Python modules changes no algorithm, inputs or output hashes; the input-only archive is unchanged.
+
+
+## 2026-10-23 remaining feedback
+
+All decisions remain 19 ACCEPT, 7 MODIFY, 5 KEEP_AS_NON_CORE, 4 UNDECIDED and 2 REMOVE. GO:1990926 remains non-core because the rat study directly measures the appropriate short-term facilitation phenotype. Its regulatory ancestry does not require ELOVL4 itself to release transmitter. The revised reason distinguishes this measured phenotype from the proposed lipid-mediated mechanism, selective W246G allele and human orthology transfer. Original Methods, Figure 3A–E Results, Discussion and current ontology locators are in the source guide; the lack of lipid rescue in these rats limits mechanism rather than contradicting the phenotype.
+
+The existing source guide is now cited by the affected support lists (source indices 18, 19, 23 and 29). Supported HuRI and CERS2 binding remains non-core under campaign policy, and unverified TECR binding remains unresolved. No imported source field, natural-product boundary, core function, cache flag, normal cache or inherited quotation changes.
