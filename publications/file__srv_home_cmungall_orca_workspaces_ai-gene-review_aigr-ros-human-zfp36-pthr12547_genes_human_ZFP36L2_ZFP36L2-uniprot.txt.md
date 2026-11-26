@@ -1,0 +1,521 @@
+---
+reference_id: file:/srv/home/cmungall/orca/workspaces/ai-gene-review/aigr-ros-human-zfp36-pthr12547/genes/human/ZFP36L2/ZFP36L2-uniprot.txt
+extractor_version: 1
+title: ZFP36L2-uniprot.txt
+content_type: local_file
+---
+
+# ZFP36L2-uniprot.txt
+
+## Content
+
+ID   TISD_HUMAN              Reviewed;         494 AA.
+AC   P47974; Q53TB4; Q9BSJ3;
+DT   01-OCT-1996, integrated into UniProtKB/Swiss-Prot.
+DT   01-MAY-2007, sequence version 3.
+DT   04-NOV-2026, entry version 213.
+DE   RecName: Full=mRNA decay activator protein ZFP36L2 {ECO:0000305};
+DE   AltName: Full=Butyrate response factor 2 {ECO:0000303|PubMed:10367403};
+DE   AltName: Full=EGF-response factor 2 {ECO:0000303|PubMed:7835719};
+DE            Short=ERF-2 {ECO:0000303|PubMed:7835719};
+DE   AltName: Full=TPA-induced sequence 11d {ECO:0000303|PubMed:7835719};
+DE   AltName: Full=Zinc finger protein 36, C3H1 type-like 2 {ECO:0000312|HGNC:HGNC:1108};
+DE            Short=ZFP36-like 2 {ECO:0000312|HGNC:HGNC:1108};
+GN   Name=ZFP36L2 {ECO:0000312|HGNC:HGNC:1108};
+GN   Synonyms=ERF2 {ECO:0000303|PubMed:7835719}, RNF162C, TIS11D
+GN   {ECO:0000303|PubMed:7835719};
+OS   Homo sapiens (Human).
+OC   Eukaryota; Metazoa; Chordata; Craniata; Vertebrata; Euteleostomi; Mammalia;
+OC   Eutheria; Euarchontoglires; Primates; Haplorrhini; Catarrhini; Hominidae;
+OC   Homo.
+OX   NCBI_TaxID=9606;
+RN   [1]
+RP   NUCLEOTIDE SEQUENCE [GENOMIC DNA].
+RX   PubMed=8545129;
+RA   Ino T., Yasui H., Hirano M., Kurosawa Y.;
+RT   "Identification of a member of the TIS11 early response gene family at the
+RT   insertion point of a DNA fragment containing a gene for the T-cell receptor
+RT   beta chain in an acute T-cell leukemia.";
+RL   Oncogene 11:2705-2710(1995).
+RN   [2]
+RP   NUCLEOTIDE SEQUENCE [MRNA].
+RX   PubMed=7835719; DOI=10.1016/0378-1119(94)00696-p;
+RA   Nie X.F., Maclean K.N., Kumar V., McKay I.A., Bustin S.A.;
+RT   "ERF-2, the human homologue of the murine Tis11d early response gene.";
+RL   Gene 152:285-286(1995).
+RN   [3]
+RP   NUCLEOTIDE SEQUENCE [LARGE SCALE GENOMIC DNA].
+RX   PubMed=15815621; DOI=10.1038/nature03466;
+RA   Hillier L.W., Graves T.A., Fulton R.S., Fulton L.A., Pepin K.H., Minx P.,
+RA   Wagner-McPherson C., Layman D., Wylie K., Sekhon M., Becker M.C.,
+RA   Fewell G.A., Delehaunty K.D., Miner T.L., Nash W.E., Kremitzki C., Oddy L.,
+RA   Du H., Sun H., Bradshaw-Cordum H., Ali J., Carter J., Cordes M., Harris A.,
+RA   Isak A., van Brunt A., Nguyen C., Du F., Courtney L., Kalicki J.,
+RA   Ozersky P., Abbott S., Armstrong J., Belter E.A., Caruso L., Cedroni M.,
+RA   Cotton M., Davidson T., Desai A., Elliott G., Erb T., Fronick C., Gaige T.,
+RA   Haakenson W., Haglund K., Holmes A., Harkins R., Kim K., Kruchowski S.S.,
+RA   Strong C.M., Grewal N., Goyea E., Hou S., Levy A., Martinka S., Mead K.,
+RA   McLellan M.D., Meyer R., Randall-Maher J., Tomlinson C.,
+RA   Dauphin-Kohlberg S., Kozlowicz-Reilly A., Shah N., Swearengen-Shahid S.,
+RA   Snider J., Strong J.T., Thompson J., Yoakum M., Leonard S., Pearman C.,
+RA   Trani L., Radionenko M., Waligorski J.E., Wang C., Rock S.M.,
+RA   Tin-Wollam A.-M., Maupin R., Latreille P., Wendl M.C., Yang S.-P., Pohl C.,
+RA   Wallis J.W., Spieth J., Bieri T.A., Berkowicz N., Nelson J.O., Osborne J.,
+RA   Ding L., Meyer R., Sabo A., Shotland Y., Sinha P., Wohldmann P.E.,
+RA   Cook L.L., Hickenbotham M.T., Eldred J., Williams D., Jones T.A., She X.,
+RA   Ciccarelli F.D., Izaurralde E., Taylor J., Schmutz J., Myers R.M.,
+RA   Cox D.R., Huang X., McPherson J.D., Mardis E.R., Clifton S.W., Warren W.C.,
+RA   Chinwalla A.T., Eddy S.R., Marra M.A., Ovcharenko I., Furey T.S.,
+RA   Miller W., Eichler E.E., Bork P., Suyama M., Torrents D., Waterston R.H.,
+RA   Wilson R.K.;
+RT   "Generation and annotation of the DNA sequences of human chromosomes 2 and
+RT   4.";
+RL   Nature 434:724-731(2005).
+RN   [4]
+RP   NUCLEOTIDE SEQUENCE [LARGE SCALE GENOMIC DNA].
+RA   Mural R.J., Istrail S., Sutton G.G., Florea L., Halpern A.L., Mobarry C.M.,
+RA   Lippert R., Walenz B., Shatkay H., Dew I., Miller J.R., Flanigan M.J.,
+RA   Edwards N.J., Bolanos R., Fasulo D., Halldorsson B.V., Hannenhalli S.,
+RA   Turner R., Yooseph S., Lu F., Nusskern D.R., Shue B.C., Zheng X.H.,
+RA   Zhong F., Delcher A.L., Huson D.H., Kravitz S.A., Mouchard L., Reinert K.,
+RA   Remington K.A., Clark A.G., Waterman M.S., Eichler E.E., Adams M.D.,
+RA   Hunkapiller M.W., Myers E.W., Venter J.C.;
+RL   Submitted (JUL-2005) to the EMBL/GenBank/DDBJ databases.
+RN   [5]
+RP   NUCLEOTIDE SEQUENCE [LARGE SCALE MRNA].
+RC   TISSUE=Pancreas;
+RX   PubMed=15489334; DOI=10.1101/gr.2596504;
+RG   The MGC Project Team;
+RT   "The status, quality, and expansion of the NIH full-length cDNA project:
+RT   the Mammalian Gene Collection (MGC).";
+RL   Genome Res. 14:2121-2127(2004).
+RN   [6]
+RP   INDUCTION.
+RX   PubMed=10367403;
+RA   Maclean K.N., McKay I.A., Bustin S.A.;
+RT   "Differential effects of sodium butyrate on the transcription of the human
+RT   TIS11 family of early-response genes in colorectal cancer cells.";
+RL   Br. J. Biomed. Sci. 55:184-191(1998).
+RN   [7]
+RP   PHOSPHORYLATION [LARGE SCALE ANALYSIS] AT SER-57, AND IDENTIFICATION BY
+RP   MASS SPECTROMETRY [LARGE SCALE ANALYSIS].
+RC   TISSUE=Cervix carcinoma;
+RX   PubMed=18669648; DOI=10.1073/pnas.0805139105;
+RA   Dephoure N., Zhou C., Villen J., Beausoleil S.A., Bakalarski C.E.,
+RA   Elledge S.J., Gygi S.P.;
+RT   "A quantitative atlas of mitotic phosphorylation.";
+RL   Proc. Natl. Acad. Sci. U.S.A. 105:10762-10767(2008).
+RN   [8]
+RP   INDUCTION.
+RX   PubMed=20166898; DOI=10.3109/08977190903578660;
+RA   Hacker C., Valchanova R., Adams S., Munz B.;
+RT   "ZFP36L1 is regulated by growth factors and cytokines in keratinocytes and
+RT   influences their VEGF production.";
+RL   Growth Factors 28:178-190(2010).
+RN   [9]
+RP   RNA-BINDING, AND MUTAGENESIS OF GLU-157 AND GLU-195.
+RX   PubMed=20506496; DOI=10.1002/pro.401;
+RA   Morgan B.R., Massi F.;
+RT   "A computational study of RNA binding and specificity in the tandem zinc
+RT   finger domain of TIS11d.";
+RL   Protein Sci. 19:1222-1234(2010).
+RN   [10]
+RP   IDENTIFICATION BY MASS SPECTROMETRY [LARGE SCALE ANALYSIS].
+RC   TISSUE=Cervix carcinoma;
+RX   PubMed=20068231; DOI=10.1126/scisignal.2000475;
+RA   Olsen J.V., Vermeulen M., Santamaria A., Kumar C., Miller M.L.,
+RA   Jensen L.J., Gnad F., Cox J., Jensen T.S., Nigg E.A., Brunak S., Mann M.;
+RT   "Quantitative phosphoproteomics reveals widespread full phosphorylation
+RT   site occupancy during mitosis.";
+RL   Sci. Signal. 3:RA3-RA3(2010).
+RN   [11]
+RP   POSSIBLE INVOLVEMENT IN LEUKEMIAS.
+RX   PubMed=21109922; DOI=10.3892/ijo_00000820;
+RA   Iwanaga E., Nanri T., Mitsuya H., Asou N.;
+RT   "Mutation in the RNA binding protein TIS11D/ZFP36L2 is associated with the
+RT   pathogenesis of acute leukemia.";
+RL   Int. J. Oncol. 38:25-31(2011).
+RN   [12]
+RP   PHOSPHORYLATION [LARGE SCALE ANALYSIS] AT SER-125, AND IDENTIFICATION BY
+RP   MASS SPECTROMETRY [LARGE SCALE ANALYSIS].
+RX   PubMed=21406692; DOI=10.1126/scisignal.2001570;
+RA   Rigbolt K.T., Prokhorova T.A., Akimov V., Henningsen J., Johansen P.T.,
+RA   Kratchmarova I., Kassem M., Mann M., Olsen J.V., Blagoev B.;
+RT   "System-wide temporal characterization of the proteome and phosphoproteome
+RT   of human embryonic stem cell differentiation.";
+RL   Sci. Signal. 4:RS3-RS3(2011).
+RN   [13]
+RP   PHOSPHORYLATION [LARGE SCALE ANALYSIS] AT THR-238, AND IDENTIFICATION BY
+RP   MASS SPECTROMETRY [LARGE SCALE ANALYSIS].
+RC   TISSUE=Cervix carcinoma, and Erythroleukemia;
+RX   PubMed=23186163; DOI=10.1021/pr300630k;
+RA   Zhou H., Di Palma S., Preisinger C., Peng M., Polat A.N., Heck A.J.,
+RA   Mohammed S.;
+RT   "Toward a comprehensive characterization of a human cancer cell
+RT   phosphoproteome.";
+RL   J. Proteome Res. 12:260-271(2013).
+RN   [14]
+RP   IDENTIFICATION BY MASS SPECTROMETRY [LARGE SCALE ANALYSIS].
+RC   TISSUE=Liver;
+RX   PubMed=24275569; DOI=10.1016/j.jprot.2013.11.014;
+RA   Bian Y., Song C., Cheng K., Dong M., Wang F., Huang J., Sun D., Wang L.,
+RA   Ye M., Zou H.;
+RT   "An enzyme assisted RP-RPLC approach for in-depth analysis of human liver
+RT   phosphoproteome.";
+RL   J. Proteomics 96:253-262(2014).
+RN   [15]
+RP   FUNCTION, RNA-BINDING, INTERACTION WITH CNOT7, PHOSPHORYLATION AT SER-490
+RP   AND SER-492, AND IDENTIFICATION BY MASS SPECTROMETRY.
+RX   PubMed=25106868; DOI=10.1093/nar/gku652;
+RA   Adachi S., Homoto M., Tanaka R., Hioki Y., Murakami H., Suga H.,
+RA   Matsumoto M., Nakayama K.I., Hatta T., Iemura S., Natsume T.;
+RT   "ZFP36L1 and ZFP36L2 control LDLR mRNA stability via the ERK-RSK pathway.";
+RL   Nucleic Acids Res. 42:10037-10049(2014).
+RN   [16]
+RP   TISSUE SPECIFICITY, AND INDUCTION.
+RX   PubMed=27182009; DOI=10.1016/j.ejcb.2016.04.007;
+RA   Prenzler F., Fragasso A., Schmitt A., Munz B.;
+RT   "Functional analysis of ZFP36 proteins in keratinocytes.";
+RL   Eur. J. Cell Biol. 95:277-284(2016).
+RN   [17]
+RP   INVOLVEMENT IN OZEMA13, VARIANTS OZEMA13 308-SER--SER-310 DEL AND ALA-308,
+RP   CHARACTERIZATION OF VARIANT OZEMA13 308-SER--SER-310 DEL, FUNCTION,
+RP   SUBCELLULAR LOCATION, TISSUE SPECIFICITY, AND INTERACTION WITH CNOT6L.
+RX   PubMed=34611029; DOI=10.1136/jmedgenet-2021-107933;
+RA   Zheng W., Sha Q.Q., Hu H., Meng F., Zhou Q., Chen X., Zhang S., Gu Y.,
+RA   Yan X., Zhao L., Zong Y., Hu L., Gong F., Lu G., Fan H.Y., Lin G.;
+RT   "Biallelic variants in ZFP36L2 cause female infertility characterised by
+RT   recurrent preimplantation embryo arrest.";
+RL   J. Med. Genet. 59:850-857(2022).
+RN   [18]
+RP   STRUCTURE BY NMR OF 151-220 IN COMPLEX WITH RNA, FUNCTION, AND RNA-BINDING.
+RX   PubMed=14981510; DOI=10.1038/nsmb738;
+RA   Hudson B.P., Martinez-Yamout M.A., Dyson H.J., Wright P.E.;
+RT   "Recognition of the mRNA AU-rich element by the zinc finger domain of
+RT   TIS11d.";
+RL   Nat. Struct. Mol. Biol. 11:257-264(2004).
+CC   -!- FUNCTION: Zinc-finger RNA-binding protein that destabilizes several
+CC       cytoplasmic AU-rich element (ARE)-containing mRNA transcripts by
+CC       promoting their poly(A) tail removal or deadenylation, and hence
+CC       provide a mechanism for attenuating protein synthesis (PubMed:14981510,
+CC       PubMed:25106868, PubMed:34611029). Acts as a 3'-untranslated region
+CC       (UTR) ARE mRNA-binding adapter protein to communicate signaling events
+CC       to the mRNA decay machinery (PubMed:25106868). Functions by recruiting
+CC       the CCR4-NOT deadenylase complex and probably other components of the
+CC       cytoplasmic RNA decay machinery to the bound ARE-containing mRNAs, and
+CC       hence promotes ARE-mediated mRNA deadenylation and decay processes
+CC       (PubMed:25106868). Binds to 3'-UTR ARE of numerous mRNAs
+CC       (PubMed:14981510, PubMed:20506496, PubMed:25106868). Promotes ARE-
+CC       containing mRNA decay of the low-density lipoprotein (LDL) receptor
+CC       (LDLR) mRNA in response to phorbol 12-myristate 13-acetate (PMA)
+CC       treatment in a p38 MAPK-dependent manner (PubMed:25106868). Positively
+CC       regulates early adipogenesis by promoting ARE-mediated mRNA decay of
+CC       immediate early genes (IEGs). Plays a role in mature peripheral neuron
+CC       integrity by promoting ARE-containing mRNA decay of the transcriptional
+CC       repressor REST mRNA. Plays a role in ovulation and oocyte meiotic
+CC       maturation by promoting ARE-mediated mRNA decay of the luteinizing
+CC       hormone receptor LHCGR mRNA. Acts as a negative regulator of erythroid
+CC       cell differentiation: promotes glucocorticoid-induced self-renewal of
+CC       erythroid cells by binding mRNAs that are induced or highly expressed
+CC       during terminal erythroid differentiation and promotes their
+CC       degradation, preventing erythroid cell differentiation. In association
+CC       with ZFP36L1 maintains quiescence on developing B lymphocytes by
+CC       promoting ARE-mediated decay of several mRNAs encoding cell cycle
+CC       regulators that help B cells progress through the cell cycle, and hence
+CC       ensuring accurate variable-diversity-joining (VDJ) recombination
+CC       process and functional immune cell formation. Together with ZFP36L1 is
+CC       also necessary for thymocyte development and prevention of T-cell acute
+CC       lymphoblastic leukemia (T-ALL) transformation by promoting ARE-mediated
+CC       mRNA decay of the oncogenic transcription factor NOTCH1 mRNA.
+CC       {ECO:0000250|UniProtKB:P23949, ECO:0000269|PubMed:14981510,
+CC       ECO:0000269|PubMed:20506496, ECO:0000269|PubMed:25106868,
+CC       ECO:0000269|PubMed:34611029}.
+CC   -!- SUBUNIT: Associates with the cytoplasmic CCR4-NOT deadenylase to
+CC       trigger ARE-containing mRNA deadenylation and decay processes
+CC       (PubMed:25106868). Interacts with CNOT7; this interaction is inhibited
+CC       in response to phorbol 12-myristate 13-acetate (PMA) treatment in a p38
+CC       MAPK-dependent manner (PubMed:25106868). Interacts with CNOT6L.
+CC       {ECO:0000269|PubMed:25106868, ECO:0000269|PubMed:34611029}.
+CC   -!- INTERACTION:
+CC       P47974; P31947: SFN; NbExp=4; IntAct=EBI-1644149, EBI-476295;
+CC       P47974; P62258: YWHAE; NbExp=5; IntAct=EBI-1644149, EBI-356498;
+CC   -!- SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:34611029}. Cytoplasm
+CC       {ECO:0000269|PubMed:34611029}. Note=Shuttles between the nucleus and
+CC       the cytoplasm in a XPO1/CRM1-dependent manner.
+CC       {ECO:0000250|UniProtKB:P23949}.
+CC   -!- TISSUE SPECIFICITY: Expressed mainly in the basal epidermal layer,
+CC       weakly in the suprabasal epidermal layers (PubMed:27182009). Expressed
+CC       in epidermal keratinocytes (at protein level) (PubMed:27182009).
+CC       Expressed in oocytes (PubMed:34611029). {ECO:0000269|PubMed:27182009,
+CC       ECO:0000269|PubMed:34611029}.
+CC   -!- INDUCTION: Up-regulated by butyrate in colorectal cancer cells
+CC       (PubMed:10367403). Up-regulated in keratinocytes after wounding
+CC       (PubMed:20166898, PubMed:27182009). Up-regulated strongly by
+CC       granulocyte macrophage colony-stimulating factor (GM-CSF) in
+CC       keratinocytes (PubMed:20166898). Up-regulated moderately by
+CC       transforming growth factor (TGF-beta), epidermal growth factor (EGF),
+CC       tumor necrosis factor (TNF) and fibroblast growth factor (FGF1) in
+CC       keratinocytes (PubMed:20166898). Up-regulated also by glucocorticoid
+CC       dexamethasone in keratinocytes (PubMed:20166898).
+CC       {ECO:0000269|PubMed:10367403, ECO:0000269|PubMed:20166898,
+CC       ECO:0000269|PubMed:27182009}.
+CC   -!- PTM: Phosphorylated by RPS6KA1 at Ser-490 and Ser-492 upon phorbol 12-
+CC       myristate 13-acetate (PMA) treatment; this phosphorylation results in
+CC       dissociation of the CCR4-NOT-deadenylase complex and induces p38 MAPK-
+CC       mediated stabilization of the low-density lipoprotein (LDL) receptor
+CC       (LDLR) mRNA (PubMed:25106868). Phosphorylation occurs during early
+CC       preadipocyte differentiation (By similarity).
+CC       {ECO:0000250|UniProtKB:P23949, ECO:0000269|PubMed:25106868}.
+CC   -!- DISEASE: Oocyte/zygote/embryo maturation arrest 13 (OZEMA13)
+CC       [MIM:620154]: An autosomal recessive female infertility disorder
+CC       characterized by embryonic development arrest and embryo implantation
+CC       failure. {ECO:0000269|PubMed:34611029}. Note=The disease is caused by
+CC       variants affecting the gene represented in this entry.
+CC   -!- DISEASE: Note=A frameshift mutation disrupting ZFP36L2 have been found
+CC       in a patient with acute myeloid leukemia, suggesting that defective
+CC       ZFP36L2 might be involved in the pathogenesis of certain types of
+CC       hematological cancers (PubMed:21109922). {ECO:0000269|PubMed:21109922}.
+CC   ---------------------------------------------------------------------------
+CC   Copyrighted by the UniProt Consortium, see https://www.uniprot.org/terms
+CC   Distributed under the Creative Commons Attribution (CC BY 4.0) License
+CC   ---------------------------------------------------------------------------
+DR   EMBL; U07802; AAA91778.1; -; Genomic_DNA.
+DR   EMBL; X78992; CAA55592.1; -; mRNA.
+DR   EMBL; AC010883; AAY14992.1; -; Genomic_DNA.
+DR   EMBL; CH471053; EAX00306.1; -; Genomic_DNA.
+DR   EMBL; BC005010; AAH05010.1; -; mRNA.
+DR   CCDS; CCDS1811.1; -.
+DR   PIR; S49147; S49147.
+DR   RefSeq; NP_008818.3; NM_006887.5.
+DR   PDB; 1RGO; NMR; -; A=151-220.
+DR   AlphaFoldDB; P47974; -.
+DR   SMR; P47974; -.
+DR   BioGRID; 107145; 224.
+DR   CORUM; P47974; -.
+DR   FunCoup; P47974; 2158.
+DR   IntAct; P47974; 20.
+DR   NDEx; IQUERY-CP-ZFP36L2; 2 NDEx IQuery Curated Pathways.
+DR   STRING; 9606.ENSP00000282388; -.
+DR   GlyCosmos; P47974; 2 sites, 1 glycan.
+DR   GlyGen; P47974; 2 sites, 1 O-linked glycan (1 site).
+DR   iPTMnet; P47974; -.
+DR   PhosphoSitePlus; P47974; -.
+DR   BioMuta; ZFP36L2; -.
+DR   DMDM; 146291085; -.
+DR   jPOST; P47974; -.
+DR   MassIVE; P47974; -.
+DR   PaxDb; 9606-ENSP00000282388; -.
+DR   PeptideAtlas; P47974; -.
+DR   ProteomicsDB; 55827; -.
+DR   Pumba; P47974; -.
+DR   Antibodypedia; 14846; 274 antibodies from 33 providers.
+DR   DNASU; 678; -.
+DR   Ensembl; ENST00000282388.4; ENSP00000282388.3; ENSG00000152518.9.
+DR   GeneID; 678; -.
+DR   KEGG; hsa:678; -.
+DR   MANE-Select; ENST00000282388.4; ENSP00000282388.3; NM_006887.5; NP_008818.3.
+DR   UCSC; uc002rsv.5; human.
+DR   AGR; HGNC:1108; -.
+DR   ClinPGx; PA35028; -.
+DR   CTD; 678; -.
+DR   DisGeNET; 678; -.
+DR   GeneCards; ZFP36L2; -.
+DR   HGNC; HGNC:1108; ZFP36L2.
+DR   HPA; ENSG00000152518; Low tissue specificity.
+DR   MalaCards; ZFP36L2; -.
+DR   MIM; 612053; gene.
+DR   MIM; 620154; phenotype.
+DR   OpenTargets; ENSG00000152518; -.
+DR   Orphanet; 675396; Epithelioid hemangioma.
+DR   Orphanet; 488191; Female infertility due to oocyte meiotic arrest.
+DR   VEuPathDB; HostDB:ENSG00000152518; -.
+DR   eggNOG; KOG1677; Eukaryota.
+DR   GeneTree; ENSGT00940000161584; -.
+DR   HOGENOM; CLU_033040_1_0_1; -.
+DR   InParanoid; P47974; -.
+DR   OMA; AANGXGG; -.
+DR   OrthoDB; 410307at2759; -.
+DR   PAN-GO; P47974; 5 GO annotations based on evolutionary models.
+DR   PhylomeDB; P47974; -.
+DR   PathwayCommons; P47974; -.
+DR   Reactome; R-HSA-9820841; M-decay: degradation of maternal mRNAs by maternally stored factors.
+DR   SignaLink; P47974; -.
+DR   Agora; ENSG00000152518; -.
+DR   BioGRID-ORCS; 678; 72 hits in 1168 CRISPR screens.
+DR   CD-CODE; 232F8A39; P-body.
+DR   CD-CODE; DEE660B4; Stress granule.
+DR   ChiTaRS; ZFP36L2; human.
+DR   EvolutionaryTrace; P47974; -.
+DR   GenomeRNAi; 678; -.
+DR   Pharos; P47974; Tbio.
+DR   PRO; PR:P47974; -.
+DR   Proteomes; UP000005640; Chromosome 2.
+DR   RNAct; P47974; protein.
+DR   Bgee; ENSG00000152518; Expressed in upper leg skin and 213 other cell types or tissues.
+DR   GO; GO:0005737; C:cytoplasm; EXP:UniProtKB.
+DR   GO; GO:0005829; C:cytosol; IBA:GO_Central.
+DR   GO; GO:0005634; C:nucleus; EXP:UniProtKB.
+DR   GO; GO:0046872; F:metal ion binding; IEA:InterPro.
+DR   GO; GO:0035925; F:mRNA 3'-UTR AU-rich region binding; IDA:UniProtKB.
+DR   GO; GO:0000900; F:mRNA regulatory element binding translation repressor activity; IBA:GO_Central.
+DR   GO; GO:0160134; F:protein-RNA sequence-specific adaptor activity; IBA:GO_Central.
+DR   GO; GO:0003723; F:RNA binding; HDA:UniProtKB.
+DR   GO; GO:0061158; P:3'-UTR-mediated mRNA destabilization; IMP:UniProtKB.
+DR   GO; GO:0071364; P:cellular response to epidermal growth factor stimulus; IDA:UniProtKB.
+DR   GO; GO:0044344; P:cellular response to fibroblast growth factor stimulus; IDA:UniProtKB.
+DR   GO; GO:0071385; P:cellular response to glucocorticoid stimulus; IDA:UniProtKB.
+DR   GO; GO:0097011; P:cellular response to granulocyte macrophage colony-stimulating factor stimulus; IDA:UniProtKB.
+DR   GO; GO:0071560; P:cellular response to transforming growth factor beta stimulus; IDA:UniProtKB.
+DR   GO; GO:0071356; P:cellular response to tumor necrosis factor; IDA:UniProtKB.
+DR   GO; GO:0060216; P:definitive hemopoiesis; ISS:UniProtKB.
+DR   GO; GO:0070371; P:ERK1 and ERK2 cascade; IDA:UniProtKB.
+DR   GO; GO:0030097; P:hemopoiesis; ISS:UniProtKB.
+DR   GO; GO:0006402; P:mRNA catabolic process; IMP:UniProtKB.
+DR   GO; GO:0045599; P:negative regulation of fat cell differentiation; ISS:UniProtKB.
+DR   GO; GO:1901991; P:negative regulation of mitotic cell cycle phase transition; ISS:UniProtKB.
+DR   GO; GO:2000737; P:negative regulation of stem cell differentiation; ISS:UniProtKB.
+DR   GO; GO:0000289; P:nuclear-transcribed mRNA poly(A) tail shortening; IBA:GO_Central.
+DR   GO; GO:1900153; P:positive regulation of nuclear-transcribed mRNA catabolic process, deadenylation-dependent decay; ISS:UniProtKB.
+DR   GO; GO:0045577; P:regulation of B cell differentiation; ISS:UniProtKB.
+DR   GO; GO:0043488; P:regulation of mRNA stability; IMP:UniProtKB.
+DR   GO; GO:0009611; P:response to wounding; IDA:UniProtKB.
+DR   GO; GO:0048103; P:somatic stem cell division; ISS:UniProtKB.
+DR   GO; GO:0035019; P:somatic stem cell population maintenance; ISS:UniProtKB.
+DR   GO; GO:0033077; P:T cell differentiation in thymus; ISS:UniProtKB.
+DR   FunFam; 4.10.1000.10:FF:000001; zinc finger CCCH domain-containing protein 15-like; 1.
+DR   FunFam; 4.10.1000.10:FF:000002; Zinc finger protein 36, C3H1 type-like 1; 1.
+DR   Gene3D; 4.10.1000.10; Zinc finger, CCCH-type; 2.
+DR   IDEAL; IID00150; -.
+DR   InterPro; IPR007635; Tis11B_N.
+DR   InterPro; IPR045877; ZFP36-like.
+DR   InterPro; IPR000571; Znf_CCCH.
+DR   InterPro; IPR036855; Znf_CCCH_sf.
+DR   PANTHER; PTHR12547; CCCH ZINC FINGER/TIS11-RELATED; 1.
+DR   PANTHER; PTHR12547:SF174; MRNA DECAY ACTIVATOR PROTEIN ZFP36L2; 1.
+DR   Pfam; PF04553; Tis11B_N; 1.
+DR   Pfam; PF00642; zf-CCCH; 2.
+DR   SMART; SM00356; ZnF_C3H1; 2.
+DR   SUPFAM; SSF90229; CCCH zinc finger; 2.
+DR   PROSITE; PS50103; ZF_C3H1; 2.
+PE   1: Evidence at protein level;
+KW   3D-structure; Cytoplasm; Developmental protein; Disease variant;
+KW   Metal-binding; Nucleus; Phosphoprotein; Proteomics identification;
+KW   Reference proteome; Repeat; Ribonucleoprotein; RNA-binding; Zinc;
+KW   Zinc-finger.
+FT   CHAIN           1..494
+FT                   /note="mRNA decay activator protein ZFP36L2"
+FT                   /id="PRO_0000089170"
+FT   ZN_FING         153..181
+FT                   /note="C3H1-type 1"
+FT                   /evidence="ECO:0000255|PROSITE-ProRule:PRU00723"
+FT   ZN_FING         191..219
+FT                   /note="C3H1-type 2"
+FT                   /evidence="ECO:0000255|PROSITE-ProRule:PRU00723"
+FT   REGION          93..113
+FT                   /note="Disordered"
+FT                   /evidence="ECO:0000256|SAM:MobiDB-lite"
+FT   REGION          170..211
+FT                   /note="RNA-binding"
+FT                   /evidence="ECO:0000269|PubMed:14981510,
+FT                   ECO:0000269|PubMed:20506496"
+FT   REGION          257..293
+FT                   /note="Disordered"
+FT                   /evidence="ECO:0000256|SAM:MobiDB-lite"
+FT   REGION          397..494
+FT                   /note="Disordered"
+FT                   /evidence="ECO:0000256|SAM:MobiDB-lite"
+FT   MOTIF           153..158
+FT                   /note="RNA-binding"
+FT                   /evidence="ECO:0000269|PubMed:14981510,
+FT                   ECO:0000269|PubMed:20506496"
+FT   COMPBIAS        406..415
+FT                   /note="Pro residues"
+FT                   /evidence="ECO:0000256|SAM:MobiDB-lite"
+FT   COMPBIAS        416..435
+FT                   /note="Low complexity"
+FT                   /evidence="ECO:0000256|SAM:MobiDB-lite"
+FT   COMPBIAS        459..478
+FT                   /note="Low complexity"
+FT                   /evidence="ECO:0000256|SAM:MobiDB-lite"
+FT   MOD_RES         57
+FT                   /note="Phosphoserine"
+FT                   /evidence="ECO:0007744|PubMed:18669648"
+FT   MOD_RES         125
+FT                   /note="Phosphoserine"
+FT                   /evidence="ECO:0007744|PubMed:21406692"
+FT   MOD_RES         238
+FT                   /note="Phosphothreonine"
+FT                   /evidence="ECO:0007744|PubMed:23186163"
+FT   MOD_RES         490
+FT                   /note="Phosphoserine; by RPS6KA1"
+FT                   /evidence="ECO:0000269|PubMed:25106868"
+FT   MOD_RES         492
+FT                   /note="Phosphoserine; by RPS6KA1"
+FT                   /evidence="ECO:0000269|PubMed:25106868"
+FT   VARIANT         308..310
+FT                   /note="Missing (in OZEMA13; results in decreased mRNA
+FT                   catabolic process)"
+FT                   /evidence="ECO:0000269|PubMed:34611029"
+FT                   /id="VAR_087928"
+FT   VARIANT         308
+FT                   /note="S -> A (in OZEMA13; uncertain significance;
+FT                   dbSNP:rs373995498)"
+FT                   /evidence="ECO:0000269|PubMed:34611029"
+FT                   /id="VAR_087929"
+FT   MUTAGEN         157
+FT                   /note="E->R: Impaired mRNA-binding; when associated with
+FT                   K-195."
+FT                   /evidence="ECO:0000269|PubMed:20506496"
+FT   MUTAGEN         195
+FT                   /note="E->K: Impaired mRNA-binding; when associated with
+FT                   R-157."
+FT                   /evidence="ECO:0000269|PubMed:20506496"
+FT   CONFLICT        96..97
+FT                   /note="TS -> DL (in Ref. 1; AAA91778)"
+FT                   /evidence="ECO:0000305"
+FT   CONFLICT        318
+FT                   /note="A -> T (in Ref. 2; CAA55592)"
+FT                   /evidence="ECO:0000305"
+FT   CONFLICT        329..332
+FT                   /note="AAAA -> LR (in Ref. 2; CAA55592)"
+FT                   /evidence="ECO:0000305"
+FT   CONFLICT        331..332
+FT                   /note="Missing (in Ref. 1; AAA91778)"
+FT                   /evidence="ECO:0000305"
+FT   CONFLICT        400
+FT                   /note="Q -> QQQQ (in Ref. 5; AAH05010)"
+FT                   /evidence="ECO:0000305"
+FT   CONFLICT        453..462
+FT                   /note="Missing (in Ref. 1; AAA91778)"
+FT                   /evidence="ECO:0000305"
+FT   TURN            152..155
+FT                   /evidence="ECO:0007829|PDB:1RGO"
+FT   STRAND          156..158
+FT                   /evidence="ECO:0007829|PDB:1RGO"
+FT   HELIX           160..165
+FT                   /evidence="ECO:0007829|PDB:1RGO"
+FT   HELIX           171..173
+FT                   /evidence="ECO:0007829|PDB:1RGO"
+FT   STRAND          175..179
+FT                   /evidence="ECO:0007829|PDB:1RGO"
+FT   HELIX           180..182
+FT                   /evidence="ECO:0007829|PDB:1RGO"
+FT   TURN            190..193
+FT                   /evidence="ECO:0007829|PDB:1RGO"
+FT   HELIX           198..203
+FT                   /evidence="ECO:0007829|PDB:1RGO"
+FT   HELIX           209..211
+FT                   /evidence="ECO:0007829|PDB:1RGO"
+FT   STRAND          213..215
+FT                   /evidence="ECO:0007829|PDB:1RGO"
+SQ   SEQUENCE   494 AA;  51063 MW;  10E23FA9E2DDABD4 CRC64;
+     MSTTLLSAFY DVDFLCKTEK SLANLNLNNM LDKKAVGTPV AAAPSSGFAP GFLRRHSASN
+     LHALAHPAPS PGSCSPKFPG AANGSSCGSA AAGGPTSYGT LKEPSGGGGT ALLNKENKFR
+     DRSFSENGDR SQHLLHLQQQ QKGGGGSQIN STRYKTELCR PFEESGTCKY GEKCQFAHGF
+     HELRSLTRHP KYKTELCRTF HTIGFCPYGP RCHFIHNADE RRPAPSGGAS GDLRAFGTRD
+     ALHLGFPREP RPKLHHSLSF SGFPSGHHQP PGGLESPLLL DSPTSRTPPP PSCSSASSCS
+     SSASSCSSAS AASTPSGAPT CCASAAAAAA AALLYGTGGA EDLLAPGAPC AACSSASCAN
+     NAFAFGPELS SLITPLAIQT HNFAAVAAAA YYRSQQQQQQ QGLAPPAQPP APPSATLPAG
+     AAAPPSPPFS FQLPRRLSDS PVFDAPPSPP DSLSDRDSYL SGSLSSGSLS GSESPSLDPG
+     RRLPIFSRLS ISDD
+//
