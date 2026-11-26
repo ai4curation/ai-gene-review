@@ -173,12 +173,25 @@ lasB, which are given secretion-system terms for being secretion cargo).
 `source_defects` recorded in all PAO1 reviews into one report per resource in
 [`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md). After tier 2, and after
 the merge from main that brought in the AST-module and eut reviews, they stand
-at 272 for PseudoCAP (123 wrong term, 84 wrong evidence code, 41 wrong
-reference, 14 wrong qualifier, 8 wrong gene product, 2 other), 116 for PAINT/GO Central,
-23 for UniProt, 7 for InterPro (which now has its own report, since the
-InterPro2GO mappings outgrew the catch-all) and 5 for other resources: 423 in
-all, matching the 423 `source_defects` entries recorded under `genes/PSEAE`. They
-include defects from PAO1 reviews made before this project. The tier-1 counts
+at 307 for PseudoCAP (125 wrong term, 94 wrong evidence code, 47 wrong
+reference, 24 wrong qualifier, 15 wrong gene product, 2 other), 120 for PAINT/GO Central,
+30 for UniProt, 9 for InterPro (which has its own report, since the
+InterPro2GO mappings outgrew the catch-all), 2 for GOA at EBI and 1 for CACAO:
+469 in all, counted 2026-11-26. They include defects from PAO1 reviews made
+before this project.
+
+Those figures are the output of
+[`export_pseae_defects.py`](PSEUDOCAP/export_pseae_defects.py), which collects
+every `source_defects` entry under `genes/PSEAE` and writes the per-resource
+reports in [`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md); re-run it
+rather than editing a total here. An earlier version of this paragraph gave 423
+and asserted that it matched the 423 entries on disk. The assertion was true when
+written and false by 46 when read, because the figures were copied rather than
+regenerated -- which is the same failure the tier-3 worklist counts had in this
+PR, and the reason both are now derived. GOA at EBI and CACAO have their own
+reports because the catch-all `OTHER.md` was replaced when the exporter was
+re-run; the two GOA entries are the `WRONG_GENE_PRODUCT` requests from the femA
+and femI reviews discussed above. The tier-1 counts
 quoted below are the totals as they stood at the end of tier 1 (116, 75, 5 and
 11).
 
