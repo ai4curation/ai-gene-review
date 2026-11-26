@@ -51,7 +51,9 @@ the triage step must check the experimental subject.
 
 1. Collect identifiers from the titles and bodies of all issues, open and
    closed. Suppress papers already mentioned there and candidates whose gene
-   review already cites their PMID, DOI or Europe PMC preprint ID.
+   review already cites their PMID, DOI or Europe PMC preprint ID. Filing
+   one gene from a multi-gene paper suppresses that paper on later runs. The
+   hidden marker records which accession the issue assigned to the curator.
 2. Match gene symbols from the title or repeated abstract mentions to UniProt
    entries in the configured species. Drop explicit non-gene acronym expansions. Prefer reviewed entries and allow an
    unreviewed title match if it resolves uniquely. Gene aliases, model species,
@@ -62,7 +64,7 @@ the triage step must check the experimental subject.
 4. A read-only triage agent checks the gene, species, experiment and, for an
    update, what the paper would change in the review. It returns eligible rank
    numbers. The publisher validates the selection, refreshes the issue ledger,
-   and files the generated bodies. A new-review issue gives the exact UniProt
+   checks the title and body for unwanted notifications, and files the generated bodies. A new-review issue gives the exact UniProt
    accession to fetch. An update issue points to the existing review.
 
 The [workflow](../.github/workflows/litscan-gene-gap.yml) serializes runs.

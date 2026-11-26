@@ -283,6 +283,7 @@ def test_review_index_and_ledger(tmp_path: Path) -> None:
     review.write_text("id: P45944\ngene_symbol: yqcI\nreferences:\n- id: PMID:123\n")
     index = gene_gap.ReviewIndex.build(tmp_path)
     assert index.paths == {"P45944": str(review)}
+    assert index.by_folder[("bacsu", "yqci")] == "P45944"
     assert index.cited["P45944"] == {"PMID:123"}
     assert gene_gap.ledger_references([{"body": "PMID:42980640\n<!-- marker -->"}]) == {
         "PMID:42980640"
@@ -451,7 +452,7 @@ def test_publisher_rejects_unapproved_ranks_and_skips_newly_filed_papers(
         "paper": {"reference_id": "PMID:12", "doi": "", "europe_pmc_url": ""},
         "issue_title": "Review X",
         "issue_labels": ["litscan"],
-        "issue_body_path": "issues/01-X.md",
+        "issue_body_path": str(tmp_path / "01-X.md"),
     }
     packet.write_text(
         json.dumps({"candidates": [row, {**row, "rank": 2, "issue_eligible": False}]})
@@ -469,7 +470,9 @@ def test_publisher_rejects_unapproved_ranks_and_skips_newly_filed_papers(
                     {
                         "type": "result",
                         "subtype": "success",
-                        "result": json.dumps(selection),
+                        "result": selection
+                        if isinstance(selection, str)
+                        else json.dumps(selection),
                     }
                 ]
             )
@@ -480,10 +483,24 @@ def test_publisher_rejects_unapproved_ranks_and_skips_newly_filed_papers(
         run_with([1, 2])
     run_with([1])
     gh.assert_not_called()
+    # A labelled issue for a different accession also suppresses this paper.
+    ledger.write_text(
+        json.dumps([{"body": gene_gap.ledger_marker("PMID:12", "QOTHER")}])
+    )
+    run_with([1])
+    gh.assert_not_called()
     ledger.write_text("[]")
-    run_with([1, 1])
+    for reply in ("[[1]]", "[1] or [2]", "[true]", '{"ranks": [1]}'):
+        with pytest.raises(ValueError):
+            run_with(reply)
+    body = Path(row["issue_body_path"])
+    body.write_text("Contact @someone to follow up.")
+    run_with([1])
+    gh.assert_not_called()
+    body.write_text("Review gene X using this paper.")
+    run_with("Selected ranks:\n```json\n[1, 1]\n```")
     gh.assert_called_once()
-    assert gh.call_args.args[0][-2:] == ["--body-file", "issues/01-X.md"]
+    assert gh.call_args.args[0][-2:] == ["--body-file", str(body)]
 
 
 @pytest.mark.parametrize(
@@ -492,6 +509,10 @@ def test_publisher_rejects_unapproved_ranks_and_skips_newly_filed_papers(
         ("FOO1 lacks catalytic activity.", True),
         ("The catalytically inactive FOO1 mutant served as a control.", False),
         ("We measured FOO1 abundance. BAR2 is a pseudokinase.", False),
+        (
+            "We tested catalytically inactive FOO1 (D5N vs. wild type) as a mutant control.",
+            False,
+        ),
     ],
 )
 def test_refutation_must_concern_candidate_not_mutant_or_neighbor(

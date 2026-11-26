@@ -36,6 +36,7 @@ import yaml
 from ai_gene_review.litscan import gene_gap_sources as sources
 from ai_gene_review.litscan.europepmc import Publication, search
 from ai_gene_review.litscan.polite import PoliteClient
+from ai_gene_review.litscan.scoring import split_sentences
 
 DEFAULT_CONFIG = Path("conf/litscan/gene_gap.yaml")
 DEFAULT_OUTPUT = Path("reports/litscan/gene-gap")
@@ -105,6 +106,7 @@ class ReviewIndex:
 
     paths: dict[str, str] = field(default_factory=dict)
     cited: dict[str, set[str]] = field(default_factory=dict)
+    by_folder: dict[tuple[str, str], str] = field(default_factory=dict)
 
     @classmethod
     def build(cls, genes_dir: Path) -> "ReviewIndex":
@@ -117,6 +119,9 @@ class ReviewIndex:
                 continue
             accession = match.group(1)
             index.paths.setdefault(accession, str(path))
+            index.by_folder[
+                (path.parent.parent.name.casefold(), path.parent.name.casefold())
+            ] = accession
             index.cited.setdefault(accession, set()).update(reference_ids(text))
         return index
 
@@ -331,7 +336,7 @@ def score_paper(
     symbol_re = re.compile(rf"(?<![\w]){re.escape(matched_symbol)}(?![\w])", re.I)
     contexts = [
         sentence
-        for sentence in [title, *re.split(r"(?<=[.!?])\s+", abstract)]
+        for sentence in [title, *split_sentences(abstract)]
         if matched_symbol and symbol_re.search(sentence)
     ]
     components = []
@@ -570,6 +575,18 @@ def run(
             log(f"  gap evidence: {n}/{len(pairs)} pairs, {client.calls} calls")
         pub = papers[key]
         accession = entry["accession"]
+        folder_key = (sp["folder"].casefold(), (entry["symbol"] or symbol).casefold())
+        existing = reviews.by_folder.get(folder_key)
+        if accession not in reviews.paths and existing and existing != accession:
+            suppressed.append(
+                {
+                    "reference_id": pub.reference_id or key,
+                    "accession": accession,
+                    "reason": "ACCESSION_CONFLICT",
+                    "detail": f"{reviews.paths[existing]} already reviews {existing}",
+                }
+            )
+            continue
         cites = paper_ids(pub) & reviews.cited.get(accession, set())
         if cites:
             suppressed.append(
@@ -889,7 +906,9 @@ def write_packet(packet: dict[str, Any], output_dir: Path) -> tuple[Path, Path]:
         cand["issue_body_path"] = str(path)
     json_path = output_dir / f"{stamp}-{JOB}.json"
     md_path = output_dir / f"{stamp}-{JOB}.md"
-    json_path.write_text(json.dumps(packet, indent=2, sort_keys=True) + "\n")
+    json_path.write_text(
+        json.dumps(packet, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     md_path.write_text(render_markdown(packet), encoding="utf-8")
     return json_path, md_path
 

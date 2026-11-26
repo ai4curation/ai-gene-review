@@ -3,10 +3,12 @@
 import argparse
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
 
 from ai_gene_review.litscan.gene_gap import ledger_references, reference_ids
+from ai_gene_review.shadow_issues.guard import find_notification_hazards
 
 
 def selected_ranks(execution_log: Path) -> set[int]:
@@ -14,7 +16,14 @@ def selected_ranks(execution_log: Path) -> set[int]:
     result = next((e for e in reversed(events) if e.get("type") == "result"), {})
     if result.get("subtype") != "success" or result.get("is_error"):
         raise ValueError("Triage did not return a successful result")
-    ranks = json.loads(result["result"])
+    # Allow prose introducing a single array and an optional Markdown fence.
+    # Multiple arrays or nested objects make the decision ambiguous.
+    selection = re.fullmatch(
+        r"[^\[\]{}]*(\[[^\[\]{}]*\])\s*(?:```)?\s*", result["result"]
+    )
+    if selection is None:
+        raise ValueError("Expected one final JSON list of integer ranks")
+    ranks = json.loads(selection[1])
     if not isinstance(ranks, list) or not all(type(rank) is int for rank in ranks):
         raise ValueError("Expected a JSON list of integer ranks")
     return set(ranks)
@@ -40,6 +49,14 @@ def main() -> None:
             f"doi:{paper['doi']} {paper['europe_pmc_url']}"
         )
         if seen & refs:
+            continue
+        body = Path(row["issue_body_path"]).read_text(encoding="utf-8")
+        if find_notification_hazards(
+            row["issue_title"] + "\n" + body, allowed_handles=frozenset()
+        ):
+            print(
+                f"Skipping rank {row['rank']} because the issue would notify another user or repository"
+            )
             continue
         subprocess.run(
             [
