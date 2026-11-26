@@ -254,7 +254,7 @@ saying where Y went, and only when X is a claim the review would accept
 | **B. BP `part_of` BP** | 586 | MODIFY to the genus BP. Y goes to a module/GO-CAM if Y is a mechanism; usually dropped if Y is a developmental context. If the gene's real contribution is an MF, record that in core_functions. |
 | **C. regulation of a nested term** | 249 | Two-step unfolding to `regulation of X`. Check sign and directness. Most are IEA/ISS over-propagations from developmental phenotypes, so Y is usually dropped. |
 | **D. no logical definition** | 240 | Sort into (i) lineage stage terms that are the right grain (DICDI sorocarp stages, *Drosophila* morphogenetic furrow): keep; (ii) grouping classes (`biological process involved in interaction with symbiont`, `developmental process involved in reproduction`, `anatomical structure formation involved in morphogenesis`, CC `protein complex involved in cell adhesion`): keep, and flag as uninformative where a specific term exists; (iii) undefined precompositions (`cysteine-type endopeptidase inhibitor activity involved in apoptotic process`, `mitochondrial fragmentation involved in apoptotic process`): treat as A/B and file a GO ticket for the missing logical definition, unless the term turns out to be the right grain (GO:0106074, round 5: see *Kept terms*). |
-| **Kept terms** (any class) | 71 (current) | A term that is the right grain although its label reads "X involved in Y" (round 5: GO:0106074 aminoacyl-tRNA editing, GO:0006271 the elongation stage of replication; round 6: GO:0050910, GO:0050973 and GO:0050974, the per-sense mechanical detection terms). Listed with a reason in [`keep_precomposed.yaml`](INVOLVED_IN_PRECOMPOSITION/keep_precomposed.yaml); the inventory flags these `kept`. |
+| **Kept terms** (any class) | 71 (current) | A term that is the right grain although its label reads "X involved in Y" (round 5: GO:0106074 aminoacyl-tRNA editing, GO:0006271 the elongation stage of replication; round 6: GO:0050910, GO:0050973 and GO:0050974, the per-sense mechanical detection terms; round 8: GO:0035735 and GO:0003351, the cilium terms). Listed with a reason in [`keep_precomposed.yaml`](INVOLVED_IN_PRECOMPOSITION/keep_precomposed.yaml); the inventory flags these `kept`. |
 | **E. label-only** | 11 (current) | A regulation term whose "involved in Y" is entailed: no `part_of` in the logical definition, and Y is an ancestor of the regulated process (round 3: GO:1901030/GO:1901029, *regulation of MOMP*). Keep the term; nothing is decomposed. The inventory flags these `label_only`. |
 
 Outcomes:
@@ -411,7 +411,8 @@ for this to be fixed.
 right and names the better term for it, so its replacement must be a claim the
 review would ACCEPT. A non-core claim on a combined term stays KEEP_AS_NON_CORE
 on that term; on an obsolete term it becomes MARK_AS_OVER_ANNOTATED, with the
-genus named in the reason. That removes the need for a core/non-core flag on
+genus named in the reason, because keeping a retired class is not something GO
+can act on. That removes the need for a core/non-core flag on
 MODIFY. Where the genus itself is doubtful, MARK_AS_OVER_ANNOTATED (CASP1,
 BCL2L13) was already the answer. The rule covers decompositions only: ordinary
 refinements of a general term (CLAUDE.md's "correct but general is MODIFY",
@@ -810,6 +811,60 @@ The `hair_cell_mechanotransduction` module question is in the plan.
    another row calls non-core, not a non-core claim that has no other row.
    The rule has to be read, not only validated.
 
+## Worked cases (round 8): two cilium terms kept
+
+Both terms stay, and no row changes. Round 8 also finishes two round-7
+follow-ups. The `decomposition_replacement_not_acceptable` check now treats
+TOO_GENERAL like the other three actions; it flags nothing new in the corpus.
+The rule text now says why an obsolete term becomes MARK_AS_OVER_ANNOTATED:
+GO cannot act on a request to keep a retired class.
+
+### GO:0035735 *intraciliary transport involved in cilium assembly* — kept
+
+- **Structure.** Class B: intraciliary transport (GO:0042073) `part_of`
+  cilium assembly (GO:0060271). It is the only "involved in" child of its
+  genus.
+- **Rows.** 11 rows across 7 genes: IFT74, IFT81, DYNC2LI1, and worm ift-74,
+  dyf-13, xbx-1 and bbs-2. INTU uses it only in a core function. Every row
+  is ACCEPT or NEW, and every gene except xbx-1 names it as a core function.
+- **Why keep.** Each gene's evidence is a cilium formation defect when the
+  gene is lost (bbs-2: when the BBSome is uncoupled from IFT, PMID:22922713).
+  That is the combined claim. Intraciliary transport also moves signalling
+  and membrane cargo in cilia that are already built, so the bare genus would
+  drop which outcome the transport serves. Two rows (the genus plus cilium
+  assembly) would lose the link between them. The
+  `intraflagellar_transport_core` module already cites the term in its PAINT
+  notes.
+
+### GO:0003351 *epithelial cilium movement involved in extracellular fluid movement* — kept
+
+- **Structure.** Class D-ii: no logical definition. It is a grouping class
+  with three `is_a` parents (cilium movement, extracellular transport,
+  microtubule-based transport). Its children are the fluid-moving uses of
+  motile cilia: mucociliary clearance, cerebrospinal fluid circulation,
+  left/right determination and otolith formation.
+- **Rows.** CCDC40 ACCEPTs it (IMP), DNAH6 adds it as NEW (IMP), and DNAH5,
+  DNAH6, DNAH9 and DNAH11 name it as a core function. The dynein assembly
+  factors DNAAF2, DNAAF4, DNAAF11 and DNAAF19 keep it as KEEP_AS_NON_CORE.
+- **Why keep.** The bare genus GO:0003341 *cilium movement* also covers
+  cilia that move the cell itself (GO:0060294, as in sperm flagella), and
+  would lose the motile, fluid-propelling function the
+  axonemal dyneins serve.
+- **The assembly-factor rows are the round-7 rule at work.** These factors
+  assemble the dynein arms or attach them to the axoneme, and cilium movement
+  is downstream of that. The claim is non-core, so it stays KEEP_AS_NON_CORE
+  on the precomposed term rather than being decomposed.
+- **Not changed.** The triage scheme says a D-ii class can be flagged as
+  uninformative where a specific child applies. DNAH11's left/right role
+  would fit GO:0060287 better than the grouping class. That is a refinement
+  for the gene's own review, not a decomposition, so it is not done here.
+
+### Lessons from round 8
+
+1. **A keep is the common answer once the clean decompositions are done.**
+   Rounds 5, 6 and 8 kept seven terms between them. Each one passed the
+   round-5 test: the bare genus would lose which process the gene serves.
+
 ### Lessons from round 4
 
 1. **A term without "involved in" in its label can still be precomposed in
@@ -881,11 +936,11 @@ The `hair_cell_mechanotransduction` module question is in the plan.
      USH1G, MYO7A) carry only GO:0050910, although these proteins sit in
      vestibular bundles too; TMC2 carries both siblings and MYO1C carries
      GO:0050973. Either add GO:0050973 or use their parent GO:0050974.
-   - Next: GO:0035735 *intraciliary transport involved in cilium assembly*
-     (10 uses, 8 genes) and GO:0003351 *epithelial cilium movement involved
-     in extracellular fluid movement* (10 uses, 4 genes). The other sensory
-     detection terms (chemical, light, temperature) are keep candidates, to
-     be decided term by term by the round-6 test.
+   - ~~GO:0035735 (intraciliary transport in cilium assembly) and GO:0003351
+     (epithelial cilium movement in fluid movement)~~: kept in round 8.
+   - Next: the other sensory detection terms (chemical, light,
+     temperature) are keep candidates, to be decided term by term by the
+     round-6 test.
 6. **Full pass** — walk `data/annotations.yaml` gene by gene, from class A to
    B, C and D. Check `gocam_same_gene` and `gocam_same_symbol_other_species`
    first, and confirm orthology before citing the symbol-matched hits.
