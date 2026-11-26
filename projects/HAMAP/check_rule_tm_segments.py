@@ -71,6 +71,21 @@ def rule_segments(ft_transmem: str, rule: str) -> list[tuple[int, int]]:
     return out
 
 
+def unparsed_features(ft_transmem: str) -> int:
+    """Number of TRANSMEM features the parser could not read.
+
+    A feature with an uncertain boundary (``?..30``, ``<1..21``) does not match
+    ``TRANSMEM``, and would otherwise disappear from the counts without notice.
+
+    >>> unparsed_features('TRANSMEM 3..21; /note="Helical"; TRANSMEM ?..60; /note="Helical"')
+    1
+    >>> unparsed_features('TRANSMEM 3..21; /note="Helical; Name=TM1"')
+    0
+    """
+    text = ft_transmem or ""
+    return text.count("TRANSMEM ") - len(TRANSMEM.findall(text))
+
+
 def fetch(rule: str) -> list[dict]:
     """UniProtKB entries carrying the rule, with TRANSMEM features and sequence."""
     params = urllib.parse.urlencode({
@@ -136,6 +151,9 @@ def main(argv: list[str]) -> None:
     for rule in rules:
         for e in fetch(rule):
             seq = e["Sequence"]
+            if (missed := unparsed_features(e["Transmembrane"])):
+                print(f"warning: {rule} {e['Entry']}: {missed} TRANSMEM feature(s) not parsed",
+                      file=sys.stderr)
             for start, end in rule_segments(e["Transmembrane"], rule):
                 seg = seq[start - 1:end]
                 kd = mean_hydropathy(seg)

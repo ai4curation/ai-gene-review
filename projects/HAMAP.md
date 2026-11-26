@@ -51,7 +51,7 @@ the rule combine:
 | Unconditional location | `SUBCELLULAR LOCATION: Cell membrane; Single-pass membrane protein`, outside any `case` | every member is placed in the membrane |
 | Transmembrane trigger | `DR General; Transmembrane; ...; trigger=yes` | a transmembrane segment is predicted on every member and written as a feature |
 
-The gene review of METTH/mtrA2 (O27134), in PR #7088, shows the result: a 183-residue protein
+The gene review of `METTH/mtrA2` (O27134), in PR #7088, shows the result: a 183-residue protein
 aligned only to the soluble cobamide domain of the operon subunit, with no
 counterpart to its C-terminal anchor, is given a transmembrane segment at
 residues 102-118 (mean Kyte-Doolittle hydropathy 0.49, with charged residues),
@@ -89,12 +89,15 @@ by the script and not committed). An earlier version of the script's
 TRANSMEM pattern stopped at the first capital T in a feature, so a segment
 with a note such as `Name=TM1` would have been dropped. After the fix the
 rerun (2026-11-26) gave the same 141,582 segments and an identical summary:
-the rule-assigned segments in current UniProt carry only `Helical` notes.
+the rule-assigned segments in current UniProt carry only `Helical` notes. The script now also warns on
+any TRANSMEM feature it cannot parse (for example an uncertain boundary such
+as `?..30`); the rerun with that check reported none, and its output was
+byte-identical to the first.
 
 | Rule | Entries | Entries with no hydrophobic segment | Notes |
 |---|---|---|---|
 | MF_01093 MtrA | 159 | 4 | O27134, D9PXT1 and D3E0P6, three of the soluble homologues (the rule review confirms all three); A6UWH7 (*Methanococcus aeolicus*, 240 residues) is an anchored subunit whose rule-placed segment is slightly off its C-terminal helix |
-| MF_01944 LpxM | 4 | 2 | *E. coli* and *Shigella* LpxM (segment 23-43, 0.85). Not an error: UniProt P24205's SUBCELLULAR LOCATION line gives Cell inner membrane with experimental evidence (ECO:0000269 from PubMed:9099672; the cached abstract of that paper does not show it), so this is a weakly hydrophobic real anchor and a false positive of the test |
+| MF_01944 LpxM | 4 | 2 | *E. coli* and *Shigella* LpxM (segment 23-43, 0.85). Not an error: UniProt P24205's SUBCELLULAR LOCATION line (read 2026-11-26) gives Cell inner membrane with experimental evidence. That line also cites ECO:0000255 from this rule, so the independent part is the ECO:0000269 tag from PubMed:9099672, whose cached abstract does not show the location; so this is a weakly hydrophobic real anchor and a false positive of the test |
 | the other 16 | 24,320 | 0 | |
 
 So among HAMAP rules that allow paralogs and put a transmembrane segment on
