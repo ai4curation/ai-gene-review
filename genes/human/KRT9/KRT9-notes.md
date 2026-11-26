@@ -24,7 +24,7 @@ Journal of the review session of 2026-11-26. Quotes are verbatim from the cached
 
 ## What K9 is
 
-- Type I (acidic) keratin, 623 aa, head 1-152 / rod 153-465 / tail 462-623 in the UniProt
+- Type I (acidic) keratin, 623 aa, head 1-152 / rod coils 153-461 (UniProt IF rod domain 153-465) / tail 462-623 in the UniProt
   numbering. Cloned from human foot sole epidermis.
   [PMID:7507869 "Differentiation of human plantar and palmar epidermis is characterized by the
   suprabasal synthesis of a major special intermediate-sized filament (IF) protein, the type I
@@ -76,7 +76,8 @@ The partner is not settled and three candidates are in the literature:
 - K6C: [PMID:37467889 "keratin 6C (KRT6C) is a probable hereterodimer partner for KRT9"] (abstract
   only; in silico model plus proteomics).
 
-An OpenScientist hypothesis job on this question was launched (see `KRT9-hypotheses/`).
+An OpenScientist hypothesis job on this question was launched; its report had not been
+written when this review was delivered and is not part of it.
 
 ## Disease mechanism (EPPK1, MIM 144200; MONDO:0007758)
 
@@ -126,7 +127,8 @@ An OpenScientist hypothesis job on this question was launched (see `KRT9-hypothe
   recorded in `suggested_questions` and a knowledge gap, not as a NEW annotation.
 - [PMID:42918816 "genetic or pharmacological inhibition of YAP1 ameliorates palmoplantar
   keratoderma in Krt9 null mice"].
-- A second OpenScientist hypothesis job (head-domain 14-3-3 motif) was launched.
+- A second OpenScientist hypothesis job (head-domain 14-3-3 motif) was launched; likewise not
+  yet reported.
 
 ## Rodent testis observations (basis of the spermatogenesis IEA)
 
