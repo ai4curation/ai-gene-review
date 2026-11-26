@@ -14,7 +14,7 @@ muscle contraction [file:human/RYR2/RYR2-uniprot.txt].
 
 Main curation decisions:
 
-- Keep `GO:0005219`, intracellular calcium-gated channel activity, SR
+- Keep `GO:0005219`, calcium-induced calcium release activity, SR
   calcium-release transport and SR membrane/channel-complex terms as the core
   RYR2 channel function.
 - Retain cardiac contraction, cytosolic calcium regulation, heart-rate and
