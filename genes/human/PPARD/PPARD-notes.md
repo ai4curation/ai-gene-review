@@ -14,7 +14,7 @@ PPARD GOA carries many broad processes transferred from mouse or rat: axon enshe
 
 `GO:0003707 nuclear steroid receptor activity` and `GO:0030518 nuclear receptor-mediated steroid hormone signaling pathway` were marked as over-annotations for the same reason as in PPARA: PPARD is a fatty-acid-activated PPAR, not a steroid-hormone receptor.
 
-The five bare `GO:0005515` IPI annotations are uninformative physical-interaction rows and were removed under the project protein-binding policy.
+The four bare `GO:0005515` IPI annotations are uninformative physical-interaction rows and were removed under the project protein-binding policy.
 
 ## PANTHER and modules
 

@@ -35,3 +35,8 @@ The cached GO-CAM index already contains PPARG activities for PTEN transcription
 The `GO:0004955 prostaglandin receptor activity` TAS row and the `GO:0007186 G protein-coupled receptor signaling pathway` IEA row both trace to lipid activation of PPARG rather than to seven-transmembrane prostaglandin receptor signaling. The former remains marked over-annotated, and the latter now follows it instead of being kept as a non-core GPCR process.
 
 The `GO:0001890 placenta development` ISS row is supported by the mouse `Pparg` knockout placental phenotype in Barak et al. 1999, but that phenotype is a tissue output of PPARG transcriptional regulation rather than the conserved core receptor mechanism. The row is therefore kept as non-core, while PPARG adipocyte differentiation, lipid storage and insulin-sensitizing metabolic outputs remain part of the synthesized core function.
+
+Broad DNA-templated transcription rows were aligned with the existing `TOO_GENERAL`
+RNA polymerase II regulation policy, and the `GO:0043235` PPARG:RXRA row now
+points to the Chandra intact-complex structure instead of the location/output
+template.
