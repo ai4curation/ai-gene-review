@@ -165,6 +165,10 @@ a new microprotein-specific branch. This needs to be tested gene by gene.
 5. **Orthology is weak.** Short, fast-evolving and often primate-specific ORFs
    make ISS/ISO and IBA transfers less reliable. The reverse also happens: human genes miss mouse
    experimental data because nobody made the ISS call.
+6. **Translation of a uORF does not prove a separate protein exists.** Ribo-seq footprints and
+   peptides from an ORF upstream of, or overlapping, a host gene's CDS can just as well come
+   from an unannotated N-terminal isoform of the host, or from translational noise. See
+   [Contested Ribo-seq ORF evidence](#contested-ribo-seq-orf-evidence-2026-11-26).
 
 ## Tier 1 results (2026-09-30)
 
@@ -457,6 +461,53 @@ What this does not solve:
 - The peptide's GO annotations therefore leak onto the host gene in those symbol-keyed
   analyses. This is worth raising with UniProt/GOA as a `suggested_questions` item.
 
+## Contested Ribo-seq ORF evidence (2026-11-26)
+
+The TransCODE consortium's protein-level survey of the 7,264 GENCODE Ribo-seq ORFs
+(Deutsch et al. 2026) reports peptides for about a quarter of them, and introduces
+"peptideins" for translated ORFs of uncertain function
+[PMID:42092140 "We show that about 25% of a set of 7,264 ncORFs gives rise to detectable peptides in a large-scale analysis of 95,520 proteomics experiments."]
+[PMID:42092140 "codify the new conceptual model of 'peptideins' as microproteins that have indeterminate potential as functional proteins"].
+It ranks 19 candidates as the strongest (Tier 1A, plus one Tier 1B case).
+
+A preprint from Ji and Salzberg (bioRxiv, DOI:10.64898/2026.11.19.767917, posted
+2026-11-24, not peer reviewed) re-examines those 19 and argues that none needs a new human
+protein. It extends their earlier analysis of 2,199 uORFs, which found that
+[PMID:39565752 "541 out of 2,199 upstream ORFs have strong evidence that they can form protein coding exons that are part of an existing gene"].
+That paper also makes the point that matters most for curation here:
+[PMID:39565752 "Ribo-seq evidence cannot be used as direct evidence to prove the existence of a protein-coding sequence."]
+
+How the preprint sorts the 19 (our summary of its text; it is not cached in `publications/`):
+
+| group | ORFs (host locus) | preprint's explanation |
+|---|---|---|
+| already-known genes | ERVH48-1 (suppressyn), CASP8AP2, LIPT2-AS1 locus (`c11riboseqorf108`) | known or previously annotated protein-coding genes; listing them as ncORFs was an error |
+| alternative first coding exon of the host | GMCL1 (`c2riboseqorf47`), PIDD1, `CNOT7` (`c8riboseqorf15`), CCNI, MAP3K9, TMEM94 | uORF or uoORF joins the host CDS through an RNA-seq-supported splice junction, giving an N-terminal isoform of the host; such an isoform would yield the same peptide and Ribo-seq evidence |
+| translational noise | ZNF219, RNF40 (3′ UTR dORF), `LONP1`, STK11, CDKN2C, SLC9A3 | out-of-frame or 3′ UTR translation with no conservation; peptides plausibly from leaky scanning |
+| pseudogene or lncRNA | BTN3A2 (pseudogene remnant), IGF2-AS, `CYP27B1` (internal out-of-frame ORF), ARRDC1-AS1 | no homologues outside primates or no evidence of a functional protein |
+
+Across 89 upstream and downstream ORFs it reports RNA-seq splice evidence for 229 candidate
+host-gene exons in 62 of them.
+
+What this means for this project:
+
+- **None of the 19 is in our census.** No host symbol above appears among the ≤100 aa
+  Swiss-Prot entries, and the catalogue ORFs mostly have no UniProtKB accession (see census point 1), so no existing review
+  changes. The hazard is prospective: if UniProt creates an entry for one of these ORFs, check
+  for the alternative-isoform explanation before reviewing it as a new microprotein.
+- **The two possibilities map onto different records.** A separate translated ORF is a
+  separate UniProt entry and gets its own folder under the alt-ORF convention above. A new
+  first exon of the host is a missing isoform of the host entry, recorded in the host review as
+  a `functional_isoforms` entry with a `MISSING_ISOFORM` source defect. Neither should be
+  recorded on peptide or Ribo-seq evidence alone.
+- **The preprint does not settle the question.** It is written by the authors of the
+  competing hypothesis. The isoform explanation rests on splice junctions and predicted
+  structure, not on peptides that span the new junction. A peptide spanning the junction
+  would favour the isoform; one from the part of the ORF beyond it would favour a separate
+  product. Treat both papers as hypotheses for any affected locus.
+- Reviewed host genes it names: `CNOT7` (a note was added to its notes file), `LONP1` and
+  `CYP27B1`. No GO annotation on any of them depends on the ORF.
+
 ## Plan
 
 1. Settle the naming/folder convention for alternative-ORF peptides (hazard 1).
@@ -480,6 +531,8 @@ What this does not solve:
 9. Next census slice: the remaining zero-GO sORF entries (mostly PE5 lncRNA ORFs) do not need
    review; the SLC35A4 uORF peptide (STREMI, reported MIC10-like) is a candidate if UniProt
    gives it an accession.
+10. Watch for UniProt entries created for TransCODE Tier 1A/1B ORFs, and apply hazard 6 before
+    reviewing one (see [Contested Ribo-seq ORF evidence](#contested-ribo-seq-orf-evidence-2026-11-26)).
 
 ---
 # STATUS
@@ -524,6 +577,16 @@ Last updated: 2026-10-08
 - [x] SMIM26, P3R3URF, ADIG (plus canonical small proteins such as TOMM5/6/7, PIGY, UQCC3)
 
 # NOTES
+
+## 2026-11-26
+
+- Read the Ji & Salzberg bioRxiv preprint (DOI:10.64898/2026.11.19.767917) re-examining the
+  TransCODE peptidein Tier 1A candidates (PMID:42092140). Added hazard 6 and the
+  "Contested Ribo-seq ORF evidence" section. Cached PMID:42092140 (abstract only; PMC full text
+  was rate-limited at fetch time) and PMID:39565752 (full text).
+- Checked: none of the 19 host loci appears in the ≤100 aa Swiss-Prot census, so no review in
+  this project changes. Added a pointer in `genes/human/CNOT7/CNOT7-notes.md`.
+- A companion putative-microprotein gene set is being drafted in the genesets repo.
 
 ## 2026-10-08
 

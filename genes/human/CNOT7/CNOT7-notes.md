@@ -38,3 +38,17 @@ Rows judged over-annotated:
 - BTG/TOB experiments show that CNOT7 mediates target mRNA deadenylation recruited by those adaptors;
   the downstream positive or negative cell-proliferation readouts are not the direct molecular work
   performed by CNOT7.
+
+## 2026-11-26: upstream ORF `c8riboseqorf15` (microprotein project)
+
+- The TransCODE consortium lists a 39 aa upstream ORF in CNOT7's first exon, `c8riboseqorf15`,
+  as a Tier 1A "peptidein" [PMID:42092140 "codify the new conceptual model of 'peptideins' as microproteins that have indeterminate potential as functional proteins"].
+- Ji & Salzberg (bioRxiv preprint, DOI:10.64898/2026.11.19.767917, not cached, not peer
+  reviewed) instead read it as the first coding exon of an unannotated CNOT7 isoform. The same
+  start codon splices past exon 2 into exon 3, in frame, giving a protein like canonical CNOT7
+  with a different N-terminus. Their earlier uORF study is
+  [PMID:39565752 "541 out of 2,199 upstream ORFs have strong evidence that they can form protein coding exons that are part of an existing gene"].
+- Neither reading affects any GO row in this review: every annotation concerns the canonical
+  CCR4-NOT deadenylase. If UniProt later adds this ORF as a separate entry, or adds the
+  isoform to Q9UIV1, revisit it. Context: `projects/MICROPROTEINS.md`, section "Contested
+  Ribo-seq ORF evidence".
