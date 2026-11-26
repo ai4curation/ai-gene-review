@@ -1,0 +1,11 @@
+# PKD2 notes
+
+Automated deep research could not be generated for this review because the configured provider was unavailable, so this note records manual curation context only.
+
+PKD2 encodes polycystin-2/TRPP2, a multi-pass nonselective cation channel that can form homotetramers and PKD1-containing heterotetrameric polycystin channels; this supports the ion-conductance, ion-transport, calcium-release, polycystin-complex, cation-channel-complex, tetramerization, and specific cytoskeletal/actinin/ATPase/phosphoprotein/transmembrane-transporter/HLH-domain-binding rows kept in this review. UniProt summarizes direct human and mammalian evidence for K(+), Na(+), and Ca(2+) conductance, ciliary and endoplasmic-reticulum membrane localization, and PKD1/PKD2 complex assembly.
+
+The strongest molecular core is cation-channel activity in a membrane channel complex. The ER, plasma-membrane, ciliary, cytoplasmic, Golgi, vesicle, exosome, migrasome, basal-body, spindle, basal-cortex, lamellipodium, and cell-cell-junction rows capture documented PKD2 membrane localization or trafficking contexts rather than separate molecular activities. Kidney, liver, vascular, left-right, generic signaling, gene-expression, cell-cycle, reactive-oxygen-species, cAMP, calcium-response, nitric-oxide, extracellular-region, and mitotic-centrosome rows mostly reflect mouse loss-of-function or expression-pattern phenotypes, high-throughput localization, or downstream cellular responses rather than additional direct PKD2 molecular mechanisms.
+
+Several rows are bare `GO:0005515 protein binding` annotations from interaction papers. These should all be removed under the project-wide protein-binding policy rather than curated one by one, while more specific interaction terms such as homomerization, heterotetramerization, actinin binding, ATPase binding, and phosphoprotein binding can be judged on their own evidence.
+
+PKD2 has reported roles in mechanical or physical stimuli through ciliary and PKD1-containing channel complexes, but those inputs remain context-specific rather than the central annotation theme. The broad mechanosensory and pressure-response process rows are kept as non-core or over-annotated instead of driving the core function.
