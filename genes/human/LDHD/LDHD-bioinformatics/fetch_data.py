@@ -110,6 +110,11 @@ def main() -> None:
     if af.get("amAnnotationsUrl"):
         (DATA / "alphamissense.csv").write_bytes(get(af["amAnnotationsUrl"]).content)
 
+    # --- MitoCarta3.0 (Broad Institute) ---
+    mc = DATA / "Human.MitoCarta3.0.xls"
+    if not mc.exists():
+        mc.write_bytes(get("https://personal.broadinstitute.org/scalvo/MitoCarta3.0/Human.MitoCarta3.0.xls").content)
+
     # --- ClinVar -----------------------------------------------------------
     eut = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
     ids = get(f"{eut}/esearch.fcgi", params={"db": "clinvar", "term": "LDHD[gene]", "retmax": 2000, "retmode": "json"}).json()["esearchresult"]["idlist"]

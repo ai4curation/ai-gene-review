@@ -35,11 +35,15 @@ evidence digest: every `QUOTE:` there is a verbatim substring of the cached
 
 Launched 2026-11-26 through `just gene-hypothesis-research openscientist human LDHD ...` (three iterations, 7200 s timeout). Local bioinformatics results were not passed to the prompts.
 
-| Slug | Question | Status when this note was written |
+| Slug | Question | Status at 2026-11-26 21:45 UTC |
 |---|---|---|
-| `isoform1-insert-dispensable` | Is the isoform-1-only segment a lineage-restricted, dispensable insertion? | see the end of this file |
-| `t463m-catalytic-loop-destabilisation` | Does p.Thr463Met act by destabilising the catalytic loop? | see the end of this file |
-| `ims-facing-inner-membrane-topology` | Does the catalytic domain face the intermembrane space? | see the end of this file |
+| `isoform1-insert-dispensable` | Is the isoform-1-only segment a lineage-restricted, dispensable insertion? | First run stopped by the 2 h job limit with no report; relaunched narrower (2 iterations), running |
+| `t463m-catalytic-loop-destabilisation` | Does p.Thr463Met act by destabilising the catalytic loop? | First run stopped by the 2 h job limit with no report; relaunched narrower (2 iterations), running |
+| `ims-facing-inner-membrane-topology` | Does the catalytic domain face the intermembrane space? | First run cancelled at the 7200 s OpenScientist ceiling (job be69918f-f9fd-4ebc-8593-1d4173b20b88); relaunched as a proteomics-lookup-only question, running |
+
+The OpenScientist gene-level deep-research run (`just deep-research-openscientist human LDHD`) was also stopped at the 2 h limit and wrote nothing; it was not restarted. No conclusion in the review depends on any of these runs.
+
+Topology follow-up done locally while the run was pending: MitoCarta3.0 lists LDHD as MIM with no APEX_matrix and no APEX_IMS evidence (`LDHD-bioinformatics/RESULTS.md`, section 6), so the proteomics resource most likely to settle the face does not.
 
 ---
 

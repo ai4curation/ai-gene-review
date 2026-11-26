@@ -9,6 +9,7 @@ Inputs were retrieved on 2026-11-26 by `fetch_data.py` (UniProt REST, RCSB PDB, 
 | `analyze_variants.py` | Which numbering did each paper use; where is each variant in the structure? | `results/reported_variants_placed.{json,tsv}` |
 | `population_variants.py` | What do gnomAD v4 and ClinVar show? | `results/population_variants.json`, `results/*.tsv` |
 | `topology_scan.py` | Is there an N-terminal membrane anchor? | `results/topology_scan.json` |
+| `mitocarta_lookup.py` | Which sub-mitochondrial compartment does MitoCarta3.0 record? | `results/mitocarta_lookup.json` |
 
 ## 1. Two isoforms, two numbering systems
 
@@ -77,6 +78,13 @@ Observations that correct or qualify the literature:
 
 - A 19-residue Kyte-Doolittle scan finds no window reaching the 1.6 threshold in the first 120 residues of human, mouse or zebrafish LDHD (human maximum 1.18, residues 32-50).
 - The same scan also fails to flag yeast Dld1 (maximum 1.06, residues 43-61), so this heuristic cannot distinguish an anchored from a soluble protein in this family and the result says nothing about topology.
+
+## 6. MitoCarta3.0 sub-mitochondrial assignment
+
+- MitoCarta3.0 assigns LDHD to the mitochondrial inner membrane (MIM), with evidence "literature, yeast mito homolog+, mito protein domain, MS/MS++".
+- LDHD was detected in neither the APEX matrix proteome nor the APEX intermembrane-space proteome, so MitoCarta3.0 does not say which face of the inner membrane it occupies.
+- Comparators in the same table are resolved by proximity labelling: D2HGDH and L2HGDH carry APEX_matrix evidence, and GPD2, which faces the intermembrane space, carries APEX_IMS evidence.
+- In the MitoCarta mouse tissue survey the LDHD ortholog was found by MS/MS in kidney, liver, heart, adipose, stomach, placenta and testis (24 unique peptides).
 
 ## Limits
 
