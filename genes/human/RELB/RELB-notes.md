@@ -28,6 +28,12 @@ evidence. The synapse and osmotic-stress IEA rows were treated as
 over-annotations because their supporting transfers do not identify a direct
 RelB activity outside the NF-kappaB transcription-factor cycle.
 
+RelB also has experimentally curated repressor contexts, including HMGB1/H1
+assembly of a RelB repressor complex at the TNF-alpha promoter during endotoxin
+tolerance and CLOCK-BMAL1 repression enhanced by NFKB2/p52. Those rows were kept
+as non-core because the central conserved RelB role is as a p52/p50 NF-kappaB
+heterodimer subunit in noncanonical NF-kappaB transcriptional activation.
+
 ## Automated research
 
 `just deep-research human RELB --provider perplexity` was not rerun after the
