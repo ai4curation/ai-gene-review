@@ -197,7 +197,8 @@ plastids come later.
      `KEEP_AS_NON_CORE` when there is direct evidence on the gene itself or
      the endogenous protein is seen in its native cell; a synthesis row whose
      source shows only transit, or retention of an overexpressed or mutant
-     protein, is `MARK_AS_OVER_ANNOTATED`.
+     protein, is `MARK_AS_OVER_ANNOTATED`. For direct rows whose assay used
+     overexpressed protein, see the 2026-11-26 PROC note.
    - **Topology does not force a sub-compartment on a transit pool.** A
      membrane protein that only passes through the ER gets no ER membrane row.
    - **Membrane and lumen lines.** A tail anchor or TM without a signal
@@ -674,14 +675,16 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 
 Recorded from the review of ai4curation/ai-gene-review#7075. PROC (protein C) is the first
 review in the corpus with *direct* ER and Golgi rows (EXP and IDA) on a secreted protein's
-biosynthetic pool: wild-type as well as mutant protein C co-localises with PDI and GM130 in
-transfected HEK293T and COS-7 cells (PMID:25748729, PMID:22531345). Rule 7's first clause covers
+biosynthetic pool. Wild-type as well as mutant protein C co-localises with PDI and GM130 in
+transfected HEK293T and COS-7 cells (PMID:25748729); PMID:22531345 reports only the retained
+mutant. Rule 7's first clause covers
 them, so they are `KEEP_AS_NON_CORE`. The UniProt-keyword IEA rows (GO_REF:0000044), which
 restate the same two transfection papers, and every ER-lumen and Golgi-lumen row (ARBA and
 Reactome biosynthesis events) are synthesis rows resting on transit, so they stay
 `MARK_AS_OVER_ANNOTATED`. The split is by evidence type, not by term: a direct row on a
 transit pool is kept as non-core even when its assay used overexpressed protein, as long as
-the wild-type protein was observed.
+the wild-type protein was observed in the same pool somewhere in the review's evidence, not
+necessarily in that row's own reference.
 
 ## 2026-11-23 (endosome batch 1: 28 human genes)
 

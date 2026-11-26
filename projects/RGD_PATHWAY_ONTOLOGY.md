@@ -24,19 +24,20 @@ term and our lexical match also finds one (397 terms), the two agree on 388.
 Separately, 44 GO ids cited in PW definitions are obsolete and one no longer resolves. Second, as a
 yardstick for GO-CAM completeness. Across the 144 diagram pathways that
 describe normal biology, the median pathway has only 29% of its RGD-curated
-human genes in any human GO-CAM. The best single GO-CAM covers a median of 2
+human genes in any human GO-CAM (46% with mouse and rat models included). The best single GO-CAM covers a median of 2
 genes of a pathway, and only 56 of the 144 have any human GO-CAM model whose
 process falls under the mapped GO term. Third, as a source of module seeds. We parsed
 all 200 RGD diagram pages into structured records (3,209 interaction edges,
 1,715 gene links, 651 chemicals, 580 links to other pathways). These were
-triaged against the 888 modules on `main` when the triage last ran (2026-11-26; modules merged since are not yet counted). 136 now have a matching module, none
+triaged against the 888 modules on `main` when the triage last ran (2026-11-26;
+modules merged since are not yet counted). 136 now have a matching module, none
 is left to model, 1 (titanium dioxide nanoparticle response) is left without a module
 by decision, 7 have too few curated genes, and 56 are disease or drug pathways and out
 of scope. The modules derived from RGD diagrams, starting with the pilot
 `srebp_signaling` and continuing through fifteen modelling sets (below; the sixteenth to
 nineteenth sets are follow-ups, triage changes and gene reviews, and add no modules), cite
-their PW pathways as evidence. 86 modules now cite a PW id as evidence (a count over all modules, not only
-those built from RGD diagrams), and each passes schema and module validation.
+their PW pathways as evidence. 86 modules now cite a PW id as evidence (a count over
+all modules, not only those built from RGD diagrams), and each passes schema and module validation.
 
 ## Why this source
 
@@ -129,13 +130,13 @@ split along their sub-pathways before modelling.
 - **PW's definition citations are reliable.** Where both exist, the definition
   citation and the lexical match agree for 388 of 397 terms. In no case is the
   cited GO term an ancestor of the lexical match. A reproducible 50-row spot check
-  of the 592 citation rows of live GO processes (592 rows rather than terms, because one
+  of the 592 citation rows of live GO processes (rows rather than terms, because one
   term cites two GO ids)
   ([`data/pw_def_xref_spot_check.yaml`](RGD_PATHWAY_ONTOLOGY/data/pw_def_xref_spot_check.yaml))
   found 48 close or exact matches and 2 narrower GO terms (PW:0000100 transcription
   pathway → DNA-templated transcription; PW:0000211 biogenic amines and polyamines →
   polyamine metabolic process), and none wrong, so the citations are now written as
-  `closeMatch`. Extrapolated, about 24 of the 592 (up to about 80 at the 95% bound)
+  `closeMatch`. Extrapolated, about 24 of them (up to about 80 at the 95% bound)
   would deserve `narrowMatch`. The GO ids typed on RGD's diagram pages are less reliable. 4 of 45
   disagree with the other sources for the same pathway, and three of these look
   wrong: urea cycle is cited as GO:0000076, a DNA replication term whose local id
@@ -171,7 +172,9 @@ GO-CAM coverage of these pathways is scattered rather than pathway-shaped. The
 genes in some human GO-CAM, and 42 reach half. Those genes are spread over many
 unrelated models. The best single model covers a median of 2 genes, and the
 median share of genes in GO-CAMs about the mapped process is 0. That last
-number undercounts modelled pathways (see the caveat below the table). Examples:
+number undercounts modelled pathways (see the caveat below the table). Counting the
+mouse and rat GO-CAMs of each gene's rodent orthologs as well raises the median to 0.462
+and the number reaching half to 70 (see the nineteenth set). Examples:
 
 | PW pathway | Curated human genes | In any GO-CAM | In GO-CAMs for the mapped GO process |
 |------------|--------------------:|--------------:|-------------------------------------:|
