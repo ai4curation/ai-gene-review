@@ -60,7 +60,7 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   biosynthesis by IBA from node PTN000182176, whose seeds are all genuine P5C
   reductases. Hmd reduces methenyl-H4MPT with H2 at its iron-guanylylpyridinol
   cofactor and uses no NAD(P)H; its pairwise similarity to P5C reductases is at
-  background level (genes/METJA/hmd/hmd-bioinformatics/RESULTS.md). The review
+  background level (`genes/METJA/hmd/hmd-bioinformatics/RESULTS.md`). The review
   removes both rows; the PTHR11645 family review already lists Q58194 as an
   exception.
 
@@ -383,7 +383,7 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
 - **Korarchaeum, resolved (leads round):** KORCO/Kcr_0764 (B1L4Y3). The
   *K. cryptofilum* genome has no methyl-coenzyme M reductase and no coenzyme M
   synthesis genes (UniProt and InterPro survey of taxon 374847,
-  genes/KORCO/Kcr_0764/Kcr_0764-bioinformatics/RESULTS.md), and its genome
+  `genes/KORCO/Kcr_0764/Kcr_0764-bioinformatics/RESULTS.md`), and its genome
   paper describes a peptide fermenter that never mentions coenzyme M or B
   (PMID:18535141, now cached in full). The Hdr-like genes sit beside a carbon
   monoxide dehydrogenase rather than in a methanogen Hdr arrangement. The IBA
@@ -468,12 +468,12 @@ IBA), one ISS, and two EXP (both on *Methanothermobacter* mcrA).
   duplicate clause take in the paralogs on purpose, and its transmembrane
   prediction runs on every sequence. mtrA2 aligns only to the first 180
   residues of mtrA1 and has nothing matching its C-terminal anchor
-  (genes/METTH/mtrA2/mtrA2-bioinformatics/RESULTS.md). The review removes the
+  (`genes/METTH/mtrA2/mtrA2-bioinformatics/RESULTS.md`). The review removes the
   membrane, sodium transport and methyltransferase rows and keeps cobamide
   binding.
 - **Scale:** of the 219 entries the rule annotates, 22 are soluble homologues
   (167-204 residues, no C-terminal hydrophobic segment), all in Methanobacteria
-  (rules/unirule/UR000100608/UR000100608-review.yaml).
+  (`rules/unirule/UR000100608/UR000100608-review.yaml`).
 - **Fix:** wrap the membrane, complex, EC and reaction statements in a length
   case (`<Length>215>`), which separates the two classes with no overlap. The HAMAP
   rule-review project (PR #7089) scans the other rules with the same shape.
@@ -519,8 +519,8 @@ send to the resource that owns them:
 | 17 (cofactor metal as free metal-ion binding) | same file, IPR005778 to GO:0050897 | REMOVE, replace with GO:0031419 | not needed |
 | 18 (copied cofactor set) | same file, IPR017682 to GO:0050660 and GO:0051536, IPR017679 to GO:0016151, IPR017681 to GO:0016151 and GO:0050660 | REMOVE | not needed |
 | 19 (acceptor-specific or wrong-enzyme hydrogenase term) | same file, IPR018194, IPR002844 and IPR036080 to GO:0008901 | REMOVE (the Mtd entries replace with GO:0030268) | not needed |
-| 22 (oxygen-using activity on F420-dependent fold members) | same file, IPR011251 and IPR036661 to GO:0016705 | broadMatch | CR-0011 (excludes 18 F420-dependent families) |
 | 21 (paired positive and NOT rows) | `genes/METJA/cofC/cofC-ai-review.yaml` `source_defects` | WRONG_QUALIFIER, for UniProt | not applicable |
+| 22 (oxygen-using activity on F420-dependent fold members) | same file, IPR011251 and IPR036661 to GO:0016705 | broadMatch | CR-0011 (excludes 18 F420-dependent families) |
 | 25 (HAMAP rule on a soluble paralog) | `rules/unirule/UR000100608/UR000100608-review.yaml` | MODIFY: a length case for the membrane, complex, EC and reaction statements | not needed (the fix is in the HAMAP rule) |
 
 The replacement rules live in [rules/curated](../../rules/curated/README.md).
