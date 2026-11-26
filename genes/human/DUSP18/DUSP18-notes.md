@@ -21,23 +21,26 @@ record, and the 68d5ebd600001504 GO-CAM review.
   DSPs exhibited no detectable in vivo activity against MAPKs under our
   conditions"], so the InterPro2GO MAPK phosphatase row is over-specific.
 - Jeong et al. is abstract-only in the local cache. The GOA rows from that paper
-  are left undecided because the abstract reports a family-wide DUSP analysis
-  but does not mention DUSP18.
+  to generic dephosphorylation and phosphatase activity are kept as
+  TOO_GENERAL, because the accepted dual-specificity activity and
+  peptidyl-tyrosine/peptidyl-threonine dephosphorylation rows establish that
+  both broad claims are true but imprecise.
 
 ## KISS1R/SRC GO-CAM context
 
 - The KISS1/KISS1R osteoclast GO-CAM uses human DUSP18 as a protein tyrosine
   phosphatase that directly negatively regulates SRC. That is consistent with
-  this gene review: GO:0004725 is an accepted activity, Dusp18 dephosphorylates
-  Src Tyr416 in the 2024 mouse osteoclast paper [PMID:38346942 "GPR54
-  activation by its natural ligand Kisspeptin-10 (Kp-10) causes Dusp18 to
-  dephosphorylate Src at Tyr 416"], and Dusp18 loss in mice supports negative
-  regulation of bone resorption [PMID:38346942 "Dusp18 knockout mice all
-  exhibit osteoclast hyperactivation and bone loss"].
-- The 2024 study assayed purified His-DUSP18 and the C104S catalytic mutant
-  against His-Src, so the phosphatase edge is biochemically direct
-  [PMID:38346942 "His-DUSP18 and His-DUSP18 (C104S) were incubated with His-Src
-  in 1x phosphatase buffer"].
+  this gene review: GO:0004725 is an accepted activity, the direct human
+  DUSP18/SRC biochemical evidence supports the new GO:0044387 negative
+  regulation of protein kinase activity row, and Dusp18 loss in mice supports
+  negative regulation of bone resorption [PMID:38346942 "Dusp18 knockout mice
+  all exhibit osteoclast hyperactivation and bone loss"].
+- The 2024 study assayed purified human DUSP18 and the C104S catalytic mutant
+  against human SRC, using the paper's Src Tyr416 numbering for the activating
+  site that corresponds to human SRC Tyr419, so the phosphatase edge is
+  biochemically direct [PMID:38346942 "Purified WT-DUSP18 potently reduced the
+  phosphorylation of Src (Y416) purified from Sf9 insect cells in vitro, but the
+  enzymatically dead DUSP18 (C104S) mutant had no activity"].
 
 ## Peripheral rows
 
