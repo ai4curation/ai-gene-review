@@ -15,7 +15,7 @@ The four pseudoenzyme items use their own paper floor of 2023-01-01. The full re
 | homolog_leakage | 44 | 6 | 0 | 0 |
 | near_duplicate | 33 | 15 | 2 | 0 |
 | uniprot_leakage | 49 | 48 | 5 | 0 |
-| reference_recency | 0 | 153 | 51 | 0 |
+| reference_recency | 0 | 153 | 153 | 0 |
 | header_leakage | 45 | 0 | 6 | 0 |
 | decoy | 72 | 0 | 0 | 0 |
 | review_agreement | 12 | 6 | 0 | 0 |
@@ -42,3 +42,32 @@ The four pseudoenzyme items use their own paper floor of 2023-01-01. The full re
   three items (`balance` WARN).
 - **The FULL header can give the answer away.** TGDS's name contains its target
   activity (`header_leakage`).
+
+## Pipeline-test model run (2026-11-26)
+
+These are `peptalk ask` runs on the 123 claims (50 targets, 1 NOT target, 72
+decoys), with shuffled copies of each sequence in the blind conditions, all at
+high effort. The scores are in `human-goa-2025-06-scores.{yaml,md}`; the raw
+JSONL lives in the git-ignored `runs/`. Actual spend was $22.04 by peptalk's
+log, canaries included: Fable 5.2 blind $12.79, Fable 5.2 organism $4.15, Opus
+5.5 blind $3.11, Opus 5.5 organism $1.95. The calls were direct API calls. Batch
+was not used because `peptalk batch submit` takes one parameter set for every
+sequence, while each item here has its own claims.
+
+| condition | targets yes | decoys yes | shuffled targets yes | NOT target yes |
+|---|---|---|---|---|
+| blind, Fable 5.2 | 32/50 | 1/72 | 4/50 (2 refused) | 1/1 |
+| organism, Fable 5.2 | 31/50 (1 refused) | 1/72 | n/a | 1/1 |
+| blind, Opus 5.5 | 28/50 (5 uncertain) | 3/72 (6 uncertain) | 0/50 (10 uncertain) | 1/1 |
+| organism, Opus 5.5 | 28/50 (7 uncertain) | 6/72 (3 uncertain) | n/a | 1/1 |
+
+**This is a pipeline test, not a fair evaluation.** Every target paper predates
+the models' training cutoffs (all 51 targets WARN on `reference_recency` for
+Opus 5.5; Fable 5.2's cutoff is not recorded). The blind reads may therefore
+draw on recalled knowledge of the protein, which peptalk's blind read
+explicitly allows. In the LRP4 canary, for example, the model said the
+sequence "looks like LRP4". With 50 targets, the blind-versus-organism
+differences (8 items change by one target) are within noise. Both models
+answered yes to TGDS's one NOT target (dTDP-glucose 4,6-dehydratase activity).
+The bio classifier refused five Fable calls, four of them on shuffled
+sequences; these score as missing.

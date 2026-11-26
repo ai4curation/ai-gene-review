@@ -416,7 +416,7 @@ benchmark-export benchmark *args="":
 benchmark-score benchmark *args="":
     uv run ai-gene-review benchmark score {{benchmark}} {{args}}
 
-# Validate every committed benchmark spec, benchmark, check report and agent evaluation
+# Validate every committed benchmark spec, benchmark, check report, agent evaluation and score report
 validate-benchmarks:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -427,6 +427,7 @@ validate-benchmarks:
         uv run ai-gene-review benchmark validate "$dir/$id.yaml" --class Benchmark
         for f in "$dir/$id"-check-report.yaml; do uv run ai-gene-review benchmark validate "$f" --class CheckReport; done
         for f in "$dir"/*-agent-evaluation.yaml; do uv run ai-gene-review benchmark validate "$f" --class AgentEvaluation; done
+        for f in "$dir"/*-scores.yaml; do uv run ai-gene-review benchmark validate "$f" --class ScoreReport; done
     done
 
 # List shadow issues waiting for triage, shadow work, or rating
