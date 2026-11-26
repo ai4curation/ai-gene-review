@@ -302,7 +302,7 @@ def test_packet_and_issue_bodies(tmp_path: Path, config: dict[str, Any]) -> None
     for cand in ranked:
         cand["issue_title"] = gene_gap.issue_title(cand)
         cand["issue_labels"] = gene_gap.issue_labels(cand)
-    packet = {
+    packet: dict[str, Any] = {
         "job": gene_gap.JOB,
         "generated_at": "2026-11-26T00:00:00+00:00",
         "date_from": "2026-10-27",
