@@ -17,3 +17,13 @@ record, whose function, kinetics and location lines cite experimental papers.
   TOO_DEEP in the PTHR46244 family review. Same action as Xanthomonas FruB; EI(Ntr) PtsP
   removes it because EI(Ntr) is not a sugar-PTS enzyme.
 - Cytoplasm rows refined to cytosol (HDA cytosolic fraction), following E. coli ptsN.
+
+## 2026-11-24 re-review of the over-annotated IBA row
+
+- GO:0015764 N-acetylglucosamine transport (IBA) changed from MARK_AS_OVER_ANNOTATED to
+  KEEP_AS_NON_CORE. The PAINT IBD is at the family root PTN000532509 (43 leaves) with one seed,
+  P. aeruginosa PA3760 (Q9HXN5; QuickGO: involved_in GO:0015764 IMP PMID:18833300, PseudoCAP).
+  The seed and ptsI are both in the 14-leaf clade PTN001879016, so the target is inside the seeded
+  clade, and the term is true of the general enzyme I. "One sugar out of many" is about how specific
+  the term is, not a ground for doubt. The node is still too deep for EI(Ntr) (PtsP), as the
+  PTHR46244 family review says; that is a PAINT placement question and does not change this row.
