@@ -9,7 +9,11 @@ description: >-
   Benchmark holds the drawn items with their target annotations, provenance and
   the pinned sources they were drawn from; a CheckReport records the
   deterministic checks run over a Benchmark; an AgentEvaluation records an
-  optional agent's reading of it. Classes are reusable so a single item or
+  optional agent's reading of it. Predictors are evaluated through a generic
+  interface: export writes a ClaimSet (and FASTA), any predictor (an LLM tool,
+  a sequence tool, an annotation pipeline, an agent review, a curator)
+  answers with Prediction records, and a ScoreReport tallies them per
+  condition and predictor. Classes are reusable so a single item or
   target annotation can be validated on its own. See docs/benchmarks.md.
 license: CC0
 prefixes:
@@ -120,13 +124,23 @@ classes:
         description: >-
           The evaluation conditions a run compares per item, for example a
           sequence-only blind read against an agent reasoning over sequence,
-          knowledge and context.
+          knowledge and context. A condition says what a predictor may see,
+          not which predictor is run.
+      predictors:
+        range: Predictor
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Predictors planned for or run on this benchmark. Optional; listed so
+          the reference_recency check can compare target dates with each
+          predictor's training cutoff before any run.
 
   EvaluationCondition:
     description: >-
-      One way of asking a predictor about each item. Conditions differ in what
-      the predictor is shown, so comparing them per item separates reading the
-      sequence from recalling or retrieving knowledge about the named protein.
+      What a predictor is allowed to see about each item. Conditions differ in
+      what the predictor is shown, so comparing them per item separates reading
+      the sequence from recalling or retrieving knowledge about the named
+      protein. Any predictor can be run under any condition it supports.
     attributes:
       name:
         identifier: true
@@ -134,22 +148,39 @@ classes:
       context:
         range: ConditionContextEnum
         required: true
-      tool:
-        description: Program that runs the condition, for example peptalk.
-      task:
-        description: Tool task, for example ask-function.
+      shuffle_control:
+        range: boolean
+        description: >-
+          Also ask of a shuffled copy of each sequence (predictions marked
+          sequence_control SHUFFLED), to measure yes answers that do not depend
+          on the sequence.
+      description:
+
+  Predictor:
+    description: >-
+      A configured predictor: a tool, model or person, with the settings that
+      change its answers. Two runs of one tool with different models are
+      different predictors.
+    attributes:
+      name:
+        identifier: true
+        required: true
+        description: >-
+          Predictor name as Prediction records give it, for example
+          peptalk:claude-opus-5-5, interproscan, ai-gene-review:claude-opus-5-5
+          or a curator's ORCID.
+      version:
+        description: Tool or pipeline version.
       model:
+        description: Underlying model, when the predictor is a model or uses one.
+      effort:
+        description: Reasoning effort or thinking level, in the provider's own labels.
       model_training_cutoff:
         range: date
         description: >-
           Training data cutoff of the model. Targets whose reference predates
           it may be known to the model from the literature, whatever the GO
           release dates say.
-      effort:
-        description: Reasoning effort or thinking level, in the provider's own labels (peptalk --effort).
-      shuffle_control:
-        range: boolean
-        description: Also ask of a shuffled copy of each sequence.
       description:
 
   FeatureQuota:
@@ -303,7 +334,7 @@ classes:
         required: true
       with_from:
       assigned_by:
-      date:
+      gaf_date:
         description: The GAF date column (YYYYMMDD). GO re-stamps it, so it is not proof of newness.
       reference_date:
         range: date
@@ -441,11 +472,104 @@ classes:
         range: integer
         required: true
 
+  Claim:
+    description: >-
+      One question a predictor is asked: does the protein of this item have
+      this GO term? A claim never says whether its term is a target, a NOT
+      target or a decoy.
+    attributes:
+      id:
+        identifier: true
+        required: true
+        description: "<item id>/<GO term id>."
+      item_id:
+        required: true
+      protein:
+        required: true
+        description: UniProtKB CURIE.
+      sequence_id:
+        required: true
+        description: Id of the item's record in the exported FASTA.
+      term:
+        range: Term
+        required: true
+
+  ClaimSet:
+    description: The claims exported for a benchmark, written as <id>-claims.yaml.
+    attributes:
+      benchmark_id:
+        required: true
+      claims:
+        range: Claim
+        multivalued: true
+        inlined_as_list: true
+
+  Prediction:
+    description: >-
+      One predictor's answer to one claim under one condition. This is the
+      only format `benchmark score` reads; importers convert each predictor's
+      native output into it. A prediction names its claim by claim_id or by
+      item_id plus term.
+    attributes:
+      item_id:
+        required: true
+      claim_id:
+        description: Id of the Claim answered; optional when term is given.
+      term:
+        description: GO term id the prediction is about; optional when claim_id is given.
+      predictor:
+        required: true
+        description: Predictor name; see Predictor.
+      predictor_version:
+      model:
+      effort:
+      condition:
+        required: true
+        description: Name of an EvaluationCondition in the spec.
+      context:
+        range: ConditionContextEnum
+        description: The condition's context level, for records read without the spec.
+      sequence_control:
+        range: SequenceControlEnum
+        description: Whether the native or a shuffled sequence was shown (default NATIVE).
+      verdict:
+        range: VerdictEnum
+        description: The predictor's answer; absent when it gave none.
+      score:
+        range: float
+        description: >-
+          A numeric score for the claim, for predictors that give one (a
+          probability, an E-value-derived score). Scored as a verdict only
+          with an explicit threshold.
+      confidence:
+        range: float
+        description: The predictor's stated confidence in its verdict, 0 to 1.
+      evidence:
+        description: The predictor's stated reasoning or evidence, verbatim or abridged.
+      cost_usd:
+        range: float
+      prediction_date:
+        range: date
+        description: When the prediction was made.
+      provenance:
+        description: Where the record came from, for example the native output file and record id.
+
+  PredictionSet:
+    description: >-
+      A YAML file of predictions. JSONL files hold one Prediction per line
+      instead, and are validated as a PredictionSet without a benchmark_id.
+    attributes:
+      benchmark_id:
+      predictions:
+        range: Prediction
+        multivalued: true
+        inlined_as_list: true
+
   ScoreReport:
     description: >-
-      Verdicts of each condition on each item's targets, NOT targets and
-      decoys, tallied overall and per item so conditions can be compared item
-      by item.
+      Verdicts of each predictor under each condition on each item's targets,
+      NOT targets and decoys, tallied overall and per item so conditions and
+      predictors can be compared item by item.
     attributes:
       benchmark_id:
         required: true
@@ -454,7 +578,7 @@ classes:
         required: true
       inputs:
         multivalued: true
-        description: Result files scored, each with its sha256 when it is a file.
+        description: Prediction files scored, each with its sha256.
       condition_scores:
         range: ConditionScore
         multivalued: true
@@ -465,11 +589,14 @@ classes:
         inlined_as_list: true
 
   ConditionScore:
-    description: Verdict counts for one condition (and, in item_scores, one item) and one query role.
+    description: >-
+      Verdict counts for one condition and predictor (and, in item_scores, one
+      item) and one query role.
     attributes:
       condition:
         required: true
-      model:
+      predictor:
+        required: true
       item_id:
       role:
         range: QueryRoleEnum
@@ -497,7 +624,7 @@ classes:
         required: true
       evaluator:
         required: true
-      date:
+      evaluation_date:
         range: date
         required: true
       overall_assessment:
@@ -544,16 +671,29 @@ enums:
   ConditionContextEnum:
     permissible_values:
       BLIND:
-        description: Sequence only; the header is withheld (peptalk --context blind, the fs2f protocol).
+        description: Sequence only; the header is withheld (the fs2f protocol).
       ORGANISM:
-        description: Sequence plus organism and taxon (peptalk --context organism).
+        description: Sequence plus organism and taxon.
       FULL:
-        description: Sequence plus the full header, accession and name included (peptalk --context full).
+        description: Sequence plus the full header, accession and name included.
       AGENT_REVIEW:
         description: >-
           Combined reasoning: an agent reads the sequence and reasons over
           knowledge and context, as in an ai-gene-review review seeded with
           baseline-release annotations only.
+
+  SequenceControlEnum:
+    permissible_values:
+      NATIVE:
+        description: The item's own sequence.
+      SHUFFLED:
+        description: A shuffled copy of the item's sequence (the shuffle control).
+
+  VerdictEnum:
+    permissible_values:
+      "yes":
+      "no":
+      uncertain:
 
   QueryRoleEnum:
     permissible_values:

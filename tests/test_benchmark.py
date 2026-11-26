@@ -30,13 +30,10 @@ from ai_gene_review.benchmark.checks import (
     validate_schema,
 )
 from ai_gene_review.benchmark.cli import benchmark_app
-from ai_gene_review.benchmark.run import (
-    claims_rows,
-    export,
-    peptalk_verdicts,
-    review_verdicts,
-    score,
-)
+from ai_gene_review.benchmark.importers import peptalk as peptalk_importer
+from ai_gene_review.benchmark.importers import reviews as reviews_importer
+from ai_gene_review.benchmark.predictions import read_predictions, verdicts
+from ai_gene_review.benchmark.run import export, score
 from ai_gene_review.benchmark.sources import (
     Annotation,
     InformationContent,
@@ -223,15 +220,9 @@ SPEC = {
     "include_negated": True,
     "decoys_per_item": 1,
     "seed": 1,
-    "conditions": [
-        {
-            "name": "blind",
-            "context": "BLIND",
-            "tool": "peptalk",
-            "task": "ask-function",
-            "model": "m1",
-            "model_training_cutoff": "2025-01-01",
-        }
+    "conditions": [{"name": "blind", "context": "BLIND", "shuffle_control": True}],
+    "predictors": [
+        {"name": "peptalk:m1", "model": "m1", "model_training_cutoff": "2025-01-01"}
     ],
 }
 
@@ -330,7 +321,7 @@ def test_check_catches_hand_edited_old_target(ctx: Context, tmp_path: Path) -> N
     )
 
 
-def test_export_and_score_peptalk(ctx: Context, tmp_path: Path) -> None:
+def test_export_writes_generic_claims(ctx: Context, tmp_path: Path) -> None:
     benchmark = toy_benchmark(ctx, tmp_path)
     written, skipped = export(benchmark, ctx, tmp_path / "inputs")
     assert skipped == []
@@ -338,43 +329,161 @@ def test_export_and_score_peptalk(ctx: Context, tmp_path: Path) -> None:
         (tmp_path / "inputs" / "toy.fasta").read_text().startswith(">sp|P1|GP1_HUMAN")
     )
     assert (tmp_path / "inputs" / "baseline-goa" / "P1-goa.tsv") in written
-    header = claims_rows(benchmark["items"])[0]
-    assert header.split("\t") == ["id", "task", "term", "label", "position", "residue"]
-    records = [
-        {
-            "id": "sp|P1|GP1_HUMAN",
-            "task": "ask-function",
-            "context": "blind",
-            "model": "m1",
-            "condition": "real",
-            "params": {"term": "GO:0106310"},
-            "answer": {"verdict": "yes"},
-        },
-        {
-            "id": "sp|P1|GP1_HUMAN",
-            "task": "ask-function",
-            "context": "blind",
-            "model": "m1",
-            "condition": "shuffled",
-            "params": {"term": "GO:0106310"},
-            "answer": {"verdict": "no"},
-        },
-        {
-            "id": "sp|P6|GP6_HUMAN",
-            "task": "ask-function",
-            "context": "blind",
-            "model": "m1",
-            "condition": "real",
-            "params": {"term": "GO:0004672"},
-            "answer": {"verdict": None},
-        },
+    claimset = yaml.safe_load((tmp_path / "inputs" / "toy-claims.yaml").read_text())
+    assert validate_schema(claimset, "ClaimSet") == []
+    # a claim never reveals whether its term is a target, NOT target or decoy
+    assert all("role" not in c and "negated" not in c for c in claimset["claims"])
+    asked = {
+        (i["id"], t["term"]["id"])
+        for i in benchmark["items"]
+        for t in i["target_annotations"] + i.get("decoys", [])
+    }
+    assert {(c["item_id"], c["term"]["id"]) for c in claimset["claims"]} == asked
+
+
+PEPTALK_RECORDS: list[dict] = [
+    {
+        "uid": "u1",
+        "id": "sp|P1|GP1_HUMAN",
+        "task": "ask-function",
+        "context": "blind",
+        "model": "m1",
+        "condition": "real",
+        "params": {"term": "GO:0106310"},
+        "answer": {"verdict": "yes", "reason": "kinase domain"},
+        "cost_usd": 0.01,
+    },
+    {
+        "uid": "u2",
+        "id": "sp|P1|GP1_HUMAN",
+        "task": "ask-function",
+        "context": "blind",
+        "model": "m1",
+        "condition": "shuffled",
+        "params": {"term": "GO:0106310"},
+        "answer": "{'verdict': 'no'}",
+    },
+    {
+        "uid": "u3",
+        "id": "sp|P6|GP6_HUMAN",
+        "task": "ask-function",
+        "context": "blind",
+        "model": "m1",
+        "condition": "real",
+        "params": {"term": "GO:0004672"},
+        "answer": {"verdict": None},
+    },
+]
+
+
+def test_peptalk_importer_and_score(ctx: Context, tmp_path: Path) -> None:
+    benchmark = toy_benchmark(ctx, tmp_path)
+    records = [(tmp_path / "blind.jsonl", r) for r in PEPTALK_RECORDS]
+    predictions = peptalk_importer.predictions(benchmark, records)
+    assert (
+        validate_schema(
+            {"benchmark_id": "toy", "predictions": predictions}, "PredictionSet"
+        )
+        == []
+    )
+    assert {p["predictor"] for p in predictions} == {"peptalk:m1"}
+    assert [p["sequence_control"] for p in predictions] == [
+        "NATIVE",
+        "SHUFFLED",
+        "NATIVE",
     ]
-    report = score(benchmark, peptalk_verdicts(benchmark, records), ["stub"])
+    report = score(benchmark, verdicts(benchmark, predictions), ["stub"])
     assert validate_schema(report, "ScoreReport") == []
     rows = {(r["condition"], r["role"]): r for r in report["condition_scores"]}
     assert rows[("blind", "TARGET")]["n_yes"] == 1
     assert rows[("blind", "SHUFFLED_TARGET")]["n_no"] == 1
     assert rows[("blind", "NEGATED_TARGET")]["n_missing"] == 1
+    assert {r["predictor"] for r in report["condition_scores"]} == {"peptalk:m1"}
+
+
+def test_peptalk_claims_tsv_round_trip(ctx: Context, tmp_path: Path) -> None:
+    from ai_gene_review.benchmark.predictions import claims
+
+    benchmark = toy_benchmark(ctx, tmp_path)
+    lines = peptalk_importer.claims_tsv(claims(benchmark["items"])).splitlines()
+    assert lines[0].split("\t") == [
+        "id",
+        "task",
+        "term",
+        "label",
+        "position",
+        "residue",
+    ]
+    assert len(lines) - 1 == len(claims(benchmark["items"]))
+
+
+def test_predictions_on_unknown_claims_are_rejected(
+    ctx: Context, tmp_path: Path
+) -> None:
+    benchmark = toy_benchmark(ctx, tmp_path)
+    bad = {
+        "item_id": "toy-P1",
+        "term": "GO:0005634",
+        "predictor": "x",
+        "condition": "c",
+    }
+    with pytest.raises(ValueError, match="matches no claim"):
+        verdicts(benchmark, [bad])
+
+
+@pytest.mark.parametrize(
+    "prediction,threshold,expected",
+    [
+        ({"verdict": "no", "score": 0.9}, 0.5, "no"),  # an explicit verdict wins
+        ({"score": 0.9}, None, "missing"),  # a bare score needs a threshold
+        ({"score": 0.9}, 0.5, "yes"),
+        ({"score": 0.1}, 0.5, "no"),
+    ],
+)
+def test_score_only_predictions(
+    ctx: Context,
+    tmp_path: Path,
+    prediction: dict,
+    threshold: float | None,
+    expected: str,
+) -> None:
+    benchmark = toy_benchmark(ctx, tmp_path)
+    record = {
+        "item_id": "toy-P1",
+        "claim_id": "toy-P1/GO:0106310",
+        "predictor": "deepgo",
+        "condition": "blind",
+        **prediction,
+    }
+    assert verdicts(benchmark, [record], threshold) == {
+        ("blind", "deepgo", "toy-P1", "GO:0106310"): expected
+    }
+
+
+@pytest.mark.parametrize("suffix", [".jsonl", ".yaml"])
+def test_import_and_score_cli(ctx: Context, tmp_path: Path, suffix: str) -> None:
+    """End to end through the CLI: native peptalk output -> predictions -> scores."""
+    benchmark = toy_benchmark(ctx, tmp_path)
+    bench_file = tmp_path / "toy.yaml"
+    bench_file.write_text(yaml.safe_dump(benchmark))
+    native = tmp_path / "blind.jsonl"
+    native.write_text("".join(json.dumps(r) + "\n" for r in PEPTALK_RECORDS))
+    out = tmp_path / f"blind-peptalk-m1{suffix}"
+    runner = CliRunner()
+    result = runner.invoke(
+        benchmark_app,
+        ["import", str(bench_file), str(native), "--from", "peptalk", "-o", str(out)],
+    )
+    assert result.exit_code == 0, result.output
+    assert len(read_predictions([out])) == 3
+    result = runner.invoke(
+        benchmark_app, ["validate", str(out), "--class", "PredictionSet"]
+    )
+    assert result.exit_code == 0, result.output
+    result = runner.invoke(benchmark_app, ["score", str(bench_file), "-p", str(out)])
+    assert result.exit_code == 0, result.output
+    report = yaml.safe_load((tmp_path / "toy-scores.yaml").read_text())
+    assert report["inputs"][0].startswith(str(out))
 
 
 def write_review(genes: Path, acc: str, symbol: str, rows: list[dict]) -> Path:
@@ -413,15 +522,24 @@ def test_review_derived_targets_and_review_verdicts(
     targets = review_targets(ctx, SPEC, yaml.safe_load(path.read_text()), path)
     assert [t["term"]["id"] for t in targets] == ["GO:0106310"]
     benchmark = toy_benchmark(ctx, tmp_path)
-    verdicts = review_verdicts(benchmark, ctx, tmp_path, "agent-review")
-    assert verdicts[("agent-review", "", "toy-P1", "GO:0106310")] == "yes"
-    decoy_roles = {
-        verdicts[("agent-review", "", item["id"], d["term"]["id"])]
+    predictions = reviews_importer.predictions(
+        benchmark, ctx, tmp_path, "agent-review", "ai-gene-review:m1", "m1"
+    )
+    assert (
+        validate_schema(
+            {"benchmark_id": "toy", "predictions": predictions}, "PredictionSet"
+        )
+        == []
+    )
+    found = verdicts(benchmark, predictions)
+    assert found[("agent-review", "ai-gene-review:m1", "toy-P1", "GO:0106310")] == "yes"
+    decoys = {
+        (item["id"], d["term"]["id"])
         for item in benchmark["items"]
-        if item["protein"] == "UniProtKB:P1"
         for d in item.get("decoys", [])
     }
-    assert decoy_roles <= {"missing"}  # a review is never asked about decoys
+    # a review is never asked about decoys, so it makes no prediction on them
+    assert not {(p["item_id"], p["term"]) for p in predictions} & decoys
 
 
 def test_review_verdicts_count_modify_replacements(
@@ -439,10 +557,16 @@ def test_review_verdicts_count_modify_replacements(
         }
     ]
     write_review(tmp_path, "P1", "GP1", rows)
-    verdicts = review_verdicts(
-        toy_benchmark(ctx, tmp_path), ctx, tmp_path, "agent-review"
+    benchmark = toy_benchmark(ctx, tmp_path)
+    predictions = reviews_importer.predictions(
+        benchmark, ctx, tmp_path, "agent-review", "ai-gene-review"
     )
-    assert verdicts[("agent-review", "", "toy-P1", "GO:0106310")] == "yes"
+    assert (
+        verdicts(benchmark, predictions)[
+            ("agent-review", "ai-gene-review", "toy-P1", "GO:0106310")
+        ]
+        == "yes"
+    )
 
 
 def test_date_filter_drops_targets_with_any_old_reference(
@@ -565,3 +689,58 @@ def test_committed_reports_match_their_benchmark(suffix: str) -> None:
             for row in report["condition_scores"]:
                 if row["role"] == "DECOY":
                     assert row["n"] == decoys
+
+
+def committed_prediction_files() -> list[Path]:
+    return sorted(Path("benchmarks").glob("*/predictions/*"))
+
+
+@pytest.mark.parametrize("path", committed_prediction_files(), ids=str)
+def test_committed_predictions_validate(path: Path) -> None:
+    result = CliRunner().invoke(
+        benchmark_app, ["validate", str(path), "--class", "PredictionSet"]
+    )
+    assert result.exit_code == 0, result.output
+
+
+@pytest.mark.parametrize("path", committed_prediction_files(), ids=str)
+def test_committed_predictions_parse_with_pydantic(path: Path) -> None:
+    from ai_gene_review.datamodel.benchmark_model import Prediction
+
+    for record in read_predictions([path]):
+        assert Prediction.model_validate(record).item_id == record["item_id"]
+
+
+def test_committed_scores_reproduce_from_committed_predictions() -> None:
+    """The committed score report is exactly what its committed prediction files give."""
+    for scores_path in sorted(Path("benchmarks").glob("*/*-scores.yaml")):
+        report = yaml.safe_load(scores_path.read_text())
+        bench_path = scores_path.with_name(f"{report['benchmark_id']}.yaml")
+        files = [Path(i.split(" sha256:")[0]) for i in report["inputs"]]
+        benchmark = yaml.safe_load(bench_path.read_text())
+        again = score(benchmark, verdicts(benchmark, read_predictions(files)), [])
+        assert again["condition_scores"] == report["condition_scores"]
+        assert again["item_scores"] == report["item_scores"]
+
+
+@pytest.mark.parametrize(
+    "generator,committed",
+    [
+        ("gen-json-schema", "assets/jsonschema/benchmark.schema.json"),
+        ("gen-pydantic", "src/ai_gene_review/datamodel/benchmark_model.py"),
+    ],
+)
+def test_generated_benchmark_models_are_current(generator: str, committed: str) -> None:
+    """Regenerate with `just gen-benchmark-models` after editing schema/benchmark.yaml."""
+    import shutil
+    import subprocess
+
+    exe = shutil.which(generator)
+    assert exe, f"{generator} not installed"
+    out = subprocess.run(
+        [exe, "src/ai_gene_review/schema/benchmark.yaml"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    assert out == Path(committed).read_text()

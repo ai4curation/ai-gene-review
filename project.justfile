@@ -398,7 +398,8 @@ sync-shadow-issues tracker="go-annotation" *args="":
 #   just benchmark-build benchmarks/human-goa-2025-06/human-goa-2025-06-spec.yaml
 #   just benchmark-check benchmarks/human-goa-2025-06/human-goa-2025-06.yaml
 #   just benchmark-export benchmarks/human-goa-2025-06/human-goa-2025-06.yaml
-#   just benchmark-score benchmarks/human-goa-2025-06/human-goa-2025-06.yaml --peptalk blind.jsonl
+#   just benchmark-import benchmarks/human-goa-2025-06/human-goa-2025-06.yaml runs/blind.jsonl --from peptalk -o benchmarks/human-goa-2025-06/predictions/blind-peptalk-m.jsonl
+#   just benchmark-score benchmarks/human-goa-2025-06/human-goa-2025-06.yaml -p benchmarks/human-goa-2025-06/predictions/blind-peptalk-m.jsonl
 
 # Draw a benchmark from a BenchmarkSpec into the spec's folder
 benchmark-build spec *args="":
@@ -408,11 +409,15 @@ benchmark-build spec *args="":
 benchmark-check benchmark *args="":
     uv run ai-gene-review benchmark check {{benchmark}} {{args}}
 
-# Write FASTA, peptalk claims and baseline GOA files for the benchmark's conditions
+# Write generic run inputs: FASTA, claims (ClaimSet YAML) and baseline GOA files
 benchmark-export benchmark *args="":
     uv run ai-gene-review benchmark export {{benchmark}} {{args}}
 
-# Score condition results (peptalk JSONL, agent-review genes folders) per item
+# Convert a predictor's native output (--from peptalk|reviews) into Prediction records
+benchmark-import benchmark *args="":
+    uv run ai-gene-review benchmark import {{benchmark}} {{args}}
+
+# Score Prediction files (JSONL or PredictionSet YAML) per condition, predictor and item
 benchmark-score benchmark *args="":
     uv run ai-gene-review benchmark score {{benchmark}} {{args}}
 
@@ -428,7 +433,13 @@ validate-benchmarks:
         for f in "$dir/$id"-check-report.yaml; do uv run ai-gene-review benchmark validate "$f" --class CheckReport; done
         for f in "$dir"/*-agent-evaluation.yaml; do uv run ai-gene-review benchmark validate "$f" --class AgentEvaluation; done
         for f in "$dir"/*-scores.yaml; do uv run ai-gene-review benchmark validate "$f" --class ScoreReport; done
+        for f in "$dir"/predictions/*; do uv run ai-gene-review benchmark validate "$f" --class PredictionSet; done
     done
+
+# Regenerate the benchmark schema's JSON Schema and Pydantic model (commit both)
+gen-benchmark-models:
+    uv run gen-json-schema src/ai_gene_review/schema/benchmark.yaml > assets/jsonschema/benchmark.schema.json
+    uv run gen-pydantic src/ai_gene_review/schema/benchmark.yaml > src/ai_gene_review/datamodel/benchmark_model.py.tmp && mv src/ai_gene_review/datamodel/benchmark_model.py.tmp src/ai_gene_review/datamodel/benchmark_model.py
 
 # List shadow issues waiting for triage, shadow work, or rating
 outstanding-shadow-issues tracker="go-annotation" *args="":
