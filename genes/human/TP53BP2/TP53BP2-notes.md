@@ -17,3 +17,11 @@
 - The perinuclear rows are retained for ASPP2 based on APCL-driven
   translocation [PMID:10646860] and the UniProt subcellular summary. The HPA
   cytosol and cell-junction rows are kept as non-core localization evidence.
+- `GO:0008157 protein phosphatase 1 binding` is proposed as the informative
+  molecular-function term for ASPP2 rows that only asserted bare PP1 catalytic
+  subunit binding [PMID:21998301].
+- ASPP2 also has a non-core epithelial tight-junction role, where it scaffolds
+  protein phosphatase 1 and YAP in an apical-lateral polarity complex
+  [PMID:25360797]. This review uses that paper to support junctional
+  localization and leaves detailed polarity/Hippo signaling as a candidate
+  module or GO-CAM rather than adding a broad process term.
