@@ -9,7 +9,9 @@
 - Loss-of-function human genetics support USP18 as a physiologic brake on type I interferon signaling. Patient fibroblasts from Meuwissen et al. showed excessive IFN-induced inflammatory gene expression that could be rescued with USP18 [PMID:27325888, "patient fibroblasts displayed severely enhanced IFN-induced inflammation, which was completely rescued by lentiviral transduction of USP18"].
 - Localization is isoform-aware. Full-length USP18 is cytoplasmic, while an N-terminally truncated human isoform, USP18-sf, has enhanced nuclear deISGylation activity [PMID:22170061, "USP18-sf shows different subcellular distribution compared with the full-length protein and enhanced deISGylation activity in the nucleus"].
 
-## GO-CAM 69729a3800005900 consistency
+## GO-CAM consistency
 
 - The KCTD10/SLC7A11/USP18 ferroptosis model is biologically aligned with the reviewed gene biology: USP18 directly deubiquitinates and stabilizes SLC7A11, opposing CRL3-KCTD10 and suppressing ferroptosis.
 - The source on the model's USP18 activity and the corresponding UniProt GOA rows is stale/wrong. PMID:30404837 is the 2018 KCTD10/CEP97 primary-cilium paper; the direct USP18-SLC7A11-ferroptosis source is PMID:38959043. The gene review records this as UniProt `WRONG_REFERENCE` defects on the affected GOA rows. The final GO-CAM consistency PR should similarly repoint the USP18 activity and KCTD10 -> SLC7A11 -> ferroptosis causal framing to PMID:38959043 rather than editing the model in this USP18 gene PR.
+- GO-CAM 632cf60a00000788 uses USP18 as a `GO:0060090` molecular adaptor in USP20-mediated STING deubiquitination and is aligned with the PMID:27801882-supported USP20/STING core function.
+- GO-CAM 69d8496c00001117 uses USP18 as a `GO:0019785` ISG15-specific peptidase in negative regulation of cGAS/STING signaling and is aligned with the PMID:38421872 cGAS deISGylation branch of the ISG15-specific peptidase core function.
