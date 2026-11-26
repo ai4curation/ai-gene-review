@@ -1,0 +1,9 @@
+# TET3 manual deep research notes
+
+Automated deep research could not run in this sparse runtime because the configured Falcon and Perplexity providers were unavailable, so this file records the literature synthesis used for the review.
+
+TET3 is a nuclear methylcytosine dioxygenase with an N-terminal CXXC domain and a C-terminal TET catalytic core. A human Mendelian-disease study tested TET3 missense variants in a catalytic assay and showed that variants in the catalytic domain are commonly hypomorphic, supporting the DNA 5-methylcytosine dioxygenase activity of the human protein [PMID:31928709]. UniProt infers the iterative 5mC-to-5hmC-to-5fC-to-5caC reaction sequence from TET orthology and records mouse-supported zygotic localization of TET3 to the male pronucleus [genes/human/TET3/TET3-uniprot.txt].
+
+The best direct promoter-targeting evidence in the GOA set comes from Xenopus Tet3. Xu et al. cloned human and mouse TET3 but used Xenopus Tet3 for the mechanistic experiments; the Xenopus CXXC domain and catalytic activity cooperate to regulate target-gene promoters during eye and neural development [PMID:23217707]. That paper supports orthologous TET3 CpG-DNA targeting and target-gene regulation, but the CXXC-domain evidence is better represented as unmethylated CpG binding than as methyl-CpG binding.
+
+Like TET2, TET3 binds OGT and promotes OGT-dependent O-GlcNAcylation/H3K4 methylation at active promoters [PMID:23222540; PMID:23353889]. That mechanism is a non-core chromatin-regulatory context for TET3's recruitment function. The male-pronucleus, chromosome, and nucleus rows reflect the zygotic and chromatin localization of the enzyme; the female-pronucleus IEA row is too specific because mouse TET3 is selectively enriched in the paternal/male pronucleus while maternal chromatin is protected from TET3 binding.
