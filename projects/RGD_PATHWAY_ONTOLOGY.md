@@ -29,12 +29,13 @@ genes of a pathway, and only 56 of the 144 have any human GO-CAM model whose
 process falls under the mapped GO term. Third, as a source of module seeds. We parsed
 all 200 RGD diagram pages into structured records (3,209 interaction edges,
 1,715 gene links, 651 chemicals, 580 links to other pathways). These were
-triaged against our 886 modules (2026-11-24). 136 now have a matching module, none
+triaged against the 888 modules on `main` when the triage last ran (2026-11-26; modules merged since are not yet counted). 136 now have a matching module, none
 is left to model, 1 (titanium dioxide nanoparticle response) is left without a module
 by decision, 7 have too few curated genes, and 56 are disease or drug pathways and out
 of scope. The modules derived from RGD diagrams, starting with the pilot
-`srebp_signaling` and continuing through eighteen sets (below), cite their PW pathways as
-evidence. 86 modules now cite a PW id as evidence (a count over all modules, not only
+`srebp_signaling` and continuing through fifteen modelling sets (below; the sixteenth to
+nineteenth sets are follow-ups, triage changes and gene reviews, and add no modules), cite
+their PW pathways as evidence. 86 modules now cite a PW id as evidence (a count over all modules, not only
 those built from RGD diagrams), and each passes schema and module validation.
 
 ## Why this source
@@ -93,7 +94,7 @@ fetcher sends its own identifying user agent.
 | File | Contents |
 |------|----------|
 | `pw_go_mappings.sssom.yaml` | Candidate PW→GO mappings as an SSSOM mapping set, from three sources: GO ids PW cites in a definition (`skos:closeMatch` after a 50-row spot check; spot-checked pairs carry their own verdict; citations of obsolete or missing GO ids stay `skos:relatedMatch`), the "associated GO term" on a diagram page (`skos:closeMatch`), and exact normalized matches between labels or exact synonyms, where PW's "X metabolic/biosynthetic/degradation pathway" is read as GO's "X metabolic/biosynthetic/catabolic process" (`skos:exactMatch` if verbatim, else `skos:closeMatch`). None is curator-verified. Each row's `curation_rule` records why it exists (`pw2go:src/…`) and any QA finding (`pw2go:qa/…`), as fixed codes defined in the mapping-set description, so one prefix filter selects every problem row. `see_also` holds only GO's replacement for an obsolete target; the conflicting GO ids for a page citation that disagrees are in `other` as `conflicts_with=<GO id>`. |
-| `pw_gocam_completeness.tsv` | One row for each of the 1,677 PW terms with human genes. Genes are taken over the term and its descendants. The basis is the RGD-curated set when one exists and all sources otherwise. Columns give the share of basis genes in any human GO-CAM, the share with a gene review, the best-overlapping GO-CAM, and the GO-CAM models whose process falls under a mapped GO term, with the share of genes they contain. |
+| `pw_gocam_completeness.tsv` | One row for each of the 1,677 PW terms with human genes. Genes are taken over the term and its descendants. The basis is the RGD-curated set when one exists and all sources otherwise. Columns give the share of basis genes in any human GO-CAM, the counts with a mouse or rat ortholog (HGNC MGI and RGD cross-references) in a GO-CAM of that species, the share in any human, mouse or rat GO-CAM, the share with a gene review, the best-overlapping GO-CAM, and the GO-CAM models whose process falls under a mapped GO term, with the share of genes they contain. |
 | `module_seeds.yaml` | One seed per diagram pathway: diagram structure, RGD-curated human genes, merged GO mappings, GO-CAM coverage, matches to existing modules, and a triage tier. |
 | `summary.yaml` | Headline counts used on this page. |
 
@@ -128,7 +129,8 @@ split along their sub-pathways before modelling.
 - **PW's definition citations are reliable.** Where both exist, the definition
   citation and the lexical match agree for 388 of 397 terms. In no case is the
   cited GO term an ancestor of the lexical match. A reproducible 50-row spot check
-  of the 592 citations of live GO processes
+  of the 592 citation rows of live GO processes (592 rows rather than terms, because one
+  term cites two GO ids)
   ([`data/pw_def_xref_spot_check.yaml`](RGD_PATHWAY_ONTOLOGY/data/pw_def_xref_spot_check.yaml))
   found 48 close or exact matches and 2 narrower GO terms (PW:0000100 transcription
   pathway → DNA-templated transcription; PW:0000211 biogenic amines and polyamines →
@@ -1380,7 +1382,24 @@ The sixteenth set closes follow-ups from the earlier sets rather than adding mod
   `gpcr_camp_pka_signaling#adenylyl_cyclase_activation`, which five modules reference,
   splits the cyclases into Gs-stimulated and Gi-inhibited variants; a reference to the
   cAMP/PKA cassette's regulatory classes would not keep that split, which the
-  calcium-sensing receptor module relies on.
+  calcium-sensing receptor and acetylcholine modules rely on for the Gi-inhibited cyclase.
+
+### Nineteenth set: mouse and rat GO-CAM completeness and protein C system reviews
+
+- The triage now also counts, for each pathway's human genes, those whose mouse or rat
+  ortholog (one HGNC MGI or RGD cross-reference per rodent gene) is in a GO-CAM of that
+  species. Over the 144 in-scope diagram pathways the median share of genes in a GO-CAM is
+  0.462 with human, mouse and rat models together, against 0.292 for human models alone,
+  and 70 pathways (42 before) have at least half their genes covered. 878 human genes have
+  a mouse ortholog in a mouse GO-CAM and 39 a rat ortholog in a rat GO-CAM; 634 are covered
+  only through a rodent model. The largest gains are metabolic: pentose phosphate (0 to
+  0.86), kynurenine (0 to 0.83), NAD biosynthesis (0.22 to 1.0) and folate one-carbon
+  metabolism (0.21 to 0.93).
+- New gene reviews for THBD (thrombomodulin; the thrombin cofactor for protein C and TAFI
+  activation), PROC (protein C; the protease that inactivates factors Va and VIIIa, and
+  EPCR-dependent PAR1 signalling) and SERPINC1 (antithrombin).
+- PROC is the first review with direct ER and Golgi rows on a secreted protein's transit
+  pool; the split it uses is recorded in [`ORGANELLES.md`](ORGANELLES.md).
 
 ## Next steps
 
@@ -1398,7 +1417,7 @@ The sixteenth set closes follow-ups from the earlier sets rather than adding mod
 - Once a calcium channel activator activity term exists, sweep the three
   "opens a calcium channel" functions onto it: STIM1/2 (`GO:0005246`),
   EMRE (`GO:0099103`) and CACNA1S (`GO:0005245`).
-- Review the remaining blood-set member genes; F3, F5, F8 and PROS1 are done.
+- Review the remaining blood-set member genes; F3, F5, F8, PROS1, THBD, PROC and SERPINC1 are done.
 - Model the remaining pathways. The broad ones (RNA polymerase II, translation,
   ribosome biogenesis, the spliceosome and histone modification, plus RNA
   polymerase transcription and calcium-mediated signaling, which match only by
@@ -1411,8 +1430,6 @@ The sixteenth set closes follow-ups from the earlier sets rather than adding mod
   (the PKC module mentions the PAR complex only through the atypical PKCs), and a
   stereocilium-organization module for the bundle genes left out of hair-cell
   mechanotransduction.
-- Repeat the completeness measure with rat and mouse GO-CAMs. The index holds
-  59 rat and 2,209 mouse activity rows.
 
 ## Status
 
@@ -1442,6 +1459,7 @@ The sixteenth set closes follow-ups from the earlier sets rather than adding mod
 - [x] Close the follow-ups from the earlier sets (sixteenth set)
 - [x] Triage reads structured module ids and follows node-level `module_ref`; PTHR10625 IRD request (seventeenth set)
 - [x] Promote definition citations; F3 and PROS1 gene reviews (eighteenth set)
+- [x] GO-CAM completeness against mouse and rat GO-CAMs; THBD, PROC and SERPINC1 gene reviews (nineteenth set)
 
 ## Notes
 
@@ -1552,3 +1570,10 @@ Seventeenth set (ai4curation/ai-gene-review#6787): structured-id triage with nod
 a 50-row spot check, and F3 and PROS1 gene reviews. Tiers are unchanged (136
 `has_module`); `modules_compared` is 886. The stale `gpcr_camp_pka_signaling` sentences
 were corrected separately (ai4curation/ai-gene-review#6718).
+
+### 2026-11-26
+
+Nineteenth set (ai4curation/ai-gene-review#7075): GO-CAM completeness against mouse and rat
+models, and the THBD, PROC and SERPINC1 gene reviews. Tiers are unchanged (136
+`has_module`); `modules_compared` is 888. This update also carries four wording fixes from
+the review of ai4curation/ai-gene-review#6873.

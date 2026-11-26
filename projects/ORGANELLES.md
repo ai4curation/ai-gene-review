@@ -670,6 +670,19 @@ From the 2026-10-18 run, mitochondrion only, leaving out REMOVEd rows:
 
 # NOTES
 
+## 2026-11-26 (PROC: direct rows on a secretory transit pool)
+
+Recorded from the review of ai4curation/ai-gene-review#7075. PROC (protein C) is the first
+review in the corpus with *direct* ER and Golgi rows (EXP and IDA) on a secreted protein's
+biosynthetic pool: wild-type as well as mutant protein C co-localises with PDI and GM130 in
+transfected HEK293T and COS-7 cells (PMID:25748729, PMID:22531345). Rule 7's first clause covers
+them, so they are `KEEP_AS_NON_CORE`. The UniProt-keyword IEA rows (GO_REF:0000044), which
+restate the same two transfection papers, and every ER-lumen and Golgi-lumen row (ARBA and
+Reactome biosynthesis events) are synthesis rows resting on transit, so they stay
+`MARK_AS_OVER_ANNOTATED`. The split is by evidence type, not by term: a direct row on a
+transit pool is kept as non-core even when its assay used overexpressed protein, as long as
+the wild-type protein was observed.
+
 ## 2026-11-23 (endosome batch 1: 28 human genes)
 
 The first endosome (GO:0005768) batch and the first for a series organelle (#6756). The
