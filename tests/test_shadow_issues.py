@@ -980,6 +980,9 @@ def test_load_issue_names_a_missing_file(config, tracker_dir):
     (tracker_dir / "101" / "issue.yaml").write_text("title: 'cut off")
     with pytest.raises(ValueError, match="issue.yaml is not valid YAML"):
         load_issue(tracker_dir / "101")
+    (tracker_dir / "101" / "issue.yaml").write_bytes(b"title: \xc3")
+    with pytest.raises(ValueError, match="issue.yaml is not valid YAML"):
+        load_issue(tracker_dir / "101")
 
 
 @pytest.mark.parametrize(
@@ -1145,15 +1148,17 @@ def test_work_product_problems(tmp_path, product, expected):
     from ai_gene_review.shadow_issues.cli import work_product_problems
 
     (tmp_path / "a.yaml").write_text("x\n")
-    (tmp_path / "d.patch").write_text(
-        "diff --git a/a.yaml b/a.yaml\n--- a/a.yaml\n+++ b/a.yaml\n context a/b.yaml\n"
-        "diff --git a/gone.yaml b/gone.yaml\n--- a/gone.yaml\n+++ b/gone.yaml\n"
+    (tmp_path / "d.patch").write_bytes(
+        # A hunk body may hold bytes that are not UTF-8 (a latin-1 file's diff).
+        b"diff --git a/a.yaml b/a.yaml\n--- a/a.yaml\n+++ b/a.yaml\n-caf\xe9\n"
+        b" context a/b.yaml\n"
+        b"diff --git a/gone.yaml b/gone.yaml\n--- a/gone.yaml\n+++ b/gone.yaml\n"
         # A pure rename has no ---/+++ headers, only git's rename lines.
-        "diff --git a/was.yaml b/pure-rename.yaml\nsimilarity index 100%\n"
-        "rename from was.yaml\nrename to pure-rename.yaml\n"
-        "diff --git a/new.yaml b/new.yaml\nnew file mode 100644\n"
-        "--- /dev/null\n+++ b/new.yaml\n+x\n"
-        "diff --git a/old.yaml b/moved.yaml\n--- a/old.yaml\n+++ b/moved.yaml\n"
+        b"diff --git a/was.yaml b/pure-rename.yaml\nsimilarity index 100%\n"
+        b"rename from was.yaml\nrename to pure-rename.yaml\n"
+        b"diff --git a/new.yaml b/new.yaml\nnew file mode 100644\n"
+        b"--- /dev/null\n+++ b/new.yaml\n+x\n"
+        b"diff --git a/old.yaml b/moved.yaml\n--- a/old.yaml\n+++ b/moved.yaml\n"
     )
     issue = {"shadow": {"work_products": [{"kind": "GENE_REVIEW", **product}]}}
     problems = work_product_problems(issue, tmp_path)

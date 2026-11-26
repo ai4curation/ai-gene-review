@@ -471,7 +471,11 @@ def work_product_problems(issue: dict, repo_root: Path) -> list[str]:
             )
         elif diff and not (repo_root / diff).exists():
             problems.append(f"preserved_diff {diff} does not exist")
-        elif diff and not diff_covers(product["path"], (repo_root / diff).read_text()):
+        elif diff and not diff_covers(
+            # A patch holds whatever bytes git wrote; only its header lines matter.
+            product["path"],
+            (repo_root / diff).read_text(errors="replace"),
+        ):
             problems.append(f"preserved_diff {diff} has no diff of {product['path']}")
     return problems
 
@@ -557,7 +561,7 @@ def parse_for_validation(path: Path) -> tuple[Any, str | None]:
     'not valid YAML (ScannerError)'
     """
     try:
-        return yaml.safe_load(path.read_text()), None
+        return yaml.safe_load(path.read_text(encoding="utf-8")), None
     except UnicodeDecodeError:
         return None, "not readable as UTF-8"
     except yaml.YAMLError as exc:
