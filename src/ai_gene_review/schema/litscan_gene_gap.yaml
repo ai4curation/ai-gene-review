@@ -1,0 +1,432 @@
+id: https://w3id.org/ai4curation/ai-gene-review/litscan_gene_gap
+name: litscan_gene_gap
+title: LitScan gene-gap scan
+description: >-
+  Records for the litscan gene-gap scan, which ranks recent papers by how much
+  they could close a gap in the experimental function knowledge of a gene
+  product. GeneGapScanConfig is the documented scoring config
+  (conf/litscan/gene_gap.yaml); GeneGapPacket is the ranked packet the scan
+  writes to reports/litscan/gene-gap/. Each GapCandidate is also valid on its
+  own, so one candidate pasted into an issue or test can be checked. See
+  docs/litscan_gene_gap.md.
+license: CC0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  litscan: https://w3id.org/ai4curation/ai-gene-review/litscan_gene_gap/
+default_prefix: litscan
+default_range: string
+imports:
+  - linkml:types
+
+classes:
+  # ------------------------------------------------------------------ config
+  GeneGapScanConfig:
+    tree_root: true
+    description: Retrieval limits, query profiles, species and scoring rules.
+    attributes:
+      id:
+        identifier: true
+      description:
+      limits:
+        range: ScanLimits
+        required: true
+      rate_limits:
+        range: HostRateLimit
+        multivalued: true
+        inlined_as_list: true
+      retry:
+        range: RetryPolicy
+      query_profiles:
+        range: QueryProfile
+        multivalued: true
+        inlined_as_list: true
+        required: true
+      exclude_title_terms:
+        multivalued: true
+      species:
+        range: SpeciesPattern
+        multivalued: true
+        inlined_as_list: true
+      symbol_stoplist:
+        multivalued: true
+      gene_scoring:
+        range: GeneScoring
+        required: true
+      paper_scoring:
+        range: PaperRule
+        multivalued: true
+        inlined_as_list: true
+        required: true
+
+  ScanLimits:
+    attributes:
+      max_records_per_profile:
+        range: integer
+        required: true
+      max_symbols_per_paper:
+        range: integer
+        required: true
+      max_genes_per_paper:
+        range: integer
+        required: true
+      max_resolution_hits:
+        range: integer
+        required: true
+      max_candidates:
+        range: integer
+        required: true
+      max_issues:
+        range: integer
+        required: true
+      max_issues_per_paper:
+        range: integer
+        required: true
+      min_issue_score:
+        range: integer
+        required: true
+
+  HostRateLimit:
+    attributes:
+      host:
+        required: true
+      min_interval_seconds:
+        range: float
+        required: true
+
+  RetryPolicy:
+    attributes:
+      max_attempts:
+        range: integer
+        required: true
+      backoff_seconds:
+        range: float
+        required: true
+
+  QueryProfile:
+    description: One Europe PMC query, run separately and capped.
+    attributes:
+      name:
+        required: true
+      description:
+      query:
+        required: true
+
+  SpeciesPattern:
+    description: A species recognised from regular expressions over title and abstract.
+    attributes:
+      taxon_id:
+        range: integer
+        required: true
+      label:
+        required: true
+      folder:
+        description: The genes/ directory name used by `just fetch-gene`.
+        required: true
+      patterns:
+        multivalued: true
+        required: true
+
+  ScoreBand:
+    description: >-
+      One band of a count. The first band whose max is at least the count wins;
+      a band without max catches every larger count.
+    attributes:
+      max:
+        range: integer
+      points:
+        range: integer
+        required: true
+      label:
+        required: true
+
+  FlagRule:
+    description: Points awarded when a named condition holds.
+    attributes:
+      points:
+        range: integer
+        required: true
+      label:
+        required: true
+      patterns:
+        multivalued: true
+
+  GeneScoring:
+    attributes:
+      experimental_annotation_bands:
+        range: ScoreBand
+        multivalued: true
+        inlined_as_list: true
+        required: true
+      no_experimental_mf:
+        range: FlagRule
+        required: true
+      electronic_only:
+        range: FlagRule
+        required: true
+      uncharacterized_name:
+        range: FlagRule
+        required: true
+      duf_domain:
+        range: FlagRule
+        required: true
+      family_experimental_bands:
+        range: ScoreBand
+        multivalued: true
+        inlined_as_list: true
+        required: true
+      existing_review_not_citing:
+        range: FlagRule
+        required: true
+      already_in_goa:
+        range: FlagRule
+        required: true
+
+  PaperRule:
+    description: Points awarded when any pattern matches the named field.
+    attributes:
+      id:
+        required: true
+      points:
+        range: integer
+        required: true
+      label:
+        required: true
+      field:
+        range: PaperFieldEnum
+        required: true
+      patterns:
+        multivalued: true
+
+  # ------------------------------------------------------------------ packet
+  GeneGapPacket:
+    tree_root: true
+    description: The ranked output of one scan run.
+    attributes:
+      job:
+        required: true
+      generated_at:
+        required: true
+      date_from:
+        required: true
+      date_to:
+        required: true
+      include_preprints:
+        range: boolean
+      config_path:
+      queries:
+        range: ProfileQuery
+        multivalued: true
+        inlined_as_list: true
+      paper_count:
+        range: integer
+        description: Distinct papers retrieved across profiles.
+      resolved_gene_count:
+        range: integer
+        description: Distinct gene products resolved from those papers.
+      suppressed:
+        range: SuppressedCandidate
+        multivalued: true
+        inlined_as_list: true
+      candidates:
+        range: GapCandidate
+        multivalued: true
+        inlined_as_list: true
+
+  ProfileQuery:
+    attributes:
+      profile:
+        required: true
+      query:
+        required: true
+      hit_count:
+        range: integer
+      fetched:
+        range: integer
+
+  SuppressedCandidate:
+    description: A (paper, gene) pair dropped before ranking, and why.
+    attributes:
+      reference_id:
+        required: true
+      accession:
+      reason:
+        range: SuppressionReasonEnum
+        required: true
+      detail:
+
+  GapCandidate:
+    tree_root: true
+    description: One (paper, gene product) pair with its gap evidence and score.
+    attributes:
+      rank:
+        range: integer
+      score:
+        range: integer
+        required: true
+      action:
+        range: HandoffActionEnum
+        required: true
+      issue_eligible:
+        range: boolean
+        description: True when the candidate is within the issue cap and above min_issue_score.
+      issue_title:
+      issue_labels:
+        multivalued: true
+      issue_body_path:
+        description: Ready-to-file issue body written for an issue-eligible candidate.
+      ledger_marker:
+        required: true
+        description: Hidden marker the issue body ends with; later scans skip pairs that carry it.
+      paper:
+        range: PaperRecord
+        required: true
+      gene:
+        range: GeneRecord
+        required: true
+      score_components:
+        range: ScoreComponent
+        multivalued: true
+        inlined_as_list: true
+
+  PaperRecord:
+    attributes:
+      pmid:
+      reference_id:
+        required: true
+      title:
+        required: true
+      journal:
+      publication_date:
+      doi:
+      source:
+      pubmed_url:
+      europe_pmc_url:
+      abstract:
+      profiles:
+        multivalued: true
+        description: The query profiles that retrieved the paper.
+      is_preprint:
+        range: boolean
+
+  GeneRecord:
+    description: A gene product resolved from a paper, with its current annotation state.
+    attributes:
+      accession:
+        required: true
+      entry_name:
+      symbol:
+        required: true
+      matched_symbol:
+        description: The string in the paper that resolved to this entry.
+      matched_in_title:
+        range: boolean
+      protein_name:
+      organism:
+      taxon_id:
+        range: integer
+      folder:
+        description: The genes/ directory name for this organism.
+      reviewed:
+        range: boolean
+      protein_existence:
+      evidence_codes:
+        range: EvidenceCount
+        multivalued: true
+        inlined_as_list: true
+      annotation_counts:
+        range: AnnotationCounts
+        required: true
+      family:
+        range: FamilyStatus
+      unknown_function_domains:
+        multivalued: true
+      review_path:
+        description: Existing ai-gene-review review for the accession, if any.
+      paper_in_goa:
+        range: boolean
+        description: The paper is already a GOA reference for this gene product.
+
+  EvidenceCount:
+    attributes:
+      code:
+        required: true
+      count:
+        range: integer
+        required: true
+
+  AnnotationCounts:
+    description: QuickGO annotation counts for one gene product, by evidence class.
+    attributes:
+      total:
+        range: integer
+        required: true
+      experimental:
+        range: integer
+        required: true
+        description: Rows in the repository experimental evidence category.
+      experimental_protein_binding:
+        range: integer
+        required: true
+        description: Experimental annotations to bare GO:0005515 protein binding.
+      experimental_mf:
+        range: integer
+        required: true
+        description: Experimental molecular-function annotations, including protein binding.
+      iba:
+        range: integer
+        required: true
+      iea:
+        range: integer
+        required: true
+        description: Rows reported by QuickGO as IEA.
+      other:
+        range: integer
+        required: true
+        description: Everything else (ISS, ISO, TAS, NAS, IC, ND, ...).
+
+  FamilyStatus:
+    description: The PANTHER family of the gene product and how much of it is experimentally known.
+    attributes:
+      panther_id:
+        required: true
+      panther_name:
+      member_count:
+        range: integer
+        description: UniProtKB entries in the family.
+      experimental_member_count:
+        range: integer
+        description: UniProtKB entries in the family with any experimental GO annotation.
+
+  ScoreComponent:
+    attributes:
+      rule:
+        required: true
+      points:
+        range: integer
+        required: true
+      label:
+        required: true
+
+enums:
+  PaperFieldEnum:
+    permissible_values:
+      title:
+      title_abstract:
+      gene_title:
+        description: Fires when the resolved gene's symbol was found in the title.
+
+  HandoffActionEnum:
+    permissible_values:
+      NEW_REVIEW:
+        description: No ai-gene-review review exists; review the gene with this paper.
+      UPDATE_REVIEW:
+        description: A review exists but does not cite the paper; update it.
+
+  SuppressionReasonEnum:
+    permissible_values:
+      ALREADY_CITED:
+        description: The gene's existing review already cites the paper.
+      LEDGER:
+        description: A litscan issue (open or closed) already covers the paper or pair.
+      UNRESOLVED:
+        description: No gene symbol in the paper resolved to a single UniProtKB entry.
