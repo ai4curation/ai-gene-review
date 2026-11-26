@@ -1,0 +1,86 @@
+history_version: 1
+target:
+  kind: other
+  slug: quote-truncation-check
+  path: src/ai_gene_review/validation/quote_truncation.py
+session:
+  id: 2026-11-26T215127Z-claude-code-4f2881
+  timestamp: '2026-11-26T21:51:27Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    model: claude-opus-5
+    agent_tool: claude-code
+links:
+  issues: []
+  prs: []
+  urls: []
+events:
+- type: CREATE
+  outcome: changed
+  summary: Add a check for supporting_text quotes cut in the middle of a word
+  details: |
+    A supporting_text copied out of a line-wrapped source is easy to stop at the hyphen the wrap
+    left behind, and nothing in the corpus notices. validate-quotes collapses whitespace before
+    matching, so such a quote genuinely is a verbatim substring of its source; it is simply not a
+    complete one, and what it loses is usually the term it was cited for. QueF's row reads
+    "reduction of 7-cyano-7-" where the substrate is 7-cyano-7-deazaguanine, so the quote names no
+    substrate at all. PTHR14614 quotes "protein-lysine N-" for a methyltransferase term, cutting
+    the word "methyltransferase" itself.
+
+    quote_truncation detects these and proposes the completing token, reusing the source resolution
+    and renderings that validate-quotes uses so the two cannot disagree about whether a quote is in
+    its source. It reports and exits 0: repairing one edits curated prose, and an extension can
+    change what the quote supports.
+
+    Two kinds, deliberately not equally strong. MID_WORD means the source continues with a word
+    character, so a word was broken in half and there is no reading on which the quote is complete.
+    TOKEN_BOUNDARY means it continues after a space, so the quote ends on a real token and whether
+    it is enough is a judgement about the argument rather than a mechanical defect.
+
+    Three bugs came out of running it on the corpus rather than on its tests, which is the part
+    worth recording.
+
+    The first run proposed "formation of L-aspartate-CC". The continuation line of a UniProt flat
+    file begins with the file's two-letter line code, so the completing token was the left margin.
+    source_renderings already offers a de-prefixed rendering for exactly this reason; I had read the
+    raw file instead. Fixed by using the renderings, most-processed first, and pinned by a test.
+
+    A quote re-typed with a unicode dash was skipped, because the scan filtered on a literal "-"
+    while the matcher folded dashes. The filter and the matcher have to agree about what a hyphen
+    is.
+
+    The third is the interesting one. TAM41's "in a CTP-" and ALG11's "to Man3-" are the same
+    construction, a suspended hyphen ("CTP- and Mg2+-dependent", "Man3- and Man4GlcNAc2-PP-Dol"),
+    which is correct English and not wrap damage at all. The check classified one MID_WORD and the
+    other TOKEN_BOUNDARY, for no reason but where each source file happened to wrap. The class now
+    keys on the following conjunction, which holds whatever the source does at that point, and the
+    two agree. A heuristic that reads a line break as evidence about language gives different
+    answers to the same sentence in two files.
+
+    On the scope, and on an instrument I got wrong again: a grep for supporting_text lines ending
+    in a hyphen reports 1937 across 661 files, and the parsed corpus contains 24. A YAML plain
+    scalar wraps, so almost all of those hyphens sit mid-value rather than at a quote's end. The
+    scanner reports all 24 of the 24, so its recall is complete; it was the grep that was wrong.
+    Fourth time in this session I have taken a tool's window for the data, after a head -20 on a
+    UniProt CC block and a single-line grep for a quote that spanned a wrap.
+
+    The ~1900 others are a different defect and are deliberately not reported: a quote whose middle
+    reads "similarly low activ- ity" came from a source that wrapped inside the word, and the
+    cached publication still contains that break, so the quote matches its source and repairing it
+    to "activity" would make it stop matching. The artifact is in the cache, not the review.
+
+    The 24 findings are not repaired here. That edits curated prose in genes/, interpro/panther/
+    and modules/, each a content slice of its own, and two of them raise a separate question: they
+    quote a mutable -ai-review.yaml, which CLAUDE.md says to avoid in favour of a primary
+    publication or stable record. A follow-up PR does the repairs. One of them, fruK, is not wrap
+    damage either: the stored quote begins "CC   -!- FUNCTION:", so the line code was copied into
+    the quote and it matches only the raw rendering.
+
+    Not a gate, and the docs say why a clean result proves nothing: the check finds the one
+    truncation that leaves a syntactic trace. A quote cut at a comma, a word or a sentence boundary
+    is indistinguishable from a short quote.
+
+    20 tests including doctests pass; ruff check, ruff format and mypy clean on the new module and
+    its tests. The full `just test` run was still going when this was committed, so it is not
+    claimed here; CI is the check on it.

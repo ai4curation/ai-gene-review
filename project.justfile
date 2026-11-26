@@ -1490,6 +1490,19 @@ validate-changed *files:
 validate-quotes *args:
     uv run python -m ai_gene_review.validation.quote_check {{args}}
 
+# Report supporting_text quotes that end in the middle of a word, with the token
+# from the source that completes each one (see
+# ai_gene_review.validation.quote_truncation). Such a quote still passes
+# validate-quotes -- it is a verbatim substring once whitespace is collapsed --
+# but it usually lost the term it was adduced for ("reduction of 7-cyano-7-" for
+# 7-cyano-7-deazaguanine). Reports only; repairing one edits curated prose.
+# Example: just quote-truncation-audit
+#          just quote-truncation-audit --kind mid_word
+#          just quote-truncation-audit interpro/panther/PTHR14614/PTHR14614-review.yaml
+[group('QC')]
+quote-truncation-audit *args:
+    uv run python -m ai_gene_review.validation.quote_truncation {{args}}
+
 # Validate incoming supporting_text quotes affected by changed local source files.
 # Example: just validate-incoming-quotes HEAD^ HEAD
 [group('QC')]
