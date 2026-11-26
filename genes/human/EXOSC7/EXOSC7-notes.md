@@ -4,6 +4,8 @@ EXOSC7/RRP42 is one of the six RNase PH-like subunits of the human Exo-9 RNA exo
 
 The accepted complex calls are nuclear, nucleolar, and cytoplasmic variants of the RNA exosome. Human core-exosome preparations and ComplexPortal records place EXOSC7 with EXOSC8 and EXOSC9 in all of those variants, and the Reactome cytosolic/nuclear/nucleolar events all use the same Exo-9 core with different cofactors or catalytic subunits.
 
+Reactome ContentService was checked for the RNA exosome localization TAS rows: R-HSA-6791222, R-HSA-9933575, R-HSA-9933585, R-HSA-9934522, R-HSA-9934763, R-HSA-9935282 and R-HSA-9935290 are nucleoplasm events; R-HSA-430028, R-HSA-450422, R-HSA-450431 and R-HSA-450488 are cytosol events; R-HSA-9935824 and R-HSA-9935837 are nucleolus events.
+
 The GO:0035925 mRNA 3'-UTR AU-rich region binding IBA is over-propagated to EXOSC7. The PANTHER IBD is at PTN000120503, above the human RRP42, RRP43 and RRP45 leaves, but the human direct seeds in PMID:16912217 support AU-rich RNA binding by PM-Scl-75/EXOSC9 and OIP2/EXOSC8, plus EXOSC4/RRP41, not EXOSC7/RRP42.
 
 The bare GO:0005515 IPI rows are preserved one-for-one, including the duplicate PMID:11812149 / UniProtKB:Q9Y3B2 row that appears in the GOA feed once from IntAct and once from UniProt. They are all removed only under the project protein-binding policy; the WITH/FROM values stay on the rows as the interaction receipts.
