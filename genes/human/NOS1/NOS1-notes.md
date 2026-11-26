@@ -41,3 +41,9 @@ Main curation decisions:
   S-nitrosylation after miR-132/212 depletion, but does not separate direct
   transnitrosylase activity from excess diffusible NO produced by NOS1
   [PMID:28089352].
+- A second review pass kept `GO:0045776 negative regulation of blood pressure`
+  as a non-core NOS-family vascular-tone output instead of a bad-PAINT call,
+  kept the human `PMID:28089352` neuron-apoptosis IMP as a non-core NOS1 neural
+  output, and changed the `PMID:7545544` myoblast-fusion TAS row to UNDECIDED
+  because the abstract verifies nNOS-dystrophin anchoring but cannot rule out a
+  myoblast-fusion author statement in the full text.

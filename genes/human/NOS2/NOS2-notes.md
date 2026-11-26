@@ -35,3 +35,8 @@ Main curation decisions:
 - Keep the Leishmania major IgE immune-complex paper as a protozoan/macrophage
   iNOS context but not as support for bacterial defense or Fc-gamma receptor
   signaling [PMID:7544003].
+- A second review pass kept `GO:0045776 negative regulation of blood pressure`
+  as a non-core NOS-family vascular-tone output instead of a bad-PAINT call, and
+  changed the `PMID:7544003` Fc-gamma receptor/phagocytosis row to REMOVE with a
+  `WRONG_TERM` source defect because that paper describes IgE immune complexes
+  and CD23 rather than Fc-gamma receptor signaling.

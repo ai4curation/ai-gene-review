@@ -37,3 +37,9 @@ Main curation decisions:
 - Remove the legacy cadmium-binding row because the cited NOS-III mutagenesis
   paper establishes Cys-99 involvement in tetrahydrobiopterin binding and heme
   retention, not cadmium as a NOS3 cofactor [PMID:7488039].
+- A second review pass kept the pulmonary-valve and endocardial-cushion rows as
+  non-core mouse-orthology developmental phenotypes instead of rejecting them
+  with the human aortic-valve Notch1/NOS3 paper. It also changed the parent
+  `GO:0008217 regulation of blood pressure` row to TOO_GENERAL because the
+  accepted `GO:0045776 negative regulation of blood pressure` child captures the
+  vascular-tone direction more precisely.
