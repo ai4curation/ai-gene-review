@@ -1,0 +1,11 @@
+# LYVE1 notes
+
+## 2026-11-26
+
+- `just fetch-gene human LYVE1` seeded UniProtKB:Q9Y5Y7, 52 GOA annotations, and the existing PTHR10225 PAINT data. The GOA cache has 52 rows plus its header, not a header-only failed fetch.
+- `just deep-research-falcon human LYVE1 --fallback perplexity-lite` failed because neither provider was available in the retained runtime, and `just deep-research-claude-code human LYVE1` failed because the Claude Code provider was not logged in. I did not create a fake provider research file; this note records the manual review instead.
+- UniProt's experimentally supported LYVE1 summary centers on a type-I plasma-membrane hyaluronan receptor on lymphatic endothelial cells. The founding paper cloned human LYVE1 as a CD44-related Link-domain receptor, showed it binds soluble and immobilized hyaluronan, and localized it to lymphatic-vessel endothelium [PMID:10037799, "Like CD44, the LYVE-1 molecule binds both soluble and immobilized HA."].
+- Lawrance et al. showed that native human dermal lymphatic endothelial LYVE1 binds hyaluronan only when receptor density or ligand organization gives sufficient avidity, and that HA displayed on macrophages can engage endogenous LYVE1 and support transendothelial migration [PMID:26823460, "HA assembled on the surface of macrophages, like that in the surface capsule of Group A streptococci, can interact with endogenous LYVE-1 in lymphatic endothelium in vitro and support transendothelial migration"].
+- Shrestha et al. assayed lung lymphatic endothelial HA uptake and found that LYVE1 blocking antibodies significantly reduced FITC-HA uptake; FK506 lowered LYVE1 expression and lowered HA uptake in vitro [PMID:32736525, "inhibiting LYVE-1 with function blocking antibody, which significantly reduced the HA uptake"].
+- PTHR10225 has two reviewed human members on `origin/main`: CD44 in PANTHER:PTHR10225:SF6 already had a complete review, and LYVE1 in PANTHER:PTHR10225:SF2 was unreviewed. The PTHR10225 PAINT cache has no IRD or IKR on the LYVE1 lineage.
+- `gocams/index.tsv` has no LYVE1 rows. The family has a real CD44-containing MIF signaling module and a CD44 GO-CAM, but there is no production LYVE1 GO-CAM or multi-part LYVE1 module to add here; receptor-mediated HA uptake is represented by cached Reactome events rather than a module in this PR.
