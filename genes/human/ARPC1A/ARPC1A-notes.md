@@ -12,7 +12,7 @@ The broad cytosol rows are retained because ARPC1A is a soluble Arp2/3 subunit w
 
 The human DSB ChIP experiment uses Arpc2, while the all-seven-subunit chromatin proteomics was performed in Xenopus egg extracts; human ARPC1A versus ARPC1B nuclear occupancy remains unresolved. The Xenopus source is useful for the ARPC1A branch, so the human nucleus and site-of-DSB rows are not removed, but PMID:29925947 does not resolve which human p41 paralog occupies nuclear Arp2/3.
 
-The exact mouse Q9R0Q6 donor annotations behind the muscle and synapse Ensembl transfers were not chased, so the human ARPC1A tissue-specific transfers stay UNDECIDED. Mouse Arpc1a is the correct orthologous donor, but this bounded review did not reconstruct the source publications or the human cell-context transfer boundary.
+QuickGO resolves the ARPC1A Ensembl GO:0036195 donor as mouse Arpc1a Q9R0Q6, MGI IDA, PMID:22553210. QuickGO resolves the ARPC1A Ensembl GO:0045202 and GO:0098978 donors as mouse Arpc1a Q9R0Q6, SynGO IDA/IMP/IDA, PMID:31171447. These rows support non-core muscle and neuronal locations rather than core ARPC1A functions.
 
 The urinary-exosome cache for PMID:19056867 is abstract-only despite a PMCID. It reports broad LC-MS/MS profiling of 1132 human urinary-exosome proteins, but not the exact ARPC1A peptide/protein table. The HDA extracellular-exosome row therefore remains UNDECIDED pending exact target verification.
 
