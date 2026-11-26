@@ -68,7 +68,7 @@ Observations that correct or qualify the literature:
 
 - gnomAD v4 shows no constraint against heterozygous loss of function: pLI = 0.00, LOEUF = 1.36 (58 observed against 52.9 expected), missense Z = -1.30.
 - The most frequent stop-gain allele in gnomAD, c.669G>A p.Trp223Ter (563 alleles, frequency 3.5e-04, one homozygote), lies in the isoform-1-only segment and is intronic in the MANE Select transcript, so it is not a loss-of-function allele of the conserved isoform 2.
-- Counting only high-confidence pLoF alleles of the MANE transcript gives 137 alleles with a cumulative frequency of 4.8e-04 (carrier frequency about 1 in 1,035) and one homozygous individual (c.835del p.Leu279TrpfsTer5).
+- Counting only high-confidence pLoF variants of the MANE transcript that pass gnomAD filters gives 137 distinct variants (568 alleles) with a cumulative frequency of 4.8e-04 (carrier frequency about 1 in 1,035) and one homozygous individual (c.835del p.Leu279TrpfsTer5); including six variants flagged AS_VQSR gives 143 variants and 575 alleles.
 - Adding the five reported pathogenic missense alleles gives a cumulative frequency of 7.0e-04, which predicts about one biallelic individual per 2.1 million births under Hardy-Weinberg proportions.
 - ClinVar holds 129 small LDHD variants: 10 pathogenic or likely pathogenic (8 of them in LDHD itself for lactic aciduria due to D-lactic acid), 91 of uncertain significance, 18 benign or likely benign; 47 further records are large copy-number events spanning the gene.
 - ClinVar and gnomAD number LDHD variants on NM_194436 (isoform 2), while every published missense variant is numbered on NM_153486 (isoform 1).
