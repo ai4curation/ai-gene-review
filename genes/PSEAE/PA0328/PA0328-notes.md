@@ -71,11 +71,31 @@ this is not a numbering-frame discrepancy; the record's features come from a rul
 ligands while the paper's list is "catalytic and ligand binding site residues", and the two sets
 need not coincide. Not recorded as a defect: nothing here shows either side wrong.
 
-M28 is a co-catalytic metallopeptidase clan, so the metal dependence and the aminopeptidase
-chemistry are the same claim. `GO:0070006` metalloaminopeptidase activity is the GO class for
-exactly that conjunction, and OLS confirms it is a child of both `GO:0004177` aminopeptidase
+M28 is a co-catalytic metallopeptidase clan, so for *this* protein the metal dependence and the
+aminopeptidase chemistry are the same claim. `GO:0070006` metalloaminopeptidase activity is the GO
+class for that conjunction, and OLS confirms it is a child of both `GO:0004177` aminopeptidase
 activity and `GO:0008235` metalloexopeptidase activity — the two terms GOA currently carries
 separately on this gene.
+
+**But the family does not license it, only this protein's own data do.** I first wrote that the
+IEA `GO:0008235` row could also be refined to `GO:0070006` "because M28 is an aminopeptidase family
+rather than a general exopeptidase one", quoting the paper's phrase "the M28 family of
+aminopeptidases". The same paper says, in its introduction:
+
+[PMID:22927813 "The M28 family encompasses both amino and carboxy specific peptidases which
+tetrahedrally coordinate two zinc ligands using residues including histidine, aspartic acid and
+glutamic acid to create their catalytic pocket"]
+
+Both sentences are in the text. The one I quoted appears where the paper introduces AaaA's own
+holotypes — SGAP and the *Vibrio* leucine aminopeptidase, which are aminopeptidases — and I read a
+statement about this protein's close relatives as a statement about the family. MEROPS M28 does
+contain carboxypeptidases; glutamate carboxypeptidase II is the familiar one. That is presumably
+why InterPro2GO maps `IPR045175` to the exopeptidase term and not the aminopeptidase one.
+
+So the signature row's evidence stops at metalloexopeptidase, and under the 2026-11-14 ruling it is
+`TOO_GENERAL`, not `MODIFY`. Only the IMP row — where the mutagenesis is — reaches the conjunction.
+This is the third instance in this session of the same error shape: a sentence true at one scope
+written as though true at a wider one.
 
 **GO has no arginine-specific aminopeptidase term.** Checked rather than assumed, and with a
 positive control so the negative is readable: a search for "aminopeptidase activity" returns 8
@@ -144,6 +164,14 @@ The absence of a flagellar or pilus word anywhere is what makes this safe to ass
 phenotype cannot be reported without naming the appendage or the assay, so the possibility that
 the claim sits in a part of the paper I did not read does not arise — I read all of it, and the
 vocabulary is simply not there.
+
+The supplementary legends close it more directly than the vocabulary does, and they are cached in
+full. The paper's entire supplementary inventory is three figures: **S1** the deletion's
+construction (Southern blot) plus growth in LB, **S2** a methionine and leucine *p*-nitroanilide
+specificity assay, **S3** growth in LB after MiniCTX insertion. None is a motility assay, so the
+result is not hiding in a supplementary figure either. S2 is a bonus for the proposed term: it
+shows AaaA does *not* release methionine or leucine, so the arginine specificity is a measured
+preference rather than an inference from the one substrate that happened to work.
 
 Two further things follow:
 

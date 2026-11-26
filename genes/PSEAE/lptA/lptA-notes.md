@@ -57,11 +57,36 @@ membrane properties, resulting in decreased membrane fluidity."]
 UniProt cites it for the `DISRUPTION PHENOTYPE` only, in PAO1, and records exactly that: the
 mutant's phospholipids shift towards longer-chain (C18) fatty acids.
 
-The phrase "functional homologue" is the load-bearing one for the two IMP rows, and the cache is
-abstract-only, so I cannot see whether it was demonstrated by complementing an *E. coli* `plsC`
-mutant or asserted from sequence. Either way the mutant phenotype is real and is the right shape
-for an IMP on an acyltransferase: losing the enzyme that installs the 2-position acyl chain changes
-which chains end up in the membrane. The rows are kept on that basis, with the limit stated.
+The phrase "functional homologue" is the load-bearing one for the two IMP rows, and it **was
+demonstrated**. The record says so, on a line I initially missed:
+
+`CC   -!- MISCELLANEOUS: Can complement the E.coli plsC mutant. {ECO:0000269|PubMed:16079332}.`
+
+`ECO:0000269` with a PubMed id is the strongest UniProt support class there is — a curator read a
+published experiment. So the protein was put into a *plsC* null and supplied the missing function.
+That is a functional test of this protein, not a sequence inference, and it is in-species evidence
+about this gene product rather than a transfer from PlsC.
+
+### How I got this wrong, because the mechanism matters
+
+An earlier version of these notes said the opposite: that whether complementation was shown "cannot
+be seen" from an abstract-only cache. That claim was false, and false about a file this review
+quotes five times.
+
+The cause was a truncating command. My first read of the CC block was
+`sed -n '/^CC   -!-/,/^DR/p' … | grep -E "^CC" | head -20`, and `head -20` stopped inside the
+`DISRUPTION PHENOTYPE` paragraph — two lines before `MISCELLANEOUS`. I then wrote about what the
+record contains on the strength of a view I had cut short myself.
+
+This is the same mechanism as the nudC title fabrication in batch 7, where I read a `title:` field
+through a truncating command and reconstructed the missing tail. Both times the output looked
+complete, and both times the thing I needed was just past the cut. The lesson that generalises:
+when asserting that a source does *not* contain something, the read has to be complete by
+construction — no `head`, no `tail`, or an explicit count showing the whole section was seen.
+
+The mutant phenotype remains real and is still the right shape for an IMP: losing the enzyme that
+installs the 2-position acyl chain changes which chains end up in the membrane. It is simply no
+longer the *only* evidence.
 
 ## Two GO terms for one reaction
 
@@ -111,7 +136,9 @@ batch, and the opposite of the wrong-branch removal that term got on soxA in bat
 
 - Whether the 2-acyl transfer is this protein's only activity. The PlsC family includes enzymes with
   broader lysophospholipid specificity, and nothing has been measured on the purified
-  *P. aeruginosa* protein.
+  *P. aeruginosa* protein. Complementation establishes that the function is supplied; it says
+  nothing about kinetics, chain-length preference or substrate breadth, which is where the real gap
+  now sits.
 - Whether the quorum-sensing effects are a consequence of membrane fluidity or of a signalling role.
   The paper's own framing is the former, through the stringent response and `relA`, and nothing in
   this review annotates the QS phenotypes — they are several steps from anything the enzyme does

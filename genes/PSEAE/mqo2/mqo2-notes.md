@@ -112,9 +112,18 @@ I have not edited the family review here. The cross-check only conflicts when a 
 a term over a gene whose review removes it, and this review keeps the row, so nothing forces a
 shared-file edit in this PR. The observation belongs in a family-review pass.
 
-On the row itself: the donor list is eukaryotic (fly, mouse, rat, yeast, *Arabidopsis*, four human
-accessions) and contains no MQO, so this is a deep node asserting a compartment rather than a
-transfer from a characterised malate:quinone oxidoreductase. "Cytoplasm" is nonetheless true of a
+On the row itself, and the qualifier matters: GOA has **`is_active_in`**, not `located_in`. The row
+therefore asserts that the catalysis happens in the cytoplasm, which is stronger than residence and
+sits in tension with everything below — the quinone half of the reaction cannot happen away from
+the membrane. (My first draft transcribed it as `located_in`, which quietly weakened the row into
+something easier to accept. Corrected.) Read as written it is defensible only on the reading that
+the catalytic face points into the cytoplasm while the enzyme is membrane-associated, which is what
+a peripheral quinone-reducing dehydrogenase looks like — but a node seeded entirely by eukaryotic
+proteins cannot have been drawing that distinction.
+
+The donor list is eukaryotic (fly, mouse, rat, yeast, *Arabidopsis*, four human accessions) and
+contains no MQO, so this is a deep node asserting a compartment rather than a transfer from a
+characterised malate:quinone oxidoreductase. "Cytoplasm" is nonetheless true of a
 bacterial MQO's catalytic face, so the row is kept rather than pruned — but it is as coarse as the
 node that produced it. The reaction needs a membrane quinone, so the enzyme has to work at the inner
 membrane, and nothing in the record or the paper localises it: there is no `SUBCELLULAR LOCATION`
