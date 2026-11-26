@@ -1475,6 +1475,16 @@ local-quote-baseline *args:
 ec-class-audit *files:
     uv run python -m ai_gene_review.validation.ec_class_consistency {{files}}
 
+# List every GO:0005737 cytoplasm row the cytoplasm policy (projects/CYTOPLASM.md)
+# would change: eukaryotic ACCEPT/NEW rows and core locations (also warned by
+# `just validate`), MODIFY on propagated eukaryotic rows, TOO_GENERAL rows nothing
+# entails, and prokaryotic TOO_GENERAL rows. Prints domain x action tallies and
+# writes reports/cytoplasm-policy.tsv (git-ignored). --no-ontology skips GO.
+# Example: just cytoplasm-audit genes/human/TP53/TP53-ai-review.yaml
+[group('QC')]
+cytoplasm-audit *files:
+    uv run python -m ai_gene_review.validation.cytoplasm_policy {{files}}
+
 # List author-supplied GO ids (NEW rows and their extensions, core_functions,
 # proposed_replacement_terms, proposed_parent, isoform_specific_terms) that an
 # offline signal marks obsolete. Same rule as the

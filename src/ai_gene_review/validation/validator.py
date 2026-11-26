@@ -50,6 +50,7 @@ from ai_gene_review.validation.ec_class_consistency import (
 from ai_gene_review.validation.protein_binding_policy import (
     check_protein_binding_policy,
 )
+from ai_gene_review.validation.cytoplasm_policy import check_cytoplasm_policy
 from ai_gene_review.validation.validation_report import (
     ValidationReport,
     ValidationSeverity,
@@ -513,6 +514,15 @@ def check_best_practices_rules(
     validate_alternative_records(data, report)
     validate_gene_model_issues(data, report)
     check_protein_binding_policy(data, report)
+    # Eukaryotic GO:0005737 is never a core location (projects/CYTOPLASM.md). The
+    # domain comes from the UniProt record beside the review; with the ontology, the
+    # advice names any asserted location that makes the row TOO_GENERAL.
+    check_cytoplasm_policy(
+        data,
+        report,
+        Path(yaml_file) if yaml_file is not None else None,
+        ancestors=go_ancestors() if check_ontology else None,
+    )
     check_nd_policy(data, report, yaml_file)
     check_ontology_change_policy(data, report)
     # Author-supplied GO ids are checked for obsoletion here because neither the
