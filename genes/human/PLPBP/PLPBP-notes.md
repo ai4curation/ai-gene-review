@@ -158,3 +158,12 @@ accounts are now recorded in RESULTS.md and the variant's functional effect is s
 uncertain. The same paper adds direct data that agree with the structural placement:
 [PMID:31825581 "R241Q and V45D did not bear any cofactor"], R41Q bound PLP but was less stable,
 and E67K could not be expressed. No annotation action in the review depends on Y69C.
+
+## 2026-11-26 (late): narrowed OpenScientist hypothesis job did not return
+
+The narrowed `surface-variant-interface` relaunch (p.Pro87Leu and p.Ala107Thr, two iterations)
+was stopped at the background time limit without writing a report; the output directory was
+empty and has been removed. Not relaunched a third time. No OpenScientist hypothesis report
+exists for this gene; only the gene deep research completed. p.Pro87Leu, p.Ala107Thr and
+p.His275Asp remain unexplained by the structural analysis, as stated in RESULTS.md, and no
+annotation action depends on them.
