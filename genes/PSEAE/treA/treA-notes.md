@@ -65,9 +65,14 @@ excreted pool to glucose that is taken back up. Periplasmic degradation is a **l
 osmotic-stress mechanism**, not merely a reaction switched on by one, and my claim that "nothing
 identifies a step of osmotic adaptation that this protein carries out" was false.
 
-**Why it is still over-annotation.** Two reasons, neither of which is the one I gave.
+**Why it is still over-annotation.** Three points, none of which is the reason I first gave.
 
-First, the compartmental split is real and the enzyme is on the catabolic side of it:
+First, the term is genuinely earned in *E. coli*, and this is the single sentence that says so:
+[PMID:8391102 "For trehalose catabolism under osmotic stress E. coli depends on the osmotically
+inducible periplasmic trehalase (TreA)."] It is the load-bearing quote for the whole verdict — it is
+why the mapping is `broadMatch` rather than a removal — so it belongs here as well as in the review.
+
+Second, the compartmental split is real and the enzyme is on the catabolic side of it:
 [PMID:8391102 "Externally supplied trehalose does not serve as a stress protectant, but it can
 be utilized as the sole source of carbon and energy."] The protectant is cytoplasmic trehalose;
 TreA acts on what has left the cell. Osmolarity also selects *which* catabolic route runs —
@@ -77,7 +82,7 @@ an amylotrehalase (TreC) which converts trehalose to free glucose and a glucose 
 enzyme's own job is catabolism under both conditions, and what changes with osmolarity is which
 enzyme does it.
 
-Second, and this is the mapping-level point: the osmotic content of the story lives in the
+Third, and this is the mapping-level point: the osmotic content of the story lives in the
 **circuitry around** the enzyme — an osmotically regulated promoter, OtsAB-type trehalose
 synthesis, trehalose excretion — and none of that is what a trehalase signature detects.
 `IPR023720` matches 472 proteins (InterPro API, checked 2026-11-26), every one of which inherits a
