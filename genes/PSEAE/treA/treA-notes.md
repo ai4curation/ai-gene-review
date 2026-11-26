@@ -41,17 +41,56 @@ support for membership and hence for function. What is missing is any measuremen
 
 ## The osmotic-response row
 
-`GO:0071474` cellular hyperosmotic response is mapped from `IPR023720`, and it inverts what the
-curated rule actually says. The rule's own FUNCTION line is
-[file:PSEAE/treA/treA-uniprot.txt "Provides the cells with the ability to utilize trehalose at
+`GO:0071474` cellular hyperosmotic response is mapped from `IPR023720`. The row stays
+`MARK_AS_OVER_ANNOTATED`, but the reasoning below replaces an earlier version of this section that
+was wrong, and the way it was wrong is worth keeping.
+
+**What I argued first, and why it does not hold.** I wrote that the mapping "inverts what the
+curated rule actually says": the rule's FUNCTION line gives a **nutritional** function
+([file:PSEAE/treA/treA-uniprot.txt "Provides the cells with the ability to utilize trehalose at
 high osmolarity by splitting it into glucose molecules that can subsequently be taken up by the
-phosphotransferase-mediated uptake system."] — a **nutritional** function exercised under
-high-osmolarity conditions, not a contribution to osmotic adaptation. The *E. coli* observation
-behind the mapping is that trehalase activity "was not induced by growth in the presence of
-trehalose but increased by about 10-fold when 0.6 M sucrose was added" — i.e. the gene is
-*regulated by* osmolarity. Being induced by a condition is not participating in the response to
-it, and the entity doing the osmotic work in these cells is cytoplasmic trehalose, not the
-periplasmic enzyme that destroys the periplasmic pool. Marked over-annotated.
+phosphotransferase-mediated uptake system."]), the *E. coli* observation behind the mapping is
+osmotic *induction* ([PMID:2820965 "Trehalase activity in MC4100 was not induced by growth in the
+presence of trehalose but increased by about 10-fold when 0.6 M sucrose was added to minimal growth
+medium."]), and being induced by a condition is not participating in the response to it. The
+general principle is sound. It is not what is happening here.
+
+A *treA* null has a phenotype that appears **only** under osmotic stress:
+[PMID:1825082 "treA mutants with a defective periplasmic trehalase accumulated trehalose
+extracellularly under osmotic stress."] The authors read the wild type as running a cycle —
+[PMID:1825082 "Thus, stressed E. coli cells regulate the cytoplasmic level of trehalose by a futile
+cycle involving overproduction, excretion, and degradation to glucose, which is
+reutilized."] So the stressed cell overproduces trehalose, excretes some, and TreA degrades the
+excreted pool to glucose that is taken back up. Periplasmic degradation is a **limb of an
+osmotic-stress mechanism**, not merely a reaction switched on by one, and my claim that "nothing
+identifies a step of osmotic adaptation that this protein carries out" was false.
+
+**Why it is still over-annotation.** Two reasons, neither of which is the one I gave.
+
+First, the compartmental split is real and the enzyme is on the catabolic side of it:
+[PMID:8391102 "Externally supplied trehalose does not serve as a stress protectant, but it can
+be utilized as the sole source of carbon and energy."] The protectant is cytoplasmic trehalose;
+TreA acts on what has left the cell. Osmolarity also selects *which* catabolic route runs —
+[PMID:8391102 "In the absence of osmotic stress, trehalose induces the formation of an enzyme IITre
+(TreB) of the group translocation system, a catabolic trehalose-6-phosphate phosphatase (TreE), and
+an amylotrehalase (TreC) which converts trehalose to free glucose and a glucose polymer."] — so the
+enzyme's own job is catabolism under both conditions, and what changes with osmolarity is which
+enzyme does it.
+
+Second, and this is the mapping-level point: the osmotic content of the story lives in the
+**circuitry around** the enzyme — an osmotically regulated promoter, OtsAB-type trehalose
+synthesis, trehalose excretion — and none of that is what a trehalase signature detects.
+`IPR023720` matches 472 proteins (InterPro API, checked 2026-11-26), every one of which inherits a
+regulatory finding from *E. coli* K-12.
+
+For *P. aeruginosa* the architecture is at least plausible rather than excluded, which is a point
+against my first version too: PAO1 does accumulate trehalose under osmotic stress
+([PMID:8434912 "osmotically stressed cultures were found to accumulate glutamate, trehalose, and
+N-acetylglutaminylglutamine amide, an unusual dipeptide previously reported only in osmotically
+stressed Rhizobium meliloti and Pseudomonas fluorescens."]), so the substrate pool the cycle needs
+exists here. What does not exist is any measurement of osmotic induction of this gene or of a
+*treA* phenotype in this organism. That is why the row is over-annotated rather than removed, and
+why the mapping review records this as `broadMatch` rather than a removal.
 
 ## Granularity
 
