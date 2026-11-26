@@ -143,16 +143,16 @@ reference-proteome counts for those terms, so they are lower bounds.
 | Outcome | Genes | Leaf IBAs |
 |---|---:|---:|
 | Seed wrong or indirect: the IBD should be withdrawn or repointed | 21 | 1,481 |
-| Seed right for PAO1, but the node term does not fit its clade | 23 | 664 |
+| Seed right for PAO1, but the node term does not fit its clade | 24 | 804 |
 | Claim true, but the seed row's evidence code, qualifier or reference is wrong | 30 | 1,043 |
 | Sound | 32 | 1,433 |
-| Review file not yet written (pvdE, pqsA, PA2403) | 3 | 151 |
+| Review file not yet written (pqsA, PA2403) | 2 | 11 |
 | **Total** | **109** | **4,772** |
 
 - **Withdraw or repoint (21):** estA, ccmC, pilU, pilM, pilN, wbpD, PA0920,
   liuC, PA5377, lasI, PA3697, cysB, ptrB, PA5208, PA1340, lhpL, znuC, phnB,
   pslC, motB, nrdJa.
-- **Node does not fit the clade (23):** PA5458, PA3760, mgtE, aruC, gbuA,
+- **Node does not fit the clade (24):** pvdE, PA5458, PA3760, mgtE, aruC, gbuA,
   mucB, pchB, nirJ, fpr, fur, nmoA, tgpA, dctQ, PA4503, PA4504, pqsC, wzm,
   phzC1, thiI, pelA, xcpV, braF, PA5359.
 - **Fix the seed row, keep the IBD (30):** fleN, hutI, hutF, hom, thrB, PA3891,
@@ -830,8 +830,8 @@ is the line the `involved_in` rule draws, so that row is marked over-annotated.
 
 ## Plan
 
-1. ~~Review every tier 1 gene.~~ Done except for writing the pqsA, PA2403 and
-   pvdE review files.
+1. ~~Review every tier 1 gene.~~ Done except for writing the pqsA and PA2403
+   review files.
 2. Reconcile small inconsistencies between reviews: xcpX's complex row
    (PMID:9466253) has no reference defect, while the similar xcpW and xcpV rows
    (PMID:8331069) do.
