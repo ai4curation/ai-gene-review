@@ -66,12 +66,26 @@ def render_run(doc: dict[str, Any]) -> list[str]:
         out.append("")
     unusable = [c for c in calls if not core.usable(c)]
     for c in unusable:
-        why = c.get("error") or (
-            "context_tokens_high"
-            if c.get("context_tokens_high")
-            else "no readable answer"
-        )
+        if c.get("error"):
+            why = c["error"]
+        elif c.get("context_tokens_high"):
+            why = "more input than the question: it may have carried other context"
+        elif c.get("context_unverified"):
+            why = "peptalk did not verify the input (no input_tokens_match check), so it is not a verified blind call"
+        else:
+            why = "no readable answer"
         out.append(f"- Unusable call: {c['question']}/{c['condition']} ({why}).")
+    for c in calls:
+        if "peptalk_checks" not in c:
+            continue
+        failed = [k["name"] for k in c["peptalk_checks"] if not k["passed"]]
+        out.append(
+            f"- peptalk {c['question']}/{c['condition']}: confidence {c.get('peptalk_confidence')}; "
+            f"input verified blind: {'yes' if not c.get('context_tokens_high') and not c.get('context_unverified') else 'NO'}; "
+            f"failed checks: {', '.join(failed) if failed else 'none'}."
+        )
+    if any("peptalk_checks" in c for c in calls):
+        out.append("")
     if unusable:
         out.append("")
     real = next(
@@ -123,6 +137,19 @@ def render_run(doc: dict[str, Any]) -> list[str]:
             "",
             f"- Shuffled sequence: {s['pfam_domains']} Pfam domains and {s['transmembrane_helices']} "
             f"transmembrane helices predicted; control {verdict}.",
+            "",
+        ]
+    if "shuffled_activity" in checks:
+        sa = checks["shuffled_activity"]
+        ok = sa["catalytically_active"] != "yes"
+        out += [
+            "- Shuffled sequence, PSEUDO prompt: called catalytically active "
+            f"{sa['catalytically_active']} (enzyme family given: {sa['enzyme_family']}); control "
+            + (
+                "passes."
+                if ok
+                else "FAILS (a shuffled sequence was called an active enzyme; weigh the activity calls below with that in mind)."
+            ),
             "",
         ]
     wt = next(

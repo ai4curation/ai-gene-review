@@ -215,6 +215,12 @@ def base_checks(
                 shuf["answer"].get("transmembrane_helices") or []
             ),
         }
+    shuf_act = by.get(("activity", "shuffled"))
+    if shuf_act is not None and core.usable(shuf_act):
+        checks["shuffled_activity"] = {
+            "catalytically_active": shuf_act["answer"].get("catalytically_active"),
+            "enzyme_family": shuf_act["answer"].get("enzyme_family"),
+        }
     wt = by.get(("activity", "wild_type"))
     if wt is not None and core.usable(wt):
         checks["activity"] = core.check_activity(

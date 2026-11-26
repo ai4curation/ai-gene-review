@@ -98,6 +98,10 @@ def _call(rec: dict[str, Any], record: core.ProteinRecord) -> dict[str, Any]:
     seq = record.sequence
     substitution = sub[0] if sub else None
     if rec["condition"] == "shuffled":
+        if cond != "wild_type":
+            raise ValueError(
+                f"{rec['id']}: a shuffled control must be of the wild type"
+            )
         condition = "shuffled"
         if sorted(rec["sequence"]) != sorted(seq):
             raise ValueError(f"{rec['id']}: shuffled sequence has another composition")
@@ -108,7 +112,9 @@ def _call(rec: dict[str, Any], record: core.ProteinRecord) -> dict[str, Any]:
         else:
             condition = cond
             pos = runner.position_of(substitution)
-            assert substitution is not None and pos is not None, rec["id"]
+            if cond not in ("catalytic_mutant", "decoy") or pos is None:
+                raise ValueError(f"{rec['id']}: not a name written by blind-fasta")
+            assert substitution is not None
             expected = core.substitute(seq, pos, substitution[-1])
         if rec["sequence"] != expected:
             raise ValueError(f"{rec['id']}: sequence does not match the UniProt record")
@@ -120,7 +126,10 @@ def _call(rec: dict[str, Any], record: core.ProteinRecord) -> dict[str, Any]:
         )
     usage = rec.get("usage") or {}
     checks = rec.get("checks") or []
-    input_ok = all(c["passed"] for c in checks if c["name"] == "input_tokens_match")
+    # True: peptalk counted the prompt and the call sent nothing else; False: it sent
+    # more; None: peptalk did not check (e.g. --no-verify-input), so not verified.
+    input_checks = [c["passed"] for c in checks if c["name"] == "input_tokens_match"]
+    blind_verified = all(input_checks) if input_checks else None
     out: dict[str, Any] = {
         "question": question,
         "condition": condition,
@@ -135,7 +144,8 @@ def _call(rec: dict[str, Any], record: core.ProteinRecord) -> dict[str, Any]:
         "input_tokens": usage.get("input_tokens"),
         "output_tokens": usage.get("output_tokens"),
         "thinking_tokens": usage.get("thinking_tokens"),
-        "context_tokens_high": not input_ok,
+        "context_tokens_high": blind_verified is False,
+        "context_unverified": blind_verified is None,
         "peptalk_checks": checks,
         "peptalk_confidence": rec.get("confidence"),
     }
@@ -146,11 +156,42 @@ def _call(rec: dict[str, Any], record: core.ProteinRecord) -> dict[str, Any]:
     return out
 
 
+def probe_from_calls(
+    record: core.ProteinRecord, calls: list[dict[str, Any]]
+) -> core.Probe:
+    """The probe the imported records encode, with its decoy checked against the rule.
+
+    The target comes from the catalytic-mutant record's name (``...catalytic_mutant.C124A``);
+    its source is UniProt ACT_SITE only when UniProt annotates that position as one.
+    ``core.probe_at`` then re-derives the decoy, which must be the imported one.
+    """
+    by = {c["condition"]: c for c in calls if c["question"] == "activity"}
+    if "catalytic_mutant" not in by:
+        raise ValueError("a decoy was imported without its catalytic mutant")
+    label = by["catalytic_mutant"]["substitution"]
+    pos = runner.position_of(label)
+    assert pos is not None
+    act = {f.start for f in record.of_type("ACT_SITE") if f.start == f.end}
+    source = (
+        "UniProt ACT_SITE"
+        if pos in act
+        else "position chosen by the curator (blind-fasta --position)"
+    )
+    family = "kinase" if label[-1] in "NM" and label[0] in "DK" else ""
+    probe = core.probe_at(record, pos, source, family)
+    if probe.label(pos) != label:
+        raise ValueError(f"{label} is not the substitution blind-fasta makes at {pos}")
+    decoy = by.get("decoy", {}).get("substitution")
+    want = probe.label(probe.decoy_position) if probe.decoy_position else None
+    if decoy is not None and decoy != want:
+        raise ValueError(f"decoy {decoy} is not the one the decoy rule gives ({want})")
+    return probe
+
+
 def import_records(
     record: core.ProteinRecord,
     rows: list[dict[str, Any]],
     pfam: Optional[list[dict[str, Any]]],
-    probe: Optional[core.Probe],
 ) -> tuple[dict[str, Any], str, str, str]:
     """Build the run body from peptalk records; returns (body, model, effort, route)."""
     for key in ("model", "effort", "provider", "annotator_version"):
@@ -161,7 +202,7 @@ def import_records(
     checks = runner.base_checks(record, calls, reference)
     conds = {c["condition"] for c in calls}
     if {"catalytic_mutant", "decoy"} & conds:
-        assert probe is not None
+        probe = probe_from_calls(record, calls)
         checks["probe"] = runner.probe_summary(
             calls,
             checks.get("activity", {}).get("catalytically_active"),

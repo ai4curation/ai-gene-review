@@ -330,6 +330,7 @@ def usable(call: dict[str, Any]) -> bool:
         "error" not in call
         and not call.get("is_error")
         and not call.get("context_tokens_high")
+        and not call.get("context_unverified")
         and call.get("answer") is not None
     )
 
@@ -518,6 +519,8 @@ def probe_at(
     ('C124A', 'C83A')
     """
     seq = record.sequence
+    if not 1 <= pos <= len(seq):
+        raise ValueError(f"position {pos} is outside the {len(seq)}-residue sequence")
     residue = seq[pos - 1]
     new = replacement_for(residue, family)
     if new is None:

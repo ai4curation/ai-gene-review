@@ -118,7 +118,10 @@ def residues_cmd(
     literature and records; each residue it relies on is checked here, and with
     --write the lines go to a file the review can quote.
     """
-    lines = core.residue_lines(_record(organism, gene, genes_root), specs)
+    try:
+        lines = core.residue_lines(_record(organism, gene, genes_root), specs)
+    except ValueError as e:  # a malformed or out-of-range residue spec
+        raise typer.BadParameter(str(e)) from e
     typer.echo("\n".join(lines))
     if write:
         path = runner.output_dir(organism, gene, genes_root) / "residue-checks.md"
@@ -136,6 +139,12 @@ def residues_cmd(
         with path.open("a") as fh:
             fh.write(head + block + "\n".join(lines) + "\n")
         typer.echo(f"Appended to {path}")
+    mismatches = [line for line in lines if "DOES NOT match" in line]
+    if mismatches:
+        typer.echo(
+            f"{len(mismatches)} claimed residue(s) do not match the sequence.", err=True
+        )
+        raise typer.Exit(1)
 
 
 @sequence_read_app.command("blind-fasta")
@@ -156,7 +165,10 @@ def blind_fasta_cmd(
 ) -> None:
     """Write the FASTA files for the peptalk blind control (no model call)."""
     record = _record(organism, gene, genes_root)
-    probe = peptalk.probe_for(record, position, kinase)
+    try:
+        probe = peptalk.probe_for(record, position, kinase)
+    except ValueError as e:
+        raise typer.BadParameter(str(e)) from e
     out = runner.output_dir(organism, gene, genes_root)
     for p in peptalk.write_fastas(record, out, gene, probe):
         typer.echo(f"Wrote {p}")
@@ -169,10 +181,6 @@ def import_peptalk_cmd(
     organism: Annotated[str, typer.Argument(help="Organism folder.")],
     gene: Annotated[str, typer.Argument(help="Gene folder.")],
     files: Annotated[list[Path], typer.Argument(help="peptalk JSONL result files.")],
-    position: Annotated[
-        Optional[int], typer.Option(help="The --position given to blind-fasta, if any.")
-    ] = None,
-    kinase: Annotated[bool, typer.Option(help="As given to blind-fasta.")] = False,
     interpro: Annotated[
         bool, typer.Option(help="Fetch Pfam boundaries from the InterPro API.")
     ] = True,
@@ -181,11 +189,13 @@ def import_peptalk_cmd(
 ) -> None:
     """Check peptalk blind-control answers and add them to RESULTS.md."""
     record = _record(organism, gene, genes_root)
-    probe = peptalk.probe_for(record, position, kinase)
     pfam = core.fetch_pfam_locations(record.accession) if interpro else None
-    body, model, effort, route = peptalk.import_records(
-        record, peptalk.read_jsonl(files), pfam, probe
-    )
+    try:
+        body, model, effort, route = peptalk.import_records(
+            record, peptalk.read_jsonl(files), pfam
+        )
+    except ValueError as e:  # records that are not a clean fs2f blind control
+        raise typer.BadParameter(str(e)) from e
     out = runner.output_dir(organism, gene, genes_root)
     path = out / f"{model}-{effort}-peptalk-blind.json"
     if path.exists() and not force:

@@ -13,6 +13,55 @@ Caveats:
 
 Probe verdicts: TRACKS_CATALYTIC_RESIDUE means the catalytic mutant was called inactive and the decoy active; REPORTS_BUT_NOT_INACTIVE means the model named the substituted position but still did not call the mutant inactive (the fs2f pattern of seeing a loss and arguing around it); REJECTS_ANY_CHANGE means the decoy also changed the call, so the read is not residue-specific; INSENSITIVE means neither changed it.
 
+## claude-fable-5-2 (effort high), 2026-11-25, blind control via peptalk
+
+- Sequence: UniProtKB:P60484 sequence version 1, 403 aa, CRC64 75F97C3DD6802BA9.
+- Route: peptalk-llm 0.1.0, direct anthropic API call, --context blind (header reduced to >sequence).
+- Prompts: FEAT and PSEUDO prompts of https://github.com/ai4curation/fable-sequence-to-function @ 442bd92, verbatim.
+
+- peptalk features/real: confidence checks_passed; input verified blind: yes; failed checks: none.
+- peptalk features/shuffled: confidence checks_passed; input verified blind: yes; failed checks: none.
+- peptalk activity/wild_type: confidence flagged; input verified blind: yes; failed checks: shuffled_control.
+- peptalk activity/shuffled: confidence checks_passed; input verified blind: yes; failed checks: none.
+- peptalk activity/catalytic_mutant: confidence checks_passed; input verified blind: yes; failed checks: none.
+- peptalk activity/decoy: confidence checks_passed; input verified blind: yes; failed checks: none.
+
+### Domains and membrane features (FEAT prompt)
+
+- Model protein name: Phosphatidylinositol 3,4,5-trisphosphate 3-phosphatase and dual-specificity protein phosphatase PTEN.
+- Model function: Tumour suppressor lipid and dual-specificity protein phosphatase that removes the 3-phosphate from PtdIns(3,4,5)P3, antagonising PI3K/AKT signalling to restrain cell growth and survival.
+- Model EC number: 3.1.3.67.
+- Predicted Pfam PF22785 (Tc-R-P) at 24-181: IN_UNIPROT_NOT_INTERPRO against InterPro API.
+- Predicted Pfam PF10409 (PTEN_C2) at 188-349: MATCH against InterPro API, boundary IoU 0.99.
+- Reference Pfam PF22784 not predicted.
+- Transmembrane helices: 0 predicted, 0 in UniProt, 0 of 0 UniProt helices overlapped by a prediction.
+- Signal peptide: predicted False, UniProt False.
+
+### Shuffled-sequence control
+
+- Shuffled sequence: 0 Pfam domains and 0 transmembrane helices predicted; control passes (no domain assigned to the shuffled sequence).
+
+- Shuffled sequence, PSEUDO prompt: called catalytically active yes (enzyme family given: DNase II family (phospholipase D-like superfamily, acid endonuclease)); control FAILS (a shuffled sequence was called an active enzyme; weigh the activity calls below with that in mind).
+
+### Catalytic residues (PSEUDO prompt)
+
+- Model enzyme family: Protein tyrosine phosphatase superfamily (PTEN subfamily, dual-specificity lipid/protein phosphatase, CX5R motif); catalytically active: yes; EC 3.1.3.67.
+- Model reason: The sequence matches human PTEN from memory with an intact P-loop signature HCKAGKGR (123-130) containing the nucleophile Cys124 and Arg130, plus the general acid Asp92. None of the known inactivating substitutions (e.g. C124S, G129E, R130 changes) are present, so it is expected to be an active PIP3 3-phosphatase.
+- Named catalytic residue C124 (catalytic nucleophile (P-loop cysteine, forms phosphoenzyme intermediate)): present in the sequence, UniProt ACT_SITE.
+- Named catalytic residue D92 (general acid (WPD-like loop aspartate)): present in the sequence, not a UniProt site.
+- Named catalytic residue R130 (phosphate binding / transition-state stabilisation (P-loop arginine)): present in the sequence, not a UniProt site.
+- Named catalytic residue K125 (substrate (PIP3) phosphate binding, P-loop lysine): present in the sequence, not a UniProt site.
+- Named catalytic residue K128 (substrate (PIP3) phosphate binding, P-loop lysine): present in the sequence, not a UniProt site.
+- Named catalytic residue G129 (P-loop glycine required for lipid phosphatase activity): present in the sequence, not a UniProt site.
+- Named catalytic residue H93 (active-site histidine supporting P-loop conformation and substrate binding): present in the sequence, not a UniProt site.
+- Reported lost catalytic or cofactor residues: none.
+
+### Catalytic-substitution and decoy probe
+
+- Catalytic substitution C124A (UniProt ACT_SITE): called active no; position reported as lost: True.
+- Decoy substitution C83A (drawn from 4 unannotated same-type residues): called active yes; position reported as lost: False.
+- Probe verdict: TRACKS_CATALYTIC_RESIDUE (wild type called active yes).
+
 ## claude-fable-5-2 (effort high), 2026-11-25, isolated read via the claude CLI
 
 - Sequence: UniProtKB:P60484 sequence version 1, 403 aa, CRC64 75F97C3DD6802BA9.

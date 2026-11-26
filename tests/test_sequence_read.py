@@ -186,7 +186,9 @@ def test_choose_probe_prefers_acidic_binding_residue():
 
 # peptalk-llm 0.1.0 records for PTEN (wild type, shuffled control, C124A, decoy C83A),
 # produced by its stub provider from `sequence-read blind-fasta` output; the stub's
-# empty answers were replaced by fixed ones so the checks have something to score.
+# empty answers were replaced by fixed ones so the checks have something to score,
+# and each carries a passed input_tokens_match check (the stub run used
+# --no-verify-input; a live run adds the check).
 PEPTALK_STUB = Path("tests/input/sequence_read/peptalk-stub-PTEN.jsonl").resolve()
 
 
@@ -238,6 +240,10 @@ def test_blind_fasta_and_import_peptalk(genes_root: Path):
     assert doc["checks"]["probe"]["verdict"] == "TRACKS_CATALYTIC_RESIDUE"
     results = (out / "RESULTS.md").read_text()
     assert "blind control via peptalk" in results
+    # the shuffled copy is also asked the activity question, and scored
+    assert "catalytically_active" in doc["checks"]["shuffled_activity"]
+    assert "Shuffled sequence, PSEUDO prompt:" in results
+    assert "input verified blind: yes" in results
     assert "- Probe verdict: TRACKS_CATALYTIC_RESIDUE" in results
 
 
@@ -254,7 +260,7 @@ def test_import_peptalk_rejects_non_blind_records(pten, field, value, message):
     rows = peptalk.read_jsonl([PEPTALK_STUB])
     rows[0][field] = value
     with pytest.raises(ValueError, match=message):
-        peptalk.import_records(pten, rows, None, peptalk.probe_for(pten, None))
+        peptalk.import_records(pten, rows, None)
 
 
 def test_residues_command_writes_checked_lines(genes_root: Path):
@@ -281,3 +287,70 @@ def test_residues_command_writes_checked_lines(genes_root: Path):
     assert "claimed C: matches the sequence" in text
     assert "claimed H: matches the sequence" in text
     assert ": P-loop nucleophile" in text
+
+
+@pytest.mark.parametrize(
+    "check,usable,flag",
+    [
+        ({"name": "input_tokens_match", "passed": True, "detail": ""}, True, None),
+        (
+            {"name": "input_tokens_match", "passed": False, "detail": ""},
+            False,
+            "context_tokens_high",
+        ),
+        (None, False, "context_unverified"),
+    ],
+)
+def test_import_peptalk_requires_verified_blind_input(pten, check, usable, flag):
+    """An absent input check means not verified, never verified clean."""
+    from ai_gene_review.sequence_read import peptalk
+
+    rows = peptalk.read_jsonl([PEPTALK_STUB])
+    for r in rows:
+        r["checks"] = [c for c in r["checks"] if c["name"] != "input_tokens_match"]
+        if check is not None:
+            r["checks"].append(check)
+    body = peptalk.import_records(pten, rows, None)[0]
+    assert all(core.usable(c) == usable for c in body["calls"])
+    if flag:
+        assert all(c[flag] for c in body["calls"])
+
+
+def test_import_peptalk_probe_comes_from_record_names(pten):
+    """The probe label and its source come from the imported names, checked against the rule."""
+    from ai_gene_review.sequence_read import peptalk
+
+    rows = peptalk.read_jsonl([PEPTALK_STUB])
+    probe = peptalk.import_records(pten, rows, None)[0]["checks"]["probe"]
+    assert (probe["target"], probe["target_source"], probe["decoy"]) == (
+        "C124A",
+        "UniProt ACT_SITE",
+        "C83A",
+    )
+    for r in rows:  # a decoy that the decoy rule would not have drawn
+        if ".decoy." in r["id"]:
+            r["id"] = r["id"].replace("C83A", "C71A")
+            r["sequence"] = core.substitute(pten.sequence, 71, "A")
+            r["prompt_sha256"] = core.sha256(
+                core.PSEUDO_PROMPT + core.fasta(r["sequence"])
+            )
+    with pytest.raises(ValueError, match="not the one the decoy rule gives"):
+        peptalk.import_records(pten, rows, None)
+
+
+def test_residues_command_exits_nonzero_on_mismatch(genes_root: Path):
+    res = CliRunner().invoke(
+        app,
+        [
+            "sequence-read",
+            "residues",
+            "human",
+            "PTEN",
+            "H124",
+            "--genes-root",
+            str(genes_root),
+        ],
+        env=PLAIN,
+    )
+    assert res.exit_code == 1
+    assert "DOES NOT match the sequence" in plain(res.output)
