@@ -13,3 +13,6 @@ curl -sSfL -o "$DATA/go-basic.obo" http://purl.obolibrary.org/obo/go/go-basic.ob
 cut -f4 "$DATA/rhea2uniprot_sprot.tsv" | tail -n +2 | sort -u > "$DATA/sp_accessions.txt"
 rm -f "$DATA"/sp_mf.*.jsonl
 uv run -q --with requests python "$HERE/fetch_by_acc.py" "$DATA/sp_accessions.txt" "$DATA/sp_mf.all.jsonl"
+# Inputs for subunit_projection.py: native contributes_to MF rows, and complex-membership fields of Swiss-Prot Rhea entries.
+curl -sSf -H 'Accept: text/tsv' -o "$DATA/goa_contributes_to_mf.tsv" 'https://www.ebi.ac.uk/QuickGO/services/annotation/downloadSearch?qualifier=contributes_to&aspect=molecular_function&geneProductType=protein&downloadLimit=200000&selectedFields=geneProductId,qualifier,goId,evidenceCode,reference,assignedBy'
+curl -sSf -o "$DATA/sp_rhea_complex.tsv" 'https://rest.uniprot.org/uniprotkb/stream?query=reviewed:true+AND+cc_catalytic_activity:RHEA&fields=accession,organism_id,xref_complexportal,go_c,cc_subunit&format=tsv'
