@@ -17,7 +17,8 @@ Outputs (``projects/RGD_PATHWAY_ONTOLOGY/data/``):
   those rows and the hand-curated set are individually verified.
 * ``pw_gocam_completeness.tsv`` -- one row per PW term with human gene
   annotations: gene counts by evidence tier, how many of those genes appear in
-  any human GO-CAM / have a gene review, the best-overlapping GO-CAM model, and
+  any human GO-CAM (and how many have a mouse or rat ortholog, by HGNC's MGI and
+  RGD cross-references, in a GO-CAM of that species) / have a gene review, the best-overlapping GO-CAM model, and
   human GO-CAM models whose biological process falls under a mapped GO term.
 * ``module_seeds.yaml`` -- one seed per RGD diagram pathway, joining the diagram
   structure (sub-pathways, labels), RGD-curated human genes, GO mappings,
@@ -196,6 +197,60 @@ def load_hgnc(path: Path) -> tuple[dict[str, str], dict[str, str]]:
                 for u in ups:
                     up2sym.setdefault(u, r["symbol"])
     return sym2up, up2sym
+
+
+RODENT_TAXA = {"mouse": ("NCBITaxon:10090", "mgd_id"), "rat": ("NCBITaxon:10116", "rgd_id")}
+
+
+def load_hgnc_rodent_xrefs(path: Path) -> dict[str, dict[str, str]]:
+    """HGNC's MGI and RGD cross-references: species -> {MOD gene id -> human symbol}.
+
+    A MOD id listed on more than one human gene is dropped, so that only one-to-one
+    assignments count.
+    """
+    seen: dict[str, dict[str, set[str]]] = {sp: defaultdict(set) for sp in RODENT_TAXA}
+    with open(path, errors="ignore") as fh:
+        for r in csv.DictReader(fh, delimiter="\t"):
+            for sp, (_, col) in RODENT_TAXA.items():
+                for x in (r.get(col) or "").split("|"):
+                    if x:
+                        seen[sp][x].add(r["symbol"])
+    return {sp: {x: next(iter(s)) for x, s in d.items() if len(s) == 1} for sp, d in seen.items()}
+
+
+def rodent_gocam_symbols(path: Path, xrefs: dict[str, dict[str, str]]) -> dict[str, set[str]]:
+    r"""Human symbols whose mouse or rat ortholog (by HGNC xref) is in a GO-CAM of that species.
+
+    Mouse index rows carry ``MGI:MGI:nnn`` and HGNC carries ``MGI:nnn``; rat rows and
+    HGNC both carry ``RGD:nnn``. Rows on other entity types (CHEBI, GO, UniProtKB) are
+    not genes with an HGNC xref and are skipped.
+
+    >>> import tempfile, os
+    >>> rows = ["gene_product\tgene_label\tmodel_id\tmodel_title\ttaxon",
+    ...         "MGI:MGI:1\tFoo Mmus\tm1\tt\tNCBITaxon:10090",
+    ...         "RGD:2\tBar Rnor\tm2\tt\tNCBITaxon:10116",
+    ...         "UniProtKB:Q1\tBaz Mmus\tm1\tt\tNCBITaxon:10090"]
+    >>> with tempfile.NamedTemporaryFile("w", suffix=".tsv", delete=False) as fh:
+    ...     _ = fh.write("\n".join(rows) + "\n")
+    >>> out = rodent_gocam_symbols(Path(fh.name), {"mouse": {"MGI:1": "FOO"}, "rat": {"RGD:2": "BAR"}})
+    >>> os.unlink(fh.name)
+    >>> sorted(out["mouse"]), sorted(out["rat"])
+    (['FOO'], ['BAR'])
+    """
+    out: dict[str, set[str]] = {sp: set() for sp in RODENT_TAXA}
+    by_taxon = {taxon: sp for sp, (taxon, _) in RODENT_TAXA.items()}
+    with open(path) as fh:
+        for r in csv.DictReader(fh, delimiter="\t"):
+            sp = by_taxon.get(r["taxon"])
+            if not sp:
+                continue
+            gid = r["gene_product"]
+            if sp == "mouse" and gid.startswith("MGI:MGI:"):
+                gid = gid[len("MGI:"):]
+            sym = xrefs[sp].get(gid)
+            if sym:
+                out[sp].add(sym)
+    return out
 
 
 def load_gocams(path: Path) -> tuple[dict[str, set[str]], dict[str, str], dict[str, set[str]]]:
@@ -722,6 +777,9 @@ def main() -> int:
     sym2up, up2sym = load_hgnc(cache / "hgnc_complete_set.txt")
     sym_models, titles, model_bps = load_gocams(ROOT / "gocams" / "index.tsv")
     gocam_syms = set(sym_models)
+    rodent_syms = rodent_gocam_symbols(ROOT / "gocams" / "index.tsv",
+                                       load_hgnc_rodent_xrefs(cache / "hgnc_complete_set.txt"))
+    mammal_syms = gocam_syms | rodent_syms["mouse"] | rodent_syms["rat"]
     model_syms: dict[str, set[str]] = defaultdict(set)
     for sym, ms in sym_models.items():
         for m in ms:
@@ -760,6 +818,9 @@ def main() -> int:
             "gene_basis": "rgd_curated" if genes_cur else "all",
             "n_basis_in_gocam": len(in_gocam),
             "frac_basis_in_gocam": round(len(in_gocam) / len(gene_basis), 3),
+            "n_basis_in_mouse_gocam": len(gene_basis & rodent_syms["mouse"]),
+            "n_basis_in_rat_gocam": len(gene_basis & rodent_syms["rat"]),
+            "frac_basis_in_any_mammal_gocam": round(len(gene_basis & mammal_syms) / len(gene_basis), 3),
             "n_basis_reviewed": len(gene_basis & reviewed),
             "best_gocam_model": best[0][0] if best else "",
             "best_gocam_overlap": best[0][1] if best else 0,
@@ -931,7 +992,18 @@ def main() -> int:
         "in_scope_with_ge_half_genes_in_gocam": sum(1 for i in in_scope if i in row_by and row_by[i]["frac_basis_in_gocam"] >= 0.5),
         "in_scope_with_any_gocam_for_mapped_go": sum(1 for i in in_scope if i in row_by and row_by[i]["n_gocam_models_for_mapped_go"] > 0),
         "in_scope_median_best_single_gocam_overlap": median([row_by[i]["best_gocam_overlap"] for i in in_scope if i in row_by]),
+        "in_scope_median_frac_in_any_mammal_gocam": round(median(
+            [row_by[i]["frac_basis_in_any_mammal_gocam"] for i in in_scope if i in row_by]), 3),
+        "in_scope_with_ge_half_genes_in_any_mammal_gocam": sum(
+            1 for i in in_scope if i in row_by and row_by[i]["frac_basis_in_any_mammal_gocam"] >= 0.5),
+        "in_scope_with_mouse_gocam_genes": sum(
+            1 for i in in_scope if i in row_by and row_by[i]["n_basis_in_mouse_gocam"] > 0),
+        "in_scope_with_rat_gocam_genes": sum(
+            1 for i in in_scope if i in row_by and row_by[i]["n_basis_in_rat_gocam"] > 0),
         "human_gocam_gene_symbols": len(gocam_syms),
+        "mouse_gocam_genes_mapped_to_human": len(rodent_syms["mouse"]),
+        "rat_gocam_genes_mapped_to_human": len(rodent_syms["rat"]),
+        "rodent_only_gocam_genes": len((rodent_syms["mouse"] | rodent_syms["rat"]) - gocam_syms),
         "modules_compared": len(modules),
     }
     with open(args.out / "summary.yaml", "w") as fh:
