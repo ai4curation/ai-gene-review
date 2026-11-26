@@ -586,7 +586,11 @@ Last updated: 2026-10-08
   was rate-limited at fetch time) and PMID:39565752 (full text).
 - Checked: none of the 19 host loci appears in the ≤100 aa Swiss-Prot census, so no review in
   this project changes. Added a pointer in `genes/human/CNOT7/CNOT7-notes.md`.
-- A companion putative-microprotein gene set is being drafted in the genesets repo.
+- Companion gene sets added in monarch-initiative/genesets as `SERIES:MICROPROTEIN_EVIDENCE`
+  (`LIT:MICROPROTEINS_SORF_PROTEIN_EVIDENCE`, 64 symbols; `LIT:MICROPROTEINS_SORF_PUTATIVE`, 106),
+  built from the census classes. Neither yields a Bonferroni-significant GO term. The putative
+  set's only nominal hits are the PMCHL1/PMCHL2 MCH-hormone rows that Tier 3 removed, so it
+  serves as a negative control for IBA/IEA propagation onto pseudogene products.
 
 ## 2026-10-08
 
