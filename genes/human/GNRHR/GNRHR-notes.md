@@ -100,3 +100,13 @@
 ### Left open
 
 - OpenScientist hypothesis job on the penetrance question: see the history record for its state.
+
+## 2026-11-26: distance correction
+
+- The companion disease-entry session pointed out that PDB 9U4W is deposited with hydrogens and
+  that `02_variant_structure.py` kept them on the GnRH and G-alpha-q side. Confirmed (8,486
+  hydrogen atoms in the file) and fixed. Heavy-atom distances: R139 to G-alpha-q 3.7 A (was 3.0),
+  P146 3.6 (was 2.8), R262 5.2 (was 4.4), Y283 to GnRH 2.8 (was 2.5). R262Q and R262W move from
+  the computed interface class to unresolved, because R262 itself is outside the 4.5 A cutoff;
+  its neighbours A261, K264 and T265 remain G-alpha-q contacts, and the published coupling defect
+  is unchanged. No annotation action changes.

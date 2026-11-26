@@ -61,11 +61,11 @@ change, charge, proline or cysteine change, and distances in the two complexes):
 | Computed class | n |
 |---|---|
 | transmembrane core packing | 19 |
-| activation switch / G-protein interface | 8 |
+| activation switch / G-protein interface | 6 |
 | ligand-binding surface | 4 |
 | extracellular fold (disulfide or glycan) | 3 |
 | buried loop or terminus packing | 2 |
-| surface / unresolved | 5 |
+| surface / unresolved | 7 |
 
 The full table is `results/disease_variant_table.md`.
 
@@ -75,11 +75,12 @@ position), not loss of a GnRH contact. That is the structural counterpart of the
 published finding that most disease mutants are misfolded and retained in the
 endoplasmic reticulum, and many are rescued by pharmacoperones. Only four variants are
 at residues that touch GnRH in the active complex: R38Q (3.6 A), Q174R (4.1 A), Y283H
-(2.5 A) and Y284C (3.5 A).
+(2.8 A) and Y284C (3.5 A).
 
 What it does not show: the rules cannot tell a folding defect from a signalling defect at
-a buried position. Five variants get no structural call (N10K is not modelled; T32I,
-I37S, L137P and L166P are lipid-facing or only moderately buried).
+a buried position. Seven variants get no structural call: N10K is not modelled; T32I,
+I37S, L137P and L166P are lipid-facing or only moderately buried; and R262Q and R262W sit
+just outside the 4.5 A contact cutoff (see Result 2).
 
 ## Result 2. The three variant classes that the literature separates are structurally distinct
 
@@ -88,13 +89,14 @@ I37S, L137P and L166P are lipid-facing or only moderately buried).
   near the hormone but not in contact, which fits a lowered affinity without loss of
   the fold. N10 is in the unmodelled N-terminus.
 - **Partial loss of function, impaired coupling (R262Q).** R262 (6.30) is at the
-  cytoplasmic end of helix 6, 32 A from GnRH and 4.4 A from G-alpha-q in the active
-  complex. Its neighbours A261, K264 and T265 are within 4 A of G-alpha-q. The reported
-  phenotype (normal binding, reduced phospholipase C activation) is what a residue at
-  the G-protein interface would give. R262W is also classified pathogenic in ClinVar.
+  cytoplasmic end of helix 6, 32 A from GnRH and 5.2 A from G-alpha-q in the active
+  complex. It does not touch the G protein itself, but its neighbours A261, K264 and
+  T265 are within 4 A of G-alpha-q. The reported phenotype (normal binding, reduced
+  phospholipase C activation) is what a residue at the edge of the G-protein interface
+  would give. R262W is also classified pathogenic in ClinVar.
 - **Complete loss of function.** These are the buried-core and motif variants: E90K
   (2.53, relative SASA 0.02), A129D (3.40), V134G (3.45), A171T (4.57, SASA 0.00), L266R
-  (6.34), P282R (6.50) and the DRS-motif variants R139H and R139C (3.50, 3.0 A from
+  (6.34), P282R (6.50) and the DRS-motif variants R139H and R139C (3.50, 3.7 A from
   G-alpha-q).
 
 ## Result 3. The crystal structure does not show a Glu90-Lys121 salt bridge
@@ -157,7 +159,7 @@ incompletely penetrant, or it causes a mild or reversible phenotype that does no
 exclude people from such cohorts. gnomAD has no phenotypes, so this analysis cannot say
 which.
 
-P146S (34.50, 2.8 A from G-alpha-q, conserved in all ten mammals) is listed by UniProt
+P146S (34.50, 3.6 A from G-alpha-q, conserved in all ten mammals) is listed by UniProt
 as an HH7 variant, has conflicting classifications in ClinVar, and has four homozygotes
 in gnomAD. Position alone would predict a coupling defect; the frequency argues against
 a fully penetrant recessive allele. No functional assay was found for it.
@@ -169,13 +171,17 @@ a fully penetrant recessive allele. No functional assay was found for it.
   Thr215 (5.42), Leu219 (5.46), Tyr283 (6.51), Tyr284 (6.52), Gly287 (6.55), Tyr290
   (6.58), Trp291 (6.59), Met296, Leu297, Asn305 (7.35), His306 (7.36), Phe309 (7.39).
 - G-alpha-q, within 4 A in 9U4W: Met76 (2.39), Asp138 (3.49), Arg139 (3.50), Ala142,
-  Ile143, Pro146, Leu147, Ser151, Asn152, Ser153, Ile234, Leu238, Val241, Asn256, Ile258,
-  Ala261 (6.29), Lys264, Thr265, Met268, Ser327 and the C-terminal Leu328.
+  Ile143, Pro146, Leu147, Ser151, Asn152, Ile258, Ala261 (6.29), Lys264, Thr265 and the
+  C-terminal Leu328.
 - Elagolix, within 4 A in 7BR3: Ile21, Pro22, Leu23, Gln25, Gly26, Asn27 (the receptor
   N-terminus), Asp98, Asn102, Ile103, Lys121, Thr215, Phe216, Leu219, Tyr283, Leu286,
   Gly287, Met296, Leu297, Asn305, Phe308.
 
 ## Limits
+
+- All distances are between heavy atoms. 9U4W is deposited with hydrogens; an earlier
+  version of the script kept them on the GnRH and G-alpha-q side, which made those
+  distances up to 0.8 A too short. Corrected 2026-11-26.
 
 - One inactive human structure and one active pig structure; no human active structure
   and no structure of any mutant.

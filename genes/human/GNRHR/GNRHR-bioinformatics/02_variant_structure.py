@@ -130,6 +130,7 @@ def receptor_chain(struct):
 
 
 def min_dist(res, atoms):
+    atoms = [a for a in atoms if a.element != "H"]
     if not atoms:
         return None
     c = np.array([a.coord for a in atoms])
@@ -225,8 +226,9 @@ for pid in ("9U4W",):
     summary[pid] = {"receptor_chain": ch.id, "mapped": stat[0], "identical_to_human": stat[1],
                     "pig_vs_human_differences": stat[2], "peptide_chain": pep, "peptide_len": info[pep]["len"],
                     "galpha_chain": galpha, "partner_chains": info}
-    pep_atoms = [a for a in st[0][pep].get_atoms()]
-    ga_atoms = [a for a in st[0][galpha].get_atoms()]
+    # 9U4W is deposited with hydrogens: keep heavy atoms only on both sides of every distance
+    pep_atoms = [a for a in st[0][pep].get_atoms() if a.element != "H"]
+    ga_atoms = [a for a in st[0][galpha].get_atoms() if a.element != "H"]
     for p, r in ma.items():
         track[p]["dist_GnRH_9U4W"] = round(min_dist(r, pep_atoms), 1)
         track[p]["dist_Gq_9U4W"] = round(min_dist(r, ga_atoms), 1)
