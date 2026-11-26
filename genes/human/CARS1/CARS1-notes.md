@@ -36,12 +36,9 @@ Annotation decisions:
 - Removed only the bare `GO:0005515` protein binding row. The EEF1G interaction
   in PMID:10908348 is real, but the GO term is the project-level
   uninformative-binding exception.
-- Left the Ensembl-transferred response to mechanical stimulus row undecided
-  because this review did not verify the rat donor mechanism and did not find
-  direct human CARS1 evidence for that process.
-- GOA `GO:0009612` cites `GO_REF:0000107` with
-  `UniProtKB:A0A8I5Y9V4|ensembl:ENSRNOP00000078006`; this rat donor was not
-  verified during the CARS1/PTHR10890 family pass.
+- Marked the Ensembl-transferred response to mechanical stimulus row
+  over-annotated because a cytosolic CysRS does not execute an organism-level
+  mechanistic response to mechanical stimulus.
 
 PANTHER:
 
