@@ -26,11 +26,12 @@ Reactome and primary PMID records directly.
 
 ## PAINT and family calls
 
-The cached PANTHER 19.0 tree places human `DCK` on leaf `PTN002471218`, below the
-vertebrate DCK node `PTN002575111` and the broader DCK/DGUOK/DCK2 node
-`PTN002236991`. Human `DGUOK` is in SF8 under the same `PTN002236991` branch, human
-`TK2` is in SF24 under `PTN000828170`, and human `NDUFA10` is on the separate SF15
-Complex-I branch under `PTN000828201`.
+`interpro/panther/PTHR10513/PTHR10513-tree-check.txt`, generated from the cached
+PANTHER 19.0 tree, places human `DCK` on leaf `PTN002471218`, below the vertebrate
+DCK node `PTN002575111` and the broader DCK/DGUOK/DCK2 node `PTN002236991`. Human
+`DGUOK` is in SF8 under the same `PTN002236991` branch, human `TK2` is in SF24 under
+`PTN000828170`, and human `NDUFA10` is on the separate SF15 Complex-I branch under
+`PTN000828201`.
 
 The root `GO:0019136` deoxynucleoside kinase IBD is a sound broad family assertion for
 the DCK/TK2/DGUOK kinase branches, and PAINT already blocks it from the NDUFA10 branch
