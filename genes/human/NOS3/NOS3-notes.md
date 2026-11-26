@@ -43,3 +43,7 @@ Main curation decisions:
   `GO:0008217 regulation of blood pressure` row to TOO_GENERAL because the
   accepted `GO:0045776 negative regulation of blood pressure` child captures the
   vascular-tone direction more precisely.
+- The legacy cadmium-binding row was changed to MODIFY toward `GO:0008270 zinc
+  ion binding`, the obsolete tetrahydrobiopterin-metabolism row was removed, and
+  the scaffold protein binding row was kept because UniProt records NOS3
+  interactions with NOSIP, NOSTRIN and HSP90AB1.

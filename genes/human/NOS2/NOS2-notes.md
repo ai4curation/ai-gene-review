@@ -40,3 +40,5 @@ Main curation decisions:
   changed the `PMID:7544003` Fc-gamma receptor/phagocytosis row to REMOVE with a
   `WRONG_TERM` source defect because that paper describes IgE immune complexes
   and CD23 rather than Fc-gamma receptor signaling.
+- Added a `NEW` `GO:0008270 zinc ion binding` row for the conserved NOS2
+  Zn(2+) site annotated in the UniProt feature table.

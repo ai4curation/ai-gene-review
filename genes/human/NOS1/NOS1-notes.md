@@ -47,3 +47,6 @@ Main curation decisions:
   output, and changed the `PMID:7545544` myoblast-fusion TAS row to UNDECIDED
   because the abstract verifies nNOS-dystrophin anchoring but cannot rule out a
   myoblast-fusion author statement in the full text.
+- The legacy `GO:0046870 cadmium ion binding` row was changed to MODIFY toward
+  `GO:0008270 zinc ion binding`, matching the conserved mammalian NOS
+  structural zinc site described for NOS1 in the cached family research.
