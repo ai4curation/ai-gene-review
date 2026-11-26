@@ -4,12 +4,13 @@ For a row whose IBA the pinned PAINT snapshot no longer propagates, this reports
 from the tree alone: a PAINT loss on the lineage, no IBD for the term on any ancestor,
 or the gene not being a leaf of its family tree. No judgement is made here.
 
-    uv run python projects/IBA_REVIEW/rereview-2026-11-21/withdrawn.py
+    uv run python projects/IBA_REVIEW/rereview-2026-11-21/withdrawn.py [PASS_DIR]
 """
 
 from __future__ import annotations
 
 import csv
+import sys
 from pathlib import Path
 
 import yaml
@@ -22,6 +23,10 @@ HERE = Path(__file__).parent
 
 
 def main() -> None:
+    global HERE
+    if len(sys.argv) > 1:  # another pass directory with the same layout
+        HERE = Path(sys.argv[1])
+    over = HERE.name.startswith("overannotated")
     with open_text(download_cached(IBD_GAF_URL, paint_cache_dir(Path(".cache/paint")))) as fh:
         ibd = parse_ibd_gaf(fh)
     genes: dict[str, list[dict]] = {}
@@ -57,7 +62,7 @@ def main() -> None:
                 "family": ", ".join(fams),
                 "snapshot_cause": cause,
                 "tree_reading": " ".join(facts) or "The UniProt record names no PANTHER family.",
-                "verdict": "REMOVE_UPHELD",
+                "verdict": "OVER_ANNOTATION_UPHELD" if over else "REMOVE_UPHELD",
                 "ground": "WITHDRAWN_UPSTREAM",
                 "paint_fix": {"paint_action": "NONE"},
                 "review_edited": False,
@@ -65,7 +70,12 @@ def main() -> None:
         )
     doc = {
         "scope": "Rows whose IBA the pinned PAINT snapshot no longer propagates to the gene. "
-        "PAINT has already made the change the REMOVE asked for, so the action stands and no fix is requested. "
+        + (
+            "The annotation the review doubted is gone upstream, so the row was not re-judged and no fix is requested. "
+            if over
+            else "PAINT has already made the change the REMOVE asked for, so the action stands and no fix is requested. "
+        )
+        +
         "snapshot_cause and tree_reading are computed by withdrawn.py.",
         "genes": [{"gene_file": g, "rows": rows} for g, rows in genes.items()],
     }

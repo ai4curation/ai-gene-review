@@ -33,8 +33,6 @@ def main() -> None:
     over = HERE.name.startswith("overannotated")
     upheld, upheld_action = ("OVER_ANNOTATION_UPHELD", "MARK_AS_OVER_ANNOTATED") if over else ("REMOVE_UPHELD", "REMOVE")
     inv = {(r["gene_file"], r["go_id"]): r for r in csv.DictReader(open(HERE / "inventory.tsv"), delimiter="\t")}
-    if over:  # rows PAINT no longer propagates are listed, not re-judged
-        inv = {k: r for k, r in inv.items() if r["status"] == "LIVE_IBD"}
     seen: dict[tuple[str, str], dict] = {}
     for path in sorted(glob.glob(str(HERE / "batches" / "*.yaml"))):
         for gene in yaml.safe_load(open(path))["genes"]:
