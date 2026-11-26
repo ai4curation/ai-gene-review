@@ -182,3 +182,102 @@ def test_choose_probe_prefers_acidic_binding_residue():
     probe = core.choose_probe(adprh, wt)[0]
     assert probe is not None
     assert probe.label(probe.target_position) == "D55A"
+
+
+# peptalk-llm 0.1.0 records for PTEN (wild type, shuffled control, C124A, decoy C83A),
+# produced by its stub provider from `sequence-read blind-fasta` output; the stub's
+# empty answers were replaced by fixed ones so the checks have something to score.
+PEPTALK_STUB = Path("tests/input/sequence_read/peptalk-stub-PTEN.jsonl").resolve()
+
+
+def test_blind_fasta_and_import_peptalk(genes_root: Path):
+    runner = CliRunner()
+    res = runner.invoke(
+        app,
+        [
+            "sequence-read",
+            "blind-fasta",
+            "human",
+            "PTEN",
+            "--genes-root",
+            str(genes_root),
+        ],
+    )
+    assert res.exit_code == 0, res.output
+    out = genes_root / "human/PTEN/PTEN-bioinformatics/sequence-read"
+    names = [
+        line
+        for line in (out / "PTEN-probe.fasta").read_text().splitlines()
+        if line.startswith(">")
+    ]
+    assert names == [">P60484.catalytic_mutant.C124A", ">P60484.decoy.C83A"]
+    res = runner.invoke(
+        app,
+        [
+            "sequence-read",
+            "import-peptalk",
+            "human",
+            "PTEN",
+            str(PEPTALK_STUB),
+            "--no-interpro",
+            "--genes-root",
+            str(genes_root),
+        ],
+    )
+    assert res.exit_code == 0, res.output
+    doc = json.loads((out / "claude-fable-5-2-high-peptalk-blind.json").read_text())
+    assert doc["route"].startswith("peptalk-llm 0.1.0")
+    assert sorted(c["condition"] for c in doc["calls"]) == [
+        "catalytic_mutant",
+        "decoy",
+        "real",
+        "shuffled",
+        "shuffled",
+        "wild_type",
+    ]
+    assert doc["checks"]["probe"]["verdict"] == "TRACKS_CATALYTIC_RESIDUE"
+    results = (out / "RESULTS.md").read_text()
+    assert "blind control via peptalk" in results
+    assert "- Probe verdict: TRACKS_CATALYTIC_RESIDUE" in results
+
+
+@pytest.mark.parametrize(
+    "field,value,message",
+    [
+        ("context", "organism", "needs --context blind"),
+        ("prompt_sha256", "0" * 64, "not the fs2f features prompt verbatim"),
+    ],
+)
+def test_import_peptalk_rejects_non_blind_records(pten, field, value, message):
+    from ai_gene_review.sequence_read import peptalk
+
+    rows = peptalk.read_jsonl([PEPTALK_STUB])
+    rows[0][field] = value
+    with pytest.raises(ValueError, match=message):
+        peptalk.import_records(pten, rows, None, peptalk.probe_for(pten, None))
+
+
+def test_residues_command_writes_checked_lines(genes_root: Path):
+    res = CliRunner().invoke(
+        app,
+        [
+            "sequence-read",
+            "residues",
+            "human",
+            "PTEN",
+            "C124",
+            "H93",
+            "--note",
+            "P-loop nucleophile",
+            "--write",
+            "--genes-root",
+            str(genes_root),
+        ],
+    )
+    assert res.exit_code == 0, res.output
+    text = (
+        genes_root / "human/PTEN/PTEN-bioinformatics/sequence-read/residue-checks.md"
+    ).read_text()
+    assert "claimed C: matches the sequence" in text
+    assert "claimed H: matches the sequence" in text
+    assert ": P-loop nucleophile" in text

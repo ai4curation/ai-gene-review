@@ -486,19 +486,46 @@ def choose_probe(
                     break
     if target is None:
         return None, "no catalytic residue from UniProt or the model to substitute"
-    pos, source = target
+    avoid = [
+        r["position"]
+        for r in named
+        + [
+            r
+            for r in wild_type_answer.get("substituted_or_missing") or []
+            if isinstance(r, dict) and isinstance(r.get("position"), int)
+        ]
+    ]
+    return probe_at(record, target[0], target[1], family, avoid), ""
+
+
+def probe_at(
+    record: ProteinRecord,
+    pos: int,
+    source: str,
+    family: str = "",
+    avoid: Optional[list[int]] = None,
+) -> Probe:
+    """The substitution at ``pos`` and its matched decoy (the fs2f decoy rule).
+
+    The decoy is a residue of the same type, inside the same UniProt DOMAIN when
+    there is one, at least ``DECOY_MARGIN`` residues from any annotated site and
+    any position in ``avoid``, and outside cleaved peptides, drawn with a
+    generator seeded by accession and position.
+
+    >>> r = read_uniprot(Path("genes/human/PTEN/PTEN-uniprot.txt"))
+    >>> p = probe_at(r, 124, "UniProt ACT_SITE")
+    >>> p.label(p.target_position), p.label(p.decoy_position)
+    ('C124A', 'C83A')
+    """
+    seq = record.sequence
     residue = seq[pos - 1]
     new = replacement_for(residue, family)
-    assert new is not None
+    if new is None:
+        raise ValueError(f"no substitution defined for {residue}{pos}")
     blocked: set[int] = set()
     for f in record.of_type(*SITE_FEATURES):
         blocked.update(range(f.start - DECOY_MARGIN, f.end + DECOY_MARGIN + 1))
-    for r in named + [
-        r
-        for r in wild_type_answer.get("substituted_or_missing") or []
-        if isinstance(r, dict) and isinstance(r.get("position"), int)
-    ]:
-        p = r["position"]
+    for p in avoid or []:
         blocked.update(range(p - DECOY_MARGIN, p + DECOY_MARGIN + 1))
     for f in record.of_type(*CLEAVED_FEATURES):
         blocked.update(range(f.start, f.end + 1))
@@ -516,16 +543,13 @@ def choose_probe(
         if candidates
         else None
     )
-    return (
-        Probe(
-            target_position=pos,
-            target_residue=residue,
-            new_residue=new,
-            target_source=source,
-            decoy_position=decoy,
-            decoy_candidates=len(candidates),
-        ),
-        "",
+    return Probe(
+        target_position=pos,
+        target_residue=residue,
+        new_residue=new,
+        target_source=source,
+        decoy_position=decoy,
+        decoy_candidates=len(candidates),
     )
 
 
@@ -718,3 +742,52 @@ def probe_verdict(
         # fs2f's second error pattern: the loss is seen, then argued around
         return "REPORTS_BUT_NOT_INACTIVE"
     return "INSENSITIVE"
+
+
+RESIDUE_SPEC = re.compile(r"([A-Z]?)(\d+)")
+
+
+def residue_lines(record: ProteinRecord, specs: list[str]) -> list[str]:
+    """Check residues an agent names while reading the sequence in a review.
+
+    Each spec is a position (``58``) or a claimed residue and position (``D58``).
+    Every line states what the sequence has there and which UniProt features
+    cover it, so an in-context observation can be quoted from a checked file.
+
+    >>> r = read_uniprot(Path("genes/human/PTEN/PTEN-uniprot.txt"))
+    >>> residue_lines(r, ["C124"])[0][:111]
+    '- Residue 124 of UniProtKB:P60484 (sequence version 1) is C; claimed C: matches the sequence. UniProt features:'
+    >>> "ACT_SITE 124 (Phosphocysteine intermediate)" in residue_lines(r, ["124"])[0]
+    True
+    >>> "claimed H: DOES NOT match the sequence" in residue_lines(r, ["H124"])[0]
+    True
+    """
+    out = []
+    seq = record.sequence
+    for spec in specs:
+        m = RESIDUE_SPEC.fullmatch(spec.strip().upper())
+        if not m:
+            raise ValueError(f"not a residue spec: {spec!r} (use 58 or D58)")
+        claimed, pos = m.group(1), int(m.group(2))
+        if not 1 <= pos <= len(seq):
+            raise ValueError(f"{spec}: outside the {len(seq)}-residue sequence")
+        here = seq[pos - 1]
+        line = f"- Residue {pos} of UniProtKB:{record.accession} (sequence version {record.sequence_version}) is {here}"
+        if claimed:
+            verdict = (
+                "matches the sequence"
+                if claimed == here
+                else "DOES NOT match the sequence"
+            )
+            line += f"; claimed {claimed}: {verdict}"
+        feats = [
+            f"{f.type} {f.start}"
+            + (f"-{f.end}" if f.end != f.start else "")
+            + (f" ({f.note})" if f.note else "")
+            for f in record.features
+            if f.start <= pos <= f.end
+            and f.type not in ("CHAIN", "CONFLICT", "VARIANT", "VAR_SEQ")
+        ]
+        line += ". UniProt features: " + ("; ".join(feats) if feats else "none") + "."
+        out.append(line)
+    return out

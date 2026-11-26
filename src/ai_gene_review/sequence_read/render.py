@@ -30,7 +30,12 @@ def _range(d: dict[str, Any]) -> str:
 def render_run(doc: dict[str, Any]) -> list[str]:
     """Markdown lines for one run file."""
     out = [
-        f"## {doc['model']} (effort {doc['effort']}), {doc['run_date']}",
+        f"## {doc['model']} (effort {doc['effort']}), {doc['run_date']}, "
+        + (
+            "blind control via peptalk"
+            if doc["route"].startswith("peptalk-llm")
+            else "isolated read via the claude CLI"
+        ),
         "",
         f"- Sequence: UniProtKB:{doc['accession']} sequence version {doc['sequence_version']}, "
         f"{doc['sequence_length']} aa, CRC64 {doc['sequence_crc64']}.",

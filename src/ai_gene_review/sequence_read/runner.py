@@ -15,6 +15,7 @@ catalytic residue can be chosen (``core.choose_probe``).
 from __future__ import annotations
 
 import json
+import re
 import shlex
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
@@ -42,6 +43,11 @@ def output_dir(organism: str, gene: str, root: Path = Path("genes")) -> Path:
     PosixPath('genes/human/PTEN/PTEN-bioinformatics/sequence-read')
     """
     return gene_dir(organism, gene, root) / f"{gene}-bioinformatics" / "sequence-read"
+
+
+def cli_route(cli_version: str) -> str:
+    """Provenance string for the claude command-line route."""
+    return f"claude CLI {cli_version}, flags: {shlex.join(core.CLI_FLAGS)}"
 
 
 def run_path(out: Path, model: str, effort: str) -> Path:
@@ -78,24 +84,11 @@ def run_read(
         jobs.append(("features", "shuffled", core.shuffled(seq, record.accession)))
     with ThreadPoolExecutor(len(jobs)) as ex:
         calls = list(ex.map(lambda j: _ask(caller, *j), jobs))
+    checks = base_checks(record, calls, reference)
     by = {(c["question"], c["condition"]): c for c in calls}
-
-    checks: dict[str, Any] = {}
-    real = by[("features", "real")]
-    if core.usable(real):
-        checks["features"] = core.check_features(real["answer"], reference)
-    shuf = by.get(("features", "shuffled"))
-    if shuf is not None and core.usable(shuf):
-        checks["shuffled"] = {
-            "pfam_domains": len(shuf["answer"].get("pfam_domains") or []),
-            "transmembrane_helices": len(
-                shuf["answer"].get("transmembrane_helices") or []
-            ),
-        }
     wt = by[("activity", "wild_type")]
     probe_note = ""
     if core.usable(wt):
-        checks["activity"] = core.check_activity(wt["answer"], seq, reference)
         if not controls:
             probe_note = "controls not requested"
         elif wt["answer"].get("catalytically_active") != "yes":
@@ -137,14 +130,45 @@ def _run_probe(
         calls = list(
             ex.map(lambda j: _ask(caller, j[0], j[1], j[2], substitution=j[3]), jobs)
         )
-    by = {c["condition"]: c for c in calls}
+    checks["probe"] = probe_summary(
+        calls,
+        checks["activity"]["catalytically_active"],
+        probe.target_source,
+        probe.decoy_candidates,
+    )
+    return calls
+
+
+def position_of(label: Optional[str]) -> Optional[int]:
+    """The position in a substitution label.
+
+    >>> position_of("C124A"), position_of(None)
+    (124, None)
+    """
+    m = re.fullmatch(r"[A-Z](\d+)[A-Z]", label or "")
+    return int(m.group(1)) if m else None
+
+
+def probe_summary(
+    calls: list[dict[str, Any]],
+    wild_type_call: Optional[str],
+    target_source: str,
+    decoy_candidates: Optional[int],
+) -> dict[str, Any]:
+    """Checks and verdict for the catalytic-mutant and decoy calls of a probe."""
+    by = {c["condition"]: c for c in calls if c["question"] == "activity"}
+
+    def label(cond: str) -> Optional[str]:
+        c = by.get(cond)
+        return c.get("substitution") if c else None
 
     def call_of(cond: str) -> Optional[str]:
         c = by.get(cond)
         return c["answer"].get("catalytically_active") if c and core.usable(c) else None
 
-    def reports(cond: str, pos: Optional[int]) -> bool:
+    def reports(cond: str) -> bool:
         c = by.get(cond)
+        pos = position_of(label(cond))
         return bool(
             pos is not None
             and c
@@ -152,27 +176,51 @@ def _run_probe(
             and core.reports_position(c["answer"], pos)
         )
 
-    mutant_reports = reports("catalytic_mutant", probe.target_position)
-    decoy_reports = reports("decoy", probe.decoy_position)
-    checks["probe"] = {
-        "target": probe.label(probe.target_position),
-        "target_source": probe.target_source,
-        "decoy": probe.label(probe.decoy_position) if probe.decoy_position else None,
-        "decoy_candidates": probe.decoy_candidates,
-        "wild_type_call": checks["activity"]["catalytically_active"],
+    return {
+        "target": label("catalytic_mutant"),
+        "target_source": target_source,
+        "decoy": label("decoy"),
+        "decoy_candidates": decoy_candidates,
+        "wild_type_call": wild_type_call,
         "mutant_call": call_of("catalytic_mutant"),
         "decoy_call": call_of("decoy"),
-        "mutant_reports_position": mutant_reports,
-        "decoy_reports_position": decoy_reports,
+        "mutant_reports_position": reports("catalytic_mutant"),
+        "decoy_reports_position": reports("decoy"),
         "verdict": core.probe_verdict(
-            checks["activity"]["catalytically_active"],
+            wild_type_call,
             call_of("catalytic_mutant"),
             call_of("decoy"),
-            mutant_reports,
-            decoy_reports,
+            reports("catalytic_mutant"),
+            reports("decoy"),
         ),
     }
-    return calls
+
+
+def base_checks(
+    record: core.ProteinRecord,
+    calls: list[dict[str, Any]],
+    reference: dict[str, Any],
+) -> dict[str, Any]:
+    """Checks of the features, shuffled and wild-type activity calls."""
+    by = {(c["question"], c["condition"]): c for c in calls}
+    checks: dict[str, Any] = {}
+    real = by.get(("features", "real"))
+    if real is not None and core.usable(real):
+        checks["features"] = core.check_features(real["answer"], reference)
+    shuf = by.get(("features", "shuffled"))
+    if shuf is not None and core.usable(shuf):
+        checks["shuffled"] = {
+            "pfam_domains": len(shuf["answer"].get("pfam_domains") or []),
+            "transmembrane_helices": len(
+                shuf["answer"].get("transmembrane_helices") or []
+            ),
+        }
+    wt = by.get(("activity", "wild_type"))
+    if wt is not None and core.usable(wt):
+        checks["activity"] = core.check_activity(
+            wt["answer"], record.sequence, reference
+        )
+    return checks
 
 
 def write_run(
@@ -182,7 +230,7 @@ def write_run(
     body: dict[str, Any],
     model: str,
     effort: str,
-    cli_version: str,
+    route: str,
     path: Path,
 ) -> Path:
     """Write the run document with its provenance."""
@@ -197,7 +245,7 @@ def write_run(
         "sequence_version": record.sequence_version,
         "model": model,
         "effort": effort,
-        "route": f"claude CLI {cli_version}, flags: {shlex.join(core.CLI_FLAGS)}",
+        "route": route,
         "run_date": date.today().isoformat(),
         "prompts_from": f"{core.FS2F_REPO} @ {core.FS2F_COMMIT}",
         **body,

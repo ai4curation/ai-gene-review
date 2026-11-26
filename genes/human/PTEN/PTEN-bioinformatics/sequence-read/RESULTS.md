@@ -13,7 +13,7 @@ Caveats:
 
 Probe verdicts: TRACKS_CATALYTIC_RESIDUE means the catalytic mutant was called inactive and the decoy active; REPORTS_BUT_NOT_INACTIVE means the model named the substituted position but still did not call the mutant inactive (the fs2f pattern of seeing a loss and arguing around it); REJECTS_ANY_CHANGE means the decoy also changed the call, so the read is not residue-specific; INSENSITIVE means neither changed it.
 
-## claude-fable-5-2 (effort high), 2026-11-25
+## claude-fable-5-2 (effort high), 2026-11-25, isolated read via the claude CLI
 
 - Sequence: UniProtKB:P60484 sequence version 1, 403 aa, CRC64 75F97C3DD6802BA9.
 - Route: claude CLI 2.1.325 (Claude Code), flags: --system-prompt '' --tools '' --output-format json --setting-sources '' --strict-mcp-config --disable-slash-commands --no-chrome.

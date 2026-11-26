@@ -415,10 +415,11 @@ validate-shadow-issues tracker="go-annotation":
 check-upstream-refs +files:
     python3 src/ai_gene_review/shadow_issues/guard.py {{files}}
 
-# Optional sequence-only read by a frontier language model (FEAT + PSEUDO prompts of
+# Optional isolated sequence read through the claude CLI (FEAT + PSEUDO prompts of
 # fable-sequence-to-function, with shuffled and catalytic/decoy controls). Bills 3-5
-# model calls to the signed-in claude account. Not literature evidence; see
-# .claude/skills/sequence-read/SKILL.md.
+# model calls to the signed-in claude account. For a clean blind control use
+# peptalk-llm (`sequence-read blind-fasta` / `import-peptalk`); the default mode is the
+# reviewing agent's own in-context read. See .claude/skills/sequence-read/SKILL.md.
 # Example: just sequence-read human PTEN --model claude-fable-5-2 --effort high
 sequence-read organism gene *args="":
     uv run ai-gene-review sequence-read run {{organism}} {{gene}} {{args}}
