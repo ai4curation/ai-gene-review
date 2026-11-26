@@ -520,7 +520,7 @@ send to the resource that owns them:
 | 18 (copied cofactor set) | same file, IPR017682 to GO:0050660 and GO:0051536, IPR017679 to GO:0016151, IPR017681 to GO:0016151 and GO:0050660 | REMOVE | not needed |
 | 19 (acceptor-specific or wrong-enzyme hydrogenase term) | same file, IPR018194, IPR002844 and IPR036080 to GO:0008901 | REMOVE (the Mtd entries replace with GO:0030268) | not needed |
 | 21 (paired positive and NOT rows) | `genes/METJA/cofC/cofC-ai-review.yaml` `source_defects` | WRONG_QUALIFIER, for UniProt | not applicable |
-| 22 (oxygen-using activity on F420-dependent fold members) | same file, IPR011251 and IPR036661 to GO:0016705 | broadMatch | CR-0011 (excludes 18 F420-dependent families) |
+| 22 (oxygen-using activity on F420-dependent fold members) | `projects/INTERPRO/interpro2go.sssom.yaml`, IPR011251 and IPR036661 to GO:0016705 | broadMatch | CR-0011 (excludes 18 F420-dependent families) |
 | 25 (HAMAP rule on a soluble paralog) | `rules/unirule/UR000100608/UR000100608-review.yaml` | MODIFY: a length case for the membrane, complex, EC and reaction statements | not needed (the fix is in the HAMAP rule) |
 
 The replacement rules live in [rules/curated](../../rules/curated/README.md).
