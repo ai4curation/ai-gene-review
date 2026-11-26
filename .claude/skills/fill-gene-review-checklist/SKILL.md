@@ -82,6 +82,12 @@ uv tool install git+ssh://git@github.com/ai4curation/linkml-checklist-validator 
 - `new_annotation_reviews`: one entry per `NEW` row, for the CLAUDE.md bar (the
   gene does the work, comparators checked with a query shown able to return a
   positive, parents and GO-CAMs read, no redundancy). `{}` when there are none.
+  These questions are in addition to the row's `annotation_reviews` entry, not
+  instead of it: a NEW row has an entry in both blocks.
+- `iea_quotes_not_labels`: kept IEA rows get no per-row entry, so this item
+  catches one whose only quote is an EC number or other label.
+- `summary_sections_sound`: `description`, `core_functions` and `knowledge_gaps`
+  follow CLAUDE.md (no project commentary, backed core functions, BIOLOGY gaps only).
 - `source_defects_confident_enough`: CONFIRMED wrong-gene or wrong-reference
   claims need a full read or an obvious abstract/record.
 
