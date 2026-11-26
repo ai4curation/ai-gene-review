@@ -332,27 +332,27 @@ Last updated: 2026-11-24
 
 **Extended the NCBIfam check through Rhea and triaged its class-term leads.**
 
-GO now cross-references many reaction terms only to Rhea, so the
-[release-table check](ENZYME_SPECIFICITY/ncbifam-metadata/RESULTS.md) maps them to EC numbers
-through Rhea's own EC table. It uses the route only when a term's Rhea reactions reach exactly
-one complete EC and the term has no EC cross-reference of its own, so generic terms such as
-ATP hydrolysis activity (nine ECs) and the NAD(P)-dependent CH-OH oxidoreductase class term
-(partial EC 1.1.1.-) are left out. That makes 72
-more pairs comparable; 68 agree with the model's EC and the 4 that do not are triaged (one new
-wrong-reaction entry, on two acetyl-CoA transferase models carrying the Kce term). The adenosine
-deaminase models now list GO:0004000 as their replacement candidate. All 84 class-term leads
-are now triaged. These are the pairs whose GO term carries only a partial EC, such as
-hydrolase activity, that does not contain the model's EC, and that is not a GO ancestor of a
-term for it (695 of the 779 class-term pairs are true but broad): 31 pairs
+GO now cross-references many reaction terms only to Rhea, so the [release-table
+check](ENZYME_SPECIFICITY/ncbifam-metadata/RESULTS.md) maps them to EC numbers through Rhea's
+own EC table. It uses the route only when a term's Rhea reactions reach exactly one complete
+EC and the term has no EC cross-reference of its own, so generic terms such as ATP hydrolysis
+activity (nine ECs) and the NAD(P)-dependent CH-OH oxidoreductase class term (partial EC
+1.1.1.-) are left out. That makes 72 more pairs comparable; 68 agree with the model's EC and
+the 4 that do not are triaged (one new wrong-reaction entry, on two acetyl-CoA transferase
+models carrying the Kce term). The adenosine deaminase models now list GO:0004000 as their
+replacement candidate. All 84 class-term leads are now triaged. These are the pairs whose GO
+term carries only a partial EC, such as hydrolase activity, whose class neither contains nor
+lies inside the model's EC and is not a GO ancestor of a term for it, or else is narrower than
+a partial model EC (the other 695 of the 779 class-term pairs are true but broad): 31 pairs
 name the wrong kind of reaction, mostly following the protein family's fold rather than its
 reaction (glycoside hydrolase terms on the branching enzyme GlgB, aminoacyl-tRNA ligase on the
 EF-P modifier EpmA); 2 keep the reaction but name the wrong donor or acceptor (the BchX iron
 protein, which takes electrons from ferredoxin rather than NAD(P)H, and the CYP152
-peroxygenases, which use H₂O₂ rather than O₂ with a paired reductant); 35 are acceptable, mostly EC cross-reference
-artifacts; and 16 need the family's literature. The 49 pairs that are not acceptable are listed in
+peroxygenases, which use H₂O₂ rather than O₂ with a paired reductant); 35 are acceptable,
+mostly EC cross-reference artifacts; and 16 need the family's literature. The 49 pairs that
+are not acceptable (41 entries) are listed in
 [FEEDBACK.md](ENZYME_SPECIFICITY/ncbifam-metadata/FEEDBACK.md) beside the earlier change list;
-the acceptable ones are recorded in `triage.yaml` only.
-No review action changes.
+the acceptable ones are recorded in `triage.yaml` only. No review action changes.
 
 ## 2026-11-23
 
