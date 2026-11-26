@@ -972,16 +972,43 @@ def test_backfill_prior_work_leaves_an_unnamed_issue_untouched(config, tracker_d
     assert path.read_bytes() == before
 
 
+@pytest.mark.parametrize("command", ["ratings", "agreement"])
+def test_rating_readers_name_an_unreadable_rating(config, tracker_dir, command):
+    """A rating file that is not UTF-8 fails naming it, in every command that reads ratings."""
+    store_issue(config, tracker_dir, make_issue(), [])
+    folder = tracker_dir / "101"
+    (folder / "rating.yaml").write_bytes(b"summary: caf\xe9\n")
+    (folder / "report.md").write_text("# r\n")
+    (folder / "rating-second.yaml").write_text(yaml.safe_dump(RATING))
+    (folder / "report-second.md").write_text("# r\n")
+    result = CliRunner().invoke(
+        app, ["shadow-issues", command, "example", "--root", str(tracker_dir.parent)]
+    )
+    assert isinstance(result.exception, ValueError), result.output
+    assert "rating.yaml is not readable" in str(result.exception)
+
+
+def test_queue_for_names_an_unreadable_rating(tmp_path):
+    """The rater's queue listing fails naming a rating file that is not UTF-8."""
+    (tmp_path / "rating.yaml").write_bytes(b"summary: caf\xe9\n")
+    issue = {
+        "triage": {"status": "TRIAGED", "in_scope": True},
+        "shadow": {"status": "DONE"},
+    }
+    with pytest.raises(ValueError, match="rating.yaml is not readable"):
+        queue_for(tmp_path, {"state": "closed"}, issue)
+
+
 def test_load_issue_names_a_missing_file(config, tracker_dir):
     store_issue(config, tracker_dir, make_issue(), [])
     (tracker_dir / "101" / "issue.yaml").unlink()
     with pytest.raises(ValueError, match="issue.yaml is missing"):
         load_issue(tracker_dir / "101")
     (tracker_dir / "101" / "issue.yaml").write_text("title: 'cut off")
-    with pytest.raises(ValueError, match="issue.yaml is not valid YAML"):
+    with pytest.raises(ValueError, match="issue.yaml is not readable"):
         load_issue(tracker_dir / "101")
     (tracker_dir / "101" / "issue.yaml").write_bytes(b"title: \xc3")
-    with pytest.raises(ValueError, match="issue.yaml is not valid YAML"):
+    with pytest.raises(ValueError, match="issue.yaml is not readable"):
         load_issue(tracker_dir / "101")
 
 

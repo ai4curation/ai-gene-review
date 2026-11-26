@@ -25,6 +25,7 @@ from ai_gene_review.shadow_issues.store import (
     queue_for,
     read_thread,
     rating_files,
+    read_rating,
     render_thread,
     report_for,
     write_yaml,
@@ -250,7 +251,7 @@ def ratings_cmd(
             continue
         _, issue = load_issue(folder)
         for rating_path in ratings:
-            rating = yaml.safe_load(rating_path.read_text()) or {}
+            rating = read_rating(rating_path)
             for dimension in DIMENSIONS:
                 # Show the final ruling, marked, beside the score as the rater
                 # wrote it; the last adjudication of a dimension is the one that counts.
@@ -292,7 +293,7 @@ def agreement_cmd(
     agreed: Counter[str] = Counter()
     rated_twice = 0
     for folder in iter_issue_folders(root / tracker):
-        ratings = [yaml.safe_load(p.read_text()) or {} for p in rating_files(folder)]
+        ratings = [read_rating(p) for p in rating_files(folder)]
         if len(ratings) < 2:
             continue
         rated_twice += 1
@@ -474,7 +475,7 @@ def work_product_problems(issue: dict, repo_root: Path) -> list[str]:
         elif diff and not diff_covers(
             # A patch holds whatever bytes git wrote; only its header lines matter.
             product["path"],
-            (repo_root / diff).read_text(errors="replace"),
+            (repo_root / diff).read_text(encoding="utf-8", errors="replace"),
         ):
             problems.append(f"preserved_diff {diff} has no diff of {product['path']}")
     return problems
@@ -559,6 +560,9 @@ def parse_for_validation(path: Path) -> tuple[Any, str | None]:
     >>> _ = bad.write_text("title: 'cut off")
     >>> parse_for_validation(bad)[1]
     'not valid YAML (ScannerError)'
+    >>> _ = bad.write_bytes(b"title: \\xc3")
+    >>> parse_for_validation(bad)[1]
+    'not readable as UTF-8'
     """
     try:
         return yaml.safe_load(path.read_text(encoding="utf-8")), None

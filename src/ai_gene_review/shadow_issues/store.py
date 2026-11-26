@@ -384,6 +384,24 @@ def store_issue(
     return StoreResult(appended, created, skipped)
 
 
+def read_yaml(path: Path) -> Any:
+    """A YAML file's content, read as UTF-8; an unreadable file raises naming it.
+
+    Neither a decode error nor a YAML syntax error says which of many files it
+    came from, so both become a ValueError with the path and a pointer to
+    ``validate``, which says which of the two it is.
+    """
+    try:
+        return yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, yaml.YAMLError) as exc:
+        raise ValueError(f"{path} is not readable; run validate") from exc
+
+
+def read_rating(path: Path) -> dict[str, Any]:
+    """A rating file; an empty one (a rater part-way through) reads as {}."""
+    return read_yaml(path) or {}
+
+
 def load_issue(folder: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     """(source.yaml, issue.yaml) for one issue folder.
 
@@ -396,11 +414,7 @@ def load_issue(folder: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         path = folder / name
         if not path.exists():
             raise ValueError(f"{path} is missing; run validate")
-        try:
-            data = yaml.safe_load(path.read_text(encoding="utf-8"))
-        except (UnicodeDecodeError, yaml.YAMLError) as exc:
-            # Neither error says which of many files it came from.
-            raise ValueError(f"{path} is not valid YAML; run validate") from exc
+        data = read_yaml(path)
         if not isinstance(data, dict):
             raise ValueError(f"{path} is empty or not a mapping; run validate")
         loaded.append(data)
@@ -500,9 +514,7 @@ def queue_for(
     ratings = rating_files(folder)
     if not ratings or ratings[0].name != "rating.yaml":
         return "needs_rating"
-    primary = (
-        yaml.safe_load(ratings[0].read_text()) or {}
-    )  # validate reports a bad file
+    primary = read_rating(ratings[0])
     if effective_score(primary, "downstream") == "PENDING_RELEASE":
         return "pending_release"
     if len(ratings) == 1:
