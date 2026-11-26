@@ -196,6 +196,61 @@ def test_accept_finding_carries_the_entailing_terms():
     assert finding.entailing == (CYTOSOL,)
 
 
+def to_cytoplasm(term_id: str, **extra: Any) -> Dict[str, Any]:
+    """A MODIFY row on *term_id* whose replacement is cytoplasm (the MCL1 shape)."""
+    return row(
+        term_id,
+        "MODIFY",
+        "IEA",
+        review={"proposed_replacement_terms": [{"id": CYTOPLASM}]},
+        **extra,
+    )
+
+
+def test_modify_to_cytoplasm_is_flagged_in_eukaryotes():
+    """A replacement of cytoplasm asserts cytoplasm just as a NEW row does."""
+    (finding,) = find_cytoplasm_findings(doc(to_cytoplasm(CYTOSOL)), "Eukaryota")
+    assert finding.category == "EUK_MODIFY_TO_CYTOPLASM"
+    assert finding.term_id == CYTOSOL
+    assert finding.path == (
+        "existing_annotations[0].review.proposed_replacement_terms[0]"
+    )
+
+
+@pytest.mark.parametrize("domain", ["Bacteria", "Archaea"])
+def test_modify_to_cytoplasm_is_allowed_in_prokaryotes(domain):
+    """A membrane-to-cytoplasm correction in a bacterium is a real lateral fix."""
+    assert categories(doc(to_cytoplasm("GO:0005886")), domain) == []
+
+
+def test_modify_to_cytoplasm_on_a_not_row_is_skipped():
+    assert categories(doc(to_cytoplasm(CYTOSOL, negated=True)), "Eukaryota") == []
+
+
+def test_validator_sees_a_review_whose_only_cytoplasm_is_a_replacement(tmp_path):
+    """The review has no cytoplasm row, so the validator must not skip it."""
+    review = write_review(tmp_path / "M", "OC   Eukaryota; Metazoa; Chordata;")
+    report = ValidationReport(file_path=review, is_valid=True)
+    check_cytoplasm_policy(doc(to_cytoplasm(CYTOSOL)), report, review, ancestors)
+    (issue,) = [i for i in report.issues if i.check_type == CHECK_TYPE]
+    assert CYTOSOL in issue.message
+    assert "laterally" in issue.suggestion
+
+
+@pytest.mark.parametrize(
+    "cytosol_isoform,entailed",
+    [("P1-2", False), ("P1-1", True), (None, True)],
+)
+def test_entailment_does_not_cross_isoforms(cytosol_isoform, entailed):
+    """As in action_consistency, a row on another isoform makes an independent claim."""
+    cytosol = row(CYTOSOL, "ACCEPT")
+    if cytosol_isoform:
+        cytosol["isoform"] = cytosol_isoform
+    data = doc(row(CYTOPLASM, "ACCEPT", isoform="P1-1"), cytosol)
+    (finding,) = find_cytoplasm_findings(data, "Eukaryota", ancestors)
+    assert finding.entailing == ((CYTOSOL,) if entailed else ())
+
+
 def write_review(folder: Path, oc_line: str) -> Path:
     """A gene folder holding a review path and a UniProt record with *oc_line*."""
     folder.mkdir(parents=True)

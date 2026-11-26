@@ -414,13 +414,15 @@ than "not nuclear, not extracellular". The policy is `projects/CYTOPLASM.md`:
   nuclear/cytoplasmic fractionation is not. Otherwise it is `KEEP_AS_NON_CORE`. A
   propagated row (IBA, IEA, ISS, ISO, ...) stops at cytoplasm by construction, so it is
   never `MODIFY`. Add the specific location as a `NEW` row on evidence of its own; never
-  propose a `NEW` cytoplasm row.
+  propose a `NEW` cytoplasm row, or `MODIFY` another location to cytoplasm (correct a
+  wrong location laterally, to the term that is right).
 - **Prokaryotes.** Cytoplasm is the main localisation contrast and is informative: normal
   rules, and never `TOO_GENERAL`.
 
 `just validate` warns (`cytoplasm_policy`, `src/ai_gene_review/validation/cytoplasm_policy.py`)
-on the eukaryotic `ACCEPT`, `NEW` and core-location cases; `just cytoplasm-audit` lists every
-row the policy would change. Reviews merged before the policy are not retroactively defective.
+on the eukaryotic `ACCEPT`, `NEW`, `MODIFY`-to-cytoplasm and core-location cases;
+`just cytoplasm-audit` lists every row the policy would change. Reviews merged before the
+policy are not retroactively defective.
 
 ### Do not overrule curators from incomplete evidence
 

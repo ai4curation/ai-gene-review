@@ -14,7 +14,9 @@ policy is ``projects/CYTOPLASM.md``. In short:
   asserts (cytosol, an organelle, a granule, the cell cortex) is ``TOO_GENERAL``. This
   is the "membrane (which membrane?)" case of the 2026-11-14 ruling. A row whose own
   evidence resolves a sub-location is ``MODIFY``. Otherwise it is ``KEEP_AS_NON_CORE``.
-  A ``NEW`` cytoplasm row adds a claim that carries almost no information.
+  A ``NEW`` cytoplasm row adds a claim that carries almost no information, and so does
+  a ``MODIFY`` whose replacement is cytoplasm: a wrong specific location is corrected
+  laterally, to the location that is right, not up to cytoplasm.
 * **Prokaryotes.** With no organelles, cytoplasm is the main localisation contrast
   (with membrane, periplasm and the outside) and is informative. The normal rules
   apply, and like a root organelle term it is never ``TOO_GENERAL``.
@@ -24,6 +26,8 @@ What is flagged (WARNING, ``check_type: cytoplasm_policy``), for eukaryotic entr
 only, judged from the ``OC`` lineage of the UniProt record beside the review:
 
 * an ``ACCEPT`` or ``NEW`` row on ``GO:0005737`` that is not ``NOT``-qualified;
+* a ``MODIFY`` row whose ``proposed_replacement_terms`` names ``GO:0005737``, which
+  is as much an author-supplied cytoplasm assertion as a ``NEW`` row;
 * ``GO:0005737`` in ``core_functions[].locations``.
 
 Severity is WARNING. Thousands of merged rows predate the policy, and it applies to
@@ -32,9 +36,13 @@ gene, so an author sees only their own.
 
 The audit entry point (``python -m ai_gene_review.validation.cytoplasm_policy``,
 ``just cytoplasm-audit``) lists every row the policy would change across the corpus,
-including two categories the validator leaves alone because they need judgement:
+including three categories the validator leaves alone because they need judgement:
 ``MODIFY`` on a propagated eukaryotic row, whose evidence stops at cytoplasm by
-construction, and ``TOO_GENERAL`` rows that nothing in the review entails.
+construction; eukaryotic ``TOO_GENERAL`` rows that nothing in the review entails;
+and prokaryotic ``TOO_GENERAL`` rows, since cytoplasm is informative there.
+
+Entailment follows the convention of ``action_consistency``: a row on one isoform is
+not made ``TOO_GENERAL`` by a row on a different isoform.
 """
 
 from __future__ import annotations
@@ -125,11 +133,46 @@ def _location_ids(core_function: Dict[str, Any]) -> List[str]:
     ]
 
 
-def asserted_terms(data: Dict[str, Any], skip_index: Optional[int] = None) -> set[str]:
+def _replacement_ids(annotation: Dict[str, Any]) -> List[str]:
+    """Ids a MODIFY row proposes in place of its term (empty for other actions)."""
+    if _action(annotation) != "MODIFY":
+        return []
+    review = annotation.get("review") or {}
+    replacements = review.get("proposed_replacement_terms")
+    if not isinstance(replacements, list):
+        return []
+    return [
+        str(repl["id"])
+        for repl in replacements
+        if isinstance(repl, dict) and isinstance(repl.get("id"), str)
+    ]
+
+
+def _comparable(isoform: Optional[str], annotation: Dict[str, Any]) -> bool:
+    """Whether *annotation* can entail a row on *isoform*.
+
+    Rows on two different isoforms make independent claims, as in
+    ``action_consistency._comparable``; a row with no isoform applies to every one.
+
+    >>> _comparable("P1-1", {"isoform": "P1-2"})
+    False
+    >>> _comparable("P1-1", {}), _comparable(None, {"isoform": "P1-2"})
+    (True, True)
+    """
+    other = annotation.get("isoform")
+    return not (isoform and other and isoform != other)
+
+
+def asserted_terms(
+    data: Dict[str, Any],
+    skip_index: Optional[int] = None,
+    isoform: Optional[str] = None,
+) -> set[str]:
     """Term ids the review asserts as true, besides row *skip_index*.
 
     Rows kept under an asserting action, the replacements a MODIFY proposes, and the
-    core-function locations. ``NOT`` rows assert nothing positive.
+    core-function locations. ``NOT`` rows assert nothing positive, and with *isoform*
+    set, rows on a different isoform are left out.
 
     >>> doc = {"existing_annotations": [
     ...     {"term": {"id": "GO:0005737"}, "review": {"action": "ACCEPT"}},
@@ -142,24 +185,26 @@ def asserted_terms(data: Dict[str, Any], skip_index: Optional[int] = None) -> se
     """
     found: set[str] = set()
     for index, annotation in enumerate(_annotations(data)):
-        if index == skip_index or annotation.get("negated"):
+        if (
+            index == skip_index
+            or annotation.get("negated")
+            or not _comparable(isoform, annotation)
+        ):
             continue
-        action = _action(annotation)
         term_id = _term_id(annotation)
-        if action in ASSERTING_ACTIONS and term_id:
+        if _action(annotation) in ASSERTING_ACTIONS and term_id:
             found.add(term_id)
-        if action == "MODIFY":
-            review = annotation.get("review") or {}
-            for repl in review.get("proposed_replacement_terms") or []:
-                if isinstance(repl, dict) and isinstance(repl.get("id"), str):
-                    found.add(repl["id"])
+        found.update(_replacement_ids(annotation))
     for core_function in _core_functions(data):
         found.update(_location_ids(core_function))
     return found
 
 
 def entailing_terms(
-    data: Dict[str, Any], skip_index: Optional[int], ancestors: Ancestors
+    data: Dict[str, Any],
+    skip_index: Optional[int],
+    ancestors: Ancestors,
+    isoform: Optional[str] = None,
 ) -> List[str]:
     """Asserted terms that have cytoplasm as an is_a/part_of ancestor.
 
@@ -169,7 +214,7 @@ def entailing_terms(
     """
     return sorted(
         t
-        for t in asserted_terms(data, skip_index)
+        for t in asserted_terms(data, skip_index, isoform)
         if t != CYTOPLASM and CYTOPLASM in ancestors(t)
     )
 
@@ -184,10 +229,13 @@ class CytoplasmFinding:
     evidence_type: str
     reference: str
     entailing: tuple[str, ...]
+    term_id: str = CYTOPLASM
 
 
 #: Categories that ``just validate`` reports; the rest are audit-only.
-WARNED_CATEGORIES = frozenset({"EUK_ACCEPT", "EUK_NEW", "EUK_CORE_LOCATION"})
+WARNED_CATEGORIES = frozenset(
+    {"EUK_ACCEPT", "EUK_NEW", "EUK_MODIFY_TO_CYTOPLASM", "EUK_CORE_LOCATION"}
+)
 
 
 def find_cytoplasm_findings(
@@ -200,6 +248,7 @@ def find_cytoplasm_findings(
     Categories, eukaryotes:
 
     * ``EUK_ACCEPT``, ``EUK_NEW``: an ACCEPT or NEW cytoplasm row (warned);
+    * ``EUK_MODIFY_TO_CYTOPLASM``: a MODIFY whose replacement is cytoplasm (warned);
     * ``EUK_CORE_LOCATION``: cytoplasm in ``core_functions.locations`` (warned);
     * ``EUK_MODIFY_PROPAGATED``: MODIFY on a propagated row, whose evidence stops at
       cytoplasm (use TOO_GENERAL, or KEEP_AS_NON_CORE plus a NEW row for the
@@ -231,7 +280,9 @@ def find_cytoplasm_findings(
         category: Optional[str] = None
         entailing: tuple[str, ...] = ()
         if ancestors is not None and (eukaryote or action == "TOO_GENERAL"):
-            entailing = tuple(entailing_terms(data, index, ancestors))
+            entailing = tuple(
+                entailing_terms(data, index, ancestors, annotation.get("isoform"))
+            )
         if prokaryote:
             if action == "TOO_GENERAL":
                 category = "PROK_TOO_GENERAL"
@@ -254,6 +305,21 @@ def find_cytoplasm_findings(
             )
     if not eukaryote:
         return
+    for index, annotation in enumerate(_annotations(data)):
+        if annotation.get("negated"):
+            continue
+        for repl_index, repl_id in enumerate(_replacement_ids(annotation)):
+            if repl_id == CYTOPLASM:
+                yield CytoplasmFinding(
+                    "EUK_MODIFY_TO_CYTOPLASM",
+                    f"existing_annotations[{index}].review"
+                    f".proposed_replacement_terms[{repl_index}]",
+                    "MODIFY",
+                    str(annotation.get("evidence_type") or ""),
+                    str(annotation.get("original_reference_id") or ""),
+                    (),
+                    _term_id(annotation) or "",
+                )
     for index, core_function in enumerate(_core_functions(data)):
         for loc_index, term_id in enumerate(_location_ids(core_function)):
             if term_id == CYTOPLASM:
@@ -268,17 +334,23 @@ def find_cytoplasm_findings(
 
 
 def mentions_cytoplasm(data: Dict[str, Any]) -> bool:
-    """Whether any row or core-function location uses cytoplasm.
+    """Whether any row, MODIFY replacement or core-function location uses cytoplasm.
 
     Lets the validator skip reading the UniProt record for most reviews.
 
     >>> mentions_cytoplasm({"core_functions": [{"locations": [{"id": "GO:0005737"}]}]})
     True
+    >>> mentions_cytoplasm({"existing_annotations": [{"term": {"id": "GO:0005829"},
+    ...     "review": {"action": "MODIFY",
+    ...                "proposed_replacement_terms": [{"id": "GO:0005737"}]}}]})
+    True
     >>> mentions_cytoplasm({"existing_annotations": [{"term": {"id": "GO:0005829"}}]})
     False
     """
-    return any(_term_id(a) == CYTOPLASM for a in _annotations(data)) or any(
-        CYTOPLASM in _location_ids(c) for c in _core_functions(data)
+    return (
+        any(_term_id(a) == CYTOPLASM for a in _annotations(data))
+        or any(CYTOPLASM in _replacement_ids(a) for a in _annotations(data))
+        or any(CYTOPLASM in _location_ids(c) for c in _core_functions(data))
     )
 
 
@@ -319,6 +391,16 @@ def _message(finding: CytoplasmFinding, ontology_checked: bool) -> tuple[str, st
             "every organelle and adds almost no information",
             "Propose the specific location the evidence supports (GO:0005829 cytosol, "
             "an organelle, a granule), or drop the row. See projects/CYTOPLASM.md.",
+        )
+    if finding.category == "EUK_MODIFY_TO_CYTOPLASM":
+        return (
+            f"MODIFY replaces {finding.term_id} with GO:0005737 cytoplasm on a "
+            "eukaryotic protein: the replacement asserts cytoplasm just as a NEW row "
+            "would, and the term includes every organelle",
+            "If the specific location is wrong, correct it laterally to the location "
+            "that is right (a membrane, the organelle, cytosol), not up to cytoplasm. If "
+            "it is right but peripheral, keep the original term as KEEP_AS_NON_CORE. See "
+            "projects/CYTOPLASM.md.",
         )
     return (
         "GO:0005737 cytoplasm is ACCEPTed (core) on a eukaryotic protein: cytoplasm "
@@ -366,6 +448,7 @@ AUDIT_HEADER = [
     "domain",
     "category",
     "path",
+    "term_id",
     "action",
     "evidence_type",
     "original_reference_id",
@@ -379,7 +462,8 @@ def audit(
     """Findings as TSV rows (header first), plus two tallies for the summary.
 
     The first tally counts every non-NOT cytoplasm row by ``(domain, action)``, the
-    second counts findings by category.
+    second counts findings by category. Reviews whose lineage cannot be read are
+    tallied under ``unknown`` and produce no findings.
     """
     rows: List[List[str]] = [AUDIT_HEADER]
     by_action: Counter = Counter()
@@ -401,6 +485,7 @@ def audit(
                     domain,
                     f.category,
                     f.path,
+                    f.term_id,
                     f.action,
                     f.evidence_type,
                     f.reference,
@@ -440,7 +525,8 @@ def main(argv: Optional[List[str]] = None) -> None:
         csv.writer(fh, delimiter="\t", lineterminator="\n").writerows(rows)
 
     print(f"cytoplasm (GO:0005737) rows in {len(paths)} reviews:", file=sys.stderr)
-    domains = sorted({d for d, _ in by_action})
+    # Always show "unknown", so a zero there says the columns are exhaustive.
+    domains = sorted({d for d, _ in by_action} | {"unknown"})
     actions = sorted(
         {a for _, a in by_action},
         key=lambda a: -sum(by_action[(d, a)] for d in domains),

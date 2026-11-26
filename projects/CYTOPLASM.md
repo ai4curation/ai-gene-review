@@ -17,7 +17,7 @@ an organelle, a granule). It is `MODIFY` when the row's own evidence resolves
 where the protein is, and `KEEP_AS_NON_CORE` otherwise. In a **prokaryote**
 cytoplasm is the main localisation contrast (with membrane, periplasm and the
 outside), so it is informative and keeps the normal rules. `just validate` warns
-on the eukaryotic `ACCEPT`, `NEW` and core-location cases
+on the eukaryotic `ACCEPT`, `NEW`, `MODIFY`-to-cytoplasm and core-location cases
 (`check_type: cytoplasm_policy`), and `just cytoplasm-audit` lists every row the
 policy would change. Proposed 2026-11-26.
 
@@ -94,7 +94,11 @@ construction.
    precise as the evidence allows, keep it (`ACCEPT` if core)". As with the
    protein-binding policy, the problem is lack of information, not a false claim.
    In `core_functions.locations`, name the compartment where the activity is shown
-   to happen, or omit the location.
+   to happen, or omit the location. One consequence is deliberate: a protein
+   whose only location evidence is a nuclear/cytoplasmic fractionation ends up
+   with no core location at all, where it used to record a weak one. The
+   cytoplasm rows stay in the review as `KEEP_AS_NON_CORE`, so the claim is not
+   lost. It is just not presented as where the function happens.
 2. **`TOO_GENERAL` when the review asserts something GO places under cytoplasm.**
    Cytoplasm is the cytoplasmic counterpart of `GO:0016020` membrane, the example
    in the 2026-11-14 ruling: imprecise on its own ("which part of the
@@ -109,8 +113,15 @@ construction.
 4. **Otherwise `KEEP_AS_NON_CORE`.** This is the honest action when the evidence
    separates only nucleus from the rest. Consider whether the gene needs a `NEW`
    cytosol or organelle row on independent evidence.
-5. **No `NEW` cytoplasm rows.** Propose the specific location the evidence
-   supports, or nothing.
+5. **No `NEW` cytoplasm rows, and no `MODIFY` to cytoplasm.** Propose the
+   specific location the evidence supports, or nothing. A `MODIFY` whose
+   replacement is cytoplasm asserts cytoplasm just as a `NEW` row does. When a
+   specific location is wrong, correct it laterally to the term that is right
+   (a membrane, the organelle, cytosol), not up to cytoplasm. When it is right but
+   peripheral, keep the original term as `KEEP_AS_NON_CORE`. The case that
+   prompted this is human MCL1, whose cytosol rows were moved to cytoplasm because
+   the protein is membrane-associated rather than soluble. That argument points to
+   the membrane term, not to cytoplasm.
 6. **Generality is not a reason to `REMOVE`.** A cytoplasm row on a
    mitochondrial-matrix protein is true by definition and is `TOO_GENERAL`.
    `REMOVE` or `MARK_AS_OVER_ANNOTATED` is for a claim that is wrong, such as a
@@ -124,6 +135,10 @@ construction.
 | Nucleus versus the rest | nuclear/cytoplasmic fractionation kits, whose "cytoplasmic fraction" carries membranes and organelles; "cytoplasmic and nuclear" staining at low resolution | `KEEP_AS_NON_CORE` |
 | An unidentified structure | punctate or perinuclear staining with no marker | `KEEP_AS_NON_CORE`; do not refine to cytosol |
 | A fraction of unknown purity | proteomics of a "cytoplasmic" fraction (HDA) | usually `KEEP_AS_NON_CORE` |
+
+The table says what one row's own evidence supports. Rule 2 still comes first:
+if the review asserts a location under cytoplasm, a `KEEP_AS_NON_CORE` row in the
+table becomes `TOO_GENERAL`.
 
 **Shuttling proteins.** For a protein that moves between nucleus and cytoplasm,
 the information is the partition and its regulation, which a static location
@@ -202,9 +217,14 @@ What the policy would change:
 | `EUK_MODIFY_PROPAGATED` | 596 | no | `TOO_GENERAL` for 585; `KEEP_AS_NON_CORE` plus a `NEW` row for 11 |
 | `PROK_TOO_GENERAL` | 39 | no | back to `ACCEPT` or `KEEP_AS_NON_CORE` |
 | `EUK_NEW` | 19 | yes | the specific location, or drop |
+| `EUK_MODIFY_TO_CYTOPLASM` | 6 | yes | a lateral correction (rule 5): four MCL1 rows from cytosol, two EPM2A rows from ER-membrane terms |
 | `EUK_TOO_GENERAL_UNENTAILED` | 0 | no | |
 
-The warned categories fall in 1,980 review files. Of the 753 `EUK_ACCEPT` rows
+No review with a cytoplasm row has an unreadable lineage: the audit's `unknown`
+column is zero throughout. The six bacterial `MODIFY`s to cytoplasm (from
+membrane or flagellar terms) are lateral corrections the prokaryote rules allow.
+
+The warned categories fall in 1,981 review files. Of the 753 `EUK_ACCEPT` rows
 that nothing more specific entails, 275 are IEA, 177 IBA, 141 IDA, 50 EXP and 39
 HDA. A sample of twelve experimental ones included four proteins known to shuttle
 between nucleus and cytoplasm. Their assays have not been checked row by row.
@@ -214,10 +234,11 @@ between nucleus and cytoplasm. Their assays have not been checked row by row.
 `src/ai_gene_review/validation/cytoplasm_policy.py`:
 
 - **`just validate`** warns (`cytoplasm_policy`) on eukaryotic `ACCEPT` and `NEW`
-  cytoplasm rows and on cytoplasm in `core_functions.locations`. The lineage is the
-  first `OC` line of the UniProt record beside the review. With the ontology
-  loaded, the warning names any asserted location that makes the row
-  `TOO_GENERAL`.
+  cytoplasm rows, on a `MODIFY` whose replacement is cytoplasm, and on cytoplasm in
+  `core_functions.locations`. The lineage is the first `OC` line of the UniProt
+  record beside the review. With the ontology loaded, the warning names any
+  asserted location that makes the row `TOO_GENERAL`. As in `action_consistency`,
+  a row on one isoform is not made `TOO_GENERAL` by a row on another isoform.
 - **`just cytoplasm-audit`** writes every finding to
   `reports/cytoplasm-policy.tsv` (git-ignored), with the entailing terms, and
   prints the tallies above.

@@ -1476,11 +1476,13 @@ ec-class-audit *files:
     uv run python -m ai_gene_review.validation.ec_class_consistency {{files}}
 
 # List every GO:0005737 cytoplasm row the cytoplasm policy (projects/CYTOPLASM.md)
-# would change: eukaryotic ACCEPT/NEW rows and core locations (also warned by
-# `just validate`), MODIFY on propagated eukaryotic rows, TOO_GENERAL rows nothing
-# entails, and prokaryotic TOO_GENERAL rows. Prints domain x action tallies and
-# writes reports/cytoplasm-policy.tsv (git-ignored). --no-ontology skips GO.
-# Example: just cytoplasm-audit genes/human/TP53/TP53-ai-review.yaml
+# would change: eukaryotic ACCEPT/NEW rows, MODIFYs to cytoplasm and core locations
+# (also warned by `just validate`), MODIFY on propagated eukaryotic rows,
+# TOO_GENERAL rows nothing entails, and prokaryotic TOO_GENERAL rows. Prints
+# domain x action tallies and writes reports/cytoplasm-policy.tsv (git-ignored).
+# Loads the GO sqlite snapshot (downloaded on first use) for the TOO_GENERAL
+# entailment; --no-ontology skips it, e.g. offline.
+# Example: just cytoplasm-audit --no-ontology genes/human/TP53/TP53-ai-review.yaml
 [group('QC')]
 cytoplasm-audit *files:
     uv run python -m ai_gene_review.validation.cytoplasm_policy {{files}}
