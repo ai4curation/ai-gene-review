@@ -2,6 +2,7 @@
 title: "Pilot 1 — E. coli genome-wide coherence"
 maturity: IN_PROGRESS
 tags: [PIPELINE]
+last_reviewed: 2026-10-04
 autolink_gene_symbols: false
 ---
 
@@ -16,26 +17,29 @@ end-to-end from public data.**
 
 - **Coherence = 86.8%** on the E. coli EcoCyc GAF: of **129** `has_part` dependencies activated
   by the genome's annotations, **17** have a required part annotated on no protein.
-- **The 17 violations are real, reviewable leads** — and they sort into exactly the three
-  categories the project predicts (below), including one likely *genuine biological gap*.
+- **The 17 violations are real, reviewable leads** — the first-pass triage already separates
+  10 into whole-pathway overreach, annotation-granularity, or over-annotation candidates, with
+  7 still unresolved.
 - **It runs on public data with the tooling already here** — GO `has_part` from `go.obo`, the
   EcoCyc GAF, true-path (`is_a`+`part_of`) closure for "present in genome." Numbers are computed
   live by `coherence_pilot.py`; see [RESULTS.md](RESULTS.md) and `violations.tsv`.
 
 ## What the leads look like
 
-The 17 violations triage cleanly — this triage is the point, because each class routes to a
-different curator action:
+The first-pass triage separates 10 of the 17 violations; that triage is the point, because
+each class routes to a different curator action:
 
 | Class | Examples | Likely meaning | Action |
 |---|---|---|---|
-| **Genuine biological gap** | `denitrification pathway` → missing *nitrous-oxide reductase activity* | E. coli K-12 is not a complete denitrifier (no NosZ); the pathway term is over-reaching | review the `denitrification pathway` annotation; confirm absence with sequence search |
-| **Annotation-granularity gap** | `DnaB-DnaC` / `DnaA-DiaA` / `DnaB-DnaG` complexes → missing sub-complex terms; `tRNA CCA addition` → missing its two MF activities; `molybdopterin cofactor biosynthesis` → missing MPT-synthase sulfurtransferase | the gene *is* present; only the finer GO term is unannotated | add the missing MF/CC annotation |
-| **Probable over-annotation** | `heterochromatin formation`, `establishment of integrated proviral latency`, `virion attachment to host cell` on E. coli | prophage-gene or electronic propagation of eukaryote/virus-centric terms | candidate `REMOVE` / `MARK_AS_OVER_ANNOTATED`; feeds the over-annotation work |
+| **Whole-pathway overreach** | `denitrification pathway` → missing *nitrous-oxide reductase activity* | E. coli K-12 has partial nitrate/nitrite metabolism, not complete denitrification to N2 | review the pathway annotation and narrow it to the supported step |
+| **Likely annotation-granularity gap** | `DnaB-DnaC` / `DnaA-DiaA` / `DnaB-DnaG` complexes → missing sub-complex terms; `tRNA CCA addition` → missing its two MF activities | the activity or complex is present; only the finer GO term is unannotated | review the exact part term and add it if direct evidence supports it |
+| **Probable over-annotation** | `heterochromatin formation`, `establishment of integrated proviral latency`, `virion attachment to host cell`, `receptor-mediated virion attachment to host cell` on E. coli | prophage-gene or electronic propagation of eukaryote/virus-centric terms | candidate `REMOVE` / `MARK_AS_OVER_ANNOTATED`; feeds the over-annotation work |
+| **Unresolved** | `molybdopterin cofactor biosynthesis` → MPT-synthase sulfurtransferase; plus cytokinesis, RNA-binding transcription regulator activity, translational initiation, deubiquitination, glycolipid transfer, and side-of-membrane dependencies | could be missing annotation, a missing or too-specific GO axiom, or a dependency that is not yet safe at bacterial genome scale | triage with term definitions and sequence evidence before making a curation call |
 
-That a single genome-scale check simultaneously surfaces a metabolic over-reach, a batch of
-missing complex/MF annotations, and a set of implausible eukaryote/viral terms — from *nothing
-but GO axioms + a GAF* — is the pilot's proof of concept.
+That a single genome-scale check simultaneously surfaces a whole-pathway over-reach, a batch
+of likely missing complex/MF annotations, a set of implausible eukaryote/viral terms, and
+test cases where the GO axiom itself needs more care — from *nothing but GO axioms + a GAF* —
+is the pilot's proof of concept.
 
 ## Run it
 
@@ -59,12 +63,13 @@ cached.
 ## Honest limitations
 
 - **Asserted `has_part` only** (743 pairs here). The reference paper (Tawfiq et al. 2026,
-  bbag336) uses an ELK reasoner to also pull *inferred* `has_part some X` subclasses (~5038
-  pairs). So this is a **lower bound** on detectable violations; adding ELK/relation-graph
-  inference is the obvious next increment.
+  bbag336) reports thousands of additional ELK-inferred `has_part some X` subclasses. So this
+  is a **lower bound** on detectable violations; adding ELK/relation-graph inference is the
+  obvious next increment.
 - **Set-based, not sequence-based.** A violation cannot by itself distinguish "gene absent"
-  from "gene present but unannotated." Genuine-gap candidates (e.g. denitrification) must be
-  confirmed with a sequence-level tool (GapMind / Pathway Tools) before any `REMOVE`.
+  from "gene present but unannotated." Whole-pathway overreach candidates such as
+  denitrification must be confirmed with a sequence-level tool (GapMind / Pathway Tools)
+  before any `REMOVE`.
 - **Coherence only.** Completeness (a curated minimal-genome essential set) and consistency
   (taxon constraints) are not yet implemented; the small essential-process probe in the output
   is an illustrative sanity check, not the completeness metric.

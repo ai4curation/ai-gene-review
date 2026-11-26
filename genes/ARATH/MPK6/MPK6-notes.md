@@ -87,3 +87,12 @@ Set to UNDECIDED (no quotable evidence in cached source):
 - GO:0005829 cytosol (was ACCEPT, HDA, PMID:28887381): cached publication text (a global membrane-protein oligomerization proteomics study) does not mention MPK6/MAPK6 or its localization; the assignment lives only in supplementary dataset tables not present in the cached markdown, so no verbatim excerpt can substantiate it. Action -> UNDECIDED.
 
 REMOVE annotations with bare-title supporting_text left as-is (out of scope; REMOVE stands on the protein-binding curation guideline).
+
+## Stomatal-lineage module curation follow-up (2026-10-06)
+
+Context: MPK6 is a member of the `stomatal_lineage_development` module (EPF2 -> ERECTA/TMM -> YDA -> MKK4/5 -> MPK3/6 -> SPCH/SCRM).
+
+- GO:0005829 cytosol (HDA, PMID:28887381): UNDECIDED -> ACCEPT. The HDA is a curated high-throughput direct assay; MPK6 cytoplasmic localization is independently documented (MPK6-YFP in nucleus and cytoplasm of stomatal lineage cells [PMID:25843888 "Considering the overall subcellular localization of MPK6-YFP in the stomatal lineage cells (both nucleus and cytoplasm, data not shown)"]; MPK6 interacts with PTP1 "in the cytoplasm and nucleus" [PMID:27029354]). Accepted deferring to the curator; the MPK6-specific row lives in supplementary data not in our cache.
+- GO:0005938 cell cortex (IDA and IEA, PMID:25843888): KEEP_AS_NON_CORE -> ACCEPT, because cortical recruitment by BASL with YODA is part of MPK6's developmental core function (stomatal asymmetric division) already listed in core_functions [PMID:25843888 "Phosphorylated BASL functions as a scaffold and recruits the MAPKKK YODA and MPK3/6 to spatially concentrate signaling at the cortex"].
+- GO:0042742 defense response to bacterium (IEP, PMID:11875555): KEEP_AS_NON_CORE -> ACCEPT, to agree with the immunity core function [PMID:11875555 "Activation of this MAPK cascade confers resistance to both bacterial and fungal pathogens"].
+- Validation now clean (no warnings); status set to COMPLETE.

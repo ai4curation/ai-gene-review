@@ -168,3 +168,12 @@ plus a more explicit receptor mechanism for the eat-me signal. Key points:
   thesis ("Unknown journal") and reid2024 has 0 citations -> low-confidence, kept out of the YAML.
   Only the four primary/peer-reviewed PMIDs above were resolved (via PubMed) and added as
   statement-only references.
+
+
+## 2026-10-24 ORGANELLES batch 2 (mitochondrion rows)
+
+- Row: GO:0005739 IEA, GO_REF:0000107 (Ensembl projection from rat Calr P18418). Previously MARK_AS_OVER_ANNOTATED with a one-line reason; action kept, reason and supported_by added. No mitochondrial sub-compartment or MAM rows.
+- Source check (QuickGO, GO:0005739 on P18418): a single IDA (assigned by FlyBase) on PMID:25087122, so the projection is not circular.
+- PMID:25087122 (abstract only): rat neonatal cardiomyocytes; purified mitochondria plus immuno-EM, flow cytometry and MitoTracker co-staining. Purity control: [PMID:25087122 "The purity of mitochondria was assessed by the reduction or elimination of the immunoreactivities of markers for cytosol, nucleus, sarcolemma, and endoplasmic reticulum"]. Better than a crude pellet, but one rodent study, ER marker only reduced, and MAM/contact membranes not resolved.
+- Human CALR: signal peptide 1..17, ER-retention motif 414..417, curated location [file:human/CALR/CALR-uniprot.txt "SUBCELLULAR LOCATION: Endoplasmic reticulum lumen"]; no mitochondrial location in UniProt. No mechanism for a KDEL-retained luminal chaperone to reach a mitochondrial compartment.
+- Outcome: organelle claim not supported for human CALR -> MARK_AS_OVER_ANNOTATED kept (not REMOVE: the rat IDA is a real observation whose full text was not read). No sub-compartment considered. Added PMID:25087122 to references.

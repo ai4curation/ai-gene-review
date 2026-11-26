@@ -1,0 +1,25 @@
+# Alkanesulfonate uptake and desulfonation audit
+
+## 2026-10-26 — comparative native implementations
+
+The boundary combines SsuABC import, reduced-FMN supply and SsuD oxidative C–S cleavage. The 15 reviewed proteins cover E. coli K-12, P. putida KT2440 and P. putida S-313. This is a bounded Gammaproteobacteria sample, not a claim that all members of that taxon possess the pathway. Sulfite assimilation, CysB/Cbl regulation, TauD chemistry and aromatic-sulfonate accessory pathways remain outside the boundary.
+
+The previous mixed-species family complex could be satisfied by incompatible representative combinations. Three exact native implementations now keep the transporter units and reductase/oxygenase context together. Family descriptors retain verified official PANTHER labels as classification, not as grants of substrate specificity. No fixed SsuABC oligomer stoichiometry or universal SsuE–SsuD stoichiometry is inferred.
+
+The previous optional SsuE conflicted with the explicit SsuD activation requirement. The named canonical implementation now includes its identified reductase. That is not a gene-essentiality claim. Full PMID:10781557 demonstrates S-313 growth on tested aliphatic sulfonates without SsuE; the physiological substitute remains unidentified. A structured BIOLOGY gap and production abduction test preserve that observation. No invented supplier, empty alternative or inactive-growth prediction replaces the positive native evidence.
+
+Full PMID:10781557 also shows growth after deletion of ssuA from complementation constructs and rescue of the ssuB insertion background by ssuF. The latter reveals a polar-effect limitation and an additional unknown biochemical role. The five named proteins are therefore not asserted to be a minimal sufficient growth genotype. The S-313 exact clones map through AF075709; merged DS1 or other strain records are distinguished from the source strain.
+
+E. coli purified enzyme chemistry is supported by PMID:10480865 (abstract available; publisher full-text recovery failed with 403). Full PMID:10781534 was normally recovered through PMC101965 and provides deletion/complementation evidence for native transport systems. Nonexchangeability concerns TauABC/SsuABC in the tested E. coli system, not a direct test of cross-species hybrids. Residual short-chain uptake leaves additional transport routes possible.
+
+The new 2024 Garret William O’Connell thesis provides native KT2440 ΔssuD and joint ΔssuBC sulfur-utilization experiments. The normal PDF cache was inspected with the exact locus map and strain/figure context. Chapter 1 was a manuscript in preparation; the module identifies this as unpublished primary thesis evidence. It does not establish isolated B/C transport kinetics, individual SsuA/E necessity, or universal substrate specificity.
+
+S-313 SsuE was expressed in E. coli and assayed in extracts: NADPH-dependent FMN reduction, lower FAD reduction and no detected NADH activity were reported. This is target-derived biochemical evidence, not purified native enzyme kinetics. In contrast, full PMID:30171650 Table 1 measures similar E. coli SsuE turnover with NADH and NADPH. KT2440 retains inferred NADPH capacity without a claim of exclusivity. The source inversion in the S-313 UniProt growth sentence is recorded in its gene review; the analogous KT2440 transfer is graded separately.
+
+Full PMID:16997955 supports SsuE–SsuD association in expressed-protein assays. PMID:26634408 and the normally recovered corresponding dissertation chapter qualify optimal interaction-assisted transfer with diffusion possible under specified conditions. Neither universally exclusive diffusion nor obligatory channeling is encoded.
+
+Four reviews were mined for specific findings: PMID:10717312 distinguishes sulfur scavenging from carbon-skeleton use; PMID:21880344 identifies the C4a-(hydro)peroxyflavin intermediate; PMID:40987416 highlights incomplete transporter characterization; PMID:41412539 discusses alternative reduced-flavin supply strategies. These caches are abstract-only, and the assessments say so. They do not replace primary native evidence or identify an untested substitute enzyme.
+
+Actual research-provider attempts failed authentication or quota where no reusable report existed. Existing OpenScientist/Falcon reports were used as discovery aids only. FEBA requests failed to obtain a database; no synthetic provider or fitness report was written. Primary caches were obtained through normal fetching, and raw UniProt/GOA files remain unchanged. PR search hits #3122/#3124 were inspected by changed files and concern mevalonate, with no Ssu ownership overlap. No related GO-CAM hits were identified for the exact sampled proteins.
+
+The two input connections per native variant express substrate supply, not protein–protein binding or sufficient whole-cell growth. Pseudomonas input chaining remains explicitly inferred from genetic, classification and comparative chemistry rather than presented as a direct reconstituted pair assay. Canonical coverage tests and the positive-activity reconciliation are documented in the adjacent source-analysis directory.

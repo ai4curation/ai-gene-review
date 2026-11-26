@@ -2,6 +2,7 @@
 provider: openai
 model: o3-deep-research-2025-06-26
 cached: false
+autolink_gene_symbols: false
 start_time: '2026-01-31T12:58:15.300132'
 end_time: '2026-01-31T13:16:18.692618'
 duration_seconds: 1083.39

@@ -54,3 +54,7 @@ Added report provenance and primary Results support to YAML; retained all 38 ann
 ## 2026-09-12: PR review follow-up
 
 Changed the two generic protein-binding to dsRNA-binding MODIFY decisions to REMOVE. The protein interactions are not denied; dsRNA binding already has appropriate direct-assay annotations, and redirecting IPI rows would mix evidence types. [PMID:15821876 "DCL1, DCL3, HYL1 and the four HYL1 homologs exhibit significant dsRNA-binding activity"] Made the three unresolved interaction summaries source-specific. Retained the DCL1-activator replacement, which describes a functional protein interaction.
+
+## 2026-10-14 — UNDECIDED rows resolved
+
+The three remaining generic protein-binding IPI rows (PMID:21798944, PMID:29769717, PMID:32612234) are now REMOVE, consistent with the review's other protein-binding rows. The interactions are not disputed.

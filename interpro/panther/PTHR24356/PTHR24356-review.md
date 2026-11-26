@@ -5,7 +5,7 @@
 | Property | Value |
 |----------|-------|
 | **Family ID** | PTHR24356 |
-| **Family Name** | Serine/threonine-protein kinases, AGC |
+| **Family Name** | SERINE/THREONINE-PROTEIN KINASE |
 | **InterPro Entry** | IPR050236 |
 | **Total Proteins** | 32,144 |
 | **Taxonomic Breadth** | 10,298 taxa |
@@ -51,27 +51,27 @@ SF140/SF150/SF136/SF224 (MAST1-4, microtubule-associated Ser/Thr kinases), SF413
 
 ## IBA Annotation Assessment
 
-Four IBA (GO_REF:0000033) annotations were propagated to **sid2 (Q09898, SF417)**. Two come from the broad AGC node PTN000683254 (catalytic/signaling, flagged CROSS_SUBFAMILY) and two from a SIN-specific node PTN008614896 (flagged NO_UNIPROT_SEEDS - i.e. propagated without UniProt-backed seeds).
+Five IBA annotations in the Sid2 review correspond to cached PAINT ancestral assertions: kinase activity and intracellular signal transduction at PTN000683254, Sid2-Mob1 complex and regulation of exit from mitosis at PTN008614896, and spindle pole body localization at PTN001220075. These assertions carry evidence from several database namespaces; absence of UniProt-prefixed sources does not indicate absence of experimental grounding. Assertion/source identities were verified from cached PAINT data; ancestral placement was not independently re-evaluated from a tree and alignment.
 
-| GO ID | Label | Aspect | Node | Seeds | Our action |
-|-------|-------|--------|------|-------|------------|
-| GO:0004674 | protein serine/threonine kinase activity | MF | PTN000683254 | 19 (4 same-SF) | **ACCEPT** |
-| GO:0035556 | intracellular signal transduction | BP | PTN000683254 | 11 (3 same-SF) | **KEEP_AS_NON_CORE** |
-| GO:0034973 | Sid2-Mob1 complex | CC | PTN008614896 | 0 (NO_UNIPROT_SEEDS) | **ACCEPT** |
-| GO:0005816 | spindle pole body | CC | PTN001220075 | 0 same-SF (LOCALIZATION) | **ACCEPT** (separate node) |
-| GO:0007096 | regulation of exit from mitosis | BP | PTN008614896 | 0 (NO_UNIPROT_SEEDS) | **MARK_AS_OVER_ANNOTATED** |
+| GO ID | Label | Aspect | Node | Our action |
+|-------|-------|--------|------|------------|
+| GO:0004674 | protein serine/threonine kinase activity | MF | PTN000683254 | **ACCEPT** |
+| GO:0035556 | intracellular signal transduction | BP | PTN000683254 | **KEEP_AS_NON_CORE** |
+| GO:0034973 | Sid2-Mob1 complex | CC | PTN008614896 | **ACCEPT** |
+| GO:0005816 | spindle pole body | CC | PTN001220075 | **ACCEPT** |
+| GO:0007096 | regulation of exit from mitosis | BP | PTN008614896 | **MARK_AS_OVER_ANNOTATED** |
 
-**GO:0004674 (protein serine/threonine kinase activity) - ACCEPT.** Despite the CROSS_SUBFAMILY flag (19 seeds spanning Greatwall, LATS, PDK1 and NDR subfamilies), this is the calibrated expected-correct case: AGC/NDR catalytic activity is conserved and Sid2 is an experimentally validated Ser/Thr kinase. Accept.
+**GO:0004674 (protein serine/threonine kinase activity) — ACCEPT.** Sid2 is experimentally established as a Ser/Thr kinase. The cached IBD sources include Sid2 itself (PomBase:SPAC24B11.11c), which is legitimate experimental grounding for a phylogenetic assertion, not circularity. Source counts do not measure the quality of the ancestral placement.
 
-**GO:0034973 (Sid2-Mob1 complex) - ACCEPT.** Although flagged NO_UNIPROT_SEEDS, this is the **defining complex of the anchor gene itself** (Sid2 is an obligate Sid2-Mob1 heterodimer); it is directly supported in the curated review. Correct and core.
+**GO:0034973 (Sid2-Mob1 complex) — ACCEPT.** Direct interaction and complex membership are supported by PMID:10769201 and PMID:10837231. The cached IBD sources are PomBase:SPAC24B11.11c and SGD:S000003324; neither being UniProt-prefixed makes the assertion unsupported.
 
-**GO:0005816 (spindle pole body) - ACCEPT.** Matches the experimentally established SPB residence of Sid2-Mob1 throughout the cell cycle. Correct localization (propagated via a separate NDR node PTN001220075).
+**GO:0005816 (spindle pole body) — ACCEPT.** Retain experimentally supported SPB localization. PMID:10459013 reports Sid2-GFP localization throughout the cell cycle; PMID:22684255 distinguishes this reporter from untagged Sid2 detected in the cytoplasm during G2. Do not generalize the reporter result to constitutive interphase SPB residence of untagged Sid2. The cached IBD has fungal taxon restriction taxon:4751 and includes Sid2 among its sources.
 
-**GO:0035556 (intracellular signal transduction) - KEEP_AS_NON_CORE.** A broad, low-specificity process term. True in the sense that Sid2 is the terminal kinase of the SIN signaling cascade, but uninformative relative to its specific cytokinesis/mitotic-exit role; retained as non-core.
+**GO:0035556 (intracellular signal transduction) — KEEP_AS_NON_CORE.** This broad process is correct for the SIN effector kinase, although its septation-initiation and cytokinesis roles are more informative. The cached IBD also includes Sid2 among its sources.
 
-**GO:0007096 (regulation of exit from mitosis) - MARK_AS_OVER_ANNOTATED.** This term has **no UniProt-backed seeds** (NO_UNIPROT_SEEDS; node PTN008614896 with 0 seeds). It conflates the budding-yeast MEN function ("exit from mitosis") with the fission-yeast SIN function, which executes **cytokinesis/septation** rather than mitotic exit proper (the SIN does not trigger CDK inactivation/mitotic exit the way the S. cerevisiae MEN does). Because the propagation lacks supporting seeds and the process is not the correct description of Sid2's role, it is marked as over-annotated rather than accepted. This is a positive biological argument (SIN != MEN exit-from-mitosis), not a challenge to any experimental curator annotation.
+**GO:0007096 (regulation of exit from mitosis) — MARK_AS_OVER_ANNOTATED.** The cached IBD at PTN008614896 cites CGD:CAL0000197161. The recommendation concerns the fit of this inherited process to S. pombe Sid2: experimental studies distinguish Sid2-dependent cytokinesis initiation from MEN-like control of mitotic exit (PMID:10837231; PMID:22684255). Source count and source database are not evidence against the ancestral assertion. Do not describe this record as a verified pairwise transfer from S. cerevisiae Dbf2 or claim that the source experiment is wrong.
 
-**Calibration note.** The conserved AGC/NDR catalytic and the anchor-defining complex/localization terms are accepted; only the seedless, semantically mismatched "regulation of exit from mitosis" term is flagged, and the generic signal-transduction process is demoted to non-core.
+**Calibration note.** Retain the catalytic, complex and localization assertions; flag the mitotic-exit process on target-specific functional grounds and retain generic signal transduction as non-core. This assessment does not infer evidence quality from donor counts or identifier namespaces.
 
 ## Key Considerations for Curators
 

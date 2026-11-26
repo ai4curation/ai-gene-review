@@ -232,6 +232,24 @@ def test_enabled_publication_cannot_silently_skip_deployment():
     assert '"$DEPLOY_RESULT" != success' in script and 'exit 1' in script
 
 
+def test_artifact_publication_does_not_depend_on_generated_git_commits():
+    """Artifact-only builds bypass Git budgets and every PR credential step."""
+    job = yaml.safe_load(Path('.github/workflows/generate-pages.yaml').read_text())['jobs']['generate-pages']
+    steps = {step['name']: step for step in job['steps']}
+    browser = steps['Deploy browser app (data.js + index.html)']
+    assert "vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true'" in job['env']['BROWSER_TARGET']
+    assert "'pages'" in job['env']['BROWSER_TARGET']
+    assert "'git'" in job['env']['BROWSER_TARGET']
+    assert browser['run'] == 'just deploy-browser "$BROWSER_TARGET"'
+    assert steps['Build shared predictions browser']['run'] == 'just deploy-predictions-browser "$BROWSER_TARGET"'
+    assert steps['Build homology propagation browser']['run'] == 'just deploy-propagation-browser "$BROWSER_TARGET"'
+    assert steps['Check for changes']['if'] == "vars.PAGES_ARTIFACT_DEPLOY_ENABLED != 'true'"
+    assert steps['Generate ai4c-agent token']['if'] == "steps.check-changes.outputs.has_changes == 'true'"
+    for name in ('Create or update regeneration PR', 'Approve exact generated commit',
+                 'Validate protection and arm generated auto-merge'):
+        assert "steps.check-changes.outputs.has_changes == 'true'" in steps[name]['if']
+
+
 def test_content_quality_diagnostics_do_not_block_valid_archive(tmp_path):
     archive = tmp_path / 'artifact.tar'
     archive.write_bytes(b'valid uploaded archive')

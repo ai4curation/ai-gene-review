@@ -1,0 +1,29 @@
+# N (P03045) - Curation Notes
+
+## Overview
+- **Gene symbol**: `N`
+- **UniProt ID**: `P03045` (`ANTN_LAMBD`)
+- **Protein name**: Antitermination protein N (Lambda N, 107 AA)
+- **Organism**: Escherichia phage lambda (`NCBITaxon:2681611`)
+
+## Function & Biological Context
+- **Intrinsically disordered early transcription antitermination factor**: Lambda N (107 AA) is an intrinsically disordered protein (IDP) that is the first immediate-early viral gene product synthesized from `PL` to enable progression from immediate-early to delayed-early gene expression [PMID:28452979, "λN-mediated processive antitermination constitutes a paradigmatic transcription regulatory event, during which phage protein λN, host factors NusA, NusB, NusE and NusG, and an RNA nut site render elongating RNA polymerase termination-resistant."].
+- **Recognition of nascent nut (`boxB`) RNA and assembly of the Nus-RNAP antitermination complex**:
+  - The N-terminal arginine-rich motif (ARM, residues 1-22) of N specifically binds the five-nucleotide GNRA-like pentaloop of the `boxB` RNA stem-loop within the `nutL` and `nutR` (N-utilization) sites on nascent viral transcripts, folding into a bent alpha-helix upon RNA binding [PMID:9659923, "Efficient antitermination by N requires an RNA-binding domain (amino acids 1-22) and two activating regions for antitermination: a newly identified NusA-binding region (amino acids 34-47) that suppresses NusA's enhancement of termination, and a carboxy-terminal region (amino acids 73-107) that interacts directly with RNA polymerase."; PMID:9063900, "In contrast N becomes partially folded with at least 16-18 amino acids of ordered alpha-helical structure and binds much more tightly (Kd approximately 10(-9) M) on forming a highly specific 1:1 complex with its cognate boxB RNA hairpin."].
+  - Prior to specific `boxB` engagement, N is unstructured and binds nonspecifically to single-stranded nascent RNA via electrostatic interactions [PMID:9063900, "N protein, either free in solution or as a complex with nonspecific RNA, lacks observable secondary and tertiary structure and binds RNA sequences indiscriminately with a dissociation constant (Kd) of approximately 10(-6) M."].
+  - The central and C-terminal regions of N thread through the bacterial RNA polymerase (RNAP) elongation complex and recruit four host transcription elongation factors—NusA (`P0AFF6`), NusB (`P0A780`), NusE/ribosomal protein S10 (`P0A7R5`), and NusG (`P0AFG0`)—remodeling RNAP so that it reads through both intrinsic (hairpin-dependent) and Rho-dependent transcription terminators (`tL1-tL3`, `tR1-tR2`) [PMID:30795892, "Bacteriophage λN protein, a model anti-termination factor, binds nascent RNA and host Nus factors, rendering RNA polymerase resistant to all pause and termination signals."].
+  - Cryo-EM of the complete N-transcription antitermination complex shows that the C-terminal region of N traverses the RNAP active-center cleft, stabilizes the RNA exit channel to prevent termination hairpin formation, and contacts upstream duplex DNA alongside NusG to suppress backtracking and swiveling [PMID:30795892, "λN also lines upstream DNA, seemingly reinforcing anti-backtracking and anti-swiveling by NusG."].
+
+## Review of Existing GO Annotations
+- `GO:0001000` (bacterial-type RNA polymerase core enzyme binding, IMP, `PMID:9659923`): **ACCEPT**. Core activity of the C-terminal region of N.
+- `GO:0001072` (transcription antitermination factor activity, RNA binding, IMP, `PMID:9659923`): **ACCEPT**. Core molecular function of N.
+- `GO:0003677` (DNA binding, IEA, `GO_REF:0000043`): **KEEP_AS_NON_CORE**. While N primarily binds nascent `boxB` RNA and bacterial RNAP/Nus factors, cryo-EM (`PMID:30795892`) demonstrates that the C-terminal tail of N also lines upstream DNA in the assembled antitermination complex to reinforce anti-backtracking.
+- `GO:0003723` (RNA binding, EXP, `PMID:9659923`): **MODIFY** to `GO:0035613` (RNA stem-loop binding) and `GO:0001072` (transcription antitermination factor activity, RNA binding).
+- `GO:0003727` (single-stranded RNA binding, EXP, `PMID:9063900`): **KEEP_AS_NON_CORE**. Nonspecific electrostatic binding to single-stranded nascent RNA facilitates delivery of N to the `boxB` stem-loop (`PMID:9063900`).
+- `GO:0005515` (protein binding, IPI, `PMID:9659923`, with `UniProtKB:P0AFF6` NusA): **MODIFY** to `GO:0001072` (transcription antitermination factor activity, RNA binding), as bare `GO:0005515` is uninformative while the interaction with NusA is a component of N's antitermination factor activity.
+- `GO:0006353` (DNA-templated transcription termination, IEA, `GO_REF:0000043`): **MODIFY** to `GO:0031564` (transcription antitermination), as N prevents termination rather than causing it.
+- `GO:0006357` (regulation of transcription by RNA polymerase II, EXP/IDA, `PMID:9063900`, `PMID:30795892`, `PMID:9659923`): **REMOVE** (all 3 rows). Bacteriophage lambda infects *Escherichia coli*, a bacterium that lacks eukaryotic RNA polymerase II; N regulates bacterial multi-subunit RNA polymerase. These three DisProt annotations used an inappropriate eukaryotic RNAP II GO term.
+- `GO:0031564` (transcription antitermination, IDA `PMID:28452979` and IMP `PMID:9659923`): **ACCEPT** (both rows). Core biological process of N.
+- `GO:0032784` (regulation of DNA-templated transcription elongation, NAS, `PMID:28452979`): **MODIFY** to `GO:0031564` (transcription antitermination), which is a more specific descendant already annotated on the gene.
+- `GO:0035613` (RNA stem-loop binding, IMP, `PMID:9659923`): **ACCEPT**. Captures high-affinity binding of the N-terminal ARM to the `boxB` RNA hairpin.
+- `GO:0070063` (RNA polymerase binding, IDA, `PMID:30795892`): **MODIFY** to `GO:0001000` (bacterial-type RNA polymerase core enzyme binding), which is more specific and already annotated on N.

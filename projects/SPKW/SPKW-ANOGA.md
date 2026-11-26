@@ -34,11 +34,11 @@ This subproject explores UniProt Keyword (SPKW) unique contributions to *Anophel
 
 ## Status
 
-- [x] Initial exploration complete (2026-01-30)
-- [x] D7 protein family review complete (2026-01-30) - **ALL 8 PROTEINS REVIEWED**
-- [x] Immune gene pilot batch complete (2026-01-30) - **6 GENES REVIEWED**
-- [x] PGRP/TEP extended batch (2026-01-31) - **ALL 8 GENES REVIEWED**
-- [ ] Review remaining immune genes (~133 more)
+- Complete: Initial exploration (2026-01-30)
+- Complete: D7 protein family review (2026-01-30) - **ALL 8 PROTEINS REVIEWED**
+- Complete: Immune gene pilot batch (2026-01-30) - **6 GENES REVIEWED**
+- Complete: PGRP/TEP extended batch (2026-01-31) - **ALL 8 GENES REVIEWED**
+- Future work: Review remaining immune genes (~133 more)
 
 ## High-Interest Categories for ANOGA
 

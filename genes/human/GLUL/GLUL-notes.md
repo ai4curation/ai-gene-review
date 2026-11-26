@@ -104,3 +104,15 @@ L-glutamine biosynthesis (GO:1901704) and intracellular ammonium homeostasis
 current term is GO:1901704 "L-glutamine biosynthetic process" (verified via OLS,
 2026-07). The palmitoyltransferase/angiogenesis role is a genuine but
 non-canonical moonlighting activity.
+
+## 2026-10-25 ORGANELLES batch 3 (mitochondrion rows)
+
+Rows: GO:0005739 mitochondrion, IEA GO_REF:0000044 (SL-0173) and ISS GO_REF:0000024 (WITH/FROM UniProtKB:P09606). No sub-compartment rows; no `is_active_in`.
+
+Checks:
+- Correction to the entries above: P09606 is rat GS (GLNA_RAT), not sheep.
+- Human UniProt: "Mitochondrion {ECO:0000250|UniProtKB:P09606}" and "Note=Mainly localizes in the cytosol, with a fraction associated with the cell membrane." [file:human/GLUL/GLUL-uniprot.txt]. No TRANSIT or TRANSMEM feature.
+- Rat P09606 (UniProt REST, fetched 2026-10-25): "Mitochondrion {ECO:0000305|PubMed:28323}", i.e. curator inference from Deuel et al. 1978, "Glutamine synthetase from rat liver. Purification, properties, and preparation of specific antisera" [PMID:28323, cached without abstract]. QuickGO lists only an IEA SL-0173 mitochondrion row for P09606.
+- None of the 16 PMIDs cited in the review reports mitochondrial GS (grep of cached texts; most abstract-only).
+
+Outcome: both rows MARK_AS_OVER_ANNOTATED (IEA was REMOVE; the SL-0173 mapping is not itself wrong, so it now matches the ISS row). Stays at root; no NEW row.

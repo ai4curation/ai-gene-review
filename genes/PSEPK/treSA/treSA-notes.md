@@ -38,3 +38,16 @@ module + ppu00500 + PSEPK query all finished without producing reports. They
 were not restarted, and no provider output was reconstructed. This review uses
 the fetched records, the previously completed narrower TreY-TreZ report, and
 the primary literature listed above.
+
+## 2026-11-12 update
+
+- The refreshed UniProt record (entry version 97) now assigns Q88IT1 to
+  PANTHER PTHR10357 at family level, without a subfamily.
+  [file:PSEPK/treSA/treSA-uniprot.txt, "DR   PANTHER; PTHR10357; ALPHA-AMYLASE FAMILY MEMBER; 1."]
+  The characterized P. stutzeri CJ38 TreS (Q9LAS5, genes/STUST/treS) has the
+  same family-only PANTHER placement and the same TIGR02455/IPR012665
+  signatures, so TreSA belongs to the Pseudomonas-type TreS group rather than
+  the classical SF219 TreS subfamily.
+- The DE-line EC quotes were dropped as support (they restate a submitter
+  label); support now rests on the TreS-type family signatures and the
+  PMID:25204684 activity measurement. Review marked COMPLETE.

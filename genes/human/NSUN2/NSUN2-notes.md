@@ -173,3 +173,17 @@ latter is already annotated to this gene from PMID:28418038).
   endonucleolytic cleavage and is a direct consequence of the core activity.
 - `GO:0005819 spindle` (IEA) → `KEEP_AS_NON_CORE`; reported mitotic localisation, not where the
   characterised catalysis happens.
+
+## 2026-10-20 ORGANELLES batch 1 (mitochondrion rows)
+
+- GO:0005739 rows: IEA GO_REF:0000044 ACCEPT (reason extended: the UniProt line is ECO:0000269 to PMID:31276587
+  and PMID:31287866); HTP PMID:34800366 ACCEPT; IDA PMID:31276587 ACCEPT; IDA PMID:31287866 ACCEPT. Unchanged actions.
+- Added NEW GO:0005759 mitochondrial matrix, **IDA** PMID:31276587, because that paper resolves the sub-compartment:
+  [PMID:31276587 "we found that endogenous NSUN2 was reproducibly labelled by matrix-APEX2, while other APEX2 constructs showed no labelling on this protein"];
+  [PMID:31276587 "Given that the in situ generated phenoxyl radical by Matrix-APEX2 cannot cross the inner-mitochondrial membrane due to its short lifetime, this latter result suggests a mitochondrial matrix localization of endogenous NSUN2"];
+  [PMID:31276587 "Both NSUN2 and mtSSB1 were resistant to proteinase K treatment of the mitochondrial fraction"].
+  Independent support for the intramitochondrial pool: [PMID:31287866 "structured illumination microscopy clearly revealed NSUN2 foci inside mitochondria"].
+- core_functions (tRNA m5C methyltransferase) locations: added GO:0005759 next to mitochondrion, since the mt-tRNA
+  methylation is shown to depend on NSUN2 and its substrates are matrix species
+  [PMID:31276587 "is partially localized in the mitochondrial matrix and is responsible for methylation of tRNA positions 48, 49 and 50 in the V-loop region of six human and eight mouse mt-tRNA"].
+- Note: NSUN2 has no annotated transit peptide; import route unknown.

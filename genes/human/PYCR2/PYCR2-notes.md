@@ -112,3 +112,49 @@ Core location: **GO:0005739 mitochondrion** (verified CC branch).
   disease data localize PYCR2 to mitochondria. Not removing experimental EXP annotation per policy.
 - GO:0005515 protein binding (IPI PMID:24930674, LTO1/ORAOV1) — MARK_AS_OVER_ANNOTATED (uninformative
   MF; do not REMOVE an IPI). Interaction is real but not a core function.
+
+## 2026-10-18 — ORGANELLES pilot: mitochondrial sub-compartment (outcome: unresolved, stay at root)
+
+Question: is PYCR2 in the mitochondrial matrix (GO:0005759), at the inner membrane, or only
+supportable at the organelle level (GO:0005739)? Applied `projects/ORGANELLES.md` Policy.
+
+Evidence examined:
+- De Ingeniis 2012 used a two-way fractionation only: "This was accomplished with Western blotting
+  using standard approaches to fractionate Lu1205 cells into mitochondrial and cytosolic fractions"
+  [PMID:23024808]. Mitochondrion vs cytosol; no submitochondrial assay. Its argument from cofactor
+  use ("PYCR1 and PYCR2 have higher specific activity in the presence of NADH, consistent with
+  their localization in the mitochondria" [PMID:23024808]) is a functional hint toward the inside
+  of the organelle, not a localization result.
+- Nakayama 2015 (abstract only cached): "both variant proteins retained normal mitochondrial
+  localization" [PMID:25865492]. Whole-organelle.
+- MitoCoP (HTP): "we combined subtractive proteomics, spatial proteomics, mitochondria-specific
+  importomics, and literature/database curation by stringent criteria" [PMID:34800366]. It also
+  mapped "membrane association and integration of MitoCoP proteins by sonication and treatment at
+  alkaline pH" [PMID:34800366], but the per-protein table (Table S3) is not in the cached text, so
+  it gives no usable PYCR2 sidedness.
+- No transit peptide: UniProt has the N-terminus directly sequenced, "PROTEIN SEQUENCE OF 2-17,
+  CLEAVAGE OF INITIATOR METHIONINE, ACETYLATION AT" Ser-2 [file:human/PYCR2/PYCR2-uniprot.txt].
+  So the mature protein retains its N-terminus; no MPP-cleaved presequence. This does not exclude
+  matrix import via internal signals, but removes the usual sequence line for matrix.
+- UniProt also lists "Cytoplasm {ECO:0000269|PubMed:2722838}" [file:human/PYCR2/PYCR2-uniprot.txt]
+  (erythrocyte enzyme), consistent with a dual or loosely associated pool.
+- PubMed search (2026-10-18; queries on PYCR1/PYCR2 with matrix / inner membrane / outer membrane /
+  submitochondrial / APEX / proteinase K / digitonin) found no PYCR1 or PYCR2 submitochondrial
+  assay. Liu et al. 2024 (PMID:38719025, Virus Res, not cached; DOI 10.1016/j.virusres.2024.199387,
+  read via PubMed/PMC) calls PYCR2 "the mitochondrial matrix protein PYCR2", but this is a cited
+  background statement, and their own assay is a mitochondria/cytosol kit fractionation. Kindlin-2
+  papers (PMID:30783087, PMID:33761308) report kindlin-2 translocating to mitochondria to bind
+  PYCR1; no sidedness for PYCR2.
+- PYCR1 comparator: its GO:0005759 matrix annotation is Reactome TAS (R-HSA-70664), whose summary
+  cites only fractionation and co-localization ("Subcellular fractionation (De Ingeniis et al.
+  2012) and co-localization studies (Reversade et al. 2009) indicate that PYCR1 is mitochondrial"
+  [Reactome:R-HSA-70664]). So the paralog's matrix term is not independent evidence either.
+
+Decision (policy rule 4): only one line (function: NADH use, access to P5CS-derived P5C) favours
+an inside location, and it does not distinguish matrix from the matrix face of the inner
+membrane; the sequence line (no cleaved MTS) and the reported cytoplasmic pool do not agree with a
+simple matrix assignment. Lines disagree / only one positive line, so stay at the root. No NEW
+sub-compartment row; core_functions location stays GO:0005739. Filled reasons on the four
+mitochondrion rows (IEA GO_REF:0000120, HTP PMID:34800366, IDA PMID:23024808, IDA PMID:25865492),
+all remaining ACCEPT. A protease-protection / alkaline-carbonate / APEX-matrix experiment would
+settle this.

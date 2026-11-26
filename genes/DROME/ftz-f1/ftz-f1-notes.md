@@ -40,3 +40,28 @@ Can an endogenous phospholipid alter full-length betaFTZ-F1 cofactor recruitment
 [Falcon/Edison research](ftz-f1-deep-research-falcon.md) completed successfully on 2026-09-08 (481 seconds), with its provider artifact preserved. It supports the overall nuclear transcription-factor and developmental-competence synthesis and offers additional steroidogenesis source leads. Its locus-wide discussion does not resolve the exact M9NFK2 isoform, and the ligand assessment needs the independently retrieved 2018 NMR/phospholipid-binding paper. The curated decisions therefore cite primary experiments and sequence records directly. The validator advisory suggesting a deep-research citation is intentionally left as an advisory; quoting the provider's summary would not add evidence to those primary-source-supported decisions.
 
 `just validate DROME ftz-f1` passes with no errors and that single advisory. The scaffolded gene history record validates. The HTML review has been rendered. The generic FASTA equality checker gives the expected identical result for M9NFK2/P33244-2 and nonidentical results for the longer P33244-1 control and synthetic control sequences.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+Scope: re-examined all 12 GOA rows, the description and core functions. ProtNLM2 output was not consulted.
+
+### Identity of the benchmark accession
+
+- M9NFK2 (UniProtKB/TrEMBL, PE 3, 803 aa) is a duplicate unreviewed entry for the shorter FTZ-F1 product. It is identical to reviewed isoform P33244-2 (803/803 aa) and is **not a fragment**. Relative to canonical P33244-1 (1027 aa) it has a different, shorter isoform-specific N-terminus (M9NFK2 1-174 vs P33244-1 1-398) and shares the entire C-terminal 629 aa (M9NFK2 175-803 = P33244-1 399-1027). The DNA-binding domain (281-356), LBD-type domain (568-800) and AF-2 motif (789-800) are all in the shared segment; nothing functional is missing. See [RESULTS-rereview.md](ftz-f1-bioinformatics/RESULTS-rereview.md) and `compare_isoforms_rereview.py` (new files; the existing isoform-records were not modified).
+- The canonical product P33244 (Swiss-Prot) carries all the FlyBase experimental and PAINT IBA annotations (QuickGO query on 2026-10-20); M9NFK2 carries only 12 IEA rows. This folder (`genes/DROME/ftz-f1`) is keyed to M9NFK2, and no review exists for P33244, so the next review should be `genes/DROME/ftz-f1__P33244`.
+- Naming hazard: UniProt Q05192 ("Nuclear hormone receptor FTZ-F1 beta") is the separate paralog **Hr39** (PANTHER SF25), not the betaFTZ-F1 isoform of ftz-f1.
+
+### Evolutionary grounding
+
+- PANTHER PTHR24086:SF15 (NUCLEAR HORMONE RECEPTOR FTZ-F1) contains M9NFK2, canonical P33244, Bombyx FTZ-F1 P49867 and C. elegans nhr-25 Q19345. Mammalian NR5A1/SF-1 (SF24) and NR5A2/LRH-1 (SF18) are separate subfamilies; their steroidogenic and phospholipid-ligand-regulated properties are not transferred.
+- PAINT node PTN000639680 (donors include FBgn0001078 and mouse Nr5a1/Nr5a2) gives canonical P33244 IBA rows for GO:0000978 RNA pol II cis-regulatory region sequence-specific DNA binding, GO:0006357, GO:0009755 hormone-mediated signaling pathway, GO:0009888 tissue development and GO:0090575 RNA pol II TF complex. GO:0004879 nuclear receptor activity is not among them; treated as a deliberate PAINT decision that supports the existing MODIFY of the InterPro2GO GO:0004879 row.
+- Family review `interpro/panther/PTHR24086/PTHR24086-review.yaml` (SF15, representative M9NFK2) agrees with the UniProt subfamily placement; no disagreement.
+
+### Changes in this re-review
+
+- GO:0003677 DNA binding: MODIFY target changed from GO:0043565 to the more precise GO:0000978 (binding to the ftz upstream regulatory element, PMID:2113881; matches PAINT).
+- GO:0043565 sequence-specific DNA binding: ACCEPT -> MODIFY to GO:0000978 (correct-but-general rule; GO:0000978 is_a descendant verified via QuickGO ancestors).
+- GO:0004879: MODIFY retained; reason extended with subfamily placement and the PAINT omission.
+- All other decisions re-examined and retained (GO:0000981 ACCEPT; GO:0003700, GO:0006351, GO:0006355 MODIFY; GO:0006357 ACCEPT; GO:0005634 ACCEPT; GO:0008270 KEEP_AS_NON_CORE; GO:0030522 ACCEPT as participation of a downstream competence TF in the ecdysone-initiated cascade; GO:0035556 MODIFY to GO:0030522).
+- No NEW terms. FlyBase organismal IMP terms on P33244 (pupation, metamorphosis, salivary gland cell death, etc.) were deliberately not added: they are mutant phenotypes, and the isoform-level assignment to the beta product would need checking against each paper. The Ftz cofactor interaction (GO:0061629 IPI on P33244) is mainly an embryonic alphaFTZ-F1 context and was not proposed for this product.
+- Validation: `just validate DROME ftz-f1` passes (only the deep-research-citation advisory).

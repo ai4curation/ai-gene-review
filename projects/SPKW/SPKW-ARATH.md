@@ -1,5 +1,6 @@
 ---
 title: "SPKW Arabidopsis thaliana (ARATH) Subproject"
+autolink_gene_symbols: false
 ---
 
 # SPKW Arabidopsis thaliana (ARATH) Subproject
@@ -157,7 +158,7 @@ The GO definition of "auxin-activated signaling pathway" refers to "binding of a
 
 ### Case 4: BUB3.1 - General vs Specific Cell Cycle Function ✓
 
-**Gene:** BUB3.1 (Q9LJN8) - BUB3 spindle checkpoint protein
+**Gene:** BUB3.1 (Q9LJN8) - `BUB3` spindle checkpoint protein
 
 **Review file:** `genes/ARATH/BUB3.1/BUB3.1-ai-review.yaml`
 

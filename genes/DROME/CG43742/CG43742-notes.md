@@ -78,3 +78,21 @@ The annotation and prediction assessments are complete. UNC/UNDECIDED record del
 Fetched and inspected `interpro/panther/PTHR24256/PTHR24256-paint.tsv`. Both CG43742 IBA rows trace to Ecdysozoa-level `PANTHER:PTN000667087`: extracellular region was placed at that node on 2026-05-29 and innate immune response was placed at the same node on 2025-12-20. The node-level extracellular inference agrees with the exact target signal peptide, and the Dipteran-seeded node-level innate-immune inference resolves the prior placeholder uncertainty about whether the GOA row came from a relevant ancestral assertion.
 
 Exact searches for `CG43742`, `FBgn0263999`, `A0A0B4KFF2`, and Drosophila `SP251` did not identify a newer paper that directly characterizes this protein. PMID:30367934 remains the only direct full-text source naming SP251 in the SP/PD/PLD classification; more recent CLIP/S1A studies characterize other Drosophila proteases or aggregate hemolymph protease activity and should remain contextual.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+Identity: A0A0B4KFF2 is the only UniProt product of CG43742 (FBgn0263999, synonym SP251), 474 aa, sequence version 1, RefSeq NP_001261130.1. It is not a fragment, isoform or alternative gene model; it carries both S1 domains, the signal peptide and the complete domain-1 triad. No separate canonical entry exists.
+
+Sequence (re-checked on the exact sequence, `CG43742-bioinformatics/subfamily_tree.py`, `RESULTS.md`): domain 1 (35-258) has H73 (TAAHC), D121 and S207 (DSGGP), so the triad is complete. Domain 2 (282-472) has neither a TAAHC-type His motif nor a GDSGG-type Ser motif; it is a protease-like domain (PLD). This matches PMID:30367934 [PMID:30367934 "SP49, SP77, SP222, SP248, and SP251 contain a PD and a PLD;"]. The UniProt CAUTION line about missing conserved residues refers to the second domain. There is no clip domain (the segment between the signal peptide and domain 1 is ~14 residues), so the UniProt ARBA "CLIP subfamily" similarity note and the Falcon report's "CLIP" framing are not supported.
+
+Evolutionary placement: the PANTHER 19.0 fly HMM file puts A0A0B4KFF2 in PTHR24260:SF147 (EG:BACR7A4.3 PROTEIN-RELATED; 27 fly members, including snk/P05049 and CG10764/SP77/A1ZAT2). UniProt's DR PANTHER line and the GOA IBA rows use PTHR24256 and PAINT node PTN000667087, whose seeds all map to other PTHR24260 subfamilies (SF134-SF145). An NJ tree over a MAFFT alignment of SF147 plus psh/modSP/SPE outgroups puts CG43742 on a branch of long tandem-domain proteins (HDC06631, CG4827, CG10764, CG42694, CG30187); snk sits alone on a deep branch. Identities are only 30-40% to every member, so there is no one-to-one ortholog. The nearest experimentally studied relative is CG10764/SP77, also a PD+PLD protein, with only an RNAi phenotype (reduced wasp-egg encapsulation; PMID:33644706). That phenotype is not transferred.
+
+Annotation changes from the previous review:
+- GO:0051604 protein maturation (ARBA IEA): UNDECIDED -> MARK_AS_OVER_ANNOTATED. ARBA-only; no precursor substrate or cascade position is known, so it is an over-specific process claim.
+- GO:0045087 innate immune response (IBA): kept KEEP_AS_NON_CORE; reason rewritten to record the SF147 vs PTHR24256 placement discrepancy and that no PAINT seed falls in SF147. The node judgment is not overturned because there is no target-specific loss evidence.
+- GO:0004252 (IEA): ACCEPT kept; noted that the EC 3.4.21.1 chymotrypsin rule is not evidence for P1 specificity.
+- All other rows unchanged in action (ND rows MODIFY to serine-type endopeptidase activity / extracellular region / proteolysis; peptidase and hydrolase activity MODIFY to GO:0004252; extracellular region IBA and proteolysis IEA ACCEPT); support now cites the exact-sequence triad check.
+- Description rewritten without any prediction-specific commentary; core function narrowed to the domain-1 serine endopeptidase.
+- Added PMID:33644706 (relative context, LOW relevance) and the bioinformatics RESULTS.md.
+
+Literature: no publication directly studies CG43742/SP251 beyond the Cao and Jiang 2018 classification (consistent with the 2026-09-28 searches above). Modules: no module under modules/ includes CG43742 or PTHR24256.

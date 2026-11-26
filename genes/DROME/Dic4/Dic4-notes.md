@@ -25,3 +25,40 @@ The existing OpenScientist report is reused critically, with exact limitation ex
 PAINT: {'family': 'PTHR45618', 'nodes': ['PTN000756618', 'PTN002515516'], 'finding': 'Current specific anion-transport and general carrier assertions were inspected separately; negative tests of one panel do not remove every possible transport function.'}
 
 All 12 rows were assessed, including experimental, electronic, negated and old proposed entries. Source annotation fields and row counts remain unchanged. Remaining questions are recorded in `projects/IBA_REVIEW/rereview-2026-09-20/receptor-and-lipid-claims.yaml`; coordinated reports will be assessed critically when available.
+
+## 2026-10-20 — Full re-review, independent of the ProtNLM2 predictions
+
+ProtNLM2 output and the ProtNLM-derived OpenScientist ThPP report were not used as evidence in this pass.
+
+**Identity.** Q9VVS1 is the 302-residue canonical Dic4 product (FlyBase PA/PC; the 173-residue PB product is a
+separate shorter isoform). It carries three Mito_carr repeats (Pfam PF00153 x3, PROSITE SOLCAR x3), so it is the
+full-length carrier, not a fragment.
+
+**Phylogeny.** PANTHER 19.0 places Dic4 in PTHR45618:SF13 MITOCHONDRIAL DICARBOXYLATE CARRIER with Dic1, Dic2,
+Dic3, CG16736, CG6893, human SLC25A10, mouse Slc25a10 and yeast DIC1. A new NJ tree
+(`Dic4-bioinformatics/RESULTS-rereview.md`) gives Dic4 the longest branch among the fly Dic paralogs; the order of
+Dic1-Dic4 is unresolved (bootstraps <62%). SLC25A10 pairs with Dic1, so it is a co-ortholog of the whole fly
+expansion. PAINT: the IBD node PTN000756618 carries dicarboxylate, phosphate, sulfate and thiosulfate transport. The
+fly NOT node PTN000640888 removes malate/succinate/oxaloacetate terms from Dic4 (QuickGO IBA rows for Dic4 lack
+them; Dic3 lacks only malate). This is a deliberate curator decision, and the phosphate/sulfur-anion terms were
+left in place.
+
+**Literature.** PMID:32842667 (full text) states that DmDic4p "was unable to catalyze either homo- or
+hetero-exchanges, after its reconstitution into liposomes" and that its "inability to transport dicarboxylates or
+phosphate could arise from a loss of some conserved residues located on CP1 and CP2", in the same assay system in
+which Dic1 and Dic3 were active. Proteins were refolded from inclusion bodies, and PMID:21130726 is abstract-only.
+
+**Changes.**
+- Phosphate/sulfate/thiosulfate IBAs (5 rows): UNDECIDED -> MARK_AS_OVER_ANNOTATED. The reason is target-specific
+  loss evidence (negative reconstitution of phosphate and other exchanges, CP1/CP2 substitutions, fast-evolving
+  paralog), not the donor count. They were not removed because of the refolding caveat and the untested substrates.
+- membrane (IEA): ACCEPT -> MODIFY to mitochondrial inner membrane (rule for correct but general terms).
+- transmembrane transport (IEA InterPro): ACCEPT -> UNDECIDED. No substrate is known and the only direct test was
+  negative.
+- NOT dicarboxylate MF/BP, mitochondrion IDA, inner membrane IBA/TAS: ACCEPT, kept.
+- Description rewritten; core_functions now gives only the inner-membrane location, with no molecular function
+  asserted.
+- Relative for next review: human SLC25A10 (SF13 co-ortholog; review present with no PENDING rows, status
+  INITIALIZED). Fly Dic1 is the characterised paralog (review DRAFT).
+- Modules: Dic4 is not in any module. The related modules are `modules/mitochondrial_dicarboxylate_tricarboxylate_carriers.yaml`
+  and `modules/dmel_sulfide_oxidation.yaml` (Dic1 only).

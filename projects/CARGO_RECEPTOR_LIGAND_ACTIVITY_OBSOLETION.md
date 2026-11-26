@@ -20,6 +20,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/KRnhmaC5Dv78KU6uHN5AW5
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Cargo Receptor Ligand Activity (GO:0140355) — Obsoletion & Transfer

@@ -83,3 +83,29 @@ The external review [comment 5850248306](https://github.com/ai4curation/ai-gene-
 Action totals remain 32 ACCEPT, 13 MODIFY, 4 KEEP_AS_NON_CORE, 3 UNDECIDED and 1 MARK_AS_OVER_ANNOTATED, with no NEW assertions. This follow-up supersedes the earlier supporting-quote selections, not the biological action decisions. Source and provider artifacts remain untouched.
 
 Follow-up validation: `just validate human ABCC9` passed with the single pre-existing Falcon-use advisory; `just render human ABCC9` completed and the updated evidence/core text was inspected in the rendered HTML. The new history record passed `just validate-history`. All 53 source tuples, action decisions and both alternative products remain identical to the verified PR baseline. No source cache, provider artifact, earlier history or Git metadata was changed.
+
+## 2026-10-24 ORGANELLES batch 2 (mitochondrion rows)
+
+Rows: one GO:0005739 row, IEA GO_REF:0000107 (Ensembl projection from mouse
+P70170), already KEEP_AS_NON_CORE. No sub-compartment rows.
+
+Checked:
+- Source of the projection (QuickGO, mouse P70170 / Abcc9 on GO:0005739): MGI IDA
+  and IMP from PMID:19797704, IMP from PMID:20935152 and PMID:24648545. The
+  projection is grounded in experiment, not circular.
+- PMID:19797704 (full text): the mitochondrial forms are short intra-exonic splice
+  (IES) products (SUR2A-55, SUR2B-55), shown by GFP/MitoTracker overlap
+  [PMID:19797704 "Like the positive control mitoGFP, green signals in the SUR2 IES
+  variant-GFP fusions overlapped with MitoTracker staining, suggesting that both
+  variants were localized to mitochondria."]. The paper isolated mitochondrial
+  membranes but does not report a sub-mitochondrial assay; the inner-membrane
+  location appears only as background on mitoKATP [PMID:19797704 "In addition to a
+  sarcolemmal location,13 KATP is present in the inner membrane of mitochondria
+  (mitoKATP)."].
+- UniProt O60706: no mitochondrial location in the curated SUBCELLULAR LOCATION
+  (Membrane, multi-pass); the canonical isoforms are plasma-membrane KATP subunits.
+
+Outcome: stays at the root, KEEP_AS_NON_CORE unchanged. Rule 4 is not met: the only
+inner-membrane line is the assumed location of mitoKATP, whose molecular identity is
+itself uncertain, and the mitochondrial forms are not UniProt isoforms. The existing
+reason already records the variant scope; one sentence recording this check was added.
