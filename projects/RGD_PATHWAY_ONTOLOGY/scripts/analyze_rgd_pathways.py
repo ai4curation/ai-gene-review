@@ -17,8 +17,9 @@ Outputs (``projects/RGD_PATHWAY_ONTOLOGY/data/``):
   those rows and the hand-curated set are individually verified.
 * ``pw_gocam_completeness.tsv`` -- one row per PW term with human gene
   annotations: gene counts by evidence tier, how many of those genes appear in
-  any human GO-CAM (and how many have a mouse or rat ortholog, by HGNC's MGI and
-  RGD cross-references, in a GO-CAM of that species) / have a gene review, the best-overlapping GO-CAM model, and
+  any human GO-CAM (and how many have a mouse or rat ortholog, by HGNC's MGI
+  and RGD cross-references, in a GO-CAM of that species) / have a gene review,
+  the best-overlapping GO-CAM model, and
   human GO-CAM models whose biological process falls under a mapped GO term.
 * ``module_seeds.yaml`` -- one seed per RGD diagram pathway, joining the diagram
   structure (sub-pathways, labels), RGD-curated human genes, GO mappings,
@@ -205,8 +206,9 @@ RODENT_TAXA = {"mouse": ("NCBITaxon:10090", "mgd_id"), "rat": ("NCBITaxon:10116"
 def load_hgnc_rodent_xrefs(path: Path) -> dict[str, dict[str, str]]:
     """HGNC's MGI and RGD cross-references: species -> {MOD gene id -> human symbol}.
 
-    A MOD id listed on more than one human gene is dropped, so that only one-to-one
-    assignments count.
+    A MOD id listed on more than one human gene is dropped, so each rodent gene counts
+    for at most one human gene; a human gene with several rodent ids counts through
+    any of them.
     """
     seen: dict[str, dict[str, set[str]]] = {sp: defaultdict(set) for sp in RODENT_TAXA}
     with open(path, errors="ignore") as fh:

@@ -110,3 +110,6 @@
   bare "membrane" TOO_GENERAL.
 - NEW: GO:0061133 (core), GO:0045916 negative regulation of complement activation,
   GO:0070379 HMGB1 binding, GO:0050728 negative regulation of inflammatory response.
+
+## 2026-11-26 PR review follow-up
+- GO:0050728 negative regulation of inflammatory response, listed above as a candidate NEW, was not proposed: the HMGB1 evidence supports the binding (GO:0070379), and the anti-inflammatory outcome is a downstream consequence rather than work THBD is shown to do in the process.

@@ -51,7 +51,7 @@
 - regulation of blood coagulation IEA (IPR033829, antithrombin-specific entry): MODIFY to negative regulation.
 - plasma membrane TAS (Reactome, HS-bound on endothelial surface): MODIFY to external side of plasma membrane (as PROS1/F5).
 - ER lumen TAS (FAM20C reaction): transit only -> MARK_AS_OVER_ANNOTATED.
-- extracellular region rows: ACCEPT. GO:0005615 extracellular space is now obsolete in QuickGO, so no refinement proposed.
+- extracellular region rows: ACCEPT. GO:0005615 extracellular space is obsolete in GO releases/2026-07-26 (merged into GO:0005576, replaced_by), so no refinement proposed.
 - ECM, exosome, blood microparticle HDA: KEEP_AS_NON_CORE.
 
 ### NEW-term checks
@@ -64,3 +64,7 @@
 - GO:0016525 negative regulation of angiogenesis: 0 hits for human P01008 and
   mouse P32261; activity is of non-native conformers in xenograft models with an
   undefined mechanism. Not proposed; recorded as a question/knowledge gap.
+
+## 2026-11-26 PR review follow-up
+- Checked the GO:0005615 obsoletion against the pinned GO release: `is_obsolete: true`, comment "obsoleted because it represents the same concept as extracellular region", `replaced_by: GO:0005576`. The repo's `cache/go/terms.csv` snapshot predates the obsoletion.
+- Added the human deficiency quote (PMID:15140129) to the NEW negative regulation of blood coagulation row; explained why protease binding with TMPRSS7 is kept, and the title-only quotes on the HDA rows.

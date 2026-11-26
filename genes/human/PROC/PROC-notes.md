@@ -96,3 +96,7 @@ All GOA-cited papers except PMID:32296183 are abstract-only in the cache.
   MARK_AS_OVER_ANNOTATED rather than KEEP_AS_NON_CORE.
 - Proteolysis rows are KEEP_AS_NON_CORE: APC is itself the protease, so the term is correct but general.
 - `just validate human PROC`: valid; quote_check 71 verified.
+
+## 2026-11-26 PR review follow-up
+- Reverted the four direct ER and Golgi rows (EXP and IDA) to KEEP_AS_NON_CORE: rule 7 keeps a secretory protein's ER row non-core when there is direct evidence on the gene, and wild-type protein C was seen with PDI and GM130. The UniProt-keyword IEA rows and the lumen rows stay MARK_AS_OVER_ANNOTATED.
+- Reworded the proteolysis reason: no narrower process term exists and the mechanism is peripheral, rather than "correct but general".
