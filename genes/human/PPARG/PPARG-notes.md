@@ -20,7 +20,7 @@ The PPARgamma2 isoform has the adipocyte-specialized arm. UniProt summarizes the
 
 Many PPARG rows are direct experiments on a particular target or cell type: smooth-muscle proliferation, BMP/TGF-beta/SMAD signaling, angiogenesis, vascular proliferation, macrophage foam-cell formation and miRNA expression. Those are retained as non-core outputs unless they were already the broad ancestors of accepted transcription terms. The review does not manufacture new process annotations from perturbation data: a PPARG knockdown or ligand treatment experiment only earns the recorded process when PPARG is being tested as the transcription factor for that response.
 
-The two `GO:0046965` RXR-binding rows are the only MODIFY decisions. The GO term is obsolete, but the underlying RXRA:PPARG heterodimerization claim is sound and is recorded as `GO:0046982 protein heterodimerization activity`. External full text for PMID:9568715 was checked after the local cache captured only the abstract; the paper explicitly frames the oxLDL response as acting through `PPARg:RXR heterodimers`.
+The two `GO:0046965` RXR-binding rows are MODIFY decisions. The GO term is obsolete, but the underlying RXRA:PPARG interaction is sound and is recorded as `GO:0016922 nuclear receptor binding`, which preserves the identity of the RXR partner better than a generic protein-heterodimerization term.
 
 Every bare `GO:0005515` row is removed under the protein-binding policy. Several are real high-throughput or curated interactions, but the rows do not state the informative molecular function.
 
@@ -29,3 +29,9 @@ Every bare `GO:0005515` row is removed under the protein-binding policy. Several
 PANTHER PTHR24082 places the pan-NR1 nuclear receptor, DNA-binding, nucleus and Pol II transcription terms above the PPAR subfamilies. `just paint-losses human PPARG` reported no IRD or IKR on the PPARG lineage.
 
 The cached GO-CAM index already contains PPARG activities for PTEN transcription, PAQR3/STUB1-mediated PPARG turnover, YTHDC1 stabilization of PPARG in brown adipocyte development, and PRDM16/TLE3 chromatin-adapter adipocyte modules. Those are compatible with the gene review but are too context-specific for a new family-level module here.
+
+## PR review follow-up
+
+The `GO:0004955 prostaglandin receptor activity` TAS row and the `GO:0007186 G protein-coupled receptor signaling pathway` IEA row both trace to lipid activation of PPARG rather than to seven-transmembrane prostaglandin receptor signaling. The former remains marked over-annotated, and the latter now follows it instead of being kept as a non-core GPCR process.
+
+The `GO:0001890 placenta development` ISS row is supported by the mouse `Pparg` knockout placental phenotype in Barak et al. 1999, but that phenotype is a tissue output of PPARG transcriptional regulation rather than the conserved core receptor mechanism. The row is therefore kept as non-core, while PPARG adipocyte differentiation, lipid storage and insulin-sensitizing metabolic outputs remain part of the synthesized core function.

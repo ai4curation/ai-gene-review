@@ -19,3 +19,7 @@ The five bare `GO:0005515` IPI annotations are uninformative physical-interactio
 ## PANTHER and modules
 
 `just paint-losses human PPARD` reported no IRD or IKR on the lineage. The one existing module hit is `efferocytosis_induced_anti_inflammatory_programme`, where PPARD represents the PPAR-delta lipid-sensing route in macrophages. That module already records the efferocytosis context, so the gene review keeps the broader PPARD metabolic terms and does not add another module.
+
+## PR review follow-up
+
+The fatty-acid oxidation, beta-oxidation, fatty-acid transport and generic lipid-metabolism rows are regulatory outputs of PPARD-dependent transcription, not enzyme or transporter activities. The ISS/IEA orthology rows were therefore recast to regulatory GO terms where their source clearly points at the oxidative PPAR-delta program. The old `PMID:1333051` TAS row for `GO:0006629 lipid metabolic process` is weaker: that paper cloned PPARD and showed fatty acids can activate its ligand-binding domain in a reporter assay, but the review keeps its action consistent with the ISS row for the same broad term and recasts both as `GO:0019216 regulation of lipid metabolic process`.
