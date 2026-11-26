@@ -26,7 +26,6 @@ from rheago_lib import parse_obo, ancestors
 D = sys.argv[1] if len(sys.argv) > 1 else ".cache/rhea-completeness"
 csv.field_size_limit(10**8)
 G = parse_obo(sys.argv[2]); anc = ancestors(G)
-ROOTS = {"GO:0003674", "GO:0003824", "GO:0005215"}
 
 # Rhea id -> mapped GO terms (the projection uses exact and narrow xrefs)
 rhea2go = collections.defaultdict(set)
@@ -44,26 +43,38 @@ for r in csv.DictReader(open(f"{D}/rhea2uniprot_sprot.tsv"), delimiter="\t"):
         proj[r["ID"]].add(g)
 
 # entry -> native contributes_to MF terms (any source)
-ct = collections.defaultdict(set); ct_src = {}
-for r in csv.DictReader(open(f"{D}/goa_contributes_to_mf.tsv"), delimiter="\t"):
+DOWNLOAD_LIMIT = 200000  # must match downloadLimit in fetch_data.sh
+ct = collections.defaultdict(set); ct_src = {}; n_ct = 0
+rd = csv.DictReader(open(f"{D}/goa_contributes_to_mf.tsv"), delimiter="\t")
+need = {"GENE PRODUCT ID", "GO TERM", "ECO ID", "REFERENCE", "ASSIGNED BY"}
+assert need <= set(rd.fieldnames or []), f"QuickGO columns changed: {rd.fieldnames}"
+for r in rd:
+    n_ct += 1
     ac = r["GENE PRODUCT ID"].split("-")[0]
-    ct[ac].add(r["GO TERM"]); ct_src.setdefault((ac, r["GO TERM"]), set()).add(f'{r["ASSIGNED BY"]}:{r["REFERENCE"]}')
+    ct[ac].add(r["GO TERM"])
+    ct_src.setdefault((ac, r["GO TERM"]), set()).add(f'{r["ASSIGNED BY"]}:{r["REFERENCE"]}:{r["ECO ID"]}')
+assert n_ct < DOWNLOAD_LIMIT, f"{n_ct} contributes_to rows reached the QuickGO downloadLimit; raise it"
 
 HETERO = re.compile(r"heterodimer|heterotrimer|heterotetramer|hetero-?oligomer|heteromer|composed of|subunits? of|complex", re.I)
 info = {}
-for r in csv.DictReader(open(f"{D}/sp_rhea_complex.tsv"), delimiter="\t"):
-    cc = r.get("Gene Ontology (cellular component)", "") or ""
+rd = csv.DictReader(open(f"{D}/sp_rhea_complex.tsv"), delimiter="\t")
+need = {"Entry", "Organism (ID)", "ComplexPortal", "Gene Ontology (cellular component)", "Subunit structure"}
+assert need <= set(rd.fieldnames or []), f"UniProt columns changed: {rd.fieldnames}"
+for r in rd:
+    cc_terms = [t for t in (r["Gene Ontology (cellular component)"] or "").split("; ") if t]
     info[r["Entry"]] = {
-        "cpx": bool((r.get("ComplexPortal") or "").strip()),
-        "cc_complex": "complex [GO:" in cc,
-        "subunit_hetero": bool(HETERO.search(r.get("Subunit structure", "") or "")),
-        "taxon": r.get("Organism (ID)", ""),
+        "cpx": bool((r["ComplexPortal"] or "").strip()),
+        # any CC label containing "complex", e.g. "mitochondrial respiratory chain complex IV"
+        "cc_complex": any("complex" in t.rsplit(" [GO:", 1)[0].lower() for t in cc_terms),
+        "subunit_hetero": bool(HETERO.search(r["Subunit structure"] or "")),
+        "taxon": r["Organism (ID)"],
     }
 
 entries = set(info) | set(proj)
 projected = {a for a in entries if proj.get(a)}
 complexish = {a for a in projected if a in info and (info[a]["cpx"] or info[a]["cc_complex"] or info[a]["subunit_hetero"])}
-with_ct = {a for a in projected if ct.get(a)}
+with_ct = {a for a in complexish if ct.get(a)}
+not_in_stream = projected - set(info)
 
 rows = []
 for a in sorted(projected):
@@ -77,21 +88,26 @@ for a in sorted(projected):
 
 with open(f"{D}/subunit_projection.tsv", "w") as f:
     w = csv.writer(f, delimiter="\t")
-    w.writerow(["accession", "taxon", "projected_go", "projected_label", "native_contributes_to", "ct_sources",
+    w.writerow(["accession", "taxon", "projected_go", "projected_label", "native_contributes_to", "ct_sources (assigned_by:reference:eco)",
                 "complexportal", "cc_complex", "subunit_heteromeric"])
     w.writerows(rows)
 
 conf_entries = {r[0] for r in rows}
 by_term = collections.Counter((r[2], r[3]) for r in rows)
 src = collections.Counter(s.split(":")[0] for r in rows for s in r[5].split(";"))
-print(f"Swiss-Prot entries with a Rhea reaction: {len(info)}")
-print(f"  ... with at least one projected GO MF (Rhea xref exact/narrow): {len(projected)}")
-print(f"  ... of those, with a complex signal (ComplexPortal xref, GO 'complex' CC term, or heteromeric SUBUNIT note): {len(complexish)}"
+print(f"Swiss-Prot entries with a Rhea reaction (UniProt stream): {len(info)}")
+print(f"Swiss-Prot entries with at least one projected GO MF (Rhea FTP join, xref exact/narrow): {len(projected)}"
+      f"  [{len(not_in_stream)} of them absent from the UniProt stream]")
+print(f"native contributes_to MF rows read: {n_ct}")
+print(f"  ... with a complex signal (ComplexPortal xref, GO 'complex' CC term, or heteromeric SUBUNIT note): {len(complexish)}"
       f"  [ComplexPortal {sum(info[a]['cpx'] for a in complexish)}; CC complex {sum(info[a]['cc_complex'] for a in complexish)};"
       f" SUBUNIT {sum(info[a]['subunit_hetero'] for a in complexish)}]")
 print(f"  ... of those, with any native contributes_to MF row: {len(with_ct)}")
 print(f"Projection says enables, native says contributes_to the same term or a descendant: {len(rows)} entry-term pairs on {len(conf_entries)} entries")
-print("  native contributes_to sources:", ", ".join(f"{k} {v}" for k, v in src.most_common()))
+print("  native contributes_to source mentions (assigned_by; a pair can have several):", ", ".join(f"{k} {v}" for k, v in src.most_common()))
+eco = collections.Counter("ECO:" + s.rsplit(":", 1)[1] for r in rows for s in r[5].split(";"))
+print("  native contributes_to evidence (ECO; ECO:0000318 = IBA, ECO:0000250 = ISS):",
+      ", ".join(f"{k} {v}" for k, v in eco.most_common(6)))
 print("  top projected terms:")
 for (g, n), c in by_term.most_common(15):
     print(f"    {c:6d}  {g} {n}")
