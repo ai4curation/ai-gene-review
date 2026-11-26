@@ -18,6 +18,12 @@ Core calls:
   real but secondary to the catalytic function.
 - The mature enzyme is in the peroxisomal matrix. PMID:8769411 identifies the C-terminal KANL signal
   and shows PTS1-pathway targeting; PMID:21976670 places monomeric catalase in the PEX5 cargo cycle.
+- PMID:7882369 supports UniProt's curated growth-factor statement by identifying a human
+  erythrocyte-derived growth-promoting factor as catalase and tying that activity to hydrogen
+  peroxide decomposition. A separate proliferation or growth GO term would describe a downstream
+  consequence rather than work performed by CAT, so no new proliferation annotation was added.
+- UniProt's ACATLAS disease block was checked; acatalasemia is caused by CAT variants through loss
+  of catalase activity and did not identify an additional GO molecular function, process or location.
 
 Non-core but supported:
 
