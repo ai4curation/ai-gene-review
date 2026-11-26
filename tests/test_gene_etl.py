@@ -516,11 +516,16 @@ def test_fetch_goa_data_raises_on_persistent_quickgo_error(monkeypatch):
         gene.fetch_goa_data("P00000")
 
 
+@pytest.mark.parametrize("force", [False, True])
 @patch("ai_gene_review.etl.gene.fetch_uniprot_data")
 def test_fetch_gene_data_keeps_existing_goa_file_when_quickgo_errors(
-    mock_fetch_uniprot, monkeypatch, tmp_path
+    mock_fetch_uniprot, monkeypatch, tmp_path, force
 ):
-    """Re-fetching during a QuickGO outage must not blank an existing GOA file."""
+    """Re-fetching during a QuickGO outage must not blank an existing GOA file.
+
+    ``force=True`` is the case that matters: without it an existing GOA file is
+    never overwritten, so only the forced run exercises the overwrite path.
+    """
     from ai_gene_review.etl import gene
 
     gene_dir = tmp_path / "genes" / "SCHPO" / "dca7"
@@ -535,7 +540,7 @@ def test_fetch_gene_data_keeps_existing_goa_file_when_quickgo_errors(
     monkeypatch.setattr(gene.time, "sleep", lambda *a, **k: None)
 
     with pytest.raises(ValueError, match="QuickGO"):
-        fetch_gene_data(("SCHPO", "dca7"), base_path=tmp_path, seed_annotations=False)
+        fetch_gene_data(("SCHPO", "dca7"), base_path=tmp_path, seed_annotations=False, force=force)
     assert goa_file.read_text() == "GO TERM\tGO NAME\nGO:0005634\tnucleus\n"
 
 

@@ -65,7 +65,7 @@ def mod_id(accession: str) -> str:
 # same mapping as genes/human/ARFGEF3/ARFGEF3-bioinformatics/uniprot.py).
 UNIPROT_XREF = {"MGI": "mgi", "RGD": "rgd", "FB": "flybase", "ZFIN": "zfin", "SGD": "sgd",
                 "PomBase": "pombase", "dictyBase": "dictybase", "AGI_LocusCode": "araport",
-                "WB": "wormbase", "Xenbase": "xenbase"}
+                "TAIR": "tair", "WB": "wormbase", "Xenbase": "xenbase"}
 
 
 def uniprot_search(query: str) -> list[dict]:
@@ -87,18 +87,21 @@ def uniprot_for(donor: str) -> dict:
     else:
         return {"resolved_by": f"not resolved: database {db} not handled by this script"}
     hits = uniprot_search(query)
-    if not hits and db == "WB":
-        # WormBase gene ids (WBGene...) are not in UniProt's wormbase xref index,
-        # which holds protein ids; free text finds them. Recorded as a fallback.
+    if not hits and db != "UniProtKB":
+        # An xref index can miss an id: WormBase gene ids (WBGene...) are not in
+        # UniProt's wormbase index, which holds protein ids, and a renumbered or
+        # newer MOD id may lag. Free text finds these; recorded as a fallback.
+        tried = query
         query = f'"{ident}"'
         hits = uniprot_search(query)
-        query = f"FALLBACK free-text {query}"
+        query = f"FALLBACK free-text {query} (after {tried})"
     if not hits:
         return {"resolved_by": f"not resolved by query {query}"}
     hit = hits[0]
     genes = hit.get("genes") or [{}]
     return {"uniprot": hit["primaryAccession"], "symbol": genes[0].get("geneName", {}).get("value"),
-            "organism": hit.get("organism", {}).get("scientificName"), "resolved_by": query}
+            "organism": hit.get("organism", {}).get("scientificName"), "resolved_by": query,
+            "hits": len(hits)}
 
 
 def ancestors(go_id: str) -> set[str]:
@@ -108,8 +111,13 @@ def ancestors(go_id: str) -> set[str]:
 
 
 def experimental_support(accession: str, go_id: str, exclude: set[str]) -> list[str]:
-    """Experimental rows on a gene product for a term or its descendants, minus excluded papers."""
-    rows = quickgo(geneProductId=accession, goId=go_id, goUsage="descendants")
+    """Experimental rows on a gene product for a term or its is_a/part_of descendants, minus excluded papers.
+
+    The relations match ``ancestors``: QuickGO's default descendant walk also follows
+    occurs_in, which would count molecular-function rows as support for a location.
+    """
+    rows = quickgo(geneProductId=accession, goId=go_id, goUsage="descendants",
+                   goUsageRelationships="is_a,part_of")
     return sorted({f"{r['goEvidence']} {r['reference']} ({r['goId']})" for r in rows
                    if r["goEvidence"] in EXPERIMENTAL and r["reference"] not in exclude})
 
