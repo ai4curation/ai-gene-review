@@ -615,7 +615,7 @@ established:
 | PHO86 | *S. cerevisiae* | P46956 | 12 | MODIFY | Phosphate transporter chaperone |
 | PNO1 | *S. cerevisiae* | Q99216 | 18 | OVER_ANNOTATED | Ribosome biogenesis |
 | ROT1 | *S. cerevisiae* | Q03691 | 23 | MODIFY | ER chaperone |
-| RRB1 | *S. cerevisiae* | Q04225 | 11 | MODIFY | Ribosome assembly |
+| RRB1 | *S. cerevisiae* | Q04225 | 6 | GO:0051082 absent from refreshed GOA; GO:0140309 accepted | Rpl3 carrier-holdase; current-GOA re-review complete |
 | SAN1 | *S. cerevisiae* | P22470 | 20 | MODIFY (GO:0051787) | E3 ligase QC sensor (GO:0031249) |
 | SHQ1 | *S. cerevisiae* | P40486 | 12 | MODIFY | H/ACA snoRNP assembly |
 | SHR3 | *S. cerevisiae* | Q02774 | 18 | MODIFY | Amino acid permease chaperone |
