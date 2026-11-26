@@ -18,8 +18,9 @@ Main curation decisions:
 - Keep the conserved PAINT/InterPro-supported channel activity and
   sarcoplasmic-reticulum membrane rows, because RYR3 retains the same large
   calcium-release channel architecture as RYR1 and RYR2.
-- Treat generic ion-channel and ion-transport rows as less informative than the
-  ryanodine-sensitive Ca2+-release channel annotations.
+- Treat generic ion-channel, intracellularly gated calcium-channel and
+  ion-transport rows as less informative than the ryanodine-sensitive
+  Ca2+-release channel annotations.
 - Keep caffeine, calcium, ATP and magnesium response rows only as non-core
   activity-regulation contexts.
 - Mark sarcolemma, Z-disc and junctional-membrane-complex propagation as

@@ -20,7 +20,9 @@ Main curation decisions:
 
 - Keep the conserved `GO:0005219` ryanodine-sensitive calcium-release channel
   activity, SR calcium-release process, SR membrane, channel complex and
-  homotetramerization rows as the core RYR1 function.
+  homotetramerization rows as the core RYR1 function, and keep
+  calcium-induced calcium release as a true but secondary RYR1 gating mode
+  relative to DHPR/Cav1.1-driven depolarization-induced Ca2+ release.
 - Treat `GO:0005262` calcium channel activity, `GO:0005216` monoatomic ion
   channel activity, `GO:0006811` ion transport, `GO:0051209` release of
   sequestered calcium ion into cytosol and generic `membrane`/`protein-containing
@@ -29,7 +31,8 @@ Main curation decisions:
 - Keep ATP-, calmodulin-, calcium-, caffeine- and magnesium-linked regulatory
   terms as non-core contexts where the evidence identifies direct allosteric
   modulation of the RYR1 channel rather than a separate evolved activity.
-- Mark plasma-membrane, sarcolemma and T-tubule rows as over-annotated: the
+- Remove the propagated voltage-gated calcium-channel rows, and mark
+  sarcolemma and T-tubule rows as over-annotated: the
   skeletal-muscle channel is positioned across the junction from the T-tubule
   voltage sensor but is itself an SR/terminal-cisterna membrane protein.
 - Mark developmental and phenotype-level propagated processes such as skin

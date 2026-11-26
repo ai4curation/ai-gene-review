@@ -20,11 +20,17 @@ Main curation decisions:
 - Retain cardiac contraction, cytosolic calcium regulation, heart-rate and
   action-potential rows where they describe the direct effect of SR Ca2+ release
   on excitation-contraction coupling.
+- Modify the transferred negative-regulation-of-cytosolic-calcium row to
+  positive regulation, because opening the RYR2 SR pore directly increases
+  cytosolic Ca2+.
 - Remove bare `GO:0005515` rows under the project protein-binding policy while
   keeping the distinct rows separate.
 - Treat plasma-membrane/sarcolemma rows as over-annotated for a channel whose
   catalytic pore is in the SR membrane, even though RYR2 is assembled in
   junctional membrane complexes apposed to sarcolemmal T-tubules.
+- Leave the rat-derived nuclear envelope row undecided: a perinuclear RYR2
+  pool is plausible because the nuclear envelope is continuous with ER/SR, but
+  the rat donor row needs source-level review.
 - Keep PKA-, FKBP-, calmodulin-, S100A1- and tetramerization-associated terms
   as supported regulatory or assembly annotations but distinguish those from
   the pore's core calcium-release activity.
