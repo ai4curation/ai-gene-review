@@ -161,7 +161,7 @@ which.
 
 P146S (34.50, 3.6 A from G-alpha-q, conserved in all ten mammals) is listed by UniProt
 as an HH7 variant, has conflicting classifications in ClinVar, and has four homozygotes
-in gnomAD. Position alone would predict a coupling defect; the frequency argues against
+in gnomAD (three in exomes, as in the table, and one in genomes). Position alone would predict a coupling defect; the frequency argues against
 a fully penetrant recessive allele. No functional assay was found for it.
 
 ## Contact lists (human numbering)
@@ -178,6 +178,11 @@ a fully penetrant recessive allele. No functional assay was found for it.
   Gly287, Met296, Leu297, Asn305, Phe308.
 
 ## Limits
+
+- Ascertainment: the disease set is not a random sample. Variants are in ClinVar and in
+  the literature partly because they were found to affect function, and transmembrane
+  variants are easier to call pathogenic, so the burial enrichment describes the reported
+  set and is not an unbiased estimate of where damaging variants fall.
 
 - All distances are between heavy atoms. 9U4W is deposited with hydrogens; an earlier
   version of the script kept them on the GnRH and G-alpha-q side, which made those

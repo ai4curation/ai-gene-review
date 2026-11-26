@@ -90,12 +90,17 @@
 - GO:0032274 gonadotropin secretion (NAS) is corrected to positive regulation of gonadotropin
   secretion. The receptor signals for release; the secretory machinery does the releasing.
 - No NEW rows. GO:0007200 is reached through a MODIFY replacement and core_functions.
+- GO:0007204 positive regulation of cytosolic calcium ion concentration was considered and not
+  proposed. PAINT asserts it at two nodes of the family (PTN000662574, PTN001544204), neither on
+  the GNRHR lineage. Calcium mobilization is real for GNRHR, but it is the downstream readout of
+  the phospholipase C pathway already captured by GO:0007200, so a separate NEW row would add a
+  consequence of an accepted term and not a distinct role.
 
 ### Family, module
 
 - PTHR24241 family review added (GnRH receptor clade and the root nodes that reach GNRHR).
-- The existing module `kndy_gnrh_pulse_generator` stops at GnRH release and names pituitary GnRHR
-  signalling as downstream; see the module note for what was added.
+- The existing module `kndy_gnrh_pulse_generator` stops at GnRH release and already names
+  pituitary GnRHR signalling as downstream. No module was created or edited in this review.
 
 ### Left open
 
