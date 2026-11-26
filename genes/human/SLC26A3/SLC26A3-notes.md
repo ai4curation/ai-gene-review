@@ -76,3 +76,17 @@ inferred from the mouse ortholog).
 - Generic BP: GO:0006820 monoatomic anion transport, GO:0055085 transmembrane transport -> TOO_GENERAL (specific Cl/HCO3 transport asserted elsewhere).
 - GO:0015701 bicarbonate transport, GO:1902476 chloride transmembrane transport -> ACCEPT (core).
 - All GO:0005515 protein binding -> REMOVE; NEW GO:0030165 PDZ domain binding (IPI).
+
+## 2026-11-21 re-review of the sulfate rows (IBA REMOVE re-review)
+
+The four sulfate rows (GO:0015116 IBA, GO:1902358 IBA and IEA, GO:0008271 IEA) were changed
+from REMOVE to MARK_AS_OVER_ANNOTATED. The earlier ground, that P40879 is not an IBD seed at
+the sulfate nodes, is not a ground for removing an IBA. The PAINT nodes PTN000929279 and
+PTN000212046 are seeded from across the clade, including the sister paralog SLC26A8 (Q96RN1,
+IDA PMID:11834742 per QuickGO) under PTN008527461. Direct evidence on DRA is mixed: sulfate
+and oxalate transport in Xenopus oocytes [PMID:7744840 "dra encodes for a Na(+)-independent
+transporter for both sulfate and oxalate"], sulfate uptake in Sf9 cells [PMID:9473459 "sulfate
+import was increased more than threefold compared to the control"], but in a later oocyte
+study [PMID:12651923 "transport of sulfate and of butyrate was undetectable"]. Abstracts read
+through PubMed; none of the three is in the publications cache. Loss of the activity is not
+shown, and no physiological sulfate role is known, hence over-annotation and not removal.

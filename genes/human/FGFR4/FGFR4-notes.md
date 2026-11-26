@@ -66,3 +66,15 @@ Rows: GO:0005783 IDA (PMID:20683963) and IEA (GO_REF:0000044, SL-0095), both loc
 - PMID:20683963 (abstract only, no PMC): [PMID:20683963 "beta-Klotho binds and directs the core glycoform of FGFR4 to the proteasome, and it allows only a terminal glycoform to reach the plasma membrane."]. Direct evidence on the gene; the abstract does not say whether the ER assays used endogenous or transfected FGFR4.
 - The UniProt location "Endoplasmic reticulum" has no evidence tag; it matches the curated IDA.
 - Outcome: both rows stay KEEP_AS_NON_CORE (transit pool with direct evidence on the gene, ER batch 1 ABCA4/BACE2 rule); reasons record the check. No NEW GO:0005789: topology does not force a sub-compartment on a transit pool. MARK_AS_OVER_ANNOTATED would apply if the pool were shown to be retention of overexpressed receptor.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- One GO:0005768 row (IEA, UniProt SL-0101). The UniProt "Endosome" item and the recycling-endosome note carry no evidence tag (uncited), so the row was traced to the literature.
+- Fetched four abstracts, all from the Oslo (Olsnes/Wesche) group, all with ectopically expressed wild-type FGFR4 stimulated by FGF1:
+  [PMID:10564275 "the activated receptor, together with the growth factor, moved to a juxtanuclear compartment, which was identified as the recycling endosome compartment"] (COS cells);
+  [PMID:16091423 "after endocytosis, FGFR4 and its bound ligand are sorted mainly to the recycling compartment"] (HeLa, transferrin route);
+  [PMID:24589086 "we demonstrate that recycling of FGFR4 is dependent on Rab11"];
+  [PMID:27615514 "is further sorted from early endosomes to the recycling compartment and the trans-Golgi network"] (U2OS, BioID).
+- Verdict: ligand-driven endosome pool of a cell-surface receptor (CXCR4 pattern) -> ACCEPT changed to KEEP_AS_NON_CORE (core activity at the plasma membrane; recycling shapes signalling output but signalling is not shown to be measured in endosomes). Close call against MARK_AS_OVER_ANNOTATED, since every line is ectopic expression in a non-native cell.
+- No GO:0055037 recycling endosome row: single laboratory, ectopic systems only, and the same group also places internalised FGFR4 in early endosomes and the TGN. Abstract depth only; PMC25683 (Citores 1999) exists but was not read.
+- The deep-research Rab11 sentence summarises the same Haugsten work and is not counted as a separate line. Earlier note that Haugsten 2005 could not be looked up is now resolved: it is PMID:16091423.

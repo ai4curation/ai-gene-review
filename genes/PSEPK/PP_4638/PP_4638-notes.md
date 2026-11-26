@@ -49,3 +49,15 @@ methionine-process row, and tetrahydrofolate interconversion remain undecided
 because the data do not exclude condition-specific methionine involvement or
 noncanonical folate chemistry. PP_4638 is therefore not a representative of
 either MTHFR reaction leaf in the reusable module.
+
+## 2026-11-21: trusted-cutoff follow-up (no action change)
+
+The Enzyme Specificity cutoff check placed the broad MTHFR [NAD(P)H] row below the
+canonical MetF model TIGR00676.1 (26.3 / 293.7). A follow-up scan of the KT2440 proteome
+found that the canonical MetF, Q88D51, passes the same model at 340.2, and that no other
+KT2440 protein does
+[file:projects/ENZYME_SPECIFICITY/cutoff-check/followup.yaml "kt2440_above_tc:
+    - Q88D51"].
+This confirms the existing conclusion that PP_4638 is not a MetF, but models built on
+canonical MetF cannot address the open question of noncanonical folate chemistry, so
+the activity, methionine and tetrahydrofolate rows stay UNDECIDED.

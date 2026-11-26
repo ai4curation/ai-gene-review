@@ -247,7 +247,8 @@ PMID:15174078 was also read in full; its receptor antibodies target GABA(B1) and
 other rat Gabrb1 paper, PMID:16469775 (also read in full), is a genuine GABA-A beta1 study
 of fast IPSCs and is correctly attributed.
 
-The swapped seeds did reach PAINT, through three IBA terms. PAINT lists its donors by MGI
+The swapped seeds reached PAINT: they are donors to three IBA terms whose term is the swapped
+term or an ancestor of it, so they could have fed those IBAs. PAINT lists its donors by MGI
 or RGD identifier, so [`swap_iba_donors.py`](SYNGO_PROVENANCE/swap_iba_donors.py) takes
 each swapped gene's identifier, lists every IBA that names it, and keeps those whose term
 is a swapped term or an ancestor of one (output
@@ -261,9 +262,12 @@ QuickGO and UniProt, 2026-11-17):
 | `GO:0005886` plasma membrane (PTN001054635, 1,751 rows) | rat Gabrb1, rat Gabrb2 | none |
 
 Each node keeps independent support. For GABA-ergic synapse, eight of the nine other
-donors have their own experimental rows for the term (mouse Gabrr3 was not resolved to a
-reviewed UniProt entry, so it was not checked); for postsynaptic membrane, all three other donors do
-(rat Gabrb3, human GABRB3 and bovine GABRB1); plasma membrane has dozens. So correcting
+donors have their own experimental rows for the term (the remaining donor, MGI:3588203, which
+the Alliance gene record names mouse Gabrr3, matched no reviewed UniProt entry by cross-reference
+or by free text, so its support was not checked); for postsynaptic membrane, all three other donors do
+(rat Gabrb3, human GABRB3 and bovine GABRB1); plasma membrane has dozens (56 of the 58
+resolvable donors; the eight that did not resolve, five FlyBase and three ZFIN genes, match no
+reviewed UniProt entry by cross-reference or by free text). So correcting
 the seeds removes donors without changing any node. Mouse Gabrb1 is a donor to no other IBA, and no
 IBA anywhere uses the G protein-coupled neurotransmitter receptor activity row. The
 script records each donor's support, so the roster can be re-checked. An earlier version
@@ -391,7 +395,7 @@ channel evidence, `PRACTICE_CHANGE` would describe the cohort for a bulk fix.
   contradicted; five lack direct functional evidence and one (GABRA5) has it on axons.
 - [x] Check every SynGO annotation on a GABA receptor gene for GABA-A/GABA-B swaps
   (`gaba_receptor_swaps.py`): two confirmed (PMID:11498050, PMID:15174078).
-- [x] Check whether the swapped seeds are PAINT donors (`swap_iba_donors.py`): they feed
+- [x] Check whether the swapped seeds are PAINT donors (`swap_iba_donors.py`): they could feed
   three IBA terms (GABA-ergic synapse, postsynaptic membrane, plasma membrane); every node
   keeps independent support.
 - [ ] Raise with the GO editors that GABA-A receptor activity is disconnected from the

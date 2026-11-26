@@ -440,17 +440,20 @@ def _include_fields(call):
     return [v for (k, v) in call.kwargs["params"] if k == "includeFields"]
 
 
-def test_goa_fetch_retries_without_taxonname_on_500():
-    """A 500 while taxonName is requested drops that field and retries the page;
-    TAXON NAME is then backfilled from taxonId."""
+def test_goa_fetch_omits_unreliable_taxonname_field():
+    """Do not request QuickGO's unreliable taxonName display field.
+
+    TAXON NAME is backfilled from taxonId instead.
+    """
     row = {"geneProductId": "UniProtKB:P1", "goId": "GO:1", "taxonId": 9606}
     with patch(
         "ai_gene_review.etl.gene.requests.get",
-        side_effect=[_error_response(500), _ok_response([row])],
+        return_value=_ok_response([row]),
     ) as mget:
         tsv = fetch_goa_data("P1")
-    assert "taxonName" in _include_fields(mget.call_args_list[0])  # first try
-    assert "taxonName" not in _include_fields(mget.call_args_list[1])  # retry
+    assert "goName" in _include_fields(mget.call_args)
+    assert "name" in _include_fields(mget.call_args)
+    assert "taxonName" not in _include_fields(mget.call_args)
     assert tsv.splitlines()[1].split("\t")[12] == "Homo sapiens"  # backfilled
 
 
@@ -486,10 +489,8 @@ def test_goa_fetch_raises_on_short_read():
 
 
 # ---------------------------------------------------------------------------
-# Fail loudly on a persistent QuickGO outage (from #6488), reconciled with the
-# retry-on-500 behaviour above: a single recoverable page is retried (see
-# test_goa_fetch_retries_without_taxonname_on_500), but a persistent outage must
-# still raise rather than write an empty or truncated GOA file.
+# Fail loudly on a persistent QuickGO outage (from #6488). A persistent outage
+# must raise rather than write an empty or truncated GOA file.
 # ---------------------------------------------------------------------------
 
 
@@ -515,11 +516,16 @@ def test_fetch_goa_data_raises_on_persistent_quickgo_error(monkeypatch):
         gene.fetch_goa_data("P00000")
 
 
+@pytest.mark.parametrize("force", [False, True])
 @patch("ai_gene_review.etl.gene.fetch_uniprot_data")
 def test_fetch_gene_data_keeps_existing_goa_file_when_quickgo_errors(
-    mock_fetch_uniprot, monkeypatch, tmp_path
+    mock_fetch_uniprot, monkeypatch, tmp_path, force
 ):
-    """Re-fetching during a QuickGO outage must not blank an existing GOA file."""
+    """Re-fetching during a QuickGO outage must not blank an existing GOA file.
+
+    ``force=True`` is the case that matters: without it an existing GOA file is
+    never overwritten, so only the forced run exercises the overwrite path.
+    """
     from ai_gene_review.etl import gene
 
     gene_dir = tmp_path / "genes" / "SCHPO" / "dca7"
@@ -534,7 +540,7 @@ def test_fetch_gene_data_keeps_existing_goa_file_when_quickgo_errors(
     monkeypatch.setattr(gene.time, "sleep", lambda *a, **k: None)
 
     with pytest.raises(ValueError, match="QuickGO"):
-        fetch_gene_data(("SCHPO", "dca7"), base_path=tmp_path, seed_annotations=False)
+        fetch_gene_data(("SCHPO", "dca7"), base_path=tmp_path, seed_annotations=False, force=force)
     assert goa_file.read_text() == "GO TERM\tGO NAME\nGO:0005634\tnucleus\n"
 
 

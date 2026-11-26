@@ -351,6 +351,62 @@ Two of the triage verdicts needed correcting along the way, and the triage file 
   mechanically attaches a cell and its cytoskeleton to neighbours or matrix, fits neither plasmodesmata
   nor gap junctions. This should go to GO as an ontology question rather than as a mapping fix.
 
+### Fungus, vertebrate and invertebrate candidates (2026-11-21)
+
+The remaining 361 candidates now have first-pass verdicts in
+[rar_rerun_triage_fungus_vertebrate.yaml](RAR_MISANNOTATION/data/rar_rerun_triage_fungus_vertebrate.yaml):
+the 81 kingdom-level terms flagged in fungi, and the 280 phylum-level terms flagged in vertebrates
+(129) or invertebrates (151). They were screened in five groups: fungi, then vertebrates and
+invertebrates each split into inferred and experimental rows. The merge checked coverage, that
+each group's summary counts match its entries, and that all 35 proposed replacements are live GO
+terms; `quote_check` verifies all 23 quotes.
+
+| Verdict | Entries |
+|---|---|
+| Annotation wrong | 64 |
+| Rare but right (flag fails) | 113 |
+| Experimental, deferred to the curator | 162 |
+| Right but too general | 15 |
+| Constraint looks too narrow | 2 |
+| Uncertain | 24 |
+
+The pattern is the one seen in plants and animals. Most flags measure curation density, and
+the errors are mostly lineage-specific biology carried across by a deep PAINT node, a mapping or
+an ortholog transfer:
+
+- **Fungi (20 wrong).** Examples:
+  - PI3K/PKB signalling on the TORC2 subunit Tsc11.
+  - Circadian regulation on photolyase.
+  - Calcium-dependent kinase activity on Nnk1, which has no EF-hand.
+  - Centriole and apical plasma membrane terms.
+  - NF-kappaB regulation from an InterPro mapping.
+  - Excinuclease ABC on UTP20.
+  - Stress fiber from an ARBA location rule.
+  - Animal developmental terms on *Candida* proteins.
+  - Midbody abscission on yeast Vps4. ComplexPortal copied it from a paper on human ESCRT.
+- **Vertebrates (12 wrong).**
+  - Drosophila structures carried by PAINT: polytene chromosome on KMT5A, and larval heart
+    development on a chicken reverse-transcriptase ORF that shares a PANTHER family with
+    Pericardin.
+  - Term slips on curated rows: hypertonic sucrose used to block endocytosis, coded as response
+    to sucrose (CALCRL); sperm DNA decondensation on spermatid TNP1; contractile ring contraction
+    on VPS4A.
+  - A probable TRIM10/TRIM15 swap from a paper on HERF1, recorded as a check.
+- **Invertebrates (32 wrong).**
+  - Vertebrate immune, blood and connective-tissue biology on fly and worm proteins: interferon,
+    T cell receptor, inflammasome, cartilage, elastic fiber, melanosome, endothelial barrier,
+    zona pellucida, keratin desmosome.
+  - Wrong components on curated rows: troponin I as tropomyosin, and the PP2A catalytic subunit
+    as a phosphatase regulator.
+  - Three IBAs where the invertebrate protein is documented to differ: fly Cep97 promotes
+    ciliogenesis, *C. elegans* makes no hyaluronan, and USP has no high-affinity retinoid ligand.
+
+Two existing reviews may need revisiting: the triage disagrees with the SEC61G review's
+KEEP_AS_NON_CORE on Ssh1 translocon complex, and with the ACER1 review's reading of response to
+alkaline pH as a pH optimum. The two questionable constraints are outflow tract morphogenesis
+(Vertebrata only, but Drosophila has a cardiac outflow tract) and cholesterol binding (as in the
+first round).
+
 ## Next steps
 
 - [x] Gene review: Arabidopsis DDL (At3g08840), on the MF IBA.
@@ -370,7 +426,8 @@ Two of the triage verdicts needed correcting along the way, and the triage file 
 - [x] Review the rest of the Arabidopsis lipid A pathway ourselves (LPXA, LPXB, LPXK, LPXD1-2, LPXC1-5).
 - [x] Rerun RAR on current GOA (2026-11-11): script, candidates and a first-pass triage of the constraint breaks and prokaryote IBA nodes; see [above](#rar-rerun-on-current-goa-2026-11-11).
 - [x] Triage the plant- and animal-flagged RAR candidates (958 terms, 2026-11-11); see [above](#plant-and-animal-candidates-2026-11-11).
-- [ ] Triage the 81 fungus-flagged RAR candidates and the 280 vertebrate-vs-invertebrate candidates.
+- [x] Triage the 81 fungus-flagged RAR candidates and the 280 vertebrate-vs-invertebrate candidates (2026-11-21); see [above](#fungus-vertebrate-and-invertebrate-candidates-2026-11-21).
+- [ ] Revisit the SEC61G (Ssh1 translocon complex) and ACER1 (response to alkaline pH) rows that the fungus/vertebrate triage disputes.
 - [x] Turn the family-wide mapping errors into SSSOM rows or curated rules (2026-11-15): three InterPro2GO rows with rules CR-0008 to CR-0010, and reviews of UniRules UR000414538 and UR000345849; see [above](#mapping-and-rule-fixes-2026-11-15).
 - [ ] Raise with GO the placement of cell-cell junction under anchoring junction, which makes every plasmodesma and gap junction annotation imply anchoring junction; also ask UniProt to map SL-0038 to GO:0030054.
 - [x] Revisit the mouse Acadl review's carnitine catabolic process row: now REMOVE (2026-11-11).

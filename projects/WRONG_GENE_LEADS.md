@@ -68,6 +68,8 @@ protein *can* do what it is annotated with, this asks whether the cited paper wa
    | The cached title and abstract do not name the annotated gene | +2 |
    | The cached title or abstract names the annotated gene | −3 |
    | The same term from the same paper and source is on 4 or more local gene folders | −2 |
+   | Otherwise, it is on a local paralog (same PANTHER family and species) that does not cite the paper | −2 |
+   | The annotated protein's own UniProt entry is unreviewed | −3 |
 
    The name check matters because papers often study several members of a family; a
    paper whose abstract names the annotated gene probably did study it. ARHGDIB's
@@ -96,7 +98,21 @@ protein *can* do what it is annotated with, this asks whether the cited paper wa
    The last signal marks complex-wide and list annotations: ComplexPortal giving one
    term to every subunit, or a proteomics paper annotated to every protein it found.
    It counts the gene folders in the sweep (every folder in a default run), so it
-   undercounts for complexes whose subunits are not reviewed here.
+   undercounts for complexes whose subunits are not reviewed here. The paralog signal
+   catches the small families that fall under that threshold (the Omega GSTs). It
+   ignores a paralog that cites the paper itself, because that copy is the row on the
+   right gene, which is evidence for the lead (CNGA3 beside CNGB3), not against it.
+
+   An unreviewed entry cites few papers beyond its own sequence submissions, so its
+   not citing a paper says little; every unreviewed top-tier lead in the seventh batch
+   was a false positive.
+
+5. Label each lead `evidence_code` or `wrong_gene` in the `lead_kind` column. A
+   direct-assay row (EXP, IDA, IPI, IMP, IGI, IEP) whose paper is cited by the same
+   gene in another species most likely reports an experiment on that ortholog (a
+   crystal of human SRα with mouse SRβ), so it is first a `WRONG_EVIDENCE_CODE`
+   question. This is a guess to check, not a verdict: mouse Rbpj's confirmed wrong-gene
+   row is labelled `evidence_code` because the human ortholog's entry cites its paper.
 
 The report is written to `reports/wrong-gene-leads/leads.tsv`. It is generated and
 git-ignored, never committed, because it aggregates every review. It joins each lead
@@ -416,6 +432,40 @@ wrong-gene annotations, 5 wrong evidence codes, 8 wrong references, 21 queries p
 text, and 74 false positives or no change. No action was changed to REMOVE or MODIFY on an
 abstract alone.
 
+## Detector fixes (2026-11-23)
+
+The three fixes the seventh batch proposed are in the scoring above: the unreviewed-entry
+and local-paralog penalties, and the `lead_kind` column. They were checked against a sweep
+of current main (11,078 leads present in both runs) and against every review row that
+carries a `WRONG_GENE_PRODUCT` or `WRONG_EVIDENCE_CODE` source defect.
+
+| | Before | After |
+|---|---|---|
+| Top-tier rows (score 6 or more) | 389 | 293 |
+| Top-tier genes | 210 | 180 |
+| Recorded wrong-gene or evidence-code rows leaving the top tier | | 1 of 127 |
+
+- The one recorded row to leave is DROME/EloC's `WRONG_EVIDENCE_CODE` query (`SUSPECTED`),
+  whose own entry is unreviewed. All 90 recorded `WRONG_GENE_PRODUCT` rows stay.
+- Of the 96 rows that leave, 82 are on genes not yet checked. Of the other 14, 8 are on
+  genes earlier batches found to be false positives (Dusp21, GstO1, GstO2, Prx4, JAK2,
+  PARD6B), 1 is EloC's query, and 5 are other rows of CHRNB4 and JAK1, whose recorded
+  defects sit on rows that stay.
+- A first version applied the paralog penalty to any local paralog carrying the row. It
+  pushed 8 recorded wrong-gene rows out of the top tier (CNGB3, CNGA1, CHRNB1, CHD4,
+  ADAM17, DLG3), all cases where the right gene carries the same row and cites the
+  paper. The penalty now skips a paralog that cites the paper, and counts only a carrier
+  in the same species: a same-family folder in another species is an ortholog, whose
+  copy of the row is the `evidence_code` case.
+- 594 leads are `evidence_code`, 28 of them in the top tier. Of the recorded defects, 12
+  `WRONG_EVIDENCE_CODE` rows are labelled `evidence_code` and 24 are not: those are
+  mostly family-level conclusions applied to a paralog (COQ8B) or rows whose ortholog
+  entry does not cite the paper, which the label cannot see.
+
+The mixed-species structure check (citing entries that are exactly a PDB entry's chains)
+was not built. The `evidence_code` label already catches SRPRB, since the mouse SRβ entry
+cites the paper, without a PDB lookup.
+
 ## Limitations
 
 - **UniProt citation is incomplete.** An entry not citing a paper does not mean the
@@ -433,9 +483,6 @@ abstract alone.
 
 ## Next steps
 
-- Do not count "own entry does not cite the paper" when the own entry is unreviewed, which cites no papers; it made most of the seventh batch's non-human leads.
-- Treat a paper whose citing entries are exactly the chains of a mixed-species structure (SRPRB, PDB 2FH5) as an evidence-code lead, not a wrong-gene one.
-- Lower the shared-row threshold for small families, or count a same-day row on two or more paralogs from the same paper as a deliberate family annotation.
 - Flag IMP and TAS rows from mutation papers whose abstract names a different subunit of the same complex as the mutated gene, the pattern of the sixth batch's CNG channel rows.
 - Refresh the local UniProt files before a sweep; a stale file (DNMT3L) produced a lead that the current entry would not.
 
@@ -450,6 +497,5 @@ abstract alone.
   cases as `WRONG_GENE_PRODUCT` source defects in the gene reviews.
 - Consider scoring IPI rows separately, or requiring that the abstract names a citing
   entry's gene.
-- Report the same-gene-other-species signal separately: a direct evidence code (IDA)
-  on a human protein from a paper on the bovine or mouse ortholog is an evidence-code
-  question (`WRONG_EVIDENCE_CODE`), not a wrong gene.
+- Check the 28 top-tier `evidence_code` leads as their own batch, since they ask a
+  different question from the wrong-gene leads.

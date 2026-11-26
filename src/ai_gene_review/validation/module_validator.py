@@ -2076,6 +2076,26 @@ def validate_module_file(
         elif finding["severity"] == "warning":
             warnings.append(message)
 
+    # Process fit of exemplars: a receptor or ligand exemplar that GOA places
+    # only in a sibling pathway of the one this module asserts. Advisory.
+    from ai_gene_review.module_process_conformance import module_process_conformance
+
+    if not resolver_was_injected:
+        process_conformance = module_process_conformance(
+            doc,
+            gene_index=gene_index,
+            genes_dir=genes_dir if genes_dir is not None else project_root / "genes",
+            go_adapter=adapter_map.get("GO"),
+        )
+        if process_conformance["failure"]:
+            warnings.append(f"Process conformance not checked: {process_conformance['failure']}")
+        for finding in process_conformance["rows"]:
+            if finding["severity"] == "warning":
+                warnings.append(
+                    f"Process conformance [{finding['status']}] {finding['annoton_id']} "
+                    f"({finding['participant_id']}): {finding['message']}"
+                )
+
     # Reference titles: every literature reference (PMID/DOI ``id``/``source_id``
     # paired with a ``title``) must match the fetched/cached publication title
     # (normalized). Mismatches block; unfetchable references degrade to warnings.
@@ -2361,7 +2381,8 @@ def validate_executable_models(
     states or cannot be checked, and a model file that does not exist under
     ``repo_root``. These are curator-authored claims, so a mismatch is an error,
     like a wrong term id. Warnings: scenarios on a model this check cannot run
-    (external or non-Boolean), which are recorded but never verified.
+    (external, or a module-derived type other than Boolean, agent-based or
+    constraint-based), which are recorded but never verified.
     """
     from ai_gene_review.module_boolean import activation_logic_findings
     from ai_gene_review.module_dynamics import (
@@ -2382,7 +2403,8 @@ def validate_executable_models(
                 )
     warnings = [
         f"Executable model {model_id}: its scenarios are not checked "
-        "(only module-derived Boolean and agent-based models are simulated)"
+        "(only module-derived Boolean, agent-based and constraint-based models "
+        "are simulated)"
         for model_id in unchecked_scenario_models(doc)
     ]
     logic_errors = [f"Activation logic: {p}" for p in activation_logic_findings(doc)]

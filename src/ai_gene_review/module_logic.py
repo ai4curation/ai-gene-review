@@ -219,6 +219,62 @@ def _atom_from_annoton(annoton: dict, namespace: str = "") -> Atom:
     )
 
 
+def _compile_annoton(annoton: dict, namespace: str = "", expand_complexes: bool = True) -> Circuit:
+    """Compile an annoton: an :class:`Atom`, or an AND over a complex's active units.
+
+    A ``protein_complex`` participant with ``active_units`` needs every unit, so it
+    compiles to an :class:`And` named after the annoton whose children are one atom
+    per unit, each grounded through that unit's own ``participant`` (``gene``,
+    ``gene_product`` or ``family``). Each unit atom carries the unit's own
+    ``function``, or, when the unit has none, the complex annoton's ``function``
+    (as the FBA module propagates it onto subunits), so a
+    function-keyed oracle still tests the step. A complex without active units, and
+    every other participant, compiles to a single atom as before.
+
+    An inherited unit function is a *contributes-to* claim: the complex, not the
+    subunit alone, has the activity (HPS1 and HPS4 each inherit BLOC-3's GEF
+    activity). A function-keyed oracle must therefore admit a protein that
+    contributes to the function, not only one that enables it, for a unit atom.
+
+    ``expand_complexes=False`` keeps the earlier contract, one atom per complex
+    annoton under the annoton's own id, for step-level oracles that expand
+    ``active_units`` themselves.
+
+    >>> step = _compile_annoton({"id": "cx", "function": {"term": {"id": "GO:0000001"}},
+    ...     "participant": {"protein_complex": {"active_units": [
+    ...         {"id": "u1", "function": {"term": {"id": "GO:0000002"}},
+    ...          "participant": {"gene_product": {"term": {"id": "UniProtKB:P1"}}}},
+    ...         {"id": "u2", "participant": {"family": {"term": {"id": "PANTHER:PTHR9"}}}}]}}})
+    >>> step.node_id, [(a.node_id, a.uniprot, a.family_ids) for a in step.children]
+    ('cx', [('u1', 'P1', ()), ('u2', None, ('PANTHER:PTHR9',))])
+    >>> [a.function_ids for a in step.children]
+    [('GO:0000002',), ('GO:0000001',)]
+    >>> _compile_annoton({"id": "solo", "participant": {"protein_complex": {}}}).node_id
+    'solo'
+    >>> _compile_annoton({"id": "cx", "participant": {"protein_complex": {"active_units": [
+    ...     {"id": "u1"}]}}}, expand_complexes=False).node_id
+    'cx'
+    """
+    participant = annoton.get("participant") or {}
+    units = as_list((participant.get("protein_complex") or {}).get("active_units"))
+    if not units or not expand_complexes:
+        return _atom_from_annoton(annoton, namespace)
+    annoton_id = annoton.get("id", "?")
+    children: list[Circuit] = []
+    for index, unit in enumerate(units, start=1):
+        unit_id = unit.get("id") or f"{annoton_id}_unit{index}"
+        children.append(_atom_from_annoton(
+            {
+                "id": unit_id,
+                "label": unit.get("label") or unit_id,
+                "participant": unit.get("participant") or {},
+                "function": unit.get("function") or annoton.get("function"),
+            },
+            namespace,
+        ))
+    return And(node_id=f"{namespace}#{annoton_id}" if namespace else annoton_id, children=children)
+
+
 def _term_ids(terms: list[Optional[dict]]) -> tuple[str, ...]:
     """Return the distinct non-empty ``id`` values of ``terms``, in order."""
     return tuple(dict.fromkeys(tid for term in terms if (tid := (term or {}).get("id"))))
@@ -255,7 +311,7 @@ def _variant_kind(variant_set: dict, branches: list[Circuit]) -> tuple[Optional[
 
 
 def _compile_reference(
-    node: dict, modules_dir: Path, chain: tuple[str, ...]
+    node: dict, modules_dir: Path, chain: tuple[str, ...], expand_complexes: bool = True
 ) -> And:
     """Compile a ``module_ref`` node as an AND wrapping the referenced module."""
     module_ref = str(node["module_ref"])
@@ -265,7 +321,8 @@ def _compile_reference(
     if target is None:
         raise ValueError(f"module_ref '{module_ref}' of node {node.get('id')!r} not found")
     namespace = module_ref.partition("#")[0]
-    sub = compile_node(target, modules_dir, (*chain, module_ref), namespace)
+    sub = compile_node(target, modules_dir, (*chain, module_ref), namespace,
+                       expand_complexes=expand_complexes)
     return And(node_id=node.get("id", "?"), children=[sub])
 
 
@@ -279,20 +336,24 @@ def compile_node(
     modules_dir: Path = DEFAULT_MODULES_DIR,
     chain: tuple[str, ...] = (),
     namespace: str = "",
+    *,
+    expand_complexes: bool = True,
 ) -> And:
     """Compile a ModuleNode dict into an AND over its atoms, parts, and variant sets.
 
     ``module_ref`` nodes are resolved against ``modules_dir``; ``chain`` holds
     the references being expanded (for cycle detection) and ``namespace`` the
-    referenced module whose atoms are being compiled.
+    referenced module whose atoms are being compiled. ``expand_complexes``
+    is passed to :func:`_compile_annoton`.
     """
     if node.get("module_ref"):
-        return _compile_reference(node, Path(modules_dir), chain)
+        return _compile_reference(node, Path(modules_dir), chain, expand_complexes)
     children: list[Circuit] = []
     for annoton in as_list(node.get("annotons")):
-        children.append(_atom_from_annoton(annoton, namespace))
+        children.append(_compile_annoton(annoton, namespace, expand_complexes))
     for part in as_list(node.get("parts")):
-        sub = compile_node(part["node"], modules_dir, chain, namespace)
+        sub = compile_node(part["node"], modules_dir, chain, namespace,
+                           expand_complexes=expand_complexes)
         if part.get("optional"):
             # An optional part is an OR of (filled, empty) -> always satisfiable.
             children.append(Or(set_id=f"opt:{part['node'].get('id', '?')}",
@@ -301,7 +362,8 @@ def compile_node(
             children.append(sub)
     for vs in as_list(node.get("variant_sets")):
         branches: list[Circuit] = [
-            compile_node(v, modules_dir, chain, namespace) for v in as_list(vs.get("variants"))
+            compile_node(v, modules_dir, chain, namespace, expand_complexes=expand_complexes)
+            for v in as_list(vs.get("variants"))
         ]
         kind, inferred = _variant_kind(vs, branches)
         selection = vs.get("selection", "ONE_OR_MORE")
@@ -318,22 +380,28 @@ def compile_module(
     doc: dict,
     modules_dir: Union[str, Path] = DEFAULT_MODULES_DIR,
     stem: Optional[str] = None,
+    *,
+    expand_complexes: bool = True,
 ) -> And:
     """Compile a loaded ModuleReview document (its ``module``) into a circuit.
 
     ``module_ref`` nodes resolve against ``modules_dir``; ``stem`` (the
     document's own file stem) lets a reference back to it be caught as a cycle.
+    ``expand_complexes`` is passed to :func:`_compile_annoton`.
     """
-    return compile_node(doc["module"], Path(modules_dir), (stem,) if stem else ())
+    return compile_node(doc["module"], Path(modules_dir), (stem,) if stem else (),
+                        expand_complexes=expand_complexes)
 
 
-def compile_module_file(path: Union[str, Path]) -> And:
+def compile_module_file(path: Union[str, Path], *, expand_complexes: bool = True) -> And:
     """Load a ModuleReview YAML file and compile its root module node.
 
-    References resolve against the file's own directory.
+    References resolve against the file's own directory. ``expand_complexes``
+    is passed to :func:`_compile_annoton`.
     """
     path = Path(path)
-    return compile_module(yaml.safe_load(path.read_text()), path.parent, path.stem)
+    return compile_module(yaml.safe_load(path.read_text()), path.parent, path.stem,
+                          expand_complexes=expand_complexes)
 
 
 def iter_atoms(circuit: Circuit) -> Iterator[Atom]:
@@ -409,9 +477,19 @@ def _enumerate(circuit: Circuit) -> list[list[Atom]]:
 
 
 def _merge_route(left: list[Atom], right: list[Atom]) -> list[Atom]:
-    """Concatenate two partial routes, keeping each atom (by ``node_id``) once."""
-    seen = {a.node_id for a in left}
-    return left + [a for a in right if a.node_id not in seen]
+    """Concatenate two partial routes, keeping each atom once.
+
+    Atoms are compared by value, not by ``node_id``: one subunit listed in two
+    complexes is one step when both name the same selector and function, and two
+    steps when the complexes give it different functions (an RNase P and an
+    RNase MRP subunit).
+
+    >>> a, b = Atom("u", "u", None, "P1", function_ids=("GO:1",)), Atom("u", "u", None, "P1", function_ids=("GO:2",))
+    >>> len(_merge_route([a], [a])), len(_merge_route([a], [b]))
+    (1, 2)
+    """
+    seen = set(left)
+    return left + [a for a in right if a not in seen]
 
 
 def is_satisfied(circuit: Circuit, holds: Predicate) -> bool:
@@ -437,23 +515,19 @@ def core_atoms(circuit: Circuit) -> list[Atom]:
     unions its children's cores, an OR intersects them), so it does not
     enumerate routes and stays cheap for umbrella modules.
     """
-    common = _core_ids(circuit)
-    seen: dict[str, Atom] = {}
-    for a in iter_atoms(circuit):
-        if a.node_id in common:
-            seen[a.node_id] = a
-    return list(seen.values())
+    common = _core_set(circuit)
+    return list(dict.fromkeys(a for a in iter_atoms(circuit) if a in common))
 
 
-def _core_ids(circuit: Circuit) -> set[str]:
-    """Return the ids of atoms present in every route of ``circuit``."""
+def _core_set(circuit: Circuit) -> set[Atom]:
+    """Return the atoms present in every route of ``circuit``, compared by value."""
     if isinstance(circuit, Atom):
-        return {circuit.node_id}
+        return {circuit}
     if isinstance(circuit, And):
-        return set().union(*(_core_ids(c) for c in circuit.children))
+        return set().union(*(_core_set(c) for c in circuit.children))
     if not circuit.children:
         return set()
-    return set.intersection(*(_core_ids(c) for c in circuit.children))
+    return set.intersection(*(_core_set(c) for c in circuit.children))
 
 
 def step_id(circuit: Circuit) -> str:

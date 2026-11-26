@@ -7,6 +7,7 @@ import hashlib
 import json
 import re
 import yaml
+import functools
 from ai_gene_review.module_logic import (
     compile_node,
     core_atoms,
@@ -14,6 +15,8 @@ from ai_gene_review.module_logic import (
     is_satisfied,
     iter_atoms,
 )
+# This audit expands protein_complex active_units itself, so it compiles one atom per complex annoton.
+compile_node = functools.partial(compile_node, expand_complexes=False)
 
 A = Path(__file__).resolve().parent
 ROOT = A.parents[4]

@@ -166,6 +166,51 @@ Three further groups of values are easy to confuse:
   upstream of any gene. Use `INTERPRO` for the InterPro2GO mappings behind
   `GO_REF:0000002` and for signature descriptions, and `PANTHER` for a family or
   ancestral-node GO association propagated by TreeGrafter (`GO_REF:0000118`).
+  An `INTERPRO` defect's `record:` is the signature, written `InterPro:IPR006108`
+  and joined with `|` for several, as GOA writes WITH/FROM:
+  `InterPro:IPR006108|InterPro:IPR006176`. Without `record:` the report falls
+  back to the GAF-row tuple, heading an InterPro defect with a row InterPro
+  never wrote.
+
+  **Which signatures belong in it:** of the ones the faulted term's GOA row cites
+  in WITH/FROM, exactly those that carry that GO term in the committed
+  `rules/arba/_interpro2go.txt`. That set is the defective record, and asking the
+  mapping file is better than reading the explanation, because it guards both
+  directions at once:
+
+  - It *drops* a signature the explanation names only to ask for its exclusion
+    from the mapping (IPR026578 for the L-carnitine dehydrogenases, IPR006277 for
+    the sarcosine oxidase alpha subunits). Those are not mapped to the faulted
+    term, so they fall out on their own.
+  - It *adds* the sibling signatures that carry the same mapping and that the
+    prose happened not to mention. This is the direction that is easy to miss:
+    `ECOLI/garK` asks for GO:0008887 to be repointed, and IPR018193 and IPR036129
+    carry that mapping too, so repointing the one signature the explanation named
+    would have left the row standing.
+
+  **When that set comes out empty**, no cited signature carries the faulted term,
+  so the row is not that mapping's output: it is GOC-derived or the term was
+  refined downstream. Record the signature the explanation names - the one whose
+  mapping produced the *upstream* row - and say in `explanation` which row that
+  is. `RHOCA/fruA` and `AZOBR/fruA1` are the worked case: their GO:1902600 rows
+  come from GO_REF:0000108, and IPR006327 is cited by the GO:0005351 row the
+  inference rests on. Never leave `record:` empty on that account, which is the
+  problem this rule exists to prevent.
+
+  Two limits on the check. The mapping file is a **committed snapshot**
+  (`!version date` at its head), so a signature added upstream since will not
+  appear in it. And the mapped set tells you which signatures are *candidates*,
+  not that all of them are faulted: where a cited signature covers a shared
+  structural domain rather than the activity, requesting a change to its mapping
+  over-reaches. Use the set to find the candidates and judge each one - six
+  records in the corpus name fewer signatures than their row maps, and
+  `9EURY/mcrA`, whose seven include sub-domain entries such as IPR009024
+  (ferredoxin-like fold), is exactly the case where widening mechanically would
+  be wrong.
+
+  Where the narrow ask is deliberate - `rat/Kcnj16` disputes `enables` only for
+  the Kir5 signature, not for the generic Kir one that shares the mapping - say so
+  in `explanation`, since the record otherwise looks like the same omission.
 - **`INTERPRO` is not `GOA_EBI`.** Ask what the fix changes. The *content* of a
   mapping - its GO term, its qualifier, the signatures it covers - or the
   signature's own description is `INTERPRO`, and stays `INTERPRO` however the
@@ -181,14 +226,15 @@ Three further groups of values are easy to confuse:
   to the pipeline - also GOA's, and also not the mapping's content.) This split
   is easy to reopen. It was closed corpus-wide in #6027, and reopened twice
   while that PR waited to merge, in reviews that had carried no defects at all.
-  As of `485113c854`: `ECOLI/pssA` and `PSEPK/pssA` each file two `GOA_EBI`
-  defects asking that the IPR016270 PGS1 mapping be suppressed for the type-I
-  PssA members - that is mapping scope, so `INTERPRO` - and none of the four
-  names the mapping in `record:`. The same shape sits on IPR006327, filed
-  `INTERPRO` with a `record:` in `XANCP/fruA` but `GOA_EBI` with none in
-  `RHOCA/fruA` and `AZOBR/fruA1`, each of which also carries a correctly-filed
-  `INTERPRO` defect on that very mapping. So check the filing whenever a
-  defect's fix is a mapping, whatever the row's `assigned_by` says.
+  The worked examples this paragraph used to carry - the IPR016270 PGS1 mapping
+  in `ECOLI/pssA` and `PSEPK/pssA`, and IPR006327 across `XANCP/fruA`,
+  `RHOCA/fruA` and `AZOBR/fruA1` - were pinned to commit `485113c854`, where
+  they were filed `GOA_EBI` and named no mapping in `record:`. All of them are
+  now filed `INTERPRO` and carry one, so the examples are gone rather than
+  rewritten: a passage that describes the corpus goes stale the moment the
+  corpus moves, and these had. The rule they illustrated stands on its own:
+  check the filing whenever a defect's fix is a mapping, whatever the row's
+  `assigned_by` says.
 - **`PANTHER` is not `GO_CENTRAL`.** `GO_CENTRAL` is PAINT's own IBD/IBA
   curation. A term can sit on a PANTHER node without PAINT ever asserting it,
   and the two are fixed in different places; a gene can carry rows from both.

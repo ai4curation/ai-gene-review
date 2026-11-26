@@ -4,7 +4,70 @@ description: "Modules and gene reviews for parasitic nematode cuticle, host-inte
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN]
 species: [BRUMA, HAECO, ONCVO, ASCSU, STRRB, STRER, TOXCA, TRITR, STECR, 9BILA, worm]
-genes: [dpy-31, bma-dpy-18.1, bma-dpy-18.2, far-1, cpi-2, gp29, mf1]
+genes:
+  - BRUMA/dpy-31
+  - worm/dpy-31
+  - HAECO/dpy-31
+  - BRUMA/bma-dpy-18.1
+  - BRUMA/bma-dpy-18.2
+  - worm/dpy-18
+  - worm/phy-2
+  - worm/pdi-2
+  - worm/bli-4
+  - worm/unc-29
+  - worm/lev-1
+  - worm/unc-38
+  - worm/unc-63
+  - worm/lev-8
+  - worm/ric-3
+  - worm/unc-50
+  - worm/unc-74
+  - worm/acr-8
+  - HAECO/acr-8
+  - worm/glc-1
+  - worm/glc-2
+  - worm/glc-3
+  - worm/glc-4
+  - worm/avr-14
+  - worm/avr-15
+  - HAECO/P91730
+  - BRUMA/A0A0K0J2Q9
+  - BRUMA/A0A894KDR7
+  - BRUMA/A0A894KHH9
+  - BRUMA/A0A894KBQ5
+  - ONCVO/Q25634
+  - ONCVO/A0A8R1XRX4
+  - ONCVO/A0A8R1TV31
+  - worm/ben-1
+  - BRUMA/bma-ben-1
+  - BRUMA/Q66T51
+  - HAECO/A2TF56
+  - HAECO/Q25022
+  - TRITR/O44388
+  - STRER/Q4KS25
+  - ASCSU/F1L8A5
+  - ASCSU/F1L5R2
+  - TOXCA/A0A0B2VD78
+  - TOXCA/A0A0B2V7F6
+  - TOXCA/A0A0B2VSH4
+  - TOXCA/A0A0B2VUK1
+  - STRER/A0A0K0DXA9
+  - STRER/A0A0K0EJ28
+  - STRER/A0AAF5DAP5
+  - ONCVO/O61358
+  - ONCVO/O61359
+  - BRUMA/far-1
+  - worm/far-1
+  - worm/far-2
+  - ONCVO/far-1
+  - BRUMA/cpi-2
+  - worm/cpi-2
+  - BRUMA/mf1
+  - worm/cht-1
+  - STECR/nas-8
+  - BRUMA/gp29
+  - worm/gpx-3
+  - worm/gpx-5
 index_group: OTHER_ORGANISM
 ---
 
@@ -55,61 +118,133 @@ anchor, `BRUMA/dpy-31`, is in the same PANTHER subfamily as *C. elegans*
 - [x] `BRUMA` `dpy-31` / A8Q2D1 - cross-check existing review against the module
 - [x] `worm` `dpy-31` / P98060 - fetched and reviewed the C. elegans DPY-31 ortholog
 - [x] `HAECO` `dpy-31` / D5FM34 - fetched and reviewed the reviewed *H. contortus* DPY-31 ortholog
-- [x] `BRUMA` `bma-dpy-18.1` / Q68VC1 - fetched and reviewed the Bma-PHY-2 prolyl 4-hydroxylase alpha subunit
-- [ ] `BRUMA` `bma-dpy-18.2` / A0A1P6BZ71 - fetch and review the second prolyl 4-hydroxylase alpha candidate
-- [ ] `worm` `dpy-18` / Q10576 - fetch and review the C. elegans prolyl 4-hydroxylase alpha-1 ortholog
-- [ ] `worm` `phy-2` / Q20065 - fetch and review the C. elegans prolyl 4-hydroxylase alpha-2 ortholog
-- [ ] `worm` `pdi-2` / Q17770 - fetch and review the PDI/prolyl 4-hydroxylase beta subunit
-- [ ] `worm` `bli-4` / P51559 - fetch and review the subtilisin-like convertase
+- [x] `BRUMA` `bma-dpy-18.1` / Q68VC1 - fetched and reviewed the `Bma-PHY-2` prolyl 4-hydroxylase alpha subunit
+- [x] `BRUMA` `bma-dpy-18.2` / A0A1P6BZ71 - fetched and reviewed the Bma-PHY-1 prolyl 4-hydroxylase alpha subunit
+- [x] `worm` `dpy-18` / Q10576 - fetched and reviewed the C. elegans prolyl 4-hydroxylase alpha-1 ortholog
+- [x] `worm` `phy-2` / Q20065 - fetched and reviewed the C. elegans prolyl 4-hydroxylase alpha-2 paralog
+- [x] `worm` `pdi-2` / Q17770 - fetched and reviewed the PDI/prolyl 4-hydroxylase beta subunit
+- [x] `worm` `bli-4` / P51559 - fetched and reviewed the subtilisin-like convertase
 
-Secondary cuticle candidates to resolve before fetching: ONCVO Q2YFS7 and
+Deferred secondary cuticle candidates for a later DPY-31-family lane: ONCVO Q2YFS7 and
 A0A8R1U276, ASCSU F1LHZ4/F1L4T8 and transcript duplicates, STRRB A0A090LLW4,
 STRER A0A0K0DV69 and A0A0K0E1H2, TOXCA dpy-31-like duplicates, and TRITR
 A0A077YYY8. Resolve duplicates by gene model, family/subfamily, sequence, and
 literature before choosing review folders.
 
-### 2. Secreted fatty-acid and retinol binding
+### 2. Anthelmintic drug target systems
+
+Treat target biology, not drug class, as the module boundary. Candidate modules
+are the levamisole-sensitive nicotinic acetylcholine receptor, avermectin-
+sensitive glutamate-gated chloride channels, and beta-tubulin microtubules.
+The first anthelmintic draft is
+`modules/nematode_levamisole_sensitive_nachr.yaml`, centered on the C. elegans
+five-subunit L-AChR and the RIC-3/UNC-50/UNC-74 expression factors.
+The second draft is
+`modules/nematode_glutamate_gated_chloride_channels.yaml`, a C. elegans
+realization of the ivermectin-sensitive GluCl channel set. HAECO, BRUMA, and
+ONCVO GluCl-family gene reviews are cross-checked parasite exemplars for now;
+add parasite GluCl orthologs to the module once their reviewed UniProt records
+or parasite-specific orthology are resolved. Beta-tubulin/benzimidazole targets
+were handled as a conserved target-family lane rather than forced into a
+multi-part module.
+
+Levamisole-sensitive nicotinic acetylcholine receptor:
+
+- [x] `worm` `unc-29` / P48181 - existing nAChR beta-type receptor subunit review reused and cross-checked as the non-alpha anchor for the new L-AChR module
+- [x] `worm` `lev-1` / Q27218 - fetched and reviewed as the second non-alpha L-AChR pore subunit
+- [x] `worm` `unc-38` / Q23022 - fetched and reviewed as an alpha L-AChR pore subunit
+- [x] `worm` `unc-63` / Q9N587 - fetched and reviewed as an alpha L-AChR/ACR-2R pore subunit
+- [x] `worm` `lev-8` / Q93329 - fetched and reviewed as the fifth C. elegans L-AChR pore subunit
+- [x] `worm` `ric-3` / Q22472 - fetched and reviewed as an ER-membrane nAChR maturation factor
+- [x] `worm` `unc-50` / Q10045 - fetched and reviewed as an L-AChR trafficking ancillary factor
+- [x] `worm` `unc-74` / Q9N4L6 - fetched and reviewed as the thioredoxin-domain L-AChR ancillary factor
+- [x] `worm` `acr-8` / Q23355 - fetched and reviewed as an ACR-8-family pore subunit relevant to levamisole-sensitive receptor composition
+- [x] `HAECO` `acr-8` / A9XX24 - fetched and reviewed as the experimentally characterized H. contortus ACR-8 subunit
+
+Parasite L-AChR candidates to resolve before fetching: BRUMA A0A1P6C5A7,
+A0A4E9EUJ4, A0A4E9FKF9 and the short UniProt `Bma-acr-8.1` record A0A4E9EXN3;
+HAECO D6MYE9, D6MYF0, D6MYF1, D6MYF2, D6MYF3, D6MYF4, D6MYF5, D6MYF6,
+A0A7I4XYK7, A0A7I4Z1Z2, A0A7I4Z2R2, A0A7I4XVV4, A0A7I4XVC3,
+A0A7I4YXE5, A0A7I4YWD8, D2XI63, P92039, G0XFE0, G0XFE1, G0XFD9 and G0XFD8;
+ONCVO P54247 and remaining PTHR18945 candidates outside reviewed GluCl-family
+accessions, with the ACR-8-like member still unresolved from anonymous live
+UniProt labels; ASCSU A0A2I6TEN1,
+A0ACT4VCM3, A0ACT4VCM4, A0ACT4VCM5, A0ACT4VCM6, A0ACT4VCM7, F1KYN0,
+F1L123, F1L348, F1L897 and O96760. Resolve broad PTHR18945 Cys-loop
+membership, ACR-8 placement, cloned paralogs, truncated entries and gene-model
+duplicates before choosing review folders.
+
+Avermectin-sensitive glutamate-gated chloride channels:
+
+- [x] `worm` `glc-1` / G5EBR3 - fetched and reviewed as a GluCl alpha subunit
+- [x] `worm` `glc-2` / Q17328 - fetched and reviewed as the GluCl beta subunit
+- [x] `worm` `glc-3` / G5EEZ3 - fetched and reviewed as a GluCl alpha subunit
+- [x] `worm` `glc-4` / Q95QT7 - fetched and reviewed as a GluCl subunit
+- [x] `worm` `avr-14` / Q8IFY7 - fetched and reviewed as a GluCl alpha subunit
+- [x] `worm` `avr-15` / G5ECH3 - fetched and reviewed as a GluCl alpha subunit
+- [x] `HAECO` `P91730` / P91730 - fetched and reviewed as the H. contortus HG4 GluCl beta subunit
+- [x] `BRUMA` `A0A0K0J2Q9` / A0A0K0J2Q9 - fetched and reviewed as a BRUMA AVR-14B-like GluCl
+- [x] `BRUMA` `A0A894KDR7` / A0A894KDR7 - fetched and reviewed as a Brugia GluCl-family channel
+- [x] `BRUMA` `A0A894KHH9` / A0A894KHH9 - fetched and reviewed as a Brugia GluCl-family channel
+- [x] `BRUMA` `A0A894KBQ5` / A0A894KBQ5 - fetched and reviewed as a Brugia GluCl-family channel
+- [x] `ONCVO` `Q25634` / Q25634 - fetched and reviewed as an O. volvulus GluClX channel
+- [x] `ONCVO` `A0A8R1XRX4` / A0A8R1XRX4 - fetched and reviewed as an O. volvulus GluCl-family channel
+- [x] `ONCVO` `A0A8R1TV31` / A0A8R1TV31 - fetched and reviewed as an O. volvulus GluCl-family channel
+
+Beta-tubulin/benzimidazole target biology:
+
+- [x] `worm` `ben-1` / Q18817 - fetched and reviewed as the C. elegans benzimidazole-sensitive beta-tubulin
+- [x] `BRUMA` `bma-ben-1` / A0A1U7F2B2 - fetched and reviewed as the Brugia beta-tubulin ben-1 candidate
+- [x] `BRUMA` `Q66T51` / Q66T51 - fetched and reviewed as a Brugia beta-tubulin
+- [x] `HAECO` `A2TF56` / A2TF56 - fetched and reviewed as an H. contortus beta-tubulin
+- [x] `HAECO` `Q25022` / Q25022 - fetched and reviewed as the H. contortus tub12-16 beta-tubulin
+- [x] `TRITR` `O44388` / O44388 - fetched and reviewed as a T. trichiura beta-tubulin
+- [x] `STRER` `Q4KS25` / Q4KS25 - fetched and reviewed as the S. stercoralis btub beta-tubulin
+- [x] `ASCSU` `F1L8A5` / F1L8A5 - fetched and reviewed as an A. suum beta-tubulin
+- [x] `ASCSU` `F1L5R2` / F1L5R2 - fetched and reviewed as an A. suum beta-tubulin
+- [x] `TOXCA` `A0A0B2VD78` / A0A0B2VD78 - fetched and reviewed as a T. canis beta-tubulin
+- [x] `TOXCA` `A0A0B2V7F6` / A0A0B2V7F6 - fetched and reviewed as a T. canis beta-tubulin
+- [x] `TOXCA` `A0A0B2VSH4` / A0A0B2VSH4 - fetched and reviewed as a T. canis beta-tubulin
+- [x] `TOXCA` `A0A0B2VUK1` / A0A0B2VUK1 - fetched and reviewed as a T. canis beta-tubulin
+- [x] `STRER` `A0A0K0DXA9` / A0A0K0DXA9 - fetched and reviewed as an S. stercoralis beta-tubulin
+- [x] `STRER` `A0A0K0EJ28` / A0A0K0EJ28 - fetched and reviewed as an S. stercoralis beta-tubulin
+- [x] `STRER` `A0AAF5DAP5` / A0AAF5DAP5 - fetched and reviewed as an S. stercoralis beta-tubulin
+- [x] `ONCVO` `O61358` / O61358 - fetched and reviewed as an O. volvulus beta-tubulin
+- [x] `ONCVO` `O61359` / O61359 - fetched and reviewed as an O. volvulus beta-tubulin
+
+### 3. Secreted fatty-acid and retinol binding
 
 Potential module or family review target for FAR proteins, with the boundary
 still to be decided. If FAR-1 remains a single binding role rather than a
 multi-part process, keep it as gene/family curation until it can be joined to a
 broader host lipid-scavenging module.
 
-- [x] `BRUMA` `far-1` / Q93142 - cross-check existing review
-- [x] `worm` `far-1` / P34382 - fetch and review the same PANTHER subfamily exemplar
-- [ ] `worm` `far-2` / P34383 - fetch only if needed for paralog-specific comparison
+- [x] `BRUMA` `far-1` / Q93142 - cross-checked the existing review
+- [x] `worm` `far-1` / P34382 - fetched and reviewed the same PANTHER subfamily exemplar
+- [x] `worm` `far-2` / P34383 - fetched and reviewed as a C. elegans FAR
+  paralog outside the FAR-1 PANTHER subfamily
+- [x] `ONCVO` `far-1` / Q25619 - fetched and reviewed as the O. volvulus
+  FAR-1/Ov20 filarial FAR exemplar
 
-### 3. Secreted immune modulators and exsheathment enzymes
+### 4. Secreted immune modulators and exsheathment enzymes
 
 These are strong parasite-interface genes but do not yet form one reusable
 module. Split them by mechanism unless literature supports a shared pathway.
 
-- [ ] `BRUMA` `cpi-2` / A0A0K0IP23 - existing cystatin review; C. elegans same-subfamily comparator is `worm` `cpi-2` / G5ECM9
-- [ ] `BRUMA` `mf1` / P29030 - existing GH18 endochitinase review; C. elegans same-subfamily comparator is `worm` `cht-1` / Q11174
-- [ ] `STECR` `nas-8` / D2KBH9 - existing secreted astacin review in the DPY-31/NAS PANTHER family but not the DPY-31 subfamily
+- [x] `BRUMA` `cpi-2` / A0A0K0IP23 - cross-checked existing filarial cystatin review
+- [x] `worm` `cpi-2` / G5ECM9 - fetched and reviewed the C. elegans same-subfamily cystatin comparator
+- [x] `BRUMA` `mf1` / P29030 - cross-checked existing GH18 endochitinase review
+- [x] `worm` `cht-1` / Q11174 - fetched and reviewed the C. elegans same-subfamily chitinase comparator
+- [x] `STECR` `nas-8` / D2KBH9 - cross-checked existing secreted astacin review in the DPY-31/NAS PANTHER family but not the DPY-31 subfamily
 
-### 4. Surface antioxidant defense
+### 5. Surface antioxidant defense
 
 Start as a small extracellular glutathione peroxidase lane and merge only after
 the extracellular oxidant-detoxification boundary is clear.
 
-- [ ] `BRUMA` `gp29` / P67877 - existing cuticular glutathione peroxidase review
-- [ ] `worm` `gpx-3` / Q95003 - fetch and review the same PANTHER subfamily exemplar
-- [ ] `worm` `gpx-5` / Q93204 - cross-check existing review as a secreted-gpx comparator, not as an established one-to-one ortholog
-
-### 5. Anthelmintic drug target systems
-
-Treat target biology, not drug class, as the module boundary. Candidate modules
-are the levamisole-sensitive nicotinic acetylcholine receptor, avermectin-
-sensitive glutamate-gated chloride channels, and beta-tubulin microtubules.
-Pathogen accessions need UniProt and literature resolution before fetching.
-
-- [ ] `worm` `unc-29` / P48181 - existing nAChR beta-type receptor subunit review
-- [ ] `worm` `lev-1` / Q27218 - fetch if the nAChR module proceeds
-- [ ] `worm` `unc-38` / Q23022 - fetch if the nAChR module proceeds
-- [ ] `worm` `unc-63` / Q9N587 - fetch if the nAChR module proceeds
-- [ ] `worm` `glc-1` / G5EBR3 - fetch if the GluCl module proceeds
-- [ ] `worm` `glc-2` / Q17328 - fetch if the GluCl module proceeds
+- [x] `BRUMA` `gp29` / P67877 - cross-checked existing cuticular glutathione peroxidase review
+- [x] `worm` `gpx-3` / Q95003 - fetched and reviewed the same PANTHER subfamily exemplar
+- [x] `worm` `gpx-5` / Q93204 - cross-checked existing review as a secreted-gpx comparator, not as an established one-to-one ortholog
 
 # STATUS
 
@@ -122,7 +257,7 @@ Pathogen accessions need UniProt and literature resolution before fetching.
 - [x] Add `modules/nematode_cuticle_collagen_maturation.yaml`
 - [x] Create the `worm` `dpy-31` review for the C. elegans DPY-31 ortholog
 - [x] Create the `HAECO` `dpy-31` review for the H. contortus DPY-31 ortholog
-- [ ] Add or cross-check the remaining first-wave cuticle member gene reviews
+- [x] Add or cross-check the remaining first-wave cuticle member gene reviews
 
 ## 2026-11-21
 
@@ -131,8 +266,69 @@ Pathogen accessions need UniProt and literature resolution before fetching.
 - [x] Fetch and review the `worm` `far-1` P34382 same-subfamily ortholog
 - [x] Fetch and review the `BRUMA` `bma-dpy-18.1` Q68VC1 prolyl
   4-hydroxylase alpha subunit
+- [x] Fetch and review the `BRUMA` `bma-dpy-18.2` A0A1P6BZ71 prolyl
+  4-hydroxylase alpha subunit
+- [x] Fetch and review the `worm` `dpy-18` Q10576 prolyl
+  4-hydroxylase alpha-1 subunit
+- [x] Fetch and review the `worm` `phy-2` Q20065 prolyl
+  4-hydroxylase alpha-2 subunit
+- [x] Fetch and review the `worm` `pdi-2` Q17770 PDI/prolyl
+  4-hydroxylase beta subunit
+- [x] Fetch and review the `worm` `bli-4` P51559 subtilisin-like
+  proprotein convertase
+- [x] Move anthelmintic drug target systems ahead of the FAR,
+  immune-modulator, and antioxidant lanes for the next module after cuticle
+  collagen maturation
+- [x] Add a draft levamisole-sensitive nicotinic acetylcholine receptor module
+  with the five C. elegans pore subunits, RIC-3/UNC-50/UNC-74 ancillary
+  factors, and UniProt-resolved BRUMA, HAECO, ONCVO and ASCSU candidate lists
+- [x] Expand the L-AChR parasite queue with ACR-8 candidates after HAECO
+  reconstitution and resistance evidence showed parasite pore composition is not
+  a one-to-one LEV-8 projection
+- [x] Fetch and review the `worm` `lev-1` Q27218 non-alpha L-AChR
+  pore subunit
+- [x] Fetch and review the `worm` `unc-38` Q23022 alpha nAChR
+  pore subunit shared by the L-AChR and ACR-2R
+- [x] Fetch and review the `worm` `unc-63` Q9N587 alpha nAChR
+  pore subunit shared by the L-AChR and ACR-2R
+- [x] Fetch and review the `worm` `lev-8` Q93329 fifth C. elegans
+  L-AChR pore subunit
+- [x] Fetch and review the `worm` `ric-3` Q22472 RIC-3-family
+  nAChR maturation factor
+
+## 2026-11-24
+
+- [x] Reconcile the project page after content PRs that left `projects/` and
+  rendered `pages/` untouched to avoid merge-queue conflicts
+- [x] Check off merged L-AChR ancillary and ACR-8 reviews through `worm`
+  `unc-50`, `worm` `unc-74`, `worm` `acr-8`, and `HAECO` `acr-8`
+- [x] Check off the merged GluCl module lane, including six C. elegans GluCl
+  reviews and HAECO, BRUMA, and ONCVO parasite exemplars
+- [x] Record the merged GluCl parasite-exemplar module cross-check (#6858)
+- [x] Check off the beta-tubulin/benzimidazole target-family reviews through
+  the ONCVO `O61359` review
+- [x] Check off the merged FAR reviews through `worm` `far-2` and `ONCVO`
+  `far-1`
+- [x] Check off the merged cystatin/chitinase/astacin and surface-GPX
+  host-interface reviews through `STECR` `nas-8`
 
 # NOTES
+
+## 2026-11-24
+
+- The FAR reviews stayed split as ligand-binding gene-family curation: BRUMA
+  and ONCVO FAR-1 plus worm FAR-1 share PANTHER subfamily `PTHR31418:SF7`,
+  while worm FAR-2 is a distinct C. elegans paralog in `PTHR31418:SF19`.
+  These FAR proteins have not yet been joined to a broader multi-part host
+  lipid-scavenging module.
+- The beta-tubulin/benzimidazole target set behaved as a conserved
+  target-family lane rather than a reusable multi-step module. The completed
+  reviews now cover the C. elegans BEN-1 anchor plus BRUMA, HAECO, TRITR,
+  STRER, ASCSU, TOXCA, and ONCVO parasite beta-tubulins.
+- The cystatin, GH18 chitinase, STECR astacin, and extracellular
+  glutathione-peroxidase reviews did not expose a single shared mechanism. Keep
+  them split by molecular mechanism unless later literature supports a
+  parasite-interface module around a concrete process.
 
 ## 2026-11-20
 
@@ -160,6 +356,28 @@ Pathogen accessions need UniProt and literature resolution before fetching.
   (`PTHR31418:SF7`), BRUMA CPI-2 to worm CPI-2 (`PTHR46186:SF2`), BRUMA MF1 to
   worm CHT-1 (`PTHR11177:SF400`), and BRUMA GP29 to worm GPX-3
   (`PTHR11592:SF88`).
+- HAECO L-AChR oocyte reconstitution identified Hco-ACR-8 as important for
+  selective levamisole sensitivity (PMID:21486278, *Br J Pharmacol* 2011), and
+  Hco-acr-8b truncation/resistance papers make ACR-8 a named
+  parasite-specific resolution lane rather than a simple C. elegans LEV-8
+  ortholog slot (PMID:21945142, *Mol Biochem Parasitol* 2011; PMID:24503202,
+  *Int J Parasitol* 2014). All three records are now cached in `publications/`.
+- UniProtKB live query receipt for ACR-8 candidates: exact-accession query
+  against release 2026_04, dated 2026-11-04, returned BRUMA A0A4E9EXN3
+  (`Bma-acr-8.1`; "Neurotransmitter-gated ion-channel ligand-binding
+  domain-containing protein"); HAECO A9XX24 and A0A7I4YXE5 ("Nicotinic
+  acetylcholine receptor 8"), A0A7I4YWD8 ("Nicotinic acetylcholine receptor
+  8"), and D2XI63 (`acr8`; "Nicotinic acetylcholine receptor alpha subunit
+  isoform b"); and ASCSU A0A2I6TEN1, A0ACT4VCM3, A0ACT4VCM4, A0ACT4VCM5,
+  A0ACT4VCM6 and A0ACT4VCM7 (all "Nicotinic acetylcholine receptor alpha
+  subunit 8", no gene name in UniProt). The ONCVO ACR-8 member remains to be
+  placed among anonymous PTHR18945 A0A8R1* records.
+- Added `genes/worm/lev-1` and curated LEV-1 as the second non-alpha pore
+  subunit of the five-subunit C. elegans L-AChR. The review adds the missing
+  neuromuscular synaptic transmission row, refines generic Cys-loop receptor,
+  channel, transport, membrane, and membrane-potential rows in parallel with
+  `unc-29`, and keeps calcium flux, neuronal localization, locomotion, and
+  egg-laying behavior as non-core contexts.
 - Added the first draft of `modules/nematode_cuticle_collagen_maturation.yaml`
   with three ordered processing steps: ER procollagen prolyl 4-hydroxylation,
   BLI-4-dependent N-terminal cleavage before secretion, and DPY-31-dependent
@@ -200,7 +418,7 @@ Pathogen accessions need UniProt and literature resolution before fetching.
   assays in PMID:12502713. No C. elegans biological-process term was proposed:
   native FAR-1 cargoes and far-1 loss-of-function phenotypes remain explicit
   open questions.
-- Added `genes/BRUMA/bma-dpy-18.1` for Q68VC1, the Bma-PHY-2 collagen
+- Added `genes/BRUMA/bma-dpy-18.1` for Q68VC1, the `Bma-PHY-2` collagen
   prolyl 4-hydroxylase alpha subunit. The UniProt symbol resolver initially
   selected the shorter duplicate A0A4E9F4D5 for the same WormBase gene, so the
   review was re-fetched with `--uniprot-id Q68VC1`; the curated review keeps
@@ -209,3 +427,88 @@ Pathogen accessions need UniProt and literature resolution before fetching.
   membership, and treats broad cofactor/oxygenase terms and generic embryonic
   or growth process transfers as accepted, refined, or over-annotated
   according to the Q68VC1 evidence.
+- Added `genes/BRUMA/bma-dpy-18.2` for A0A1P6BZ71, the Bm3843
+  procollagen-proline 4-dioxygenase that matches the cloned Bma-PHY-1
+  sequence. The review keeps the seeded core ER-lumen
+  procollagen-proline 4-dioxygenase activity and the direct larval-development
+  phenotype, refines broad oxygenase rows to collagen P4H activity, and adds
+  direct annotations to the native prolyl 4-hydroxylase complex and
+  collagenous-cuticle development from the Bma-PDI-2 co-IP and combined
+  `Bma-phy-1`/`Bma-phy-2` RNAi evidence.
+- Added `genes/worm/dpy-18` for Q10576, the C. elegans PHY-1 prolyl
+  4-hydroxylase alpha subunit. The review keeps direct and PAINT
+  procollagen-proline 4-dioxygenase activity, accepts the informative ER and
+  ER-lumen rows, treats embryonic hatching, basement-membrane morphogenesis,
+  and multicellular growth as non-core phenotype/context rows, and marks the
+  tunicamycin high-throughput expression row for IRE1-mediated unfolded
+  protein response as over-annotated.
+- Added `genes/worm/phy-2` for Q20065, the C. elegans PHY-2 prolyl
+  4-hydroxylase alpha-2 subunit. The review keeps PAINT and
+  EC/Rhea-supported procollagen-proline 4-dioxygenase activity, accepts
+  PDI-2-containing procollagen-proline 4-dioxygenase complex membership and
+  ER/ER-lumen localization, refines broad peptidyl-proline and paired-donor
+  oxygenase activities to the collagen P4H reaction, and adds a conservative
+  direct cuticle-development row without copying the downstream
+  dpy-18-specific phenotype annotations onto buffered phy-2.
+- Added `genes/worm/pdi-2` for Q17770, the C. elegans PDI-2
+  protein-disulfide-isomerase and procollagen-proline 4-dioxygenase beta
+  subunit. The review accepts the ER-lumen PDI/P4H-beta role, adds direct
+  collagenous-cuticle development from the pdi-2 RNAi phenotype and the
+  PHY-1/PHY-2/PDI-2 complex literature, keeps the broad ER-stress response row
+  as non-core, marks the tunicamycin high-throughput expression row for
+  IRE1-mediated unfolded protein response as over-annotated, and leaves the
+  transglutaminase-like activity rows undecided pending full text of the
+  abstract-only PDI-3 paper.
+- Added `genes/worm/bli-4` for P51559, the C. elegans furin/Kex2-like
+  proprotein convertase that anchors the N-terminal cuticle-collagen
+  processing step. The review accepts the core serine endopeptidase and
+  collagenous-cuticle process rows, proposes a direct non-core peptide hormone
+  processing row for the ASEL INS-6 high-salt circuit, treats root proteolysis
+  and membrane rows as too general beside protein processing and Golgi/TGN
+  location, and leaves the old nucleus row plus neuromuscular-junction
+  synaptic-assembly rows undecided because the relevant 1995 and 2013 papers
+  are abstract-only locally.
+- Ros-orchestrate reprioritized anthelmintic drug target systems as the next
+  module lane after cuticle collagen maturation. Keep the mechanism split:
+  scope levamisole-sensitive nicotinic acetylcholine receptors,
+  avermectin-sensitive glutamate-gated chloride channels, and
+  beta-tubulin/benzimidazole as separate candidate modules, resolving parasite
+  orthologs from UniProt/PANTHER before adding HAECO, BRUMA, ONCVO, ASCSU, or
+  other accessions.
+- Added `modules/nematode_levamisole_sensitive_nachr.yaml` as the first
+  anthelmintic target module. The draft models the C. elegans
+  levamisole-sensitive AChR as a five-subunit UNC-29/LEV-1/UNC-38/UNC-63/LEV-8
+  acetylcholine-gated cation channel plus RIC-3, UNC-50 and UNC-74 ancillary
+  expression factors. The parasite accessions from BRUMA, HAECO, ONCVO and
+  ASCSU are listed as candidates to resolve rather than as asserted
+  one-to-one orthologs, because UniProt/PTHR18945 currently mixes L-AChR,
+  GluCl, GABA/glycine, MOD-1-like, ACR-16-like and monepantel-channel records.
+- Added `genes/worm/unc-38` for Q23022, the first alpha nAChR pore-subunit
+  review in the L-AChR lane. The review distinguishes the module-relevant
+  body-wall muscle L-AChR from the neuronal ACR-2R that reuses UNC-38 and
+  UNC-63 with ACR-2/ACR-3/ACR-12, refines generic receptor and transport rows
+  to acetylcholine-gated cation-channel activity and cation transmembrane
+  transport, keeps locomotion and egg laying as non-core outputs, and records
+  WormBase follow-up queries for the calcium-import row and stale ACR-2R
+  composition text.
+- Ros-orchestrate confirmed the initial cuticle-collagen maturation lane is
+  complete for the scoped DPY-31, Bma-DPY-18.1/.2, DPY-18, PHY-2, PDI-2 and
+  BLI-4 set. Keep the ONCVO, ASCSU, STRRB, STRER, TOXCA and TRITR DPY-31-like
+  candidates deferred as a later duplicate-resolution pass while this lane
+  continues through anthelmintic drug targets.
+- Added `genes/worm/lev-8` for Q93329, the fifth C. elegans L-AChR pore
+  subunit. The review anchors LEV-8 to the native UNC-29/UNC-38/UNC-63/LEV-8/LEV-1
+  receptor purified by Gottschalk et al. and the Boulin et al. five-subunit oocyte
+  reconstitution, refines broad Cys-loop receptor, channel, transport and
+  membrane-potential rows to the L-AChR functions, and records that LEV-8 is
+  L-AChR-specific rather than an ACR-2R shared subunit like UNC-38 and UNC-63.
+- Added `genes/worm/ric-3` for Q22472, the C. elegans RIC-3-family
+  ER-membrane chaperone and assembly factor in the L-AChR expression-factor
+  lane. The review keeps RIC-3's ER-membrane protein-folding chaperone
+  activity, nAChR surface-localization, and positive cholinergic-transmission
+  regulation as core; treats muscle contraction and cell-body localization as
+  non-core; refines the 1995 WormBase cholinergic-transmission row to positive
+  regulation using later direct RIC-3 evidence; keeps direct weak
+  neuron-process localization as non-core; and marks the PAINT
+  neuron-projection active-in row plus the synapse IEA as over-propagated from
+  receptor output rather than RIC-3's ER-membrane activity.

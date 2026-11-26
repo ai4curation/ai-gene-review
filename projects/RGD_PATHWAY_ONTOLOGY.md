@@ -29,16 +29,13 @@ genes of a pathway, and only 56 of the 144 have any human GO-CAM model whose
 process falls under the mapped GO term. Third, as a source of module seeds. We parsed
 all 200 RGD diagram pages into structured records (3,209 interaction edges,
 1,715 gene links, 651 chemicals, 580 links to other pathways). These were
-triaged against our 714 modules. Ninety already have a matching module, 14 are
-ready to model, 9 have only a broad GO process term or none, and 56 are disease
-or drug pathways and out of scope. Thirteen modules have now been derived from RGD
-diagrams: the pilot `srebp_signaling`; the linked blood set `coagulation_cascade`,
-`fibrinolysis` and `kallikrein_kinin_cascade`; a second set,
-`acetylcholine_signaling`, `dopamine_receptor_signaling`,
-`visual_phototransduction` and `prostanoid_biosynthesis`; and a third set,
-`protein_kinase_c_signaling`, `dna_cytosine_methylation_cycle`,
-`reelin_signaling`, `trail_apoptotic_signaling` and `nmj_achr_clustering`. All
-thirteen pass schema and module validation.
+triaged against our 886 modules (2026-11-24). 136 now have a matching module, none
+is left to model, 1 (titanium dioxide nanoparticle response) is left without a module
+by decision, 7 have too few curated genes, and 56 are disease or drug pathways and out
+of scope. The modules derived from RGD diagrams, starting with the pilot
+`srebp_signaling` and continuing through eighteen sets (below), cite their PW pathways as
+evidence. 86 modules now cite a PW id as evidence (a count over all modules, not only
+those built from RGD diagrams), and each passes schema and module validation.
 
 ## Why this source
 
@@ -95,7 +92,7 @@ fetcher sends its own identifying user agent.
 
 | File | Contents |
 |------|----------|
-| `pw_go_mappings.sssom.yaml` | Candidate PW→GO mappings as an SSSOM mapping set, from three sources: GO ids PW cites in a definition (`skos:relatedMatch`), the "associated GO term" on a diagram page (`skos:closeMatch`), and exact normalized matches between labels or exact synonyms, where PW's "X metabolic/biosynthetic/degradation pathway" is read as GO's "X metabolic/biosynthetic/catabolic process" (`skos:exactMatch` if verbatim, else `skos:closeMatch`). None is curator-verified. Each row's `curation_rule` records why it exists (`pw2go:src/…`) and any QA finding (`pw2go:qa/…`), as fixed codes defined in the mapping-set description, so one prefix filter selects every problem row. `see_also` holds only GO's replacement for an obsolete target; the conflicting GO ids for a page citation that disagrees are in `other` as `conflicts_with=<GO id>`. |
+| `pw_go_mappings.sssom.yaml` | Candidate PW→GO mappings as an SSSOM mapping set, from three sources: GO ids PW cites in a definition (`skos:closeMatch` after a 50-row spot check; spot-checked pairs carry their own verdict; citations of obsolete or missing GO ids stay `skos:relatedMatch`), the "associated GO term" on a diagram page (`skos:closeMatch`), and exact normalized matches between labels or exact synonyms, where PW's "X metabolic/biosynthetic/degradation pathway" is read as GO's "X metabolic/biosynthetic/catabolic process" (`skos:exactMatch` if verbatim, else `skos:closeMatch`). None is curator-verified. Each row's `curation_rule` records why it exists (`pw2go:src/…`) and any QA finding (`pw2go:qa/…`), as fixed codes defined in the mapping-set description, so one prefix filter selects every problem row. `see_also` holds only GO's replacement for an obsolete target; the conflicting GO ids for a page citation that disagrees are in `other` as `conflicts_with=<GO id>`. |
 | `pw_gocam_completeness.tsv` | One row for each of the 1,677 PW terms with human genes. Genes are taken over the term and its descendants. The basis is the RGD-curated set when one exists and all sources otherwise. Columns give the share of basis genes in any human GO-CAM, the share with a gene review, the best-overlapping GO-CAM, and the GO-CAM models whose process falls under a mapped GO term, with the share of genes they contain. |
 | `module_seeds.yaml` | One seed per diagram pathway: diagram structure, RGD-curated human genes, merged GO mappings, GO-CAM coverage, matches to existing modules, and a triage tier. |
 | `summary.yaml` | Headline counts used on this page. |
@@ -104,14 +101,14 @@ Module matching uses three tests. A module that cites the PW id matches. A
 module matches when at least two of its human members are in the pathway and
 they make up at least half its members (mapped through HGNC). A module also
 matches when it uses the mapped GO term or one of its descendants. Seeds are
-then put in tiers:
+then put in tiers (counts as of the 2026-11-23 triage):
 
 | Tier | Rule | Diagram pathways |
 |------|------|------------------|
-| `has_module` | Cites the PW id as an `evidence` source, or at least half of a module's genes are in the pathway | 131 |
+| `has_module` | Cites the PW id as an `evidence` source, or at least half of a module's genes are in the pathway | 136 |
 | `candidate` | Mapped GO process, at least 5 curated genes, no matching module | 0 |
-| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 4 |
-| `no_specific_go_term` | Curated, but GO has only a broad process term or none (not used for matching) | 2 |
+| `related_module_only` | Only a GO-term match, often a bacterial or other-taxon module | 0 |
+| `no_specific_go_term` | Curated, but GO has only a broad process term or none (not used for matching) | 1 |
 | `needs_go_mapping` | At least 5 curated genes but no GO process mapping | 0 |
 | `thin` | Fewer than 5 RGD-curated human genes | 7 |
 | `out_of_scope` | Disease or drug branch, or an "altered ..." pathway | 56 |
@@ -130,9 +127,14 @@ split along their sub-pathways before modelling.
   cite GO in their definition and 417 have a lexical match.
 - **PW's definition citations are reliable.** Where both exist, the definition
   citation and the lexical match agree for 388 of 397 terms. In no case is the
-  cited GO term an ancestor of the lexical match. This supports treating PW's
-  definition citations as closer to exact than `relatedMatch`, after spot
-  checks. The GO ids typed on RGD's diagram pages are less reliable. 4 of 45
+  cited GO term an ancestor of the lexical match. A reproducible 50-row spot check
+  of the 592 citations of live GO processes
+  ([`data/pw_def_xref_spot_check.yaml`](RGD_PATHWAY_ONTOLOGY/data/pw_def_xref_spot_check.yaml))
+  found 48 close or exact matches and 2 narrower GO terms (PW:0000100 transcription
+  pathway → DNA-templated transcription; PW:0000211 biogenic amines and polyamines →
+  polyamine metabolic process), and none wrong, so the citations are now written as
+  `closeMatch`. Extrapolated, about 24 of the 592 (up to about 80 at the 95% bound)
+  would deserve `narrowMatch`. The GO ids typed on RGD's diagram pages are less reliable. 4 of 45
   disagree with the other sources for the same pathway, and three of these look
   wrong: urea cycle is cited as GO:0000076, a DNA replication term whose local id
   repeats the PW id; ERK5 signaling as the JNK cascade; and Toll-like receptor
@@ -1169,10 +1171,219 @@ Possible upstream errors found in this set:
   the 60S by GOA and Complex Portal; the module follows UniProt and records the
   conflict.
 
+### Eleventh set: the spliceosome
+
+The eleventh set carries out the spliceosome plan in
+[broad_pathway_split_plans.md](RGD_PATHWAY_ONTOLOGY/broad_pathway_split_plans.md).
+Every module cites PW:0001073 (spliceosome), which moves from
+`related_module_only` to `has_module`. The snRNAs are not gene products in these
+models, and the Sm and snRNP units are modelled once, in the cycle module.
+
+- [`modules/major_spliceosome_cycle.yaml`](../modules/major_spliceosome_cycle.yaml):
+  the snRNPs (Sm and LSm rings, U1, 17S U2 with SF3a and SF3b, U4/U6, U5 and the
+  tri-snRNP), then the assembly states E/A, B, Bact/B*, C, C*/P and ILS, with each
+  DEAD/DEAH-box ATPase at the transition it drives, the two transesterifications
+  on the C and C* complexes (RNA catalysis, so no protein carries them), the
+  NineTeen complex, and the EJC by reference to `nonsense_mediated_mrna_decay`.
+  90 of RGD's 153 human genes are participants. RGD lists no U12-specific
+  protein, so there is no minor spliceosome module.
+- [`modules/spliceosomal_snrnp_biogenesis.yaml`](../modules/spliceosomal_snrnp_biogenesis.yaml):
+  Sm protein symmetric dimethylation by the PRMT5-WDR77-CLNS1A methylosome, Sm
+  ring assembly by the SMN complex, TGS1 cap hypermethylation, snurportin-importin
+  beta nuclear import, and optional Cajal body maturation. RGD's list has only the
+  Sm and LSm substrates, so every assembly factor was added with human evidence.
+- [`modules/splice_site_selection_regulators.yaml`](../modules/splice_site_selection_regulators.yaml):
+  SR and TRA2 activators, silencer-binding hnRNP and SR-like repressors, and the
+  cell-type-specific regulators RGD names (PTBP2, MBNL1, QKI, TIAL1, SRRM4), acting
+  on the E/A state of the cycle module. 26 proteins, all on RGD's list.
+- **Ontology requests**: two `proposed_new_terms` (Sm protein complex chaperone
+  activity, for pICln; pre-mRNA exonic splicing enhancer binding) and one
+  `proposed_ontology_changes` (a RHEA cross-reference for GO:0035243).
+
+### Twelfth set: histone modification
+
+PW:0001338 names a class of reactions, not a pathway, and has no specific GO
+process. The plan's six writer and eraser modules all cite it, and a seventh fills
+a gap the plan left. GO has made the histone modification process terms obsolete
+as molecular functions, so each module carries the closest live process
+(facultative heterochromatin formation, transcription initiation-coupled chromatin
+remodeling, chromatin remodeling, peptidyl-lysine or peptidyl-arginine
+methylation) and puts the site-specific activities on the enzymes. None asks GO
+for new histone process terms. Histones are substrates, not units, and readers
+appear only as units of the complexes that recruit them. PW:0001338 moves from
+`no_specific_go_term` to `has_module`.
+
+- [`modules/polycomb_repressive_complexes.yaml`](../modules/polycomb_repressive_complexes.yaml):
+  PRC2 (EZH1/2, EED, SUZ12, RBBP4/7, with PRC2.1 and PRC2.2 accessory variants)
+  and canonical and variant PRC1, linked by the H3K27me3 and H2AK119ub1 reader
+  steps.
+- [`modules/compass_family_h3k4_methylation.yaml`](../modules/compass_family_h3k4_methylation.yaml):
+  the WRAD core stimulating the SET1A/B, MLL1/2 and MLL3/4 branches; the MLL3/4
+  enzymes are the enhancer H3K4 monomethylases.
+- [`modules/histone_acetyltransferase_complexes.yaml`](../modules/histone_acetyltransferase_complexes.yaml):
+  the SAGA HAT module and ATAC, MOZ/MORF, the two HBO1 complexes, NSL and MSL, and
+  CBP/p300; TIP60-p400 by reference.
+- [`modules/histone_deacetylation.yaml`](../modules/histone_deacetylation.yaml):
+  HDAC1/2 in SIN3A and CoREST, HDAC3 in NCoR/SMRT, the class IIa HDACs as adaptors
+  without deacetylase activity, NuRD by reference, and SIRT1, SIRT6 and SIRT7.
+- [`modules/histone_lysine_demethylation.yaml`](../modules/histone_lysine_demethylation.yaml):
+  the FAD-dependent KDM1A/B and the Fe(II)/2-oxoglutarate JmjC families KDM2 to
+  KDM7 and PHF2. JMJD1C and KDM8 are left out as not genuine histone demethylases.
+- [`modules/histone_arginine_methylation.yaml`](../modules/histone_arginine_methylation.yaml):
+  type I PRMT1, CARM1, PRMT6 (and the weak PRMT2), histone-context PRMT5-WDR77,
+  and PRMT7.
+- [`modules/histone_lysine_methylation_h3k9_h3k36_h3k79_h4k20.yaml`](../modules/histone_lysine_methylation_h3k9_h3k36_h3k79_h4k20.yaml):
+  not in the plan. SUV39H1/2, G9a/GLP and SETDB1-ATF7IP (H3K9), NSD1-3 and ASH1L
+  then SETD2 (H3K36), DOT1L-AF10 (H3K79) and KMT5A then KMT5B/C (H4K20). SETD7,
+  the SMYDs and the PRDMs are left out with reasons.
+- **Ontology requests**: two `proposed_new_terms` (CoREST complex; NCoR-HDAC3
+  complex) and three `proposed_ontology_changes` (the label of GO:0140682 says
+  H3K4me3 where its definition says mono- and dimethyl; the definition of
+  GO:0141052 names only the Fe(II)/2-oxoglutarate mechanism although it has
+  FAD-dependent children; the EC:1.14.11.65 mapping on the FAD-dependent
+  GO:0140685).
+- USP22, the SAGA deubiquitinase, is the one RGD histone gene left without a
+  module; BAP1 and USP16 (H2A deubiquitination) are named as a candidate module.
+
+### Thirteenth set: ribosome biogenesis
+
+- [`modules/ribosome_biogenesis.yaml`](../modules/ribosome_biogenesis.yaml)
+  completes the translation plan. It cites PW:0001066, which was already
+  `has_module` through `cytoplasmic_ribosome`. Pol I transcription by reference,
+  box C/D and H/ACA snoRNP modification, the SSU processome, XRN2 and the nuclear
+  exosome, ITS1 cleavage, nuclear pre-60S and pre-40S maturation, export, and
+  cytoplasmic 40S and 60S maturation. The ribosomal proteins stay in the ribosome
+  module. 50 gene products, so the 40S and 60S branches did not need sub-modules.
+  Two BIOLOGY knowledge gaps: the human 5' ETS endonucleases and the ITS1 site 2
+  endonuclease are unidentified.
+
+### Fourteenth set: the calcium-mediated signaling leftovers and the last seed
+
+- [`modules/small_conductance_calcium_activated_potassium_channels.yaml`](../modules/small_conductance_calcium_activated_potassium_channels.yaml):
+  calmodulin bound to SK1-3 (KCNN1-3, which co-assemble) and IK (KCNN4) channels,
+  the one coherent group among the 30 PW:0001140 genes no module covered. As the
+  plan says, the EF-hand sensors and buffers, synaptotagmins and the rest get no
+  catch-all module; each belongs in the process it serves.
+- **PW:0001437 (titanium dioxide nanoparticle response)** gets no module. Its six
+  genes (BAX, CASP3, CASP8, FAS, TLR4, TP53) are all in pathways that have modules,
+  and RGD's diagram links out to them (intrinsic apoptosis, FasL, p53, Toll-like
+  receptor signaling). It describes a response to a xenobiotic, not a reusable
+  mechanism, and it stays the one `no_specific_go_term` pathway.
+
+Tiers are now 136 `has_module`, 1 `no_specific_go_term`, 7 `thin` and 56
+`out_of_scope`, with `modules_compared` at 868. Every in-scope pathway with enough
+genes has a module.
+
+Possible upstream errors found in sets 11 to 14 (queries; full texts not read
+unless stated):
+
+- **GOA.**
+  - SLU7 has an IDA row for second spliceosomal transesterification activity; the
+    paper shows a structural requirement, and the reaction is RNA-catalysed.
+  - DDX23 has a NOT helicase IDA row beside TAS helicase rows; USP39 has a NOT
+    deubiquitinase IDA row beside positive rows from non-splicing papers.
+  - SIRT1 and SIRT6 carry "hydrolytic mechanism" histone deacetylase rows;
+    sirtuins are NAD-dependent.
+  - KDM1A carries EXP rows for GO:0140683, the Fe/2-oxoglutarate H3K9
+    demethylase; the FAD-dependent GO:0140685 fits LSD1.
+  - PRMT7 carries symmetric dimethylation rows that later biochemistry
+    contradicts; ASH1L carries an H3K36 trimethylation row that later work
+    contradicts.
+  - MSL3 carries H4K16ac reader activity where the paper reports H4K20me1
+    binding; JADE2 carries "enables" HAT rows where its co-subunits carry
+    "contributes_to".
+  - KCNN1 and KCNN4 are part_of the voltage-gated potassium channel complex,
+    though SK and IK channels are voltage-independent.
+- **GO-CAM.** Five adipocyte models give EHMT1 H3K9 trimethyltransferase
+  activity, where G9a/GLP make mono- and dimethyl H3K9.
+- **RGD.** PALS2 on PW:0001066 looks meant for MPHOSPH6, the exosome cofactor
+  RGD's text calls Mpp6.
+
+### Fifteenth set: candidate modules from the earlier sets
+
+With every RGD seed modelled or decided, the fifteenth set takes candidates the
+earlier sets split out.
+
+- [`modules/ribosome_quality_control_and_stalled_ribosome_rescue.yaml`](../modules/ribosome_quality_control_and_stalled_ribosome_rescue.yaml)
+  (PW:0001671 no-go and PW:0000549 nonstop mRNA decay; RGD annotates no genes to
+  either): ZNF598 collision sensing, splitting by ASC-1 or by PELO-HBS1L then
+  ABCE1, RQC on the 60S (NEMF, LTN1, ANKZF1, optional VCP), and optional
+  GIGYF2-4EHP repression. The no-go/nonstop endonuclease is a knowledge gap.
+- [`modules/histone_deubiquitination.yaml`](../modules/histone_deubiquitination.yaml)
+  (PW:0001338): the ATXN7L3-ENY2 modules with USP22 (SAGA), USP27X or USP51, PR-DUB
+  (BAP1 with ASXL1-3), USP16, and optional MYSM1 and USP3. USP22, the last RGD
+  histone gene without a module, is now covered.
+- [`modules/epithelial_apical_basal_polarity_complexes.yaml`](../modules/epithelial_apical_basal_polarity_complexes.yaml):
+  the PAR, Crumbs and Scribble complexes with the aPKC-LGL antagonism. PW has no
+  apical-basal polarity pathway.
+- [`modules/dna_repair_gap_filling_synthesis_and_ligation.yaml`](../modules/dna_repair_gap_filling_synthesis_and_ligation.yaml):
+  RFC or CTF18-RFC, PCNA, Pol delta, epsilon or kappa, and LIG1 or LIG3-XRCC1, the
+  late steps shared by NER and mismatch repair.
+- [`modules/hair_cell_stereocilium_bundle_organization.yaml`](../modules/hair_cell_stereocilium_bundle_organization.yaml)
+  (PW:0001503): the twelve bundle genes left out of hair-cell mechanotransduction,
+  as actin core, cross-linkers, MYO15A tip complex, myosin III length tuning, the
+  USH2 ankle links and base anchoring.
+- **Ontology requests**: two `proposed_new_terms` (histone H2AK119 deubiquitinase
+  activity; Crumbs complex) and two `proposed_ontology_changes` (the definition of
+  GO:0000731 describes only recombination; an edge GO:0060122 part_of GO:0160194).
+- **Follow-ups from the set 11-14 review**: G9a/GLP carries histone H3K9
+  dimethyltransferase activity; the branching annoton is the catalytic step 1
+  spliceosome; four papers cited only in prose are cached. The NER module no longer
+  says LIG3-XRCC1 is the main NER ligase in quiescent cells: that rested on
+  PMID:17643379, retracted in 2021.
+
+The Reelin synapse candidate is not modelled: its NMDA and AMPA receptor evidence
+is from mouse.
+
+### Sixteenth set: follow-ups
+
+The sixteenth set closes follow-ups from the earlier sets rather than adding modules.
+
+- `nucleotide_excision_repair` and `eukaryotic_mismatch_repair` now reach their
+  gap-filling and ligation steps by `module_ref` to
+  `dna_repair_gap_filling_synthesis_and_ligation` (MMR keeps `pcna_loading`, which also
+  activates MutLalpha). The NER file lists 18 fewer accessions and the MMR file 5; both
+  still cite their PW ids, so their tiers do not change, but their seed basis counts in
+  `module_seeds.yaml` now understate coverage until the triage follows `module_ref`.
+- `gpcr_camp_pka_signaling`'s PKA steps now resolve into `camp_pka_signal_transduction`;
+  its ten callers in seven modules are unchanged. The cyclase step keeps its own ADCY5
+  annoton, because the fuller module's cyclase step also admits soluble ADCY10, which
+  G proteins do not regulate; the CREB step stays because the fuller module leaves PKA
+  substrates out.
+- `plasma_membrane_calcium_extrusion` models PMCA1-4 as complexes of the ATP2B pump and
+  one accessory unit, a family of NPTN or BSG (a native complex carries one or the
+  other; PMID:29056295, PMID:30190470), and asks for a direction-neutral definition of
+  GO:0090534.
+- `retinoic_acid_receptor_signaling`'s production part now references
+  `retinoic_acid_metabolism`'s `retinal_oxidation` and `crabp2_variant` nodes.
+- The HDAC4 gene review now marks its histone deacetylase rows over-annotated,
+  matching the HDAC5 review and `histone_deacetylation`, and its description names
+  His976 (not His803) as the residue that replaces the catalytic Tyr. The met-2 review
+  now reads GO:0140942 as the full two-step dimethylation.
+
+### Seventeenth and eighteenth sets: triage fixes, spot check and blood-set reviews
+
+- The triage now reads GO and UniProt ids from structured `term.id` fields only, so ids
+  named in notes no longer create matches (ai4curation/ai-gene-review#6006), and it
+  follows node-level `module_ref` (`slug#node`) when counting a module's genes; a
+  bare-slug reference to a separate whole module is not followed. Tiers did not change;
+  76 pathways' match bases did, and NER (36/46) and mismatch repair (21/21) count their
+  gap-filling genes again.
+- `interpro/panther/PTHR10625/PTHR10625-review.yaml` asks PAINT for an `ADD_IRD` of
+  histone deacetylase activity at PTN000743504, the vertebrate class IIa HDAC clade,
+  whose members carry His in place of the catalytic Tyr.
+- PW's definition citations are now `closeMatch` after the spot check described under
+  Findings.
+- New gene reviews for F3 (tissue factor; the FVIIa cofactor and allosteric activator)
+  and PROS1 (protein S; the APC and TFPI cofactor and a TAM-receptor ligand).
+- The optional transmembrane-only adenylyl cyclase node was not added.
+  `gpcr_camp_pka_signaling#adenylyl_cyclase_activation`, which five modules reference,
+  splits the cyclases into Gs-stimulated and Gi-inhibited variants; a reference to the
+  cAMP/PKA cassette's regulatory classes would not keep that split, which the
+  calcium-sensing receptor module relies on.
+
 ## Next steps
 
-- Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
-  definition citations from `relatedMatch` to `closeMatch`/`exactMatch`.
 - Send RGD the 45 obsolete GO citation sites (44 in definitions, 1 on a
   diagram page; the page one repeats PW:0000543's definition citation, so 44
   distinct pairs), the unresolvable one and the 3 wrong page citations, with
@@ -1180,9 +1391,6 @@ Possible upstream errors found in this set:
   Filtering `curation_rule` on `pw2go:qa/` returns all 50 rows: `qa/OBSOLETE_TARGET` 45, `qa/MISSING_TARGET` 1,
   `qa/PAGE_XREF_DISAGREES` 4 (the three wrong citations and the defensible
   PW:0000862) and `qa/ID_ECHO` 1 (PW:0000076, which also disagrees).
-- Reconcile `gpcr_camp_pka_signaling` with the fuller
-  `camp_pka_signal_transduction`: the four Gs hormone modules still refer to the
-  compact module's cyclase and PKA steps.
 - Submit the new-term requests now recorded in module `proposed_new_terms`
   (`export_proposed_terms.py modules` lists them) to GO. Deduplicate by
   `proposed_name`: calcium channel activator activity is requested by both
@@ -1190,24 +1398,14 @@ Possible upstream errors found in this set:
 - Once a calcium channel activator activity term exists, sweep the three
   "opens a calcium channel" functions onto it: STIM1/2 (`GO:0005246`),
   EMRE (`GO:0099103`) and CACNA1S (`GO:0005245`).
-- Review the blood-set member genes, starting with the proteases and cofactors
-  that carry curator-judgment molecular functions (F3, F5, F8, PROS1).
+- Review the remaining blood-set member genes; F3, F5, F8 and PROS1 are done.
 - Model the remaining pathways. The broad ones (RNA polymerase II, translation,
   ribosome biogenesis, the spliceosome and histone modification, plus RNA
   polymerase transcription and calcium-mediated signaling, which match only by
   gene overlap) now have split plans in
   [broad_pathway_split_plans.md](RGD_PATHWAY_ONTOLOGY/broad_pathway_split_plans.md),
-  with a suggested order. The RNA polymerase II plan (ninth set) and translation
-  (tenth set) are done; next are the spliceosome, Polycomb and COMPASS, then
-  ribosome biogenesis.
-- Add the obligatory PMCA subunits NPTN and BSG to
-  `plasma_membrane_calcium_extrusion`.
-- Factor a human DNA gap-filling module (PCNA, RFC, Pol delta, LIG1) out of the
-  NER and mismatch repair modules, and point
-  `retinoic_acid_receptor_signaling`'s production step at
-  `retinoic_acid_metabolism`.
-- Fix the triage's prose scraping of GO and UniProt ids
-  (ai4curation/ai-gene-review#6006).
+  with a suggested order. All of them are now carried out (ninth to fourteenth
+  sets), and the candidates they split out are modelled in the fifteenth set.
 - Candidate modules split out during the sets: Reelin modulation of NMDA/AMPA
   receptors in the adult synapse, and a human PAR/Crumbs/Scribble polarity module
   (the PKC module mentions the PAR complex only through the atypical PKCs), and a
@@ -1224,7 +1422,7 @@ Possible upstream errors found in this set:
 - [x] GO-CAM completeness table (`data/pw_gocam_completeness.tsv`)
 - [x] Module seeds and triage (`data/module_seeds.yaml`)
 - [x] Pilot module from an RGD diagram (`modules/srebp_signaling.yaml`)
-- [ ] Spot-check and promote definition-citation mappings
+- [x] Spot-check and promote definition-citation mappings (50 rows; 48 close or exact, 2 narrower)
 - [ ] Report obsolete GO citations to RGD
 - [x] Map `needs_go_mapping` seeds (all 28, in `data/pw_go_curated.sssom.yaml`)
 - [x] Gene reviews for SREBP pathway members
@@ -1236,6 +1434,14 @@ Possible upstream errors found in this set:
 - [x] Model the remaining calcium transport families (6 modules, eighth set)
 - [x] Split RNA polymerase II transcription into five modules (ninth set)
 - [x] Split translation into four modules (tenth set)
+- [x] Split the spliceosome into three modules (eleventh set)
+- [x] Split histone modification into seven modules (twelfth set)
+- [x] Model ribosome biogenesis (thirteenth set)
+- [x] Model the SK channels from the calcium-mediated signaling leftovers and decide PW:0001437 (fourteenth set)
+- [x] Model the candidate modules split out of earlier sets (fifteenth set)
+- [x] Close the follow-ups from the earlier sets (sixteenth set)
+- [x] Triage reads structured module ids and follows node-level `module_ref`; PTHR10625 IRD request (seventeenth set)
+- [x] Promote definition citations; F3 and PROS1 gene reviews (eighteenth set)
 
 ## Notes
 
@@ -1317,3 +1523,32 @@ and termination, nonsense-mediated decay), plus three follow-ups from the
 ninth-set review. PW:0000101 and PW:0001066 move to `has_module`: 134
 `has_module`, 1 `related_module_only` and 2 `no_specific_go_term`, with
 `modules_compared` at 851.
+
+### 2026-11-21
+
+Sets eleven to fourteen: three spliceosome modules, seven histone modification
+modules, ribosome biogenesis, and the SK/IK channels. PW:0001073 and PW:0001338
+move to `has_module`, and PW:0001437 is left without a module by decision: 136
+`has_module` and 1 `no_specific_go_term`, with `modules_compared` at 868.
+
+Fifteenth set: ribosome quality control, histone deubiquitination, apical-basal
+polarity, DNA repair gap filling and stereocilium bundle organization, plus the
+follow-ups from the review of sets 11-14 and the removal of a claim resting on a
+retracted paper from `nucleotide_excision_repair`. Tiers are unchanged (136
+`has_module`); `modules_compared` is 873.
+
+### 2026-11-23
+
+Sixteenth set: NER and MMR gap filling by module_ref, the cAMP/PKA reconciliation,
+PMCA accessory subunits, the retinoic acid production repoint, and the HDAC4 and met-2
+gene review revisits (merged in ai4curation/ai-gene-review#6630). Tiers are unchanged
+(136 `has_module`); `modules_compared` is 877, with modules merged on `main` meanwhile.
+
+### 2026-11-24
+
+Seventeenth set (ai4curation/ai-gene-review#6787): structured-id triage with node-level
+`module_ref`, and the PTHR10625 class IIa IRD request. Eighteenth set
+(ai4curation/ai-gene-review#6840): definition citations promoted to `closeMatch` after
+a 50-row spot check, and F3 and PROS1 gene reviews. Tiers are unchanged (136
+`has_module`); `modules_compared` is 886. The stale `gpcr_camp_pka_signaling` sentences
+were corrected separately (ai4curation/ai-gene-review#6718).

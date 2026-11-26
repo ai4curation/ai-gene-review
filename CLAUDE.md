@@ -54,6 +54,31 @@ and individual snippets can be validated with LinkML tooling.
   new batch. File allocation and APFS physical free-space changes are different
   measurements; do not claim one proves the other.
 
+## Parallel PRs: avoid shared files
+
+Content PRs should touch only their owned slice: the gene folders, history
+records, publications, modules, GO-CAM reviews, rules, or family reviews that the
+PR is explicitly delivering. Branch each content PR from current `main`; do not
+stack it on another unmerged content branch.
+
+- Update top-level `projects/*.md` status pages in a separate status PR after
+  the content they summarize has merged. Until then, record progress in gene
+  notes, module notes, or append-only history records.
+- Do not commit rendered `pages/**` HTML from content PRs. The
+  `generate-pages` workflow renders `pages/` from `main` with `just render-all`
+  and `just render-projects`, then publishes those outputs. Older rendered
+  `pages/` copies are still tracked while they are untracked in batches; do not
+  stage re-rendered versions of them.
+- Regenerate single-file shared caches, including committed `cache/**/terms.csv`
+  files and `interpro/panther/panther.obo`, in dedicated refresh PRs. If a merge
+  leaves a cache unsorted or duplicated, run the repair command such as
+  `just fix-caches` before staging the cache.
+- If you edit a local file other records may quote, such as a gene review, a
+  family review under `interpro/panther/`, or a bioinformatics `RESULTS.md`,
+  run `just validate-quotes` and fix any incoming `supporting_text` quotes in
+  the same PR. Prefer a primary publication, PAINT node, or stable database
+  record over quoting mutable review prose when it supports the same claim.
+
 ## Repository layout
 
 src/
@@ -187,6 +212,8 @@ A deep research file should already be present in the gene folder, e.g. `genes/S
 ```bash
 just deep-research SPECIES GENE --provider perplexity
 ```
+
+The Falcon (FutureHouse/Edison) stack is not in the default install. Run `uv sync --extra edison` once before the recipes that run Falcon through the repo environment: `deep-research-interpro-family` (its default provider is falcon), `rules-deep-research-falcon`, `term-deep-research-falcon`, `family-deep-research-falcon`, `gene-hypothesis-research` with falcon, and `fetch-research-artifacts`. The uvx-based `deep-research-falcon` and `module-*-deep-research-falcon` recipes are unaffected. `uv run` keeps the extra, but an exact sync (plain `uv sync`, or `just install`, which runs `uv sync --group dev`) removes it, so afterwards re-run `uv sync --group dev --extra edison`.
 
 This will create a file like `GENE-deep-research-perplexity.md`. You can also make your own notes in `genes/SPECIES/GENE/GENE-notes.md`.
 
@@ -610,6 +637,23 @@ Validation deliberately treats the two sources of GO term ids differently:
 Rule of thumb: machine-sourced ids are trusted (other deterministic steps guarantee they
 are real GOA terms); author-supplied ids are checked hard.
 
+**Neither check catches an obsolete id you wrote**, because the dynamic enums test branch
+*reachability* and a retired term is still reachable. `just validate` therefore warns
+(`obsolete_authored_term`,
+`src/ai_gene_review/validation/obsolete_authored_terms.py`) on every author-supplied GO
+id — a `NEW` row's term and its extensions, `core_functions`,
+`proposed_replacement_terms`, a `proposed_parent`, an isoform's
+`isoform_specific_terms` — that an offline signal marks obsolete; `just obsolete-term-audit`
+lists them. Detection combines the GO sqlite snapshot's `obsolete ` label prefix with the
+same prefix in the corpus' own `GENE-goa.tsv` files, which are refetched per gene and so
+catch obsoletions the snapshot has not picked up (this is how `GO:0098734` was found while
+CPT1C's own GOA file still carried the live label). **A hit is informative; a clean result
+proves nothing** — the two signals together caught four of eight known cases, and a
+*merged* id, which QuickGO resolves silently to a different term, is invisible to both. So
+check a replacement term against a live service when it matters, and do not read silence
+as confirmation. Do not repoint to GO's `replaced_by` without checking it against the gene:
+the mapping is automated and has been wrong here (see `genes/human/FYB1`).
+
 When a core activity has **no GO term yet** (e.g. in-situ holdases after GO:0051082 was
 obsoleted without a replacement), do not put an obsolete or ill-fitting id in
 `core_functions.molecular_function`. Instead set `proposed_molecular_function` to the
@@ -731,7 +775,9 @@ points to the wrong paper).
 The reference validator already catches the *mechanical* citation failures automatically: it
 verifies each cited reference's `title` matches the fetched record (a transposed/wrong PMID whose
 title no longer matches fails) and that every `supporting_text` is a **verbatim substring** of the
-cached publication (a quote from the wrong paper, or a paraphrased/invented quote, fails).
+cached publication (a quote from the wrong paper, or a paraphrased/invented quote, fails);
+for `PMID:` and `DOI:` sources the paper's cached title also counts, as a separate text a quote
+cannot run into the body from (`src/ai_gene_review/validation/title_matching.py`).
 A `supporting_text` value must contain actual verbatim source text. Editorial square
 brackets may clarify part of a real quotation; an empty string or a value consisting
 only of editorial commentary is not a quotation. Omit this optional field when no
