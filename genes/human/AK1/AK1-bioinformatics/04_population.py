@@ -61,6 +61,11 @@ def main() -> None:
             by_hgvsc.setdefault(v["hgvsc"], []).append(v)
     spec = yaml.safe_load((HERE / "reported_variants.yaml").read_text())
     reported = []
+    cons_path = HERE / "results" / "variant_consequences.json"
+    computed_p = {}
+    if cons_path.exists():
+        computed_p = {v["cdna"]: v.get("hgvs_p") for v in json.loads(cons_path.read_text())["variants"]
+                      if v.get("class") != "missense" and v.get("hgvs_p")}
     for r in spec["variants"]:
         hits = by_hgvsc.get(r["cdna"], [])
         if not hits:  # deletions/duplications are written with the bases in gnomAD
@@ -69,10 +74,15 @@ def main() -> None:
             if kind:
                 hits = [v for h, vs in by_hgvsc.items() for v in vs
                         if re.match(rf"c\.{pos}(_\d+)?{kind}", h)]
+        if not hits and r["cdna"] in computed_p:
+            # gnomAD left-/right-shifts indels in repeats (c.418_420del is written c.421_423del),
+            # so fall back to the protein consequence computed by 01_variant_consequences.py
+            hits = [v for v in variants if v["hgvsp"] == computed_p[r["cdna"]]]
         row = {"cdna": r["cdna"], "in_gnomad_v4": bool(hits)}
         if hits:
             ac, an, hom = (sum(x) for x in zip(*(counts(v) for v in hits)))
-            row.update({"gnomad_ids": [v["variant_id"] for v in hits], "hgvsp": hits[0]["hgvsp"],
+            row.update({"gnomad_ids": [v["variant_id"] for v in hits], "gnomad_hgvsc": [v["hgvsc"] for v in hits],
+                        "hgvsp": hits[0]["hgvsp"],
                         "allele_count": ac, "allele_number": an, "homozygotes": hom,
                         "allele_frequency": ac / an if an else None})
         reported.append(row)
@@ -106,6 +116,9 @@ def main() -> None:
         "n_missense": len(mis),
         "missense_with_homozygotes": sorted(mis_hom, key=lambda r: -r["homozygotes"]),
         "predicted_lof_variants": sorted(lof_rows, key=lambda r: -r["allele_count"]),
+        "all_predicted_lof_summary": {"n_variants": len(lof_rows),
+                                      "total_allele_count": sum(r["allele_count"] for r in lof_rows),
+                                      "homozygotes": sum(r["homozygotes"] for r in lof_rows)},
         "high_confidence_lof_summary": {
             "n_variants": len(hc_lof),
             "total_allele_count": sum(r["allele_count"] for r in hc_lof),

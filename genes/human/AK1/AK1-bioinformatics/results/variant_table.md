@@ -2,7 +2,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | c.71A>G | p.Gln24Arg | missense | CORE domain | - | 5.15 | phosphate | 0.04 | 7/7 | 6/8 | 0.95 LPath | absent | PMID:30918013 |
 | c.118G>A | p.Gly40Arg | missense | NMP domain | - | 3.53 | phosphate | 0.19 | 7/7 | 8/8 | 1.00 LPath | 4/1613960 (0) | PMID:12649162 |
-| c.138del | p.Val47SerfsTer45 | frameshift | NMP domain | - | 8.28 | ribose AMP-site adenosine | 0.24 | 7/7 | 2/8 | n/a | absent | PMID:15315793 |
+| c.138del | p.Val47SerfsTer45 | frameshift | NMP domain | - | 8.28 | ribose AMP-site adenosine | 0.24 | 7/7 | 2/8 | n/a | 1/1461850 (0) | PMID:15315793 |
 | c.190G>A | p.Gly64Arg | missense | NMP domain | - | 4.42 | ribose AMP-site adenosine | 0.1 | 7/7 | 7/8 | 1.00 LPath | 6/1614000 (0) | PMID:12649162 |
 | c.223dup | p.Met75AsnfsTer19 | frameshift | CORE domain | - | 8.7 | adenine AMP-site adenosine | 0.16 | 7/7 | 2/8 | n/a | absent | PMID:35509045 |
 | c.289C>T | p.Arg97Trp | missense | CORE domain | AMP (94-97) | 3.51 | adenine AMP-site adenosine | 0.23 | 7/7 | 8/8 | 0.98 LPath | 40/1461858 (0) | PMID:28211224 |
@@ -10,7 +10,7 @@
 | c.319C>T | p.Arg107Ter | nonsense | CORE domain | - | 14.73 | adenine AMP-site adenosine | 0.59 | 4/7 | 2/8 | n/a | 1/1461656 (0) | PMID:10233365 |
 | c.382C>T | p.Arg128Trp | missense | CORE domain | - | 3.38 | adenine ATP-site adenosine | 0.29 | 7/7 | 8/8 | 0.97 LPath | 5/1456106 (0) | PMID:2542324 |
 | c.413G>A | p.Arg138His | missense | LID domain | AMP (138) | 3.15 | phosphate | 0.28 | 7/7 | 7/8 | 0.98 LPath | 10/1611874 (0) | PMID:30918013 |
-| c.418_420del | p.Asp141del | in-frame deletion | LID domain | - | 5.06 | phosphate | 0.05 | 7/7 | 8/8 | n/a | absent | PMID:12649162 |
+| c.418_420del | p.Asp141del | in-frame deletion | LID domain | - | 5.06 | phosphate | 0.05 | 7/7 | 8/8 | n/a | 6/1460430 (0) | PMID:12649162 |
 | c.464del | p.Lys155ArgfsTer39 | frameshift | CORE domain | - | 12.07 | phosphate | 0.51 | 6/7 | 1/8 | n/a | absent | PMID:40016400 |
 | c.491A>G | p.Tyr164Cys | missense | CORE domain | - | 11.8 | adenine AMP-site adenosine | 0.01 | 7/7 | 8/8 | 0.76 LPath | 1/1452070 (0) | PMID:9432020 |
 | c.518T>G | p.Val173Gly | missense | CORE domain | - | 9.91 | adenine ATP-site adenosine | 0.0 | 5/7 | 2/8 | 0.83 LPath | absent | PMID:37782390 |

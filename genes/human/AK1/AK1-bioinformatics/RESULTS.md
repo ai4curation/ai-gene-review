@@ -90,6 +90,8 @@ gnomAD v4 constraint for AK1: pLI 0.009, loss-of-function observed/expected 0.54
 AK1 is therefore not constrained against heterozygous loss of function, which fits a recessive disorder with healthy carriers.
 gnomAD holds 39 high-confidence predicted loss-of-function variants on the MANE transcript with 98 alleles in total and no homozygote.
 None of the reported disease variants is homozygous in gnomAD; the most frequent is Arg97Trp (40 alleles in 1,461,858), then Arg132His (23) and Arg138His (10).
+Two published indels are in gnomAD under their 3'-shifted names and are matched by protein consequence: Asp141del as c.421_423del (6 alleles) and Val47SerfsTer45 as c.139del (1 allele).
+Published variants absent from gnomAD v4 are Gln24Arg, Met75AsnfsTer19, Lys155ArgfsTer39 and Val173Gly.
 The missense variants that do occur homozygous are Glu123Gln (1,477 homozygotes, allele frequency 0.038), Ala162Thr (74), Ser58Leu (17), Ala162Val (2), Ser51Leu (1) and Leu5Pro (1).
 ClinVar (as mirrored by gnomAD) lists eleven pathogenic or likely pathogenic AK1 records: the published variants Gly40Arg, Gly64Arg, Gln101Lys, Arg107Ter, Arg128Trp, Asp141del, Tyr164Cys and Val47SerfsTer45, plus Arg132His, Lys56Ter and a splice-acceptor deletion-insertion (c.44-5_48delinsC) for which no publication was found in PubMed.
 Most ClinVar assertions carry no or one review star, and 45 AK1 records are of uncertain significance.
