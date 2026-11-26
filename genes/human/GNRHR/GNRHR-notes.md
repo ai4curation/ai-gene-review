@@ -104,7 +104,13 @@
 
 ### Left open
 
-- OpenScientist hypothesis job on the penetrance question: see the history record for its state.
+- OpenScientist hypothesis job (`just gene-hypothesis-research openscientist human GNRHR`, free-text
+  hypothesis that Glu90 belongs to the helix 2-3-6 interhelical network and does not form a salt
+  bridge with Lys121, two iterations): launched 2026-11-26 and stopped at the session's background
+  time limit without writing a report. The empty output directory was removed. The local structure
+  measurement (RESULTS.md, Result 3) stands on its own; no OpenScientist result is used anywhere.
+- The penetrance of Q106R and R262Q homozygosity was not sent to OpenScientist; it is recorded as a
+  knowledge gap and a suggested experiment.
 
 ## 2026-11-26: distance correction
 
