@@ -16,10 +16,13 @@ condition on the 24-protein example benchmark, at a total cost of about $36.
 The first numbers cannot answer the project's question yet. Every target
 predates the models' training cutoffs, so the example is a pipeline test.
 The peptalk conditions and the agent-review condition also measure different
-things: peptalk asks the model yes or no about each target term, while a
-review must come up with the term unprompted. The agent-review result (10 of
-50 targets) is a recall floor for open-ended annotation. It is not evidence
-that reading the literature makes a model worse.
+things. Peptalk asks the model yes or no about each target term, while a
+review must come up with the term unprompted. A review is also handed the
+baseline GOA file, and 7 of the 50 targets were already in it as IBA, IEA or
+ISS rows. The agent-review condition found 10 of 50 targets, but 7 of those
+were rows it kept from that file. On the 43 targets it had to produce itself,
+it found 3. It is not evidence that reading the literature makes a model
+worse.
 
 ## Aim
 
@@ -82,13 +85,36 @@ Each sandbox held only what was available on 2025-06-01
 Web tools and MCP servers were disabled. The prompt
 ([scripts/agent-review-prompt.md](SEQFUN_BENCHMARK/scripts/agent-review-prompt.md))
 forbade network access and reading outside the sandbox, and asked the agent to
-mark recalled claims. An audit of every tool call
+mark recalled claims. The audit
 ([scripts/summarize_agent_runs.py](SEQFUN_BENCHMARK/scripts/summarize_agent_runs.py))
-found no network commands and no reads outside the sandbox. The per-gene
-model, effort, cost, turns, action counts and audit are in
-[agent-review-runs.yaml](SEQFUN_BENCHMARK/agent-review-runs.yaml). The
-reviews live in the git-ignored `benchmarks/human-goa-2025-06/runs/agent-review/genes/`.
-They are not production reviews and were never written to `genes/`.
+scans every argument of every tool call for network access, for absolute
+paths outside the sandbox, and for the repository checkout. The checkout
+matters because `run_agent_review.sh` exports it as `$AIGR_REPO`, so that
+`tools/residues.sh` can run the repository's residue checker, and 12 of the 24
+genes have production reviews and current GOA files in the repository. The
+audit found no network access and no reads of repository data. Its one hit
+is POPDC2, whose agent echoed `$AIGR_REPO` before calling `tools/residues.sh`.
+The audit only sees the agent's own tool arguments. It cannot rule out a
+script the agent wrote that built a path at run time, but none of the
+scripts it ran names the repository. The per-gene model, effort, cost, turns,
+action counts and audit are in
+[agent-review-runs.yaml](SEQFUN_BENCHMARK/agent-review-runs.yaml).
+[sandbox-manifest.yaml](SEQFUN_BENCHMARK/sandbox-manifest.yaml) records the
+UniProt entry version and the number of papers given to each gene.
+
+The reviews themselves live in the git-ignored
+`benchmarks/human-goa-2025-06/runs/agent-review/genes/`. They are not
+production reviews and were never written to `genes/`. To make the score
+checkable without them,
+[agent-review-claims.yaml](SEQFUN_BENCHMARK/agent-review-claims.yaml) records
+each final review's sha256 and the kept and contested terms that the scorer
+reads from it.
+
+**The REMOVE counts are almost all protein binding.** LAMP2 has 254 REMOVE
+rows of 344, ZFYVE26 43 of 76, and GSK3B 128 of 417. Of these, 251, 43 and 126
+are bare `GO:0005515` protein binding, which the repository's protein-binding
+policy removes. They do not affect the score, because protein binding entails
+no target.
 
 **Cost: $14.33 for 24 genes** ($0.23 for TGDS to $1.06 for MYD88). Claude Code
 billed a small part of that to Haiku 5.5 for its own housekeeping calls.
@@ -109,6 +135,20 @@ made by [scripts/compare_conditions.py](SEQFUN_BENCHMARK/scripts/compare_conditi
 | organism, Opus 5.5 | 28/50 (7 uncertain) | 1/1 | 6/72 (3 uncertain) |
 | agent-review, Opus 5.5 | 10/50 | 1/1 | not asked |
 
+Seven targets were already entailed by a term in the baseline GOA file that
+the agent was given (as IBA, IEA or ISS rows; the check report's
+`prior_prediction` WARNs). The benchmark's novelty check only excludes
+targets with experimental baseline evidence. The agent scores yes on these by
+keeping a row, and the peptalk conditions never see the file:
+
+| condition | targets in baseline input (n=7) | targets not in baseline input (n=43) |
+|---|---|---|
+| blind, Fable 5.2 | 7/7 | 25/43 |
+| organism, Fable 5.2 | 7/7 | 24/43 (1 refused) |
+| blind, Opus 5.5 | 6/7 | 22/43 (5 uncertain) |
+| organism, Opus 5.5 | 6/7 | 22/43 (7 uncertain) |
+| agent-review, Opus 5.5 | 7/7 | 3/43 |
+
 | condition | C targets | F targets | P targets |
 |---|---|---|---|
 | blind, Fable 5.2 | 8/11 | 11/15 | 13/24 |
@@ -122,15 +162,18 @@ How to read it:
   A review is asked nothing about the targets. It scores yes only when a kept
   row, a NEW row or a core function entails the target term. Reviews are never
   asked about decoys, so the agent-review decoy rate is not measured. Compare
-  agent-review with the others on targets only, and read its 10/50 as recall
-  in open-ended annotation.
-- **The agent did well where the target extends known biology:** SLC25A16
-  mitochondrial CoA transport, SUCLG1 succinate-CoA ligase, SKIC2 non-stop
-  decay, ERLEC1 Hrd1 complex, POPDC2 heart rate, TRIM28 chromatin, MRGPRE
-  plasma membrane, and WHR1 (STK19) transcription-coupled repair. For WHR1 it
-  said it was recalling 2024–early-2025 papers, so the knowledge predated the
-  2025-06 baseline, even though the GO annotation did not ("new to GO is not
-  new knowledge").
+  agent-review with the others on targets only, and on the 43 targets that
+  were not in its input. Its open-ended recall there is 3/43.
+- **Most of the agent's hits were kept rows.** On SLC25A16 (mitochondrial CoA
+  transport), SUCLG1 (succinate-CoA ligase), TRIM28 (chromatin), MRGPRE
+  (plasma membrane), POPDC2 (heart rate) and KLK11 (Golgi apparatus), the
+  target was already an electronic or ISS row in the baseline file, and the
+  agent kept it. SLC25A16, SUCLG1, MRGPRE and KLK11 have no NEW rows at all.
+- **Its three hits beyond the input** were WHR1 (STK19)
+  transcription-coupled repair, SKIC2 non-stop decay and ERLEC1 Hrd1 complex.
+  For WHR1 it said it was recalling papers from 2024 to early 2025, so the
+  knowledge predated the 2025-06 baseline even though the GO annotation did
+  not ("new to GO is not new knowledge").
 - **It missed targets that report genuinely new findings**, such as MPO
   nucleosome disassembly, LAMP2 ferroptosis and STING1 cholesterol and
   PI(3,5)P2 binding. The peptalk runs said yes to most of these when asked
@@ -163,21 +206,27 @@ How to read it:
 
 ## Next steps
 
-1. **A fair test needs a post-cutoff GO release.** Draw a benchmark whose
+1. **Separate kept rows from produced terms in the scorer.** `benchmark score`
+   should report agent-review targets split by whether the baseline input
+   already entails them, as `scripts/compare_conditions.py` now does. The
+   alternatives are to drop such targets from the agent-review score, or to
+   exclude targets with any baseline evidence when drawing the benchmark.
+
+2. **A fair test needs a post-cutoff GO release.** Draw a benchmark whose
    targets rest on papers published after the reviewing model's training
    cutoff (for Opus 5.5, after June 2026), using a baseline release at the
    cutoff and the first GO release that accumulates enough new experimental
    annotations after it. Rerun all conditions on it.
-2. **Make the tasks comparable.** Either ask the agent the peptalk claims at
+3. **Make the tasks comparable.** Either ask the agent the peptalk claims at
    the end of its review (recognition with combined reasoning), or score the
    peptalk conditions by open generation. Both are needed to separate reading
    the sequence from being prompted with the answer.
-3. **Decoys across GO aspects.** Decoys are currently drawn from other items'
+4. **Decoys across GO aspects.** Decoys are currently drawn from other items'
    targets. Draw them per aspect (C, F, P), matched for specificity, so that
    a yes rate on decoys can be compared aspect by aspect with targets.
-4. **Run the `full` peptalk condition and a Fable 5.2 agent review** on the
+5. **Run the `full` peptalk condition and a Fable 5.2 agent review** on the
    same benchmark (Fable cost 2 to 4 times as much as Opus in the peptalk runs).
-5. **Bigger samples.** With 50 targets the blind versus organism differences
+6. **Bigger samples.** With 50 targets the blind versus organism differences
    (one target here and there) are within noise.
 
 ## Reproducing

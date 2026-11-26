@@ -84,7 +84,11 @@ as missing. Opus refused none.
 The AGENT_REVIEW condition was run on all 24 items with Opus 5.5 at high
 effort, each gene in a sandbox holding only the baseline GOA, the UniProt entry
 version of the baseline date and pre-baseline cached papers, for $14.33. It
-found 10 of the 50 targets. A review must name a term unprompted, while the
-peptalk runs are asked about each target, so compare the two with care. The
+found 10 of the 50 targets. Seven of those were targets already present in
+the baseline GOA file it was given (IBA, IEA or ISS rows, the `prior_prediction`
+WARNs), which it kept. It found 3 of the other 43. A review must name a term
+unprompted, while the peptalk runs are asked about each target, so compare the
+two with care, and split agent-review targets by whether the input already
+entails them. The
 method, the leakage audit and the comparison table are in
 `projects/SEQFUN_BENCHMARK.md`.
