@@ -93,3 +93,39 @@ secondary (KEEP_AS_NON_CORE-level) function.
 - GO:0005886 IBA and IEA: ACCEPT (5 TM helices; activity in membrane fraction; monoderm).
 - GO:0008654 IEA, GO:0006644 IEA: MODIFY to GO:0006654 phosphatidic acid biosynthetic process (PlsY catalyses the
   first acylation on the way to PA; precise process supported by knockouts).
+
+## OpenScientist attempt log, 2026-11-26/27 (gap not wired)
+
+The first knowledge gap here — whether PlsY acylates sn-glycerol 1-phosphate in the
+living cell — was submitted to OpenScientist three times as
+`kgap-plsy-g1p-in-vivo` and produced no report. The gap is therefore still
+unwired, and this note exists so the attempt is not silently repeated.
+
+- Attempt 1 (2026-11-26 ~18:50): killed as collateral when the session worker
+  restarted at ~20:20. Not a job fault. The two genes submitted alongside it,
+  ASPFU/hmg2 and BRUMA/bma-ben-1, had already completed and their reports survived
+  the restart intact.
+- Attempt 2 (20:20): ran 2 h 07 m with no output directory ever created, past its
+  own `--param timeout=7200`, and was killed.
+- Attempt 3 (22:28): ran 2 h 00 m with no output directory, same signature, killed.
+
+Two hangs in a row on the same prompt, while eight other genes submitted through
+the identical wrapper in the same session completed in 30–50 minutes, suggests
+something specific to this prompt or gene rather than infrastructure luck. A fourth
+attempt was not made.
+
+Operational notes for whoever picks this up:
+
+- The attach wrapper cannot give up. `_poll_until_done` is patched to poll without a
+  deadline and `_cancel_job` is a no-op, so when a remote job ends or hangs the
+  wrapper keeps polling indefinitely and the local process stays alive at ~0% CPU.
+  Near-zero local CPU is normal for every run and is *not* a stall signal.
+- The usable stall test in this campaign is the output directory: every successful
+  run created `GENE-hypotheses/<slug>/` when it wrote its report, so no directory
+  after ~2 hours means hung.
+- The hypothesis text used is preserved in the session scratchpad as `hyp_plsY.txt`;
+  it asks for PlsY's Km for each glycerophosphate enantiomer set against the measured
+  cellular pools, to test whether the heterochiral lipid fraction is supply-limited
+  rather than specificity-limited. That framing is worth keeping on a retry; the
+  carried-forward numbers are the ~6 µM G1P pool and 4:1 enantiomer ratio established
+  by the `kgap-egsa-ara-operon-coupling` run on BACSU/egsA.

@@ -1,0 +1,65 @@
+history_version: 1
+target:
+  kind: gene
+  slug: plsY
+  organism: BACSU
+  path: genes/BACSU/plsY/plsY-ai-review.yaml
+session:
+  id: 2026-11-27T003031Z-claude-code-47e411
+  timestamp: '2026-11-27T00:30:31Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+links:
+  issues: []
+  prs: []
+  urls: []
+events:
+- type: AUDIT
+  outcome: needs_followup
+  summary: Record three failed OpenScientist attempts on the G1P-in-vivo gap; gap
+    left unwired with reasons
+  details: |
+    Recorded an attempt log in genes/BACSU/plsY/plsY-notes.md. The knowledge gap asking
+    whether PlsY acylates sn-glycerol 1-phosphate in the living cell is NOT wired: three
+    OpenScientist submissions of kgap-plsy-g1p-in-vivo produced no report.
+
+    - Attempt 1 (2026-11-26 ~18:50): killed as collateral when the session worker
+      restarted at ~20:20. Not a job fault; the two genes submitted alongside it
+      (ASPFU/hmg2, BRUMA/bma-ben-1) had already completed and their reports survived.
+    - Attempt 2 (20:20): 2 h 07 m, no output directory ever created, past its own
+      --param timeout=7200, killed.
+    - Attempt 3 (22:28): 2 h 00 m, no output directory, same signature, killed.
+
+    Two consecutive hangs on the same prompt, while eight other genes went through the
+    identical wrapper in this session and completed in 30-50 minutes, points to something
+    specific to this prompt or gene rather than infrastructure luck. I stopped at three
+    rather than spending a fourth run: the expected value of another identical attempt is
+    low, and an unwired gap with a documented reason is more useful than a silent gap or a
+    fourth burn.
+
+    No review content was changed. The gap keeps status OPEN, which is correct - nothing
+    was learned about it.
+
+    Two operational findings worth keeping, both recorded in the notes file:
+
+    1. The attach wrapper cannot give up. _poll_until_done is patched to poll without a
+       deadline and _cancel_job is a no-op, so when a remote job ends or hangs the wrapper
+       polls indefinitely and the local process stays alive at ~0% CPU. I checked CPU time
+       on attempt 2 (2 seconds over 97 minutes) and nearly concluded it was stalled on that
+       basis; that would have been wrong, because near-zero local CPU is the normal
+       signature for every run in this campaign, successful ones included. Local CPU is not
+       a stall signal.
+    2. The usable stall test is the output directory. Every successful run in 62 batches
+       created GENE-hypotheses/<slug>/ at the moment it wrote its report, so absence of the
+       directory after about two hours is the reliable hang indicator. This also matters in
+       the other direction: after the worker restart, the process list was empty and all
+       three jobs looked dead, but two had written complete reports and only plsY had lost
+       work. An empty process list after a restart does not mean the work is gone.
+
+    The hypothesis text is preserved in the session scratchpad as hyp_plsY.txt. Its framing
+    is worth keeping on any retry: it asks for PlsY's Km for each glycerophosphate
+    enantiomer set against the measured cellular pools, to test whether the heterochiral
+    lipid fraction is supply-limited rather than specificity-limited. The carried-forward
+    numbers are the ~6 uM G1P pool and 4:1 enantiomer ratio established by the
+    kgap-egsa-ara-operon-coupling run on BACSU/egsA earlier in this campaign.
