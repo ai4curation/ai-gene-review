@@ -32,3 +32,8 @@ publications.
   as part of TOP1's experimentally reported secondary kinase interaction
   [PMID:9611241, "at least two distinct domains of Topo I are necessary for
   kinase activity"].
+- UniProt records an endothelial F3 pre-mRNA alternative-splicing function for
+  the TOP1/CLK SR-protein kinase arm from PMID:19168442. The review used that
+  context to explain the non-core SF2/ASF domain-binding row, but did not add a
+  direct splicing-process annotation from an abstract-only cache that combines
+  TOP1 inhibition/depletion with perturbation of the related CLK kinases.

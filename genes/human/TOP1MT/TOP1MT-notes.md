@@ -14,9 +14,10 @@ publications.
 - PTHR10290 splits the two human paralogs cleanly: `PTN000033239` is the
   TOP1MT node, carries an IBD mitochondrial-nucleoid call, and has IRD losses
   for ancestral TOP1 nucleolus and chromosome-segregation assertions.
-- The InterPro chromosome row was marked over-annotated because it follows the
-  shared topoisomerase domain architecture rather than the mitochondrial
-  targeting and mtDNA-nucleoid biology of TOP1MT.
+- The InterPro chromosome row was modified to `GO:0000262` mitochondrial
+  chromosome. The broad chromosome call is true because mtDNA is a chromosome in
+  GO, but the mitochondrial-specific replacement captures TOP1MT's targeted
+  mtDNA-nucleoid biology.
 - The PAINT DNA-replication row was modified to `GO:0006264` mitochondrial DNA
   replication. TOP1MT keeps the conserved ATP-independent strand
   breakage/rejoining chemistry, but the relevant duplex substrate is the
