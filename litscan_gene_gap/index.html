@@ -752,6 +752,14 @@ bodies to <code>reports/litscan/gene-gap/</code>. A single candidate can be vali
 Omit the ledger to explore results without GitHub access. Specify
 <code>--date-from YYYY-MM-DD --date-to YYYY-MM-DD</code> for a fixed inclusive window.
 Manual workflow dispatch defaults to a dry run and uploads the packet artifact.</p>
+<p>To try new weights without querying the APIs again, rescore an existing packet
+into another directory (the command refuses to overwrite the input packet and its
+issue bodies). Each candidate keeps its earlier rank as <code>previous_rank</code>. Only the
+packet's own candidates are re-ranked, so confirm a change with a fresh scan.
+Packets written before the homology and full-text fields were added cannot be
+rescored:</p>
+<pre><code class="language-sh">just litscan-rescore-gene-gap reports/litscan/gene-gap/2026-11-26-gene-gap.json --output-dir /tmp/rescore
+</code></pre>
 <h2 id="read-the-score">Read the score</h2>
 <p>The <a href="../conf/litscan/gene_gap.yaml">configuration</a> lists the search terms,
 recognized model organisms and strains, limits, scoring bands, and weights.
@@ -769,20 +777,32 @@ the matching rules and the issue body shows each contribution.</p>
 </thead>
 <tbody>
 <tr>
-<td>Experimental gap</td>
-<td>QuickGO annotation rows by source evidence code. Bare protein binding is subtracted from the informative experimental total and molecular-function count. Zero informative experimental rows scores +5, compared with −4 above 40.</td>
+<td>Known function</td>
+<td>QuickGO rows by source evidence code. Informative experimental rows plus ISS/ISO/ISA/ISM rows transferred from a homolog, both without bare protein binding. Zero scores +5, compared with −4 above 40.</td>
+</tr>
+<tr>
+<td>Saturation</td>
+<td>More than 40 GO rows of any evidence loses a point, more than 100 loses three. Informative experimental rows already in two GO aspects lose three points, in all three four.</td>
 </tr>
 <tr>
 <td>Electronic or phylogenetic support only</td>
-<td>A nonempty record consisting entirely of IEA and IBA earns +1.</td>
+<td>A nonempty record consisting entirely of IEA and IBA earns +1. A missing informative experimental molecular function earns +2.</td>
 </tr>
 <tr>
 <td>Unknown protein or family</td>
 <td>UniProt protein names, Pfam DUF/UPF domains, and the number of UniProtKB entries with experimental GO cross-references in an assigned PANTHER family. A family with indexed members and zero experimental members earns +3.</td>
 </tr>
 <tr>
+<td>Subject of the paper</td>
+<td>A title mention earns +1, and three or more abstract sentences naming the gene earn +2, so a co-subject reported under a partner's title still counts.</td>
+</tr>
+<tr>
 <td>New primary evidence</td>
-<td>First-characterization and changed-function language must share a sentence with the candidate symbol. Target-specific functional experiments add three points. High-throughput, review-like and clinical language subtract points.</td>
+<td>Characterization, functional-experiment, direct molecular assay (binding with partners or residues, enzyme, reporter or reconstitution assays) and rescue or epistasis language must share a sentence with the candidate symbol. A pseudoenzyme class word counts only in the title, because abstracts use it as background.</td>
+</tr>
+<tr>
+<td>Weak evidence</td>
+<td>A sentence naming the gene with a disease or knockout phenotype, in a paper with no direct assay or rescue on the gene, loses three points. Bare "abolished" or "reversed" count as phenotype, not rescue. Framing by an indirect effect or as a therapeutic target loses two. High-throughput, review-like and clinical language subtract points. A paper whose full text Europe PMC does not hold loses a point, and its issue says so.</td>
 </tr>
 <tr>
 <td>Review impact</td>
@@ -790,6 +810,9 @@ the matching rules and the issue body shows each contribution.</p>
 </tr>
 </tbody>
 </table>
+<p>The weights were recalibrated after curators reviewed the first six filed
+issues: only the two papers with a direct assay or a gene without homolog
+coverage closed a gap. The packet lists every rule that fired for each row.</p>
 <p>These counts describe what the databases currently contain. An absent family
 assignment supplies no family score. UniProtKB family coverage and QuickGO
 annotation counts have different denominators. A statement about a catalytic
@@ -806,7 +829,7 @@ the triage step must check the experimental subject.</p>
    entries in the configured species. Drop explicit non-gene acronym expansions. Prefer reviewed entries and allow an
    unreviewed title match if it resolves uniquely. Gene aliases, model species,
    expression hosts and cross-species studies can produce false matches.</li>
-<li>Rank by score, then by informative experimental count, reference and
+<li>Rank by score, then by known-function rows, reference and
    accession. By default at most ten candidates qualify for triage, with one
    per paper and a minimum score of six. A dispatch can lower the cap.</li>
 <li>A read-only triage agent checks the gene, species, experiment and, for an
