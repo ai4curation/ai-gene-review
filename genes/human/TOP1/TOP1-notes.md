@@ -35,5 +35,5 @@ publications.
 - UniProt records an endothelial F3 pre-mRNA alternative-splicing function for
   the TOP1/CLK SR-protein kinase arm from PMID:19168442. The review used that
   context to explain the non-core SF2/ASF domain-binding row, but did not add a
-  direct splicing-process annotation from an abstract-only cache that combines
-  TOP1 inhibition/depletion with perturbation of the related CLK kinases.
+  direct splicing-process annotation from an abstract-only cache that leaves the
+  exact participation of TOP1 in TF splicing unresolved.
