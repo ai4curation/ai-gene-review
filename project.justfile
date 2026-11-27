@@ -382,6 +382,19 @@ descriptions-status organism *args="":
 litscan-module-member *args="":
     uv run ai-gene-review litscan module-member {{args}}
 
+# LitScan gene-gap: rank recent papers by the function-knowledge gap they could
+# close (dark genes, unknown-function families, refuted annotations). Writes a
+# packet + ready-to-file issue bodies to reports/litscan/gene-gap/; never touches
+# GitHub. Scoring rules: conf/litscan/gene_gap.yaml. See docs/litscan_gene_gap.md.
+#   just litscan-gene-gap --days 30
+#   just litscan-gene-gap --date-from 2026-10-27 --date-to 2026-11-26 --include-preprints
+litscan-gene-gap *args="":
+    uv run ai-gene-review litscan gene-gap {{args}}
+
+# Validate gene-gap scan configs and packets against their LinkML schema.
+litscan-validate-gene-gap *paths="conf/litscan/gene_gap.yaml":
+    uv run ai-gene-review litscan validate-gene-gap {{paths}}
+
 # Shadow issue trackers (issues/<tracker>/, see projects/GO_ANNOTATION_TRACKER.md).
 # Read-only mirror of upstream issues: never reference them by URL or org/repo#N
 # in commits or PRs, and never at-mention anyone but cmungall.
