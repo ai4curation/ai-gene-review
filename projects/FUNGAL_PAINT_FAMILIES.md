@@ -39,7 +39,11 @@ that include Candida Genome Database seeds or *Neurospora crassa* members.
 
 # STATUS
 
-Last updated: 2026-10-11
+Last updated: 2026-11-27
+
+PR state below is as of 2026-11-27. Checkbox rows record whether a member
+review has merged to `main`, not whether its content is present on this
+branch.
 
 ## Family 1: Hsp100/ClpB Disaggregases
 
@@ -67,13 +71,13 @@ mitochondrial Hsp78-family disaggregases at `PANTHER:PTN000909045`.
 separate fungal Esa1/NuA4, Sas2/SAS-I, and Sas3/NuA3 placements that need
 paralog-aware activity and complex checks.
 
-- [ ] `yeast/ESA1` - NuA4 catalytic subunit; open follow-up in PR #4604
-- [ ] `yeast/SAS2` - SAS-I catalytic subunit; open follow-up in PR #4606
+- [x] `yeast/ESA1` - NuA4 catalytic subunit; merged in PR #4604
+- [x] `yeast/SAS2` - SAS-I catalytic subunit; merged in PR #4606
 - [x] `yeast/SAS3` - NuA3 catalytic subunit; merged in PR #4608
 - [x] `SCHPO/mst1` - fission yeast Esa1/NuA4-family MYST
   acetyltransferase; merged in PR #4601
-- [ ] `SCHPO/mst2` - fission yeast Sas3/KAT7-family H3K14
-  acetyltransferase; open follow-up in PR #4711
+- [x] `SCHPO/mst2` - fission yeast Sas3/NuA3-family H3K14
+  acetyltransferase; merged in PR #4711
 - [x] `CANAL/ESA1` - *Candida albicans* Esa1/NuA4-family MYST
   acetyltransferase; merged in PR #4598
 - [x] `NEUCR/esa-1` - *Neurospora crassa* Esa1/NuA4-family MYST
@@ -207,7 +211,10 @@ exo-1,3-beta-glucosidase node.
   redirected a nucleosome component row to `GO:0031491 nucleosome binding`.
 - Reconciled the MYST tracker after the `NEUCR/esa-1`, `CANAL/ESA1`,
   `SCHPO/mst1`, and `yeast/SAS3` reviews merged and the `yeast/ESA1`,
-  `yeast/SAS2`, and `SCHPO/mst2` follow-up reviews entered open PR review.
+  `yeast/SAS2`, and `SCHPO/mst2` follow-up reviews entered open PR review
+  (state as of 2026-10-11). All three follow-ups have since merged:
+  `yeast/ESA1` and `SCHPO/mst2` on 2026-10-11, `yeast/SAS2` on 2026-10-15,
+  completing the `PTHR10615` MYST pass.
 - Started `PTHR35329` as a compact CHS7-family follow-up. Yeast `CHS7` was
   already reviewed; `NEUCR/csc-1` checks the same `PTN002175570` fungal PAINT
   ancestor against the direct CSE-7/CHS-4 trafficking paper and the newer
