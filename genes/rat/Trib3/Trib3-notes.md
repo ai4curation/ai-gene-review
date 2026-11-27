@@ -41,3 +41,10 @@ opposite: overexpressed TRB3/NIPK did not diminish insulin-induced PKB phosphory
 rat hepatocytes. The wording matches PMID:12791994 (Du et al. 2003, mouse). I raised this as a
 suggested question and did not make it a confirmed source defect, because I have not seen UniProt's
 own curation notes.
+
+## 2026-11-27: changes after the PR #7146 review
+
+- Correction: the rat UniProt entry already records the rat hepatocyte discrepancy as a curated CAUTION (ECO:0000305). It is now quoted on the AKT-inhibitor and insulin-signalling rows. What remains odd is only the inline FUNCTION citation of PMID:15469416, and the suggested question now asks about that alone.
+- GO:0012501 programmed cell death is now TOO_GENERAL, because GO:0070059 carries the claim.
+- GO:1990757 ubiquitin ligase activator activity is now MARK_AS_OVER_ANNOTATED: there is no evidence that TRB3 activates COP1 catalysis.
+- The location of the corepressor core function is now nucleus, not nucleoplasm.
