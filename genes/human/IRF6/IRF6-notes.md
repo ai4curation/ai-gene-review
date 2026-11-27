@@ -1,0 +1,13 @@
+# IRF6 notes
+
+## Deep research
+
+`just deep-research-falcon human IRF6 --fallback perplexity-lite` could not run in this workspace: the research client exposed only `claude_code`, while both `falcon` and the `perplexity` provider used by the fallback were unavailable. I did not run a Claude Code deep-research job because this lane is limited to the current Codex writer and no extra sub-workers.
+
+## Manual synthesis
+
+IRF6 is the epithelial-development IRF-family member. The UniProt-reviewed summary describes it as a probable DNA-binding transcriptional activator involved in the keratinocyte proliferation-differentiation switch and mammary epithelial proliferation; unlike IRF1, IRF5, IRF7, or IRF9, it is not an interferon-response factor.
+
+The main human experimental papers show that IRF6 binds SERPINB5/maspin in mammary epithelial cells [PMID:16049006], that IRF6 re-expression promotes breast-cancer cell-cycle arrest and cooperates with maspin in a mammary epithelial differentiation model [PMID:18212048], and that IRF6 is part of a p63-centered feedback loop controlling the proliferative potential of epidermal cells [PMID:21807998]. High-throughput SELEX also supports a direct sequence-specific double-stranded-DNA binding capacity for human IRF6 [PMID:28473536].
+
+I therefore kept the IRF-family DNA-binding and RNAPII transcription rows, kept mammary epithelial differentiation and proliferation outputs as non-core consequences of the epithelial transcriptional program, and marked the family-wide immune-system IBA as over-propagated for this divergent subfamily.
