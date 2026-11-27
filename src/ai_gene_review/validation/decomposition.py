@@ -22,7 +22,9 @@ from ai_gene_review.validation.validation_report import (
 INVOLVED_IN = " involved in "
 CATEGORY = "Decomposition"
 #: actions that say a claim is not one the review would accept
-NOT_ACCEPTABLE = frozenset({"KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED", "REMOVE"})
+NOT_ACCEPTABLE = frozenset(
+    {"KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED", "REMOVE", "TOO_GENERAL"}
+)
 #: actions that assert a claim the review accepts
 ACCEPTING = frozenset({"ACCEPT", "NEW"})
 

@@ -1,0 +1,9 @@
+# TET2 manual deep research notes
+
+Automated deep research could not run in this sparse runtime because the configured Falcon and Perplexity providers were unavailable, so this file records the literature synthesis used for the review.
+
+TET2 is a nuclear methylcytosine dioxygenase with the conserved TET cysteine-rich and double-stranded beta-helix catalytic core but no N-terminal CXXC domain in the same polypeptide. The crystal structure of human TET2 bound to methylated DNA shows that a Cys-rich domain and two zinc fingers organize the DSBH catalytic domain, position 5mC into the Fe(II)-dependent active site, and explain how TET2 accommodates 5mC derivatives for iterative oxidation [PMID:24315485]. UniProt records the three EC 1.14.11.80 reactions converting 5mC to 5hmC, 5hmC to 5fC, and 5fC to 5caC in DNA [genes/human/TET2/TET2-uniprot.txt].
+
+Human TET2 biology is strongly tied to hematopoietic cells. Ko et al. showed that myeloid-cancer-associated TET2 mutations impair 5mC hydroxylation and are associated with low genomic 5hmC [PMID:21057493]. Biallelic germline loss of TET2 causes a human immunodeficiency/lymphoma syndrome and TET2-deficient induced pluripotent stem cells show abnormal hematopoietic differentiation, supporting TET2 as a regulator of leukocyte and myeloid differentiation rather than a lineage-specific structural factor [PMID:32518946].
+
+TET2 also recruits chromatin regulators. TET2 and TET3 bind OGT, bring OGT to chromatin, promote H2B O-GlcNAcylation and HCF1/SET1-COMPASS-dependent H3K4 methylation, and thereby support transcription at active promoters [PMID:23222540; PMID:23353889]. PROSER1 and PML can recruit or stabilize TET2 at particular genomic loci, and CRL4(VprBP)-mediated monoubiquitylation promotes chromatin binding of all three TET family members [PMID:25557551; PMID:29735542; PMID:34667079]. These interactions are useful regulatory context but do not warrant keeping generic `protein binding` annotations.

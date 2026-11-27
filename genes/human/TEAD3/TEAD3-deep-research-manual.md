@@ -1,0 +1,7 @@
+# TEAD3 manual research notes
+
+TEAD3 is the human TEF-5/TEAD5 paralog, cloned as a placentally enriched TEA-domain transcription factor that binds multiple functional elements in the human chorionic somatomammotropin-B enhancer [PMID:9148898]. Like the other human TEAD proteins, its core biochemical role is sequence-specific cis-regulatory DNA binding followed by recruitment of transcriptional coactivators such as YAP1 and WWTR1/TAZ. YAP reporter assays identified TEAD3 together with TEAD2 and TEAD4 as strong YAP-activated transcription factors [PMID:18579750], and TAZ affinity purification identified all four human TEAD family members as high-scoring TAZ partners [PMID:19324877].
+
+The PTHR11834 PAINT root supports RNA polymerase II cis-regulatory DNA binding, RNA polymerase II-specific DNA-binding transcription factor activity, transcription regulator complex membership, and regulation of Pol II transcription across the TEAD family. The narrower PTN000931330 node propagates Hippo signaling to all four human TEADs from mouse and human TEAD/YAP/TAZ evidence, and the PTN000931329 embryonic-organ-development row reflects a vertebrate developmental use rather than the core molecular role.
+
+Two TEAD3 GOA rows cite a Caenorhabditis elegans study of the TEAD ortholog EGL-44 and its zinc-finger partner EGL-46 in Q neuroblast lineage progression [PMID:23946438]. That work supports a worm EGL-44/EGL-46 transcriptional pathway, but it does not establish human TEAD3 in asymmetric neuroblast division or a direct EGL-46-like partner binding function.

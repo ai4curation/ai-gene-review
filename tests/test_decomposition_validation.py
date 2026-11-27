@@ -233,6 +233,7 @@ def _row(term: dict, action: str, **review) -> dict:
         ("KEEP_AS_NON_CORE", True),
         ("MARK_AS_OVER_ANNOTATED", True),
         ("REMOVE", True),
+        ("TOO_GENERAL", True),
         ("ACCEPT", False),
     ],
 )

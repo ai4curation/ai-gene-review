@@ -327,7 +327,7 @@ def present_in_current(
 
 def date_window(ctx: Context, target: dict, item_id: str) -> Result | None:
     """GAF date on or after the cutoff (informational, since GO re-stamps dates)."""
-    gaf_date = target.get("date")
+    gaf_date = target.get("gaf_date")
     if not gaf_date:
         return None
     cutoff = ctx.cutoff.replace("-", "")
@@ -412,22 +412,22 @@ def uniprot_leakage(
 
 
 def reference_recency(
-    target: dict, conditions: list[dict], item_id: str
+    target: dict, predictors: list[dict], item_id: str
 ) -> list[Result]:
-    """Was the target's earliest supporting reference published after each condition's model training cutoff?
+    """Was the target's earliest supporting reference published after each predictor's training cutoff?
 
     >>> t = {"term": {"id": "GO:1"}, "reference": "PMID:1", "reference_date": "2025-09-01"}
-    >>> [r["status"] for r in reference_recency(t, [{"name": "blind", "model_training_cutoff": "2026-06-01"}], "x")]
+    >>> [r["status"] for r in reference_recency(t, [{"name": "peptalk:m", "model_training_cutoff": "2026-06-01"}], "x")]
     ['WARN']
-    >>> [r["status"] for r in reference_recency(t, [{"name": "blind"}], "x")]
+    >>> [r["status"] for r in reference_recency(t, [{"name": "interproscan"}], "x")]
     ['INFO']
     """
     term = target["term"]["id"]
     published = target.get("reference_date")
     out = []
-    for condition in conditions:
-        cutoff = condition.get("model_training_cutoff")
-        name = condition["name"]
+    for predictor in predictors:
+        cutoff = predictor.get("model_training_cutoff")
+        name = predictor["name"]
         if not cutoff or not published:
             missing = (
                 "model training cutoff"
@@ -801,6 +801,15 @@ def run_checks(
         result("schema", "FAIL", problem)
         for problem in validate_schema(benchmark, "Benchmark")
     ] or [result("schema", "PASS", "Benchmark validates against schema/benchmark.yaml")]
+    predictors = benchmark["spec"].get("predictors") or []
+    if not predictors:
+        results.append(
+            result(
+                "reference_recency",
+                "INFO",
+                "No predictors declared. Training cutoff fairness is unassessed.",
+            )
+        )
     for item in benchmark["items"]:
         protein, item_id = item["protein"], item["id"]
         accession = protein.split(":", 1)[1]
@@ -848,9 +857,7 @@ def run_checks(
                 results += uniprot_leakage(
                     entry, term, target["term"].get("label"), item_id
                 )
-            results += reference_recency(
-                target, benchmark["spec"].get("conditions") or [], item_id
-            )
+            results += reference_recency(target, predictors, item_id)
             if item.get("protein_name"):
                 results.append(
                     header_leakage(

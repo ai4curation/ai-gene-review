@@ -1,0 +1,103 @@
+history_version: 1
+target:
+  kind: other
+  slug: quote-truncation-repairs
+  path: interpro/panther
+session:
+  id: 2026-11-26T221800Z-claude-code-bde5cc
+  timestamp: '2026-11-26T22:18:00Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    model: claude-opus-5
+    agent_tool: claude-code
+links:
+  issues: []
+  prs: []
+  urls: []
+events:
+- type: EDIT
+  outcome: changed
+  sections:
+  - supported_by
+  summary: Complete 24 supporting_text quotes cut mid-word by a source line wrap
+  details: |
+    Completes the 24 supporting_text quotes that quote_truncation found cut in the middle of a word,
+    across three gene prediction reviews, eleven PANTHER family reviews and one module. Each quote
+    passed validate-quotes before and after: whitespace collapse made the truncated form a verbatim
+    substring, which is why nothing had caught them.
+
+    What each cut had removed is the term the quote was cited for. "reduction of 7-cyano-7-" for
+    QueF, whose substrate is 7-cyano-7-deazaguanine, so the row named no substrate. "protein-lysine
+    N-" on a methyltransferase term for rib2, cutting the word methyltransferase. "dephosphorylation
+    of 2-" for gph and PP_0416, whose substrate is 2-phosphoglycolate from DNA-repair
+    3'-phosphoglycolate ends. "cleavage of tyrosine to 2-" for thiH, which makes 2-iminoacetate and
+    4-cresol. "cyclization of GTP to (8S)-3',8-cyclo-7,8-" for moaA, whose product is the
+    dihydroguanosine 5'-triphosphate of the cPMP step. "citrate to isocitrate via cis-" for ACO1,
+    via cis-aconitate. "orotate + 5-phospho-" for URA5, where the other product is
+    5-phospho-alpha-D-ribose 1-diphosphate. "oxidation of L-carnitine to 3-" for cdhA,
+    3-dehydrocarnitine. "formation of L-aspartate-" for asd and HOM2, L-aspartate-semialdehyde.
+    "an essential role in anti-" for IRF9, anti-viral immunity.
+
+    Each completion is taken from that source's own text, not from what the molecule is called
+    elsewhere: HOM2's record reads "L-aspartate 4-semialdehyde" with a space and PSEPK asd's reads
+    "L-aspartate-semialdehyde" with a hyphen, and each quote follows its own record. Where one line
+    carried two references - PTHR43434's identical sentence from gph and from PP_0416, whose records
+    continue "2-phosphoglycolate (2P-Gly)" and "2-phosphoglycolate" - the completion is the shorter
+    form valid in both, rather than risk mapping the two the wrong way round.
+
+    Two of the 24 were not wrap damage at all, and are the ones worth reading.
+
+    PTHR46566's quote begins "CC   -!- FUNCTION:", so the flat file's two-letter line code had been
+    copied into the quote, which is why it matched only the raw rendering. Re-quoted without the
+    margin and completed: fructose-l-phosphate to fructose-l,6-bisphosphate. The record's own
+    spelling with a letter l for the digit 1 is kept, since the quote is verbatim or it is nothing.
+
+    PTHR13619's "in a CTP-" and PTHR45919's "to Man3-" are suspended hyphens, correct English rather
+    than breakage, and both quote a mutable -ai-review.yaml rather than a publication. Completed in
+    place to "in a CTP- and Mg2+-dependent manner" and "to Man3- and Man4GlcNAc2-PP-Dol".
+
+    On the Mg2+ clause I was wrong and checked before saying so. The TAM41 review attributes CTP-
+    and Mg2+-dependence to Tam41, and in PMID:23623749 every sentence naming Mg2+ is about Cds1 -
+    "The Cds1 CDP-DAG synthase activity requires Mg2+ and is inhibited by EDTA" - while the Tam41
+    result reads only "accumulated in a CTP-dependent manner". That looked like a cofactor
+    requirement transferred from a different enzyme. It is not: the paper also reports "Dependence
+    of the Tam41 CDP-DAG activity on different divalent metal ions" in Figure 3B, and that purified
+    mitochondria containing Tam41 "were not able to produce CDP-DAG in the presence of EDTA". The
+    review's reading holds, and reading the figures rather than grepping one term is what kept a
+    false wrong-gene-style claim out of a source defect report.
+
+    Not taken here: re-pointing those two off the review prose onto their primaries, which CLAUDE.md
+    prefers. Both are available - PMID:23623749 is cached in full and says "When we incubated NBD-PA
+    and purified Tam41, NBD-PA was efficiently consumed and an additional lipid product with smaller
+    migration similar to CDP-DAG on the TLC plate accumulated in a CTP-dependent manner (Figure 2B,
+    Tam41)", and PMID:19929855 carries "GDP-mannose to Man3GlcNAc2-PP-Dol and subsequently to
+    Man4GlcNAc2-PP-Dol". Changing which source backs a claim is a different judgement from
+    completing a quote, so it is left for its own change rather than folded in here.
+
+    The three prediction reviews needed a different form, and the reason is a finding. prediction_
+    evidence's local_quote_matches ignores "only layout whitespace" by design, and a UniProt wrap
+    collapses to a space rather than rejoining the word, so the de-prefixed rendering reads
+    "7-cyano-7- deazaguanine". The joined completion that validate-quotes accepts therefore failed
+    the stricter check - which means that matcher, as it stands, accepts the truncated quote and
+    rejects the complete one. I first changed prediction_evidence to use source_renderings as
+    quote_check does, saw that this was not the cause, and reverted it rather than carry a change
+    that fixed nothing observed. The three quotes now mark the wrap with the "..." elision the
+    validator already supports, which both checks accept and which does not pretend the source runs
+    on. Whether the strict matcher should de-hyphenate a wrap is a real question and belongs in its
+    own change.
+
+    Two bugs in my own edit planner, both caught before they could do harm. The module file holds
+    twelve lines beginning with that same sentence and only four are truncated; the other eight are
+    single-quoted scalars that continue after a blank line, a literal newline in YAML, and already
+    contain the full sentence. My first "does the scalar end here" test counted a blank next line as
+    the end, which is exactly backwards, and a replace-all would have corrupted eight complete
+    quotes to produce four fixes. The planner now ends a scalar only on a closing quote or a new
+    key, and reports exactly the four the audit reports. A guard against inserting a quote character
+    into a quoted scalar also misfired on plain scalars, where the quote character is the empty
+    string and "" in anything is true.
+
+    Verification: quote_truncation reports 0 truncated quotes, down from 24; validate-quotes on the
+    15 changed files gives 481 verified, 0 not found, 0 blocking; validate-predictions passes all
+    three with 0 errors and 21 quotes verified between them. Diff is 24 changed lines in 15 files,
+    one per finding.

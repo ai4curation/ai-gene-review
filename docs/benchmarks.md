@@ -14,11 +14,12 @@ The benchmark expands the analysis in the fable-sequence-to-function preprint
 (`ai4curation/fable-sequence-to-function`). That preprint asked small,
 hand-built questions of a model that sees the sequence alone. This benchmark asks
 the same kind of question on many more proteins, with time-split, leakage-checked
-targets. It also compares conditions item by item:
+targets. It also compares conditions item by item. A condition is what a
+predictor is allowed to see, not which predictor runs:
 
 | condition | context | what the predictor sees |
 |---|---|---|
-| `blind` | `BLIND` | the sequence only (`peptalk ask --context blind`, the fs2f protocol), optionally with a shuffled-sequence control |
+| `blind` | `BLIND` | the sequence only (the fs2f protocol), optionally with a shuffled-sequence control |
 | `organism` | `ORGANISM` | the sequence plus organism and taxon id |
 | `full` | `FULL` | the sequence plus the UniProt-style header: accession, protein name, gene |
 | `agent-review` | `AGENT_REVIEW` | combined reasoning: an agent reads the sequence and reasons over knowledge and context, as in an ai-gene-review review seeded with baseline-release annotations only |
@@ -28,20 +29,57 @@ reading the sequence from recalling or retrieving knowledge about the named
 protein. Decoy terms and shuffled sequences measure how often a predictor says
 yes regardless.
 
+## Predictors
+
+The benchmark knows nothing about any particular predictor. Any of them can
+be evaluated under any condition it supports: an LLM tool, a sequence tool
+(InterProScan, PANNZER, a DeepGO-style model), an ai-gene-review agent review,
+or a curator. The interface has two halves, both LinkML classes in the schema
+(with a generated JSON Schema in `assets/jsonschema/benchmark.schema.json` and
+a Pydantic model in `src/ai_gene_review/datamodel/benchmark_model.py`):
+
+- **Claims out.** `benchmark export` writes `<id>.fasta` and `<id>-claims.yaml`,
+  a `ClaimSet` with one `Claim` (item, protein, FASTA id, GO term) per target,
+  NOT target and decoy. A claim never says which of the three it is.
+- **Predictions in.** A predictor answers with `Prediction` records: the item
+  and the claim or GO term, the predictor's name and version (and model, if
+  any), the condition, a verdict (`yes`, `no`, `uncertain`) and/or a score,
+  and optional confidence, evidence, cost and provenance. Files are JSONL (one
+  record per line) or a `PredictionSet` YAML. `benchmark score` reads only
+  this format. In YAML, quote `"yes"` and `"no"` so they remain strings.
+  An attempt that returned no answer counts as missing. A score without a verdict counts only with `--threshold`.
+
+An **importer** converts a predictor's native output into predictions
+(`src/ai_gene_review/benchmark/importers/`). Two exist: `peptalk` (the JSONL
+of `peptalk ask`, an example LLM predictor; `export --for peptalk` also writes
+its claims TSV) and `reviews` (a folder of ai-gene-review reviews). To evaluate
+another tool, add a small importer module, or have the tool write predictions
+directly. Use the declared condition names. New predictors can run against a frozen
+benchmark. The scorer warns when a predictor is absent from a declared roster
+because the check report has no training-cutoff assessment for that predictor.
+Use distinct predictor names for configurations you want scored separately.
+Each condition, predictor, item, GO term and sequence control identifies one
+answer across all input files.
+
 ## Workflow
 
 ```bash
 just benchmark-build  benchmarks/<id>/<id>-spec.yaml    # draw items -> <id>.yaml
 just benchmark-check  benchmarks/<id>/<id>.yaml         # -> <id>-check-report.{yaml,md}
 just benchmark-export benchmarks/<id>/<id>.yaml         # -> run-inputs/ (FASTA, claims, baseline GOA)
-peptalk ask run-inputs/<id>.fasta --claims run-inputs/<id>-claims.tsv --context blind --shuffle-control > runs/blind.jsonl
-just benchmark-score  benchmarks/<id>/<id>.yaml --peptalk runs/blind.jsonl --reviews-dir runs/agent-review/genes
+# run any predictor on run-inputs/, then convert its output, for example:
+just benchmark-import benchmarks/<id>/<id>.yaml runs/blind.jsonl --from peptalk -o benchmarks/<id>/predictions/blind-peptalk-<model>.jsonl
+just benchmark-import benchmarks/<id>/<id>.yaml runs/agent-review/genes --from reviews \
+    --condition agent-review --predictor ai-gene-review:<model> -o benchmarks/<id>/predictions/agent-review-<model>.jsonl
+just benchmark-score  benchmarks/<id>/<id>.yaml -p benchmarks/<id>/predictions/blind-peptalk-<model>.jsonl -p ...
 just validate-benchmarks
 ```
 
 GO release files and UniProt responses are cached in `.cache/benchmark/`
-(git-ignored). `run-inputs/` and `runs/` are git-ignored too: `export`
-regenerates the inputs, and run outputs belong with whoever ran them.
+(git-ignored). `run-inputs/` and `runs/` (native predictor outputs) are
+git-ignored too. Commit the converted predictions under
+`benchmarks/<id>/predictions/`: they are small, and the committed score report
+must be reproducible from them (a test checks this).
 
 ### The spec
 
@@ -50,8 +88,10 @@ GO releases, aspects, optional GO branches, evidence codes (default: CAFA's EXP,
 IDA, IPI, IMP, IGI, IEP, TAS, IC), excluded terms (default: roots, binding,
 protein binding), whether NOT annotations count as negative targets, size, seed,
 feature quotas (for example `PSEUDOENZYME`, with a UniProt query), the number of
-decoys per item, and the evaluation conditions. Each condition records its
-model and, where known, the model's training cutoff.
+decoys per item, the evaluation conditions (name, context level, whether to
+ask a shuffled-sequence control) and, optionally, the predictors planned for
+it. Each predictor records its model and, where known, the model's training
+cutoff, which the `reference_recency` check compares with the target dates.
 
 `min_reference_date` keeps only targets whose supporting PubMed references
 were all published on or after a date. A target that also rests on an older
@@ -94,7 +134,7 @@ review-derived benchmark is held to the same tests as a drawn one.
 | `near_duplicate` | the closest baseline experimental term in the same aspect has Lin similarity at or above the threshold (IC from baseline annotation frequencies; INFO when there is no baseline term to compare) |
 | `uniprot_leakage` | the current UniProt entry carries the target in a DR GO line (INFO) or its label in comment text (WARN) |
 | `header_leakage` | the protein name shown in FULL conditions shares most of the target label's words |
-| `reference_recency` | the earliest supporting paper was published after each condition's model training cutoff |
+| `reference_recency` | the earliest supporting paper was published after each listed predictor's model training cutoff |
 | `decoy` | decoys neither entail nor are entailed by any current annotation of the protein |
 | `feature_label` | a query-derived feature (pseudoenzyme) is supported by the UniProt protein name, not only by comment text |
 | `review_agreement` | an ai-gene-review review of the gene keeps (PASS) or contests (WARN) the target |
@@ -184,14 +224,17 @@ annotation only in another aspect) and `PARTIAL_KNOWLEDGE`.
   preprint, accepted manuscript or author copy may have been readable, and in a
   model's training data, a year earlier. A preprint-date lookup would tighten
   both.
+- The shuffled-sequence control tallies positive targets. Imported predictions
+  retain shuffled decoy and shuffled NOT-target answers for separate analyses.
 - Decoys are scored only where a predictor is asked about them. A review is
-  never asked about decoys, so the agent-review condition records them as
-  missing, and its decoy rate is not comparable with the peptalk conditions.
-  Compare conditions on targets, and on decoys only among the peptalk runs.
+  never asked about decoys, so the reviews importer writes no predictions for
+  them; they count as missing, and the agent-review decoy rate is not
+  comparable with predictors that answer every claim. Compare conditions on
+  targets, and on decoys only among predictors that were asked.
 - Review verdicts count ACCEPT, KEEP_AS_NON_CORE, NEW, TOO_GENERAL and MODIFY
   rows (including MODIFY's replacement terms) and every core-function term
   slot as assertions. REMOVE and MARK_AS_OVER_ANNOTATED count as "no".
-- Existing ai-gene-review reviews were written with current GOA in view. Scoring
-  them with `--reviews-dir genes` measures agreement, not an AGENT_REVIEW run.
+- Existing ai-gene-review reviews were written with current GOA in view. Importing
+  them with `benchmark import benchmarks/<id>/<id>.yaml genes --from reviews` measures agreement, not an AGENT_REVIEW run.
   A real run seeds each review with `run-inputs/baseline-goa/<ACC>-goa.tsv` and
   keeps the agent away from post-cutoff sources.
