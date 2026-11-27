@@ -53,3 +53,9 @@ transcriptional effects. The paper did not close a molecular-function gap for TR
 - Core: GO:0055106 ubiquitin-protein transferase regulator activity, the COP1 adaptor role, with
   positive regulation of proteasomal ubiquitin-dependent protein catabolism. GO uses GO:0055106 for
   all three human Tribbles (QuickGO, 2026-11-26), so I kept it rather than moving to GO:1990756.
+
+## 2026-11-27: changes after the PR #7144 review
+
+- Added NEW GO:0005524 ATP binding (IDA, PMID:25583260), so the positive finding is recorded rather than lost with the removed NOT row.
+- Recorded the UniProt ISS negation as a source defect.
+- Changed GO:0055106 to MODIFY, replaced by GO:1990756 ubiquitin-like ligase-substrate adaptor activity. QuickGO (2026-11-27) shows GO:1990756 sits under molecular adaptor activity, as a sibling of GO:0055106, not a descendant. This row's evidence (PMID:20805362: binds both COP1 and C/EBPalpha; kinase-domain mutants bind but do not degrade) supports the adaptor reading. This supersedes the earlier entry above that kept GO:0055106.
