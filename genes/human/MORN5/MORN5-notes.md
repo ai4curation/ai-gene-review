@@ -51,3 +51,10 @@ mitochondrion ISS row from mouse may then be justified.
 
 - REMOVE: nine bare GO:0005515 HuRI rows.
 - ACCEPT: motile cilium and sperm flagellum (PMID:28742876).
+
+## 2026-11-27: changes after the PR #7148 review
+
+- Motile cilium is now TOO_GENERAL. The evidence is sperm-only, so the term adds nothing beyond sperm flagellum.
+- Correction to the localisation note above. The organelle policy's two-line threshold applies to adding a sub-compartment term, not to the root organelle. A root `mitochondrion` row is still not justified, because the abstract-level crude-fraction result cannot be checked for contamination and the full text is unavailable.
+- Leads for the MF_DARK gap: three of the HuRI partners, ENKD1, GAS2L2 and MISP, are cilium or cytoskeleton proteins. They would be worth testing as direct partners.
+- PMID:43076034 is now flagged `full_text_unavailable: true`.
