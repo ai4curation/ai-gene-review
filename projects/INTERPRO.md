@@ -76,9 +76,12 @@ experimental evidence.
 ### Rule cover for the removals
 
 Most removal rows in the mapping set carry a note on what still supplies the term to the members
-that should keep it: 17 of the 25 do. The test is containment, not position -- several notes are
-followed by further text. To re-derive that split, match the literal `Rule cover` or
-`cover (current ...)` clause in a removal row's `comment`; a semantic reading can reach 18, because the
+that should keep it: 17 of the 25 do. The test is containment, not position -- 14 of those 17
+notes are followed by further text in the same `comment`. To re-derive the split, parse the YAML
+and test each removal row's `comment` value for a `Rule cover (` clause. Do not grep the file:
+the comments are block scalars and the phrase wraps mid-clause on `IPR018194` and `IPR021006`, so
+a line-based search returns 16 and reads as a stale page rather than a broken check. A semantic
+reading can reach 18, because the a semantic reading can reach 18, because the
 IPR017682 removal of `GO:0050660` says where FAD binding does belong (FrhB, via IPR017679) without
 carrying a cover clause. That row is excluded deliberately: it names cover for a *sibling* entry's
 members, not for this entry's, which is the distinction the count is about. The remaining eight carry no such note, across six entries --
@@ -131,7 +134,7 @@ CR-0003) that couples the InterPro condition with a taxon condition.
 1. **Assess the four removal proposals first:** ATP binding (GO:0005524) and protein
    phosphorylation (GO:0006468) for IPR000719, superoxide metabolic process
    (GO:0006801) for IPR001424, and ATP binding (GO:0005524) for IPR012724. Verify the cited exceptions and the current entry scope.
-   Most removal rows end with a rule-cover note, but eight of the 25 do not, so check for one
+   Most removal rows carry a rule-cover note, but eight of the 25 do not, so check for one
    rather than assuming it before forwarding the removal.
    The IPR013380 removals (GO:0046961, GO:0006754) are simpler: the entry is SctN-specific, so
    they are wrong for every member rather than for an exception subset.
