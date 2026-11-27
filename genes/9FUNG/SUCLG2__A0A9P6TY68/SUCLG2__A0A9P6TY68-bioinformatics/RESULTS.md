@@ -89,3 +89,49 @@ The three models therefore disagree on the start. The 14 residues of A0A9P6TY68 
 - The sequence is an unreviewed gene model from a draft whole-genome shotgun assembly.
 - Residue correspondences come from one alignment per pair with one set of gap penalties.
 - Nothing here measures enzyme activity or nucleotide specificity.
+
+## Addendum, 2026-11-27: are the N-terminal features distinguishable from chance?
+
+Run `python3 presequence_features.py`. Stdlib only, no network, hardcodes no results.
+This addendum addresses the hole named above — no targeting-sequence predictor had
+been run — and it still does not run one: TargetP and MitoFates are not installed
+and there is no network here. Instead it computes the features such predictors rest
+on **and the expectation for each under this protein's own composition**, which is
+the part that was missing.
+
+It was written locally because the OpenScientist run that would otherwise have been
+used was unavailable; the service returned nothing for any submission after
+2026-11-26 19:52 (see `genes/BACSU/plsY/plsY-notes.md`).
+
+The knowledge gap cites two observations about the 14-residue extension
+(`MPIQRGIVASQVRF`): "two arginines and no acidic residue". Against the protein's own
+background (acidic 54/409 = 0.132, basic 40/409 = 0.098):
+
+| Observation | Expectation under the protein's own composition | Reading |
+|---|---|---|
+| Zero acidic residues in 14 | **P = 0.138** | Happens roughly one time in seven by chance |
+| Two basic residues in 14 | **P(≥2) = 0.404** | Happens two times in five by chance |
+| Hydrophobic moment of the extension | +0.283, **64th percentile** of this protein's 14-mers | Unremarkable |
+| Arg at −2 of the putative cut | R13 is at −2 | Consistent with the processing peptidase preference |
+
+**Both features the gap cites are within chance expectation and carry essentially no
+weight.** Neither is the kind of signal a presequence call should rest on. The
+amphipathicity — which is the feature cleavable presequences actually display, since
+they form amphipathic helices — is middling for this protein rather than distinctive,
+which is evidence against a classical cleavable presequence rather than for one.
+
+The one feature that does point the right way is **R13 at position −2** relative to
+the putative cleavage point, matching the mitochondrial processing peptidase
+preference for Arg at −2 or −3. That observation is weaker than it looks, though:
+the cleavage point was *assumed* to be after residue 14, from the *E. coli*
+alignment, so finding an arginine at −2 is conditional on that assumption rather than
+independent support for it. It is worth recording as consistent, not as evidence.
+
+**What this does not change.** The protein may still be mitochondrial — the family is,
+and that is why the electronic annotation says so. What this shows is that the
+*sequence-level* case for a cleavable presequence in this gene model is weak, and that
+the specific observations the knowledge gap offers do not discriminate. The gap stays
+OPEN, and its resolution still requires the experiments it already names. Note also
+that the sequence comes from a preliminary WGS entry, so the start codon is itself
+unverified: if the model's start is wrong, the extension analysed here is not the real
+N-terminus and none of these numbers apply.
