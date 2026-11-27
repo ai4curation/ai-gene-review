@@ -48,6 +48,7 @@ import hashlib
 import importlib.util
 import io
 import json
+import os
 import re
 import subprocess
 import sys
@@ -56,7 +57,7 @@ from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Iterable, Iterator
+from typing import Any, Iterable, Iterator, Mapping
 
 import yaml
 
@@ -1402,6 +1403,58 @@ def applied_problems(runs: Path = RUNS) -> dict[str, list[str]]:
             if problems:
                 found[" ".join(part for part in (record["batch"], unit, row.get("node", ""), row["term"]) if part)] = problems
     return found
+
+
+IN_FLIGHT_ON = "claude/gifted-clarke-b11rqv"
+"""The branch on which the re-read is merged with main until it lands.
+
+While that branch is under test, an applied row that is no longer the row its record
+vouches for fails the test suite (:func:`in_flight`): merges with main are what alters
+such rows, and a failing test is how a merge by another agent is seen. Anywhere else the
+comparison fails nothing. Once the re-read has landed, later edits of these reviews are
+main's ordinary work, and a test that failed on them would stop every pull request that
+touches one of the rows. ``check`` reports the rows at any time, and a later round of the
+re-read starts from its list and names its own branch here.
+"""
+
+
+def branch_under_test(checked_out: str, environ: Mapping[str, str]) -> str:
+    """The branch a checkout stands for, or ``""`` when it stands for none.
+
+    A checkout of a named branch stands for that branch. CI tests a pull request on a
+    detached checkout of its merge commit, and names the pull request's head branch in
+    ``GITHUB_HEAD_REF``; a merge-queue run names none.
+
+    >>> branch_under_test("claude/some-branch", {})
+    'claude/some-branch'
+    >>> branch_under_test("HEAD", {"GITHUB_HEAD_REF": "claude/some-branch"})
+    'claude/some-branch'
+    >>> branch_under_test("main", {"GITHUB_HEAD_REF": "claude/some-branch"})
+    'main'
+    >>> branch_under_test("HEAD", {})
+    ''
+    """
+    if checked_out and checked_out != "HEAD":
+        return checked_out
+    return environ.get("GITHUB_HEAD_REF", "")
+
+
+def in_flight(checked_out: str | None = None, environ: Mapping[str, str] | None = None) -> bool:
+    """Whether the checkout under test is the branch the re-read is in flight on (:data:`IN_FLIGHT_ON`).
+
+    With no arguments the checked-out branch is asked of git and the environment is the
+    process's own. A checkout that git cannot name, with no pull request named either, is
+    in flight nowhere.
+
+    >>> in_flight(IN_FLIGHT_ON, {})
+    True
+    >>> in_flight("main", {"GITHUB_HEAD_REF": IN_FLIGHT_ON})
+    False
+    """
+    if checked_out is None:
+        done = subprocess.run(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=ROOT, capture_output=True, text=True, check=False)
+        checked_out = done.stdout.strip() if done.returncode == 0 else ""
+    return branch_under_test(checked_out, os.environ if environ is None else environ) == IN_FLIGHT_ON
 
 
 def _git_show(revision: str, path: str) -> str | None:

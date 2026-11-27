@@ -183,11 +183,22 @@ is left for a curator, with the reason in the run record:
   reason the text its record says was applied (the reader's sentence, the verifier's
   where that was the one applied, or the corrected reason), word for word, unless the
   record has a `correction` that says how the row was changed by hand. A merge, or
-  anyone, that changes such a row makes `check` and the test suite name the row until
-  it has been read again and vouched for. The digest says that the row has not changed
-  since it was vouched for; the comparison of texts says that what was vouched for is
-  what was read. Of the 572 applied rows, 558 hold their recorded text and 14 carry a
-  `correction` (2026-11-27, when the digests were first written).
+  anyone, that changes such a row makes `check` name the row until it has been read
+  again and vouched for. The digest says that the row has not changed since it was
+  vouched for; the comparison of texts says that what was vouched for is what was read.
+  Of the 572 applied rows, 558 hold their recorded text and 14 carry a `correction`
+  (2026-11-27, when the digests were first written).
+- **The test suite holds that only while the re-read is in flight.** The script names
+  the branch on which the re-read is merged with main until it lands (`IN_FLIGHT_ON`).
+  While that branch is checked out, or is the head of the pull request CI is testing,
+  the test over the committed records fails on any row `check` names: merges with main
+  are what alters such rows, and a failing test is how a merge by another agent is
+  seen. Everywhere else the test is skipped and says why. Once the re-read has landed,
+  later edits of these reviews are main's ordinary work. Main changes rows the re-read
+  edited several times a week, and a test that failed on each would stop, in the merge
+  queue, every pull request that touches one of them. `check` still lists the rows
+  that have changed since they were vouched for, and a later round of the re-read
+  starts from that list and names its own branch.
 - **Quoting around an adverse fact.** A reading must quote more than the sentence that
   names the term, and must quote every sentence that stands against the verdict: that the
   gene is itself a seed, that it is inside the clade the seeds span, that seeds share its

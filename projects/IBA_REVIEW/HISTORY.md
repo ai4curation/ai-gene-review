@@ -374,6 +374,13 @@ got an extract or a listing (1,486 and 406).
   by another agent was enough to make a record false without anyone seeing it. What a
   record vouches for is now a digest of the row, the text it says was applied is
   compared with the row's reason, and both comparisons are a test.
+- **A check on files that others edit must not outlive the work it guards.** The
+  first form of that test failed on any change to one of 572 review rows, on any
+  branch. On this branch that is the point. On main, after the re-read has landed, it
+  would have failed in the merge queue for every pull request that edits such a row,
+  and main edits them several times a week. The test now binds only on the branch the
+  re-read is in flight on and is skipped elsewhere, with the reason; the command
+  reports the rows at any time. Found on re-reading the push, before it was merged.
 - **Other agents will merge this branch.** The merge rule lived in this session's notes
   and scratch files, where the agent that made the tenth merge could not find it. A
   rule that only one session knows is not the repository's rule. It is in the README

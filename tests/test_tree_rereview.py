@@ -573,7 +573,38 @@ def test_an_applied_row_without_a_digest_is_not_vouched_for() -> None:
 def test_every_applied_row_is_still_the_row_its_record_vouches_for() -> None:
     # a merge, or anyone, that changes the verdict, the reason or the tree quote of a row the re-read edited
     # has to read the row again and record it (`vouch`); see the README on merges
+    if not tr.in_flight():
+        # once the re-read has landed, later edits of these reviews are main's ordinary work: this must not
+        # fail another pull request that touches one of the rows
+        pytest.skip("the re-read is not in flight on this branch; `tree_rereview.py check` lists the rows changed since they were vouched for")
     assert tr.applied_problems() == {}
+
+
+@pytest.mark.parametrize(
+    ("checked_out", "environ", "branch"),
+    [
+        # a checkout of a named branch stands for that branch, whatever a workflow's own event says
+        ("claude/some-branch", {}, "claude/some-branch"),
+        ("main", {"GITHUB_HEAD_REF": "claude/some-branch"}, "main"),
+        # CI checks out a pull request's merge commit on a detached HEAD: the pull request's head is under test
+        ("HEAD", {"GITHUB_HEAD_REF": "claude/some-branch"}, "claude/some-branch"),
+        # a merge-queue run, or a checkout git cannot name, stands for no branch
+        ("HEAD", {"GITHUB_HEAD_REF": ""}, ""),
+        ("HEAD", {}, ""),
+        ("", {}, ""),
+    ],
+)
+def test_the_branch_under_test_is_the_checkout_or_the_pull_requests_head(checked_out: str, environ: dict[str, str], branch: str) -> None:
+    assert tr.branch_under_test(checked_out, environ) == branch
+
+
+def test_the_check_binds_only_on_the_branch_the_re_read_is_in_flight_on() -> None:
+    assert tr.in_flight(tr.IN_FLIGHT_ON, {})
+    assert tr.in_flight("HEAD", {"GITHUB_HEAD_REF": tr.IN_FLIGHT_ON})
+    # main, another pull request, the merge queue
+    assert not tr.in_flight("main", {})
+    assert not tr.in_flight("HEAD", {"GITHUB_HEAD_REF": "claude/another-review"})
+    assert not tr.in_flight("HEAD", {})
 
 
 def test_the_fields_that_changed_between_two_versions_of_a_row_are_named() -> None:
