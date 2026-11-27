@@ -110,9 +110,15 @@ unwired, and this note exists so the attempt is not silently repeated.
 - Attempt 3 (22:28): ran 2 h 00 m with no output directory, same signature, killed.
 
 Two hangs in a row on the same prompt, while eight other genes submitted through
-the identical wrapper in the same session completed in 30–50 minutes, suggests
-something specific to this prompt or gene rather than infrastructure luck. A fourth
-attempt was not made.
+the identical wrapper in the same session completed in 30–50 minutes, suggested at
+the time that the cause was specific to this prompt or gene. **That attribution was
+wrong and is withdrawn.** A later batch (BACSU/plsC, CHLRE/MITH1, CANAL/CYB5,
+submitted 2026-11-27 00:32) hung identically, all three reaching 2 h 01 m with no
+output directory. The last OpenScientist report to arrive in this campaign was
+BRUMA/bma-ben-1 at 2026-11-26 19:52:41; every submission after that time has
+returned nothing, five runs across four genes. Since 256 runs had succeeded before
+that cutoff, the cause is the submission path or the remote service, not this gene.
+A fourth plsY attempt was not made, and it would not have helped.
 
 Operational notes for whoever picks this up:
 
