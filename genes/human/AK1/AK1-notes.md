@@ -167,9 +167,15 @@ Reported alleles, all checked against NM_000476.3 by `01_variant_consequences.py
   the CMPK1 and yeast ADK1 reviews.
 - GO:0004550 (NDP kinase), IDA and IEA: MARK_AS_OVER_ANNOTATED, same judgement as CMPK1.
   Not REMOVE: I have not read the full text and the activity was measured.
-- GO:0009142 (NTP biosynthetic process): kept. The reverse adenylate kinase reaction makes
-  ATP from two ADP, which is the physiologically important direction in working muscle; the
-  row does not depend on the NDP kinase side activity.
+- GO:0009142 (NTP biosynthetic process): MODIFY to GO:0006754 ATP biosynthetic process
+  (changed from ACCEPT after PR review, 2026-11-27). The reverse adenylate kinase reaction
+  makes ATP from two ADP, the physiologically important direction in working muscle, and ATP
+  is the only triphosphate AK1 makes by its own reaction; the generic NTP reading would rest
+  on the NDP kinase side activity. GO:0006754 checked in QuickGO: not obsolete, descendant of
+  GO:0009142 and GO:0046034.
+- Cytoplasm rows stay ACCEPT (not TOO_GENERAL): cytoplasm still excludes nucleus,
+  extracellular space and the AK1beta membrane location.
+- AK1beta: no structured plasma membrane term on the isoform; human localisation untested.
 - Sperm flagellum / outer dense fiber: KEEP_AS_NON_CORE on mouse evidence.
 - No NEW rows. Candidate "plasma membrane" for AK1beta rests on mouse and transfected-cell
   data and belongs to the isoform (recorded there). Candidate process terms such as energy
