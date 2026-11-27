@@ -24,8 +24,8 @@ annotations, which reach many other proteins as IBAs, so an error in a seed is
 copied to every descendant. Of 471 PAO1 proteins that seed an IBD, 398 have a
 PseudoCAP annotation supporting at least one seeding; for 139 node terms (109
 proteins) the PAO1 protein is the only seed. We reviewed all 109 of those
-proteins: 107 have full reviews, and the review files for pqsA and PA2403
-are still to be written. For 21 genes the seed is wrong or
+proteins, and as of 2026-11-27 all 109 have full reviews: pqsA and PA2403, the
+last two outstanding, merged in #7133. For 21 genes the seed is wrong or
 is an indirect mutant phenotype, and the IBD it supports should be withdrawn or
 repointed. Examples are catalase activity on a heme exporter (ccmC), lipid
 biosynthesis on an esterase (estA), DNA endonuclease activity from a mistyped
@@ -135,10 +135,11 @@ produces one report for PseudoCAP and one for PAINT.
 
 ## Results: tier 1 (sole seeds)
 
-All 109 tier 1 proteins have been assessed, and 107 have full reviews. The
-review files for pqsA and PA2403 still need writing (see below), so they are
-tallied separately. pvdE was in that list and is no longer: its review was
-written in tier-3 batch 5 (PR #6754), so the count moved from 106 to 107 and
+All 109 tier 1 proteins have been assessed and all 109 now have full reviews.
+pqsA and PA2403 were the last outstanding and merged in #7133; they are still
+tallied separately below because their seed assessments have not been folded
+into the category counts. pvdE was in that list earlier and is no longer: its
+review was written in tier-3 batch 5 (PR #6754), so the count moved from 106 to 107 and
 this page did not follow it. Each gene is classified by the outcome for
 its sole-seeded node terms. Leaf IBA counts are the worklist's
 reference-proteome counts for those terms, so they are lower bounds.
@@ -149,7 +150,7 @@ reference-proteome counts for those terms, so they are lower bounds.
 | Seed right for PAO1, but the node term does not fit its clade | 24 | 804 |
 | Claim true, but the seed row's evidence code, qualifier or reference is wrong | 30 | 1,043 |
 | Sound | 32 | 1,433 |
-| Review file not yet written (pqsA, PA2403) | 2 | 11 |
+| Review written in #7133, seed assessment not yet folded into these categories (pqsA, PA2403) | 2 | 11 |
 | **Total** | **109** | **4,772** |
 
 - **Withdraw or repoint (21):** estA, ccmC, pilU, pilM, pilN, wbpD, PA0920,
@@ -367,7 +368,7 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 82 | PA0906 | PA0906 | regulation of DNA-templated transcription (PTN002221379) | 10 | SOUND (ChIP-seq, promoter fusions) | Sound | P (autolysis row) |
 | 83 | PA2280 | PA2280 | NAD(P)H quinone oxidoreductase (PTN008682975) | 10 | WRONG reference: the cited paper studies Synechocystis ArsH; activity true from a later P. aeruginosa assay | Sound content; re-cite the seed | P, G |
 | 84 | PA2580 | PA2580 | cellular response to oxidative stress (PTN002922793) | 9 | SOUND but weak (overexpression rescues only a katA mutant); quinone reductase row is a purified-enzyme assay coded IMP | Sound; H. pylori ortholog knockout would be a better seed | P |
-| 85 | pqsA | PA0996 | secondary metabolite biosynthetic process (PTN002458530) | 9 | Not written (review YAML blocked): agent found the cited paper attributes the PA0996 result to another study | Node is the family root; a child node swaps terms between PqsA and FadD22 | pending |
+| 85 | pqsA | PA0996 | secondary metabolite biosynthetic process (PTN002458530) | 9 | Reviewed in #7133; the cited paper attributes the PA0996 result to another study | Node is the family root; a child node swaps terms between PqsA and FadD22 | pending |
 | 86 | lhpL | PA1255 | 4-hydroxyproline epimerase activity (PTN002433936) | 9 | WRONG: Swiss-Prot records experimentally that it has no 4-hydroxyproline epimerase activity; it is a trans-3-hydroxy-L-proline dehydratase; PAO1's real epimerase is PA1268 | Unsupported: repoint | P, G |
 | 87 | motB | PA4953 | bacterial-type flagellum-dependent swarming motility (PTN001251133) | 9 | OVER-SPECIFIC: motAB single mutant swarms normally; only the motAB motCD double fails | Swarming is a lifestyle phenotype, not propagable; repoint to flagellum-dependent motility | P (x2), G |
 | 88 | dctP | PA5167 | C4-dicarboxylate transport (PTN002121312) | 9 | SOUND | Sound: unlike the DctQ node this is a binding-protein clade | none |
@@ -391,15 +392,17 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 106 | mucD | PA0766 | periplasmic space (PTN002342204) | 5 | SOUND | Sound | P (signal transduction row) |
 | 107 | eddB | PA3909 | DNA catabolic process (PTN001684760) | 3 | SOUND (secreted DNase) | Sound | none |
 | 108 | pelA | PA3064 | deacetylase activity (PTN002441861) | 3 | SOUND (purified protein, active-site mutants) | Other two leaves look too short to contain the deacetylase domain | G |
-| 109 | PA2403 | PA2403 | siderophore biosynthetic process | 2 | Not written (agent stopped): gene is FpvG, which releases iron from ferripyoverdine, so pyoverdine biosynthesis looks wrong or indirect | pending | pending |
+| 109 | PA2403 | PA2403 | siderophore biosynthetic process | 2 | Reviewed in #7133; gene is FpvG, which releases iron from ferripyoverdine, so pyoverdine biosynthesis looks wrong or indirect | pending | pending |
 
 ### Not completed
 
-The review files for pqsA and PA2403 are still not written: the agent's write of
-the pqsA review YAML was blocked by a safety classifier, and the agent stopped
-before PA2403. pvdE was blocked the same way and has since been written, in
-tier-3 batch 5 (PR #6754, commit `a3073d800f`), so it is no longer listed here.
-The research findings for the two that remain:
+Nothing in tier 1 is now unwritten. pqsA and PA2403 were the last two: the
+agent's write of the pqsA review YAML had been blocked by a safety classifier
+and the agent stopped before PA2403, and both merged in #7133 on 2026-11-27.
+pvdE was blocked the same way earlier and was written in tier-3 batch 5
+(PR #6754, commit `a3073d800f`). What remains owed is bookkeeping rather than
+curation: the seed assessments for pqsA and PA2403 have not been folded into
+the category table above. The research findings that drove their reviews:
 
 - **pqsA:** the cited paper (PMID:12426334) attributes the PA0996 result to a
   different study; PMID:18728009 shows a pqsA mutant makes no quinolines. The
@@ -871,8 +874,8 @@ is the line the `involved_in` rule draws, so that row is marked over-annotated.
 
 ## Plan
 
-1. ~~Review every tier 1 gene.~~ Done except for writing the pqsA and PA2403
-   review files.
+1. ~~Review every tier 1 gene.~~ Done; the last two review files, pqsA and
+   PA2403, merged in #7133.
 2. Reconcile small inconsistencies between reviews: xcpX's complex row
    (PMID:9466253) has no reference defect, while the similar xcpW and xcpV rows
    (PMID:8331069) do.
@@ -889,7 +892,9 @@ is the line the `involved_in` rule draws, so that row is marked over-annotated.
    review used the ITC paper. The np20 review also judges its pyocyanin seed an
    indirect phenotype, where the earlier fur review called the same seed
    reasonable.
-6. The rest of the PseudoCAP corpus (2,069 rows on PAO1 in QuickGO),
+6. Fold the pqsA and PA2403 seed assessments into the tier 1 category table,
+   which still counts them in a separate row rather than in the seed categories.
+7. The rest of the PseudoCAP corpus (2,069 rows on PAO1 in QuickGO),
    prioritising IMP rows on molecular-function terms. Started: see
    "Tier 3" below. 142 proteins carry such a row: 98 were covered by tiers 1-2
    when the list was built, and the remaining 44 have since been reviewed. All 142
