@@ -10,7 +10,7 @@ sidecars:
 manifest:
   slides:
     - href: INTERPRO/slides/INTERPRO-slides.html
-      description: AI generated
+      description: AI generated; figures predate the 2026-11 refresh
   artifacts:
     - href: https://claude.ai/artifact/NaAEVgdB1TnJUKnBWWt69N
       title: Project brief
@@ -98,10 +98,12 @@ clause match given above rather than trusting this sentence.
 | IPR006935 DNA binding | HAMAP UvrB rule MF_00204; nothing for RIG-I-like receptors or Dicer | Replace with `GO:0003676` |
 | IPR045122, IPR013380 (two), IPR005714 | Not needed; the terms are wrong for every member | Remove; for IPR045122 and IPR013380, add the correct family-wide terms as mappings |
 
-This table is a selection, not the whole set: seven of the seventeen cover notes are not listed
-here -- IPR019982, IPR018229, IPR017402, IPR001135, IPR037893, IPR002956 and IPR018194 -- so read
-the row's own `comment` in the mapping set when looking one up rather than concluding from this
-table that a removal has no cover note.
+This table is a selection, not the whole set: it carries ten of the seventeen cover notes, across
+eight of the fifteen entries that have one. The rule rather than the list, because the list grows:
+a removal's cover note lives in its own row `comment` in the mapping set, and this table reproduces
+only some of them, so read the row before concluding that a removal has no cover. As of this
+writing the entries with a cover note absent here are IPR019982, IPR018229, IPR017402, IPR001135,
+IPR037893, IPR002956 and IPR018194.
 
 The checks themselves are described in [Before proposing a removal](INTERPRO/README.md#before-proposing-a-removal).
 
