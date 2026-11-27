@@ -67,9 +67,9 @@ at a tree and left only prose was not counted.
   67 reviews on 2026-11-27, [below](#residue-arguments-without-a-residue-claim)).
   `just validate-families` reports a node assessment that disputes a placement without
   quoting a tree listing (`NODE_TREE_EVIDENCE`).
-- **Backfill.** Extracts are committed for 1,481 genes: every gene whose review overrules
+- **Backfill.** Extracts are committed for 1,486 genes: every gene whose review overrules
   an IBA row that is still in its GOA file, and the genes with a kept row under a PAINT
-  loss. Node listings are committed for 403 families: those whose family review disputes a
+  loss. Node listings are committed for 406 families: those whose family review disputes a
   node placement, and PTHR48034 (the CIRBP family below). A review row whose IBA has since
   been withdrawn from GOA has no tree row to quote and is not asked for one. The committed
   set is what was written when the tooling landed and at each merge with main since. It
@@ -294,14 +294,14 @@ ninth, 4 at the eleventh); 53 of them are counted here as left for adjudication.
 other, a PTHR11525 assessment given up at the ninth merge, got its tree fact back by
 hand: main's text treats two terms alike that the tree files tell apart (spo9 is itself a
 seed of FPP biosynthesis at the family root and no seed of the FPPS activity there).
-Twelve more rows that main changed keep the re-read's sentence, under main's new text:
-five from the tenth merge, which another agent made, and seven from the eleventh. In
-most of them main had named the node for a PAINT loss, and the node is the clade the
-sentence counts. Main's present text of every one of these rows, and of 5 rows main
-rewrote while they waited for a curator, has been read against the tree file: the 12
-kept rows agree with it; of the 58 that are main's, 55 state nothing that bears on their
-verdict and that the tree file contradicts, and leave out no fact against it, and 3 gene
-rows do not say that the gene is itself the only seed of its node
+Fourteen more rows that main changed keep the re-read's sentence, under main's new text:
+five from the tenth merge, which another agent made, seven from the eleventh and two
+from the twelfth. In most of them main had named the node for a PAINT loss, and the node
+is the clade the sentence counts. Main's present text of every one of these rows, and of
+5 rows main rewrote while they waited for a curator, has been read against the tree
+file: the 14 kept rows agree with it; of the 58 that are main's, 55 state nothing that
+bears on their verdict and that the tree file contradicts, and leave out no fact against
+it, and 3 gene rows do not say that the gene is itself the only seed of its node
 ([the rule](tree-rereview/README.md#what-the-script-will-not-do)). Sixteen of the
 17 of the eighth merge are gene rows that main rewrote in its own re-review of every IBA
 row marked `REMOVE` ([below](#mains-re-review-of-the-rows-marked-remove)). The three of
@@ -430,10 +430,10 @@ marks them `contradiction_disputed`.
 
 Not yet read: 59 gene batches with no candidate row. 1,350 of their rows, in 919 genes,
 are still overruled; main's re-review changed the verdict of the others. They still raise
-`missing_tree_evidence`. So do 445 overruled rows in 293 genes that reviews merged on
-main have added since the plan was made. 363 disputed node assessments are in the same
-position: 343 in 184 families the plan does not cover, and 20 new ones in 12 families it
-had read (as of the eleventh merge, 2026-11-27). These have extracts and listings but are
+`missing_tree_evidence`. So do 452 overruled rows in 298 genes that reviews merged on
+main have added since the plan was made. 367 disputed node assessments are in the same
+position: 347 in 187 families the plan does not cover, and 20 new ones in 12 families it
+had read (as of the twelfth merge, 2026-11-27). These have extracts and listings but are
 in neither plan.
 
 ### Main's re-review of the rows marked REMOVE

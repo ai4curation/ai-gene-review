@@ -42,9 +42,9 @@ each subfamily the review names as affected lie below the node.
 [`needs-curator.yaml`](needs-curator.yaml).
 
 The 59 unread gene batches hold 1,350 rows in 919 genes that are still overruled. Since
-the plans were made, reviews merged on main have added 445 overruled IBA rows in 293
-genes and 363 disputed node assessments: 343 in 184 families the plan does not cover, and
-20 new ones in 12 families it had read (as of the eleventh merge, 2026-11-27). Those have
+the plans were made, reviews merged on main have added 452 overruled IBA rows in 298
+genes and 367 disputed node assessments: 347 in 187 families the plan does not cover, and
+20 new ones in 12 families it had read (as of the twelfth merge, 2026-11-27). Those have
 extracts and listings, and are not in either plan; `plan` makes a plan once and does not
 extend it, so they need batches of their own.
 
@@ -141,7 +141,7 @@ is left for a curator, with the reason in the run record:
     text, it goes back under main's text word for word, with its quotes, through the
     script's editor. The row stays `applied`. Its record says what main changed
     (`changed_on_main`) and what the reading found (`main_text_read`); `vouch` writes
-    both and renews the row's digest (below). 12 rows today.
+    both and renews the row's digest (below). 14 rows today.
   - **Given up.** Where main's text now says the same itself, or the sentence no longer
     describes the row, the row stays main's. The work list marks it `needs_new_reading`
     (58 today): its `action`, `tree_reading` and `note` describe the review as it was

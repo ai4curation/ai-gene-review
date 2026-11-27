@@ -342,6 +342,17 @@ correction. A row kept under main's text records what main changed and
 what a reading of main's text found, as a row given up does. And the merge-time checks
 that had lived in scratch files are commands: `changed-on-main`, `vouch` and `check`.
 
+**Twelfth merge with main (2026-11-27).** Main moved 23 commits while the eleventh merge
+was being checked, and conflicted again before it could be pushed: the docs navigation,
+and the PTHR11748 review, where the review of human LDHD had rewritten two assessments
+the re-read had edited and named the node for the loss. The commands of the eleventh
+merge were enough this time. `changed-on-main` named the two rows; both were set to
+main's text and main's text read against the listing and the release tree; the node main
+names holds all thirteen SF119 leaves and no seed, as the sentences say; both sentences
+went back word for word and `vouch` recorded the reading. That is 14 rows kept under a
+change of main's, still 572 applied. Five more genes and three more families from main
+got an extract or a listing (1,486 and 406).
+
 - **Two re-reads of the same rows ran at once without knowing of each other.** Both were
   about the tree, both edited the reason of a `REMOVE` row, and sixteen rows had to be
   given up at the merge. Work of this kind should be announced where the other can see
