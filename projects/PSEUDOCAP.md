@@ -198,8 +198,10 @@ entry: they are the two `GO_REF:0000108` rows inferred from the misplaced ones -
 `GO:2000142` on Q9I2J4 and `GO:0033214` on Q9I2J2 -- each reported at `PROBABLE`
 as a consequence to be re-derived once the repoint lands, the inference being
 sound and only its input wrong. The tier-1 counts
-quoted below are the totals as they stood at the end of tier 1 (116, 75, 5 and
-11).
+quoted below are the totals as they stood at the end of tier 1: 116 for PseudoCAP
+and 75 for PAINT, which appear below as the confidence splits 36 + 56 + 24 and
+6 + 56 + 13. The UniProt and other totals of that moment are no longer quoted
+anywhere on this page, so they are not named here either.
 
 Confidence follows the rule in [REVIEW_PROTOCOL](PSEUDOCAP/REVIEW_PROTOCOL.md):
 CONFIRMED needs the full text, primary data we checked, or an abstract that
@@ -287,7 +289,7 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 4 | fleN | PA1454 | ATP binding (PTN000344128) | 149 | WRONG evidence code: IDA for a sequence motif | Term true (later structures), needs a real seed | P, G |
 | 5 | PA5458 | PA5458 | lipopolysaccharide biosynthetic process (PTN000546841); polysaccharide biosynthetic process (PTN000546715) | 31 + 113 | SOUND but general (O-antigen modification; one row IDA without an assay) | Both wrong for clade: 15/31 leaves in non-LPS organisms (OatA peptidoglycan O-acetyltransferases); 109/113 leaves eukaryotic | P, G (x2) |
 | 6 | ccmC | PA1477 | catalase activity (PTN001247822) | 143 | INDIRECT-PHENOTYPE, and cites an *E. coli* paper | Unsupported: drop catalase from the node | P (x7), G |
-| 7 | pvdE | PA2397 | ATPase-coupled transmembrane transporter activity (PTN000656738) | 140 | SOUND | Node too deep: 126 of 140 leaves are NBD-only proteins | G (planned) |
+| 7 | pvdE | PA2397 | ATPase-coupled transmembrane transporter activity (PTN000656738) | 140 | SOUND | Node too deep: 126 of 140 leaves are NBD-only proteins | G |
 | 8 | PA1024 | PA1024 | oxidoreductase activity (PTN002844975) | 122 | SOUND (purified enzyme) | Sound; generic term right for a clade with one characterised member | none on seed; InterPro2GO NMO mapping removed |
 | 9 | hutI | PA5092 | imidazolonepropionase activity; L-histidine catabolic process (PTN000505272) | 52 | UNVERIFIABLE: 1967 paper predates genes and never mentions step III | Term right for a LUCA node (reaches human AMDHD1), but its only anchor is weak: re-seed | P |
 | 10 | phzS | PA4217 | monooxygenase activity (PTN002492679) | 104 | SOUND claim, wrong reference (a crystallization note) | Sound at family root; one misplaced leaf (Synechocystis ChlP) | P |
@@ -504,8 +506,13 @@ the 156 is a lower bound by at least four. They are
 scoped to tier 2 rather than to the corpus, and this page carries no derivable
 list of which genes are tier 2, so they are left as the dated snapshot they are
 rather than re-estimated; the set-wide figures above are the derived ones.
-By kind, the PseudoCAP defects are 77 wrong term, 43 wrong evidence code, 22
-wrong reference, 6 wrong gene product and 6 wrong qualifier.
+By kind, five of the six kinds the report uses: 77 wrong term, 43 wrong evidence
+code, 22 wrong reference, 6 wrong gene product and 6 wrong qualifier. Those five
+sum to 154, not to the 156 above, because the sixth kind is not among them. The
+set-wide report holds exactly two OTHER PseudoCAP defects, on PA2133 and speH,
+neither of which is in the tier-1 cohort; that is consistent with the missing pair
+being tier-2 OTHER rows, but it is not provable from this page, which carries no
+derivable list of tier-2 membership. The list is five of six either way.
 
 ### Seeds that are wrong
 
