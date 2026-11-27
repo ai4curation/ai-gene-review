@@ -239,3 +239,11 @@ Changes made in answer to the `CHANGES_REQUESTED` review on PR #6731.
 
 Action tally after these changes: 28 ACCEPT, 11 KEEP_AS_NON_CORE, 15 REMOVE, 8 MODIFY, 1 NEW
 (no `TOO_GENERAL` rows remain).
+
+Follow-up on the approving re-review: the two `core_functions` descriptions that had picked up
+curation framing ("recorded as its own core function below"; "which is why the review MODIFYs
+the GO:0035591 row...") are now plain biology. The rationale for splitting the adaptor
+activity out stays here in the notes, where it belongs. The `GO:0060213` synonym the
+re-review could not check offline is confirmed through OLS: the term carries "positive
+regulation of mRNA deadenylation" and "positive regulation of 3' to 5' mRNA deadenylation"
+as exact synonyms.
