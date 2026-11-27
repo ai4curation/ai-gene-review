@@ -192,6 +192,36 @@ def test_uniprot_line_code_is_not_offered_as_the_completion(tmp_path) -> None:
     assert findings[0].truncation.completed.endswith("L-aspartate-semialdehyde")
 
 
+def test_line_code_margin_is_stripped_when_the_quote_carries_its_own(tmp_path) -> None:
+    """A quote that copied the ``CC`` margin into itself is still completed by the record.
+
+    Regression: such a quote matches *only* the raw rendering -- the de-prefixed one
+    no longer contains the ``CC   `` it opens with -- so ``scan_document``'s
+    most-processed-first loop cannot reach a rendering whose next token is the
+    record's own text, and the continuation taken was the left margin of the
+    wrapped line. Reported on PR #7130 against three corpus rows.
+    """
+    genes = tmp_path / "genes" / "ECOLI" / "fruK"
+    genes.mkdir(parents=True)
+    (genes / "fruK-uniprot.txt").write_text(
+        "ID   FRUK_ECOLI              Reviewed;         312 AA.\n"
+        "CC   -!- FUNCTION: Catalyzes the ATP-dependent phosphorylation of fructose-l-\n"
+        "CC       phosphate to fructose 1,6-bisphosphate.\n"
+    )
+    doc = tmp_path / "fruK-ai-review.yaml"
+    doc.write_text(
+        "id: P0AEW9\n"
+        "references:\n"
+        "  - id: file:ECOLI/fruK/fruK-uniprot.txt\n"
+        "    supporting_text: 'CC   -!- FUNCTION: Catalyzes the ATP-dependent"
+        " phosphorylation of fructose-l-'\n"
+    )
+    findings = scan_document(doc, project_root=tmp_path)
+    assert len(findings) == 1
+    assert findings[0].truncation.continuation == "phosphate"
+    assert findings[0].truncation.kind is CutKind.MID_WORD
+
+
 def test_folding_matches_a_quote_written_with_an_en_dash(tmp_path) -> None:
     """A quote re-typed with a unicode dash still finds its source."""
     (tmp_path / "publications").mkdir()

@@ -113,6 +113,25 @@ reach for it as one, which is the mistake corrected above. Mid-value wrap artifa
 and value-final truncations are separate populations, and only measuring each
 separately tells you how big either is.
 
+## A quote that copied the flat file's margin
+
+Some `supporting_text` values open with the UniProt line code they were copied
+with, e.g. `CC   -!- FUNCTION: ... of fructose-l-`. Such a quote matches **only**
+the raw rendering: the de-prefixed rendering no longer contains the `CC   ` it
+begins with, so the most-processed-first loop in `scan_document` never reaches a
+rendering whose next token is the record's own text.
+
+The continuation therefore has to be de-prefixed where it is taken, which is what
+`_LINE_CODE_MARGIN` does. Without it the completion offered is the left margin of
+the wrapped line — `fructose-l-CC` instead of `fructose-l-phosphate` — which is
+the one output `test_uniprot_line_code_is_not_offered_as_the_completion` forbids;
+that test passes without the fix only because its fixture quote does not itself
+begin with a line code.
+
+The margin is stripped from the *remainder*, after the gap has already decided
+`MID_WORD` versus `TOKEN_BOUNDARY`, so the kind is unaffected: the line break
+before the margin is still what marks the cut as mid-word.
+
 ## Fixing one
 
 `Truncation.completed` extends the quote by a single token, which is enough to

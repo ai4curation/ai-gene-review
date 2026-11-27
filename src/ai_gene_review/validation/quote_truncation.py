@@ -95,6 +95,12 @@ _TOKEN = re.compile(r"[^\W_][\w]*(?:-[^\W_][\w]*)*")
 #: Whitespace between any two tokens of the quote, however the source wraps.
 _GAP = r"\s+"
 
+#: The two-letter line code that opens every line of a UniProt flat file. A quote
+#: that copied its own margin in matches only the raw rendering, so the de-prefixed
+#: rendering is out of reach and the continuation has to be de-prefixed here.
+#: Mirrors ``local_source_text._UNIPROT_LINE_CODE``.
+_LINE_CODE_MARGIN = re.compile(r"^[A-Z]{2} {3,}")
+
 #: Conjunctions that can coordinate a suspended hyphen ("CTP- and Mg2+-dependent").
 #: Necessary but not sufficient: see ``_is_suspension``.
 _SUSPENDING = frozenset({"and", "or", "nor"})
@@ -247,11 +253,13 @@ def find_truncation(quote_text: str, source_text: str) -> Truncation | None:
         else CutKind.MID_WORD
     )
 
-    token = _TOKEN.match(rest.lstrip())
+    # The gap above decided the kind; the margin itself is not part of the record's
+    # text, so it must not become the completion.
+    stripped = _LINE_CODE_MARGIN.sub("", rest.lstrip())
+    token = _TOKEN.match(stripped)
     if token is None:
         return None
     continuation = token.group(0)
-    stripped = rest.lstrip()
     if _is_suspension(continuation, stripped[token.end() :]):
         # A suspended hyphen: real punctuation, so the quote ends on a whole token
         # however the source wraps there.

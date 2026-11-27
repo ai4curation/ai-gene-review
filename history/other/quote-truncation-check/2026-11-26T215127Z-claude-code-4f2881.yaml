@@ -203,3 +203,41 @@ events:
     YNK1 27, ADE3 22, ADE1 21 -- which is consistent with long UniProt CATALYTIC ACTIVITY blocks
     full of hyphenated metabolite names wrapping mid-name, the same mechanism as the 24 already
     repaired.
+- type: EDIT
+  outcome: changed
+  sections:
+  - src/ai_gene_review/validation/quote_truncation.py
+  - tests/test_quote_truncation.py
+  - docs/quote_truncation.md
+  summary: >-
+    A quote carrying its own CC margin was completed by the margin rather than by the record. The
+    continuation is now de-prefixed where it is taken.
+  details: >-
+    Review finding, open across two rounds and correct. A supporting_text value that copied the
+    UniProt line code in with it - "CC   -!- FUNCTION: ... of fructose-l-" - matches only the raw
+    rendering, because the de-prefixed rendering no longer contains the "CC   " the quote opens
+    with. So scan_document's most-processed-first loop cannot reach a rendering whose next token is
+    the record's own text, and _TOKEN.match on the remainder returned the left margin of the
+    wrapped continuation line.
+
+    Written as a failing test first, against the row the review named: PTHR46566-review.yaml's
+    fruK quote returned "CC" where the record says "phosphate". Fixed by stripping a line-code
+    margin from the remainder before tokenising it, with the strip placed after the gap has already
+    decided MID_WORD versus TOKEN_BOUNDARY so the kind is unaffected - the line break before the
+    margin is still what marks the cut as mid-word.
+
+    All three rows the review traced now complete from the record:
+    PTHR46566-review.yaml fructose-l- to phosphate, MYCTU/dnaE2 LexA- to regulated, and ECOLI/rbsK
+    D-ribose 5- to phosphate. 22 tests pass, ruff check and format clean.
+
+    Worth recording why the existing regression test did not catch it. The review's point is exact:
+    test_uniprot_line_code_is_not_offered_as_the_completion forbids precisely this output, and
+    passes without the fix only because its fixture quote does not itself begin with a line code.
+    The test was written against the symptom as first observed - a completion ending in CC - and
+    the fixture reproduced the source but not the quote shape that causes it. A regression test
+    inherits the scope of the case that motivated it, which is the same thing recorded on the
+    INTERPRO page about checks derived from failures. The new test differs from it in exactly one
+    respect, the quote's own prefix, which is the variable that matters.
+
+    The docs gain a section on the class, since the reason the loop cannot help is not obvious from
+    reading either function alone.
