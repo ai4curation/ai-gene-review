@@ -90,7 +90,7 @@ clause match given above rather than trusting this sentence.
 
 | Removal | What still supplies the term | Request |
 |---------|------------------------------|---------|
-| IPR000719 ATP binding | IPR017441 (ATP binding site) for members with the motif; family rules such as the JNK rule UR001528758 for members without it | Remove; all 7 reviewed sole-source losses were accepted or kept, so family rules are needed |
+| IPR000719 ATP binding | IPR017441 (ATP binding site) for members with the motif; family rules such as the JNK rule UR001528758 for members without it | Remove; all 7 reviewed sole-source losses were accepted or kept as of 2026-10-10, a dated check result rather than a figure derivable from the mapping set, so family rules are needed |
 | IPR000719 protein phosphorylation | Active-site entries IPR008271 and IPR008266 | Remove |
 | IPR001424 superoxide metabolic process | UniRule UR000000113 selects canonical Cu/Zn SODs and excludes CCS, but assigns only the EC number; Candida albicans SOD5 lacks its PS00332 condition and needs separate Cu-only SOD cover | Remove; add `GO:0019430` to the Cu/Zn rule and to a fungal Cu-only SOD rule or narrower entry |
 | IPR012724 ATP binding | Nothing needed; the HAMAP DnaJ rule MF_01152 also assigns no ATP-binding or zinc-ion-binding GO term | Remove |
@@ -206,4 +206,3 @@ breakdowns, example genes, and affected GO terms.
   workstream checklists, and session chronology.
 - [Protein families](FAMILIES.md) · [IBA annotation review](IBA_REVIEW.md) ·
   [Over-annotation patterns](OVER_ANNOTATION_PATTERNS.html) — related collections.
-- [Slides](INTERPRO/slides/INTERPRO-slides.html) (Marp source: [INTERPRO-slides.md](INTERPRO/slides/INTERPRO-slides.md)) — AI generated
