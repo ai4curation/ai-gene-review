@@ -368,7 +368,7 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 82 | PA0906 | PA0906 | regulation of DNA-templated transcription (PTN002221379) | 10 | SOUND (ChIP-seq, promoter fusions) | Sound | P (autolysis row) |
 | 83 | PA2280 | PA2280 | NAD(P)H quinone oxidoreductase (PTN008682975) | 10 | WRONG reference: the cited paper studies Synechocystis ArsH; activity true from a later P. aeruginosa assay | Sound content; re-cite the seed | P, G |
 | 84 | PA2580 | PA2580 | cellular response to oxidative stress (PTN002922793) | 9 | SOUND but weak (overexpression rescues only a katA mutant); quinone reductase row is a purified-enzyme assay coded IMP | Sound; H. pylori ortholog knockout would be a better seed | P |
-| 85 | pqsA | PA0996 | secondary metabolite biosynthetic process (PTN002458530) | 9 | Reviewed in #7133; the cited paper attributes the PA0996 result to another study | Node is the family root; a child node swaps terms between PqsA and FadD22 | pending |
+| 85 | pqsA | PA0996 | secondary metabolite biosynthetic process (PTN002458530) | 9 | Reviewed in #7133; the cited paper attributes the PA0996 result to another study | Node is the family root; a child node swaps terms between PqsA and FadD22 | none |
 | 86 | lhpL | PA1255 | 4-hydroxyproline epimerase activity (PTN002433936) | 9 | WRONG: Swiss-Prot records experimentally that it has no 4-hydroxyproline epimerase activity; it is a trans-3-hydroxy-L-proline dehydratase; PAO1's real epimerase is PA1268 | Unsupported: repoint | P, G |
 | 87 | motB | PA4953 | bacterial-type flagellum-dependent swarming motility (PTN001251133) | 9 | OVER-SPECIFIC: motAB single mutant swarms normally; only the motAB motCD double fails | Swarming is a lifestyle phenotype, not propagable; repoint to flagellum-dependent motility | P (x2), G |
 | 88 | dctP | PA5167 | C4-dicarboxylate transport (PTN002121312) | 9 | SOUND | Sound: unlike the DctQ node this is a binding-protein clade | none |
@@ -392,7 +392,7 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 106 | mucD | PA0766 | periplasmic space (PTN002342204) | 5 | SOUND | Sound | P (signal transduction row) |
 | 107 | eddB | PA3909 | DNA catabolic process (PTN001684760) | 3 | SOUND (secreted DNase) | Sound | none |
 | 108 | pelA | PA3064 | deacetylase activity (PTN002441861) | 3 | SOUND (purified protein, active-site mutants) | Other two leaves look too short to contain the deacetylase domain | G |
-| 109 | PA2403 | PA2403 | siderophore biosynthetic process | 2 | Reviewed in #7133; gene is FpvG, which releases iron from ferripyoverdine, so pyoverdine biosynthesis looks wrong or indirect | pending | pending |
+| 109 | PA2403 | PA2403 | siderophore biosynthetic process | 2 | Reviewed in #7133; gene is FpvG, which releases iron from ferripyoverdine, so pyoverdine biosynthesis looks wrong or indirect | The node's only experimental grounding is this gene's own seed; re-examine if that row is an expression pattern | P |
 
 ### Not completed
 
