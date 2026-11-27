@@ -8158,3 +8158,17 @@ The source-bound audit verified 13 exact quote occurrences across 8 sources, wit
 Only ACTG1 is newly checked. All 235 dated queue records, 184 prior completion updates, earlier journal bytes and original snapshot metadata are preserved. Local acceptance receipt `ACTG1-root-delivery-acceptance-v1.json` (SHA256 `3f628e6dbf3e1bcd779fc621942e16c1b4adf4051bef68c17b60a73aa6952c7b`) identifies retained provenance; it is not a public download link.
 
 [Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-21T235117Z-codex-ae3a5c.yaml).
+
+## Completion checkpoint 766 (2026-11-26 17:22:18 UTC)
+
+766 complete; 2,110 of 2,876 remain. This publishes ROOT's prior acceptance of human ACTN1 (HGNC:163; P12814), with zero new acceptance credit.
+
+[PR #7002](https://github.com/ai4curation/ai-gene-review/pull/7002) merged as [e262778f](https://github.com/ai4curation/ai-gene-review/commit/e262778fce4e9737b7b3498399d1b94b403a82f3); [merge-group run 45748846439](https://github.com/ai4curation/ai-gene-review/actions/runs/45748846439), attempt 1, succeeded. ROOT verified approval of reviewed head d8335c8f, 57 reviewed files, 34 actual changed paths, 23 identical inherited paths, and actual-merge ancestry of the fresh tracker base.
+
+The delivered review retains 128 native annotation contexts from 136 downloaded GOA rows, with 8 duplicate source rows collapsed. Final actions: 54 ACCEPT, 57 KEEP_AS_NON_CORE, 16 UNDECIDED, 1 TOO_GENERAL. Review status remains DRAFT; 0 NEW contexts and 3 core functions are recorded. Sixteen inaccessible or unresolved original evidence assignments remain UNDECIDED, including both native NOT assertions. Supported generic binding stays non-core; independent same-pair support is distinguished from access to original assays. Purified human, isolated-domain, rodent-neuron and heterologous-cell evidence retain their experimental scope. Precise actin-filament cross-linking activity is supported as a core function without creating a NEW annotation. No source defects or upstream reports asserted.
+
+The source-bound quote audit verified 30 quotations, with 0 unchecked and 0 baselined, across 22 quoted sources. All 48 local reference inputs are pinned. ROOT's executed-log audit, actual job/log pins and their scope limits are retained in this checkpoint's durable merge evidence; a successful step badge alone is not treated as evidence that every possible test ran.
+
+Only ACTN1 is newly checked. All 235 dated queue records, 185 prior completion updates, earlier journal bytes and original snapshot metadata are preserved. Canonical tracker sources are updated; generated pages are left to the deployment renderer. Acceptance receipt `ACTN1-root-delivery-acceptance-v1.json` (SHA256 `9b5d68d5b4764dd04ea3d46af4af835489b0ac5c395e16190f67607f01d14832`) identifies retained provenance and is not a public download link.
+
+[Project history](https://github.com/ai4curation/ai-gene-review/blob/main/history/projects/CLINGEN_MENDELIAN/2026-11-26T172137Z-codex-0c9e8d.yaml).

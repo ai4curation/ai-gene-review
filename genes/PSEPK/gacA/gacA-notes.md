@@ -32,3 +32,23 @@
 - Cognate-kinase biochemistry comes from the E. coli orthologs [PMID:11022030 "Phosphorylated BarA, in turn, acts as an efficient phosphoryl group donor to UvrY but not to the non-cognate response regulators ArcA, PhoB, or CpxR."].
 - Action changes: GO:0003677 DNA binding is TOO_GENERAL (entailed by GO:0000976, accepted). GO:0000976 is ACCEPTED, not non-core: the LuxR-type HTH domain and the conserved upstream GacA boxes support it. GO:0006355 is MODIFIED to GO:0045893 because GacA is an activator.
 - Deep research: the codex and falcon files in this folder were used; no new provider run.
+
+## 2026-11-16 — TF batch 2: signaling and target evidence
+
+Re-reviewed all four machine-seeded GO rows and the previous authored proposals. Primary sources replace notes/provider paraphrases as annotation evidence. The receiver and HTH assignments in the preserved UniProt record are computational; predicted Asp54 phosphorylation is not a KT2440 phosphotransfer measurement. Core cis-regulatory binding stays core despite limited direct-target evidence. DNA binding refines to TF activity; response-regulator activity remains a separate IC proposal. The duplicate authored TF proposal and weakly supported cytosol proposal were withdrawn.
+
+[PMID:27489550, Genetic Dissection of the Regulatory Network Associated with High c-di-GMP Levels in Pseudomonas putida KT2440] full text identifies cfcT-5 as PP_4099/gacA. Table 3 reports loss of crinkling, floccules and increased biofilm with multicopy rup4959, and methods describe the KT2440 gacA/pMIR203 complementation construct. The retained positive-biofilm-regulation IMP is conditional on this regulatory assay. GacA does regulatory work; it does not execute adhesion or matrix synthesis.
+
+[PMID:24488315, Roles of cyclic Di-GMP and the Gac system in transcriptional control of the genes coding for the Pseudomonas putida adhesins LapA and LapF] is abstract-only locally. The exact support is “Both lapA and lapF are under the control of the two-component regulatory system GacS/GacA”. The sidecar therefore records system-level control with unknown target-specific signs and unresolved directness.
+
+[PMID:36748579, Transcriptional organization and regulation of the Pseudomonas putida K1 type VI secretion system gene cluster] full text tests a gacS mutant, not gacA. Positive PS/PV regulation is explicitly a Gac-system inference to GacA, with no demonstrated GacA occupancy. Named KT2440 RsmX/Y/Z promoter contacts are not asserted from the conserved Gac/Rsm model.
+
+Provider reports/artifacts, UniProt/GOA and existing publication caches were preserved verbatim. Existing Falcon research was reused, not regenerated. FEBA retrieval failed because no local database or remote source was reachable; no fitness artifact was fabricated. PSEPK has no applicable MOD-description source. Annotation-reviewer consultation was read-only; one writer performed the curation.
+
+## 2026-11-25 — Merge reconciliation
+
+Preserved both preceding review accounts. PMID:33693029 identifies conserved GacA motifs upstream of KT2440 rsmY/rsmZ, but its EMSA measures Rsm–RNA binding, not GacA–DNA binding. Thus the older “direct transcriptional targets” wording describes candidate targets; the batch statement that no named promoter evidence was found is superseded by this motif evidence. Neither establishes physical directness, so no experimentally direct sidecar edge is added.
+
+Retained all incoming references and primary findings. PMID:11022030 directly demonstrates E. coli BarA/UvrY phosphotransfer, supporting ISS for GO:0000156 alongside conserved KT2440 receiver architecture. The source UniProt record assigns Q88FJ6 to PTHR43214:SF3; the family entry table assigns E. coli UvrY P0AED5 to that subfamily. No KT2440 phosphorylation assay is implied.
+
+Retained the batch's GO:0003677 MODIFY to GO:0003700, with GO:0000976 separately covering the DNA-binding branch. The incoming standalone GO:0003700 proposal is consolidated into that replacement, preserving its primary evidence. The incoming cytosol proposal remains withdrawn under the batch's conservative localization policy: soluble architecture and provider prose do not independently establish localization. The conditional biofilm regulation remains in core_functions because GacA performs regulatory work, while the secretion machinery is downstream. Incoming promoter-EMSA and sRNA-reporter experiment details are retained.

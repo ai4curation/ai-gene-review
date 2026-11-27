@@ -2,7 +2,7 @@
 
 Date: 2026-11-05. All 20 selected accessions received a scoped evidence assessment. That pass did not change gene-review YAML. The machine-readable assessments, citations, access limitations and follow-ups are in [calibration-assessments.yaml](calibration-assessments.yaml).
 
-Follow-up, 2026-11-08: the [first full-review batch](../batches/tf_carbon_utilization_01.md) covers BenR, HexR, PtxS and CbrB, with supported regulatory relationships and explicit pathway context. The other 16 cases retain their scoped-assessment status; they have not received full GO re-review in this workstream. Per-case `full_go_review` fields distinguish that subsequent work from the original assessment.
+Follow-up, 2026-11-08: the [first full-review batch](../batches/tf_carbon_utilization_01.md) covers BenR, HexR, PtxS and CbrB, with supported regulatory relationships and explicit pathway context. Follow-up, 2026-11-16: [batch 2](../batches/tf_signaling_rna_02.md) completes GacA, FleQ, RpoS and Hfq. The other 12 cases retain their scoped-assessment status; they have not received full GO re-review in this workstream. Per-case `full_go_review` fields distinguish that subsequent work from the original assessment.
 
 ## What this pass resolves
 

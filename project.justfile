@@ -394,6 +394,42 @@ litscan-module-member *args="":
 sync-shadow-issues tracker="go-annotation" *args="":
     uv run ai-gene-review shadow-issues sync {{tracker}} {{args}}
 
+# --- Time-split annotation benchmarks (docs/benchmarks.md) ---
+#   just benchmark-build benchmarks/human-goa-2025-06/human-goa-2025-06-spec.yaml
+#   just benchmark-check benchmarks/human-goa-2025-06/human-goa-2025-06.yaml
+#   just benchmark-export benchmarks/human-goa-2025-06/human-goa-2025-06.yaml
+#   just benchmark-score benchmarks/human-goa-2025-06/human-goa-2025-06.yaml --peptalk blind.jsonl
+
+# Draw a benchmark from a BenchmarkSpec into the spec's folder
+benchmark-build spec *args="":
+    uv run ai-gene-review benchmark build {{spec}} -o $(dirname {{spec}}) {{args}}
+
+# Run the deterministic checks; writes <id>-check-report.yaml and .md beside the benchmark
+benchmark-check benchmark *args="":
+    uv run ai-gene-review benchmark check {{benchmark}} {{args}}
+
+# Write FASTA, peptalk claims and baseline GOA files for the benchmark's conditions
+benchmark-export benchmark *args="":
+    uv run ai-gene-review benchmark export {{benchmark}} {{args}}
+
+# Score condition results (peptalk JSONL, agent-review genes folders) per item
+benchmark-score benchmark *args="":
+    uv run ai-gene-review benchmark score {{benchmark}} {{args}}
+
+# Validate every committed benchmark spec, benchmark, check report, agent evaluation and score report
+validate-benchmarks:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+    for spec in benchmarks/*/*-spec.yaml; do
+        dir=$(dirname "$spec"); id=$(basename "$spec" -spec.yaml)
+        uv run ai-gene-review benchmark validate "$spec" --class BenchmarkSpec
+        uv run ai-gene-review benchmark validate "$dir/$id.yaml" --class Benchmark
+        for f in "$dir/$id"-check-report.yaml; do uv run ai-gene-review benchmark validate "$f" --class CheckReport; done
+        for f in "$dir"/*-agent-evaluation.yaml; do uv run ai-gene-review benchmark validate "$f" --class AgentEvaluation; done
+        for f in "$dir"/*-scores.yaml; do uv run ai-gene-review benchmark validate "$f" --class ScoreReport; done
+    done
+
 # List shadow issues waiting for triage, shadow work, or rating
 outstanding-shadow-issues tracker="go-annotation" *args="":
     uv run ai-gene-review shadow-issues outstanding {{tracker}} {{args}}
@@ -414,6 +450,15 @@ validate-shadow-issues tracker="go-annotation":
 # Check a commit message or PR body file for text that would notify upstream curators.
 check-upstream-refs +files:
     python3 src/ai_gene_review/shadow_issues/guard.py {{files}}
+
+# Optional isolated sequence read through the claude CLI (FEAT + PSEUDO prompts of
+# fable-sequence-to-function, with shuffled and catalytic/decoy controls). Bills 3-5
+# model calls to the signed-in claude account. For a clean blind control use
+# peptalk-llm (`sequence-read blind-fasta` / `import-peptalk`); the default mode is the
+# reviewing agent's own in-context read. See .claude/skills/sequence-read/SKILL.md.
+# Example: just sequence-read human PTEN --model claude-fable-5-2 --effort high
+sequence-read organism gene *args="":
+    uv run ai-gene-review sequence-read run {{organism}} {{gene}} {{args}}
 
 # Generic provider-selecting entry point documented in AGENTS.md and automation prompts.
 # Supports --provider, --alias, --fallback, --timeout, and --extra-args (which must come last).

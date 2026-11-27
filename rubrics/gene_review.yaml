@@ -1,0 +1,478 @@
+id: https://w3id.org/ai4curation/ai-gene-review/rubrics/gene_review
+name: gene_review_checklist
+title: Gene review checklist
+description: >-
+  Checklist an agent fills in for one changed gene review
+  (genes/<org>/<GENE>/<GENE>-ai-review.yaml) before opening a PR. Checked with
+  linkml-checklist-validator (`lcv check`). Items come from recurring review
+  failures and from the rules in CLAUDE.md. Warn-only pilot; see
+  docs/gene_review_checklists.md. Adapted from the LCV pilot in
+  examples/ai-gene-review/ of ai4curation/linkml-checklist-validator.
+  Self-contained: it follows the LCV shapes via `implements:` and does not import LCV.
+license: MIT
+prefixes:
+  linkml: https://w3id.org/linkml/
+  lcv: https://w3id.org/ai4curation/lcv/
+  grc: https://w3id.org/ai4curation/ai-gene-review/rubrics/gene_review/
+default_prefix: grc
+default_range: string
+imports:
+  - linkml:types
+
+classes:
+
+  GeneReviewChecklist:
+    tree_root: true
+    implements:
+      - lcv:Rubric
+    description: The filled checklist for one gene review file.
+    rules:
+      - description: A completed checklist records who filled it and when.
+        preconditions:
+          slot_conditions:
+            status:
+              equals_string: completed
+        postconditions:
+          slot_conditions:
+            reviewer:
+              required: true
+            timestamp:
+              required: true
+    attributes:
+      status:
+        range: ChecklistStatus
+        required: true
+      review_file:
+        implements:
+          - lcv:subject
+        description: Path of the gene review YAML file being checked.
+        required: true
+      reviewer:
+        implements:
+          - lcv:filled_by
+        description: >-
+          Agent (tool and model id, e.g. "claude-code / claude-opus-5-5") or person who
+          filled the checklist.
+      timestamp:
+        range: datetime
+      review_file_validates:
+        range: SourcedCheck
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            The review file passes `just validate <org> <GENE>` (schema, terms, references
+            and best-practice rules) with no errors.
+          lcv:rationale: Invalid files are rejected by CI; a passing run is the cheapest receipt.
+          lcv:severity: critical
+          lcv:check_kind: deterministic
+          lcv:definition: https://github.com/ai4curation/ai-gene-review/blob/main/CLAUDE.md
+      history_record_names_model:
+        range: SourcedCheck
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            The session's history record exists under history/genes/<org>/<GENE>/, and its
+            actors[] name the agent tool and the model that actually did the work (for
+            example gpt-rosalind-5.5 for a codex session, claude-opus-5-5 for Claude Code),
+            not a default or another session's model.
+          lcv:rationale: >-
+            Provenance is only useful if it names the right model; records whose actor
+            name, agent_tool and model disagree have been committed.
+          lcv:severity: major
+          lcv:check_kind: deterministic
+          lcv:definition: https://github.com/ai4curation/ai-gene-review/blob/main/docs/history.md
+      goa_empty_explained:
+        range: Check
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            If the GOA file is empty or header-only, the review or notes say why (new or
+            unreviewed entry, obsolete or merged accession, wrong taxon, fetch failure)
+            instead of leaving existing_annotations silently empty.
+          lcv:rationale: An empty existing_annotations list is ambiguous between "nothing to review" and "fetch failed".
+          lcv:severity: major
+          lcv:check_kind: judgment
+      curated_lines_weighed:
+        range: SourcedCheck
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            Curated UniProt lines (FUNCTION, CATALYTIC ACTIVITY, SUBUNIT, SUBCELLULAR
+            LOCATION, CAUTION with ECO:0000269) and experimental GOA rows were read and
+            weighed. No experimental annotation is REMOVEd, or called a wrong gene or
+            wrong reference, on the strength of an abstract-only or title-only reading
+            (CLAUDE.md "Do not overrule curators from incomplete evidence").
+          lcv:rationale: Reviews have removed curator-supported annotations without engaging with the curated record.
+          lcv:severity: major
+          lcv:check_kind: judgment
+          lcv:definition: https://github.com/ai4curation/ai-gene-review/blob/main/CLAUDE.md
+      publications_checked:
+        range: PublicationCoverage
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            Every entry in the review's references was examined (its cached text or record
+            opened and compared with the claims citing it), or its omission is explained.
+          lcv:rationale: '"I checked the publications" is not checkable; a list against the references section is.'
+          lcv:severity: major
+          lcv:check_kind: judgment
+          lcv:coverage_over: references[].id
+      literature_depth:
+        range: LiteratureDepthCheck
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: The depth at which the cited literature was read (see full_text_available in publications/).
+          lcv:rationale: Abstract-only reviews should be weighted differently from full-text ones.
+          lcv:severity: minor
+          lcv:check_kind: judgment
+      source_defects_confident_enough:
+        range: SourcedCheck
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            Each review.source_defects entry's confidence matches the depth of evidence
+            behind it: a WRONG_GENE_PRODUCT or WRONG_REFERENCE claim, or a REPOINT or
+            DELETE_ROW request, is CONFIRMED only when the whole paper was read or the
+            error is obvious from the abstract or record; otherwise it is SUSPECTED or
+            PROBABLE with requested_change CHECK, and explanation states the depth.
+            not_applicable when the review records no source defects.
+          lcv:rationale: Source defects go upstream as correction requests, so over-confident ones cost curators time.
+          lcv:severity: major
+          lcv:check_kind: judgment
+          lcv:definition: https://github.com/ai4curation/ai-gene-review/blob/main/docs/source_defects.md
+      iea_quotes_not_labels:
+        range: SourcedCheck
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            No kept IEA row (ACCEPT, KEEP_AS_NON_CORE), which gets no annotation_reviews
+            entry, rests only on a quote that restates a label: an EC number, protein
+            name, keyword or DR GO line. not_applicable when no IEA row is kept.
+          lcv:rationale: Label-only quotes restate the annotation instead of supporting it, and IEA rows escape the per-row checks.
+          lcv:severity: minor
+          lcv:check_kind: deterministic
+      summary_sections_sound:
+        range: SourcedCheck
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            The description is a project-independent biological summary (no curation or
+            workflow commentary); each core_functions entry is backed by an accepted
+            annotation or supported_by quote; every knowledge_gaps entry is a BIOLOGY gap
+            a wet-lab experiment could close, not a curation or ontology gap.
+          lcv:rationale: These sections are summarised downstream, and CLAUDE.md records recurring failures in each.
+          lcv:severity: major
+          lcv:check_kind: judgment
+          lcv:definition: https://github.com/ai4curation/ai-gene-review/blob/main/CLAUDE.md
+      new_annotation_reviews:
+        range: NewAnnotationDecision
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        description: >-
+          One entry per NEW row, for the bar in CLAUDE.md "Do not add what curators
+          deliberately declined to add". Empty when the review proposes nothing new.
+        annotations:
+          lcv:parametrize_over: existing_annotations[] | select(.review.action == "NEW")
+          lcv:parametrize_key: >-
+            {term.id}|{evidence_type}|{original_reference_id?}|{supporting_entities?}|{qualifier?}|{isoform?}|{negated?}|{extensions[].term.id}
+      annotation_reviews:
+        range: AnnotationDecision
+        multivalued: true
+        inlined: true
+        inlined_as_list: false
+        description: >-
+          One entry per annotation decision that needs judgment: every REMOVE, MODIFY,
+          NEW, MARK_AS_OVER_ANNOTATED, TOO_GENERAL or unreviewed row whatever its
+          evidence, and every non-IEA ACCEPT, KEEP_AS_NON_CORE or UNDECIDED. IEA rows
+          that are simply ACCEPTed, kept as non-core or left UNDECIDED get no entry.
+        annotations:
+          # `and` binds tighter than `or`; the LCV predicate syntax has no parentheses.
+          lcv:parametrize_over: >-
+            existing_annotations[] | select(.evidence_type != "IEA"
+            or .review.action != "ACCEPT" and .review.action != "KEEP_AS_NON_CORE"
+            and .review.action != "UNDECIDED")
+          # Rows that share term, evidence and reference often differ only in WITH/FROM,
+          # qualifier, isoform, negation or extensions, so all of them are in the key.
+          # Rows identical on every field get a `duplicate:` error, which is a real
+          # defect (usually per-partner IPI rows whose WITH/FROM was dropped).
+          lcv:parametrize_key: >-
+            {term.id}|{evidence_type}|{original_reference_id?}|{supporting_entities?}|{qualifier?}|{isoform?}|{negated?}|{extensions[].term.id}
+
+  AnnotationDecision:
+    description: Checks on the decision taken for one existing (or NEW) annotation.
+    attributes:
+      key:
+        identifier: true
+        description: The annotation's parametrize_key (written by `lcv skeleton`; do not retype it).
+      decision_has_evidence:
+        range: SourcedCheck
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            The action is backed by review.supported_by entries whose supporting_text is a
+            verbatim quote from the cited source (publication, UniProt curated line, PAINT
+            node, file), or, for an UNDECIDED row, the reason says what could not be
+            accessed. At least one quote comes from the row's own original_reference_id;
+            when that is a GO_REF method reference, from the source the method rests on
+            (PAINT node, ortholog record, UniProt line). If not, the reason says why. The
+            checklist evidence repeats at least one such quote.
+          lcv:rationale: Unbacked actions cannot be audited.
+          lcv:severity: critical
+          lcv:check_kind: deterministic
+      supporting_text_not_title:
+        range: Check
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            No supporting_text for this annotation is only the title of the cited paper
+            (or a label, keyword or DR GO line restating the annotation).
+          lcv:rationale: A title proves the paper exists, not that it supports the claim.
+          lcv:severity: major
+          lcv:check_kind: deterministic
+      action_matches_reason:
+        range: Check
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            The action does not contradict its own reason (e.g. ACCEPT or KEEP_AS_NON_CORE
+            while the reason argues the term is wrong or too general; MODIFY without a
+            deeper replacement supported by this row's evidence).
+          lcv:rationale: Contradictory action/reason pairs are a recurring editing error.
+          lcv:severity: critical
+          lcv:check_kind: judgment
+
+  NewAnnotationDecision:
+    description: The extra bar a NEW annotation must clear.
+    attributes:
+      key:
+        identifier: true
+        description: The annotation's parametrize_key (written by `lcv skeleton`; do not retype it).
+      gene_does_the_work:
+        range: SourcedCheck
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            For a process term, the gene product itself does some of the work of the
+            process (catalyses a step, or supplies the structure, scaffold or cofactor
+            activity a step depends on); the reason names the entity that performs the
+            step. Necessity evidence (knockout, rescue, disease) alone does not pass.
+            not_applicable for MF or CC terms.
+          lcv:rationale: Substrates and necessary inputs have been proposed as process participants.
+          lcv:severity: critical
+          lcv:check_kind: judgment
+      comparators_checked:
+        range: SourcedCheck
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            Two or three gene products in the same role were checked for the term by term
+            id, and the query was shown able to return a positive; a systematic absence was
+            read as a convention, not a gap. The evidence is the query and its result.
+          lcv:rationale: A malformed query returns a clean, false absence.
+          lcv:severity: major
+          lcv:check_kind: judgment
+      parents_and_gocams_read:
+        range: SourcedCheck
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            The term's parents were read for what kind of entity carries it, and
+            gocams/index.tsv was checked for a model that already places the gene in
+            another role.
+          lcv:rationale: Curated models often contain the gene in the role GO intends for it.
+          lcv:severity: major
+          lcv:check_kind: judgment
+      not_redundant:
+        range: SourcedCheck
+        inlined: true
+        required: true
+        annotations:
+          lcv:question: >-
+            The term is not an ancestor or descendant of another proposed term or of a term
+            the gene already carries.
+          lcv:rationale: Redundant NEW rows add no coverage.
+          lcv:severity: minor
+          lcv:check_kind: deterministic
+
+  # Check classes are kept as leaves (no is_a between them): a range class
+  # with subclasses becomes a JSON Schema anyOf, and validation errors
+  # degrade to "not valid under any of the given schemas". Shared slots
+  # are declared once under `slots:` instead.
+  Check:
+    implements:
+      - lcv:BooleanCheck
+    description: A pass/fail/not_applicable requirement with a reason.
+    slots:
+      - verdict
+      - reason
+      - remediation
+    rules:
+      - description: A failed check states its remediation.
+        preconditions:
+          slot_conditions:
+            verdict:
+              equals_string: fail
+        postconditions:
+          slot_conditions:
+            remediation:
+              required: true
+
+  SourcedCheck:
+    implements:
+      - lcv:EvidencedCheck
+    description: A Check backed by receipts (verbatim quotes, file lines, commands).
+    slots:
+      - verdict
+      - reason
+      - remediation
+      - evidence
+    rules:
+      - description: A failed check states its remediation.
+        preconditions:
+          slot_conditions:
+            verdict:
+              equals_string: fail
+        postconditions:
+          slot_conditions:
+            remediation:
+              required: true
+
+  PublicationCoverage:
+    implements:
+      - lcv:CoverageCheck
+    slots:
+      - reason
+    attributes:
+      examined:
+        multivalued: true
+      not_examined:
+        range: NotExamined
+        multivalued: true
+        inlined_as_list: true
+
+  LiteratureDepthCheck:
+    implements:
+      - lcv:ChoiceCheck
+    attributes:
+      answer:
+        range: LiteratureDepth
+        required: true
+    slots:
+      - reason
+
+  NotExamined:
+    implements:
+      - lcv:NotExamined
+    attributes:
+      item:
+        required: true
+    slots:
+      - reason
+
+  Evidence:
+    implements:
+      - lcv:Evidence
+    description: A receipt; see the LCV Evidence class for the allowed pairings.
+    attributes:
+      reference_id: {}
+      excerpt: {}
+      file_path: {}
+      line:
+        range: integer
+      command: {}
+      output_digest: {}
+      entity_id: {}
+      entity_label: {}
+    any_of:
+      - slot_conditions:
+          reference_id:
+            required: true
+      - slot_conditions:
+          file_path:
+            required: true
+      - slot_conditions:
+          command:
+            required: true
+      - slot_conditions:
+          entity_id:
+            required: true
+    rules:
+      - preconditions:
+          slot_conditions:
+            reference_id:
+              value_presence: PRESENT
+        postconditions:
+          slot_conditions:
+            excerpt:
+              required: true
+      - description: A file receipt quotes the line, so it still checks after a refetch moves it.
+        preconditions:
+          slot_conditions:
+            file_path:
+              value_presence: PRESENT
+        postconditions:
+          slot_conditions:
+            excerpt:
+              required: true
+      - preconditions:
+          slot_conditions:
+            entity_id:
+              value_presence: PRESENT
+        postconditions:
+          slot_conditions:
+            entity_label:
+              required: true
+      - preconditions:
+          slot_conditions:
+            command:
+              value_presence: PRESENT
+        postconditions:
+          slot_conditions:
+            output_digest:
+              required: true
+
+slots:
+  verdict:
+    range: Verdict
+    required: true
+  reason:
+    required: true
+    description: Why the answer is what it is, specific to this artifact.
+  remediation:
+    description: What will be done about a failed check.
+  evidence:
+    range: Evidence
+    multivalued: true
+    inlined_as_list: true
+
+enums:
+  Verdict:
+    permissible_values:
+      pass: {}
+      fail: {}
+      not_applicable: {}
+  ChecklistStatus:
+    permissible_values:
+      in_progress: {}
+      completed: {}
+  LiteratureDepth:
+    permissible_values:
+      abstract_only: {}
+      mixed: {}
+      full_text: {}

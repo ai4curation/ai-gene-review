@@ -261,12 +261,14 @@ QuickGO and UniProt, 2026-11-17):
 | `GO:0045211` postsynaptic membrane (PTN008360792, 39 rows) | rat Gabrb1 (its swapped postsynaptic specialization membrane row is a descendant) | rat Gabrb1 |
 | `GO:0005886` plasma membrane (PTN001054635, 1,751 rows) | rat Gabrb1, rat Gabrb2 | none |
 
-Each node keeps independent support. For GABA-ergic synapse, eight of the nine other
-donors have their own experimental rows for the term (the remaining donor, MGI:3588203, which
+Each node keeps independent support. Below, "other donors" means the donors left once those whose
+only support is the swap (the table's last column) are set aside. For GABA-ergic synapse, eight of the
+nine other donors have their own experimental rows for the term (the remaining donor, MGI:3588203, which
 the Alliance gene record names mouse Gabrr3, matched no reviewed UniProt entry by cross-reference
 or by free text, so its support was not checked); for postsynaptic membrane, all three other donors do
 (rat Gabrb3, human GABRB3 and bovine GABRB1); plasma membrane has dozens (56 of the 58
-resolvable donors; the eight that did not resolve, five FlyBase and three ZFIN genes, match no
+resolvable donors, including both swapped rat genes, whose support for the term does not rest on
+the swap; the eight that did not resolve, five FlyBase and three ZFIN genes, match no
 reviewed UniProt entry by cross-reference or by free text). So correcting
 the seeds removes donors without changing any node. Mouse Gabrb1 is a donor to no other IBA, and no
 IBA anywhere uses the G protein-coupled neurotransmitter receptor activity row. The
