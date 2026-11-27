@@ -16,7 +16,7 @@
 - `GO:0030246` carbohydrate binding was refined to the chondroitin-sulfate binding term directly supported by PMID:26896299 and already asserted in the PTN review.
 - The PTPRZ protein-phosphatase inhibitor and receptor-clustering rows were accepted because PTPRZ clustering and inhibition are the best resolved PTN receptor mechanism.
 - Integrin, endothelial-migration, osteoblast, proliferation, and oligodendrocyte-differentiation rows were kept as non-core contexts downstream of the secreted ligand activity.
-- Orthology-only transfers for mouse auditory, reproductive, hematopoietic, synaptic, and neural-development phenotypes were treated as over-annotations onto the human secreted ligand unless the cached human or primary mouse evidence supported a direct receptor mechanism.
+- Orthology-only transfers for mouse auditory, reproductive, hematopoietic, synaptic, neural-development, and tissue-regeneration phenotypes were treated as over-annotations onto the human secreted ligand unless the cached human or primary mouse evidence supported a direct receptor mechanism.
 
 ## PTHR13850 module and GO-CAM scope
 
