@@ -309,16 +309,18 @@ def summarize_annotations(results: list[dict[str, Any]]) -> dict[str, int]:
         ),
         "experimental_aspects": len(
             {
-                r.get("goAspect")
+                r["goAspect"]
                 for r in experimental
-                if r.get("goId") != PROTEIN_BINDING
+                if r.get("goAspect") and r.get("goId") != PROTEIN_BINDING
             }
         ),
         "iba": sum(r.get("goEvidence") == "IBA" for r in results),
         "iea": sum(r.get("goEvidence") == "IEA" for r in results),
+        # Bare protein binding is as uninformative by ISS as by IPI.
         "homology": sum(
             source_evidence_code(r.get("goEvidence"), r.get("evidenceCode"))
             in HOMOLOGY_EVIDENCE_CODES
+            and r.get("goId") != PROTEIN_BINDING
             for r in results
         ),
     }

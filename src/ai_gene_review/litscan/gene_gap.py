@@ -345,7 +345,7 @@ def score_paper(
     *,
     gene_in_title: bool,
     matched_symbol: str = "",
-    full_text_available: bool = True,
+    full_text_available: bool,
 ) -> list[dict[str, Any]]:
     """Paper-side score components; each rule fires at most once.
 
@@ -355,7 +355,8 @@ def score_paper(
     >>> rules = [{"id": "t", "points": 2, "label": "in title", "field": "gene_title"},
     ...          {"id": "r", "points": -5, "label": "review", "field": "title",
     ...           "patterns": [r"\\breview\\b"]}]
-    >>> [c["rule"] for c in score_paper("A review", "", rules, gene_in_title=True)]
+    >>> [c["rule"] for c in score_paper("A review", "", rules, gene_in_title=True,
+    ...                                 full_text_available=True)]
     ['t', 'r']
 
     A co-subject is named in several abstract sentences, even when the title
@@ -372,7 +373,7 @@ def score_paper(
     ...           "field": "abstract_only"}]
     >>> abstract = "DTX3 ubiquitinates NPM3. NPM3 binds RUVBL1 in a pull-down. Tumor growth fell."
     >>> [c["rule"] for c in score_paper("DTX3 in tumors", abstract, rules,
-    ...                                 gene_in_title=False, matched_symbol="NPM3")]
+    ...      gene_in_title=False, matched_symbol="NPM3", full_text_available=True)]
     ['focus', 'assay']
     >>> [c["rule"] for c in score_paper("DTX3 in tumors", "NPM3 loss slows tumor growth.",
     ...      rules, gene_in_title=False, matched_symbol="NPM3", full_text_available=False)]
@@ -470,7 +471,7 @@ def score_candidate(
         config["paper_scoring"],
         gene_in_title=gene["matched_in_title"],
         matched_symbol=gene["matched_symbol"],
-        full_text_available=paper.get("full_text_available", False),
+        full_text_available=paper["full_text_available"],
     )
     return {
         "score": sum(c["points"] for c in components),
@@ -493,6 +494,27 @@ def rank_and_title(
     return ranked
 
 
+def rescore_problem(packet: dict[str, Any]) -> str:
+    """Why a packet cannot be rescored with the current config, or ''.
+
+    >>> rescore_problem({"candidates": [{"gene": {"symbol": "X", "annotation_counts": {}},
+    ...                                  "paper": {}}]})
+    '1 candidates (e.g. X) predate the homology and full-text fields; re-run the scan instead of rescoring this packet'
+    """
+    stale = [
+        old["gene"]["symbol"]
+        for old in packet["candidates"]
+        if "homology" not in old["gene"]["annotation_counts"]
+        or "full_text_available" not in old["paper"]
+    ]
+    if not stale:
+        return ""
+    return (
+        f"{len(stale)} candidates (e.g. {stale[0]}) predate the homology and "
+        "full-text fields; re-run the scan instead of rescoring this packet"
+    )
+
+
 def rescore_packet(packet: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
     """Re-apply a config's scoring to an existing packet, without network calls.
 
@@ -500,10 +522,14 @@ def rescore_packet(packet: dict[str, Any], config: dict[str, Any]) -> dict[str, 
     so a rescore calibrates weights; it does not replace a fresh scan. Earlier
     ranks are kept as ``previous_rank``.
     """
+    problem = rescore_problem(packet)
+    if problem:
+        raise ValueError(problem)
     candidates = []
     for old in packet["candidates"]:
         cand = score_candidate(old["paper"], old["gene"], config)
-        cand["previous_rank"] = old["rank"]
+        if old.get("rank") is not None:
+            cand["previous_rank"] = old["rank"]
         candidates.append(cand)
     return {
         **packet,
@@ -893,10 +919,10 @@ def issue_body(cand: dict[str, Any]) -> str:
         f"- Journal/date: {paper.get('journal') or 'n/a'}, {paper.get('publication_date') or 'n/a'}",
         f"- DOI: {paper.get('doi') or 'n/a'}",
         f"- Links: {paper.get('pubmed_url') or 'n/a'} | {paper['europe_pmc_url']}",
-        "- Full text in Europe PMC: "
+        "- Full text available (Europe PMC or open access): "
         + (
             "yes"
-            if paper.get("full_text_available")
+            if paper["full_text_available"]
             else "no (abstract only; find the full text before annotating)"
         ),
         *preprint,
@@ -1018,6 +1044,28 @@ def write_packet(packet: dict[str, Any], output_dir: Path) -> tuple[Path, Path]:
 SCHEMA = Path(__file__).resolve().parent.parent / "schema" / "litscan_gene_gap.yaml"
 
 
+def paper_rule_problems(rules: list[dict[str, Any]]) -> list[str]:
+    """Consistency checks the schema cannot express for ``paper_scoring``.
+
+    >>> paper_rule_problems([{"id": "a", "field": "gene_sentence_count"},
+    ...                      {"id": "b", "field": "title", "unless_rules": ["c"]},
+    ...                      {"id": "c", "field": "title"}])
+    ['a: gene_sentence_count needs min_sentences', 'b: unless_rules c is not an earlier rule']
+    """
+    problems = []
+    earlier: set[str] = set()
+    for rule in rules:
+        if rule["field"] == "gene_sentence_count" and "min_sentences" not in rule:
+            problems.append(f"{rule['id']}: gene_sentence_count needs min_sentences")
+        problems += [
+            f"{rule['id']}: unless_rules {other} is not an earlier rule"
+            for other in rule.get("unless_rules", [])
+            if other not in earlier
+        ]
+        earlier.add(rule["id"])
+    return problems
+
+
 def validate_files(paths: Iterable[Path]) -> list[str]:
     """Validate configs (``.yaml``) and packets (``.json``) against the LinkML schema."""
     from linkml.validator import Validator
@@ -1032,6 +1080,10 @@ def validate_files(paths: Iterable[Path]) -> list[str]:
             data, target = json.loads(path.read_text()), "GeneGapPacket"
         else:
             data, target = yaml.safe_load(path.read_text()), "GeneGapScanConfig"
+            problems += [
+                f"{path}: {p}"
+                for p in paper_rule_problems(data.get("paper_scoring") or [])
+            ]
         problems += [
             f"{path}: {r.message}" for r in validator.validate(data, target).results
         ]

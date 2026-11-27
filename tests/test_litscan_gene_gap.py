@@ -236,6 +236,7 @@ def test_score_paper_rules(config: dict[str, Any], title: str, rule: str) -> Non
             config["paper_scoring"],
             gene_in_title=False,
             matched_symbol="FOO1",
+            full_text_available=True,
         )
     }
     assert rule in fired
@@ -262,6 +263,23 @@ def test_score_paper_rules(config: dict[str, Any], title: str, rule: str) -> Non
             True,
             {"gene_focus", "direct_assay", "rescue_or_epistasis"},
             {"phenotype_only", "abstract_only"},
+        ),
+        # Phenotype verbs are not rescue: "abolished" and "reversed" here report
+        # the knockout phenotype, so the phenotype-only penalty stands.
+        (
+            "FOO1 in tumour metabolism",
+            "FOO1 knockdown abolished tumour growth and reversed the glycolytic shift.",
+            True,
+            {"phenotype_only"},
+            {"rescue_or_epistasis", "direct_assay"},
+        ),
+        # A mechanistic phenotype rescue is not an indirect effect.
+        (
+            "FOO1 in tumour metabolism",
+            "The knockout phenotype was rescued by wild-type FOO1.",
+            True,
+            {"rescue_or_epistasis"},
+            {"indirect_effect", "phenotype_only"},
         ),
         # Abstract-only papers are flagged.
         ("FOO1 binds DNA", "", False, {"abstract_only"}, set()),
@@ -592,6 +610,7 @@ def test_refutation_must_concern_candidate_not_mutant_or_neighbor(
         config["paper_scoring"],
         gene_in_title=True,
         matched_symbol="FOO1",
+        full_text_available=True,
     )
     assert ("refutation" in {r["rule"] for r in fired}) == expected
 
@@ -650,3 +669,56 @@ def test_rescore_packet_keeps_previous_rank(config: dict[str, Any]) -> None:
     rescored = gene_gap.rescore_packet(packet, config)
     assert [c["previous_rank"] for c in rescored["candidates"]] == [1, 2]
     assert [c["score"] for c in rescored["candidates"]] == [c["score"] for c in ranked]
+
+
+def test_paper_rule_order_is_checked(tmp_path: Path, config: dict[str, Any]) -> None:
+    bad = copy.deepcopy(config)
+    rules = bad["paper_scoring"]
+    pheno = next(r for r in rules if r["id"] == "phenotype_only")
+    rules.remove(pheno)
+    rules.insert(0, pheno)
+    path = tmp_path / "bad.yaml"
+    path.write_text(yaml.safe_dump(bad))
+    problems = gene_gap.validate_files([path])
+    assert any(
+        "unless_rules direct_assay is not an earlier rule" in p for p in problems
+    )
+
+
+def test_cli_rescore_refuses_to_overwrite_and_old_packets(
+    tmp_path: Path, config: dict[str, Any]
+) -> None:
+    ranked = gene_gap.rank_and_title(
+        [make_candidate(config, make_gene())], config["limits"]
+    )
+    packet: dict[str, Any] = {
+        "job": gene_gap.JOB,
+        "generated_at": "2026-11-26T00:00:00+00:00",
+        "date_from": "2026-10-28",
+        "date_to": "2026-11-26",
+        "include_preprints": False,
+        "queries": [],
+        "paper_count": 1,
+        "resolved_gene_count": 1,
+        "suppressed": [],
+        "candidates": ranked,
+    }
+    src = tmp_path / "2026-11-26-gene-gap.json"
+    src.write_text(json.dumps(packet))
+    runner = CliRunner()
+    same = runner.invoke(
+        app, ["litscan", "rescore-gene-gap", str(src), "--output-dir", str(tmp_path)]
+    )
+    assert same.exit_code != 0 and "must differ" in same.output
+    out = tmp_path / "rescore"
+    ok = runner.invoke(
+        app, ["litscan", "rescore-gene-gap", str(src), "--output-dir", str(out)]
+    )
+    assert ok.exit_code == 0, ok.output
+    assert (out / "2026-11-26-gene-gap.json").exists()
+    del packet["candidates"][0]["gene"]["annotation_counts"]["homology"]
+    src.write_text(json.dumps(packet))
+    old = runner.invoke(
+        app, ["litscan", "rescore-gene-gap", str(src), "--output-dir", str(out)]
+    )
+    assert old.exit_code != 0 and "re-run the scan" in old.output

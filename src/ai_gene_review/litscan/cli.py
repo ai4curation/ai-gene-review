@@ -134,21 +134,35 @@ def gene_gap_cmd(
 @litscan_app.command("rescore-gene-gap")
 def rescore_gene_gap_cmd(
     packet: Annotated[Path, typer.Argument(help="GeneGapPacket JSON to rescore.")],
+    output_dir: Annotated[
+        Path,
+        typer.Option(
+            help="Directory for the rescored packet; must not hold the input packet."
+        ),
+    ],
     config: Annotated[
         Path, typer.Option(help="GeneGapScanConfig YAML.")
     ] = gene_gap.DEFAULT_CONFIG,
-    output_dir: Annotated[
-        Path, typer.Option(help="Packet output directory.")
-    ] = gene_gap.DEFAULT_OUTPUT,
 ) -> None:
     """Re-apply the scoring config to an existing packet, offline.
 
     Use it to calibrate weights: every candidate keeps its earlier rank as
     previous_rank. Only the packet's own candidates are re-ranked.
     """
-    rescored = gene_gap.rescore_packet(
-        json.loads(packet.read_text()), gene_gap.load_config(config)
-    )
+    data = json.loads(packet.read_text())
+    target = output_dir / f"{data['date_to']}-{gene_gap.JOB}.json"
+    if (
+        target.resolve() == packet.resolve()
+        or output_dir.resolve() == packet.parent.resolve()
+    ):
+        raise typer.BadParameter(
+            "--output-dir must differ from the input packet's directory: writing "
+            "there would replace the packet and the issue bodies that were filed"
+        )
+    problem = gene_gap.rescore_problem(data)
+    if problem:
+        raise typer.BadParameter(problem)
+    rescored = gene_gap.rescore_packet(data, gene_gap.load_config(config))
     rescored["config_path"] = str(config)
     json_path, md_path = gene_gap.write_packet(rescored, output_dir)
     for cand in rescored["candidates"]:

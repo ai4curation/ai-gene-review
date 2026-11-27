@@ -180,7 +180,10 @@ gene_scoring:
       label: 11-40 informative experimental or homology-transferred GO annotations
     - points: -4
       label: well annotated (>40 informative experimental or homology-transferred GO annotations)
-  # Saturation: the total number of GO rows of any evidence.
+  # Saturation: the total number of GO rows of any evidence. The three
+  # knowledge bands overlap for a well-annotated gene; known_function_bands
+  # does most of the work, and these two separate genes the scan would
+  # otherwise rank as dark (many electronic rows, or one well-studied aspect).
   total_annotation_bands:
     - max: 40
       points: 0
@@ -293,17 +296,22 @@ paper_scoring:
     points: 3
     label: candidate named in a sentence describing a direct molecular assay
     field: gene_sentence
+    # Purification, reconstitution and substrate specificity already score in
+    # gene_experiment, so they are not repeated here.
     patterns: ['physically (interacts?|associates?|binds?)', 'direct(ly)? (binds?|interacts?)',
                'binds? directly', 'interacts? with', 'pull-?down', 'co-?immunoprecipitat',
                '\bresidues?\b', 'point mutant', 'reporter', 'luciferase', 'enzym(e|atic) activity',
-               '\bpurified', 'reconstitut', 'chromatin immunoprecipitation', '\bChIP\b',
-               'crystal structure', 'kinetic', 'substrate specificity', 'demethylat', '(?<!oxidative )phosphorylat']
-  # Rescue or epistasis that places the candidate in a pathway.
+               'chromatin immunoprecipitation', '\bChIP\b', 'crystal structure', 'demethylat',
+               '(?<!oxidative )phosphorylat']
+  # Rescue or epistasis that places the candidate in a pathway. Bare
+  # "abolished" or "reversed" also describe knockout phenotypes, so they
+  # count only with the agent or effect they act on.
   - id: rescue_or_epistasis
     points: 2
     label: rescue or epistasis experiment involving the candidate
     field: gene_sentence
-    patterns: ['revers', 'counteract', 'abolish', 'rescu', 'restor', 'attenuated by']
+    patterns: ['rescu', '(revers|restor|attenuat|block|prevent)\w* by', 'counteract',
+               'abolish\w* the \w*\s?effects? of', 're-?express', 'complement\w* (the|by)']
   - id: biochemical_evidence
     points: 1
     label: direct biochemical or genetic evidence
@@ -312,10 +320,11 @@ paper_scoring:
                'in vitro', 'purified', 'substrate specificity', 'knock-?out', 'deletion mutant',
                'site-directed', 'catalytic (residue|site|mechanism)']
   # Disease or knockout phenotype with no mechanism: necessity, not function.
+  # Scoped to sentences naming the gene, like the rules that cancel it.
   - id: phenotype_only
     points: -3
     label: disease or knockout phenotype without a molecular assay or rescue
-    field: title_abstract
+    field: gene_sentence
     patterns: ['cancer', 'tumou?r', 'melanoma', 'carcinoma', 'glioma', 'leukemi', 'injur',
                'disease', 'infertil', 'obes', 'diabet', 'fibrosis', 'prolifera']
     unless_rules: [direct_assay, rescue_or_epistasis]
@@ -325,7 +334,8 @@ paper_scoring:
     label: candidate framed by an indirect effect or as a therapeutic target
     field: gene_sentence
     patterns: ['upstream (regulator|modulator)', 'immune (evasion|phenotype|activation|sensing)',
-               '(therapeutic|potential|neuroprotective|druggable) target', '\bphenotype\b']
+               '(therapeutic|potential|neuroprotective|druggable) target',
+               '(promot|support|driv|induc)\w* (an? |the )?(\w+ ){0,2}phenotype']
   - id: high_throughput
     points: -3
     label: high-throughput or omics study
