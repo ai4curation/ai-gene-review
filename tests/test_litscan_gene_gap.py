@@ -13,6 +13,7 @@ from typer.testing import CliRunner
 
 from ai_gene_review.cli import app
 from ai_gene_review.litscan import gene_gap
+from ai_gene_review.litscan.europepmc import publication_from_record
 from ai_gene_review.litscan.gene_gap_sources import choose_entry
 
 REPO = Path(__file__).resolve().parents[1]
@@ -30,8 +31,10 @@ def counts(**overrides: int) -> dict[str, int]:
         "experimental": 0,
         "experimental_protein_binding": 0,
         "experimental_mf": 0,
+        "experimental_aspects": 0,
         "iba": 0,
         "iea": 0,
+        "homology": 0,
         "other": 0,
     }
     base.update(overrides)
@@ -75,34 +78,22 @@ def make_candidate(
     title = (
         title or "YqcI/YcgG heme monooxygenases: a new fold for guanidine N-oxygenation"
     )
-    abstract = "We purified recombinant YqcI and measured kcat for this uncharacterized protein."
-    components = gene_gap.score_gene(
-        gene, config["gene_scoring"]
-    ) + gene_gap.score_paper(
-        title, abstract, config["paper_scoring"], gene_in_title=gene["matched_in_title"]
-    )
-    ref = f"PMID:{pmid}"
-    return {
-        "score": sum(c["points"] for c in components),
-        "action": "UPDATE_REVIEW" if gene.get("review_path") else "NEW_REVIEW",
-        "ledger_marker": gene_gap.ledger_marker(ref, gene["accession"]),
-        "paper": {
-            "pmid": pmid,
-            "reference_id": ref,
-            "title": title,
-            "journal": "J Test",
-            "publication_date": "2026-11-01",
-            "doi": "10.1/x",
-            "source": "MED",
-            "pubmed_url": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
-            "europe_pmc_url": f"https://europepmc.org/article/MED/{pmid}",
-            "abstract": abstract,
-            "profiles": ["dark_gene"],
-            "is_preprint": False,
-        },
-        "gene": gene,
-        "score_components": components,
+    paper = {
+        "pmid": pmid,
+        "reference_id": f"PMID:{pmid}",
+        "title": title,
+        "journal": "J Test",
+        "publication_date": "2026-11-01",
+        "doi": "10.1/x",
+        "source": "MED",
+        "pubmed_url": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
+        "europe_pmc_url": f"https://europepmc.org/article/MED/{pmid}",
+        "abstract": "We purified recombinant YqcI and measured kcat for this uncharacterized protein.",
+        "profiles": ["dark_gene"],
+        "is_preprint": False,
+        "full_text_available": True,
     }
+    return gene_gap.score_candidate(paper, gene, config)
 
 
 def test_config_validates_against_schema() -> None:
@@ -127,13 +118,18 @@ def test_bad_config_fails_validation(tmp_path: Path, config: dict[str, Any]) -> 
         (
             {},
             {
-                "experimental_annotations",
+                "known_function_rows",
                 "no_experimental_mf",
                 "electronic_only",
                 "uncharacterized_name",
                 "family_experimental",
             },
-            {"existing_review_not_citing", "already_in_goa"},
+            {
+                "existing_review_not_citing",
+                "already_in_goa",
+                "total_annotations",
+                "experimental_aspects",
+            },
         ),
         # Well-annotated gene with a review that does not cite the paper.
         (
@@ -144,6 +140,7 @@ def test_bad_config_fails_validation(tmp_path: Path, config: dict[str, Any]) -> 
                     experimental=800,
                     experimental_protein_binding=500,
                     experimental_mf=600,
+                    experimental_aspects=3,
                     iba=8,
                     iea=40,
                     other=152,
@@ -151,8 +148,29 @@ def test_bad_config_fails_validation(tmp_path: Path, config: dict[str, Any]) -> 
                 "family": None,
                 "review_path": "genes/human/TP53/TP53-ai-review.yaml",
             },
-            {"experimental_annotations", "existing_review_not_citing"},
+            {
+                "known_function_rows",
+                "total_annotations",
+                "experimental_aspects",
+                "existing_review_not_citing",
+            },
             {"no_experimental_mf", "electronic_only", "uncharacterized_name"},
+        ),
+        # One experimental row but many ISO transfers from the ortholog: not dark.
+        (
+            {
+                "annotation_counts": counts(
+                    total=61,
+                    experimental=1,
+                    experimental_aspects=1,
+                    homology=34,
+                    iba=3,
+                    iea=22,
+                    other=1,
+                )
+            },
+            {"no_experimental_mf", "total_annotations", "known_function_rows"},
+            {"electronic_only", "experimental_aspects"},
         ),
         # Paper already used by GOA for the gene.
         ({"paper_in_goa": True}, {"already_in_goa"}, set()),
@@ -199,7 +217,8 @@ def test_well_annotated_gene_is_down_ranked(config: dict[str, Any]) -> None:
     "title,rule",
     [
         ("A genome-wide CRISPR screen identifies regulators of X", "high_throughput"),
-        ("FOO1 is a pseudokinase that scaffolds BAR", "refutation"),
+        ("FOO1 is a pseudokinase that scaffolds BAR", "pseudoenzyme_title"),
+        ("FOO1 is catalytically inactive in vivo", "refutation"),
         ("Functions of FOO family proteins: a review", "review_like"),
         ("Prognostic biomarker FOO1 in a lung cancer cohort", "clinical"),
         (
@@ -217,9 +236,94 @@ def test_score_paper_rules(config: dict[str, Any], title: str, rule: str) -> Non
             config["paper_scoring"],
             gene_in_title=False,
             matched_symbol="FOO1",
+            full_text_available=True,
         )
     }
     assert rule in fired
+
+
+@pytest.mark.parametrize(
+    "title,abstract,full_text,expected,excluded",
+    [
+        # Background naming of the pseudoenzyme class is not a refutation.
+        (
+            "FOO1 supports glycolysis in melanoma cells",
+            "The pseudokinase FOO1 is highly expressed in melanoma. FOO1 knockout "
+            "cells proliferate less. FOO1 expression promotes a glycolytic phenotype.",
+            True,
+            {"phenotype_only", "indirect_effect", "gene_experiment"},
+            {"refutation", "pseudoenzyme_title", "direct_assay", "abstract_only"},
+        ),
+        # A co-subject under a partner's title, with a binding assay and rescue.
+        (
+            "BAR2 suppresses the FOO1-BAZ1 axis in tumors",
+            "BAR2 physically interacts with FOO1 and ubiquitinates FOO1 at the Lys102 "
+            "residue. Loss of FOO1 destabilizes the BAZ1 complex. Elevated FOO1 "
+            "expression counteracts BAR2-mediated radiosensitization.",
+            True,
+            {"gene_focus", "direct_assay", "rescue_or_epistasis"},
+            {"phenotype_only", "abstract_only"},
+        ),
+        # Phenotype verbs are not rescue: "abolished" and "reversed" here report
+        # the knockout phenotype, so the phenotype-only penalty stands.
+        (
+            "FOO1 in tumour metabolism",
+            "FOO1 knockdown abolished tumour growth and reversed the glycolytic shift.",
+            True,
+            {"phenotype_only"},
+            {"rescue_or_epistasis", "direct_assay"},
+        ),
+        # Passive loss-of-function reporting is not rescue either.
+        (
+            "FOO1 in tumour metabolism",
+            "Tumour growth was prevented by FOO1 knockout, and the glycolytic shift "
+            "was reversed by FOO1 silencing. FOO1 is re-expressed in metastases.",
+            True,
+            {"phenotype_only"},
+            {"rescue_or_epistasis"},
+        ),
+        # Pharmacological epistasis still counts.
+        (
+            "FOO1 in kidney disease",
+            "FOO1 overexpression aggravated the injury, an effect that was reversed "
+            "by a PPARα agonist.",
+            True,
+            {"rescue_or_epistasis"},
+            {"phenotype_only"},
+        ),
+        # A mechanistic phenotype rescue is not an indirect effect.
+        (
+            "FOO1 in tumour metabolism",
+            "The knockout phenotype was rescued by wild-type FOO1.",
+            True,
+            {"rescue_or_epistasis"},
+            {"indirect_effect", "phenotype_only"},
+        ),
+        # Abstract-only papers are flagged.
+        ("FOO1 binds DNA", "", False, {"abstract_only"}, set()),
+    ],
+)
+def test_score_paper_mechanism_rules(
+    config: dict[str, Any],
+    title: str,
+    abstract: str,
+    full_text: bool,
+    expected: set[str],
+    excluded: set[str],
+) -> None:
+    fired = {
+        c["rule"]
+        for c in gene_gap.score_paper(
+            title,
+            abstract,
+            config["paper_scoring"],
+            gene_in_title=False,
+            matched_symbol="FOO1",
+            full_text_available=full_text,
+        )
+    }
+    assert expected <= fired
+    assert not (excluded & fired)
 
 
 def test_rank_caps_issues_and_one_per_paper(config: dict[str, Any]) -> None:
@@ -524,5 +628,115 @@ def test_refutation_must_concern_candidate_not_mutant_or_neighbor(
         config["paper_scoring"],
         gene_in_title=True,
         matched_symbol="FOO1",
+        full_text_available=True,
     )
     assert ("refutation" in {r["rule"] for r in fired}) == expected
+
+
+@pytest.mark.parametrize(
+    "flags,expected",
+    [
+        ({"inEPMC": "Y", "isOpenAccess": "N"}, True),
+        ({"inEPMC": "N", "isOpenAccess": "Y"}, True),
+        ({"inEPMC": "N", "isOpenAccess": "N"}, False),
+        ({}, False),
+    ],
+)
+def test_full_text_availability_from_europe_pmc_record(
+    flags: dict[str, str], expected: bool
+) -> None:
+    record = {"source": "MED", "id": "1", "pmid": "1", "title": "T", **flags}
+    assert publication_from_record(record).full_text_available is expected
+
+
+REVIEWED_ISSUES = Path("tests/input/litscan/gene_gap_reviewed_issues.yaml")
+
+
+def test_reviewed_issues_rank_gap_closers_first(config: dict[str, Any]) -> None:
+    """Regression on the curators' verdicts for the first six filed issues.
+
+    The two papers that closed a gap (NPM3: direct binding, rescue and reporter
+    assays under a partner's title; Mtdh: a gene with no experimental MF) must
+    outrank the three that did not: TRIB2 (knockout phenotype, pseudokinase as
+    background), Trib3 (rat gene covered by ISO transfers) and Pes1 (BP and CC
+    already experimentally annotated).
+    """
+    records = yaml.safe_load(REVIEWED_ISSUES.read_text())
+    scores = {
+        r["gene"]["symbol"]: gene_gap.score_candidate(r["paper"], r["gene"], config)[
+            "score"
+        ]
+        for r in records
+    }
+    closed = {r["gene"]["symbol"] for r in records if r["closed_gap"]}
+    assert closed == {"NPM3", "Mtdh"}
+    assert min(scores[s] for s in closed) > max(
+        scores[s] for s in ("TRIB2", "Trib3", "Pes1")
+    ), scores
+
+
+def test_rescore_packet_keeps_previous_rank(config: dict[str, Any]) -> None:
+    ranked = gene_gap.rank_and_title(
+        [
+            make_candidate(config, make_gene(accession="P1"), pmid="10"),
+            make_candidate(config, make_gene(accession="P2"), pmid="11"),
+        ],
+        config["limits"],
+    )
+    packet = {"job": gene_gap.JOB, "date_to": "2026-11-26", "candidates": ranked}
+    rescored = gene_gap.rescore_packet(packet, config)
+    assert [c["previous_rank"] for c in rescored["candidates"]] == [1, 2]
+    assert [c["score"] for c in rescored["candidates"]] == [c["score"] for c in ranked]
+
+
+def test_paper_rule_order_is_checked(tmp_path: Path, config: dict[str, Any]) -> None:
+    bad = copy.deepcopy(config)
+    rules = bad["paper_scoring"]
+    pheno = next(r for r in rules if r["id"] == "phenotype_only")
+    rules.remove(pheno)
+    rules.insert(0, pheno)
+    path = tmp_path / "bad.yaml"
+    path.write_text(yaml.safe_dump(bad))
+    problems = gene_gap.validate_files([path])
+    assert any(
+        "unless_rules direct_assay is not an earlier rule" in p for p in problems
+    )
+
+
+def test_cli_rescore_refuses_to_overwrite_and_old_packets(
+    tmp_path: Path, config: dict[str, Any]
+) -> None:
+    ranked = gene_gap.rank_and_title(
+        [make_candidate(config, make_gene())], config["limits"]
+    )
+    packet: dict[str, Any] = {
+        "job": gene_gap.JOB,
+        "generated_at": "2026-11-26T00:00:00+00:00",
+        "date_from": "2026-10-28",
+        "date_to": "2026-11-26",
+        "include_preprints": False,
+        "queries": [],
+        "paper_count": 1,
+        "resolved_gene_count": 1,
+        "suppressed": [],
+        "candidates": ranked,
+    }
+    src = tmp_path / "2026-11-26-gene-gap.json"
+    src.write_text(json.dumps(packet))
+    runner = CliRunner()
+    same = runner.invoke(
+        app, ["litscan", "rescore-gene-gap", str(src), "--output-dir", str(tmp_path)]
+    )
+    assert same.exit_code != 0 and "must differ" in same.output
+    out = tmp_path / "rescore"
+    ok = runner.invoke(
+        app, ["litscan", "rescore-gene-gap", str(src), "--output-dir", str(out)]
+    )
+    assert ok.exit_code == 0, ok.output
+    assert (out / "2026-11-26-gene-gap.json").exists()
+    del packet["candidates"][0]["gene"]["annotation_counts"]["homology"]
+    src.write_text(json.dumps(packet))
+    old = runner.invoke(
+        app, ["litscan", "rescore-gene-gap", str(src), "--output-dir", str(out)]
+    )
+    assert old.exit_code != 0 and "re-run the scan" in old.output

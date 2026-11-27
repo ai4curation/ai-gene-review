@@ -35,6 +35,8 @@ UNIPROT_EXPERIMENTAL_FIELDS = sorted(
     if not code.startswith("ECO:")
 )
 PROTEIN_BINDING = "GO:0005515"
+# Sequence- and ortholog-based transfers: knowledge that exists for a homolog.
+HOMOLOGY_EVIDENCE_CODES = frozenset({"ISS", "ISO", "ISA", "ISM"})
 
 
 def article_id(source: str, record_id: str) -> str:
@@ -284,9 +286,11 @@ def summarize_annotations(results: list[dict[str, Any]]) -> dict[str, int]:
     ...         {"goEvidence": "IEA", "goId": "GO:0005737", "goAspect": "cellular_component"},
     ...         {"goEvidence": "ISS", "goId": "GO:0005737", "goAspect": "cellular_component"}]
     >>> summarize_annotations(rows)["experimental"], summarize_annotations(rows)["other"]
-    (2, 1)
+    (2, 0)
     >>> summarize_annotations(rows)["experimental_protein_binding"]
     1
+    >>> summarize_annotations(rows)["homology"], summarize_annotations(rows)["experimental_aspects"]
+    (1, 1)
     """
     experimental = [
         r
@@ -303,11 +307,25 @@ def summarize_annotations(results: list[dict[str, Any]]) -> dict[str, int]:
         "experimental_mf": sum(
             r.get("goAspect") == "molecular_function" for r in experimental
         ),
+        "experimental_aspects": len(
+            {
+                r["goAspect"]
+                for r in experimental
+                if r.get("goAspect") and r.get("goId") != PROTEIN_BINDING
+            }
+        ),
         "iba": sum(r.get("goEvidence") == "IBA" for r in results),
         "iea": sum(r.get("goEvidence") == "IEA" for r in results),
+        # Bare protein binding is as uninformative by ISS as by IPI.
+        "homology": sum(
+            source_evidence_code(r.get("goEvidence"), r.get("evidenceCode"))
+            in HOMOLOGY_EVIDENCE_CODES
+            and r.get("goId") != PROTEIN_BINDING
+            for r in results
+        ),
     }
     counts["other"] = counts["total"] - (
-        counts["experimental"] + counts["iba"] + counts["iea"]
+        counts["experimental"] + counts["iba"] + counts["iea"] + counts["homology"]
     )
     return counts
 

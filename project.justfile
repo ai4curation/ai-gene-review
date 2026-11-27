@@ -391,6 +391,10 @@ litscan-module-member *args="":
 litscan-gene-gap *args="":
     uv run ai-gene-review litscan gene-gap {{args}}
 
+# Re-apply conf/litscan/gene_gap.yaml to an existing packet, offline (calibration).
+litscan-rescore-gene-gap packet *args="":
+    uv run ai-gene-review litscan rescore-gene-gap {{packet}} {{args}}
+
 # Validate gene-gap scan configs and packets against their LinkML schema.
 litscan-validate-gene-gap *paths="conf/litscan/gene_gap.yaml":
     uv run ai-gene-review litscan validate-gene-gap {{paths}}
