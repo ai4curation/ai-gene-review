@@ -52,3 +52,42 @@ osteoclast ruffled border; tissue-specific proteolytic processing (~40 kDa brain
 role in mTORC1 amino-acid sensing. Net: no change to the core call (accessory V0
 assembly/structural-hub subunit; `GO:0060590 ATPase regulator activity` + lysosomal
 acidification), with strengthened structural justification.
+
+
+## CLINGEN Mendelian re-review — 2026-09-29
+
+This assessment supersedes the earlier PN-specific decisions above. It preserves all 54 machine-supplied assertions, their order, qualifiers, references and alternative-product records. Final decisions are 25 ACCEPT, 19 KEEP_AS_NON_CORE, nine UNDECIDED and one MODIFY. One qualified V-ATPase core remains; the legacy NEW ATPase-regulator assertion is withdrawn. No new GO annotation is proposed.
+
+ATP6AP1 contributes to the assembled pump as a persistent V0 accessory component. Human structural contacts support assembly and stability; processed human Ac45 complementation in yeast supports function without isolating direct ATPase activation. Human hepatocyte ER/ERGIC localization identifies an assembly context, not ER-lumen acidification. The mouse osteoclast study PMID:22467241 supports targeting and acidification without demonstrating an assembly defect in that assay. The core therefore uses contributes_to proton-transporting ATPase activity and the general V-type complex GO:0033176, covering the distinct assembly and endolysosomal contexts without adding a location restriction to the complex itself. Existing lysosomal and endosomal acidification assertions remain accepted because this subunit contributes structure to the pump itself.
+
+The existing molecular-function-activator annotation remains UNDECIDED: the inspected donor and assembly evidence does not resolve a specific activation mechanism. No ATPase-regulator replacement is asserted. Earlier rejection of small-GTPase-binding annotations is withdrawn in favor of curatorial deference and source-specific uncertainty where the exact ATP6AP1 assay remains unresolved. PMID:22053050 places V-ATPase upstream of Rag nucleotide loading; inspected purified Ragulator contacts involve d1 and D rather than proving direct ATP6AP1–Rag binding. The ATP6AP1-specific supplemental experiment was not reconstructed. These limits do not invalidate the curated complex-associated TORC1 role.
+
+The ordinary source cache for PMID:38448650 was recovered unchanged. Its official identity is doi:10.1038/s41422-024-00938-z, PMC11061317. Root read the complete normal abstract, Fig. 5/6 Results and text legends, recombinant binding and real-time nucleotide-loading Methods after recovery. Purified Rheb associates directly with a synthetic ATP6AP1 tail. The last 12 residues mediate binding, while a 30-residue tail promotes GTP loading. A tri-aspartate mutant retains interaction but loses the loading effect. Human-cell rescue and signaling results support a separate Rheb/mTORC1 role, also evaluated by the independent primary-source consultation.
+
+The authors interpret this mechanism as unconventional GEF activity. The inspected real-time assay mixes Rheb and tail peptide with either fluorescent GDP or fluorescent GTPγS in separate reactions. It does not explicitly measure release from GDP-preloaded Rheb during a nucleotide chase. The description records the reported signaling function; a dedicated GDP-release experiment is proposed. No NEW GO:0005085 or second catalytic core is asserted. This bounded decision neither refutes the paper nor establishes absence of GEF activity. No figure-pixel or raw-data reanalysis is claimed.
+
+The linked author correction (PMID:40016599; doi:10.1038/s41422-025-01088-6) replaces a duplicated supplementary wound-healing image. The authors state that quantification and conclusions remain unchanged; the correction does not state a change to the nucleotide-loading experiments. That notice was independently read as a correction, not treated as a retraction or independent validation of the original raw data.
+
+Other source boundaries remain recorded per reference. In particular, PMID:33065002's short cache lacks Results/Methods despite its full-text flag; selected original structural text was independently consulted. Screen-derived binding assertions without the exact target assay remain UNDECIDED. Supported generic binding stays non-core rather than being labeled false merely for lacking functional specificity. Neither the original GOA nor UniProt/publication/provider caches were edited.
+
+
+## PR3550 review follow-up — 2026-09-29
+
+The signaling-specific TORC1, amino-acid-response and contributes_to GEF-activator assertions are retained as non-core, aligning their classification with the single V0 assembly/acidification core. This preserves the curated complex-associated signaling evidence while keeping the ATP6AP1-specific supplemental assay limitation explicit. The lysosomal is_active_in assertion remains accepted because that location independently matches the pump core. Counts are now 20 ACCEPT, 24 KEEP_AS_NON_CORE, nine UNDECIDED and one MODIFY over the same 54 source assertions. No new GO assertion or additional catalytic core is introduced.
+
+PMID:38448650 now has a machine-readable finding and an exact short source quotation for its reported C-terminal Rheb-loading effect. The separate fluorescent nucleotide-addition assays remain distinct from measuring release of preloaded GDP. PMID:40016599 is now represented explicitly as the externally inspected correction, with its ordinary cache correctly marked as lacking full text. Neither source cache was changed.
+
+Supported generic-binding annotations remain non-core under the user-supplied ActionEnum definitions; this preserves correct peripheral observations without manufacturing a replacement function. The generic-binding skill preference does not override those definitions. Uninspected exosome evidence remains UNDECIDED. The original history record and earlier reasoning above are preserved as session provenance.
+
+The follow-up passed focused validation with the same three advisories: two supported generic-binding rows retained as non-core and the existing provider report not used as direct annotation evidence. Rendering passed. The review remains DRAFT; no new repository-wide validation pass is claimed.
+
+
+## 2026-10-01 UTC — Binding-policy clarification
+
+The [review of PR #3550](https://github.com/ai4curation/ai-gene-review/pull/3550) at `6f4aedf04` correctly identifies the repository default: an uninformative generic binding annotation can be excluded even when its reported interaction is real. That informational-exclusion criterion is distinct from concluding that the experimental evidence is false. The earlier notes should not be read as saying that the default policy requires biological falsity or that these touched annotations qualify for a legacy exception.
+
+This task explicitly directs that generic binding not be removed solely for informativeness, while preserving uncertainty when the relevant experiment cannot be adjudicated. The retained decisions are a scoped application of those task instructions. They are not a claim of compliance with the default generic-binding policy, a global policy revision, or a reason to silence its advisory warnings.
+
+The retained rows distinguish viral NSP6 coassociation in human lung cells from ATP6AP2 coassociation and construct mapping. Neither is described as purified binary binding or a new ATP6AP1 enzymatic activity. V0 assembly-complex membership is a cellular-component statement; it is not a more specific molecular-function replacement for an enables protein-binding assertion. The existing pump contribution remains the sole core. The separate Rheb nucleotide-loading evidence still does not establish a GDP-preloaded chase assay, and the unresolved experimental rows remain UNDECIDED.
+
+This addendum changes only the explanation of the decision. It adds no primary-source reading, assay verification, quotation, annotation or core function. All current annotation decisions, products, evidence limitations and source objects remain unchanged.

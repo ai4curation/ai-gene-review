@@ -72,4 +72,26 @@ GOA (`ALAD-goa.tsv`), and cached `publications/PMID_*.md` + `reactome/*.md`.
   defensible given ALAD's role as the lead target — KEEP_AS_NON_CORE.
 - GO:1904854 proteasome core complex binding (IEA, Ensembl) duplicates the moonlighting role
   captured experimentally by PMID:8175643 — KEEP_AS_NON_CORE.
-</content>
+
+## Completion pass (2026-11-10, Claude (AI-assisted))
+
+Deep research still unavailable (no provider output); review grounded in UniProt, cached
+abstracts/full text and Reactome. Changes on re-review:
+
+- Every row now carries vetted, complete quotes (UniProt CC:FUNCTION / CATALYTIC ACTIVITY /
+  PATHWAY / COFACTOR / SUBUNIT text tied to PubMed:11032836, 12897770, 19812033; abstracts of
+  PMID:11032836, 8175643, 3463993, 3758678; PANTHER PTHR11458 for the IBA rows). The DE-line
+  quote "EC=4.2.1.24" was replaced (labels are not support).
+- GO:0033014 tetrapyrrole biosynthetic process (InterPro2GO) -> MODIFY to GO:0006783: humans
+  make no chlorophyll/cobalamin, so the tetrapyrrole pathway ALAD feeds is heme synthesis.
+- GO:0046872 metal ion binding -> MODIFY to GO:0008270 zinc ion binding; the zinc-binding IDA row
+  is now ACCEPT (catalytic ZnB site; PMID:11032836 "MinusZnB is far less active"), matching the
+  zinc-binding core function.
+- GO:0042802 identical protein binding: changed from MARK_AS_OVER_ANNOTATED to KEEP_AS_NON_CORE;
+  the homo-octamer is real and the term is not GO:0005515.
+- Extracellular region (Compara IEA + two Reactome TAS) and the two granule-lumen rows ->
+  MARK_AS_OVER_ANNOTATED, since the reasons argue bystander detection of a cytosolic enzyme in
+  neutrophil-granule cargo lists. Exosome and sperm-nucleus HDA rows stay KEEP_AS_NON_CORE
+  (direct detection, peripheral).
+- Rat Compara "response to X" block: MARK_AS_OVER_ANNOTATED with UniProt function/location
+  support; metal/zinc/lead-response rows stay KEEP_AS_NON_CORE.

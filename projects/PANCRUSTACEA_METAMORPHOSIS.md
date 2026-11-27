@@ -16,6 +16,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/PxxS5zriXhGzC6gvrazkFT
       title: Project brief
+index_group: OTHER_ORGANISM
 ---
 
 # Pancrustacea Metamorphosis Gene Families

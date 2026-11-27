@@ -26,7 +26,7 @@ The historical GOA rows for NTN1/NTN3 cite PTN000180816 and experimentally chara
 | GO:0000978 RNA polymerase II cis-regulatory region sequence-specific DNA binding | REMOVE | The POU-derived DNA-recognition assertion is unsupported for the target netrins; NTN1 ribosomal-promoter association does not establish this Pol II-specific MF. |
 | GO:0006357 regulation of transcription by RNA polymerase II | UNDECIDED | This broader process can involve signaling proteins. Neither the defective trace nor secretion establishes that netrin-specific regulation is impossible. |
 
-POU5F1 (Q01860) is independently indexed in `panther-members.tsv` under PTHR11636:SF86. That confirms a mismatch for one named source, while the current IBD export still requires upstream inspection. No family assignment is inferred for the other sources from memory.
+POU5F1 (Q01860) is independently indexed in `panther-members.tsv` (now the git-ignored build artifact .cache/panther/panther-members-<release>.tsv) under PTHR11636:SF86. That confirms a mismatch for one named source, while the current IBD export still requires upstream inspection. No family assignment is inferred for the other sources from memory.
 
 The target-specific MF removals are curation recommendations, not experimental NOT annotations. No negative experiment has been supplied that would justify manufacturing a NOT annotation. Likewise, no family-wide “never nuclear” rule is justified.
 

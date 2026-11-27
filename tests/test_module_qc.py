@@ -12,11 +12,13 @@ from ai_gene_review.module_qc import (
     collect_module_qc,
     collect_uniprot_groundings,
     index_gene_reviews,
+    intentionally_ungrounded_leaf_nodes,
     is_leaf_node,
     iter_nodes,
     leaf_nodes_missing_representatives,
     module_deep_research,
     module_gene_review_summary,
+    node_concrete_nonprotein_groundings,
     node_representative_groundings,
     review_completeness,
     run_data_qc,
@@ -146,6 +148,70 @@ def test_family_without_representatives_is_not_grounded():
     assert node_representative_groundings(node) == []
 
 
+def test_concrete_nonprotein_family_member_satisfies_leaf_grounding():
+    data = {
+        "module": {
+            "id": "srp_rna_module",
+            "annotons": [
+                {
+                    "participant": {
+                        "selector_type": "FAMILY",
+                        "family": {
+                            "preferred_term": "bacterial 4.5S SRP RNA family",
+                            "term": {
+                                "id": "RFAM:RF00169",
+                                "label": "Bacterial small signal recognition particle RNA",
+                            },
+                            "representative_members": [
+                                {
+                                    "preferred_term": (
+                                        "ffs (Pseudomonas putida KT2440 "
+                                        "4.5S SRP RNA)"
+                                    ),
+                                    "term": {"id": "NCBIGene:26969983"},
+                                }
+                            ],
+                        },
+                    }
+                }
+            ],
+        }
+    }
+
+    node = data["module"]
+
+    assert node_representative_groundings(node) == []
+    assert node_concrete_nonprotein_groundings(node) == [
+        {
+            "id": "NCBIGene:26969983",
+            "label": "ffs (Pseudomonas putida KT2440 4.5S SRP RNA)",
+        }
+    ]
+    assert leaf_nodes_missing_representatives(data) == []
+
+
+def test_concrete_nonprotein_gene_satisfies_leaf_grounding():
+    data = {
+        "module": {
+            "id": "rnase_p",
+            "annotons": [
+                {
+                    "participant": {
+                        "selector_type": "GENE",
+                        "gene": {
+                            "preferred_term": "RNaseP:RNA",
+                            "term": {"id": "FB:FBgn0046696"},
+                        },
+                    }
+                }
+            ],
+        }
+    }
+
+    assert node_representative_groundings(data["module"]) == []
+    assert leaf_nodes_missing_representatives(data) == []
+
+
 def test_protein_complex_active_units_grounded():
     node = {
         "id": "n",
@@ -197,16 +263,61 @@ def test_homology_selector_anchor_is_grounded(selector_type, slot):
     assert groundings == [{"id": "UniProtKB:P0ABC9", "label": "E. coli BetT"}]
 
 
+def test_name_only_gene_product_does_not_ground_leaf():
+    data = {
+        "module": {
+            "id": "pathway",
+            "parts": [
+                {
+                    "node": {
+                        "id": "hidden_orf_step",
+                        "label": "Hidden ORF step",
+                        "annotons": [
+                            {
+                                "participant": {
+                                    "selector_type": "PROTEIN_COMPLEX",
+                                    "protein_complex": {
+                                        "active_units": [
+                                            {
+                                                "participant": {
+                                                    "selector_type": "GENE_PRODUCT",
+                                                    "gene_product": {
+                                                        "preferred_term": "LhpF (Pseudomonas aeruginosa)",
+                                                        "description": "Named ORF with no UniProtKB accession.",
+                                                    },
+                                                }
+                                            }
+                                        ]
+                                    },
+                                }
+                            }
+                        ],
+                    }
+                }
+            ],
+        }
+    }
+
+    node = data["module"]["parts"][0]["node"]
+
+    assert node_representative_groundings(node) == []
+    assert leaf_nodes_missing_representatives(data) == [
+        {
+            "id": "hidden_orf_step",
+            "label": "Hidden ORF step",
+            "annoton_count": 1,
+            "selector_types": ["PROTEIN_COMPLEX"],
+        }
+    ]
+
+
 def test_bbsome_leaf_grounding():
-    # bbsome.yaml grounds most subunits to concrete UniProt accessions, but the
-    # cargo-trafficking leaf references the BBSome only by its GO complex term
-    # (no active_units / representative members), so it is correctly flagged.
+    # The completed BBSome module should ground every terminal role to concrete
+    # UniProt accessions, including BBSome-as-cargo-adaptor leaves that also
+    # carry the GO complex term.
     data = load_module("bbsome.yaml")
     flagged = leaf_nodes_missing_representatives(data)
-    flagged_ids = {item["id"] for item in flagged}
-    assert "bbsome_cargo_trafficking" in flagged_ids
-    # The octamer leaf lists concrete subunits, so it must not be flagged.
-    assert "bbsome_core_octamer" not in flagged_ids
+    assert flagged == []
 
 
 def test_ras_mapk_flags_abstract_family_leaves():
@@ -238,6 +349,75 @@ def test_abstract_scope_skips_leaf_representative_grounding():
         },
     }
     assert leaf_nodes_missing_representatives(data) == []
+
+
+def test_intentionally_ungrounded_leaf_skips_representative_grounding():
+    data = {
+        "module": {
+            "id": "cycle",
+            "parts": [
+                {
+                    "node": {
+                        "id": "distributed_step",
+                        "label": "Distributed step",
+                        "intentionally_ungrounded": True,
+                        "annotons": [
+                            {
+                                "participant": {
+                                    "selector_type": "ANY_WITH_FUNCTION",
+                                    "required_function": {
+                                        "term": {
+                                            "id": "GO:0008757",
+                                            "label": "S-adenosylmethionine-dependent methyltransferase activity",
+                                        }
+                                    },
+                                }
+                            }
+                        ],
+                    }
+                }
+            ],
+        }
+    }
+
+    assert leaf_nodes_missing_representatives(data) == []
+    assert intentionally_ungrounded_leaf_nodes(data) == [
+        {
+            "id": "distributed_step",
+            "label": "Distributed step",
+            "annoton_count": 1,
+            "selector_types": ["ANY_WITH_FUNCTION"],
+        }
+    ]
+
+
+def test_annotonless_leaf_skips_representative_grounding():
+    data = {
+        "module": {
+            "id": "motility",
+            "parts": [
+                {
+                    "node": {
+                        "id": "flagellar_motor_rotation_output",
+                        "label": "Flagellum-dependent motility output",
+                        "module_type": "BIOLOGICAL_PROCESS",
+                        "concepts": [
+                            {
+                                "preferred_term": "bacterial-type flagellum-dependent cell motility",
+                                "term": {
+                                    "id": "GO:0071973",
+                                    "label": "bacterial-type flagellum-dependent cell motility",
+                                },
+                            }
+                        ],
+                    }
+                }
+            ],
+        }
+    }
+
+    assert leaf_nodes_missing_representatives(data) == []
+    assert intentionally_ungrounded_leaf_nodes(data) == []
 
 
 # ---------------------------------------------------------------------------
@@ -368,13 +548,18 @@ def test_collect_module_qc_smoke():
     assert set(qc) == {
         "data_qc",
         "leaf_nodes_missing_representatives",
+        "intentionally_ungrounded_leaf_nodes",
         "conformance_violations",
+        "module_ref_violations",
         "reaction_chaining",
         "feedback_loops",
         "gene_reviews",
         "module_deep_research",
+        "function_conformance",
     }
     assert qc["module_deep_research"]["has_deep_research"] is False
+    assert qc["intentionally_ungrounded_leaf_nodes"] == []
+    assert qc["module_ref_violations"] == []
 
 
 # ---------------------------------------------------------------------------
@@ -496,6 +681,27 @@ def test_chaining_unresolvable_mf_is_not_a_warning():
             assert f["status"] == "NOT_CHECKED"
 
 
+def test_chaining_without_precedes_does_not_open_ontologies(monkeypatch):
+    import ai_gene_review.module_qc as qc
+    data = _chain_module()
+    for conn in data["module"]["connections"]:
+        conn["connection_type"] = "POSITIVELY_REGULATES"
+    monkeypatch.setattr(qc, "_default_chaining_resolvers", lambda: pytest.fail("unneeded lookup"))
+    assert reaction_chaining_findings(data) == []
+
+
+def test_chaining_only_queries_edge_participants():
+    data = _chain_module()
+    data["module"]["parts"].append({"node": {"id": "unconnected", "annotons": [
+        {"function": {"term": {"id": "GO:unused"}}},
+    ]}})
+    mf, eq = _resolvers()
+    def lookup(go_id):
+        assert go_id != "GO:unused"
+        return mf(go_id)
+    assert reaction_chaining_findings(data, lookup, eq) == reaction_chaining_findings(_chain_module(), mf, eq)
+
+
 # ---------------------------------------------------------------------------
 # Feedback-loop check (advisory; see projects/BOOLEAN_MODELS.md)
 # ---------------------------------------------------------------------------
@@ -523,9 +729,53 @@ def test_feedback_loops_cut_is_a_warning_not_an_error():
 
 
 def test_feedback_loop_closed_through_child_of_container():
-    """jak_stat: the SOCS child of the negative-regulation bundle is STAT-induced, so the bundle is closed."""
+    """A negative-regulation bundle is closed when one of its children is pathway-induced."""
+    data = {
+        "module": {
+            "id": "m",
+            "parts": [
+                {"node": {"id": "jak"}},
+                {"node": {"id": "stat"}},
+                {
+                    "role": "negative regulation",
+                    "node": {
+                        "id": "negreg",
+                        "parts": [
+                            {
+                                "node": {
+                                    "id": "socs",
+                                    "description": "SOCS induced as feedback",
+                                }
+                            },
+                            {
+                                "node": {
+                                    "id": "ptp",
+                                    "description": "constitutive phosphatase",
+                                }
+                            },
+                        ],
+                    },
+                },
+            ],
+            "connections": [
+                {"source": "jak", "target": "stat", "connection_type": "CAUSES"},
+                {"source": "stat", "target": "socs", "connection_type": "CAUSES"},
+                {
+                    "source": "negreg",
+                    "target": "jak",
+                    "connection_type": "NEGATIVELY_REGULATES",
+                },
+            ],
+        }
+    }
+    by_source = {f["source"]: f for f in feedback_loop_findings(data)}
+    assert by_source["negreg"]["status"] == "closed"
+    assert "via socs" in by_source["negreg"]["message"]
+
+
+def test_jak_stat_socs_feedback_is_closed():
+    """jak_stat wires SOCS, PTP and PIAS as separate regulators; only SOCS is STAT-induced."""
     data = load_module("jak_stat_signaling.yaml")
     by_source = {f["source"]: f for f in feedback_loop_findings(data)}
-    assert by_source["jak_stat_negative_regulation"]["status"] == "closed"
-    assert "via socs_feedback" in by_source["jak_stat_negative_regulation"]["message"]
     assert by_source["socs_feedback"]["status"] == "closed"
+    assert not [f for f in by_source.values() if f["severity"] == "warning"]

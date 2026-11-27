@@ -1,0 +1,25 @@
+# FCHO1 review journal
+
+## 2026-10-26 — integrated source review
+
+All 37 inherited annotation contexts were assessed through 19 database, seven binding and eleven functional decisions. The source records, their order, three curated natural splice-product objects and zero-quotation regime remain exact. The integrated review has one protein–membrane adaptor core; no new annotation or experimental proposal was added. Four legitimate generic binding observations remain non-core under the project exception, so the review status is DRAFT. The negated coated-vesicle context (index 24) remains an explicitly completed UNDECIDED assessment.
+
+The 2010 Science paper has verified Expression of Concern and Erratum records, but the notice bodies and affected-panel/resolution scope remain unavailable. The original source is not declared retracted or misattributed. Independent 2012 and 2020 human FCHO1 evidence supports positive membrane, coat and endocytosis functions while preserving cell/cargo context. The 2020 Author Correction was read: it corrects the Discussion’s account of prior work and transferrin-receptor context, and does not state a figure or experimental-data correction. Original source caches remain unchanged.
+
+The genuine Falcon attempt failed with HTTP 403 authentication failure; its perplexity-lite fallback failed with HTTP 401/insufficient_quota. Neither produced a provider report, and none was fabricated. Assessment instead uses the recorded original, database and supplement evidence. Raw provider traces are private and are not delivered.
+
+The [source guide](FCHO1-source-guide.md) records the combined access limits. The [database journal](FCHO1-database-notes.md), [binding journal](FCHO1-binding-notes.md) and [functional journal](FCHO1-functional-notes.md) retain their original bytes as historical stage records; their references to unfinished lane work do not describe the now-integrated annotation set. Source tables retain exact full-annotation/index joins. The normal-source closure retains all 26 accepted intake files plus four genuine additions; the already-present 2020 correction normal is selected from the original intake.
+
+The final focused validation passes with five advisories: four permitted generic-binding rows and the standalone adaptor core not appearing as an existing annotation term. The core is supported by the accepted source synthesis; no new annotation row was added solely to silence that advisory. Computed status remains DRAFT.
+
+## 2026-10-26: focused review feedback
+
+Read the full formal and finished companion feedback for PR 5587 at head 1df5820455b092be40a8206935533b4d0b762b37. All 37 imported source objects/actions, three natural splice products and immutable caches remain unchanged. The proposal appends one IC protein-membrane adaptor annotation and the complete Calzoni 2019 reference (PMID:30822429), giving 38 annotation rows and 25 references. No new process or quotation is added.
+
+The actual Calzoni main letter contributes human functional evidence: pre-transplant patient P2 cells showed reduced activation-induced proliferation and survival, and activated blasts showed impaired transferrin uptake with preserved TCR/CD3 internalization. These observations strengthen the two non-core T-cell contexts without treating the patient study as a repeat of the 2020 Jurkat TCR phenotype. The 2020 correction’s removal of the contrary Discussion claim is retained. Precise locators and limits are in the [functional source guide](FCHO1-functional-source-guide.md).
+
+Human FCHO1 lipid association, linker AP-2 interaction and muHD EPS15/intersectin interaction have experimental domain-localization and coat-recruitment support in PMID:22484487 and PMID:32098969. The added GO:0043495 IC row expresses this molecular bridge; official typed ancestry confirms that it is not an ancestor or descendant of the existing/replacement binding terms. The patient phenotype alone is not its evidence.
+
+PTK6 binding refinements describe the identity of a measured interaction partner, not kinase activity or regulation. The 2019 Y2H work is related retesting, not independent orthogonal confirmation; no FCHO1-specific PCA evidence is claimed. The supported LGALS14/EXOSC5 pairs remain non-core under the user’s [ClinGen curation instructions](../../../projects/CLINGEN_MENDELIAN.md#curation-instructions), which also prohibit adding publication quotations. The reviewer’s contrary policy premise does not override these explicit instructions.
+
+UniProt’s clathrin/ITSN statements were considered with their mixed by-similarity/2012 provenance. Actual human intersectin association is reported in 2012, while its isolated-linker negative clathrin result does not refute every whole-protein association. The mature-vesicle NOT remains unresolved: UniProt repeats affirmative curated support with overlapping 2010 provenance, while the combined blot and antibody scope remain limiting. The 2010 notices are neither assumed retraction nor resolved concern. See the [feedback decisions](FCHO1-feedback-decisions.yaml) for exact source joins.

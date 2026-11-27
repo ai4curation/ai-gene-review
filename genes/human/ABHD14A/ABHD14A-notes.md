@@ -1,69 +1,20 @@
-# ABHD14A — review notes
+# ABHD14A (human) — review notes
 
-PAINT no-IBA project review, using the `affinage` deep-research provider plus UniProt Q9BUJ0,
-the GOA TSV and the primary literature.
+Family-coordinated review of human `ABHD14A` (`UniProtKB:Q9BUJ0`, `HGNC:24538`, `PANTHER:PTHR46197:SF1`, 271 aa), harmonized with mouse `Abhd14a` (`Q922Q6`), rat `Abhd14a` (`Q5I0C4`), paralog `ABHD14B` (`Q96IU4`, `PTHR46197:SF2`), *C. elegans* `abhd-14` (`Q9N366`, `PTHR46197:SF3`), and `PANTHER:PTHR46197`.
 
-## Outcome: stays dark, with citations for why
+## 1. Topology, 2026 primary biochemical characterization (`PMID:42469586`), and paralog boundary (`PMID:37974539`)
 
-Three GO annotations, all localisation. No molecular function, no biological process, and none
-proposed. The peer-reviewed literature says so directly
-[PMID:37974539, "While ABHD14A still lacks any functional annotation to date, we"] recently
-showed that ABHD14B functions as a lysine deacetylase.
+- **Type II membrane topology**: Human ABHD14A (`Q9BUJ0`, 271 aa; note UniProt `CC:CAUTION` regarding whether `Met1` or `Met30` is the physiological initiator, both preceding the transmembrane helix) has an annotated single-pass type II signal-anchor helix (`FT TRANSMEM 35..55`), predicted lumenal N-glycosylation sites (`Asn67`, `Asn201`), and a conserved alpha/beta-hydrolase charge-relay triad (`Ser171`, `Asp222`, `His249` within `SPSLSGHY`, `LILYGELD`, `NAGHACYL`). Unlike soluble cytosolic/nuclear paralog `ABHD14B` (`Q96IU4`, 210 aa), type II orientation places ABHD14A's catalytic domain on the lumenal side of secretory membranes.
+- **Paralog conflation hazard (`PMID:37974539`)**: Vaidya et al. 2023 defined sequence determinants separating `ABHD14A` (`SF1`) from mammalian KDAC `ABHD14B` (`SF2`) and warned that automated pipelines frequently misassign them the same function [PMID:37974539, "Given their high sequence similarity, automated databases often wrongly assign ABHD14A and ABHD14B as the same enzyme, and therefore, annotating functions to them in various organisms has been problematic."].
+- **Peer-reviewed biochemical & localization characterization (`PMID:42469586`)**: Gupta, Dhaware & Kamat (*Biochemistry* Aug 2026; superseding bioRxiv `10.1101/2025.11.28.691245`) engineered a soluble N-terminally truncated human ABHD14A variant and demonstrated fluorophosphonate ABPP reactivity and short-chain *p*-nitrophenyl ester turnover with CoA-dependent enhancement on *p*-nitrophenyl acetate, while showing that full-length human ABHD14A-GFP is catalytically active and localizes specifically to the Golgi apparatus in HEK293T cells; crucially, native physiological substrates and cellular biological roles remain undiscovered [PMID:42469586, "Together, these findings establish the enzymatic activity, mechanistic features, and subcellular localization of ABHD14A while providing essential biochemical tools that can now enable the systematic discovery of its physiological substrates and regulatory contexts."].
 
-## The chief hazard: ABHD14B
+## 2. Review of the 5 refreshed GOA rows (`ABHD14A-goa.tsv`)
 
-[PMID:37974539, "Given \ntheir high sequence similarity, automated databases often wrongly assign
-ABHD14A \nand ABHD14B as the same enzyme, and therefore, annotating functions to them in \nvarious
-organisms has been problematic."]
-
-ABHD14B **is** characterised — a lysine deacetylase. ABHD14A is not. Sequence determinants
-separating them had to be defined explicitly because databases kept merging them. This is the
-AASDH failure mode (PR #2226) caught before it happens.
-
-## Topology — the feature that argues against the paralog
-
-Applied to this gene's *own* annotations, not just to hypothetical future ones. UniProt annotates:
-
-| Feature | Value | Evidence |
-|---|---|---|
-| Subcellular location | Cytoplasm | `ECO:0000250` (by similarity) |
-| Topology | **Single-pass type II membrane protein** | `ECO:0000305` |
-| `FT TRANSMEM` | 35–55, *"Signal-anchor for type II membrane protein"* | `ECO:0000255` |
-| `FT CARBOHYD` | Asn-67, Asn-201 | `ECO:0000255` |
-
-Type II topology with glycosylated residues C-terminal to the anchor puts the **hydrolase domain
-on the lumenal/extracellular side**. ABHD14B is soluble. So the two proteins differ in where they
-sit, not only in sequence — and "the family behaves this way" is not a reason to accept a
-cytoplasmic call for this one.
-
-That matters for the two cytoplasm annotations, which are still `ACCEPT`ed but on narrower
-grounds: the IBA is evidence independent of the by-similarity UniProt call, and a type II protein
-does present a short cytosolic N-terminal tail. What neither annotation establishes is **which
-side the catalytic domain faces**, which is the question that matters here — and which would
-reconcile with the Golgi localisation reported in the excluded preprint.
-
-The `GO:0016020` row is marked over-annotated for lack of specificity, not for lack of membrane
-association: the protein does carry an annotated signal-anchor, and the bare term conveys none
-of it.
-
-## ⚠️ Affinage citation caveat (campaign-wide)
-
-The provider's two most substantive claims — short-chain ester hydrolysis with CoA enhancement,
-and Golgi localisation — both cite:
-
-```
-PMID:bio_10.1101_2025.11.28.691245
-```
-
-**That is a bioRxiv DOI in a PMID-shaped field, not a PubMed identifier.** A reader skimming for
-PMIDs would take preprint claims for peer-reviewed ones. Both claims are excluded here. If the
-preprint is published they would justify a hydrolase molecular function and a Golgi location.
-
-**Check the affinage `## Citations` list for `PMID:bio_*` before relying on any finding.**
-
-## What is deliberately not annotated
-
-The granule-neuron link comes from *Dorz1*, a rodent transcript expressed in differentiating
-cerebellar granule neurons and regulated by Zic1. That is expression biology — being downstream
-of a transcription factor is not participation in a process, the same conflation identified for
-A1BG (#2217) and AARD (#2225).
+1. **`GO:0005737` (`cytoplasm`, `IBA` `PTN002475422` and `IEA` `GO_REF:0000044`) -> `ACCEPT`**:
+   - Retained consistently across `SF1` (`human/ABHD14A`, `mouse/Abhd14a`, `rat/Abhd14a`): a single-pass type II membrane protein exposes its N-terminal tail to the cytoplasm and `PTN002475422` is seeded by orthologous mouse `MGI:MGI:1915894` (`PMID:14667578`), with the explicit caveat that the C-terminal catalytic domain is predicted to face the Golgi lumen.
+2. **`GO:0016020` (`membrane`, `IEA` `GO_REF:0000044`, `UniProtKB-SubCell:SL-0162`) -> `MODIFY` to `GO:0000139` (`Golgi membrane`)**:
+   - Generic `membrane` is refined to the specific supported descendant `GO:0000139` (`Golgi membrane`) already carried by `Q9BUJ0`, supported by human `FT:TRANSMEM` (`35..55`) and human ABHD14A-GFP Golgi localization in HEK293T cells (`PMID:42469586`).
+3. **`GO:0000139` (`Golgi membrane`, `ISS` `GO_REF:0000024` from `UniProtKB:Q5I0C4`) -> `KEEP_AS_NON_CORE` (with `PROBABLE` `CHECK` `source_defects`)**:
+   - Biologically supported for human ABHD14A by `PMID:42469586` (kept as non-core pending endogenous protein localization and identification of its Golgi biological role). Flagged with a `PROBABLE` `WRONG_EVIDENCE_CODE` `CHECK` defect on `UNIPROT` because `PMID:42469586` characterizes human ABHD14A-GFP in HEK293T cells, yet on `20260721` UniProt attached `IDA` to rat `Q5I0C4` and projected `ISS` back onto human `Q9BUJ0` (and mouse `Q922Q6`).
+4. **`GO:0016407` (`acetyltransferase activity`, `IDA` `PMID:42469586`) -> `MARK_AS_OVER_ANNOTATED`**:
+   - Per `projects/ENZYME_SPECIFICITY.md`, real in vitro CoA-enhanced *p*-nitrophenyl acetate cleavage by an engineered N-terminally truncated construct whose physiological substrates remain unknown is marked `MARK_AS_OVER_ANNOTATED`, harmonized with mouse and rat `Abhd14a` and `PTHR46197-review.yaml`, paired with `MF_DARK` (`status: NARROWING`) and `BP_DARK` (`status: OPEN`) `BIOLOGY` `knowledge_gaps`.

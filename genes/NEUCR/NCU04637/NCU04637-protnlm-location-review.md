@@ -6,7 +6,7 @@ Source method: ProtNLM2. Source version: live API snapshot 2026-09-09T03:00:51.8
 
 - Original identifier: `SL-0086`. Original text: **Cytoplasm**.
 
-Assessment: **LSP (2)**. The Rvs167 subfamily and BAR/SH3 architecture support a cytoplasmic adaptor acting at cortical actin patches, as established for fungal Rvs proteins (PMID:20610658; PMID:35976707). That more precise location is already in GOA. The source hydrates Cytoplasm from GO:0031097 (medial cortex); exact medial distribution remains unresolved in this fungus but is unnecessary for the broad cytoplasmic inference. This SL claim is distinct from the separately emitted GO:0005737 record.
+Assessment: **CNN (2)**. The Rvs167 subfamily and BAR/SH3 architecture support a cytoplasmic adaptor acting at cortical actin patches, as established for fungal Rvs proteins (PMID:20610658; PMID:35976707). Q7S3B9 is the full-length product carrying both the BAR and SH3 domains, so no feature the claim depends on is missing. GOA already carries cytoplasm for this gene (InterPro2GO IEA, GO:0005737), together with the more specific actin cortical patch, so the claim is correct but not novel. The source hydrates Cytoplasm from GO:0031097 (medial cortex); exact medial distribution remains unresolved in this fungus but is unnecessary for the broad cytoplasmic inference. This SL claim is distinct from the separately emitted GO:0005737 record.
 
 ## Inspected evidence
 

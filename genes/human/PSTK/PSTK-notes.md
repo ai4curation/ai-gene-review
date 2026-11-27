@@ -98,3 +98,20 @@ PSTK and were not used.
 - No experimental subcellular-location line in UniProt; localization to cytosol is inferred
   from pathway/Reactome context, so cytosol is discussed here but not asserted as a
   verbatim-supported core-function location.
+
+## 2026-11-11 policy audit and completion
+
+- Cached abstracts now available: PMID:15317934 (Carlson 2004, mouse PSTK)
+  [PMID:15317934 "PSTK specifically phosphorylated the seryl moiety on seryl-tRNA"],
+  PMID:17142313 (Yuan 2006) [PMID:17142313 "In this two-step pathway, O-phosphoseryl-tRNA(Sec) kinase (PSTK) converts Ser-tRNA(Sec) to Sep-tRNA(Sec)."],
+  PMID:20705242 (Chiba 2010, archaeal PSTK-tRNA(Sec) structure, fetched this session)
+  [PMID:20705242 "The D-arm.CTD binding occurs independently of and much more strongly than the acceptor-arm.NTD binding."].
+  The earlier statement that these were not cached is superseded.
+- tRNA binding IBA: ACCEPT (specific D-arm recognition; reason no longer self-contradictory).
+- kinase activity IBA: MODIFY -> GO:0043915; propagation_review traces PTN000466790.
+- NEW GO:0001717 row: evidence recast as ISS from mouse PSTK (PMID:15317934); it previously
+  carried a GOA-style IEA/GO_REF:0000120 provenance that it does not have. Participation: PSTK
+  catalyses step 1 of the two-step conversion. Comparator: SEPSECS carries GO:0001717 (genes/human/SEPSECS).
+  GO:0016260 not added (not proposed for PSTK in the module; avoid over-annotation).
+- No CC annotations exist and none added: no experimental localization for PSTK in the record.
+- `just paint-losses human PSTK`: no IRD/IKR losses. Deep research unavailable offline.

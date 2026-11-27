@@ -13,7 +13,7 @@ Assessment: **CNN** (score 2). Budding yeast Rrp36 copurifies with early pre-rRN
 - [PMID:20038530](https://pubmed.ncbi.nlm.nih.gov/20038530/): "We show that the Rrp36p protein is nucleolar and interacts with 90S and pre-40S preribosomal particles. Its depletion affects early cleavages of the 35S pre-rRNA and results in a rapid decrease in mature 18S rRNA levels."
 ### Claim 2: involved in the maturation of rRNAs.
 
-Assessment: **CNN** (score 2). The demonstrated ortholog function is early small-subunit pre-rRNA maturation, supported across budding yeast and human cells. Existing GOA specifies the SSU precursor pathway. The plural wording must not be expanded into an independent requirement for all large-subunit rRNAs.
+Assessment: **LSP** (score 2). The demonstrated ortholog function is early small-subunit pre-rRNA maturation, supported across budding yeast and human cells. GOA for rrp36 already records the more specific maturation of SSU-rRNA from tricistronic rRNA transcript (GO:0000462), so generic rRNA maturation is correct but loses the small-subunit specificity. The plural wording must not be expanded into an independent requirement for all large-subunit rRNAs.
 
 - [PMID:20038530](https://pubmed.ncbi.nlm.nih.gov/20038530/): "We show that the Rrp36p protein is nucleolar and interacts with 90S and pre-40S preribosomal particles. Its depletion affects early cleavages of the 35S pre-rRNA and results in a rapid decrease in mature 18S rRNA levels."
 ### Claim 3: Required for early cleavages of the pre-RNAs in the 40S ribosomal subunit maturation pathway.

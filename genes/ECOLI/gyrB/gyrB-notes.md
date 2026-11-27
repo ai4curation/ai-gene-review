@@ -1,0 +1,13 @@
+# gyrB: maturation/topology annotation review
+
+## 2026-11-06
+
+GyrB P0AES6 is the 804-aa K-12 reference ATPase/TOPRIM subunit. Complete strand passage requires GyrA2GyrB2. The ATPase subreaction is experimentally distinguishable: [PMID:9756859 "Mutation of Glu42 to Ala in the B subunit of DNA gyrase abolishes ATP hydrolysis but not nucleotide binding."] PMID:6094559 demonstrates low intrinsic ATPase activity of isolated GyrB and strong stimulation by GyrA plus DNA. One conservative NEW IC molecular-function row captures this missing intrinsic activity, distinct from contributing to topoisomerase activity; these GO terms are not in an ancestor/descendant relationship in current QuickGO.
+
+DNA-binding evidence is primarily complex-level mutational evidence (PMID:10764756, PMID:20675723); it does not establish independent DNA binding by the isolated GyrB insertion. The latter paper uses a GyrBA fusion for structural analysis and separately tests deletion mutants, so its structure is not described as an untouched native full-length heterotetramer. The full enzyme's positive-supercoil relaxation and negative-supercoiling functions are retained without equating gyrase with the major native E. coli decatenase.
+
+Localization studies and MC4100 cytosolic proteomics support a soluble pool. Antibiotic binding and mutant effects are retained as non-core response context, not a normal detoxification function. Neither reconstructed enzyme assays nor inhibitor-fragment structures imply a measured rate for every K-12 laboratory strain.
+
+Provenance: seeded with the normal accession-aware fetch-gene workflow after confirming that no gene directory existed. The pristine machine rows and both raw-file hashes were frozen in `.cache/module-audit-logs/chromosomal-replication-20261106/maturation-topology/seeded-baseline.yaml` before editing. All raw files remain unchanged. Default Falcon research was attempted using `just deep-research ECOLI gyrB --provider falcon` and failed with HTTP 403; no provider report was fabricated. These are manual reviewer notes based on primary caches, curated UniProt statements and comparative publications. `just paint-losses ECOLI gyrB` reported no IRD/IKR loss on the lineage. Original annotation payloads and any inherited proposals are preserved; authored ATPase additions, where present, are counted separately. Focused gene validation and helper-scaffolded history validation are recorded in the audit logs.
+
+Construct/host check: PMID:20675723 expresses pLIC172-escoGyrBAfus in BL21-CodonPlus(DE3)-RIL and uses BL21-CodonPlus(DE3)-RIL or Arctic Express hosts for protein production. These are recombinant expression hosts, not evidence that the crystallized fusion is the native K-12 heterotetramer.

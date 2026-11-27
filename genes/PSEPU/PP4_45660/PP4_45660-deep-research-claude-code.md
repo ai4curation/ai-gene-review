@@ -1,0 +1,221 @@
+---
+provider: claude_code
+model: claude-haiku-5-5, claude-opus-5-5
+cached: false
+start_time: '2026-10-30T21:11:08.731996'
+end_time: '2026-10-30T21:16:17.071282'
+duration_seconds: 308.34
+template_file: templates/gene_research_go_focused.md
+template_variables:
+  organism: PSEPU
+  gene_id: PP4_45660
+  gene_symbol: PP4_45660
+  uniprot_accession: A0ABN5URH5
+  protein_description: 'RecName: Full=Membrane-anchored protein {ECO:0008006|Google:ProtNLM};'
+  gene_info: ORFNames=PP4_45660 {ECO:0000313|EMBL:BAN56419.1};
+  organism_full: Pseudomonas putida NBRC 14164.
+  protein_family: Not specified in UniProt
+  protein_domains: DUF3422. (IPR021830); DUF3422 (PF11902)
+provider_config:
+  timeout: 1800
+  max_retries: 3
+  parameters:
+    allowed_domains: []
+    claude_executable: claude
+    skip_permissions: false
+    allowed_tools:
+    - WebSearch
+    - WebFetch
+    add_dirs: []
+    timeout: 1800
+    min_report_chars: 200
+    extra_args: []
+run_metadata:
+  models_used:
+  - claude-haiku-5-5
+  - claude-opus-5-5
+  web_search_requests: 2
+  num_turns: 12
+  total_cost_usd: 0.7561915
+  session_id: 5f413761-1cb6-47d1-abba-5b3f49aca08a
+  stop_reason: end_turn
+  assistant_text_blocks: 2
+citation_count: 9
+---
+
+## Question
+
+# Gene Research for Functional Annotation
+
+## ⚠️ CRITICAL: Gene/Protein Identification Context
+
+**BEFORE YOU BEGIN RESEARCH:** You MUST verify you are researching the CORRECT gene/protein. Gene symbols can be ambiguous, especially for less well-characterized genes from non-model organisms.
+
+### Target Gene/Protein Identity (from UniProt):
+- **UniProt Accession:** A0ABN5URH5
+- **Protein Description:** RecName: Full=Membrane-anchored protein {ECO:0008006|Google:ProtNLM};
+- **Gene Information:** ORFNames=PP4_45660 {ECO:0000313|EMBL:BAN56419.1};
+- **Organism (full):** Pseudomonas putida NBRC 14164.
+- **Protein Family:** Not specified in UniProt
+- **Key Domains:** DUF3422. (IPR021830); DUF3422 (PF11902)
+
+### MANDATORY VERIFICATION STEPS:
+
+1. **Check if the gene symbol "PP4_45660" matches the protein description above**
+2. **Verify the organism is correct:** Pseudomonas putida NBRC 14164.
+3. **Check if protein family/domains align with what you find in literature**
+4. **If you find literature for a DIFFERENT gene with the same or similar symbol, STOP**
+
+### If Gene Symbol is Ambiguous or You Cannot Find Relevant Literature:
+
+**DO NOT PROCEED WITH RESEARCH ON A DIFFERENT GENE.** Instead:
+- State clearly: "The gene symbol 'PP4_45660' is ambiguous or literature is limited for this specific protein"
+- Explain what you found (e.g., "Found extensive literature on a different gene with the same symbol in a different organism")
+- Describe the protein based ONLY on the UniProt information provided above
+- Suggest that the protein function can be inferred from domain/family information
+
+### Research Target:
+
+Please provide a comprehensive research report on the gene **PP4_45660** (gene ID: PP4_45660, UniProt: A0ABN5URH5) in PSEPU.
+
+The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.
+
+You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.
+
+We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.
+
+We are interested in where in or outside the cell the gene product carries out its function.
+
+We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.
+
+Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
+
+## Output
+
+Neighborhood mapped; now checking homologs in other Pseudomonas via UniRef clusters.
+
+# PP4_45660 (UniProt A0ABN5URH5), *Pseudomonas putida* NBRC 14164: a DUF3422 membrane protein of unknown function
+
+## 1. Identity check
+
+| Attribute | Value | Source |
+|---|---|---|
+| Accession | A0ABN5URH5 (TrEMBL, unreviewed; integrated 8 Oct 2025) | local `PP4_45660-uniprot.txt` |
+| Locus / RefSeq | PP4_45660; EMBL BAN56419.1; WP_016501524.1; chromosome NC_021505.1 | UniProt DR lines |
+| Organism | *P. putida* NBRC 14164 (type strain), TaxID 1211579 | UniProt OS/OX |
+| Length | 405 aa, 44.9 kDa | UniProt SQ |
+| Name | "Membrane-anchored protein". The name was generated by ProtNLM (ECO:0008006), so it is a machine prediction, not curation. | UniProt DE |
+| Protein existence | PE 4, "Predicted" | UniProt PE |
+| Domain | DUF3422 (Pfam PF11902 / InterPro IPR021830), residues 2–401, covering almost the whole protein | InterPro API |
+| GO annotations in GOA | None (the GOA file has only a header row) | local `PP4_45660-goa.tsv` |
+
+**Identity verdict.** "PP4_45660" is a locus tag, not a gene symbol, so there is no ambiguity about which gene this is. **No publication describes this protein or any member of the DUF3422 family.** The only paper attached to the entry is the genome announcement (Ohji et al. 2014, *Genome Announc.* 2:e00029-14, PMID:24526630), which reports sequencing only. Web searches for "DUF3422" and "PF11902" returned no literature on the family ([NCBI CDD search result](https://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid=463390), [CNGB DUF entries](https://db.cngb.org/data_resources/protein/A0A520TQA6)). Everything below therefore comes from domain, sequence and genome-context inference. None of it is experimental.
+
+## 2. What the family tells us
+
+- **Pfam/InterPro description (PF11902, IPR021830):** "This family of proteins are functionally uncharacterised. This protein is found in bacteria, archaea and eukaryotes. Proteins in this family are typically between 426 to 444 amino acids in length." ([InterPro PF11902](https://www.ebi.ac.uk/interpro/entry/pfam/PF11902/), retrieved 2026-10-30.)
+- **Family size and spread (InterPro API, 2026-10-30):**
+  - 2,677 proteins in 2,520 proteomes.
+  - 2,655 bacterial, 21 eukaryotic and 1 archaeal.
+  - Of the bacterial members, 2,620 are Pseudomonadota: about 1,488 Alphaproteobacteria, about 595 Betaproteobacteria and about 530 Gammaproteobacteria.
+  - Bacillota, Bacteroidota and Cyanobacteria have none.
+  - The family is essentially a Pseudomonadota family; the few eukaryotic hits are probably contamination or horizontal transfer.
+- **Domain architecture:** InterPro records only 3 architectures. In this protein the DUF3422 match spans the whole sequence, so the protein is a single-domain family member, not a fusion.
+- **No structures, no curated members:**
+  - No experimental structures exist.
+  - No Swiss-Prot (reviewed) entry carries PF11902.
+  - InterPro lists 0 pathways and 0 interactions for the family.
+  - AlphaFold models exist for about 1,753 members.
+
+## 3. Sequence features and predicted location
+
+- **Two transmembrane helices at the C-terminus:** residues 348–368 and 380–399, predicted by Phobius (ECO:0000256|SAM:Phobius). They are separated by a loop of about 11 residues.
+- **No N-terminal signal peptide or TM segment.** Residues 1–347 form a long soluble region.
+- **Predicted topology (my inference):**
+  - A hairpin of two TM helices places the N- and C-termini on the same side of the membrane.
+  - The C-terminal tail (…LRIKQAKQH) is basic, and the positive-inside rule puts it in the cytoplasm.
+  - So the most likely topology is a large N-terminal domain facing the cytoplasm, anchored in the inner membrane by a C-terminal helical hairpin.
+- **Likely coiled-coil or helical bundle:** residues about 285–345 (…EQRLEQLAKNVANLGDLLQARVQVEMEEQNAEILSSLNARADAQVKIQRAV…) have a heptad-like pattern of charged and hydrophobic residues. This suggests a helical-bundle or coiled-coil region just before the membrane anchor. It is visual inspection only, not a formal Coils prediction.
+- **Possible metal-binding motif:** a Cys/Gly-rich segment near residues 130–140 (KDPCGSCVGGG) could be a small metal-binding or redox motif. It is unvalidated.
+
+**Probable location:** cytoplasmic (inner) membrane, with the functional domain on the cytoplasmic face. This rests on the Phobius prediction plus topology reasoning. No experimental localization exists.
+
+## 4. Orthologs and conservation
+
+- **No DUF3422 protein in the model strains** *P. putida* KT2440 (taxon 160488), *P. aeruginosa* PAO1 (208964) or *E. coli* K-12 (83333). A UniProt query for Pfam PF11902 in these proteomes returned nothing. So there is no well-studied ortholog to borrow annotation from, and this locus is part of the accessory genome of the *P. putida* group.
+- **UniRef90 cluster (UniRef90_A0A383S1L1, 39 members):**
+  - Almost all members are from *P. putida*-group species: *P. reidholzensis*, *P. alloputida*, *P. monteilii*, *P. plecoglossicida*, *P. asiatica*, *P. taiwanensis*, *P. hunanensis*, *P. capeferrum* and others.
+- **UniRef50 cluster (UniRef50_W8WYP6, 180 members):**
+  - Members come mostly from *Pseudomonas* (*P. fluorescens*, *P. corrugata*, *P. brassicacearum*, *P. chlororaphis* group).
+  - It also includes Betaproteobacteria of the genus *Castellaniella* (*C. defragrans*, *C. denitrificans*, *C. ginsengisoli*).
+- **Misleading names to ignore:**
+  - Some cluster members are named "Egg lysin" or "Lysin".
+  - These are automated name-transfer artifacts. Egg lysin is a mollusc sperm protein, and nothing links it to a bacterial membrane protein with two C-terminal TM helices.
+
+## 5. Genomic context (KEGG ppun, chromosome positions)
+
+| Locus | Strand | Annotation |
+|---|---|---|
+| PP4_45600 | − | KefB, glutathione-regulated K⁺-efflux system |
+| PP4_45610 | − | Polyphosphate kinase PPK2 |
+| PP4_45620 | − | Isochorismatase-family protein |
+| PP4_45630 | + | SnoaL-like / DUF4440 protein |
+| PP4_45640 | + | NCS1 family purine/cytosine transporter (Transp_cyt_pur) |
+| PP4_45650 | + | Betaine-aldehyde dehydrogenase family protein (K00130; 5,178,042–5,179,472) |
+| **PP4_45660** | **+** | **DUF3422 (5,179,671–5,180,888)** |
+| PP4_45670 | − | K⁺-dependent mechanosensitive channel (MscK/KefA family) |
+| PP4_45680 | − | Ada, AraC-family regulator / O⁶-methylguanine methyltransferase |
+| PP4_45690 | − | AlkA, DNA-3-methyladenine glycosylase II |
+| PP4_45700–45710 | + | ECF sigma factor + FecR-type transmembrane sensor |
+
+**Interpretation:**
+- PP4_45660 sits on the same strand as the transporter (PP4_45640) and aldehyde dehydrogenase (PP4_45650) genes, 199 bp downstream of PP4_45650. It could be co-transcribed with them, which would hint at a role in transport or catabolism of the NCS1 substrate. The intergenic gap is large enough for its own promoter, so this is weak evidence.
+- It is divergent from the *mscK*-like gene (PP4_45670) and the *ada–alkA* DNA-repair genes. Those are unlikely to be functionally linked.
+- KEGG's motif list also shows a weak hit to RseC_MucC, a family of small inner-membrane proteins in σE/AlgU regulation and SoxR reduction. The hit is probably low-scoring and should not be read as homology without checking.
+
+## 6. Synthesis: what can and cannot be said
+
+| Question | Best current answer | Confidence |
+|---|---|---|
+| Molecular function / catalysis | Unknown. No catalytic motifs are recognized; the family is uncharacterized. | — |
+| Substrate (if transporter) | Unknown. Two TM helices are too few for a typical transporter, so it is more likely a membrane-anchored soluble domain than a channel or carrier. | Low–moderate |
+| Location | Integral to the cytoplasmic membrane, with a large N-terminal domain probably in the cytoplasm. | Moderate (prediction only) |
+| Pathway | Not established. Gene neighborhood weakly suggests a link to the adjacent NCS1 transporter / aldehyde dehydrogenase cluster. | Low |
+| Taxonomic scope | Pseudomonadota-specific family; accessory in *P. putida* (absent from KT2440). | High |
+
+**Implications for GO annotation:**
+- No molecular function or biological process term is justified.
+- The only defensible annotation is a cellular-component term such as **membrane (GO:0016020)**, or possibly **plasma membrane (GO:0005886)**, inferred from the TM predictions (ISM/IEA-level).
+- The ProtNLM name "Membrane-anchored protein" is consistent with the TM topology but adds no functional information.
+- The "Egg lysin" names in related entries should be treated as erroneous.
+
+## 7. Suggested experiments
+
+1. **Membrane fractionation and topology:**
+   - Fractionate cells to confirm the protein is in the inner membrane.
+   - Map topology with PhoA/LacZ or GFP fusions to test the cytoplasmic N-terminus prediction.
+2. **Transcriptional coupling:** RT-PCR across the PP4_45650–PP4_45660 junction to test co-transcription with the transporter and aldehyde dehydrogenase genes, plus induction tests with candidate NCS1 substrates (purines, cytosine, hydantoins).
+3. **Mutant phenotyping:** knock out the gene and run Biolog or fitness assays in NBRC 14164 or a related *P. putida*-group strain. Accessory-genome fitness data (e.g., Fitness Browser strains of *P. fluorescens*) may already exist for orthologs.
+4. **Structure:** analyze AlphaFold models of the N-terminal region (about residues 1–345) to look for a recognizable fold or a conserved pocket, and test the Cys-rich KDPCGSC motif for metal binding.
+
+## 8. Sources
+
+- UniProtKB A0ABN5URH5 record (local `genes/PSEPU/PP4_45660/PP4_45660-uniprot.txt`; entry version 3, 10 Jun 2026); https://www.uniprot.org/uniprotkb/A0ABN5URH5
+- Ohji S. et al. (2014) "The Complete Genome Sequence of *Pseudomonas putida* NBRC 14164T Confirms High Intraspecies Variation." *Genome Announc.* 2:e00029-14. PMID:24526630; doi:10.1128/genomea.00029-14
+- InterPro/Pfam PF11902 DUF3422 (family description, counts, taxonomy), accessed 2026-10-30: https://www.ebi.ac.uk/interpro/entry/pfam/PF11902/
+- UniRef90_A0A383S1L1 and UniRef50_W8WYP6 clusters, accessed 2026-10-30: https://www.uniprot.org/uniref/UniRef50_W8WYP6
+- KEGG GENES, *P. putida* NBRC 14164 (ppun) loci PP4_45600–PP4_45720, accessed 2026-10-30: https://www.kegg.jp/entry/ppun:PP4_45660
+- Web searches that found no DUF3422 literature: [NCBI CDD](https://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid=463390), [NCBI CDD pfam11880](https://www.ncbi.nlm.nih.gov/Structure/cdd/pfam11880), [CNGB DUF3429 entry](https://db.cngb.org/data_resources/protein/A0A520TQA6), [CNGB DUF423 entry](https://db.cngb.org/data_resources/protein/A0A2E2ZKD6), [NCBI CDD cl19878](https://www.ncbi.nlm.nih.gov/Structure/cdd/cl19878)
+
+## Citations
+
+1. https://www.ncbi.nlm.nih.gov/Structure/cdd/cddsrv.cgi?uid=463390
+2. https://db.cngb.org/data_resources/protein/A0A520TQA6
+3. https://www.ebi.ac.uk/interpro/entry/pfam/PF11902/
+4. https://www.uniprot.org/uniprotkb/A0ABN5URH5
+5. https://www.uniprot.org/uniref/UniRef50_W8WYP6
+6. https://www.kegg.jp/entry/ppun:PP4_45660
+7. https://www.ncbi.nlm.nih.gov/Structure/cdd/pfam11880
+8. https://db.cngb.org/data_resources/protein/A0A2E2ZKD6
+9. https://www.ncbi.nlm.nih.gov/Structure/cdd/cl19878

@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/L2Sufj4t2uzGbunSeHsxvK
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Ad-Hoc Bioinformatics Analysis Project

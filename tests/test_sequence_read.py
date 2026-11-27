@@ -1,0 +1,356 @@
+"""Tests for the optional sequence-only read (ai_gene_review.sequence_read).
+
+No model is called: the CLI tests point ``--claude-bin`` at a stub that answers
+the two prompts deterministically from the sequence it is given.
+"""
+
+import json
+import re
+import shutil
+from pathlib import Path
+
+import pytest
+from typer.testing import CliRunner
+
+from ai_gene_review.cli import app
+from ai_gene_review.sequence_read import core
+
+PTEN_UNIPROT = Path("genes/human/PTEN/PTEN-uniprot.txt")
+STUB = Path("tests/input/sequence_read/stub_claude.py").resolve()
+# Rich colours and wraps error panels to the terminal width, which differs on CI.
+PLAIN = {"NO_COLOR": "1", "TERM": "dumb", "COLUMNS": "400"}
+
+
+def plain(text: str) -> str:
+    """Error output with ANSI codes, panel borders and line breaks removed."""
+    text = re.sub(r"\x1b\[[0-9;]*m", "", text)
+    return " ".join(text.replace("│", " ").split())
+
+
+@pytest.fixture
+def pten() -> core.ProteinRecord:
+    return core.read_uniprot(PTEN_UNIPROT)
+
+
+@pytest.fixture
+def genes_root(tmp_path: Path, pten: core.ProteinRecord, monkeypatch) -> Path:
+    d = tmp_path / "human" / "PTEN"
+    d.mkdir(parents=True)
+    shutil.copy(PTEN_UNIPROT, d / "PTEN-uniprot.txt")
+    monkeypatch.setenv("SEQREAD_STUB_REAL", pten.sequence)
+    return tmp_path
+
+
+def test_prompts_are_fs2f_verbatim():
+    """The prompts must stay identical to the benchmarked ones (fs2f @ 442bd92)."""
+    # SHA-256 of the string P in experiments/features/ask.py and experiments/pseudo/ask.py,
+    # computed from those files in a checkout of fable-sequence-to-function at 442bd92
+    # (not from this module), so a match shows the constants are that text verbatim.
+    assert (
+        core.sha256(core.FEAT_PROMPT)
+        == "b03b98845ad2ebd1e169fb60b413fee9c5ab657df3087b046ae444f81243661e"
+    )
+    assert (
+        core.sha256(core.PSEUDO_PROMPT)
+        == "bfad171fd98e297ef954bca9cedda4e005c462f0e026188ee9f26fd666b57fe5"
+    )
+
+
+def test_choose_probe_targets_active_site_and_avoids_sites(pten: core.ProteinRecord):
+    wt = {
+        "enzyme_family": "protein tyrosine phosphatase",
+        "catalytic_residues": [
+            {"role": "nucleophile", "residue": "C", "position": 124}
+        ],
+        "substituted_or_missing": [],
+    }
+    probe, why = core.choose_probe(pten, wt)
+    assert probe is not None, why
+    assert (probe.target_position, probe.target_residue, probe.new_residue) == (
+        124,
+        "C",
+        "A",
+    )
+    assert probe.target_source == "UniProt ACT_SITE"
+    assert probe.decoy_position is not None
+    assert pten.sequence[probe.decoy_position - 1] == "C"
+    sites = [
+        p for f in pten.of_type(*core.SITE_FEATURES) for p in range(f.start, f.end + 1)
+    ]
+    assert all(abs(probe.decoy_position - p) > core.DECOY_MARGIN for p in sites)
+    # deterministic
+    assert core.choose_probe(pten, wt)[0] == probe
+
+
+def test_choose_probe_uses_model_residue_only_if_present(pten: core.ProteinRecord):
+    no_site = core.ProteinRecord(
+        accession="X", sequence=pten.sequence, crc64="", sequence_version=1
+    )
+    wrong = {
+        "enzyme_family": "x",
+        "catalytic_residues": [{"residue": "H", "position": 124}],
+    }
+    assert core.choose_probe(no_site, wrong)[0] is None
+    right = {
+        "enzyme_family": "x",
+        "catalytic_residues": [{"residue": "C", "position": 124}],
+    }
+    probe = core.choose_probe(no_site, right)[0]
+    assert probe is not None and probe.target_source.startswith("residue named")
+
+
+@pytest.mark.parametrize(
+    "wt,mut,decoy,mrep,drep,verdict",
+    [
+        ("yes", "no", "yes", True, False, "TRACKS_CATALYTIC_RESIDUE"),
+        ("yes", "yes", "yes", True, False, "REPORTS_BUT_NOT_INACTIVE"),
+        ("yes", "uncertain", "yes", True, False, "REPORTS_BUT_NOT_INACTIVE"),
+        ("yes", "no", "no", True, False, "REJECTS_ANY_CHANGE"),
+        ("yes", "yes", "yes", False, False, "INSENSITIVE"),
+        ("no", "no", "no", False, False, "WILD_TYPE_NOT_CALLED_ACTIVE"),
+        ("yes", None, "yes", False, False, "INCOMPLETE"),
+    ],
+)
+def test_probe_verdict(wt, mut, decoy, mrep, drep, verdict):
+    assert core.probe_verdict(wt, mut, decoy, mrep, drep) == verdict
+
+
+def test_cli_run_with_stub(genes_root: Path):
+    runner = CliRunner()
+    args = [
+        "sequence-read",
+        "run",
+        "human",
+        "PTEN",
+        "--claude-bin",
+        str(STUB),
+        "--no-interpro",
+        "--model",
+        "stub-model",
+        "--genes-root",
+        str(genes_root),
+    ]
+    res = runner.invoke(app, args)
+    assert res.exit_code == 0, res.output
+    out = genes_root / "human/PTEN/PTEN-bioinformatics/sequence-read"
+    doc = json.loads((out / "stub-model-high.json").read_text())
+    conds = sorted(c["condition"] for c in doc["calls"])
+    assert conds == ["catalytic_mutant", "decoy", "real", "shuffled", "wild_type"]
+    assert all(core.usable(c) for c in doc["calls"])
+    assert doc["checks"]["shuffled"]["pfam_domains"] == 0
+    assert doc["checks"]["features"]["pfam"][0]["verdict"] == "IN_UNIPROT"
+    assert doc["checks"]["probe"]["target"] == "C124A"
+    assert doc["checks"]["probe"]["verdict"] == "TRACKS_CATALYTIC_RESIDUE"
+    act = doc["checks"]["activity"]["catalytic_residues"][0]
+    assert act["present_in_sequence"] and act["uniprot"] == "ACT_SITE"
+    results = (out / "RESULTS.md").read_text()
+    assert "**Not literature evidence.**" in results
+    assert "- Probe verdict: TRACKS_CATALYTIC_RESIDUE" in results
+    # A second run for the same model and effort is refused without --force.
+    again = runner.invoke(app, args, env=PLAIN)
+    assert again.exit_code != 0
+    assert "pass --force to replace it" in plain(again.output)
+    # render alone needs no model
+    res = runner.invoke(
+        app,
+        ["sequence-read", "render", "human", "PTEN", "--genes-root", str(genes_root)],
+    )
+    assert res.exit_code == 0, res.output
+
+
+def test_cli_run_requires_uniprot_file(tmp_path: Path):
+    res = CliRunner().invoke(
+        app,
+        ["sequence-read", "run", "human", "NOPE", "--genes-root", str(tmp_path)],
+        env=PLAIN,
+    )
+    assert res.exit_code != 0
+    assert "just fetch-gene human NOPE" in plain(res.output)
+
+
+def test_choose_probe_prefers_acidic_binding_residue():
+    """With no ACT_SITE (ADPRH), an acidic UniProt BINDING residue beats list order."""
+    adprh = core.read_uniprot(Path("genes/human/ADPRH/ADPRH-uniprot.txt"))
+    assert not adprh.of_type("ACT_SITE")
+    wt = {
+        "enzyme_family": "ADP-ribosylhydrolase",
+        "catalytic_residues": [
+            {"role": "Mg2+ coordination", "residue": "S", "position": 54},
+            {"role": "Mg2+ coordination", "residue": "D", "position": 55},
+        ],
+    }
+    probe = core.choose_probe(adprh, wt)[0]
+    assert probe is not None
+    assert probe.label(probe.target_position) == "D55A"
+
+
+# peptalk-llm 0.1.0 records for PTEN (wild type, shuffled control, C124A, decoy C83A),
+# produced by its stub provider from `sequence-read blind-fasta` output; the stub's
+# empty answers were replaced by fixed ones so the checks have something to score,
+# and each carries a passed input_tokens_match check (the stub run used
+# --no-verify-input; a live run adds the check).
+PEPTALK_STUB = Path("tests/input/sequence_read/peptalk-stub-PTEN.jsonl").resolve()
+
+
+def test_blind_fasta_and_import_peptalk(genes_root: Path):
+    runner = CliRunner()
+    res = runner.invoke(
+        app,
+        [
+            "sequence-read",
+            "blind-fasta",
+            "human",
+            "PTEN",
+            "--genes-root",
+            str(genes_root),
+        ],
+    )
+    assert res.exit_code == 0, res.output
+    out = genes_root / "human/PTEN/PTEN-bioinformatics/sequence-read"
+    names = [
+        line
+        for line in (out / "PTEN-probe.fasta").read_text().splitlines()
+        if line.startswith(">")
+    ]
+    assert names == [">P60484.catalytic_mutant.C124A", ">P60484.decoy.C83A"]
+    res = runner.invoke(
+        app,
+        [
+            "sequence-read",
+            "import-peptalk",
+            "human",
+            "PTEN",
+            str(PEPTALK_STUB),
+            "--no-interpro",
+            "--genes-root",
+            str(genes_root),
+        ],
+    )
+    assert res.exit_code == 0, res.output
+    doc = json.loads((out / "claude-fable-5-2-high-peptalk-blind.json").read_text())
+    assert doc["route"].startswith("peptalk-llm 0.1.0")
+    assert sorted(c["condition"] for c in doc["calls"]) == [
+        "catalytic_mutant",
+        "decoy",
+        "real",
+        "shuffled",
+        "shuffled",
+        "wild_type",
+    ]
+    assert doc["checks"]["probe"]["verdict"] == "TRACKS_CATALYTIC_RESIDUE"
+    results = (out / "RESULTS.md").read_text()
+    assert "blind control via peptalk" in results
+    # the shuffled copy is also asked the activity question, and scored
+    assert "catalytically_active" in doc["checks"]["shuffled_activity"]
+    assert "Shuffled sequence, PSEUDO prompt:" in results
+    assert "input verified blind: yes" in results
+    assert "- Probe verdict: TRACKS_CATALYTIC_RESIDUE" in results
+
+
+@pytest.mark.parametrize(
+    "field,value,message",
+    [
+        ("context", "organism", "needs --context blind"),
+        ("prompt_sha256", "0" * 64, "not the fs2f features prompt verbatim"),
+    ],
+)
+def test_import_peptalk_rejects_non_blind_records(pten, field, value, message):
+    from ai_gene_review.sequence_read import peptalk
+
+    rows = peptalk.read_jsonl([PEPTALK_STUB])
+    rows[0][field] = value
+    with pytest.raises(ValueError, match=message):
+        peptalk.import_records(pten, rows, None)
+
+
+def test_residues_command_writes_checked_lines(genes_root: Path):
+    res = CliRunner().invoke(
+        app,
+        [
+            "sequence-read",
+            "residues",
+            "human",
+            "PTEN",
+            "C124",
+            "H93",
+            "--note",
+            "P-loop nucleophile",
+            "--write",
+            "--genes-root",
+            str(genes_root),
+        ],
+    )
+    assert res.exit_code == 0, res.output
+    text = (
+        genes_root / "human/PTEN/PTEN-bioinformatics/sequence-read/residue-checks.md"
+    ).read_text()
+    assert "claimed C: matches the sequence" in text
+    assert "claimed H: matches the sequence" in text
+    assert ": P-loop nucleophile" in text
+
+
+@pytest.mark.parametrize(
+    "check,usable,flag",
+    [
+        ({"name": "input_tokens_match", "passed": True, "detail": ""}, True, None),
+        (
+            {"name": "input_tokens_match", "passed": False, "detail": ""},
+            False,
+            "context_tokens_high",
+        ),
+        (None, False, "context_unverified"),
+    ],
+)
+def test_import_peptalk_requires_verified_blind_input(pten, check, usable, flag):
+    """An absent input check means not verified, never verified clean."""
+    from ai_gene_review.sequence_read import peptalk
+
+    rows = peptalk.read_jsonl([PEPTALK_STUB])
+    for r in rows:
+        r["checks"] = [c for c in r["checks"] if c["name"] != "input_tokens_match"]
+        if check is not None:
+            r["checks"].append(check)
+    body = peptalk.import_records(pten, rows, None)[0]
+    assert all(core.usable(c) == usable for c in body["calls"])
+    if flag:
+        assert all(c[flag] for c in body["calls"])
+
+
+def test_import_peptalk_probe_comes_from_record_names(pten):
+    """The probe label and its source come from the imported names, checked against the rule."""
+    from ai_gene_review.sequence_read import peptalk
+
+    rows = peptalk.read_jsonl([PEPTALK_STUB])
+    probe = peptalk.import_records(pten, rows, None)[0]["checks"]["probe"]
+    assert (probe["target"], probe["target_source"], probe["decoy"]) == (
+        "C124A",
+        "UniProt ACT_SITE",
+        "C83A",
+    )
+    for r in rows:  # a decoy that the decoy rule would not have drawn
+        if ".decoy." in r["id"]:
+            r["id"] = r["id"].replace("C83A", "C71A")
+            r["sequence"] = core.substitute(pten.sequence, 71, "A")
+            r["prompt_sha256"] = core.sha256(
+                core.PSEUDO_PROMPT + core.fasta(r["sequence"])
+            )
+    with pytest.raises(ValueError, match="not the one the decoy rule gives"):
+        peptalk.import_records(pten, rows, None)
+
+
+def test_residues_command_exits_nonzero_on_mismatch(genes_root: Path):
+    res = CliRunner().invoke(
+        app,
+        [
+            "sequence-read",
+            "residues",
+            "human",
+            "PTEN",
+            "H124",
+            "--genes-root",
+            str(genes_root),
+        ],
+        env=PLAIN,
+    )
+    assert res.exit_code == 1
+    assert "DOES NOT match the sequence" in plain(res.output)

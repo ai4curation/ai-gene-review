@@ -1,5 +1,7 @@
 """Tests for module HTML rendering."""
 
+import re
+
 from ai_gene_review.render_modules import (
     collect_anchor_map,
     collect_module_stats,
@@ -210,6 +212,19 @@ def test_render_modules_index_table_lists_all_modules(tmp_path):
         modules_dir / "test.yaml",
         output_dir / "test.html",
         index_path,
+        qc={
+            "leaf_nodes_missing_representatives": [],
+            "intentionally_ungrounded_leaf_nodes": [
+                {
+                    "id": "distributed_step",
+                    "label": "Distributed step",
+                    "annoton_count": 1,
+                    "selector_types": ["ANY_WITH_FUNCTION"],
+                }
+            ],
+            "gene_reviews": {"with_review": 0, "total_genes": 0},
+            "module_deep_research": {"has_deep_research": False},
+        },
     )
 
     render_modules_index([summary], output_dir=output_dir)
@@ -223,6 +238,12 @@ def test_render_modules_index_table_lists_all_modules(tmp_path):
     assert str(len(summary["ptn_ids"])) in html
     # Concepts derived from the module document appear.
     assert "test pathway" in html
+    assert "Open&nbsp;leaves" in html
+    assert re.search(
+        r'<td class="num" data-sort-value="0">\s*0\s*</td>\s*'
+        r'<td class="num" data-sort-value="1">\s*1\s*</td>',
+        html,
+    )
 
 
 def test_render_modules_index_collapses_long_descriptions(tmp_path):

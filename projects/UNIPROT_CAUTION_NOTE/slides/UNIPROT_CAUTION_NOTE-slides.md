@@ -37,7 +37,7 @@ Using curators' written warnings to find over-annotated GO functions
 ## Bottom line
 
 - **14,830 CAUTION notes** on 14,513 reviewed UniProt entries; **7,219** flag contested, reclassified, pseudoenzyme, retracted or artifact functions.
-- Two queries turn them into GO flags. Locally, strong flags matched curators' actions **8 of 11** times; UniProt-wide they **rediscovered known pseudoenzymes**.
+- Two frozen Query A/B snapshots turn them into GO flags. Locally, strong flags matched curators' actions **8 of 11** times; UniProt-wide they **rediscovered known pseudoenzymes**.
 - **13 human genes reviewed**; nine pseudoenzymes (CRMP family, ILK, ROR1, CASP12, AZIN2) each had an inferred catalytic row removed.
 
 ---
@@ -66,7 +66,7 @@ Using curators' written warnings to find over-annotated GO functions
 ## Query B: the CAUTION paper, cited positively
 
 - A CAUTION cites a PMID; GO uses the **same PMID** for a positive annotation, with no `NOT` from it.
-- 69 flags / 39 local genes; 1,140 UniProt-wide.
+- Frozen counts: 68 flags / 38 local genes; 1,140 UniProt-wide.
 - Real catches: **CHMP1A** metallopeptidase from a mistranslated ORF (REMOVE); **ENDOU** serine peptidase from a refuted paper; **HDAC6** histone deacetylase.
 - Over-flags: a paper makes several claims and only one is doubted. Needs activity-level matching, not PMID matching.
 
@@ -77,7 +77,7 @@ Using curators' written warnings to find over-annotated GO functions
 | Gene | Removed inferred catalytic term | Real core role |
 |---|---|---|
 | DPYSL2/3, CRMP1, DPYSL5 | hydrolase activity (IEA) | cytoskeletal regulators, semaphorin signalling |
-| DPYSL4 | cyclic-amide hydrolase (IBA); hydrolase UNDECIDED | same family |
+| DPYSL4 | cyclic-amide hydrolase (IBA); hydrolase parents UNDECIDED | same family |
 | ILK | protein kinase activity | IPP-complex scaffold |
 | ROR1 | protein kinase activity | Wnt coreceptor |
 | CASP12 | cysteine-type peptidase activity | inflammasome modulator |

@@ -120,3 +120,39 @@ Checks performed:
 - Left alone (conservative): all EXP/IDA/IMP experimental annotations retained per their
   authors; no REMOVE issued; no existing-annotation term ids rewritten.
 </content>
+
+
+## Evidence reassessment — 2026-11-04
+
+The preceding journal is preserved verbatim as historical work. The current assessment reviews all 37 original contexts, including the thirteen distinct interaction partners that were previously summarized by one stored row. Current decisions and selected source locators are in the [source guide](GATM-source-guide.md).
+
+GATM performs the entry reaction of creatine synthesis. Purified human kidney enzyme supports dimer formation [PMID:3800397 "transamidinase is a dimer"]. Broader acceptor activity is retained within one catalytic synthesis, with the experimental readout and limits stated in the current reference assessment rather than treating side reactions as established physiological programs.
+
+The natural products and engineered proteins are distinguished in the current product descriptions. The older journal's “mature numbering” for Cys407 should be read as canonical precursor numbering. A missing targeting segment does not by itself establish cytoplasmic localization, and a changed catalytic region does not establish measured inactivity.
+
+The primary clinical paper includes actual cognitive assessments and biopsy atrophy. Learning or memory is therefore retained as a contextual function; atrophy remains a consequence of deficiency rather than a process performed by GATM. The thermogenesis interpretation separates the cold endpoint from the adrenergic rescue experiment and uses the verified directional erratum.
+
+Original target tables support the interaction and urinary-vesicle observations. Four binding partners permit informative class refinements; nine positive pairs remain uninformative generic binding assertions. The MitoCoP record includes GATM through literature rather than a new target proteomics measurement. These distinctions preserve positive observations without assigning unmeasured mechanisms.
+
+All fifteen inherited quote associations remain historical and traceable through the preserved review and Git locators. The three newly selected literal anchors are short and centralized; repeated quotations are not needed for source-linked support. Genuine native refresh matched all 37 contexts and three products without reseeding. All 35 source records are now present, including 14 missing-only acquisitions and 21 unchanged sources. Reference titles and the three short anchors match exactly. A genuine EDIT record documents this update. Default validation and strict GOA matching passed with zero annotation advisories; native status computation sets COMPLETE. The initial report-only status mismatch is retained as a diagnostic. All 35 source bytes and the ontology cache remain unchanged.
+
+
+## 2026-11-04 — Review follow-up
+
+Formal cognitive testing is retained as a genuine AGAT-deficiency phenotype, while the learning/memory assertion is marked over-annotated because precursor synthesis does not itself perform information processing. Cytoplasm remains non-core with the explicit product-2 database context and its unresolved experimental basis. The broad enzyme parents are refined to the established glycine reaction; wider in-vitro acceptor chemistry remains documented.
+
+Short exact cache excerpts now accompany the experimental claims. The four binding refinements cite the actual partner records as well as the interaction paper, without assigning partner activities or claiming orthogonal validation. The positive urinary-vesicle identification supports the non-core location independently of any extracellular enzymatic role. The description restores catalytic mechanism, expression and both recessive deficiency and dominant renal aggregation disease. See the [source guide](GATM-source-guide.md) for selected-source access and the [review](GATM-ai-review.yaml) for the evidence-linked reasons. All existing normal source bytes, original contexts, product sequences and previous journal text are preserved.
+
+Native amendment outcome: Default validation, strict GOA matching, computed-status audit, genuine EDIT history validation and private rendering pass. Computed review status remains COMPLETE, with zero annotation advisories. The only diagnostic is a dependency deprecation notice. All 35 normal source objects and the ontology cache remain unchanged.
+
+
+## 2026-11-04: measured secondary acceptor breadth
+
+The experimental broad amidinotransferase annotation is retained as non-core to keep its measured non-glycine chemistry machine-readable. This supersedes the prior refinement of that IDA row; the family-based refinement and single physiological core remain ([PMID:36543883](https://pubmed.ncbi.nlm.nih.gov/36543883/), [source guide](GATM-source-guide.md)).
+
+The native result is DRAFT with one retained consistency advisory; the source-specific activity distinction is intentional. The [source guide](GATM-source-guide.md) records the checked outcome.
+
+
+## 2026-11-04: broad activity retained across both source contexts
+
+Independent human acceptor assays make the broad amidinotransferase term informative beyond glycine-specific catalysis. Both existing parent assertions are now non-core; this supersedes the earlier InterPro refinement and its source-specific action distinction. The family mapping alone does not establish the complete substrate range, and the single physiological core is unchanged ([PMID:36543883](https://pubmed.ncbi.nlm.nih.gov/36543883/), [source guide](GATM-source-guide.md)).

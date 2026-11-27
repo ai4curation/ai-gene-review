@@ -4,6 +4,28 @@ UniProt: P00367 (DHE3_HUMAN). HGNC:4335. Gene: GLUD1 (Synonym GLUD). 558 aa prec
 with an N-terminal mitochondrial transit peptide (residues 1..53); mature chain 54..558.
 EC 1.4.1.3.
 
+Deep research: `GLUD1-deep-research-falcon.md` is committed and was checked against this review on
+2026-10-11. It agrees on the core annotation (a mitochondrial-matrix NAD(P)-dependent L-glutamate
+dehydrogenase, EC 1.4.1.3, a homohexamer of two trimers with an antenna and pivot helix, GTP
+inhibiting and ADP activating, leucine activating) and adds four points worth recording:
+
+- It is explicit that leucine stimulates the enzyme but is not the amino acid converted, and that
+  glutamine supplies glutamate only after an upstream glutaminase reaction. GLUD1 is not a
+  glutamine-cleaving enzyme, a leucine dehydrogenase or a glutamate transporter.
+- Reversibility does not fix a direction per tissue. The recombinant hGDH1 ammonia Km rises from
+  12.8 mM at pH 8.0 to 35.0 mM at pH 7.5 and 57.5 mM at pH 7.0, so acidification reduces capacity
+  for reductive amination. These are assay values, not tissue ammonia measurements.
+- The Fang 2002 mutagenesis separates the regulatory mechanisms cleanly: half-maximal GTP
+  inhibition at 42 nM for wild type against 210 microM for H454Y and 3.1 microM for S448P, both
+  retaining ADP and leucine responses, while engineered R463A abolishes ADP activation with little
+  effect on GTP or leucine. This supports annotating GTP inhibition and ADP activation separately.
+- It keeps GLUD2 findings out of GLUD1's annotations, which matters for the renal and brain
+  claims: both paralogs are in human proximal tubule, so the pathway-level estimate that the GDH
+  route accounts for at least 25% of renal ammonia cannot be assigned to GLUD1 alone, and hGDH1 is
+  predominantly glial while hGDH2 has substantial neuronal expression. It also warns against
+  reading the 2023 SIRT4/ornithine transcarbamylase result as evidence about GLUD1: GLUD1 is not a
+  urea-cycle enzyme.
+
 ## Core biology (from UniProt P00367 and cited literature)
 
 - **Function.** "Mitochondrial glutamate dehydrogenase that catalyzes the conversion of
@@ -95,3 +117,12 @@ EC 1.4.1.3.
   activity, generic amino acid metabolic process) → MODIFY or KEEP_AS_NON_CORE per policy.
 </content>
 </invoke>
+
+## 2026-11-05 ORGANELLES ER batch 2 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IEA (GO_REF:0000044, SL-0095) and IDA (PMID:19448744), both located_in; no ER sub-compartment rows; no is_active_in.
+
+- UniProt: "Endoplasmic reticulum {ECO:0000269|PubMed:19448744}" with note "Mostly translocates into the mitochondria, only a small amount of the protein localizes to the endoplasmic reticulum." So the IEA and IDA rows carry one claim.
+- PMID:19448744 (abstract only, no PMC): hGDH1-EGFP overexpressed in COS 7, HeLa, CHO, HEK293, SH-SY5Y; [PMID:19448744 "colocalized with the mitochondrial marker DsRed2-Mito and to a lesser extent with the endoplasmic reticulum marker DsRed2-ER"]; the ~95 kDa full-length (unprocessed) band was in the ER-containing cytosol fraction.
+- Topology: FT TRANSIT 1..53 (mitochondrion); no ER signal peptide, TM or retention motif, so any ER pool is cytosolic-face; stays at root.
+- Outcome: both rows stay KEEP_AS_NON_CORE (precedent AHCY, ER batch 1: overexpressed fusion against an ER marker); reasons added (rows previously had none) and UniProt + abstract quotes added. Close call with MARK_AS_OVER_ANNOTATED (tagged, overexpressed, unprocessed precursor), stated in the reasons.

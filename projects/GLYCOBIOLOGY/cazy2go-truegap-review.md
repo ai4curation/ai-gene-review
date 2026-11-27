@@ -80,15 +80,23 @@ candidates to propose to `interpro2go` / as confirmation of GO coverage:
 | verdict | n | disposition |
 |---------|--:|-------------|
 | ENDORSE | 34 | actionable `interpro2go`/GO gap candidates (need a human GO/InterPro curator sign-off before submission) |
-| CAUTION | 13 | retain but flag; need specific EC / subfamily resolution (→ dbCAN-sub step) |
+| CAUTION | 13 | excluded from family-level propagation and routed to specific EC / subfamily analysis |
 | REJECT | 6 | artifacts; auto-filtered from the safe set |
 
-So **34 / 53 true-gaps are genuine, specific contributions** `interpro2go` lacks; **13 await
-subfamily/EC resolution**; **6 were artifacts** the review removed. The 6 rejects validate the value
-of hand-review over the raw automated set, and the CAUTION set motivates the subfamily step next.
+So **34 / 53 true-gaps are genuine, specific contributions** `interpro2go` lacks; **13 were
+excluded from family-level propagation and routed to the later subfamily/signature analysis**; **6
+were artifacts** the review removed. The 6 rejects validate the value of hand-review over the raw
+automated set, while the CAUTION set records why those families stayed out of the safe family-level
+map.
 
 **Effect on the safe set:** after adding the CBM-skip, peptidase-branch drop, `GO:0016837`-generic,
 and **CAUTION-family** exclusion filters to `select_cazy2go_safe.py`, `cazy2go.safe.sssom.yaml` shrank
 89 → 66 (artifact filters) → **60 rows** (35 true-gap + 25 altitude-gain); the ENDORSE families are
 retained, the CAUTION families (AA5 etc.) and artifact rows are now excluded from the safe set. The 34 ENDORSE rows still require a **human GO/InterPro2GO
 curator sign-off** before any submission — they are AI-proposed candidates, not curated GO records.
+
+## Next
+
+Remaining CAZy-to-GO submission work — including curator sign-off and either rerunning or explicitly
+freezing the 2026-06 CAZy/UniProt/InterPro inputs before external submission — is tracked in
+[#4094](https://github.com/ai4curation/ai-gene-review/issues/4094).
