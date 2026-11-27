@@ -12,4 +12,11 @@ MTDH knockdown in diabetic mouse kidney enhances PPARalpha-dependent fatty acid 
 
 ### Unverified rows
 
-Seven ISO rows from human cancer papers were not traced to accessible evidence. They are left UNDECIDED: dsRNA binding (x2), mRNA catabolism, autophagy, LPS signalling, angiogenesis, PI3K signalling, nuclear body and intercellular canaliculus.
+Fifteen rows on eight terms (8 ISO and 7 IEA, all transferred from human MTDH) were not traced to accessible evidence. They are left UNDECIDED: dsRNA binding (x2), mRNA catabolism, autophagy, LPS signalling, angiogenesis, PI3K signalling, nuclear body and intercellular canaliculus.
+
+## 2026-11-27: changes after the PR #7151 review
+
+- The RXR-coregulator rows (GO:0003712, GO:0000122, GO:0006357, GO:0061629) are now ACCEPT, and the core function's MF is GO:0003712 transcription coregulator activity. GO:0003714 corepressor activity is the more literal term, but the direct RXR-binding and coactivator-blocking assay is in the earlier Srivastava et al. paper, which is not cached here. GO:0003714 should be revisited once that paper is fetched.
+- The Rrs1 and Snd1 protein-binding rows now have separate reasons.
+- The nucleolus and ER membrane IDA rows now quote their own reference, PMID:19433866.
+- Open: the LXR half of the mechanism has no annotation. No GO term for negative regulation of LXR signalling was checked.
