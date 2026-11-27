@@ -84,3 +84,78 @@ events:
     20 tests including doctests pass; ruff check, ruff format and mypy clean on the new module and
     its tests. The full `just test` run was still going when this was committed, so it is not
     claimed here; CI is the check on it.
+- type: EDIT
+  outcome: changed
+  sections:
+  - results
+  summary: The audit's default scope excluded gene reviews, so its "whole corpus" count
+    was measured inside its own window
+  details: |
+    Review of this PR requested changes on a finding that is correct and is the same error
+    this check was built to catch, committed by the check itself.
+
+    main() fell back to quote_check.default_files(), whose DEFAULT_GLOBS reach genes/ only
+    through *-predictions-review.yaml and *-regulatory-evidence.yaml. *-ai-review.yaml is
+    deliberately absent, because validator.py already checks that gene-review quotes match their
+    sources. That rationale does not carry over: validator.py checks whether a quote MATCHES its
+    source, and nothing checked whether it was CUT. So the audit silently skipped the largest
+    holder of supporting_text in the repository while the docs labelled the no-argument run
+    "whole corpus" and the PR body said "24 such quotes in the corpus" and "recall is complete".
+
+    Recall was complete over iter_quotes(default_files()). It was not complete over the corpus,
+    and the difference is not marginal: 4,749 files in the default scope against 12,511 gene
+    reviews excluded. The review verified three MID_WORD cases by hand that the audit could not
+    have seen, and the sharpest is that genes/yeast/ACO1 and interpro/panther/PTHR43160 quote the
+    same UniProt sentence, "isomerization of citrate to isocitrate via cis-", and only the family
+    review was in scope. The audit reported one half of one sentence.
+
+    This is the fifth time in this session I have taken an instrument's window for the data, and
+    the worst instance, because the instrument was mine and I had written the warning against it
+    in the same change. docs/quote_truncation.md said "do not read the finding count as a measure
+    of the problem" and "parse the YAML rather than grepping it" while the parse was scoped to
+    exclude two thirds of the files. Being right about the grep is not being right about the
+    corpus.
+
+    Fixed by giving the audit its own scope rather than borrowing one: audit_files() is
+    default_files() plus genes/*/*/*-ai-review.yaml, with the reason for diverging written where
+    the divergence is. Verified against the review's own cases: ACO1 now reports four occurrences
+    completing to cis-aconitate, and murF four completing to
+    gamma-D-glutamyl-meso-2,6-diaminopimelate -- the UDP-MurNAc-tripeptide that is murF's actual
+    substrate, so the same substrate-identity loss as the rest.
+
+    The second requested change was also right and is a trap I left. source_text() returned the
+    FIRST rendering, which is the raw one -- exactly the bug the CC-margin fix was about -- while
+    scan_document iterates reversed() to avoid it. Exported in __all__, unused, untested: a
+    plausible-looking function that would reintroduce the fixed bug for its first caller. Deleted
+    rather than repaired, since source_renderings_for is the real interface.
+
+    Three of the suggestions are now fixed too. The suspended-hyphen override fired on the
+    conjunction alone, so a wrapped "comm-" before "and" read as punctuation -- the exact mirror
+    of the andro-/and case I had already written a test for, and I did not think to check the
+    other direction. It now needs positive evidence of the construction: a coordinating
+    conjunction and a following word carrying its own internal hyphen. Note the coordinate's
+    hyphen is often preceded by punctuation rather than a letter ("Mg2+-dependent"), so the test
+    matches a word-internal hyphen rather than a tokenised word; the first two attempts failed on
+    exactly that and the doctest caught both. A malformed YAML file now yields no findings instead
+    of aborting the run, as quote_check does, because an audit that dies on the first bad file
+    reports a partial count as a complete one. And an absolute path from outside the checkout no
+    longer raises from Path.relative_to.
+
+    Two of the review's answers are taken as given. The conjunction list stays narrow, because
+    widening it only moves findings from the certain class to the uncertain one. And the hard
+    counts are now out of the docs entirely rather than updated: a number written into prose goes
+    stale silently, which is the failure this check exists to catch, so the docs say to run the
+    audit.
+
+    Recorded and not done here: warning on MID_WORD inside validate-quotes via the
+    only-ever-shrinks baseline once the repairs land, keeping TOKEN_BOUNDARY audit-only. Also
+    newly documented as a limitation rather than fixed: this audit shares source_renderings with
+    validate-quotes but not its matcher, so a quote written with an explicit "..." elision is not
+    located here and is absent from the report rather than reported as unchecked.
+
+    The companion repair PR (#7132) is approved and correct for what it covers, but it is now
+    known to be incomplete: it repairs the 24 the narrow scope found, and the gene-review slice
+    needs its own pass. A corpus-wide re-count under the corrected scope was still running when
+    this was committed and is deliberately not quoted.
+
+    25 tests including doctests pass; ruff check, ruff format and mypy clean.

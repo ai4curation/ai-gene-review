@@ -70,6 +70,7 @@ from ai_gene_review.validation.local_source_text import (
     source_renderings,
 )
 from ai_gene_review.validation.quote_check import (
+    EXCLUDED_PARTS,
     default_files,
     iter_quotes,
     literature_prefix,
@@ -80,9 +81,9 @@ __all__ = [
     "CutKind",
     "Truncation",
     "Finding",
+    "audit_files",
     "find_truncation",
     "scan_document",
-    "source_text",
     "source_renderings_for",
 ]
 
@@ -94,10 +95,38 @@ _TOKEN = re.compile(r"[^\W_][\w]*(?:-[^\W_][\w]*)*")
 #: Whitespace between any two tokens of the quote, however the source wraps.
 _GAP = r"\s+"
 
-#: Tokens that make a preceding hyphen a suspended hyphen ("CTP- and Mg2+-dependent"),
-#: which is correct English rather than a word broken by a line wrap. Keyed on the whole
-#: token, so "andro-" does not read as "and".
+#: Conjunctions that can coordinate a suspended hyphen ("CTP- and Mg2+-dependent").
+#: Necessary but not sufficient: see ``_is_suspension``.
 _SUSPENDING = frozenset({"and", "or", "nor"})
+
+#: A hyphen inside a word, attaching to what follows it. Matched against the whole
+#: whitespace-delimited word rather than a token, because the coordinate often carries
+#: punctuation a tokeniser stops at: "Mg2+-dependent" tokenises as "Mg2", and its
+#: hyphen is preceded by "+" rather than by a word character.
+_INNER_HYPHEN = re.compile(r"(?<=[^\s])-\w")
+
+
+def _is_suspension(continuation: str, rest_after: str) -> bool:
+    """True when the hyphen is suspended rather than a word broken by a wrap.
+
+    A conjunction alone is not evidence. ``comm-`` followed by ``and`` is the word
+    "command" split across lines, and reading that as punctuation is the mirror of
+    letting "andro-" read as "and". The construction that *is* punctuation coordinates
+    two hyphen-attributive terms, so the token after the conjunction must carry its own
+    hyphen.
+
+    >>> _is_suspension("and", " Mg2+-dependent manner")
+    True
+    >>> _is_suspension("and", " to the server")
+    False
+    >>> _is_suspension("semialdehyde", " (L-ASA)")
+    False
+    """
+    if _fold(continuation) not in _SUSPENDING:
+        return False
+    words = rest_after.split()
+    return bool(words) and _INNER_HYPHEN.search(words[0]) is not None
+
 
 #: Characters folded before matching. Every entry is one character mapped to one
 #: character, so an offset into the folded text indexes the original -- which is
@@ -222,7 +251,8 @@ def find_truncation(quote_text: str, source_text: str) -> Truncation | None:
     if token is None:
         return None
     continuation = token.group(0)
-    if _fold(continuation) in _SUSPENDING:
+    stripped = rest.lstrip()
+    if _is_suspension(continuation, stripped[token.end() :]):
         # A suspended hyphen: real punctuation, so the quote ends on a whole token
         # however the source wraps there.
         kind = CutKind.TOKEN_BOUNDARY
@@ -234,17 +264,27 @@ def find_truncation(quote_text: str, source_text: str) -> Truncation | None:
 # --------------------------------------------------------------------------- #
 
 
-def source_text(reference_id: str, project_root: Path = PROJECT_ROOT) -> str | None:
-    """Raw text of the source *reference_id* names, line breaks intact.
+#: Gene reviews, which ``quote_check.DEFAULT_GLOBS`` deliberately omits.
+GENE_REVIEW_GLOB = "genes/*/*/*-ai-review.yaml"
 
-    Handles the two source kinds a quote can be checked against: local files
-    (``file:``, ``Reactome:``) and cached literature (``PMID:``, ``DOI:``).
-    Returns ``None`` for an id with no readable source, which is the same set
-    ``validate-quotes`` reports as unchecked.
+
+def audit_files(project_root: Path = PROJECT_ROOT) -> list[Path]:
+    """Every file this audit scans: ``quote_check``'s default scope plus gene reviews.
+
+    ``quote_check`` leaves ``*-ai-review.yaml`` out of its defaults on the grounds that
+    ``validator.py`` already checks those quotes. That rationale does not carry over
+    here: ``validator.py`` checks whether a gene-review quote *matches* its source, and
+    nothing checks whether it was *cut*. Inheriting the narrower scope would silently
+    exclude the largest holder of ``supporting_text`` in the repository while reporting
+    a count as if it covered everything.
     """
-    for rendering in source_renderings_for(reference_id, project_root):
-        return rendering
-    return None
+    files = set(default_files(project_root))
+    files.update(
+        path
+        for path in project_root.glob(GENE_REVIEW_GLOB)
+        if not any(part in EXCLUDED_PARTS for part in path.parts)
+    )
+    return sorted(files)
 
 
 def source_renderings_for(
@@ -279,8 +319,16 @@ class Finding:
 
 
 def scan_document(path: Path, project_root: Path = PROJECT_ROOT) -> list[Finding]:
-    """Return every truncated quote in the YAML document at *path*."""
-    data = yaml.safe_load(path.read_text())
+    """Return every truncated quote in the YAML document at *path*.
+
+    A file that does not parse yields no findings rather than aborting the run:
+    ``quote_check`` counts such files and carries on, and an audit that died on the
+    first one would report a partial count as though it were complete.
+    """
+    try:
+        data = yaml.safe_load(path.read_text())
+    except yaml.YAMLError:
+        return []
     findings: list[Finding] = []
     for quote in iter_quotes(data):
         if not quote.reference_id or not _fold(quote.text.strip()).endswith("-"):
@@ -306,6 +354,20 @@ def scan_document(path: Path, project_root: Path = PROJECT_ROOT) -> list[Finding
     return findings
 
 
+def _display_path(path: Path) -> Path | str:
+    """*path* relative to the repository when it is inside it, else as given.
+
+    A file passed by absolute path from outside the checkout must not crash the run,
+    which ``Path.relative_to`` would do.
+    """
+    if not path.is_absolute():
+        return path
+    try:
+        return path.relative_to(PROJECT_ROOT)
+    except ValueError:
+        return path
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Report truncated quotes across the corpus.
 
@@ -323,14 +385,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    paths = args.files or default_files()
+    paths = args.files or audit_files()
     counts: dict[CutKind, int] = {k: 0 for k in CutKind}
     for path in paths:
         for finding in scan_document(path):
             if args.kind and finding.truncation.kind.value != args.kind:
                 continue
             counts[finding.truncation.kind] += 1
-            rel = path.relative_to(PROJECT_ROOT) if path.is_absolute() else path
+            rel = _display_path(path)
             print(f"{rel}: {finding.yaml_path} [{finding.truncation.kind.value}]")
             print(f"    quote:     ...{finding.truncation.quote[-70:]}")
             print(f"    completed: ...{finding.truncation.completed[-70:]}")

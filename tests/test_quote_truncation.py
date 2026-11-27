@@ -17,6 +17,7 @@ import pytest
 
 from ai_gene_review.validation.quote_truncation import (
     CutKind,
+    audit_files,
     find_truncation,
     scan_document,
 )
@@ -237,3 +238,59 @@ def test_a_wrapped_word_beginning_with_an_is_still_mid_word() -> None:
     assert cut is not None
     assert cut.kind is CutKind.MID_WORD
     assert cut.continuation == "stenedione"
+
+
+def test_a_wrapped_word_completed_by_and_is_not_a_suspended_hyphen() -> None:
+    """``comm-`` + ``and`` is the word "command", not a suspended hyphen.
+
+    The conjunction alone is not evidence of suspension. A real suspended hyphen
+    coordinates two hyphen-attributive terms -- ``CTP- and Mg2+-dependent`` -- so the
+    token after the conjunction carries a hyphen of its own. Without that, a line wrap
+    that happens to split before "and" was being read as correct punctuation.
+    """
+    cut = find_truncation("issued the comm-", "issued the comm-\nand to the server")
+    assert cut is not None
+    assert cut.kind is CutKind.MID_WORD
+    assert cut.continuation == "and"
+
+
+def test_suspended_hyphen_still_recognised_when_the_coordinate_is_hyphenated() -> None:
+    """The real construction keeps its classification."""
+    for source, follower in [
+        ("in a CTP-\n  and Mg2+-dependent manner", "and"),
+        ("to Man3-\n  and Man4GlcNAc2-PP-Dol", "and"),
+    ]:
+        quote = source.split("\n")[0].strip()
+        cut = find_truncation(quote, source)
+        assert cut is not None, quote
+        assert cut.kind is CutKind.TOKEN_BOUNDARY, quote
+        assert cut.continuation == follower
+
+
+def test_audit_scope_includes_gene_reviews(tmp_path) -> None:
+    """Gene reviews are in this audit's scope even though they are not in quote_check's.
+
+    ``quote_check`` leaves ``*-ai-review.yaml`` out because ``validator.py`` already
+    checks that their quotes *match* their sources. Nothing checks whether one was
+    *cut*, so that rationale does not transfer and inheriting the narrower scope hid
+    the largest slice of ``supporting_text`` in the repository.
+    """
+    gene = tmp_path / "genes" / "yeast" / "ACO1"
+    gene.mkdir(parents=True)
+    (gene / "ACO1-ai-review.yaml").write_text("id: P19414\n")
+    (tmp_path / "modules").mkdir()
+    (tmp_path / "modules" / "m.yaml").write_text("id: m\n")
+    found = audit_files(tmp_path)
+    assert gene / "ACO1-ai-review.yaml" in found
+    assert tmp_path / "modules" / "m.yaml" in found
+
+
+def test_scan_document_reports_nothing_for_unparseable_yaml(tmp_path) -> None:
+    """A malformed file is skipped, not allowed to abort a corpus run.
+
+    ``quote_check`` counts unparseable files and carries on; an audit that dies on the
+    first one would report a partial count as if it were complete.
+    """
+    doc = tmp_path / "broken-ai-review.yaml"
+    doc.write_text("id: x\n  bad: [unclosed\n")
+    assert scan_document(doc, project_root=tmp_path) == []
