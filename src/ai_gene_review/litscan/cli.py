@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import datetime as dt
+import json
 from pathlib import Path
 from typing import Optional
 
 import typer
 from typing_extensions import Annotated
 
-from ai_gene_review.litscan import module_member
+from ai_gene_review.litscan import gene_gap, module_member
 
 litscan_app = typer.Typer(help="Literature-scan jobs for genes and modules.")
 
@@ -53,3 +55,92 @@ def module_member_cmd(
         f"{packet['total_records']} candidate papers.\n"
         f"Wrote {md_path} and {json_path}"
     )
+
+
+@litscan_app.command("gene-gap")
+def gene_gap_cmd(
+    days: Annotated[
+        int,
+        typer.Option(
+            help="Look back this many days (ignored if a date range is given)."
+        ),
+    ] = 7,
+    date_from: Annotated[str, typer.Option(help="Start date YYYY-MM-DD.")] = "",
+    date_to: Annotated[str, typer.Option(help="End date YYYY-MM-DD.")] = "",
+    config: Annotated[
+        Path, typer.Option(help="GeneGapScanConfig YAML.")
+    ] = gene_gap.DEFAULT_CONFIG,
+    ledger: Annotated[
+        Optional[Path],
+        typer.Option(
+            help="JSON list of existing issues ({number, title, state, body}); "
+            "papers they name are not proposed again."
+        ),
+    ] = None,
+    include_preprints: Annotated[
+        bool, typer.Option(help="Also scan Europe PMC preprints (SRC:PPR).")
+    ] = False,
+    max_issues: Annotated[
+        Optional[int], typer.Option(help="Lower the configured issue cap.")
+    ] = None,
+    genes_dir: Annotated[Path, typer.Option(help="Gene review directory.")] = Path(
+        "genes"
+    ),
+    output_dir: Annotated[
+        Path, typer.Option(help="Packet output directory.")
+    ] = gene_gap.DEFAULT_OUTPUT,
+) -> None:
+    """Rank recent papers by the function-knowledge gap they could close.
+
+    Writes a JSON + markdown packet and ready-to-file issue bodies; never writes
+    to GitHub, so every run is a dry run until the workflow publishes the selected
+    issue bodies.
+    """
+    if bool(date_from) != bool(date_to):
+        raise typer.BadParameter("--date-from and --date-to go together")
+    start, end = (
+        (date_from, date_to) if date_from else gene_gap.default_date_range(days)
+    )
+    if days < 1 or (max_issues is not None and max_issues < 0):
+        raise typer.BadParameter("days must be positive and max-issues nonnegative")
+    try:
+        if dt.date.fromisoformat(start) > dt.date.fromisoformat(end):
+            raise typer.BadParameter("date-from must be on or before date-to")
+    except ValueError as exc:
+        raise typer.BadParameter("use ISO dates (YYYY-MM-DD)") from exc
+    cfg = gene_gap.load_config(config)
+    if max_issues is not None:
+        cfg["limits"]["max_issues"] = min(max_issues, cfg["limits"]["max_issues"])
+    issues = json.loads(ledger.read_text()) if ledger else []
+    packet = gene_gap.run(
+        cfg,
+        date_from=start,
+        date_to=end,
+        genes_dir=genes_dir,
+        ledger=issues,
+        include_preprints=include_preprints,
+        config_path=str(config),
+        log=lambda msg: typer.echo(msg, err=True),
+    )
+    json_path, md_path = gene_gap.write_packet(packet, output_dir)
+    eligible = sum(1 for c in packet["candidates"] if c.get("issue_eligible"))
+    typer.echo(
+        f"{start}..{end}: {packet['paper_count']} papers, "
+        f"{len(packet['candidates'])} ranked candidates, {eligible} issue bodies.\n"
+        f"Wrote {md_path} and {json_path}"
+    )
+
+
+@litscan_app.command("validate-gene-gap")
+def validate_gene_gap_cmd(
+    paths: Annotated[
+        list[Path], typer.Argument(help="Config YAML or packet JSON files.")
+    ],
+) -> None:
+    """Validate gene-gap configs (GeneGapScanConfig) and packets (GeneGapPacket)."""
+    problems = gene_gap.validate_files(paths)
+    for problem in problems:
+        typer.echo(problem, err=True)
+    typer.echo(f"Checked {len(paths)} files; {len(problems)} problems.")
+    if problems:
+        raise typer.Exit(1)

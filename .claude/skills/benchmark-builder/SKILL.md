@@ -7,7 +7,8 @@ description: >
   annotations for a benchmark" with constraints such as species, recency window,
   GO aspect or branch, evidence types, size, or pseudoenzymes and other
   catalytically dead paralogs, or wants to compare a blind sequence-only read
-  with organism, full-header and agent-review conditions. Do not use for
+  with organism, full-header and agent-review conditions, for any predictor
+  (LLM tools, sequence tools, agent reviews, curators). Do not use for
   reviewing one gene's annotations (use review) or for judging one prediction
   file (use review-function-prediction).
 compatibility: >
@@ -28,7 +29,8 @@ deterministic steps below. Do the agentic steps only when the user asks for them
 ## When to use, and when not
 
 - **Use** to make a new benchmark, to extend or recheck one under `benchmarks/`,
-  to export inputs for a condition run, or to score condition results.
+  to export inputs for a predictor run, to import a predictor's output as
+  generic predictions, or to score them.
 - **Do not use** to review a gene (use `review`), to judge one set of
   predictions (use `review-function-prediction`), or to run paid model calls
   without the user's go-ahead.
@@ -48,16 +50,19 @@ deterministic steps below. Do the agentic steps only when the user asks for them
    targets: change the spec and rebuild.
 3. **Check.** Run `just benchmark-check benchmarks/<id>/<id>.yaml`. Any FAIL must be
    fixed, by changing the spec, before you go on. Report the summary table, the
-   `reference_recency` counts per condition (which models the benchmark is fair
+   `reference_recency` counts per predictor (which models the benchmark is fair
    for), `feature_label` warnings, reference concentration, and the difficulty mix.
 4. **Agentic steps, only if asked** (frontier models only; otherwise stop and
    say so): a review-derived build, and an agent evaluation. Follow
    [references/agentic-steps.md](references/agentic-steps.md).
-5. **Export and score, only if asked.** Follow
+5. **Export, run, import and score, only if asked.** Follow
    [references/conditions-and-scoring.md](references/conditions-and-scoring.md).
-   Ask before any paid model call, and test with `--provider stub` first.
+   Scoring reads only generic `Prediction` records; convert native outputs with
+   `benchmark import --from <importer>`. Ask before any paid model call, and
+   test with a free or stub mode first.
 6. **Deliver.** Run `just validate-benchmarks` and `uv run pytest tests/test_benchmark.py`.
-   Commit the spec, the benchmark, the check report and any agent evaluation.
+   Commit the spec, the benchmark, the check report, any agent evaluation, the
+   prediction files under `predictions/` and the score report.
    Never commit `run-inputs/`, `runs/` or `.cache/benchmark/`. In the PR, state
    the purpose (blind versus combined reasoning, per item), the counts that limited
    the draw, and the models the benchmark is and is not fair for.
@@ -66,6 +71,6 @@ deterministic steps below. Do the agentic steps only when the user asks for them
 
 - [references/spec-choices.md](references/spec-choices.md): how to set each spec field.
 - [references/agentic-steps.md](references/agentic-steps.md): the review-derived build and agent evaluation.
-- [references/conditions-and-scoring.md](references/conditions-and-scoring.md): export, peptalk runs and scoring.
+- [references/conditions-and-scoring.md](references/conditions-and-scoring.md): export, predictor runs, importers and scoring.
 - [references/example-results.md](references/example-results.md): the worked example's check report and what it taught.
 - [docs/benchmarks.md](../../../docs/benchmarks.md): design rationale, the full list of checks, related practice (CAFA, fs2f, "A Society of AI Scientists") and limits.

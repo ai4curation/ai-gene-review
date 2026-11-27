@@ -187,7 +187,7 @@ def target_from_row(
         "evidence_code": a.evidence,
         "reference": a.reference,
         "assigned_by": a.assigned_by,
-        "date": a.date,
+        "gaf_date": a.date,
         "source": "GOA_RELEASE",
     }
     if a.negated:

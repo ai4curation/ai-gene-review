@@ -1,0 +1,272 @@
+# Scoring and retrieval rules for the litscan gene-gap scan.
+#
+# The scan (`just litscan-gene-gap`, workflow `.github/workflows/litscan-gene-gap.yml`)
+# looks for recent papers that move the needle on *function knowledge*: the first
+# experimental characterization of a dark gene or family, or evidence that refutes
+# or changes an existing annotation. Every score below is deterministic: a band on
+# a count from QuickGO/UniProt, or a regular expression over the paper's title and
+# abstract. Nothing here is judged by an LLM; the optional triage agent only reads
+# the ranked packet this config produces.
+#
+# A candidate is one (paper, gene product) pair. Its score is the sum of the
+# matching gene rules and paper rules; the packet lists every rule that fired, so
+# a curator can see why a candidate ranked where it did.
+#
+# Schema: src/ai_gene_review/schema/litscan_gene_gap.yaml (class GeneGapScanConfig).
+# Documentation: docs/litscan_gene_gap.md.
+
+id: litscan-gene-gap
+description: >-
+  Rank recent papers by how much they could close a gap in the experimental
+  function knowledge of a gene product.
+
+limits:
+  # Europe PMC records fetched per query profile (sorted by relevance).
+  max_records_per_profile: 150
+  # Gene-symbol candidates tried per paper, and resolved gene products kept.
+  max_symbols_per_paper: 6
+  max_genes_per_paper: 3
+  # UniProt hits above which a (symbol, taxon) lookup is treated as ambiguous.
+  max_resolution_hits: 3
+  # Candidates written to the packet, and ready-to-file issue bodies.
+  max_candidates: 40
+  max_issues: 10
+  max_issues_per_paper: 1
+  # A candidate below this score never gets an issue body.
+  min_issue_score: 6
+
+# Minimum seconds between calls to one host, and retry policy for 429/5xx.
+rate_limits:
+  - host: www.ebi.ac.uk
+    min_interval_seconds: 0.15
+  - host: rest.uniprot.org
+    min_interval_seconds: 0.2
+retry:
+  max_attempts: 5
+  backoff_seconds: 2.0
+
+# Each profile runs as its own Europe PMC query restricted to the scan
+# window and PubMed (plus preprints with
+# --include-preprints), and with reviews and the excluded title terms removed.
+query_profiles:
+  - name: dark_gene
+    description: Papers that name an uncharacterized protein or unknown-function domain.
+    query: >-
+      TITLE_ABS:"uncharacterized protein" OR TITLE_ABS:"uncharacterised protein"
+      OR TITLE_ABS:"unknown function" OR TITLE_ABS:"previously uncharacterized"
+      OR TITLE_ABS:"previously uncharacterised" OR TITLE_ABS:"poorly characterized"
+      OR TITLE_ABS:"domain of unknown function" OR TITLE_ABS:"orphan enzyme"
+      OR TITLE_ABS:"hypothetical protein"
+  # Keep the narrow search independent so common "poorly characterized"
+  # abstracts cannot exhaust the retrieval budget for specific dark-gene leads.
+  - name: uncharacterized_gene_product
+    description: First studies of a named uncharacterized gene product or DUF.
+    query: >-
+      TITLE_ABS:"previously uncharacterized protein" OR TITLE_ABS:"previously uncharacterised protein"
+      OR TITLE_ABS:"protein of unknown function" OR TITLE_ABS:"gene of unknown function"
+      OR TITLE_ABS:"uncharacterized gene" OR TITLE_ABS:"uncharacterized member"
+      OR TITLE_ABS:"domain of unknown function" OR TITLE_ABS:"orphan enzyme"
+  - name: refutation
+    description: Papers that report lost catalysis or a changed function.
+    query: >-
+      TITLE_ABS:pseudoenzyme OR TITLE_ABS:pseudokinase OR TITLE_ABS:pseudophosphatase
+      OR TITLE_ABS:pseudoprotease OR TITLE_ABS:"catalytically inactive"
+      OR TITLE_ABS:"catalytically dead" OR TITLE_ABS:"catalytically impaired"
+      OR TITLE_ABS:moonlighting OR TITLE_ABS:misannotated OR TITLE_ABS:misannotation
+  - name: first_characterization
+    description: Papers that characterize an activity or substrate biochemically.
+    query: >-
+      TITLE_ABS:"substrate specificity" OR TITLE_ABS:"biochemical characterization"
+      OR TITLE_ABS:"functional characterization" OR TITLE_ABS:"catalytic mechanism"
+      OR TITLE_ABS:deorphanization OR TITLE_ABS:"first characterization"
+      OR TITLE_ABS:"novel enzyme"
+
+exclude_title_terms:
+  - corrigendum
+  - erratum
+  - retraction
+  - retracted
+  - withdrawn
+  - review
+
+# Species recognised from the title and abstract. `folder` is the genes/ directory
+# name used by `just fetch-gene`. Text-mined organism IDs can also match these
+# taxa. Restrict resolution to this list of model organisms and reference strains.
+species:
+  - taxon_id: 9606
+    label: Homo sapiens
+    folder: human
+    patterns: ['\bhuman\b', '\bHomo sapiens\b', '\bpatients?\b']
+  - taxon_id: 10090
+    label: Mus musculus
+    folder: mouse
+    patterns: ['\bmice\b', '\bmouse\b', '\bmurine\b', '\bMus musculus\b']
+  - taxon_id: 10116
+    label: Rattus norvegicus
+    folder: rat
+    patterns: ['\brats?\b', '\bRattus norvegicus\b']
+  - taxon_id: 7227
+    label: Drosophila melanogaster
+    folder: fly
+    patterns: ['\bDrosophila melanogaster\b', '\bD\. melanogaster\b']
+  - taxon_id: 6239
+    label: Caenorhabditis elegans
+    folder: worm
+    patterns: ['\bC\. elegans\b', '\bCaenorhabditis elegans\b']
+  - taxon_id: 7955
+    label: Danio rerio
+    folder: DANRE
+    patterns: ['\bzebrafish\b', '\bDanio rerio\b']
+  - taxon_id: 559292
+    label: Saccharomyces cerevisiae S288C
+    folder: yeast
+    patterns: ['\bSaccharomyces cerevisiae\b', '\bbudding yeast\b', '\bS\. cerevisiae\b']
+  - taxon_id: 284812
+    label: Schizosaccharomyces pombe 972h-
+    folder: SCHPO
+    patterns: ['\bSchizosaccharomyces pombe\b', '\bfission yeast\b', '\bS\. pombe\b']
+  - taxon_id: 3702
+    label: Arabidopsis thaliana
+    folder: ARATH
+    patterns: ['\bArabidopsis thaliana\b', '\bA\. thaliana\b']
+  - taxon_id: 83333
+    label: Escherichia coli K-12
+    folder: ECOLI
+    patterns: ['\b(?:Escherichia|E\.) coli K-?12\b']
+  - taxon_id: 224308
+    label: Bacillus subtilis 168
+    folder: BACSU
+    patterns: ['\b(?:Bacillus|B\.) subtilis (?:strain )?168\b']
+# Tokens that look like gene symbols but are not (checked case-insensitively).
+symbol_stoplist:
+  [DNA, RNA, mRNA, ATP, ADP, GTP, NAD, NADH, NADPH, FAD, CoA, ROS, PCR, qPCR,
+   RT-qPCR, CRISPR, Cas9, GFP, YFP, RFP, KO, WT, MS, LC-MS, NMR, EM, cryo-EM,
+   HPLC, ELISA, siRNA, shRNA, sgRNA, miRNA, lncRNA, circRNA, AlphaFold, AlphaFold2,
+   AlphaFold3, SARS-CoV-2, COVID-19, HIV, HIV-1, II, III, IV, USA, UK, EU, LPS,
+   IC50, Km, kcat, pH, MOA, ER, PM, ECM, RNAi, CI, OR, HR, BMI, MRI, CT, AI,
+   ML, GO, KEGG, PDB, DUF, TCA, ESKAPE]
+
+# Suppress a symbol only when the paper spells out its non-gene meaning.
+non_gene_expansions:
+  - symbol: ALS
+    patterns: ['amyotrophic lateral sclerosis\s*\(ALS\)']
+  - symbol: ERAS
+    patterns: ['enhanced recovery after surgery\s*\(ERAS\)']
+  - symbol: PAM
+    patterns: ['positive allosteric modulat(?:or|ion)s?\s*\(PAMs?\)', 'ago/PAM']
+  - symbol: AID
+    patterns: ['auxin.inducible degron\s*\(AID\)']
+
+# Gene-side rules: how big the function-knowledge gap is for the gene product.
+gene_scoring:
+  # Bands on QuickGO experimental annotations (the repository experimental
+  # evidence category), excluding bare GO:0005515
+  # protein binding, which identifies no function. First band whose `max` is
+  # >= the count wins; a band without `max` catches the rest.
+  experimental_annotation_bands:
+    - max: 0
+      points: 5
+      label: no informative experimental GO annotation
+    - max: 3
+      points: 3
+      label: 1-3 informative experimental GO annotations
+    - max: 10
+      points: 1
+      label: 4-10 informative experimental GO annotations
+    - max: 40
+      points: 0
+      label: 11-40 informative experimental GO annotations
+    - points: -4
+      label: well annotated (>40 informative experimental GO annotations)
+  # No experimental molecular-function annotation other than protein binding.
+  no_experimental_mf:
+    points: 2
+    label: no informative experimental molecular-function annotation
+  # Every annotation is IBA or IEA (and there is at least one).
+  electronic_only:
+    points: 1
+    label: all GO annotations are IBA/IEA
+  # UniProt protein name marks the protein as uncharacterized.
+  uncharacterized_name:
+    points: 2
+    label: UniProt name marks the protein as uncharacterized
+    patterns: ['^Uncharacteri[sz]ed', '^Putative', 'unknown function', '^Hypothetical', '^Protein of unknown', '\bDUF\d+']
+  # A Pfam domain of unknown function (DUFnnnn / UPFnnnn) on the entry.
+  duf_domain:
+    points: 2
+    label: carries a domain of unknown function
+    patterns: ['^DUF\d+', '^UPF\d+']
+  # Bands on UniProt entries in the PANTHER family with any experimental GO.
+  family_experimental_bands:
+    - max: 0
+      points: 3
+      label: no member of the PANTHER family has experimental GO
+    - max: 3
+      points: 1
+      label: 1-3 members of the PANTHER family have experimental GO
+  # The gene already has an ai-gene-review review that does not cite the paper.
+  existing_review_not_citing:
+    points: 2
+    label: existing ai-gene-review review does not cite this paper
+  # The paper is already a GOA reference for this gene product.
+  already_in_goa:
+    points: -6
+    label: paper already used by GOA for this gene product
+  # A candidate whose paper is already cited by the gene's review is dropped.
+
+# Paper-side rules: regular expressions over the title (`field: title`) or the
+# title plus abstract (`field: title_abstract`), case-insensitive. Each rule fires
+# at most once per paper.
+paper_scoring:
+  - id: gene_in_title
+    points: 2
+    label: gene symbol in the title
+    field: gene_title
+  - id: refutation
+    points: 3
+    label: candidate-specific language about pseudoenzymes or revised activity
+    field: gene_sentence
+    exclude_patterns: ['\bmutant', '\bmutagenesis', 'site.directed', '\bmutation']
+    patterns: ['pseudo(enzyme|kinase|phosphatase|protease)', 'catalytically (inactive|dead|impaired)',
+               'lacks? (catalytic|enzymatic) activity', 'misannotat', 'moonlighting',
+               'contrary to (its|the) (annotation|predicted)', 'not an? (active )?(enzyme|kinase|transporter)']
+  - id: first_characterization
+    points: 2
+    label: candidate-specific characterization of an understudied gene or family
+    field: gene_sentence
+    patterns: ['previously uncharacteri[sz]ed', 'uncharacteri[sz]ed protein', 'of unknown function',
+               'first (functional |biochemical |structural )?characteri[sz]ation',
+               'poorly characteri[sz]ed', 'novel (enzyme|enzymatic activity|function)',
+               'de-?orphan', 'domain of unknown function', 'hypothetical protein']
+  - id: gene_experiment
+    points: 3
+    label: candidate named in a sentence describing a functional experiment
+    field: gene_sentence
+    patterns: ['knock.?out', 'knock.?down', '\bdeficien', 'loss of function', '\bpurified',
+               'reconstitut', 'substrate specificity', 'loss of .{1,20} destabiliz',
+               'rescued by', 'complementation', 'silencing']
+  - id: biochemical_evidence
+    points: 1
+    label: direct biochemical or genetic evidence
+    field: title_abstract
+    patterns: ['\bk(cat|m)\b', 'kinetic', 'crystal structure', 'cryo-?EM', 'recombinant',
+               'in vitro', 'purified', 'substrate specificity', 'knock-?out', 'deletion mutant',
+               'site-directed', 'catalytic (residue|site|mechanism)']
+  - id: high_throughput
+    points: -3
+    label: high-throughput or omics study
+    field: title_abstract
+    patterns: ['genome-wide', 'CRISPR screen', 'proteom', 'transcriptom', 'single-cell',
+               'RNA-seq', 'GWAS', 'mendelian randomi[sz]ation', 'multi-omics', 'metagenom',
+               'machine learning', 'bioinformatic analysis', 'pan-cancer']
+  - id: review_like
+    points: -5
+    label: review or perspective
+    field: title
+    patterns: ['\breview\b', 'overview', 'perspective', 'meta-analysis', 'state of the art', 'roadmap']
+  - id: clinical
+    points: -3
+    label: clinical, prognostic or case study
+    field: title_abstract
+    patterns: ['case report', 'cohort', 'prognos', 'biomarker', 'nomogram', 'survival analysis',
+               'clinical trial']

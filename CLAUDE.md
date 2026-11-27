@@ -320,8 +320,9 @@ went in `review.decomposed_into`: `gocam_associations` or `module_associations` 
 model), `in_core_functions` (Y is central to the gene), or `context_dropped: true` (Y is peripheral context or
 was itself the over-annotation). The replacement must be a claim you would `ACCEPT`: when the claim is
 non-core, keep the row `KEEP_AS_NON_CORE` on the precomposed term, or `MARK_AS_OVER_ANNOTATED` if GO has
-obsoleted it, and do not MODIFY it (the `decomposition_replacement_not_acceptable` check warns when the
-replacement sits on another row as non-core, over-annotated or removed). Ordinary refinements of a general
+obsoleted it (a request to keep a retired class is not one GO can act on), and do not MODIFY it (the
+`decomposition_replacement_not_acceptable` check warns when the replacement sits on another row as non-core,
+over-annotated, too general or removed). Ordinary refinements of a general
 term are not decompositions and keep their own rule above. Do not encode Y as an annotation extension (X plus `part_of(Y)` restates the
 retired class), and do not split the term into two unrelated annotations. Modules model reusable mechanisms,
 not tissue or developmental contexts: do not create a module per Y. GO's `consider` is curator advice: check each half against the evidence before using it. Its
@@ -401,6 +402,29 @@ are not covered yet. For these five terms the policy is an exception to the
   term, `GO:0098554` for the ER, which is the more
   specific child of `GO:0005789`; brief or regulated recruitment stays at the root. See rule 7 in
   `projects/ORGANELLES.md`.
+
+### Cytoplasm: never a core location in a eukaryote
+
+`GO:0005737` cytoplasm includes every organelle, so in a eukaryote it says little more
+than "not nuclear, not extracellular". The policy is `projects/CYTOPLASM.md`:
+
+- **Eukaryotes.** Never `ACCEPT` a cytoplasm row or name cytoplasm in
+  `core_functions.locations`. A row is `TOO_GENERAL` when the review asserts a location GO
+  places under cytoplasm (cytosol, an organelle, a granule; not cytoskeleton, microtubule,
+  centrosome or ribosome). It is `MODIFY` only when the row's own evidence resolves the
+  location: diffuse staining or a high-speed supernatant is cytosol, while a
+  nuclear/cytoplasmic fractionation is not. Otherwise it is `KEEP_AS_NON_CORE`. A
+  propagated row (IBA, IEA, ISS, ISO, ...) stops at cytoplasm by construction, so it is
+  never `MODIFY`. Add the specific location as a `NEW` row on evidence of its own; never
+  propose a `NEW` cytoplasm row, or `MODIFY` another location to cytoplasm (correct a
+  wrong location laterally, to the term that is right).
+- **Prokaryotes.** Cytoplasm is the main localisation contrast and is informative: normal
+  rules, and never `TOO_GENERAL`.
+
+`just validate` warns (`cytoplasm_policy`, `src/ai_gene_review/validation/cytoplasm_policy.py`)
+on the eukaryotic `ACCEPT`, `NEW`, `MODIFY`-to-cytoplasm and core-location cases;
+`just cytoplasm-audit` lists every row the policy would change. Reviews merged before the
+policy are not retroactively defective.
 
 ### Do not overrule curators from incomplete evidence
 
