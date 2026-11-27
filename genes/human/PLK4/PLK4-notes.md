@@ -32,9 +32,9 @@ Rows reviewed conservatively:
   left distinct and removed as uninformative unless the same evidence identified
   a phosphorylated PLK4 substrate; only the FBXW5 row was modified to
   `GO:0106310`.
-- Many Reactome `GO:0005829` cytosol rows are PLK1, AURKA, ciliogenesis or
-  basal-body events rather than PLK4 events. They were removed row by row
-  instead of treating Reactome as a uniform PLK4 source.
+- The same-day Reactome `GO:0005829` cytosol rows were kept as non-core. The
+  cached Reactome summaries do not include participant lists, and UniProt
+  supports a PLK4 cytoplasmic centrosome/centriole pool.
 - Mouse-derived XY-body localization was left `UNDECIDED`; mouse-derived
   nucleolus, cleavage-furrow, trophoblast and deuterosome rows were kept only as
   non-core similarity transfers.
