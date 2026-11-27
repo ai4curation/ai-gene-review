@@ -94,7 +94,8 @@ To re-derive the 17:
 2. Do not grep the file. The comments are block scalars and the phrase wraps mid-clause on
    `IPR018194` and `IPR021006`, so a line-based search returns 16 -- which reads as a stale page
    rather than as a broken check.
-3. Expect 17 as of 2026-11-27, not 18. A semantic reading can reach 18, because the IPR017682 removal of
+3. Expect 17 as of 2026-11-27, not 18. A semantic reading can reach 18, because
+   the IPR017682 removal of
    `GO:0050660` says where FAD binding does belong (FrhB, via IPR017679) without carrying a cover
    clause. That row is excluded deliberately: it names cover for a *sibling* entry's members, not
    for this entry's, which is the distinction the count is about.
