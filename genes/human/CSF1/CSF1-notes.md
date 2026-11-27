@@ -39,9 +39,9 @@ own M-CSF pathway.
 ## Source checks
 
 - `PMID:10652277` is a STAT5 paper focused on GM-CSF-dependent maturation in
-  chicken and mouse hematopoietic cells. It mentions M-CSF only as a comparator
-  in one mouse culture, so the two MGI CSF1 rows that cite it should be checked
-  against a CSF1-specific primary paper.
+  chicken and mouse hematopoietic cells, but its mouse cultures used recombinant
+  human M-CSF as a dedicated factor arm. The two MGI rows are therefore kept
+  without a source-defect query.
 - `Reactome:R-HSA-8937656` is an IL10 inflammatory-mediator event. It does not
   support CSF1 plasma-membrane localization, although CSF1 itself is a bona fide
   plasma-membrane protein.
