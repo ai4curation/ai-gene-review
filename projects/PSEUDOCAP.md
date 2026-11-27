@@ -33,8 +33,11 @@ GO id (pilU), and signal transduction on a signal synthase (lasI). For 24 the
 seed is right for PAO1 but the node carries the term to proteins or lineages it
 does not fit. For 30 the claim is true but the PseudoCAP row misstates the
 evidence code, qualifier or reference, and 32 are sound. These 107 reviews
-record 113 defects for PseudoCAP and 74 for PAINT, part of the 307 and 120
-across the whole PSEAE corpus (counted 2026-11-26 from the exporter output, as
+record 113 defects for PseudoCAP and 74 for PAINT. The 107 here is the sum of
+the four seed categories, not the number of tier-1 reviews, which is 109: pqsA
+and PA2403 are reviewed but not yet placed in a seed category, so neither they
+nor their defects are in these figures. The 113 and 74 are part of the 308 and
+120 across the whole PSEAE corpus (counted 2026-11-27 from the exporter output, as
 below), written up in [`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md).
 
 Tier 2, the 289 proteins whose node terms have other seeds as well, is now
@@ -42,9 +45,9 @@ reviewed too: 286 of 289 genes, 342 seedings and 43,061 leaf IBAs. There most
 seeds hold and most nodes stand on their other seeds, but the reviews still
 record 156 PseudoCAP defects and 41 for PAINT, including eleven seed rows that
 describe a different gene or organism and a pair of choline transporters whose
-annotations are swapped. Across all PAO1 reviews the reports now hold 307
+annotations are swapped. Across all PAO1 reviews the reports now hold 308
 PseudoCAP, 120 PAINT/GO Central, 30 UniProt, 9 InterPro, 2 GOA at EBI and 1
-CACAO -- 469 in all, counted 2026-11-26 from
+CACAO -- 470 in all, counted 2026-11-27 from
 [`export_pseae_defects.py`](PSEUDOCAP/export_pseae_defects.py).
 
 ## Why start with IBA seeds
@@ -177,11 +180,11 @@ lasB, which are given secretion-system terms for being secretion cargo).
 `source_defects` recorded in all PAO1 reviews into one report per resource in
 [`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md). After tier 2, and after
 the merge from main that brought in the AST-module and eut reviews, they stand
-at 307 for PseudoCAP (125 wrong term, 94 wrong evidence code, 47 wrong
+at 308 for PseudoCAP (125 wrong term, 95 wrong evidence code, 47 wrong
 reference, 24 wrong qualifier, 15 wrong gene product, 2 other), 120 for PAINT/GO Central,
 30 for UniProt, 9 for InterPro (which has its own report, since the
 InterPro2GO mappings outgrew the catch-all), 2 for GOA at EBI and 1 for CACAO:
-469 in all, counted 2026-11-26. They include defects from PAO1 reviews made
+470 in all, counted 2026-11-27. They include defects from PAO1 reviews made
 before this project.
 
 Those figures are the output of
@@ -228,8 +231,8 @@ stands and that defect was removed). The PseudoCAP report stood at 36
 CONFIRMED, 56 PROBABLE and 24 SUSPECTED at the end of tier 1, and the PAINT
 report at 6, 56 and 13. After tier 2 and the tree check (below) they stood at
 96, 126 and 50 for PseudoCAP and 32, 83 and 1 for PAINT, which sum to the 272 and
-116 superseded above. They now stand at 121, 131 and 55 for PseudoCAP and 38, 80
-and 2 for PAINT, summing to the current 307 and 120; counted 2026-11-26 from the
+116 superseded above. They now stand at 121, 131 and 56 for PseudoCAP and 38, 80
+and 2 for PAINT, summing to the current 308 and 120; counted 2026-11-27 from the
 same exporter output, so re-run it rather than editing these.
 
 ### Checked against the tree
@@ -248,7 +251,7 @@ The PAINT report moved from 17 CONFIRMED, 82 PROBABLE and 17 SUSPECTED to **37 C
 exact when first written, but the leaf-evidence audit in `1f556e0` regenerated the reports and
 changed it; the totals still summed to 116, which is why the stale figures survived several
 reading passes. That 37/77/2 is itself now the 2026-11-05 snapshot and not the present state --
-the report stands at 38 CONFIRMED, 80 PROBABLE and 2 SUSPECTED, 120 in all, counted 2026-11-26 --
+the report stands at 38 CONFIRMED, 80 PROBABLE and 2 SUSPECTED, 120 in all, counted 2026-11-27 --
 so this paragraph fell to the mechanism it describes, and the lesson it draws is the one the
 set-wide figures above now avoid by being the exporter's output rather than a copy of it. The check does three different things:
 
