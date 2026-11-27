@@ -31,23 +31,33 @@ share one PANTHER node (PTN000768388), each with its own experimental annotation
 ## Domain architecture
 
 776 aa. `SIGNAL 1..32`, then a canonical secretin: GspD-like N0 (48–114), three NolW-like
-ring-building domains (141–201, 206–271, 276–352) and the secretin β-barrel. Two sources
-give the barrel different boundaries and both are right about their own signature:
-InterPro `IPR004846` "Type II/III secretion system, secretin-like domain" matches
-**359–597**, while UniProt's feature table carries the narrower Pfam call
-`DOMAIN 429..597` / `PF00263`. The InterPro match starts about 70 residues earlier
-because it covers the whole secretin-like region rather than the Pfam model's core.
-`IPR013356` "Type II secretion system protein GspD" spans **48–605**, and the NCBIfam
-`TIGR02517` "type II secretion system secretin GspD" covers the same region (the `DR`
-line carries no coordinates of its own).
+ring-building domains (141–201, 206–271, 276–352) and the secretin β-barrel.
 
-All InterPro spans in this file come from one live InterPro API query on `Q9I2M7`
-(`entry/InterPro/protein/UniProt/`); the UniProt figures come from the cached flat file.
+Two sources give the barrel different boundaries, and the difference is **not** between
+two signatures. `IPR004846` "Type II/III secretion system, secretin-like domain"
+integrates `PF00263`, and InterPro reports both at **359–597** — entry and member
+signature identical, with no second signature contributing. UniProt's feature table
+carries the same `PF00263` match as `DOMAIN 429..597`. So one signature has two
+different start coordinates depending on which resource you read, and the `/note` on
+the UniProt feature is `IPR004846`'s own name, which is how UniProt labels a Pfam
+feature through the entry integrating it. Why the two differ is not established here;
+it is not that one covers the domain and the other its core.
+
+`IPR013356` "Type II secretion system protein GspD" spans **48–605** via `TIGR02517`,
+whose own `DR` line carries no coordinates. `IPR001775` (GspD/PilQ, PRINTS `PR00811`)
+matches as five short motifs between 352 and 598 rather than as one block.
+
+All InterPro and member-signature spans in this file come from one live InterPro API
+query on `Q9I2M7` (`entry/all/protein/UniProt/`, which returns member signatures as
+well as entries); the UniProt figures come from the cached flat file.
 
 Beyond residue ~605 there is a C-terminal extension of about 170 residues. Within it,
 **684–769 matches CATH-Gene3D `G3DSA:3.30.70.1070` "Sporulation related repeat" and
-nothing else** — no Pfam, no PROSITE, no NCBIfam, no family-level InterPro entry covers
-that region. That single structural match is the whole basis of the `GO:0042834` row.
+nothing else** — no Pfam, no PROSITE, no NCBIfam signature reaches it. The family entry
+`IPR050810` (PANTHER `PTHR30332`) stops at 612, so it does not cover the region either.
+The claim the `GO:0042834` row actually rests on is narrower and does not depend on that:
+no entry mapped to `GO:0042834` other than `IPR036680` reaches 684–769. That single
+structural match is the whole basis of the row.
 
 ## The peptidoglycan-binding row
 
