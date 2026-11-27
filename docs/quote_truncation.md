@@ -81,11 +81,24 @@ quote written with an explicit `...` elision is matched there part by part and i
 **not located here**, so such a quote is silently absent from this report rather
 than reported as unchecked.
 
-In particular, do not read the finding count as a measure of the problem. A
-hyphen at the end of a *physical line* in a YAML file is usually not the end of a
-quote at all: a plain scalar wraps, so the hyphen sits mid-value. Grepping lines
-reports well over a thousand such hyphens where there are two dozen truncated
-quotes. Parse the YAML — which is what this check does — rather than grepping it.
+In particular, do not read the finding count as a measure of the problem, and be
+careful which way round the error runs.
+
+A hyphen at the end of a *physical line* in a YAML file is sometimes not the end of
+a quote at all: a plain or quoted scalar can wrap, leaving the hyphen mid-value. That
+is why this check parses the YAML instead of grepping lines, and the module file for
+aspartate-to-threonine biosynthesis is the clear case — twelve lines begin with the
+same sentence and only four end a scalar, so a line-based repair there would have
+corrupted eight complete quotes to make four fixes.
+
+But that observation was then used here to dismiss a grep's magnitude, and the
+dismissal was wrong. An earlier version of these docs said grepping "reports well
+over a thousand such hyphens where there are two dozen truncated quotes". The two
+dozen came from a parse whose scope excluded `genes/*/*/*-ai-review.yaml`; with gene
+reviews in scope the parsed count is in the same order as the grep's. The grep was
+approximately right and the parse was too narrow. **A more rigorous instrument
+pointed at less of the data is not more trustworthy than a crude one pointed at all
+of it** — check what your scope covers before using it to overrule a cruder count.
 
 ## Wrap artifacts inside a quote are a different problem
 
@@ -94,6 +107,11 @@ wrapped inside the word, and the cached source still contains the break. Such a
 quote matches its source, and "repairing" it to `activity` would make it stop
 matching. The artifact is in the cached publication, not in the review, so these
 are out of scope here and are not reported.
+
+This class is real but it is **not** an explanation for a large grep count; do not
+reach for it as one, which is the mistake corrected above. Mid-value wrap artifacts
+and value-final truncations are separate populations, and only measuring each
+separately tells you how big either is.
 
 ## Fixing one
 
