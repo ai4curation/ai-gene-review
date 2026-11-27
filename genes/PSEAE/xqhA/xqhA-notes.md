@@ -31,11 +31,18 @@ share one PANTHER node (PTN000768388), each with its own experimental annotation
 ## Domain architecture
 
 776 aa. `SIGNAL 1..32`, then a canonical secretin: GspD-like N0 (48–114), three NolW-like
-ring-building domains (141–201, 206–271, 276–352) and the secretin β-barrel (429–597,
-`DOMAIN 429..597` / `PF00263`; the 353–428 stretch between it and the last NolW-like
-domain carries no feature of its own),
-with the GspD/PilQ family entry and the NCBIfam `TIGR02517` "type II secretion system
-secretin GspD" covering 48–605.
+ring-building domains (141–201, 206–271, 276–352) and the secretin β-barrel. Two sources
+give the barrel different boundaries and both are right about their own signature:
+InterPro `IPR004846` "Type II/III secretion system, secretin-like domain" matches
+**359–597**, while UniProt's feature table carries the narrower Pfam call
+`DOMAIN 429..597` / `PF00263`. The InterPro match starts about 70 residues earlier
+because it covers the whole secretin-like region rather than the Pfam model's core.
+`IPR013356` "Type II secretion system protein GspD" spans **48–605**, and the NCBIfam
+`TIGR02517` "type II secretion system secretin GspD" covers the same region (the `DR`
+line carries no coordinates of its own).
+
+All InterPro spans in this file come from one live InterPro API query on `Q9I2M7`
+(`entry/InterPro/protein/UniProt/`); the UniProt figures come from the cached flat file.
 
 Beyond residue ~605 there is a C-terminal extension of about 170 residues. Within it,
 **684–769 matches CATH-Gene3D `G3DSA:3.30.70.1070` "Sporulation related repeat" and
