@@ -122,3 +122,23 @@ REMOVE 6 (4 protein binding, 2 mitochondrion HDA) · KEEP_AS_NON_CORE 1 (apoptot
   the mitotic chromosome-segregation role but adds no distinct Esp1 GO assertion, and a 2026
   TORC1-stress paper [PMID:42360689] whose cohesin-degradation route is explicitly
   separase-independent.
+
+## 2026-11-27 provenance for the Q4GYR1 PAINT source species
+
+The `GO:0005634` and `GO:0005737` IBA summaries describe `UniProtKB:Q4GYR1` as trypanosome
+separase. That identification had no provenance recorded anywhere in this repository, and
+`genes/human/ESPL1/ESPL1-notes.md` records the same accession as mouse Espl1, so one of the two
+had to be wrong. Looked the accession up directly against the UniProt REST API on 2026-11-27
+(`https://rest.uniprot.org/uniprotkb/Q4GYR1.txt`, entry version 80 of 04-NOV-2026):
+
+- `ID   Q4GYR1_TRYB2            Unreviewed;      1159 AA.`
+- `OS   Trypanosoma brucei brucei (strain 927/4 GUTat10.1).`
+- `OX   NCBI_TaxID=185431`
+- `OC   Eukaryota; Discoba; Euglenozoa; Kinetoplastea; Metakinetoplastina; Trypanosomatida; Trypanosomatidae; Trypanosoma.`
+- `GN   ORFNames=TB927.1.3120`, from the *T. brucei* chromosome 1 genomic sequence [PMID:12907729].
+
+So "trypanosome" is correct for this review and the `ESPL1-notes.md` line is the wrong record.
+That file belongs to a different gene's slice and is not touched here; it needs its own
+one-line correction. Note that Q4GYR1 is a TrEMBL entry whose own separase naming is ARBA
+(`DE   RecName: Full=separase {ECO:0000256|ARBA:ARBA00012489}`), i.e. an unvetted prediction —
+which is a statement about how well characterised the PAINT donor is, not about the species.
