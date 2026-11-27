@@ -60,7 +60,7 @@ canonical CSR-1 annotations. See the [migration manifest](../../../genes/worm/cs
 Current-GOA refreshes with genuinely retired source assertions are registered as
 narrow signature-level exceptions in `verify_sources.py`, while qualifier-only
 backfills remain matched and reported generically. As of this batch, explicit
-exceptions cover APJ1, CPS1, HSC82, HSP82, SSQ1, and YAR1. It does not assess
+exceptions cover APJ1, CPS1, HSC82, HSP10, HSP82, SSQ1, and YAR1. It does not assess
 biological correctness or count as a manual review.
 
 Scientific review checks whether the claimed activity, participation, or
