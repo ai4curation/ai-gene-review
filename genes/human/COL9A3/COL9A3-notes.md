@@ -38,3 +38,25 @@ The same target path confirms the current type-IX and matrix-organization source
 [PMID:17880280, accepted postprint Results, indexed lines625–626](https://www.researchgate.net/publication/5963382): “both full length and NC4-NC2 chains were found mainly as monomeric and dimeric molecules”. The surrounding Results592–641 describe individual chains expressed with prolyl 4-hydroxylase in insect cells, distinguish alpha3 from the small full-length alpha1 homotrimer fraction, and distinguish the coexpressed heterotrimer from deletion constructs. The published self-association interpretation does not imply a native autonomous alpha3 complex.
 
 These anchors preserve the original indexed text with only whitespace normalization. They are external full-text excerpts, not additions to the unchanged abstract caches or fabricated cache-verifiable supporting_text. The abstract-only PMID8586434 remains an access-limited composition source; that separate limitation does not erase the verified external sections above.
+
+## GO:0042803 literature_support left deliberately open — 2026-11-27
+
+The PR review round found that the two `supporting_text` quotes attached to the `GO:0042803`
+protein homodimerization row did not support same-chain association, and it was right on both:
+
+- `PMID:8660302` abstract says type IX collagen "is covalently cross-linked to type II collagen
+  and to other molecules of type IX collagen" — IX–IX, with no chain identity. The
+  alpha3(IX)COL2 → alpha3(IX)NC1 link the annotation's `reason` relies on is a Figure 4 result,
+  and the cache is `full_text_available: false`.
+- `PMID:17880280` abstract says chains "can associate in the absence of COL1 and NC1 domains to
+  form a triple helix, but the COL2-NC2 region alone is not sufficient for trimerization" — that
+  is heterotrimer assembly, close to the opposite of a dimer. The monomeric/dimeric observation
+  is a Results sentence, likewise outside the abstract cache.
+
+Both quotes were therefore removed and the two `supported_by` entries reduced to bare
+`reference_id`s, leaving the row's `literature_support` gap **open on purpose**. The real
+evidence for same-chain association is the external postprint text recorded under "Public primary
+anchors — 2026-10-12" above; it is not cache-verifiable, and inventing a cache-verifiable quote
+to close a compliance metric would assert something the cached sources do not say. The annotation
+action (`KEEP_AS_NON_CORE`), the term and the `reason` are unchanged: only the two quotes the
+compliance pass added, and the `summary` that restated them, were touched.
