@@ -14,3 +14,15 @@ Loss-of-function: hypophosphatemic nephrolithiasis/osteoporosis, infantile hyper
 
 ## The IEA response-to-X cluster (all Ensembl-Compara ortholog projections, GO_REF:0000107)
 Kept as non-core regulatory responses where NaPi-IIa regulation is established (rodent ortholog + conserved physiology): parathyroid hormone (GO:0071374/GO:0071107; PTH-induced internalization is curated), dietary phosphate (GO:0016036 phosphate starvation, GO:0007584 nutrient), estradiol, growth hormone, thyroid hormone, peptide hormone/peptide (PTH/FGF23), cellular response to metal ion, plus the IDA heavy-metal responses (cadmium/lead/mercury, PMID:8898024, inhibit renal NaPi transport). Marked over-annotated where no NaPi-IIa-specific mechanism exists or the aspect is wrong: staurosporine, potassium, magnesium, vitamin A (vitamin D - not A - regulates NaPi-IIa), xenobiotic stimulus, dentinogenesis, kidney development (mature-function transporter, not a developmental role), tricarboxylic acid metabolic process (wrong aspect), ossification (distal systemic consequence; participation-test fail). Self-referential GO:2000120/GO:2000187 (a transporter regulating its own transport) MARK_AS_OVER_ANNOTATED. Bare GO:0005515 protein binding (IPI x2) REMOVE per policy (informative binding captured by the PDZ row). GO:0016020 membrane MODIFY->plasma membrane; GO:0006817 broad phosphate transport KEEP_AS_NON_CORE; arsenate transport (Pi mimic) KEEP_AS_NON_CORE. Batch 27.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- The only endosome row is an Ensembl projection (GO_REF:0000107) from rat Slc34a1 Q06496, whose
+  endosome annotation is an RGD IDA from PMID:16514432 (Bacic et al. 2006, Kidney Int, DOI
+  10.1038/sj.ki.5000148; abstract-only, no PMC). Abstract: endogenous NaPi-IIa in rat proximal
+  tubule leaves the brush border within 5 min of PTH, passes through clathrin-positive
+  compartments and EEA1-positive early endosomes, colocalizes with internalized insulin, and
+  reaches lgp120-positive late endosomes/lysosomes by 45-60 min ["Shortly thereafter, NaPi-IIa
+  appeared in endosomes stained for EEA1 (early endosomal antigen 1)."].
+- Physiological, hormone-triggered pool on the normal degradation route, seen without blocking
+  degradation: real endosome pool, KEEP_AS_NON_CORE. EEA1 is one study, so no early-endosome row.

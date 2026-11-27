@@ -20,3 +20,10 @@ Reactome "endosome lumen" assignment is topologically impossible -> REMOVE.
 396 GOA rows (159 Reactome cytosol rows). Core: PTK activity, cytokine receptor binding, JAK-STAT and specific
 cytokine pathways. Downstream physiology KEEP_AS_NON_CORE; apoptosis machinery / response-to-chemical / adhesion
 machinery terms marked over-annotated; generic protein binding removed except receptor partners (-> cytokine receptor binding).
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- GO:0005768 row: IEA from ARBA00028568 only (unvetted ML rule). UniProt gives JAK2 an endomembrane item by similarity, cytoplasm and nucleus, no endosome. The earlier reason's PMID:15899890 localises TpoR (with recycling transferrin), not JAK2.
+- PubMed searches (2026-11-23) for JAK2 with endosome/endosomal plus localization, colocalization, fractionation or EEA1 found no study placing JAK2 itself in endosomes (hits localised GM-CSF receptor beta in rat mesothelium, PMID:31212003; PAF receptor, PMID:27098179; EPOR-GFP in endosome-like puncta, PMID:11997394). None cached or cited.
+- KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED (consistent JAK rule: JAK1 has an endogenous EEA1-endosome line, JAK3 an abstract-level line, JAK2 none).
+- Out-of-survey sub-compartment row GO:0031904 endosome lumen (Reactome TAS R-HSA-1170539): REMOVE kept (a cytosolic kinase cannot be luminal); added a WRONG_TERM CHECK source defect for Reactome.

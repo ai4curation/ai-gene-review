@@ -7,7 +7,11 @@ Checks first, and fails rather than writing a misleading report:
 * conversely, every triaged (model, GO term) pair is one of those flagged pairs, unless
   its entry is marked ``source: sweep`` (a model the EC comparison cannot catch);
 * every triaged (model, GO term) pair exists in the NCBIfam release table;
-* every ``better`` term exists in the GO database and is not obsolete.
+* every ``better`` term exists in the GO database and is not obsolete, and no
+  EC_SUSPECT entry carries one;
+* every class-term lead (``class_term_outside_model_ec`` and
+  ``class_term_within_model_ec``) has exactly one ``class_term_triage`` entry, and
+  that list triages nothing else.
 
     uv run python projects/ENZYME_SPECIFICITY/ncbifam-metadata/render_feedback.py
 """
@@ -24,7 +28,7 @@ import yaml
 from ai_gene_review.validation.enzyme_family_cutoff import NCBIfam
 
 sys.path.insert(0, str(Path(__file__).parent))
-from check_release_table import GoHierarchy, refseq_hits  # noqa: E402
+from check_release_table import GoHierarchy, RheaEC, refseq_hits  # noqa: E402
 
 from ai_gene_review.validation.enzyme_family_cutoff import is_complete_ec  # noqa: E402
 
@@ -66,8 +70,9 @@ def candidate_text(
     Computed from the model itself, not from the check's pair records, so a model added
     by hand from the sweep gets the same treatment as a flagged one. A partial EC would
     match a whole EC subclass, so its terms are not offered; a complete EC beside it
-    still is. An empty result means no GO term carries the EC as a cross-reference,
-    not that GO lacks a term for the reaction: many GO terms cross-reference only Rhea.
+    still is. A GO term reaches an EC through an EC cross-reference or through a Rhea
+    reaction mapped to that EC. An empty result means neither route reaches it, which
+    is weaker than GO having no term for the reaction.
 
     >>> class Hierarchy:
     ...     def terms_for_ec(self, ec):
@@ -80,11 +85,11 @@ def candidate_text(
     >>> candidate_text(["2.1.2.-"], Hierarchy(), db)
     '(partial EC 2.1.2.-; not listed)'
     >>> candidate_text(["3.5.4.4"], Hierarchy(), db)
-    '(no GO term cross-references EC 3.5.4.4)'
+    '(no GO term reaches EC 3.5.4.4)'
     >>> candidate_text(["3.4.16.4", "3.4.21.-"], Hierarchy(), db)
     'GO:0009002 x (partial EC 3.4.21.- not listed)'
     >>> candidate_text(["3.4.16.4", "3.5.4.4"], Hierarchy(), db)
-    'EC 3.4.16.4: GO:0009002 x / EC 3.5.4.4: (no GO term cross-references it)'
+    'EC 3.4.16.4: GO:0009002 x / EC 3.5.4.4: (no GO term reaches it)'
     """
     if not ec_numbers:
         return "(model has no EC)"
@@ -96,7 +101,7 @@ def candidate_text(
     def describe(ec: str, name: str) -> str:
         terms = sorted(hierarchy.terms_for_ec(ec))
         if not terms:
-            return f"(no GO term cross-references {name})"
+            return f"(no GO term reaches {name})"
         if len(terms) > MAX_CANDIDATES:
             return f"({len(terms)} terms under {name}; too broad to list)"
         return "; ".join(f"{t} {go_label(go_db, t)[0]}" for t in terms)
@@ -114,10 +119,12 @@ def candidate_text(
 def main() -> None:
     """Check the triage against the data, then write FEEDBACK.md."""
     check = yaml.safe_load((HERE / "release_table_check.yaml").read_text())
-    triage = yaml.safe_load((HERE / "triage.yaml").read_text())["triage"]
+    triage_file = yaml.safe_load((HERE / "triage.yaml").read_text())
+    triage = triage_file["triage"]
+    class_triage = triage_file.get("class_term_triage", [])
     families = {f.accession: f for f in NCBIfam(CACHE / "ncbifam").families}
     go_db = sqlite3.connect(GO_DB)
-    hierarchy = GoHierarchy(GO_DB)
+    hierarchy = GoHierarchy(GO_DB, RheaEC.load(CACHE / "rhea"))
     candidate_cache: dict[tuple[str, ...], str] = {}
     hits = refseq_hits(CACHE / "ncbifam")
     flagged = [r for r in check["pairs"] if r["placement"] in TRIAGED]
@@ -159,6 +166,25 @@ def main() -> None:
     for r in flagged:
         if (r["model"], r["go"]) not in covered:
             errors.append(f"untriaged {r['placement']} pair {r['model']} {r['go']}")
+    # class-term leads: every listed pair triaged once, and nothing else
+    class_records = {
+        (r["model"], r["go"]): r
+        for key in ("class_term_outside_model_ec", "class_term_within_model_ec")
+        for r in check.get(key, [])
+    }
+    class_covered: dict[tuple[str, str], int] = defaultdict(int)
+    for t in class_triage:
+        if t["verdict"] not in VERDICTS:
+            errors.append(f"unknown verdict {t['verdict']} for {t['models']}")
+        for m in t["models"]:
+            class_covered[(m, t["go"])] += 1
+            if (m, t["go"]) not in class_records:
+                errors.append(f"{m} {t['go']}: class-term triage for a pair not listed")
+    for key in class_records:
+        if class_covered.get(key, 0) != 1:
+            errors.append(
+                f"class-term pair {key[0]} {key[1]} triaged {class_covered.get(key, 0)} times"
+            )
     if errors:
         sys.exit("triage does not match the data:\n  " + "\n  ".join(errors))
 
@@ -178,10 +204,10 @@ def main() -> None:
         "against literature: they are proposals for NCBIfam curators to confirm. "
         "RefSeq hits are the release table's `n_refseq_protein_hits`. `proposed` is a "
         "curator's replacement where one was checked; `GO terms for the model's EC` "
-        "lists, unreviewed, the terms that cross-reference the model's own EC numbers. "
-        "`no GO term cross-references EC …` means no GO term carries that EC as a "
-        "cross-reference; GO often has a term for the reaction all the same, "
-        "cross-referenced only to Rhea, as `proposed` shows for adenosine deaminase. "
+        "lists, unreviewed, the terms that reach the model's own EC numbers, through an "
+        "EC cross-reference or a Rhea reaction mapped to that EC. `no GO term reaches "
+        "EC …` means neither route reaches it; GO may still have a term for the "
+        "reaction, so look by name before requesting one. "
         "A partial EC would match a whole subclass, so its terms are not listed. A model with several ECs has each EC's "
         "terms labelled. In the EC_SUSPECT section the suspect EC's terms are evidence "
         "for the verdict, not proposals. The RefSeq column is summed over the "
@@ -249,6 +275,43 @@ def main() -> None:
             "`triage.yaml` only.",
         ]
     )
+    class_reported = [t for t in class_triage if t["verdict"] in REPORTED]
+    class_reported.sort(
+        key=lambda t: (
+            REPORTED.index(t["verdict"]),
+            -sum(hits.get(m, 0) for m in t["models"]),
+        )
+    )
+    lines.extend(
+        [
+            "",
+            f"## Class terms that do not fit the model's EC ({len(class_reported)})",
+            "",
+            "These GO terms carry only a partial EC (a class such as hydrolase activity, "
+            "EC 3.-.-.-). Their class neither contains nor lies inside the model's EC and "
+            "they are not GO ancestors of a term for it, or they are narrower than a "
+            "partial model EC. A class term often follows the protein family's fold "
+            "rather than the reaction. "
+            f"{sum(1 for t in class_triage if t['verdict'] == 'ACCEPTABLE')} further "
+            "entries were triaged `ACCEPTABLE` (EC renumbering, partial cross-references "
+            "narrower than the term, second activities) and are in `triage.yaml` only.",
+            "",
+            "| model, product name (EC) | GO term (its EC) | verdict | note |",
+            "|---|---|---|---|",
+        ]
+    )
+    for t in class_reported:
+        models = [
+            f"{m} {families[m].product_name} "
+            f"({', '.join(families[m].ec_numbers) or 'no EC'})"
+            for m in t["models"]
+        ]
+        rec = class_records[(t["models"][0], t["go"])]
+        note = " ".join(t["note"].split())
+        lines.append(
+            f"| {'<br>'.join(models)} | {t['go']} {rec['go_name']} "
+            f"({', '.join(rec['go_partial_ec'])}) | {t['verdict']} | {note} |"
+        )
     (HERE / "FEEDBACK.md").write_text("\n".join(lines) + "\n")
     print("wrote FEEDBACK.md", file=sys.stderr)
 

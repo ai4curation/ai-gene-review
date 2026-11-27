@@ -1,299 +1,100 @@
-# iModulonDB Integration
+# iModulonDB integration and evidence use
 
-## Overview
+The KT2440 importer now reproduces **all 84 PRECISE321 modules** from pinned,
+published iModulonDB exports. On 2026-11-05, all source member counts, measured
+weights, module-specific thresholds and named matrix-column joins passed checks.
+The [20-case calibration](../projects/P_PUTIDA/tf_census/calibration-review.md)
+records biological evidence separately from the
+[importer results](../projects/P_PUTIDA/tf_census/imodulon/calibration-results.md).
+These are scoped assessments, not 20 completed GO reviews.
 
-The iModulonDB integration allows you to compare gene reviews with machine learning-derived transcriptional modules (iModulons) for bacterial genes. This provides independent validation of gene regulatory annotations using data-driven approaches.
+## Implementation and sources
 
-## What is iModulonDB?
+Both [original](../scripts/compare_with_imodulondb.py) and
+[v2](../scripts/compare_with_imodulondb_v2.py) entry points call the shared
+[importer](../src/ai_gene_review/imodulondb.py). The
+[configuration](../src/ai_gene_review/data/imodulondb_organisms.yaml) resolves
+`PSEPK`, `p_putida` and `NCBITaxon:160488` to canonical `genes/PSEPK/` paths.
 
-[iModulonDB](https://imodulondb.org/) is a database of independently modulated gene sets (iModulons) derived from applying Independent Component Analysis (ICA) to bacterial transcriptomes. iModulons represent co-regulated gene groups that explain variance across diverse growth conditions.
+The adapter reads [SBRG/modulytics](https://github.com/SBRG/modulytics/tree/01af982cb604eef842df4209abe39b033d9067d5/organisms/p_putida/precise321)
+at commit `01af982cb604eef842df4209abe39b033d9067d5`. Published per-module gene tables
+are authoritative for membership. `M.csv` and `M_thresholds.csv` independently
+check each member call and measured weight using source module IDs, including
+when column order differs. The
+[authors' supplement](https://github.com/SBRG/modulome_ppu/blob/f63a0dfab124ea9022123ce6227d132f39de0108/Manuscript_supp_data/Supplementary_Data.xlsx)
+at commit `f63a0dfab124ea9022123ce6227d132f39de0108` supplies additional metrics and
+regulator-to-locus mappings. Module statistics join by name, with count and
+precision/recall consistency checks. The
+[export manifest](../projects/P_PUTIDA/tf_census/imodulon/manifest.json) records
+exact URLs, retrieval times, SHA-256 hashes, importer hash and validation results.
 
-**Key Features:**
-- Data-driven approach using hundreds of transcriptomes
-- Identifies co-regulated gene modules
-- Provides precision/recall metrics vs. known regulons
-- Available for multiple bacterial species
+Legacy E. coli and B. subtilis configuration entries are explicitly unavailable:
+their dataset labels and download routes were not verified to describe matching
+datasets. They require separately versioned adapters before use; the command
+returns an error rather than substituting a differently sized compendium.
 
-**Reference:** Sastry et al. 2021, *Nucleic Acids Research* 49:D112-D120
+## Commands and outputs
 
-## Supported Organisms
-
-Currently supported organisms with iModulonDB datasets:
-
-| Organism | Code | Dataset | Reference |
-|----------|------|---------|-----------|
-| *Pseudomonas putida* KT2440 | PSEPK / p_putida | precise321 | Lim et al. 2022 |
-| *Escherichia coli* K-12 MG1655 | ecoli / e_coli | precise456 | Sastry et al. 2019 |
-| *Bacillus subtilis* 168 | b_subtilis | precise91 | Rychel et al. 2020 |
-
-To see the current list:
 ```bash
 just list-imodulondb-organisms
+just compare-imodulondb PSEPK BenR --output-dir /tmp/aigr-imodulondb
+uv run python scripts/compare_with_imodulondb_v2.py PSEPK \
+  --cache-dir .cache/imodulondb-repaired \
+  --export-dataset projects/P_PUTIDA/tf_census/imodulon
+uv run python projects/P_PUTIDA/calibrate_tf_imodulons.py
+uv run pytest -q tests/test_imodulondb.py tests/test_putida_tf_census.py
 ```
 
-## Quick Start
-
-### Compare a Single Gene
-
-```bash
-just compare-imodulondb PSEPK BenR
-```
-
-This will:
-1. Download iModulonDB data for *P. putida* (cached locally)
-2. Find the BenR iModulon
-3. Extract gene weights and statistics
-4. Generate comparison report
-
-Output: `genes/p_putida/BenR/BenR-imodulondb-comparison.md`
-
-### Example Output
-
-```markdown
-# BenR iModulonDB Comparison
-
-## BenR iModulon Statistics
-
-| Metric | Value |
-|--------|-------|
-| **iModulon Size** | 10 genes |
-| **Known Regulon Size** | 4 genes |
-| **Precision** | 0.40 (40%) |
-| **Recall** | 1.00 (100%) |
-| **F1 Score** | 0.57 |
-
-## Interpretation
-
-**Consistency Level**: HIGH
-
-✅ **Perfect Recall**: All known regulon members captured in iModulon.
-⚠️ **Moderate Precision**: iModulon contains additional genes suggesting functional coupling.
-```
-
-## Use Cases
-
-### 1. Validate Gene Review
-
-After completing a gene review, compare with iModulonDB to:
-- Confirm direct regulatory targets
-- Identify potential novel targets
-- Assess consistency with transcriptomic data
-
-```bash
-just compare-imodulondb PSEPK BenR
-```
-
-### 2. Identify Novel Regulatory Targets
-
-iModulons may include genes not in literature-based regulons:
-- Genes with high weights but not in review → novel predictions
-- Functionally coupled genes (indirect regulation)
-- Cross-pathway regulatory connections
-
-### 3. Distinguish Direct vs. Functional Coupling
-
-**Direct regulation**: High weight + known target (e.g., benABCD for BenR)
-**Functional coupling**: High weight + downstream pathway (e.g., cat genes with ben genes)
-
-### 4. Cross-Organism Comparison
-
-Compare regulatory patterns across species:
-```bash
-just compare-imodulondb ecoli FliA
-just compare-imodulondb bsubtilis SigD
-# Compare flagellar regulation across organisms
-```
-
-## Understanding the Metrics
-
-### iModulon Statistics
-
-- **iModulon Size**: Number of genes in data-driven module
-- **Known Regulon Size**: Number of validated targets from literature
-- **True Positives (TP)**: Genes in both iModulon and known regulon
-- **Precision**: TP / iModulon Size (fraction of iModulon that's validated)
-- **Recall**: TP / Regulon Size (fraction of known targets captured)
-- **F1 Score**: Harmonic mean of precision and recall
-
-### Consistency Levels
-
-- **HIGH** (F1 ≥ 0.5, Recall ≥ 0.8): Strong validation
-- **MEDIUM** (F1 ≥ 0.4, Recall ≥ 0.6): Partial validation
-- **LOW** (F1 < 0.4 or Recall < 0.6): Discrepancies warrant investigation
-
-### Gene Weights
-
-Gene weights from ICA indicate strength of co-regulation:
-- **|weight| > 0.2**: Strong association (likely direct targets)
-- **|weight| 0.1-0.2**: Moderate association (direct or coupled)
-- **|weight| 0.05-0.1**: Weak association (may be indirect)
-- **|weight| < 0.05**: Not significantly associated
-
-## Interpreting Results
-
-### Perfect Recall, Moderate Precision
-
-**Example**: BenR has recall=1.0, precision=0.4
-
-**Interpretation**:
-- ✅ All known targets captured (good!)
-- ⚠️ iModulon includes 6 additional genes
-- These may be: (a) novel predictions, (b) functionally coupled, or (c) false positives
-
-**Action**: Investigate high-weight genes not in review
-
-### Imperfect Recall
-
-**Example**: Recall = 0.7 (missing 30% of known targets)
-
-**Possible reasons**:
-- Known targets not co-expressed across conditions
-- Context-specific regulation
-- Data quality issues
-- Literature over-annotation
-
-**Action**: Check which genes are missing and why
-
-### Low Precision
-
-**Example**: Precision = 0.2 (80% of iModulon not validated)
-
-**Possible reasons**:
-- Captures functional pathway, not just direct regulation
-- Novel targets awaiting experimental validation
-- Promiscuous regulator with many targets
-- iModulon captures complex regulatory logic
-
-**Action**: Distinguish functional coupling from direct regulation
-
-## Advanced Usage
-
-### Custom Cache Directory
-
-```bash
-just compare-imodulondb PSEPK BenR --cache-dir /path/to/cache
-```
-
-### Batch Analysis
-
-For multiple genes:
-```bash
-for gene in BenR CatR PcaR; do
-  just compare-imodulondb PSEPK $gene
-done
-```
-
-### Clean Cache
-
-To re-download data:
-```bash
-just clean-imodulondb-cache
-just compare-imodulondb PSEPK BenR
-```
-
-## File Structure
-
-```
-.cache/imodulondb/
-  p_putida/
-    supplementary_data.xlsx     # Downloaded from GitHub
-  e_coli/
-    supplementary_data.xlsx
-
-genes/
-  p_putida/
-    BenR/
-      BenR-imodulondb-comparison.md   # Generated comparison
-```
-
-## Implementation Details
-
-### Data Source
-
-iModulonDB data is downloaded from organism-specific GitHub repositories:
-- **P. putida**: [SBRG/modulome_ppu](https://github.com/SBRG/modulome_ppu)
-- **E. coli**: [SBRG/modulome_eco](https://github.com/SBRG/modulome_eco)
-- **B. subtilis**: [SBRG/modulome_bsu](https://github.com/SBRG/modulome_bsu)
-
-### Caching
-
-- Downloaded files are cached in `.cache/imodulondb/`
-- Subsequent runs use cached data (faster)
-- Cache persists across sessions
-- Use `just clean-imodulondb-cache` to force re-download
-
-### Organism Mapping
-
-Organism codes are mapped in: `src/ai_gene_review/data/imodulondb_organisms.yaml`
-
-To add new organisms, edit this file with:
-- Taxon ID
-- iModulonDB code
-- GitHub repository
-- Dataset name
-- Reference citation
-
-## Troubleshooting
-
-### "Organism not found in iModulonDB mapping"
-
-**Solution**: Check organism code with `just list-imodulondb-organisms`
-
-### "No iModulon found for regulator"
-
-**Possible reasons**:
-1. Gene is not a transcription factor
-2. Gene name mismatch (try alternative names)
-3. No iModulon identified for this regulator
-
-**Solution**: Check available regulators in dataset
-
-### "Download failed"
-
-**Possible reasons**:
-1. Network connectivity issues
-2. GitHub repository moved
-3. File path changed
-
-**Solution**: Check GitHub repo exists, update organism mapping if needed
-
-## Limitations
-
-1. **Bacterial organisms only** - iModulonDB currently focuses on bacteria
-2. **Dataset availability** - Only ~20 organisms have published datasets
-3. **Gene name matching** - Requires exact match with regulator name
-4. **Context-specific regulation** - iModulons average across conditions
-5. **Indirect effects** - ICA captures co-expression, not just direct regulation
-
-## Future Enhancements
-
-Planned features (see `IMODULONDB_INTEGRATION_PLAN.md`):
-
-- [ ] Automatic integration with `just fetch-gene`
-- [ ] Validation checks during `just validate`
-- [ ] Cross-organism comparison tools
-- [ ] Interactive visualizations
-- [ ] API-based access (when available)
-- [ ] Support for condition-specific iModulons
-- [ ] Integration with other regulatory databases
-
-## Related Documentation
-
-- [iModulonDB website](https://imodulondb.org/)
-- [iModulonDB paper](https://doi.org/10.1093/nar/gkaa810)
-- [Integration plan](../IMODULONDB_INTEGRATION_PLAN.md)
-- [Example: BenR analysis](../genes/PSEPK/BenR/BenR-imodulondb-comparison.md)
-
-## Citation
-
-If you use iModulonDB data in your work, please cite:
-
-- **iModulonDB**: Sastry AV et al. (2021) iModulonDB: a knowledgebase of microbial transcriptional regulation derived from machine learning. *Nucleic Acids Res* 49:D112-D120.
-- **Organism-specific datasets**: See references in organism mapping file
-
-## Questions?
-
-For questions about:
-- **This integration**: File an issue on GitHub
-- **iModulonDB data**: Contact [iModulonDB team](https://imodulondb.org/)
-- **Specific datasets**: See references in organism-specific papers
+Add `--offline` to reuse checked raw downloads without network requests. Cache
+entries are keyed by URL and paired with checksum provenance; missing, incomplete
+or altered entries fail explicitly. Cache location is controlled by `--cache-dir`.
+The calibration command works entirely from the committed normalized export and
+local review/metadata inputs; re-export if importer code has changed.
+
+A single-gene command writes Markdown and JSON beneath
+`<output-dir>/genes/PSEPK/<resolved-review-name-or-accession>/`. It reads
+accession/taxon-matched review YAML for context and records input hashes, pending
+rows and declared status. It does **not** run gene validation. Ambiguous aliases
+fail with a request to use accession/locus; explicit unmatched accessions do not
+fall back to names. All assigned modules and all memberships of the queried gene
+are reported separately. Source regulator expressions retain their original text.
+
+The dataset export contains `dataset.json`, `memberships.tsv` and `manifest.json`.
+The calibration folder adds 20 report pairs, a summary and a checksum manifest.
+Published reference-regulon precision/recall/F1 and p/q values remain source
+statistics. Missing measurements are null, measured zero remains zero, and
+membership-only input never receives invented rank-based weights. No structured
+curated target set has been supplied: **target-overlap comparison is not performed**.
+
+## Evidence interpretation
+
+An iModulon is an expression component inferred by Independent Component
+Analysis. The approach is described by [Rychel et al. (2021)](https://doi.org/10.1093/nar/gkaa810)
+and the KT2440 compendium by [Lim et al. (2022)](https://doi.org/10.1016/j.ymben.2022.04.004).
+
+- Membership supports expression association in sampled conditions; it does not
+  establish TF identity, direct promoter regulation or pathway participation.
+- A TF need not belong to the module it regulates. Missing assignments are not
+  negative evidence of TF function; modules can be unassigned or multi-regulator.
+- Weight magnitude is not binding probability, and ICA loading sign does not
+  establish activation versus repression. Display cutoffs cannot define membership.
+- Imported overlap scores measure agreement with the authors' reference regulon.
+  Those labels and scores may reuse the same literature as another database and
+  cannot independently validate it. Missing members are not grounds to remove
+  literature-supported targets.
+- Directness, regulatory sign and ligand binding each require their own evidence.
+  A growth condition is not necessarily a TF ligand. No GO edits are generated.
+
+## BenR correction and remaining work
+
+The [corrected BenR summary](../projects/P_PUTIDA/tf_census/imodulon/reports/Q88I42.md)
+has **10 published members**, at source threshold **0.12821891758582343**. The
+[historical report](../genes/PSEPK/BenR/BenR-iModulonDB-comparison.md) listed 13 genes
+above an arbitrary 0.05 cutoff. PP_3765, PP_3168 and PP_3792 are not published
+BenR members. Its mechanistic claims require separate literature checks; even
+the corrected membership set is not a direct-target list.
+
+Next steps are full gene-level GO reviews, structured experimental regulatory
+relationships and new comparisons against those curated target sets. The
+[bacterial regulon workstream](../projects/TRANSCRIPTION_FACTORS/bacterial-regulon-evidence.md)
+tracks these separately from the completed membership import.

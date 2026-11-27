@@ -420,6 +420,42 @@ litscan-module-member *args="":
 sync-shadow-issues tracker="go-annotation" *args="":
     uv run ai-gene-review shadow-issues sync {{tracker}} {{args}}
 
+# --- Time-split annotation benchmarks (docs/benchmarks.md) ---
+#   just benchmark-build benchmarks/human-goa-2025-06/human-goa-2025-06-spec.yaml
+#   just benchmark-check benchmarks/human-goa-2025-06/human-goa-2025-06.yaml
+#   just benchmark-export benchmarks/human-goa-2025-06/human-goa-2025-06.yaml
+#   just benchmark-score benchmarks/human-goa-2025-06/human-goa-2025-06.yaml --peptalk blind.jsonl
+
+# Draw a benchmark from a BenchmarkSpec into the spec's folder
+benchmark-build spec *args="":
+    uv run ai-gene-review benchmark build {{spec}} -o $(dirname {{spec}}) {{args}}
+
+# Run the deterministic checks; writes <id>-check-report.yaml and .md beside the benchmark
+benchmark-check benchmark *args="":
+    uv run ai-gene-review benchmark check {{benchmark}} {{args}}
+
+# Write FASTA, peptalk claims and baseline GOA files for the benchmark's conditions
+benchmark-export benchmark *args="":
+    uv run ai-gene-review benchmark export {{benchmark}} {{args}}
+
+# Score condition results (peptalk JSONL, agent-review genes folders) per item
+benchmark-score benchmark *args="":
+    uv run ai-gene-review benchmark score {{benchmark}} {{args}}
+
+# Validate every committed benchmark spec, benchmark, check report, agent evaluation and score report
+validate-benchmarks:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+    for spec in benchmarks/*/*-spec.yaml; do
+        dir=$(dirname "$spec"); id=$(basename "$spec" -spec.yaml)
+        uv run ai-gene-review benchmark validate "$spec" --class BenchmarkSpec
+        uv run ai-gene-review benchmark validate "$dir/$id.yaml" --class Benchmark
+        for f in "$dir/$id"-check-report.yaml; do uv run ai-gene-review benchmark validate "$f" --class CheckReport; done
+        for f in "$dir"/*-agent-evaluation.yaml; do uv run ai-gene-review benchmark validate "$f" --class AgentEvaluation; done
+        for f in "$dir"/*-scores.yaml; do uv run ai-gene-review benchmark validate "$f" --class ScoreReport; done
+    done
+
 # List shadow issues waiting for triage, shadow work, or rating
 outstanding-shadow-issues tracker="go-annotation" *args="":
     uv run ai-gene-review shadow-issues outstanding {{tracker}} {{args}}
@@ -440,6 +476,15 @@ validate-shadow-issues tracker="go-annotation":
 # Check a commit message or PR body file for text that would notify upstream curators.
 check-upstream-refs +files:
     python3 src/ai_gene_review/shadow_issues/guard.py {{files}}
+
+# Optional isolated sequence read through the claude CLI (FEAT + PSEUDO prompts of
+# fable-sequence-to-function, with shuffled and catalytic/decoy controls). Bills 3-5
+# model calls to the signed-in claude account. For a clean blind control use
+# peptalk-llm (`sequence-read blind-fasta` / `import-peptalk`); the default mode is the
+# reviewing agent's own in-context read. See .claude/skills/sequence-read/SKILL.md.
+# Example: just sequence-read human PTEN --model claude-fable-5-2 --effort high
+sequence-read organism gene *args="":
+    uv run ai-gene-review sequence-read run {{organism}} {{gene}} {{args}}
 
 # Generic provider-selecting entry point documented in AGENTS.md and automation prompts.
 # Supports --provider, --alias, --fallback, --timeout, and --extra-args (which must come last).
@@ -1259,6 +1304,10 @@ validate organism gene:
     set -e
     file="genes/{{organism}}/{{gene}}/{{gene}}-ai-review.yaml"
     uv run ai-gene-review validate --verbose --terms "$file"
+    sidecar="${file%-ai-review.yaml}-regulatory-evidence.yaml"
+    if [[ -f "$sidecar" ]]; then
+        uv run --group dev python projects/P_PUTIDA/validate_regulatory_evidence.py "$sidecar"
+    fi
     echo ""
     echo "Checking PMID references in markdown files..."
     uv run python src/ai_gene_review/tools/validate_pmid_references.py "genes/{{organism}}/{{gene}}/"
@@ -1487,6 +1536,24 @@ local-quote-baseline *args:
 [group('QC')]
 ec-class-audit *files:
     uv run python -m ai_gene_review.validation.ec_class_consistency {{files}}
+
+# List author-supplied GO ids (NEW rows and their extensions, core_functions,
+# proposed_replacement_terms, proposed_parent, isoform_specific_terms) that an
+# offline signal marks obsolete. Same rule as the
+# obsolete_authored_term warning in `just validate`. The signals are incomplete --
+# a hit is informative, a clean result does not prove the ids are live -- so this
+# exits 0 by default; pass --strict to fail, --no-ontology to skip the GO snapshot.
+# Example: just obsolete-term-audit genes/human/CPT1C/CPT1C-ai-review.yaml
+[group('QC')]
+obsolete-term-audit *files:
+    uv run python -m ai_gene_review.validation.obsolete_authored_terms {{files}}
+
+# List processes that modules assert for a gene and that neither GOA nor the
+# gene's review carries: leads for NEW annotations, not annotations. Writes
+# reports/module-annotation-leads.tsv (git-ignored). See modules/README.md.
+[group('QC')]
+module-annotation-leads *args:
+    uv run python -m ai_gene_review.module_annotation_leads {{args}}
 
 # Validate all gene review files (schema + references + best practices).
 # Uses batch mode for schema and advisory term validation, then the CLI for
@@ -2574,10 +2641,10 @@ family-msa family_id:
 
 # ============== iModulonDB Integration ==============
 
-# Compare gene review with iModulonDB data (for bacterial transcription factors)
+# Summarize published iModulon evidence with matched gene-review context
 # Examples:
 #   just compare-imodulondb PSEPK BenR
-#   just compare-imodulondb ecoli FliA
+#   just compare-imodulondb p_putida PP_3159
 compare-imodulondb organism gene *args="":
     @echo "Comparing {{organism}}/{{gene}} with iModulonDB..."
     uv run python scripts/compare_with_imodulondb_v2.py {{organism}} {{gene}} {{args}}

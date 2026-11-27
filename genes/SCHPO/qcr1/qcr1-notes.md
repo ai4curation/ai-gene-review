@@ -1,0 +1,8 @@
+# qcr1 review notes
+
+- The GO-CAM activity in model `69729a3800007453` uses `PomBase:SPBP23A10.15c`, enabled by signal peptidase activity (`GO:0009003`), part of mitochondrial protein processing (`GO:0034982`), and occurring in the mitochondrial matrix (`GO:0005759`). Those calls agree with this qcr1 review.
+- The GO-CAM label still uses `mas1`, but `SPBP23A10.15c` is now named `qcr1` by UniProt and NCBI; `mas1` is an alias. I fetched and reviewed `genes/SCHPO/qcr1` rather than the empty `genes/SCHPO/mas1` directory that `just fetch-gene SCHPO mas1` could not populate.
+- `just deep-research-falcon SCHPO qcr1 --fallback perplexity-lite` failed because `falcon` and `perplexity` were unavailable to the uvx `deep-research-client` environment; the only listed provider was `claude_code`. I wrote `qcr1-deep-research-manual.md` instead.
+- `just mod-description-deep-research SCHPO qcr1` skipped because no MOD provider is configured for `SCHPO`.
+- `just paint-losses SCHPO qcr1` reported PAINT IRDs at PTN000220393 blocking `GO:0004222 metalloendopeptidase activity` and `GO:0070585 protein localization to mitochondrion` on the qcr1 leaf. The direct S. pombe structural and peptidase data from PMID:37939086 contradict the GO:0004222 loss; the gene has no current `GO:0070585` row, so there was nothing to decide for that blocked term.
+- The final GO-CAM consistency-notes PR should mention that the qcr1/Cor1 gene review agrees with the modeled MPP activity and matrix location, with no hard conflict, but that the model still displays the older `mas1` alias and does not represent qcr1/Cor1 as also integrated into the S. pombe complex III supercomplex.

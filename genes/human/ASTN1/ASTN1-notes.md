@@ -18,3 +18,10 @@
 - PMID:20573900 was re-fetched with full text (PMC2905051). Quotes now come from its Results: RhoB-positive endosomes, clathrin light chain colocalization, and C-terminus exposure on the cell surface. The C-terminus result supports external side of plasma membrane.
 - The 1996 abstract says "two fibronectin type III repeats"; current UniProt annotates one FN3 domain (1030-1145), and the description follows UniProt.
 - BP specificity: GO:0021932 hindbrain radial glia guided cell migration fits the cerebellar evidence. ASTN1 is also expressed in cortex, hippocampus and olfactory bulb, and human variants cause cortical malformations, so the general neuron migration term is kept.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Endosome IBA (is_active_in, PTN000422025) and IEA (GO_REF:0000120 from mouse Q61137): KEEP_AS_NON_CORE -> MARK_AS_OVER_ANNOTATED on both.
+- PMID:20573900 full text: the only endosome data are ASTN1 co-transfected with GFP-Endo (RhoB) in HEK293T cells. The "endogenous" neuron experiment co-stains endogenous ASTN1 only with clathrin light chain-Venus (coated vesicles), no endosome marker.
+- The PAINT IBD seeds (mouse Astn1 and Astn2 IDA) and the mouse UniProt Endosome item (ECO:0000269|PubMed:20573900) all trace to this same paper (QuickGO and UniProt REST, 2026-11-23).
+- Overexpression in a foreign cell only, so over-annotated; KEEP_AS_NON_CORE is the close alternative given clathrin-dependent surface regulation in neurons. Added a WRONG_QUALIFIER CHECK source defect on the IBA.

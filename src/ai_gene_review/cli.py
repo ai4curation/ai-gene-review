@@ -42,13 +42,17 @@ from ai_gene_review.validation import (
 from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.validator import get_project_root, get_schema_path
 from ai_gene_review.draw import ReviewVisualizer
+from ai_gene_review.benchmark.cli import benchmark_app
 from ai_gene_review.litscan.cli import litscan_app
 from ai_gene_review.shadow_issues.cli import shadow_issues_app
+from ai_gene_review.sequence_read.cli import sequence_read_app
 from ai_gene_review.tools.audit_fulltext_flags import audit as audit_flags
 
 app = typer.Typer(help="ai-gene-review: Gene data ETL and review tool.")
 app.add_typer(litscan_app, name="litscan")
+app.add_typer(benchmark_app, name="benchmark")
 app.add_typer(shadow_issues_app, name="shadow-issues")
+app.add_typer(sequence_read_app, name="sequence-read")
 
 
 @app.command()
@@ -3899,6 +3903,71 @@ def compare_module_regulation(
         candidates = candidate_connections(source, source_id=f"file:{maud_toml}")
         typer.echo("# candidate connections (review before adding to a module):")
         typer.echo(_yaml.safe_dump(candidates, sort_keys=False))
+
+
+@app.command()
+def compare_module_sbml(
+    module_file: Annotated[
+        Path, typer.Argument(help="Curated module YAML (e.g. modules/erk_cascade.yaml)")
+    ],
+    sbml_file: Annotated[
+        Path, typer.Argument(help="SBML kinetic model to read signed edges from")
+    ],
+    mapping: Annotated[
+        Path,
+        typer.Option(
+            "--mapping",
+            "-m",
+            help="Reviewed mapping with modules, external and activity_levels sections",
+        ),
+    ],
+    module_key: Annotated[
+        Optional[str],
+        typer.Option(
+            "--module-key",
+            help="Key under modules: in the mapping (default: module file stem)",
+        ),
+    ] = None,
+    seed: Annotated[
+        int, typer.Option("--seed", help="Seed for the derivative-sign sampling")
+    ] = 0,
+    samples: Annotated[
+        int,
+        typer.Option(
+            "--samples", min=1, help="Sample points per effector for the sign check"
+        ),
+    ] = 64,
+):
+    """Diff a curated module's signed causal graph against an SBML kinetic model.
+
+    Signed edges are read from the model's rate laws (sign of the partial
+    derivative of each rate with respect to each effector, times the reaction's
+    effect on its target's activity) and compared with the module's signed edges
+    through the reviewed mapping. The model is evidence, not truth; nothing is
+    written to the module. Re-run with another --seed or more --samples to check
+    whether an undetermined (?) model sign is robust.
+
+    Example:
+        ai-gene-review compare-module-sbml \\
+            modules/erk_cascade.yaml \\
+            models/kinetic/biomd0000000010/model.xml \\
+            -m models/kinetic/biomd0000000010/mapping_to_modules.yaml
+    """
+    from ai_gene_review.sbml_signed import compare_module_to_sbml, format_comparison
+
+    for path in (module_file, sbml_file, mapping):
+        if not path.exists():
+            typer.echo(f"Error: file not found: {path}", err=True)
+            raise typer.Exit(code=1)
+    comparison = compare_module_to_sbml(
+        module_file,
+        sbml_file,
+        mapping,
+        module_key=module_key,
+        seed=seed,
+        samples=samples,
+    )
+    typer.echo(format_comparison(comparison))
 
 
 @app.command()

@@ -6,6 +6,12 @@ This project is for managing AI reviews of gene annotations. The overall goal is
 review existing GO annotations using strict defined criteria, and to summarize the resulting
 high quality annotations.
 
+## Schema authoring
+
+Always author schemas in LinkML, including project-local pilot and sidecar formats.
+Do not author JSON Schema schemas. Define reusable classes so both complete records
+and individual snippets can be validated with LinkML tooling.
+
 ## Local parallel work and storage
 
 - Keep at most six unfinished workstreams, including the coordinator. An idle
@@ -213,6 +219,11 @@ The Falcon (FutureHouse/Edison) stack is not in the default install. Run `uv syn
 This will create a file like `GENE-deep-research-perplexity.md`. You can also make your own notes in `genes/SPECIES/GENE/GENE-notes.md`.
 
 NEVER write your own content and name it `-deep-research-{provider}.md`. If deep research fails, document in `-notes.md` or `-deep-research-manual.md` instead.
+
+Preserve existing provider research and its artifacts verbatim. Do not manually edit
+them or rerun generation over them as part of routine curation. Generate missing
+research only; refresh existing output only when explicitly requested. Record
+corrections and disagreements in notes, `reference_review`, or `source_defects`.
 
 For worm, fly and yeast genes, also run `just mod-description-deep-research SPECIES GENE`. It writes the model organism database's hand-written gene description verbatim as `GENE-deep-research-<mod>.md` (`wormbase`, `flybase`, `sgd`). Other organisms are skipped: MGI's note summarises mutant phenotypes, and RGD, ZFIN and Xenbase have no hand-written text (see `projects/MOD_DESCRIPTIONS.md`). This is provider content, like an Affinage file, not your own. Treat it as an uncited, often out-of-date source: check its claims, record your verdict in that reference's `reference_review`, and record errors in its text as `source_defects` (see `docs/source_defects.md`).
 
@@ -665,6 +676,23 @@ Validation deliberately treats the two sources of GO term ids differently:
 Rule of thumb: machine-sourced ids are trusted (other deterministic steps guarantee they
 are real GOA terms); author-supplied ids are checked hard.
 
+**Neither check catches an obsolete id you wrote**, because the dynamic enums test branch
+*reachability* and a retired term is still reachable. `just validate` therefore warns
+(`obsolete_authored_term`,
+`src/ai_gene_review/validation/obsolete_authored_terms.py`) on every author-supplied GO
+id — a `NEW` row's term and its extensions, `core_functions`,
+`proposed_replacement_terms`, a `proposed_parent`, an isoform's
+`isoform_specific_terms` — that an offline signal marks obsolete; `just obsolete-term-audit`
+lists them. Detection combines the GO sqlite snapshot's `obsolete ` label prefix with the
+same prefix in the corpus' own `GENE-goa.tsv` files, which are refetched per gene and so
+catch obsoletions the snapshot has not picked up (this is how `GO:0098734` was found while
+CPT1C's own GOA file still carried the live label). **A hit is informative; a clean result
+proves nothing** — the two signals together caught four of eight known cases, and a
+*merged* id, which QuickGO resolves silently to a different term, is invisible to both. So
+check a replacement term against a live service when it matters, and do not read silence
+as confirmation. Do not repoint to GO's `replaced_by` without checking it against the gene:
+the mapping is automated and has been wrong here (see `genes/human/FYB1`).
+
 When a core activity has **no GO term yet** (e.g. in-situ holdases after GO:0051082 was
 obsoleted without a replacement), do not put an obsolete or ill-fitting id in
 `core_functions.molecular_function`. Instead set `proposed_molecular_function` to the
@@ -786,7 +814,9 @@ points to the wrong paper).
 The reference validator already catches the *mechanical* citation failures automatically: it
 verifies each cited reference's `title` matches the fetched record (a transposed/wrong PMID whose
 title no longer matches fails) and that every `supporting_text` is a **verbatim substring** of the
-cached publication (a quote from the wrong paper, or a paraphrased/invented quote, fails).
+cached publication (a quote from the wrong paper, or a paraphrased/invented quote, fails);
+for `PMID:` and `DOI:` sources the paper's cached title also counts, as a separate text a quote
+cannot run into the body from (`src/ai_gene_review/validation/title_matching.py`).
 A `supporting_text` value must contain actual verbatim source text. Editorial square
 brackets may clarify part of a real quotation; an empty string or a value consisting
 only of editorial commentary is not a quotation. Omit this optional field when no

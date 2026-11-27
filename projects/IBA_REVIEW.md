@@ -164,6 +164,10 @@ agree and where they do not
 > (PMID:32470107), which reported IBA as the leading non-IEA source of taxon-inconsistent
 > annotations. Most of its 290 flagged pairs are now gone from GOA; its plant lipid A flags
 > are refuted by experiment.
+>
+> Spin-off: [TRANSPOSON_DERIVED_ANNOTATIONS](TRANSPOSON_DERIVED_ANNOTATIONS.md) follows PAINT nodes
+> that carry host-gene biology to transposable-element ORFs (issue 12 below), starting from a
+> node that gives fly Pericardin's heart terms to 2,072 reverse-transcriptase ORFs.
 
 This project examines the quality of IBA (Inferred from Biological Aspect of Ancestor) annotations discovered through AI-assisted gene review. IBA annotations use phylogenetic trees to transfer function from characterized proteins to uncharacterized orthologs.
 
@@ -1146,6 +1150,7 @@ as a secondary function.
 - **NTN1 / NTN3 (human)** — `GO:0000981`/`GO:0006357`/`GO:0000978` (DNA-binding transcription-factor activity, Pol II transcription regulation, cis-regulatory DNA binding): Netrins are **secreted** axon-guidance cues (UniProt: extracellular; PANTHER PTHR10574 Netrin/Laminin) with no DNA-binding domain — yet they carry nuclear **POU-domain transcription-factor** IBAs. The WITH/FROM proves it: the source list is POU-domain TFs (POU2F1 P14859, POU1F1 P28069, POU4F1 Q12837, POU4F3 Q15319, …). A secreted protein cannot be a Pol II transcription factor; this is a phylogenetic grouping error.
 - **NOTCH1 (human)** — `GO:0007411` (axon guidance): the WITH/FROM is **SLIT1/2/3** (O75093, O94813, O75094). NOTCH1 signals in neurogenesis but axon guidance is a SLIT function transferred across an over-broad node.
 - **IL23R (human)** — `GO:0004925` (prolactin receptor activity), `GO:0017046` (peptide hormone binding): the WITH/FROM is **PRLR** (P16471). IL23R is a type-I cytokine receptor that binds the cytokine IL-23, not the hormone prolactin; the superfamily node is too broad.
+- **Transposon ORFs (many species)** — `GO:0007508` larval heart development, `GO:0061343`, `GO:0031012`: PAINT node PTN008655974 carries fly Pericardin's terms to reverse-transcriptase ORFs because PANTHER PTHR33395 groups Pericardin (SF21) with "REVERSE TRANSCRIPTASE DOMAIN-CONTAINING PROTEIN" (SF22); 2,072 rows (QuickGO, 2026-11-23). Followed up in [Transposon-derived proteins](TRANSPOSON_DERIVED_ANNOTATIONS.md).
 
 **Tier B — wrong paralog** (subtle; the source is a close relative with a different function):
 - **ABRAXAS1 (human)** — `GO:0090307`/`GO:0008608`/`GO:0008017` (mitotic spindle assembly, spindle–kinetochore attachment, microtubule binding): every one of these IBAs traces via WITH/FROM to **`UniProtKB:Q15018` = ABRAXAS2** (ABRO1, the BRISC-complex paralog). ABRAXAS1 is a nuclear BRCA1-A DNA-damage scaffold; the spindle/MT biology belongs to ABRAXAS2.

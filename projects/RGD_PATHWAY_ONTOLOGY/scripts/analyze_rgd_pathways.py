@@ -11,11 +11,15 @@ Outputs (``projects/RGD_PATHWAY_ONTOLOGY/data/``):
 * ``pw_go_mappings.sssom.yaml`` -- candidate PW -> GO mappings (SSSOM), from three sources:
   GO ids that PW cites as a definition source (``def_xref``) and exact
   normalized label/synonym matches (``lexical``), plus the "associated GO
-  term" that RGD diagram pages cite (``rgd_page_go_xref``). Every row is a *candidate*;
-  ``predicate_id`` is conservative and no row is curator-verified.
+  term" that RGD diagram pages cite (``rgd_page_go_xref``). Every row is a *candidate*.
+  Definition citations are closeMatch on the strength of a 50-row spot check
+  (``data/pw_def_xref_spot_check.yaml``, whose rows carry their own verdicts); only
+  those rows and the hand-curated set are individually verified.
 * ``pw_gocam_completeness.tsv`` -- one row per PW term with human gene
   annotations: gene counts by evidence tier, how many of those genes appear in
-  any human GO-CAM / have a gene review, the best-overlapping GO-CAM model, and
+  any human GO-CAM (and how many have a mouse or rat ortholog, by HGNC's MGI
+  and RGD cross-references, in a GO-CAM of that species) / have a gene review,
+  the best-overlapping GO-CAM model, and
   human GO-CAM models whose biological process falls under a mapped GO term.
 * ``module_seeds.yaml`` -- one seed per RGD diagram pathway, joining the diagram
   structure (sub-pathways, labels), RGD-curated human genes, GO mappings,
@@ -196,6 +200,61 @@ def load_hgnc(path: Path) -> tuple[dict[str, str], dict[str, str]]:
     return sym2up, up2sym
 
 
+RODENT_TAXA = {"mouse": ("NCBITaxon:10090", "mgd_id"), "rat": ("NCBITaxon:10116", "rgd_id")}
+
+
+def load_hgnc_rodent_xrefs(path: Path) -> dict[str, dict[str, str]]:
+    """HGNC's MGI and RGD cross-references: species -> {MOD gene id -> human symbol}.
+
+    A MOD id listed on more than one human gene is dropped, so each rodent gene counts
+    for at most one human gene; a human gene with several rodent ids counts through
+    any of them.
+    """
+    seen: dict[str, dict[str, set[str]]] = {sp: defaultdict(set) for sp in RODENT_TAXA}
+    with open(path, errors="ignore") as fh:
+        for r in csv.DictReader(fh, delimiter="\t"):
+            for sp, (_, col) in RODENT_TAXA.items():
+                for x in (r.get(col) or "").split("|"):
+                    if x:
+                        seen[sp][x].add(r["symbol"])
+    return {sp: {x: next(iter(s)) for x, s in d.items() if len(s) == 1} for sp, d in seen.items()}
+
+
+def rodent_gocam_symbols(path: Path, xrefs: dict[str, dict[str, str]]) -> dict[str, set[str]]:
+    r"""Human symbols whose mouse or rat ortholog (by HGNC xref) is in a GO-CAM of that species.
+
+    Mouse index rows carry ``MGI:MGI:nnn`` and HGNC carries ``MGI:nnn``; rat rows and
+    HGNC both carry ``RGD:nnn``. Rows on other entity types (CHEBI, GO, UniProtKB) are
+    not genes with an HGNC xref and are skipped.
+
+    >>> import tempfile, os
+    >>> rows = ["gene_product\tgene_label\tmodel_id\tmodel_title\ttaxon",
+    ...         "MGI:MGI:1\tFoo Mmus\tm1\tt\tNCBITaxon:10090",
+    ...         "RGD:2\tBar Rnor\tm2\tt\tNCBITaxon:10116",
+    ...         "UniProtKB:Q1\tBaz Mmus\tm1\tt\tNCBITaxon:10090"]
+    >>> with tempfile.NamedTemporaryFile("w", suffix=".tsv", delete=False) as fh:
+    ...     _ = fh.write("\n".join(rows) + "\n")
+    >>> out = rodent_gocam_symbols(Path(fh.name), {"mouse": {"MGI:1": "FOO"}, "rat": {"RGD:2": "BAR"}})
+    >>> os.unlink(fh.name)
+    >>> sorted(out["mouse"]), sorted(out["rat"])
+    (['FOO'], ['BAR'])
+    """
+    out: dict[str, set[str]] = {sp: set() for sp in RODENT_TAXA}
+    by_taxon = {taxon: sp for sp, (taxon, _) in RODENT_TAXA.items()}
+    with open(path) as fh:
+        for r in csv.DictReader(fh, delimiter="\t"):
+            sp = by_taxon.get(r["taxon"])
+            if not sp:
+                continue
+            gid = r["gene_product"]
+            if sp == "mouse" and gid.startswith("MGI:MGI:"):
+                gid = gid[len("MGI:"):]
+            sym = xrefs[sp].get(gid)
+            if sym:
+                out[sp].add(sym)
+    return out
+
+
 def load_gocams(path: Path) -> tuple[dict[str, set[str]], dict[str, str], dict[str, set[str]]]:
     """Human GO-CAM index: symbol -> models, model -> title, model -> BP ids."""
     sym_models: dict[str, set[str]] = defaultdict(set)
@@ -224,7 +283,9 @@ MATCH_FIELD = {"label": "rdfs:label", "exact_synonym": "oboInOwl:hasExactSynonym
 SOURCE_RULE = {"pw_def_xref": "PW_DEFINITION_XREF", "rgd_page_go_xref": "RGD_PAGE_GO_XREF",
                "curated": "CURATED_MAPPING"}
 RULE_TEXT = {
-    "src/PW_DEFINITION_XREF": "the GO id is cited as a definition source of the PW term",
+    "src/PW_DEFINITION_XREF": (
+        "the GO id is cited as a definition source of the PW term; a citation of a live GO process "
+        "is a closeMatch, or the verdict of the spot check in data/pw_def_xref_spot_check.yaml"),
     "src/RGD_PAGE_GO_XREF": "the GO id is the 'associated GO term' on the term's RGD pathway page",
     "src/LEXICAL_MATCH": "normalized PW label or exact synonym equals a GO label or exact synonym",
     "src/CURATED_MAPPING": (
@@ -316,7 +377,8 @@ def write_sssom(mappings: list[dict], path: Path) -> None:
             "Candidate PW -> GO mappings generated by projects/RGD_PATHWAY_ONTOLOGY/scripts/"
             "analyze_rgd_pathways.py from GO ids cited in PW definitions, GO ids cited on RGD "
             "pathway pages, and exact normalized label/synonym matches, plus the hand-curated rows "
-            "of data/pw_go_curated.sssom.yaml. Only the curated rows are curator-verified. "
+            "of data/pw_go_curated.sssom.yaml. Only the curated rows and the 50 spot-checked definition "
+            "citations (data/pw_def_xref_spot_check.yaml) are individually verified. "
             "curation_rule records why each row exists and any QA finding: " + rule_doc),
         "license": "https://creativecommons.org/licenses/by/4.0/",
         "creator_label": ["AI Gene Review project"],
@@ -343,19 +405,121 @@ def write_sssom(mappings: list[dict], path: Path) -> None:
         yaml.safe_dump(doc, fh, sort_keys=False, width=100, allow_unicode=True)
 
 
+def _term_ids(obj) -> set[str]:
+    """Every ``term.id`` in a parsed YAML subtree (structured fields only, never prose)."""
+    out: set[str] = set()
+    if isinstance(obj, dict):
+        term = obj.get("term")
+        if isinstance(term, dict) and isinstance(term.get("id"), str):
+            out.add(term["id"].strip())
+        for v in obj.values():
+            out |= _term_ids(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            out |= _term_ids(v)
+    return out
+
+
+def _module_refs(obj) -> set[str]:
+    """Every ``module_ref`` value in a parsed YAML subtree."""
+    out: set[str] = set()
+    if isinstance(obj, dict):
+        ref = obj.get("module_ref")
+        if isinstance(ref, str):
+            out.add(ref.strip())
+        for v in obj.values():
+            out |= _module_refs(v)
+    elif isinstance(obj, list):
+        for v in obj:
+            out |= _module_refs(v)
+    return out
+
+
+def _find_by_id(obj, node_id: str):
+    """The first dict in a subtree whose ``id`` is ``node_id`` (nodes, parts, variants, annotons)."""
+    if isinstance(obj, dict):
+        if obj.get("id") == node_id:
+            return obj
+        for v in obj.values():
+            hit = _find_by_id(v, node_id)
+            if hit is not None:
+                return hit
+    elif isinstance(obj, list):
+        for v in obj:
+            hit = _find_by_id(v, node_id)
+            if hit is not None:
+                return hit
+    return None
+
+
+def _uniprot_ids(ids: set[str]) -> set[str]:
+    return {i.split(":", 1)[1].split("-")[0] for i in ids if i.startswith("UniProtKB:")}
+
+
 def load_modules(mod_dir: Path, up2sym: dict[str, str]) -> list[dict]:
-    mods = []
+    """Index modules by the ids in their structured fields.
+
+    GO terms and UniProtKB members are read from ``term.id`` fields of the parsed
+    ``module`` tree, so ids named only in notes or descriptions no longer count
+    (ai4curation/ai-gene-review#6006). Members reached through a node-level
+    ``module_ref`` (``slug#node``) count for the referencing module: the referenced
+    node's own members, and theirs in turn, are added (cycle-safe). A bare-slug
+    reference names a separate whole module and adds nothing, and a node-level
+    reference that does not resolve adds nothing and is reported on stderr.
+    GO ids under ``about_node``, ``subject`` or ``proposed_parent`` (ontology change
+    requests) are not ``term.id`` fields and do not count. PW ids count only from the
+    top-level ``evidence`` list, where every module declares them.
+    """
+    docs: dict[str, dict] = {}
     for f in sorted(mod_dir.glob("*.yaml")):
-        txt = f.read_text(errors="ignore")
-        title_m = re.search(r"^title:\s*(.+)$", txt, flags=re.M)
-        ups = set(re.findall(r"UniProtKB:([A-Z0-9]{6,10})", txt))
+        try:
+            doc = yaml.safe_load(f.read_text(errors="ignore")) or {}
+        except yaml.YAMLError as exc:
+            print(f"warning: {f.name} is not valid YAML and is skipped: {exc}", file=sys.stderr)
+            continue
+        if isinstance(doc, dict):
+            docs[f.stem] = doc
+
+    def module_root(slug: str) -> dict:
+        return docs[slug].get("module") or {}
+
+    def subtree_members(slug: str, node_id: str | None, seen: set[tuple],
+                        referrer: str | None = None) -> set[str]:
+        key = (slug, node_id)
+        if key in seen:
+            return set()
+        if slug not in docs:
+            print(f"warning: {referrer}: module_ref to missing module {slug!r}", file=sys.stderr)
+            return set()
+        seen = seen | {key}
+        root = module_root(slug)
+        sub = _find_by_id(root, node_id) if node_id else root
+        if sub is None:
+            print(f"warning: {referrer}: unresolved module_ref {slug}#{node_id}", file=sys.stderr)
+            return set()
+        ups = _uniprot_ids(_term_ids(sub))
+        for ref in _module_refs(sub):
+            ref_slug, _, ref_node = ref.partition("#")
+            # Only node-level references (slug#node) bring the referenced step's members
+            # in; a bare slug points at a separate whole mechanism (a dependency), whose
+            # members are not this module's.
+            if ref_node:
+                ups |= subtree_members(ref_slug, ref_node, seen, referrer=slug)
+        return ups
+
+    mods = []
+    for slug, doc in docs.items():
+        ids = _term_ids(module_root(slug))
+        ups = subtree_members(slug, None, set())
+        title = doc.get("title") or slug
         mods.append({
-            "id": f.stem,
-            "title": (title_m.group(1).strip().strip("'\"") if title_m else f.stem),
-            "go": set(re.findall(r"GO:\d{7}", txt)),
+            "id": slug,
+            "title": str(title).strip(),
+            "go": {i for i in ids if re.fullmatch(r"GO:\d{7}", i)},
             # Only PW ids a module declares as its evidence sources count as "cites PW id";
             # a PW id named in notes (often as an out-of-scope neighbour) does not.
-            "pw": set(re.findall(r"source_id:\s*['\"]?(PW:\d{7})", txt)),
+            "pw": {e.get("source_id") for e in (doc.get("evidence") or [])
+                   if isinstance(e, dict) and str(e.get("source_id", "")).startswith("PW:")},
             "symbols": {up2sym[u] for u in ups if u in up2sym},
         })
     return mods
@@ -409,6 +573,43 @@ def load_curated(path: Path, pw_live: dict[str, dict], go: dict[str, dict]) -> l
     return out
 
 
+def load_spot_check(path: Path) -> dict[tuple[str, str], dict]:
+    """Spot-check verdicts for PW definition citations, keyed by (subject_id, object_id)."""
+    rows = yaml.safe_load(path.read_text())["rows"]
+    bad = sorted({r["verdict"] for r in rows} - set(MATCHING_PREDICATES) - {"skos:broadMatch", "skos:relatedMatch"})
+    if bad:
+        raise ValueError(f"{path.name}: unknown verdicts {bad}")
+    return {(r["subject_id"], r["object_id"]): r for r in rows}
+
+
+def def_xref_predicate(pair: tuple[str, str], usable: bool,
+                       spot: dict[tuple[str, str], dict]) -> tuple[str, str]:
+    """Predicate and comment for a GO id cited in a PW definition.
+
+    A 50-row spot check (data/pw_def_xref_spot_check.yaml) found PW's citations of live
+    GO processes to be close or exact matches 48 times and narrower GO terms twice, so
+    an unchecked citation is a closeMatch and a checked one takes its verdict. A citation
+    of an obsolete, unresolvable or non-process GO id stays a relatedMatch.
+
+    >>> spot = {("PW:1", "GO:1"): {"verdict": "skos:narrowMatch", "note": "GO is narrower."}}
+    >>> def_xref_predicate(("PW:1", "GO:1"), True, spot)[0]
+    'skos:narrowMatch'
+    >>> def_xref_predicate(("PW:2", "GO:2"), True, spot)[0]
+    'skos:closeMatch'
+    >>> def_xref_predicate(("PW:2", "GO:2"), False, spot)[0]
+    'skos:relatedMatch'
+    """
+    if not usable:
+        return "skos:relatedMatch", "GO id cited as a definition source in PW; the GO term is not usable."
+    if pair in spot:
+        r = spot[pair]
+        return r["verdict"], ("GO id cited as a definition source in PW; spot-checked "
+                              f"(data/pw_def_xref_spot_check.yaml). {r.get('note', '')}").strip()
+    return "skos:closeMatch", ("GO id cited as a definition source in PW; closeMatch on the evidence "
+                               "of a 50-row spot check (data/pw_def_xref_spot_check.yaml), not checked "
+                               "individually.")
+
+
 def merge_go_maps(go_maps: list[dict]) -> list[dict]:
     """One entry per GO id; the strongest predicate wins, all sources are kept."""
     rank = {"skos:exactMatch": 0, "skos:closeMatch": 1, "skos:narrowMatch": 2, "skos:relatedMatch": 3}
@@ -460,6 +661,7 @@ def main() -> int:
         rec = yaml.safe_load(f.read_text())
         page_xrefs[rec["id"]] = [x for x in rec.get("description_xrefs", []) if x.startswith("GO:")]
 
+    spot = load_spot_check(PROJECT / "data" / "pw_def_xref_spot_check.yaml")
     mappings: list[dict] = []
     for t in pw_live.values():
         seen: set[tuple[str, str]] = set()
@@ -481,14 +683,16 @@ def main() -> int:
             seen.add((x, "def"))
             g = go.get(x)
             status = "missing" if not g else ("obsolete" if g["obsolete"] else "ok")
+            pred, comment = def_xref_predicate(
+                (t["id"], x), status == "ok" and g["namespace"] == "biological_process", spot)
             mappings.append({
                 "subject_id": t["id"], "subject_label": t["name"],
-                "predicate_id": "skos:relatedMatch", "object_id": x,
+                "predicate_id": pred, "object_id": x,
                 "object_label": g["name"] if g else "", "object_namespace": g["namespace"] if g else "",
                 "mapping_justification": "semapv:ManualMappingCuration",
                 "match_source": "pw_def_xref", "object_status": status,
                 "replaced_by": g["replaced_by"] if g else [],
-                "comment": "GO id cited as a definition source in PW; scope not asserted.",
+                "comment": comment,
             })
         names = [(t["name"], "label")] + [(s, "exact_synonym") for s, sc in t["synonyms"] if sc == "EXACT"]
         for nm, src in names:
@@ -575,6 +779,9 @@ def main() -> int:
     sym2up, up2sym = load_hgnc(cache / "hgnc_complete_set.txt")
     sym_models, titles, model_bps = load_gocams(ROOT / "gocams" / "index.tsv")
     gocam_syms = set(sym_models)
+    rodent_syms = rodent_gocam_symbols(ROOT / "gocams" / "index.tsv",
+                                       load_hgnc_rodent_xrefs(cache / "hgnc_complete_set.txt"))
+    mammal_syms = gocam_syms | rodent_syms["mouse"] | rodent_syms["rat"]
     model_syms: dict[str, set[str]] = defaultdict(set)
     for sym, ms in sym_models.items():
         for m in ms:
@@ -613,6 +820,9 @@ def main() -> int:
             "gene_basis": "rgd_curated" if genes_cur else "all",
             "n_basis_in_gocam": len(in_gocam),
             "frac_basis_in_gocam": round(len(in_gocam) / len(gene_basis), 3),
+            "n_basis_in_mouse_gocam": len(gene_basis & rodent_syms["mouse"]),
+            "n_basis_in_rat_gocam": len(gene_basis & rodent_syms["rat"]),
+            "frac_basis_in_any_mammal_gocam": round(len(gene_basis & mammal_syms) / len(gene_basis), 3),
             "n_basis_reviewed": len(gene_basis & reviewed),
             "best_gocam_model": best[0][0] if best else "",
             "best_gocam_overlap": best[0][1] if best else 0,
@@ -784,7 +994,18 @@ def main() -> int:
         "in_scope_with_ge_half_genes_in_gocam": sum(1 for i in in_scope if i in row_by and row_by[i]["frac_basis_in_gocam"] >= 0.5),
         "in_scope_with_any_gocam_for_mapped_go": sum(1 for i in in_scope if i in row_by and row_by[i]["n_gocam_models_for_mapped_go"] > 0),
         "in_scope_median_best_single_gocam_overlap": median([row_by[i]["best_gocam_overlap"] for i in in_scope if i in row_by]),
+        "in_scope_median_frac_in_any_mammal_gocam": round(median(
+            [row_by[i]["frac_basis_in_any_mammal_gocam"] for i in in_scope if i in row_by]), 3),
+        "in_scope_with_ge_half_genes_in_any_mammal_gocam": sum(
+            1 for i in in_scope if i in row_by and row_by[i]["frac_basis_in_any_mammal_gocam"] >= 0.5),
+        "in_scope_with_mouse_gocam_genes": sum(
+            1 for i in in_scope if i in row_by and row_by[i]["n_basis_in_mouse_gocam"] > 0),
+        "in_scope_with_rat_gocam_genes": sum(
+            1 for i in in_scope if i in row_by and row_by[i]["n_basis_in_rat_gocam"] > 0),
         "human_gocam_gene_symbols": len(gocam_syms),
+        "mouse_gocam_genes_mapped_to_human": len(rodent_syms["mouse"]),
+        "rat_gocam_genes_mapped_to_human": len(rodent_syms["rat"]),
+        "rodent_only_gocam_genes": len((rodent_syms["mouse"] | rodent_syms["rat"]) - gocam_syms),
         "modules_compared": len(modules),
     }
     with open(args.out / "summary.yaml", "w") as fh:

@@ -29,13 +29,13 @@ genes of a pathway, and only 56 of the 144 have any human GO-CAM model whose
 process falls under the mapped GO term. Third, as a source of module seeds. We parsed
 all 200 RGD diagram pages into structured records (3,209 interaction edges,
 1,715 gene links, 651 chemicals, 580 links to other pathways). These were
-triaged against our 877 modules (2026-11-23). 136 now have a matching module, none
+triaged against our 886 modules (2026-11-24). 136 now have a matching module, none
 is left to model, 1 (titanium dioxide nanoparticle response) is left without a module
 by decision, 7 have too few curated genes, and 56 are disease or drug pathways and out
 of scope. The modules derived from RGD diagrams, starting with the pilot
-`srebp_signaling` and continuing through sixteen sets (below), cite their PW pathways as
-evidence; 86 modules now cite an RGD PW id that way, and each passes schema and module
-validation.
+`srebp_signaling` and continuing through eighteen sets (below), cite their PW pathways as
+evidence. 86 modules now cite a PW id as evidence (a count over all modules, not only
+those built from RGD diagrams), and each passes schema and module validation.
 
 ## Why this source
 
@@ -92,7 +92,7 @@ fetcher sends its own identifying user agent.
 
 | File | Contents |
 |------|----------|
-| `pw_go_mappings.sssom.yaml` | Candidate PW→GO mappings as an SSSOM mapping set, from three sources: GO ids PW cites in a definition (`skos:relatedMatch`), the "associated GO term" on a diagram page (`skos:closeMatch`), and exact normalized matches between labels or exact synonyms, where PW's "X metabolic/biosynthetic/degradation pathway" is read as GO's "X metabolic/biosynthetic/catabolic process" (`skos:exactMatch` if verbatim, else `skos:closeMatch`). None is curator-verified. Each row's `curation_rule` records why it exists (`pw2go:src/…`) and any QA finding (`pw2go:qa/…`), as fixed codes defined in the mapping-set description, so one prefix filter selects every problem row. `see_also` holds only GO's replacement for an obsolete target; the conflicting GO ids for a page citation that disagrees are in `other` as `conflicts_with=<GO id>`. |
+| `pw_go_mappings.sssom.yaml` | Candidate PW→GO mappings as an SSSOM mapping set, from three sources: GO ids PW cites in a definition (`skos:closeMatch` after a 50-row spot check; spot-checked pairs carry their own verdict; citations of obsolete or missing GO ids stay `skos:relatedMatch`), the "associated GO term" on a diagram page (`skos:closeMatch`), and exact normalized matches between labels or exact synonyms, where PW's "X metabolic/biosynthetic/degradation pathway" is read as GO's "X metabolic/biosynthetic/catabolic process" (`skos:exactMatch` if verbatim, else `skos:closeMatch`). None is curator-verified. Each row's `curation_rule` records why it exists (`pw2go:src/…`) and any QA finding (`pw2go:qa/…`), as fixed codes defined in the mapping-set description, so one prefix filter selects every problem row. `see_also` holds only GO's replacement for an obsolete target; the conflicting GO ids for a page citation that disagrees are in `other` as `conflicts_with=<GO id>`. |
 | `pw_gocam_completeness.tsv` | One row for each of the 1,677 PW terms with human genes. Genes are taken over the term and its descendants. The basis is the RGD-curated set when one exists and all sources otherwise. Columns give the share of basis genes in any human GO-CAM, the share with a gene review, the best-overlapping GO-CAM, and the GO-CAM models whose process falls under a mapped GO term, with the share of genes they contain. |
 | `module_seeds.yaml` | One seed per diagram pathway: diagram structure, RGD-curated human genes, merged GO mappings, GO-CAM coverage, matches to existing modules, and a triage tier. |
 | `summary.yaml` | Headline counts used on this page. |
@@ -127,9 +127,14 @@ split along their sub-pathways before modelling.
   cite GO in their definition and 417 have a lexical match.
 - **PW's definition citations are reliable.** Where both exist, the definition
   citation and the lexical match agree for 388 of 397 terms. In no case is the
-  cited GO term an ancestor of the lexical match. This supports treating PW's
-  definition citations as closer to exact than `relatedMatch`, after spot
-  checks. The GO ids typed on RGD's diagram pages are less reliable. 4 of 45
+  cited GO term an ancestor of the lexical match. A reproducible 50-row spot check
+  of the 592 citations of live GO processes
+  ([`data/pw_def_xref_spot_check.yaml`](RGD_PATHWAY_ONTOLOGY/data/pw_def_xref_spot_check.yaml))
+  found 48 close or exact matches and 2 narrower GO terms (PW:0000100 transcription
+  pathway → DNA-templated transcription; PW:0000211 biogenic amines and polyamines →
+  polyamine metabolic process), and none wrong, so the citations are now written as
+  `closeMatch`. Extrapolated, about 24 of the 592 (up to about 80 at the 95% bound)
+  would deserve `narrowMatch`. The GO ids typed on RGD's diagram pages are less reliable. 4 of 45
   disagree with the other sources for the same pathway, and three of these look
   wrong: urea cycle is cited as GO:0000076, a DNA replication term whose local id
   repeats the PW id; ERK5 signaling as the JNK cascade; and Toll-like receptor
@@ -1356,10 +1361,29 @@ The sixteenth set closes follow-ups from the earlier sets rather than adding mod
   His976 (not His803) as the residue that replaces the catalytic Tyr. The met-2 review
   now reads GO:0140942 as the full two-step dimethylation.
 
+### Seventeenth and eighteenth sets: triage fixes, spot check and blood-set reviews
+
+- The triage now reads GO and UniProt ids from structured `term.id` fields only, so ids
+  named in notes no longer create matches (ai4curation/ai-gene-review#6006), and it
+  follows node-level `module_ref` (`slug#node`) when counting a module's genes; a
+  bare-slug reference to a separate whole module is not followed. Tiers did not change;
+  76 pathways' match bases did, and NER (36/46) and mismatch repair (21/21) count their
+  gap-filling genes again.
+- `interpro/panther/PTHR10625/PTHR10625-review.yaml` asks PAINT for an `ADD_IRD` of
+  histone deacetylase activity at PTN000743504, the vertebrate class IIa HDAC clade,
+  whose members carry His in place of the catalytic Tyr.
+- PW's definition citations are now `closeMatch` after the spot check described under
+  Findings.
+- New gene reviews for F3 (tissue factor; the FVIIa cofactor and allosteric activator)
+  and PROS1 (protein S; the APC and TFPI cofactor and a TAM-receptor ligand).
+- The optional transmembrane-only adenylyl cyclase node was not added.
+  `gpcr_camp_pka_signaling#adenylyl_cyclase_activation`, which five modules reference,
+  splits the cyclases into Gs-stimulated and Gi-inhibited variants; a reference to the
+  cAMP/PKA cassette's regulatory classes would not keep that split, which the
+  calcium-sensing receptor module relies on.
+
 ## Next steps
 
-- Spot-check about 50 `pw_def_xref` mappings and, if they hold, promote PW's
-  definition citations from `relatedMatch` to `closeMatch`/`exactMatch`.
 - Send RGD the 45 obsolete GO citation sites (44 in definitions, 1 on a
   diagram page; the page one repeats PW:0000543's definition citation, so 44
   distinct pairs), the unresolvable one and the 3 wrong page citations, with
@@ -1367,16 +1391,6 @@ The sixteenth set closes follow-ups from the earlier sets rather than adding mod
   Filtering `curation_rule` on `pw2go:qa/` returns all 50 rows: `qa/OBSOLETE_TARGET` 45, `qa/MISSING_TARGET` 1,
   `qa/PAGE_XREF_DISAGREES` 4 (the three wrong citations and the defensible
   PW:0000862) and `qa/ID_ECHO` 1 (PW:0000076, which also disagrees).
-- Optionally add a transmembrane-only adenylyl cyclase node to
-  `camp_pka_signal_transduction`, so that `gpcr_camp_pka_signaling`'s cyclase step
-  (still an inline ADCY5 annoton) could also reference the fuller module.
-- Add an `ADD_IRD` node assessment for the vertebrate class IIa HDAC clade to
-  `interpro/panther/PTHR10625/PTHR10625-review.yaml`: the HDAC4 and HDAC5 reviews both
-  reject the propagated histone deacetylase activity on the catalytic-Tyr argument, and
-  only a PAINT change stops the propagation.
-- Correct three stale sentences in `gpcr_camp_pka_signaling.yaml` left by the
-  sixteenth-set cyclase fix (its description still says the cyclase step is
-  referenced and omits ADCY5 from the exemplars).
 - Submit the new-term requests now recorded in module `proposed_new_terms`
   (`export_proposed_terms.py modules` lists them) to GO. Deduplicate by
   `proposed_name`: calcium channel activator activity is requested by both
@@ -1384,8 +1398,7 @@ The sixteenth set closes follow-ups from the earlier sets rather than adding mod
 - Once a calcium channel activator activity term exists, sweep the three
   "opens a calcium channel" functions onto it: STIM1/2 (`GO:0005246`),
   EMRE (`GO:0099103`) and CACNA1S (`GO:0005245`).
-- Review the blood-set member genes, starting with the proteases and cofactors
-  that carry curator-judgment molecular functions (F3, F5, F8, PROS1).
+- Review the remaining blood-set member genes; F3, F5, F8 and PROS1 are done.
 - Model the remaining pathways. The broad ones (RNA polymerase II, translation,
   ribosome biogenesis, the spliceosome and histone modification, plus RNA
   polymerase transcription and calcium-mediated signaling, which match only by
@@ -1393,11 +1406,6 @@ The sixteenth set closes follow-ups from the earlier sets rather than adding mod
   [broad_pathway_split_plans.md](RGD_PATHWAY_ONTOLOGY/broad_pathway_split_plans.md),
   with a suggested order. All of them are now carried out (ninth to fourteenth
   sets), and the candidates they split out are modelled in the fifteenth set.
-- Teach the triage to follow `module_ref` when counting a module's genes: since the
-  sixteenth set, NER and mismatch repair reach their gap-filling proteins only by
-  reference.
-- Fix the triage's prose scraping of GO and UniProt ids
-  (ai4curation/ai-gene-review#6006).
 - Candidate modules split out during the sets: Reelin modulation of NMDA/AMPA
   receptors in the adult synapse, and a human PAR/Crumbs/Scribble polarity module
   (the PKC module mentions the PAR complex only through the atypical PKCs), and a
@@ -1414,7 +1422,7 @@ The sixteenth set closes follow-ups from the earlier sets rather than adding mod
 - [x] GO-CAM completeness table (`data/pw_gocam_completeness.tsv`)
 - [x] Module seeds and triage (`data/module_seeds.yaml`)
 - [x] Pilot module from an RGD diagram (`modules/srebp_signaling.yaml`)
-- [ ] Spot-check and promote definition-citation mappings
+- [x] Spot-check and promote definition-citation mappings (50 rows; 48 close or exact, 2 narrower)
 - [ ] Report obsolete GO citations to RGD
 - [x] Map `needs_go_mapping` seeds (all 28, in `data/pw_go_curated.sssom.yaml`)
 - [x] Gene reviews for SREBP pathway members
@@ -1432,6 +1440,8 @@ The sixteenth set closes follow-ups from the earlier sets rather than adding mod
 - [x] Model the SK channels from the calcium-mediated signaling leftovers and decide PW:0001437 (fourteenth set)
 - [x] Model the candidate modules split out of earlier sets (fifteenth set)
 - [x] Close the follow-ups from the earlier sets (sixteenth set)
+- [x] Triage reads structured module ids and follows node-level `module_ref`; PTHR10625 IRD request (seventeenth set)
+- [x] Promote definition citations; F3 and PROS1 gene reviews (eighteenth set)
 
 ## Notes
 
@@ -1533,3 +1543,12 @@ Sixteenth set: NER and MMR gap filling by module_ref, the cAMP/PKA reconciliatio
 PMCA accessory subunits, the retinoic acid production repoint, and the HDAC4 and met-2
 gene review revisits (merged in ai4curation/ai-gene-review#6630). Tiers are unchanged
 (136 `has_module`); `modules_compared` is 877, with modules merged on `main` meanwhile.
+
+### 2026-11-24
+
+Seventeenth set (ai4curation/ai-gene-review#6787): structured-id triage with node-level
+`module_ref`, and the PTHR10625 class IIa IRD request. Eighteenth set
+(ai4curation/ai-gene-review#6840): definition citations promoted to `closeMatch` after
+a 50-row spot check, and F3 and PROS1 gene reviews. Tiers are unchanged (136
+`has_module`); `modules_compared` is 886. The stale `gpcr_camp_pka_signaling` sentences
+were corrected separately (ai4curation/ai-gene-review#6718).
