@@ -31,7 +31,9 @@ share one PANTHER node (PTN000768388), each with its own experimental annotation
 ## Domain architecture
 
 776 aa. `SIGNAL 1..32`, then a canonical secretin: GspD-like N0 (48–114), three NolW-like
-ring-building domains (141–201, 206–271, 276–352) and the secretin β-barrel (359–597),
+ring-building domains (141–201, 206–271, 276–352) and the secretin β-barrel (429–597,
+`DOMAIN 429..597` / `PF00263`; the 353–428 stretch between it and the last NolW-like
+domain carries no feature of its own),
 with the GspD/PilQ family entry and the NCBIfam `TIGR02517` "type II secretion system
 secretin GspD" covering 48–605.
 
