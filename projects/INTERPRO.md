@@ -75,8 +75,9 @@ experimental evidence.
 
 ### Rule cover for the removals
 
-Most removal rows in the mapping set end with a note on what still supplies the term to the members
-that should keep it: 17 of the 25 do. To re-derive that split, match the literal `Rule cover` or
+Most removal rows in the mapping set carry a note on what still supplies the term to the members
+that should keep it: 17 of the 25 do. The test is containment, not position -- several notes are
+followed by further text. To re-derive that split, match the literal `Rule cover` or
 `cover (current ...)` clause in a removal row's `comment`; a semantic reading can reach 18, because the
 IPR017682 removal of `GO:0050660` says where FAD binding does belong (FrhB, via IPR017679) without
 carrying a cover clause. That row is excluded deliberately: it names cover for a *sibling* entry's
