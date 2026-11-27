@@ -255,7 +255,7 @@ saying where Y went, and only when X is a claim the review would accept
 | **C. regulation of a nested term** | 249 | Two-step unfolding to `regulation of X`. Check sign and directness. Most are IEA/ISS over-propagations from developmental phenotypes, so Y is usually dropped. |
 | **D. no logical definition** | 240 | Sort into (i) lineage stage terms that are the right grain (DICDI sorocarp stages, *Drosophila* morphogenetic furrow): keep; (ii) grouping classes (`biological process involved in interaction with symbiont`, `developmental process involved in reproduction`, `anatomical structure formation involved in morphogenesis`, CC `protein complex involved in cell adhesion`): keep, and flag as uninformative where a specific term exists; (iii) undefined precompositions (`cysteine-type endopeptidase inhibitor activity involved in apoptotic process`, `mitochondrial fragmentation involved in apoptotic process`): treat as A/B and file a GO ticket for the missing logical definition, unless the term turns out to be the right grain (GO:0106074, round 5: see *Kept terms*). |
 | **Kept terms** (any class) | 88 (current) | A term that is the right grain although its label reads "X involved in Y" (round 5: GO:0106074 aminoacyl-tRNA editing, GO:0006271 the elongation stage of replication; round 6: GO:0050910, GO:0050973 and GO:0050974, the per-sense mechanical detection terms; round 8: GO:0035735 and GO:0003351, the cilium terms). Listed with a reason in [`keep_precomposed.yaml`](INVOLVED_IN_PRECOMPOSITION/keep_precomposed.yaml); the inventory flags these `kept`. |
-| **E. label-only** | 11 (current) | A regulation term whose "involved in Y" is entailed: no `part_of` in the logical definition, and Y is an ancestor of the regulated process (round 3: GO:1901030/GO:1901029, *regulation of MOMP*). Keep the term; nothing is decomposed. The inventory flags these `label_only`. |
+| **E. label-only** | 13 (current) | A regulation term whose "involved in Y" is entailed: no `part_of` in the logical definition, and Y is an ancestor of the regulated process (round 3: GO:1901030/GO:1901029, *regulation of MOMP*). Keep the term; nothing is decomposed. The inventory flags these `label_only`. |
 
 Outcomes:
 
@@ -335,8 +335,8 @@ The gene-review HTML template shows `decomposed_into` as badges.
 
 Each case is recorded in the gene review with `decomposed_into` and validates
 cleanly. After round 1, 15 rows carried a recorded decomposition (16 before
-human DNMT1 was retired upstream). After round 3, `rows_decomposition_recorded`
-in `data/summary.yaml` is 47; besides this project's rows, that includes
+human DNMT1 was retired upstream). As of round 8, `rows_decomposition_recorded`
+in `data/summary.yaml` is 51; besides this project's rows, that includes
 decompositions recorded by other reviews merged to `main`.
 
 ### The obsolete-term rows
@@ -825,16 +825,26 @@ GO cannot act on a request to keep a retired class.
   cilium assembly (GO:0060271). It is the only "involved in" child of its
   genus.
 - **Rows.** 11 rows across 7 genes: IFT74, IFT81, DYNC2LI1, and worm ift-74,
-  dyf-13, xbx-1 and bbs-2. INTU uses it only in a core function. Every row
-  is ACCEPT or NEW, and every gene except xbx-1 names it as a core function.
+  dyf-13, xbx-1 and bbs-2. Every row is ACCEPT or NEW, and every gene except
+  xbx-1 names it as a core function. Reviewers also MODIFY other rows onto
+  it: INTU twice (and names it as a core function) and worm bbs-5 once.
 - **Why keep.** Each gene's evidence is a cilium formation defect when the
   gene is lost (bbs-2: when the BBSome is uncoupled from IFT, PMID:22922713).
   That is the combined claim. Intraciliary transport also moves signalling
-  and membrane cargo in cilia that are already built, so the bare genus would
-  drop which outcome the transport serves. Two rows (the genus plus cilium
-  assembly) would lose the link between them. The
-  `intraflagellar_transport_core` module already cites the term in its PAINT
-  notes.
+  and membrane cargo in cilia that are already built, so the bare genus is a
+  weaker claim for every one of these rows.
+- **The alternative, rejected.** A MODIFY to the genus with
+  `decomposed_into.module_associations` would keep the link to cilium
+  assembly: four modules name GO:0060271 (`intraflagellar_transport`,
+  `intraflagellar_transport_core`, `dmel_ciliary_transition_zone`,
+  `primary_cilium_life_cycle`). It is rejected because it would replace the
+  claim the evidence makes with a weaker one, not because a link would be
+  lost.
+- **Later cleanup, for those reviews.** Three reviews assert a parent next to
+  the term: bbs-2 lists GO:0042073 and GO:0035735 as core processes, INTU
+  lists GO:0060271 and GO:0035735, and bbs-5's MODIFY offers both GO:0035735
+  and its parent GO:0042073 as replacements. Each parent is redundant beside
+  the kept term.
 
 ### GO:0003351 *epithelial cilium movement involved in extracellular fluid movement* — kept
 
@@ -844,7 +854,8 @@ GO cannot act on a request to keep a retired class.
   motile cilia: mucociliary clearance, cerebrospinal fluid circulation,
   left/right determination and otolith formation.
 - **Rows.** CCDC40 ACCEPTs it (IMP), DNAH6 adds it as NEW (IMP), and DNAH5,
-  DNAH6, DNAH9 and DNAH11 name it as a core function. The dynein assembly
+  DNAH6, DNAH9 and DNAH11 name it as a core function. Reviewers also MODIFY
+  other rows onto it: DNAH11 four times, DNAH5 and DNAH9 once each. The dynein assembly
   factors DNAAF2, DNAAF4, DNAAF11 and DNAAF19 keep it as KEEP_AS_NON_CORE.
 - **Why keep.** The bare genus GO:0003341 *cilium movement* also covers
   cilia that move the cell itself (GO:0060294, as in sperm flagella), and
@@ -855,9 +866,12 @@ GO cannot act on a request to keep a retired class.
   is downstream of that. The claim is non-core, so it stays KEEP_AS_NON_CORE
   on the precomposed term rather than being decomposed.
 - **Not changed.** The triage scheme says a D-ii class can be flagged as
-  uninformative where a specific child applies. DNAH11's left/right role
-  would fit GO:0060287 better than the grouping class. That is a refinement
-  for the gene's own review, not a decomposition, so it is not done here.
+  uninformative where a specific child applies, and several dyneins have
+  children that may fit (mucociliary clearance for the airway dyneins, the
+  left/right term for DNAH11). Choosing among them needs each gene's own
+  evidence, so it belongs to those reviews, not to a precomposition round.
+  The left/right child, GO:0060287, is itself an "involved in" term, so it
+  is not a recommendation either.
 
 ### Lessons from round 8
 
