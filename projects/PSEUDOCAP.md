@@ -4,7 +4,7 @@ collections: [HOMOLOGY_PROPAGATION]
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEAE]
-genes: [aer, aguB, alg8, algA, algB, algC, algU, algZ, alr, ampD, ampDh2, ampDh3, ampG, ampR, arcA, arcB, arcC, arcD, argA, arr, aruC, aruG, aruH, astA, astB, atsA, atuR, azoR1, azoR2, azoR3, azu, betT1, bfd, bifA, braC, braD, braF, braG, brlR, cbrA, ccmC, ccmF, ccoN1, ccoN2, ccoO1, ccoO2, ccoP1, ccoP2, ccoQ1, ccoQ2, ccpA, cdhR, cheZ, cif, cifR, copR, ctpH, ctpL, ctpM, cueR, cupA3, cyaA, cyaB, cysB, cysH, dadA1, dadA2, dadX, dctP, dctQ, dgcB, dgcP, dksA, dsbB1, dsbB2, dsdA, eddB, eraR, estA, exsA, fabA, fabB, fabD, fabV, fadD1, fdnG, fdnH, fdnI, femA, femI, fimU, fiuA, fleN, fleQ, fleS, fliC, fliD, folP, foxA, foxI, foxR, fpr, fpvI, fpvR, fur, galU, gbcB, gbdR, gbuA, glmM, glmR, gltA, gmd, gntR, hasR, hemB, hfq, hom, hutF, hutH, hutI, hutU, infB, katA, kynB, lap, lasB, lasI, lhpL, ligD, liuA, liuB, liuC, liuD, liuE, lolA, lolD, lpxA, lpxC, lpxL, lysA, mcpB, mexA, mexT, mexX, mexZ, mgtE, migA, mltB1, motA, motB, motC, msrA, mucA, mucB, mucD, mucR, nalC, nalD, nbdA, ndk, nfxB, nirJ, nmoA, np20, nrdA, nrdJa, nuh, ohrR, opdP, opmQ, oprB, oprD, oprE, oprG, PA0011, PA0148, PA0149, PA0305, PA0317, PA0471, PA0472, PA0692, PA0845, PA0847, PA0906, PA0920, PA0938, PA0949, PA1014, PA1024, PA1054, PA1055, PA1056, PA1057, PA1058, PA1059, PA1107, PA1204, PA1242, PA1257, PA1268, PA1340, PA1341, PA1342, PA1486, PA1566, PA1611, PA1810, PA1811, PA2050, PA2057, PA2070, PA2077, PA2078, PA2089, PA2093, PA2126, PA2127, PA2133, PA2200, PA2280, PA2412, PA2580, PA2590, PA2634, PA2870, PA2986, PA2988, PA3047, PA3170, PA3177, PA3271, PA3343, PA3345, PA3677, PA3678, PA3697, PA3760, PA3761, PA3825, PA3859, PA3891, PA3933, PA3992, PA4079, PA4088, PA4156, PA4178, PA4218, PA4332, PA4379, PA4400, PA4503, PA4504, PA4505, PA4506, PA4521, PA4596, PA4624, PA4675, PA4843, PA4896, PA4910, PA4912, PA4921, PA4975, PA5017, PA5082, PA5085, PA5089, PA5134, PA5190, PA5208, PA5291, PA5359, PA5376, PA5377, PA5384, PA5455, PA5456, PA5458, PA5484, PA5498, PA5504, PA5542, parC, parE, parR, parS, pchA, pchB, pctA, pctB, pctC, pelA, pfeA, pfeE, pfeS, phnA, phnB, phr, phuR, phzC1, phzM, phzS, pilA, pilB, pilD, pilM, pilN, pilT, pilU, pirA, plcH, pldA, pmpM, pmrB, ppkA, pppA, pprA, ppx, pqsC, pqsH, prc, prpC, pscC, pslC, psrA, ptrB, ptxR, ptxS, putA, putP, pvdD, pvdE, pvdH, pvdJ, pvdL, pvdQ, pvdR, pvdS, pvdT, pyrE, Q9HTB8, quiP, recG, relA, rhdA, rmlC, rocA1, rocR, rpoS, rppH, sigX, sltB1, speA, speC, speE2, speH, spuA, spuB, spuD, spuE, spuI, sucC, sucD, tatA, tatB, tatC, tesA, tgpA, thiI, thrB, tpbA, tpbB, tpx, trpA, trpC, trpE, trpG, trpI, tse6, tsi6, vgrG1a, vgrG1b, vgrG1c, vreI, waaC, waaF, waaL, wapR, wbpA, wbpD, wbpE, wbpI, wbpL, wbpW, wbpX, wbpY, wspR, wzx, wzz, xcpQ, xcpR, xcpS, xcpT, xcpU, xcpV, xcpW, xcpX, znuC]
+genes: [aer, aguB, alg8, algA, algB, algC, algU, algZ, alr, ampD, ampDh2, ampDh3, ampG, ampR, arcA, arcB, arcC, arcD, argA, arr, aruC, aruG, aruH, astA, astB, atsA, atuR, azoR1, azoR2, azoR3, azu, betT1, bfd, bifA, braC, braD, braF, braG, brlR, cbrA, ccmC, ccmF, ccoN1, ccoN2, ccoO1, ccoO2, ccoP1, ccoP2, ccoQ1, ccoQ2, ccpA, cdhR, cheZ, cif, cifR, copR, ctpH, ctpL, ctpM, cueR, cupA3, cyaA, cyaB, cysB, cysH, dadA1, dadA2, dadX, dctP, dctQ, dgcB, dgcP, dksA, dsbB1, dsbB2, dsdA, eddB, eraR, estA, exsA, fabA, fabB, fabD, fabV, fadD1, fdnG, fdnH, fdnI, femA, femI, fimU, fiuA, fleN, fleQ, fleS, fliC, fliD, folP, foxA, foxI, foxR, fpr, fpvI, fpvR, fur, galU, gbcB, gbdR, gbuA, glmM, glmR, gltA, gmd, gntR, hasR, hemB, hfq, hom, hutF, hutH, hutI, hutU, infB, katA, kynB, lap, lasB, lasI, lhpL, ligD, liuA, liuB, liuC, liuD, liuE, lolA, lolD, lpxA, lpxC, lpxL, lysA, mcpB, mexA, mexT, mexX, mexZ, mgtE, migA, mltB1, motA, motB, motC, msrA, mucA, mucB, mucD, mucR, nalC, nalD, nbdA, ndk, nfxB, nirJ, nmoA, np20, nrdA, nrdJa, nuh, ohrR, opdP, opmQ, oprB, oprD, oprE, oprG, PA0011, PA0148, PA0149, PA0305, PA0317, PA0471, PA0472, PA0692, PA0845, PA0847, PA0906, PA0920, PA0938, PA0949, PA1014, PA1024, PA1054, PA1055, PA1056, PA1057, PA1058, PA1059, PA1107, PA1204, PA1242, PA1257, PA1268, PA1340, PA1341, PA1342, PA1486, PA1566, PA1611, PA1810, PA1811, PA2050, PA2057, PA2070, PA2077, PA2078, PA2089, PA2093, PA2126, PA2127, PA2133, PA2200, PA2280, PA2403, PA2412, PA2580, PA2590, PA2634, PA2870, PA2986, PA2988, PA3047, PA3170, PA3177, PA3271, PA3343, PA3345, PA3677, PA3678, PA3697, PA3760, PA3761, PA3825, PA3859, PA3891, PA3933, PA3992, PA4079, PA4088, PA4156, PA4178, PA4218, PA4332, PA4379, PA4400, PA4503, PA4504, PA4505, PA4506, PA4521, PA4596, PA4624, PA4675, PA4843, PA4896, PA4910, PA4912, PA4921, PA4975, PA5017, PA5082, PA5085, PA5089, PA5134, PA5190, PA5208, PA5291, PA5359, PA5376, PA5377, PA5384, PA5455, PA5456, PA5458, PA5484, PA5498, PA5504, PA5542, parC, parE, parR, parS, pchA, pchB, pctA, pctB, pctC, pelA, pfeA, pfeE, pfeS, phnA, phnB, phr, phuR, phzC1, phzM, phzS, pilA, pilB, pilD, pilM, pilN, pilT, pilU, pirA, plcH, pldA, pmpM, pmrB, ppkA, pppA, pprA, ppx, pqsA, pqsC, pqsH, prc, prpC, pscC, pslC, psrA, ptrB, ptxR, ptxS, putA, putP, pvdD, pvdE, pvdH, pvdJ, pvdL, pvdQ, pvdR, pvdS, pvdT, pyrE, Q9HTB8, quiP, recG, relA, rhdA, rmlC, rocA1, rocR, rpoS, rppH, sigX, sltB1, speA, speC, speE2, speH, spuA, spuB, spuD, spuE, spuI, sucC, sucD, tatA, tatB, tatC, tesA, tgpA, thiI, thrB, tpbA, tpbB, tpx, trpA, trpC, trpE, trpG, trpI, tse6, tsi6, vgrG1a, vgrG1b, vgrG1c, vreI, waaC, waaF, waaL, wapR, wbpA, wbpD, wbpE, wbpI, wbpL, wbpW, wbpX, wbpY, wspR, wzx, wzz, xcpQ, xcpR, xcpS, xcpT, xcpU, xcpV, xcpW, xcpX, znuC]
 autolink_exclude: [III, PTS, katA, fruB, ptsP, ampD, caiX, dgcA, argJ]
 manifest:
   artifacts:
@@ -179,7 +179,7 @@ lasB, which are given secretion-system terms for being secretion cargo).
 [`export_pseae_defects.py`](PSEUDOCAP/export_pseae_defects.py) collects the
 `source_defects` recorded in all PAO1 reviews into one report per resource in
 [`PSEUDOCAP/defects/`](PSEUDOCAP/defects/PSEUDOCAP.md). After tier 2, and after
-the merge from main that brought in the AST-module and eut reviews, they stand
+the #7133 merge that completed tier 1, they stand
 at 308 for PseudoCAP (125 wrong term, 95 wrong evidence code, 47 wrong
 reference, 24 wrong qualifier, 15 wrong gene product, 2 other), 120 for PAINT/GO Central,
 30 for UniProt, 9 for InterPro (which has its own report, since the
@@ -371,7 +371,7 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 82 | PA0906 | PA0906 | regulation of DNA-templated transcription (PTN002221379) | 10 | SOUND (ChIP-seq, promoter fusions) | Sound | P (autolysis row) |
 | 83 | PA2280 | PA2280 | NAD(P)H quinone oxidoreductase (PTN008682975) | 10 | WRONG reference: the cited paper studies Synechocystis ArsH; activity true from a later P. aeruginosa assay | Sound content; re-cite the seed | P, G |
 | 84 | PA2580 | PA2580 | cellular response to oxidative stress (PTN002922793) | 9 | SOUND but weak (overexpression rescues only a katA mutant); quinone reductase row is a purified-enzyme assay coded IMP | Sound; H. pylori ortholog knockout would be a better seed | P |
-| 85 | pqsA | PA0996 | secondary metabolite biosynthetic process (PTN002458530) | 9 | Reviewed in #7133; the cited paper attributes the PA0996 result to another study | Node is the family root; a child node swaps terms between PqsA and FadD22 | none |
+| 85 | pqsA | PA0996 | secondary metabolite biosynthetic process (PTN002458530) | 9 | Reviewed in #7133 and accepted as sound; one caution recorded, that the screen was scored on pyocyanin while the phenotype identifying pqsA is loss of PQS, so the row must not be read as phenazine biosynthesis | Node is the family root; a child node swaps terms between PqsA and FadD22 | none |
 | 86 | lhpL | PA1255 | 4-hydroxyproline epimerase activity (PTN002433936) | 9 | WRONG: Swiss-Prot records experimentally that it has no 4-hydroxyproline epimerase activity; it is a trans-3-hydroxy-L-proline dehydratase; PAO1's real epimerase is PA1268 | Unsupported: repoint | P, G |
 | 87 | motB | PA4953 | bacterial-type flagellum-dependent swarming motility (PTN001251133) | 9 | OVER-SPECIFIC: motAB single mutant swarms normally; only the motAB motCD double fails | Swarming is a lifestyle phenotype, not propagable; repoint to flagellum-dependent motility | P (x2), G |
 | 88 | dctP | PA5167 | C4-dicarboxylate transport (PTN002121312) | 9 | SOUND | Sound: unlike the DctQ node this is a binding-protein clade | none |
@@ -397,7 +397,7 @@ Verdicts on the PseudoCAP seed and on the IBD it feeds. "Defects" are the
 | 108 | pelA | PA3064 | deacetylase activity (PTN002441861) | 3 | SOUND (purified protein, active-site mutants) | Other two leaves look too short to contain the deacetylase domain | G |
 | 109 | PA2403 | PA2403 | siderophore biosynthetic process | 2 | Reviewed in #7133; gene is FpvG, which releases iron from ferripyoverdine, so pyoverdine biosynthesis looks wrong or indirect | The node's only experimental grounding is this gene's own seed; re-examine if that row is an expression pattern | P |
 
-### Not completed
+### Tier 1 completion and the research behind the last two
 
 Nothing in tier 1 is now unwritten. pqsA and PA2403 were the last two: the
 agent's write of the pqsA review YAML had been blocked by a safety classifier
@@ -407,13 +407,24 @@ pvdE was blocked the same way earlier and was written in tier-3 batch 5
 curation: the seed assessments for pqsA and PA2403 have not been folded into
 the category table above. The research findings that drove their reviews:
 
-- **pqsA:** the cited paper (PMID:12426334) attributes the PA0996 result to a
-  different study; PMID:18728009 shows a pqsA mutant makes no quinolines. The
-  seeding node PTN002458530 is the family root, and the child node
-  PTN001186225 swaps terms between PqsA and FadD22.
+- **pqsA:** the pre-review note recorded that the cited paper (PMID:12426334)
+  attributes the PA0996 result to a different study. **The review did not
+  sustain that**: it read the full text (PMC135424), accepted the row, quoted
+  the paper as its support, and recorded no source defect. What it kept instead
+  is a narrower caution -- the screen was scored on pyocyanin while the
+  phenotype identifying pqsA is loss of PQS, so the row must not be read as
+  phenazine biosynthesis. PMID:18728009 shows a pqsA mutant makes no
+  quinolines. The seeding node PTN002458530 is the family root, and the child
+  node PTN001186225 swaps terms between PqsA and FadD22.
 - **PA2403:** the gene is FpvG, which releases iron from ferripyoverdine
   (PMID:28192658, PMID:31924850), so its pyoverdine biosynthesis seed
-  (PMID:12207696, an expression-profiling study) looks wrong or indirect.
+  (PMID:12207696, an expression-profiling study) looks wrong or indirect. The
+  review leaves it `UNDECIDED` on the `IEP`-versus-`IMP` reading that the
+  evidence-code category above is built on, and diverges from PA2412, which
+  `ACCEPT`s the same PseudoCAP row from the same reference on independent 2003
+  deletion data (PMID:17502378). A paper on another gene of the same cluster
+  cannot support a PA2403 annotation, which is why the same row is sound there
+  and undecided here.
 
 ### Patterns
 
