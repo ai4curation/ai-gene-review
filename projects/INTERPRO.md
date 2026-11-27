@@ -76,13 +76,18 @@ experimental evidence.
 ### Rule cover for the removals
 
 Most removal rows in the mapping set carry a note on what still supplies the term to the members
-that should keep it: 17 of the 25 do. The test is containment, not position -- 14 of those 17
-notes are followed by further text in the same `comment`. To re-derive the split, parse the YAML
+that should keep it: 17 of the 25 do. Test by containment rather than by position: 14 of the 17
+notes run to more than one sentence, so a reader looking for a single trailing clause will miss
+most of them. Position would in fact succeed here -- in all 17 the note is the last element of its
+`comment` -- but only two rows have trailing material that is not cover content (`IPR000719`
+`GO:0005524`, followed by the sole-source check result, and `IPR018194`, followed by an
+`IPR002844`/`IPR036080` cross-reference), and where a note ends is a judgement rather than a
+marked boundary. Containment is the robust test, not the one the counts force.
+To re-derive the split, parse the YAML
 and test each removal row's `comment` value for a `Rule cover (` clause. Do not grep the file:
 the comments are block scalars and the phrase wraps mid-clause on `IPR018194` and `IPR021006`, so
 a line-based search returns 16 and reads as a stale page rather than a broken check. A semantic
-reading can reach 18, because the a semantic reading can reach 18, because the
-IPR017682 removal of `GO:0050660` says where FAD binding does belong (FrhB, via IPR017679) without
+reading can reach 18, because the IPR017682 removal of `GO:0050660` says where FAD binding does belong (FrhB, via IPR017679) without
 carrying a cover clause. That row is excluded deliberately: it names cover for a *sibling* entry's
 members, not for this entry's, which is the distinction the count is about. The remaining eight carry no such note, across six entries --
 IPR002844, IPR005778, IPR017679, IPR036080 and, with two rows each, IPR017681 and IPR017682 -- so a reader should
