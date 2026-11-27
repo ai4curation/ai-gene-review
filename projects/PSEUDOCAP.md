@@ -628,7 +628,7 @@ unreviewed when tier 3 opened:
 
 | term | reference | proteins |
 |---|---|---|
-| `GO:0004129` cytochrome-c oxidase activity | PMID:14763990 | the 6 cco subunits |
+| `GO:0004129` cytochrome-c oxidase activity | PMID:14763990 | the 6 catalytic cco subunits plus ccoQ1/ccoQ2 |
 | `GO:0004485` methylcrotonoyl-CoA carboxylase activity | PMID:16517656 | liuB, liuD |
 | `GO:0015232` heme transmembrane transporter activity | PMID:10658665 | hasR, phuR |
 | `GO:0097351` toxin sequestering activity | PMID:24589350 | tse6, tsi6 |
@@ -680,8 +680,7 @@ which is what makes them fine:
 - `GO:0016987` — `femA` is `REMOVE` against four ECF sigma factors' `ACCEPT`, for the
   reason set out above: it is an outer-membrane TonB-dependent receptor and the sigma
   factor activity belongs to PA1912. The paragraph above already says this group does
-  not agree, and an earlier version of this section contradicted it by counting only
-  three full divergences.
+  not agree.
 - `GO:0047580` — `lhpL` modifies to `GO:0050346` trans-L-3-hydroxyproline dehydratase
   while `PA1268` accepts the 4-hydroxyproline epimerase term, because the isomer is
   wrong rather than the chemistry: `GO:0047580` is trans-4-hydroxy-L-proline to
@@ -707,12 +706,12 @@ things to a reader:
 - **divergent** — every member ruled on the claim, and they disagree. Read it.
 - **consistent** — every member ruled, and they agree.
 - **incomplete** — a member cannot be compared because its review does not exist.
-  That is curation backlog: someone has to review the gene. No group is presently in
-  it, so a reader meeting this bucket should not go looking for a missing review. The *other* members are
+  That is curation backlog: someone has to review the gene. The *other* members are
   still compared, and the line says so — most of these groups have three or more
   reviewed members, so waiting for the backlog before comparing them would hide a
   live divergence. An incomplete group whose comparable members disagree is marked
-  on its line and counted in the summary.
+  on its line and counted in the summary. No group is presently in this bucket, so a
+  reader meeting it should not go looking for a missing review.
 - **no verdict** — every member is reviewed, but none rules on the claim (the only
   rows on the term are `NEW` proposals, which assert an addition rather than judge
   the shared claim). Nothing to chase; the group is complete and simply has no
@@ -749,14 +748,11 @@ row and accepts it, so the ancestor term is `TOO_GENERAL` there, while `tatA` ha
 `tatA` does carry `GO:0009977` as its core-function molecular function, so both
 reviews agree about what the protein does; what differs is only whether GOA already
 asserts it. The two verdicts
-agree about what the supported term is, and the asymmetry is in GOA. What is open is
-whether `tatA`'s rows pass the 2026-11-14 bar — a `MODIFY` needs that row's own
-evidence for the deeper term, and its IMP reason says the evidence is an export
-phenotype. That is a judgement about three merged reviews of genes this PR does not
-touch, so it is recorded here rather than fixed opportunistically. It is the one
-item in this group still open: `tatA`'s three rows all `MODIFY` to `GO:0009977`, and
-whether an export phenotype is that row's own evidence for the proton-motive-force
-term is a judgement about a merged review, not a status-page edit.
+agree about what the supported term is, and the asymmetry is in GOA. One item in this
+group is still open: `tatA`'s three rows all `MODIFY` to `GO:0009977`, and whether the
+export phenotype its IMP reason cites is that row's own evidence for the
+proton-motive-force term is the 2026-11-14 bar applied to three merged reviews of
+genes this PR does not touch — recorded here rather than fixed opportunistically.
 
 The check has now paid for itself three times. It is the generalisation of the
 `liuB`/`liuD` drift caught in review on PR #6341, and run across the corpus it
