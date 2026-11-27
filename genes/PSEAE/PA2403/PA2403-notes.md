@@ -70,8 +70,29 @@ process across a family.
 
 ## What would settle it
 
-A clean deletion of PA2403 with pyoverdine quantified by fluorescence or CAS assay under iron
-limitation. If pyoverdine is unaffected, both rows go; if it is reduced, the next question is
+**Read the 2003 paper's candidate list first — it is cheaper than any experiment and may settle
+the evidence-code question outright.** PMID:12686626 identified fourteen candidate genes, mutated
+them and scored pyoverdine
+[PMID:12686626 "The candidate genes were mutated and the effects of the
+mutations on pyoverdine production were determined. Eight new pvd genes were
+identified."], so six were assayed and found not required, and the abstract does not enumerate
+the fourteen. If PA2403 is among them it was tested and scored negative, which is much stronger
+than never having been followed up; if it is not, the reading in this review stands. That list is
+in a readable full text, unlike the 2002 paper, which has no PMC record.
+
+Two further points this review establishes that belong here rather than only in the YAML. The
+evidence-code concern is **reference-level, not a single row**: five PAO1 genes carry the identical
+PseudoCAP row — `involved_in GO:0002049`, IMP, PMID:12207696 — all dated 20190311 (PA2403, PA2412,
+pvdN, pvdO, pvdP), so the request is about what that reference was taken to supply for the set, and
+PA2403 is named only because it is the gene under review. And the divergence from **PA2412** is not
+a difference of rule: PA2412 reaches ACCEPT on independent deletion-mutant data
+[PMID:17502378 "Our results demonstrate that PA2412 is necessary for the production
+or secretion of pyoverdine at normal levels."] while recording the same reference as unverified for
+IMP; PA2403 has no such independent data, so the same row resolves differently on the same
+reasoning.
+
+Only then the wet lab: a clean deletion of PA2403 with pyoverdine quantified by fluorescence or CAS
+assay under iron limitation. If pyoverdine is unaffected, both rows go; if it is reduced, the next question is
 whether the protein acts in synthesis, in export, or in the iron sensing that gates the
 pathway — which its four transmembrane helices and PepSY domains make a live question rather
 than a formality.
