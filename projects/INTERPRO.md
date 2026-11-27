@@ -94,20 +94,24 @@ To re-derive the 17:
 2. Do not grep the file. The comments are block scalars and the phrase wraps mid-clause on
    `IPR018194` and `IPR021006`, so a line-based search returns 16 -- which reads as a stale page
    rather than as a broken check.
-3. Expect 17, not 18. A semantic reading can reach 18, because the IPR017682 removal of
+3. Expect 17 as of 2026-11-27, not 18. A semantic reading can reach 18, because the IPR017682 removal of
    `GO:0050660` says where FAD binding does belong (FrhB, via IPR017679) without carrying a cover
    clause. That row is excluded deliberately: it names cover for a *sibling* entry's members, not
    for this entry's, which is the distinction the count is about.
 
 Where a term is right for only part of an entry, a conditional UniProt rule is often the better
 carrier than a mapping, because a rule can require a site, exclude a domain, or limit the taxon.
-The notes were checked against the UniProt UniRule API and the current interpro2go file on
-2026-10-10; re-derive the 17-of-25 split by the clause match given above rather than trusting
-this sentence.
+Each cover note carries its own sources and date, and they are not uniform. The ten notes
+reproduced in the table below were checked against the UniProt UniRule API and the current
+interpro2go file on 2026-10-10. The other seven are later -- three on 2026-10-15, one on
+2026-11-02, one on 2026-11-05 and two on 2026-11-07 -- and six of those seven cite only the
+current interpro2go file rather than any UniProt rule source, the exception being `IPR018229`.
+Read the provenance off the note rather than from this sentence, and re-derive the 17-of-25
+split by the clause match given above.
 
 | Removal | What still supplies the term | Request |
 |---------|------------------------------|---------|
-| IPR000719 ATP binding | IPR017441 (ATP binding site) for members with the motif; family rules such as the JNK rule UR001528758 for members without it | Remove; all 7 reviewed sole-source losses were accepted or kept as of 2026-10-10, a dated check result rather than a figure derivable from the mapping set, so family rules are needed |
+| IPR000719 ATP binding | IPR017441 (ATP binding site) for members with the motif; family rules such as the JNK rule UR001528758 for members without it | Remove; all 7 reviewed sole-source losses were accepted or kept. Not derivable from the predicate fields, but recorded verbatim in the row's own `comment`, which names the seven (SCHPO bub1 and ppk34, ARATH CLV1 and FLS2, MEDTR NFP, human ILK and PIK3R4) -- so family rules are needed |
 | IPR000719 protein phosphorylation | Active-site entries IPR008271 and IPR008266 | Remove |
 | IPR001424 superoxide metabolic process | UniRule UR000000113 selects canonical Cu/Zn SODs and excludes CCS, but assigns only the EC number; Candida albicans SOD5 lacks its PS00332 condition and needs separate Cu-only SOD cover | Remove; add `GO:0019430` to the Cu/Zn rule and to a fungal Cu-only SOD rule or narrower entry |
 | IPR012724 ATP binding | Nothing needed; the HAMAP DnaJ rule MF_01152 also assigns no ATP-binding or zinc-ion-binding GO term | Remove |
