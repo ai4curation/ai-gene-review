@@ -10,3 +10,4 @@ python3 "$HERE/native_consensus.py" "$DATA" 0.6
 python3 "$HERE/consistency.py" "$DATA" "$OBO"
 cp "$DATA/candidates3.tsv" "$HERE/unmapped_candidates.tsv"
 cp "$DATA/consistency.tsv" "$HERE/consistency.tsv"
+python3 "$HERE/subunit_projection.py" "$DATA" "$OBO" | tee "$HERE/subunit_projection_summary.txt"; cp "$DATA/subunit_projection.tsv" "$HERE/subunit_projection.tsv"

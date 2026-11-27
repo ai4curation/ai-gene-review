@@ -21,7 +21,7 @@ Supporting material for the [InterPro Mapping Review project](../INTERPRO.md).
   suspect mappings first).
 ## Proposed interpro2go edits (SSSOM)
 
-- `interpro2go.sssom.yaml` — canonical SSSOM mapping set: the family-deep-research verdicts
+- `interpro2go.sssom.yaml` — canonical SSSOM mapping set: the per-(entry, GO term) verdicts
   expressed as proposed edits to InterPro2GO (one row per reviewed `(InterPro entry, GO term)`;
   `exactMatch` = sound, `broadMatch` = over-broad/demote, `exactMatch` + `predicate_modifier: Not`
   = remove). Source of truth.

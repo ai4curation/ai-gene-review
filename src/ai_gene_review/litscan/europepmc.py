@@ -9,6 +9,8 @@ from typing import Any
 
 import requests
 
+from ai_gene_review.litscan.polite import PoliteClient
+
 EUROPE_PMC_SEARCH_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
 
 
@@ -90,33 +92,38 @@ def search(
     page_size: int = 100,
     timeout: float = 30.0,
     sort: str = "P_PDATE_D desc",
+    client: PoliteClient | None = None,
 ) -> tuple[int, list[Publication]]:
     """Run a Europe PMC search, returning ``(hit_count, publications)``.
 
-    ``sort`` defaults to newest-first. Records are de-duplicated by PMID (or
-    source:id when no PMID is present).
+    ``sort`` defaults to newest-first; an empty ``sort`` keeps Europe PMC's
+    relevance order. Records are de-duplicated by PMID (or source:id when no
+    PMID is present). A ``client`` adds rate limiting and retries.
     """
     publications: list[Publication] = []
     seen: set[str] = set()
     hit_count = 0
-    page = 1
+    cursor = "*"
     while len(publications) < max_records:
-        current_page_size = min(page_size, max_records - len(publications))
-        response = requests.get(
-            EUROPE_PMC_SEARCH_URL,
-            params={
-                "query": query,
-                "format": "json",
-                "pageSize": str(current_page_size),
-                "page": str(page),
-                "resultType": "core",
-                "sort": sort,
-            },
-            timeout=timeout,
-        )
-        response.raise_for_status()
+        current_page_size = min(page_size, max_records)
+        params = {
+            "query": query,
+            "format": "json",
+            "pageSize": str(current_page_size),
+            "cursorMark": cursor,
+            "resultType": "core",
+        }
+        if sort:
+            params["sort"] = sort
+        if client is None:
+            response = requests.get(
+                EUROPE_PMC_SEARCH_URL, params=params, timeout=timeout
+            )
+            response.raise_for_status()
+        else:
+            response = client.get(EUROPE_PMC_SEARCH_URL, params=params)
         payload = response.json()
-        if page == 1:
+        if cursor == "*":
             hit_count = int(payload.get("hitCount") or 0)
         page_records = payload.get("resultList", {}).get("result", [])
         if not page_records:
@@ -128,7 +135,14 @@ def search(
                 continue
             seen.add(key)
             publications.append(pub)
-        if len(page_records) < current_page_size:
+            if len(publications) == max_records:
+                break
+        next_cursor = payload.get("nextCursorMark")
+        if (
+            not next_cursor
+            or cursor == next_cursor
+            or len(page_records) < current_page_size
+        ):
             break
-        page += 1
+        cursor = next_cursor
     return hit_count, publications

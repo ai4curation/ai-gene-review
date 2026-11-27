@@ -1,25 +1,28 @@
-"""``ai-gene-review benchmark`` commands: build, check, export, score, validate."""
+"""``ai-gene-review benchmark`` commands: build, check, export, import, score, validate."""
 
 from __future__ import annotations
 
-from datetime import date
 from pathlib import Path
-from typing import Annotated, Any, Optional
+from enum import Enum
+from typing import Annotated, Optional
 
 import typer
 import yaml
 
 from ai_gene_review.benchmark.build import build_from_reviews, build_goa, load_context
 from ai_gene_review.benchmark.checks import report_markdown, run_checks, validate_schema
-from ai_gene_review.benchmark.run import (
-    export,
-    peptalk_verdicts,
-    read_jsonl,
-    review_verdicts,
-    score,
-    score_markdown,
+from ai_gene_review.benchmark.importers import peptalk as peptalk_importer
+from ai_gene_review.benchmark.importers import reviews as reviews_importer
+from ai_gene_review.benchmark.predictions import (
+    Verdicts,
+    claims,
+    read_prediction_set,
+    verdicts,
+    write_predictions,
 )
+from ai_gene_review.benchmark.run import export, score, score_markdown
 from ai_gene_review.benchmark.sources import DEFAULT_CACHE, sha256
+from ai_gene_review.benchmark.yaml_io import load_yaml
 
 benchmark_app = typer.Typer(
     help="Time-split protein annotation benchmarks (see docs/benchmarks.md)."
@@ -31,26 +34,6 @@ CacheOpt = Annotated[
 GenesOpt = Annotated[
     Path, typer.Option(help="Folder of gene reviews, used to attach review actions.")
 ]
-
-
-def isoformat_dates(value: Any) -> Any:
-    """Replace YAML-parsed dates with ISO strings, recursively (the schema's dates are strings).
-
-    >>> isoformat_dates({"d": date(2025, 6, 1), "l": [date(2026, 1, 2)]})
-    {'d': '2025-06-01', 'l': ['2026-01-02']}
-    """
-    if isinstance(value, date):
-        return value.isoformat()
-    if isinstance(value, dict):
-        return {k: isoformat_dates(v) for k, v in value.items()}
-    if isinstance(value, list):
-        return [isoformat_dates(v) for v in value]
-    return value
-
-
-def load_yaml(path: Path) -> dict:
-    """Read a YAML mapping, with dates as ISO strings."""
-    return isoformat_dates(yaml.safe_load(path.read_text()))
 
 
 def dump_yaml(data: dict, path: Path) -> None:
@@ -139,9 +122,33 @@ def validate_cmd(
         str, typer.Option("--class", "-C", help="Schema class.")
     ] = "Benchmark",
 ) -> None:
-    """Validate a benchmark document (Benchmark, BenchmarkSpec, CheckReport, AgentEvaluation, ...)."""
-    require_valid(load_yaml(path), target_class, path)
+    """Validate a benchmark document (Benchmark, BenchmarkSpec, CheckReport, ...).
+
+    A ``.jsonl`` file is read as Prediction records and validated as a PredictionSet.
+    """
+    if path.suffix == ".jsonl":
+        target_class = "PredictionSet"
+    try:
+        data = (
+            read_prediction_set(path)
+            if target_class == "PredictionSet"
+            else load_yaml(path)
+        )
+    except (ValueError, OSError, yaml.YAMLError) as exc:
+        raise typer.BadParameter(f"{path}: {exc}") from exc
+    require_valid(data, target_class, path)
     typer.echo(f"{path}: valid {target_class}")
+
+
+class Importer(str, Enum):
+    """Native predictor outputs that ``benchmark import`` converts."""
+
+    peptalk = "peptalk"
+    reviews = "reviews"
+
+
+class ExportFormat(str, Enum):
+    peptalk = "peptalk"
 
 
 @benchmark_app.command("export")
@@ -151,14 +158,25 @@ def export_cmd(
         Optional[Path],
         typer.Option("--out-dir", "-o", help="Default: <benchmark folder>/run-inputs."),
     ] = None,
+    for_predictor: Annotated[
+        Optional[list[ExportFormat]],
+        typer.Option(
+            "--for",
+            help="Also write a predictor's native input (peptalk: <id>-claims.peptalk.tsv).",
+        ),
+    ] = None,
     cache: CacheOpt = DEFAULT_CACHE,
 ) -> None:
-    """Write FASTA, peptalk claims TSV, and per-protein baseline GOA files for the conditions."""
+    """Write generic run inputs: FASTA, <id>-claims.yaml (a ClaimSet) and baseline GOA files."""
     benchmark = load_yaml(benchmark_file)
     ctx, _ = load_context(benchmark["spec"], cache)
-    written, skipped = export(
-        benchmark, ctx, out_dir or benchmark_file.parent / "run-inputs"
-    )
+    target = out_dir or benchmark_file.parent / "run-inputs"
+    written, skipped = export(benchmark, ctx, target)
+    if ExportFormat.peptalk in (for_predictor or []):
+        path = target / f"{benchmark['id']}-claims.peptalk.tsv"
+        items = [i for i in benchmark["items"] if i.get("sequence")]
+        path.write_text(peptalk_importer.claims_tsv(claims(items)))
+        written.append(path)
     typer.echo(f"wrote {len(written)} files, starting {written[0]}")
     if skipped:
         typer.echo(
@@ -167,39 +185,119 @@ def export_cmd(
         )
 
 
+@benchmark_app.command("import")
+def import_cmd(
+    benchmark_file: Annotated[Path, typer.Argument(help="Benchmark YAML.")],
+    inputs: Annotated[
+        list[Path],
+        typer.Argument(
+            help="Native outputs: peptalk JSONL files, or one genes folder."
+        ),
+    ],
+    source: Annotated[
+        Importer, typer.Option("--from", help="Format of the native outputs.")
+    ],
+    output: Annotated[
+        Path,
+        typer.Option(
+            "--output",
+            "-o",
+            help="Predictions file (.jsonl, or .yaml for a PredictionSet).",
+        ),
+    ],
+    condition: Annotated[
+        Optional[str],
+        typer.Option(help="Condition name, for reviews (default agent-review)."),
+    ] = None,
+    predictor: Annotated[
+        Optional[str],
+        typer.Option(
+            help="Predictor name, for reviews (default ai-gene-review or ai-gene-review:<model>)."
+        ),
+    ] = None,
+    model: Annotated[
+        Optional[str], typer.Option(help="Model that wrote the reviews.")
+    ] = None,
+    cache: CacheOpt = DEFAULT_CACHE,
+) -> None:
+    """Convert a predictor's native output into generic Prediction records."""
+    benchmark = load_yaml(benchmark_file)
+    try:
+        if source is Importer.peptalk:
+            if any(value is not None for value in (condition, predictor, model)):
+                raise typer.BadParameter(
+                    "--condition, --predictor and --model apply only to reviews"
+                )
+            predictions = peptalk_importer.predictions(
+                benchmark, peptalk_importer.read_jsonl(inputs)
+            )
+        else:
+            if len(inputs) != 1 or not inputs[0].is_dir():
+                raise typer.BadParameter("--from reviews takes one genes folder")
+            ctx, _ = load_context(benchmark["spec"], cache)
+            predictions = reviews_importer.predictions(
+                benchmark,
+                ctx,
+                inputs[0],
+                condition or "agent-review",
+                predictor or (f"ai-gene-review:{model}" if model else "ai-gene-review"),
+                model,
+            )
+        require_valid({"predictions": predictions}, "PredictionSet", output)
+        verdicts(benchmark, predictions)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    write_predictions(benchmark["id"], predictions, output)
+    typer.echo(f"wrote {len(predictions)} predictions to {output}")
+
+
 @benchmark_app.command("score")
 def score_cmd(
     benchmark_file: Annotated[Path, typer.Argument(help="Benchmark YAML.")],
-    peptalk: Annotated[
-        Optional[list[Path]],
-        typer.Option(help="peptalk ask JSONL output (repeatable)."),
-    ] = None,
-    reviews_dir: Annotated[
-        Optional[Path],
+    predictions: Annotated[
+        list[Path],
         typer.Option(
-            help="Genes folder of reviews made under the AGENT_REVIEW condition."
+            "--predictions",
+            "-p",
+            help="Prediction files, .jsonl or PredictionSet .yaml (repeatable).",
+        ),
+    ],
+    threshold: Annotated[
+        Optional[float],
+        typer.Option(
+            help="Count a prediction with a score but no verdict as yes at or above this."
         ),
     ] = None,
-    review_condition: Annotated[
-        str, typer.Option(help="Condition name for --reviews-dir verdicts.")
-    ] = "agent-review",
     output: Annotated[
         Optional[Path],
         typer.Option(
             "--output", "-o", help="Default: <id>-scores.yaml beside the benchmark."
         ),
     ] = None,
-    cache: CacheOpt = DEFAULT_CACHE,
 ) -> None:
-    """Tally verdicts per condition, role (target, NOT target, decoy, shuffled) and item."""
+    """Tally predictions per condition, predictor, role (target, NOT target, decoy, shuffled) and item."""
     benchmark = load_yaml(benchmark_file)
-    verdicts = peptalk_verdicts(benchmark, read_jsonl(peptalk or []))
-    inputs = [f"{p} sha256:{sha256(p)}" for p in peptalk or []]
-    if reviews_dir:
-        ctx, _ = load_context(benchmark["spec"], cache)
-        verdicts.update(review_verdicts(benchmark, ctx, reviews_dir, review_condition))
-        inputs.append(str(reviews_dir))
-    report = score(benchmark, verdicts, inputs)
+    answers: Verdicts = {}
+    for path in predictions:
+        try:
+            data = read_prediction_set(path)
+            require_valid(data, "PredictionSet", path)
+            if data.get("benchmark_id", benchmark["id"]) != benchmark["id"]:
+                raise ValueError(
+                    f"expected benchmark_id {benchmark['id']}, got {data['benchmark_id']}"
+                )
+            found = verdicts(benchmark, data["predictions"], threshold)
+            duplicate = next((key for key in found if key in answers), None)
+            if duplicate:
+                raise ValueError(f"duplicate prediction for {duplicate}")
+            answers.update(found)
+        except (OSError, ValueError, yaml.YAMLError) as exc:
+            raise typer.BadParameter(f"{path}: {exc}") from exc
+    report = score(
+        benchmark,
+        answers,
+        [f"{p} sha256:{sha256(p)}" for p in predictions],
+    )
     path = output or benchmark_file.with_name(f"{benchmark['id']}-scores.yaml")
     require_valid(report, "ScoreReport", path)
     dump_yaml(report, path)

@@ -23,7 +23,10 @@ The class is `BenchmarkSpec` in `src/ai_gene_review/schema/benchmark.yaml`.
   proteins than this is treated as high-throughput, and its rows are dropped.
 - **Features**: use a `PSEUDOENZYME` quota with a UniProt query (see the
   example). Its hits are candidates, not literature-checked labels.
-- **Conditions**: blind, organism, full and agent-review, each with its `model`
-  and, only when known, its `model_training_cutoff`.
+- **Conditions**: blind (with `shuffle_control`), organism, full and
+  agent-review: what a predictor may see, with no tool or model.
+- **Predictors** (optional): each predictor planned for the benchmark, with its
+  `model` and, only when known, its `model_training_cutoff`, so that
+  `reference_recency` can say which predictors the benchmark is fair for.
 - **Other fields**: `decoys_per_item` (3), `seed`, `size`, `dev_fraction`,
   `near_duplicate_threshold` (0.8).
