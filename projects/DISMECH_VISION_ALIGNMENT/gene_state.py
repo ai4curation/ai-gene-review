@@ -74,7 +74,20 @@ def main():
         m = ID_RE.search(text[:3000])
         if m:
             s = STATUS_RE.search(text)
-            other[m.group(1)] = (org, gene, s.group(1) if s else None)
+            other[m.group(1)] = (org, gene, s.group(1) if s else None, f)
+
+    def core_mfs(path):
+        """Core molecular functions of a review, as (relation, id, label) records."""
+        out = []
+        d = yaml.load(open(path), Loader=Loader)
+        for cf in d.get("core_functions") or []:
+            for key in ("molecular_function", "contributes_to_molecular_function"):
+                t = cf.get(key)
+                if isinstance(t, dict) and t.get("id"):
+                    out.append(dict(relation=key, id=t["id"], label=t.get("label")))
+            if cf.get("proposed_molecular_function"):
+                out.append(dict(relation="proposed_molecular_function", label=cf["proposed_molecular_function"]))
+        return out
 
     module_members = {}
     for f in sorted(glob.glob("modules/*.yaml")):
@@ -130,8 +143,20 @@ def main():
         rec["gocams"] = [dict(model=m, title=gocam_title[m], reviewed=os.path.exists(f"gocams/{m}/{m}-review.yaml"))
                          for m in sorted(gocam.get(f"UniProtKB:{acc}", ()))] if acc else []
         rec["reviewed_orthologs"] = [dict(organism=other[o["uniprot"]][0], gene=other[o["uniprot"]][1],
-                                          status=other[o["uniprot"]][2], type=o["type"])
+                                          status=other[o["uniprot"]][2], type=o["type"],
+                                          core_molecular_functions=core_mfs(other[o["uniprot"]][3]))
                                      for o in orth.get(symbol, []) if o["uniprot"] in other]
+        # proteins of other species that the human rows were transferred from (ISS, ISO,
+        # and the Ensembl Compara IEA route), and whether each has a review here
+        donors = {}
+        if os.path.exists(review):
+            for a in ann:
+                if a.get("evidence_type") in ("ISS", "ISO", "ISA", "ISM") or a.get("original_reference_id") == "GO_REF:0000107":
+                    for ent in a.get("supporting_entities") or []:
+                        if ent.startswith("UniProtKB:") and ent.split(":", 1)[1] != acc:
+                            donors[ent] = donors.get(ent, 0) + 1
+        rec["transfer_donors"] = [dict(protein=k, rows=v, reviewed=(k.split(":", 1)[1] in other))
+                                  for k, v in sorted(donors.items(), key=lambda kv: -kv[1])]
         state[symbol] = rec
 
     def n(pred):
@@ -146,6 +171,8 @@ def main():
         gocam_models=len({g["model"] for r in state.values() for g in r["gocams"]}),
         gocam_models_reviewed=len({g["model"] for r in state.values() for g in r["gocams"] if g["reviewed"]}),
         genes_with_a_reviewed_ortholog=n(lambda r: r["reviewed_orthologs"]),
+        transfer_donor_proteins=len({d["protein"] for r in state.values() for d in r["transfer_donors"]}),
+        transfer_donor_proteins_reviewed=len({d["protein"] for r in state.values() for d in r["transfer_donors"] if d["reviewed"]}),
     )
     with open(os.path.join(HERE, "gene_state.yaml"), "w") as fh:
         yaml.safe_dump(dict(summary=summary, genes=state), fh, sort_keys=False, width=120)

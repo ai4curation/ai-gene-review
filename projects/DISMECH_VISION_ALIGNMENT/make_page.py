@@ -73,6 +73,37 @@ def gene_block(state):
     return "\n".join(out)
 
 
+def fmt_core(cs):
+    return "; ".join(dict.fromkeys(
+        (f"{c['id']} {c['label']}" if c.get("id") else f"proposed: {c['label']}")
+        + (" (contributes)" if c["relation"].startswith("contributes") else "") for c in cs)) or "-"
+
+
+def ortholog_block(state):
+    s = state["summary"]
+    out = [f"{s['genes_with_a_reviewed_ortholog']} genes have at least one reviewed orthologue. The human rows of the "
+           f"reviewed genes were transferred (ISS, ISO, or the Ensembl Compara route) from {s['transfer_donor_proteins']} "
+           f"proteins of other species, of which {s['transfer_donor_proteins_reviewed']} have a review here.", "",
+           "Reviewed orthologues, with the core molecular function on each side. \"Same term\" compares GO ids only; "
+           "a different term can still be the same biology at another level of the ontology.", "",
+           "| Gene | Core molecular function | Orthologue | Orthologue core molecular function | Same term |",
+           "|---|---|---|---|---|"]
+    for sym, r in state["genes"].items():
+        mine = {c["id"] for c in (r["review"] or {}).get("core_molecular_functions", []) if c.get("id")}
+        for o in r["reviewed_orthologs"]:
+            theirs = {c["id"] for c in o["core_molecular_functions"] if c.get("id")}
+            same = "yes" if mine & theirs else ("-" if not mine or not theirs else "no")
+            out.append(f"| {sym} | {fmt_core((r['review'] or {}).get('core_molecular_functions', []))} | "
+                       f"{o['organism']} {o['gene']} ({o['status']}, {'least diverged' if o['type'] == 'LDO' else 'other'}) | "
+                       f"{fmt_core(o['core_molecular_functions'])} | {same} |")
+    out += ["", "Proteins that most human rows were transferred from, for genes with a review (rows, and whether the donor is reviewed):", ""]
+    for sym, r in state["genes"].items():
+        if r["transfer_donors"]:
+            out.append(f"- {sym}: " + ", ".join(f"{d['protein']} ({d['rows']} rows, {'reviewed' if d['reviewed'] else 'no review'})"
+                                                 for d in r["transfer_donors"][:4]))
+    return "\n".join(out)
+
+
 def audit_block(rep):
     p = rep["provenance"]
     rows = [(e["entry"], g) for e in rep["entries"] for g in e.get("genes", [])]
@@ -97,7 +128,9 @@ def audit_block(rep):
 
 
 def main():
-    blocks = {"scope": scope_block(load("scope_decisions.yaml")), "genes": gene_block(load("gene_state.yaml"))}
+    state = load("gene_state.yaml")
+    blocks = {"scope": scope_block(load("scope_decisions.yaml")), "genes": gene_block(state),
+              "orthologs": ortholog_block(state)}
     if os.path.exists(os.path.join(HERE, "report.yaml")):
         blocks["audit"] = audit_block(load("report.yaml"))
     text = open(PAGE).read()
