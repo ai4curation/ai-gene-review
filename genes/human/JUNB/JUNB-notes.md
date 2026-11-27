@@ -17,3 +17,12 @@
   regulation were retained as non-core outputs. The JunB-specific Th17 row is also retained as a
   cell-type-specific regulatory output rather than promoted to the conserved AP-1 core
   [PMID:29234109, "The AP-1 transcription factor JunB is required for Th17 cell differentiation"].
+- **AI review follow-up.** The InterPro-derived `GO:0003700` row now refines inside transcription-factor
+  activity to `GO:0000981` rather than laterally to `GO:0000978`. The HPA/Reactome nucleoplasm rows
+  quote the curated UniProt nucleus statement instead of the UniProt `DR GO` cross-reference, and the
+  core-function prose now calls out that JunB overlaps with c-Jun in AP-1 complexes but has
+  partner- and promoter-dependent regulatory effects, including negative regulation in JunB/c-Jun
+  combinations [PMID:2513129, "interactions between them involve negative regulation"].
+- **Chromatin support.** The legacy PMID:2513129 chromatin TAS row is retained as part of JunB's direct
+  AP-1 DNA-regulatory mechanism, but its reason now states that the cached abstract supports AP-1
+  trans-activation rather than a separate chromatin assay.

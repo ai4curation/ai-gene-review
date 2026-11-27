@@ -17,3 +17,12 @@
   response terms such as circadian rhythm, cold, water deprivation, fatty-acid response and cardiac
   hypertrophy. These were marked over-annotated because they propagate contextual transcriptional
   outputs onto human JUND rather than the direct AP-1 mechanism.
+- **AI review follow-up.** The InterPro/Ensembl `GO:0003700` row now refines to the Pol II-specific
+  transcription-factor activity child `GO:0000981`, while rodent stress-response transfers no longer
+  cite the generic JUND AP-1-site sentence as positive support. The core-function prose now
+  distinguishes JunD from JUN/JUNB by explicitly including MEN1-dependent restraint of JunD-mediated
+  transcription [PMID:9989505, "Menin repressed transcriptional activation mediated by JunD"] while
+  keeping direct AP-1 DNA binding and Pol II transcriptional regulation as its molecular core.
+- **Chromatin support.** The legacy PMID:1903194 chromatin TAS row is retained as part of JunD's direct
+  AP-1 DNA-regulatory mechanism, but its reason now states that the cached abstract supports AP-1-site
+  binding and transcriptional activation rather than a separate chromatin assay.
