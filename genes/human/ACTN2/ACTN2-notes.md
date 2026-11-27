@@ -115,7 +115,7 @@ change is part of this gene review.
 The public project remains at checkpoint 766 until ACTN2 is reviewed, validated
 and delivered through its own PR. This work does not yet earn completion credit.
 
-## Validation and review outcome
+## Initial validation and review outcome
 
 All 208 native annotation contexts are adjudicated: 41 ACCEPT, 143
 KEEP_AS_NON_CORE, 22 UNDECIDED, one TOO_GENERAL and one REMOVE. The source
@@ -139,3 +139,72 @@ four-EF-hand calcium-coordination passage, the human-construct/rat-neuron
 rescue evidence, and the unresolved internalization-versus-recycling mechanism.
 This does not replace the stated limits on inaccessible supplements or
 unverified source-specific results.
+
+## 2026-11-27: PR #7147 follow-up
+
+The specificity rule is to flag an umbrella term as TOO_GENERAL only when a
+retained specific annotation already entails it and the umbrella adds no useful
+mechanism, structural system, partner class or assembly description. This is
+separate from evidence confidence and from whether a process is core. The two
+locations in core_functions are representative, not an exhaustive whitelist.
+Apply the rule to structural molecule activity, cytoskeleton, cytoskeletal
+protein binding, cell junction, anatomical structure formation involved in
+morphogenesis, and supramolecular fiber organization. The retained muscle and
+postsynaptic structural terms, actin/titin binding, synaptic locations and
+sarcomere organization supply the specific claims. QuickGO confirms the relevant
+is_a/part_of paths; sarcomere organization is part_of myofibril assembly, which
+connects to both fiber organization and assembly involved in morphogenesis.
+Informative locations such as sarcomere and actin cytoskeleton remain retained.
+The NAS cytoskeleton paper's access limitation is recorded without treating it
+as evidence that the localization is false.
+
+The mouse-ortholog actin-filament-binding row now proposes MODIFY to GO:7770064
+actin-filament cross-linking activity. This mechanistic replacement makes the
+first core function actionable without adding a NEW context or remapping the
+separate PAINT binding assertion. GO:7770064 is an adaptor activity, not an is_a
+descendant of actin filament binding. The human ACTN2 dimer architecture and
+explicit two-filament model support crosslinking [PMID:25433700]; sedimentation
+and isolated-domain experiments establish binding, not themselves crosslinks
+[PMID:25433700; PMID:27287556].
+
+Two UniProt-assigned experimental rows retain UNDECIDED and gain
+WRONG_REFERENCE / SUSPECTED / CHECK source-defect entries. The cited article
+does not identify a supporting uncapping or angiotensin/PLC assay in the
+inspected text; its CapZ statement is speculative. Binary supplements remain
+uninspected. The request is for UniProt to identify the supporting assay or
+check the citation, with no invented replacement reference and no assertion
+that the biological claims are disproved. These requests have not been sent
+upstream. Structural-muscle and PIP2-binding quotations now support the claimed
+function and binding result directly.
+
+The 115 generic-binding contexts span 33 PMIDs: 65 from primary Y2H surveys
+(27 from PMID:25910212), 25 focused/source-specific contexts, two BioPlex AP-MS
+contexts, 22 terminal-peptide/PDZ holdup contexts and one HENA provenance
+context independently corroborated by primary evidence. These classes retain
+their assay limits. ATP5MC1, MRPL10, histone H4 and SRP9 rows now explicitly
+bound the heterologous construct result; SRP9 is cytoplasmic, so it is not
+treated as an impossible compartment pairing. No endogenous complex or
+partner pathway is inferred from these screen results.
+
+Coverage remains all 208 native contexts from 209 retained GOA assertions:
+116 raw protein-binding assertions map to 115 contexts. The two PMID:9501083
+TTN assertions differ in assigning source/date but share the native identity;
+both are retained in the TSV and represented by the reviewed TTN context.
+No source assertion is silently dropped and no duplicate review context is
+manufactured to change the count. PMID:37489746 remains support for the
+neuronal synthesis; citing it does not require an additional kinase-binding
+annotation in this revision.
+
+Revised decisions: 34 ACCEPT, 142 KEEP_AS_NON_CORE, 22 UNDECIDED, eight
+TOO_GENERAL, one MODIFY and one REMOVE. All native annotation identities and
+source files are unchanged. There are 42 supporting-text occurrences to verify.
+
+Follow-up validation passed for the gene and the new history record, and all
+42 quotations verified with zero failed or unchecked sources. Independent
+biological QA found no blocking issue. The missing crosslinking-annotation
+advisory is resolved. An older action-consistency check warns about ACCEPT on
+the PAINT actin-binding row beside MODIFY on the ortholog-transfer row: both
+affirm binding, while the latter proposes the crosslinking mechanism. This
+documented distinction does not assert different isoform behavior or a PAINT
+node error. That advisory, the generic-binding policy warnings and unresolved
+evidence keep the review at DRAFT.
