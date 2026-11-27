@@ -100,3 +100,45 @@ REMOVE 6 (4 protein binding, 2 mitochondrion HDA) · KEEP_AS_NON_CORE 1 (apoptot
 - Whether an MF term for the FEAR/PP2A-Cdc55 role is justified (scaffold vs inhibitor).
 - Ty1 retrotransposition role (Ho et al. 2015, not cached) not represented in GOA; not
   proposed as NEW pending comparator check.
+
+## 2026-10-01 current-GOA / IBA review
+
+- Forced a current `just fetch-gene yeast ESP1 --force` refresh. GOA still materializes the
+  same 41 source signatures already reviewed; no stale source rows need `retired: true`.
+- Rechecked all six PTHR12792 IBA rows against current PAINT. PTN000300670 still supports
+  the separase-family endopeptidase activity, nucleus, cytoplasm, mitotic spindle and
+  meiotic chromosome separation transfers, while the fungal PTN000980533 node supports
+  mitotic spindle pole body localization. All six remain `ACCEPT` and now carry
+  `NO_FAILURE_CORE` propagation reviews using the PTN node as the source entity.
+- Re-read the four `GO:0005515 protein binding` rows under the current IBA-project policy.
+  They remain `REMOVE`: the Pds1 interaction is better captured by `GO:1990520`
+  separase-securin complex, and the Cdc55 FEAR interaction is real but still lacks a direct,
+  specific molecular-function term because direct PP2A inhibition by substoichiometric Esp1 is
+  judged unlikely in [PMID:18762578].
+- Cached and read [PMID:25822502]. Esp1 affects Ty1 mobility/insertion and
+  co-immunoprecipitates with Ty1 integrase, but the exact step remains ambiguous between
+  cohesin-barrier removal and integrase targeting; no conservative Ty1 `NEW` term was added.
+- Newer-paper search found the 2024 cly8/esp1-G543E preprint [PMID:39484378], which reinforces
+  the mitotic chromosome-segregation role but adds no distinct Esp1 GO assertion, and a 2026
+  TORC1-stress paper [PMID:42360689] whose cohesin-degradation route is explicitly
+  separase-independent.
+
+## 2026-11-27 provenance for the Q4GYR1 PAINT source species
+
+The `GO:0005634` and `GO:0005737` IBA summaries describe `UniProtKB:Q4GYR1` as trypanosome
+separase. That identification had no provenance recorded anywhere in this repository, and
+`genes/human/ESPL1/ESPL1-notes.md` records the same accession as mouse Espl1, so one of the two
+had to be wrong. Looked the accession up directly against the UniProt REST API on 2026-11-27
+(`https://rest.uniprot.org/uniprotkb/Q4GYR1.txt`, entry version 80 of 04-NOV-2026):
+
+- `ID   Q4GYR1_TRYB2            Unreviewed;      1159 AA.`
+- `OS   Trypanosoma brucei brucei (strain 927/4 GUTat10.1).`
+- `OX   NCBI_TaxID=185431`
+- `OC   Eukaryota; Discoba; Euglenozoa; Kinetoplastea; Metakinetoplastina; Trypanosomatida; Trypanosomatidae; Trypanosoma.`
+- `GN   ORFNames=TB927.1.3120`, from the *T. brucei* chromosome 1 genomic sequence [PMID:12907729].
+
+So "trypanosome" is correct for this review and the `ESPL1-notes.md` line is the wrong record.
+That file belongs to a different gene's slice and is not touched here; it needs its own
+one-line correction. Note that Q4GYR1 is a TrEMBL entry whose own separase naming is ARBA
+(`DE   RecName: Full=separase {ECO:0000256|ARBA:ARBA00012489}`), i.e. an unvetted prediction —
+which is a statement about how well characterised the PAINT donor is, not about the species.
