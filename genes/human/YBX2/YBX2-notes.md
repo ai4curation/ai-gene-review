@@ -22,7 +22,6 @@ establish cold-induced thermogenesis as a direct human YBX2 process.
 
 The PAINT rows place broad nucleic-acid binding and nucleus on the family.
 There are no PAINT losses on the human YBX2 lineage, but the PTHR11544 family is
-very broad and includes bacterial cold-shock proteins. The broad GO:0003676 row
-is kept as the right common denominator for the family, while the IEA
-InterPro2GO row to the same term is too general once the PAINT row already says
-the same thing.
+very broad and includes bacterial cold-shock proteins. The broad GO:0003676 rows
+are kept as the right common denominator for the family; the PAINT and
+InterPro2GO rows reinforce the same generic nucleic-acid-binding claim.
