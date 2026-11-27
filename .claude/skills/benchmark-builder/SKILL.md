@@ -60,7 +60,7 @@ deterministic steps below. Do the agentic steps only when the user asks for them
    Scoring reads only generic `Prediction` records; convert native outputs with
    `benchmark import --from <importer>`. Ask before any paid model call, and
    test with a free or stub mode first.
-6. **Deliver.** Run `just validate-benchmarks` and `uv run pytest tests/test_benchmark.py`.
+6. **Deliver.** Run `just validate-benchmarks` and `uv run pytest packages/aigr-benchmark tests/test_benchmark_committed.py`.
    Commit the spec, the benchmark, the check report, any agent evaluation, the
    prediction files under `predictions/` and the score report.
    Never commit `run-inputs/`, `runs/` or `.cache/benchmark/`. In the PR, state

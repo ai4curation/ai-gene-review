@@ -1,4 +1,8 @@
-"""Tests for time-split benchmark building, checks, export and scoring (no network)."""
+"""Tests for time-split benchmark building, checks, export and scoring (no network).
+
+Tests over the benchmarks committed in ai-gene-review are in that repository's
+``tests/test_benchmark_committed.py``.
+"""
 
 from __future__ import annotations
 
@@ -10,14 +14,14 @@ import pytest
 import yaml
 from typer.testing import CliRunner
 
-from ai_gene_review.benchmark.build import (
+from aigr_benchmark.build import (
     add_decoys,
     collapse_rows,
     goa_candidates,
     make_item,
     review_targets,
 )
-from ai_gene_review.benchmark.checks import (
+from aigr_benchmark.checks import (
     Context,
     difficulty,
     grading_results,
@@ -27,21 +31,24 @@ from ai_gene_review.benchmark.checks import (
     novelty,
     prior_prediction,
     run_checks,
+    SCHEMA,
     validate_schema,
 )
-from ai_gene_review.benchmark.cli import benchmark_app
-from ai_gene_review.benchmark.importers import peptalk as peptalk_importer
-from ai_gene_review.benchmark.importers import reviews as reviews_importer
-from ai_gene_review.benchmark.predictions import read_prediction_set, verdicts
-from ai_gene_review.benchmark.run import export, score
-from ai_gene_review.benchmark.sources import (
+from aigr_benchmark.cli import benchmark_app
+from aigr_benchmark.importers import peptalk as peptalk_importer
+from aigr_benchmark.importers import reviews as reviews_importer
+from aigr_benchmark.predictions import read_prediction_set, verdicts
+from aigr_benchmark.run import export, score
+from aigr_benchmark.sources import (
     Annotation,
     InformationContent,
     Ontology,
     by_protein,
 )
 
-EXAMPLE = Path("benchmarks/human-goa-2025-06")
+
+#: The installed package folder, which holds the schema and generated models.
+PACKAGE = SCHEMA.parents[1]
 
 # root F -> kinase -> {ser kinase, tyr kinase}; obsolete old kinase replaced by ser kinase
 OBO = """
@@ -408,7 +415,7 @@ def test_peptalk_importer_and_score(ctx: Context, tmp_path: Path) -> None:
 
 
 def test_peptalk_claims_tsv_round_trip(ctx: Context, tmp_path: Path) -> None:
-    from ai_gene_review.benchmark.predictions import claims
+    from aigr_benchmark.predictions import claims
 
     benchmark = toy_benchmark(ctx, tmp_path)
     lines = peptalk_importer.claims_tsv(claims(benchmark["items"])).splitlines()
@@ -678,7 +685,7 @@ def test_review_verdicts_count_modify_replacements(
 def test_date_filter_drops_targets_with_any_old_reference(
     ctx: Context, tmp_path: Path
 ) -> None:
-    from ai_gene_review.benchmark.build import date_filtered
+    from aigr_benchmark.build import date_filtered
 
     (tmp_path / "pubmed-dates.json").write_text(
         json.dumps(
@@ -699,7 +706,7 @@ def test_date_filter_drops_targets_with_any_old_reference(
 
 
 def test_uniprot_stream_cache_is_keyed_by_query(tmp_path: Path) -> None:
-    from ai_gene_review.benchmark.sources import uniprot_stream
+    from aigr_benchmark.sources import uniprot_stream
 
     folder = tmp_path / "uniprot"
     folder.mkdir()
@@ -720,7 +727,7 @@ def test_homolog_check_without_other_members_is_info(ctx: Context) -> None:
 
 
 def test_decoys_follow_target_aspects(ctx: Context) -> None:
-    from ai_gene_review.benchmark.build import aspect_matched
+    from aigr_benchmark.build import aspect_matched
 
     item = {"target_annotations": [{"aspect": "C"}]}
     eligible = [("GO:0004713", "a"), ("GO:0005634", "b")]
@@ -729,127 +736,65 @@ def test_decoys_follow_target_aspects(ctx: Context) -> None:
     ]
 
 
-SUFFIX_CLASSES = {
-    "-spec.yaml": "BenchmarkSpec",
-    "-check-report.yaml": "CheckReport",
-    "-agent-evaluation.yaml": "AgentEvaluation",
-    "-scores.yaml": "ScoreReport",
-}
-
-
-def committed_benchmark_files() -> list[tuple[Path, str]]:
-    """Every committed benchmark document with its schema class."""
-    out = []
-    for path in sorted(Path("benchmarks").glob("*/*.yaml")):
-        cls = next(
-            (c for suffix, c in SUFFIX_CLASSES.items() if path.name.endswith(suffix)),
-            None,
-        )
-        out.append(
-            (path, cls or ("Benchmark" if path.stem == path.parent.name else ""))
-        )
-    return out
-
-
-@pytest.mark.parametrize("path,cls", committed_benchmark_files(), ids=lambda v: str(v))
-def test_committed_benchmark_files_validate(path: Path, cls: str) -> None:
-    assert cls, f"{path} has no recognised benchmark file name"
-    result = CliRunner().invoke(benchmark_app, ["validate", str(path), "--class", cls])
-    assert result.exit_code == 0, result.output
-
-
-def test_example_is_committed() -> None:
-    names = {p.name for p, _ in committed_benchmark_files()}
-    assert {"human-goa-2025-06.yaml", "human-goa-2025-06-check-report.yaml"} <= names
-
-
-def test_example_report_has_no_failures() -> None:
-    report = yaml.safe_load(
-        (EXAMPLE / "human-goa-2025-06-check-report.yaml").read_text()
-    )
-    assert all(s["failed"] == 0 for s in report["summary"])
-    assert json.dumps(report["stats"])  # serialisable
-
-
-@pytest.mark.parametrize("suffix", ["-check-report.yaml", "-scores.yaml"])
-def test_committed_reports_match_their_benchmark(suffix: str) -> None:
-    """A committed report must describe the committed benchmark, not an earlier draw."""
-    for bench_path in sorted(Path("benchmarks").glob("*/*.yaml")):
-        if bench_path.stem != bench_path.parent.name:
-            continue
-        report_path = bench_path.with_name(bench_path.stem + suffix)
-        if not report_path.exists():
-            continue
-        bench = yaml.safe_load(bench_path.read_text())
-        report = yaml.safe_load(report_path.read_text())
-        assert report["benchmark_id"] == bench["id"]
-        items = bench["items"]
-        targets = [t for i in items for t in i["target_annotations"]]
-        if suffix == "-check-report.yaml":
-            assert report["stats"]["n_items"] == len(items)
-            assert report["stats"]["n_targets"] == len(targets)
-        else:
-            ids = {i["id"] for i in items}
-            assert {r["item_id"] for r in report["item_scores"]} <= ids
-            decoys = sum(len(i.get("decoys") or []) for i in items)
-            for row in report["condition_scores"]:
-                if row["role"] == "DECOY":
-                    assert row["n"] == decoys
-
-
-def committed_prediction_files() -> list[Path]:
-    return sorted(Path("benchmarks").glob("*/predictions/*"))
-
-
-@pytest.mark.parametrize("path", committed_prediction_files(), ids=str)
-def test_committed_predictions_validate(path: Path) -> None:
-    result = CliRunner().invoke(
-        benchmark_app, ["validate", str(path), "--class", "PredictionSet"]
-    )
-    assert result.exit_code == 0, result.output
-
-
-@pytest.mark.parametrize("path", committed_prediction_files(), ids=str)
-def test_committed_predictions_parse_with_pydantic(path: Path) -> None:
-    from ai_gene_review.datamodel.benchmark_model import Prediction
-
-    for record in read_prediction_set(path)["predictions"]:
-        assert Prediction.model_validate(record).item_id == record["item_id"]
-
-
-def test_committed_scores_reproduce_from_committed_predictions() -> None:
-    """The committed score report is exactly what its committed prediction files give."""
-    for scores_path in sorted(Path("benchmarks").glob("*/*-scores.yaml")):
-        report = yaml.safe_load(scores_path.read_text())
-        bench_path = scores_path.with_name(f"{report['benchmark_id']}.yaml")
-        files = [Path(i.split(" sha256:")[0]) for i in report["inputs"]]
-        benchmark = yaml.safe_load(bench_path.read_text())
-        predictions = [
-            p for path in files for p in read_prediction_set(path)["predictions"]
-        ]
-        again = score(benchmark, verdicts(benchmark, predictions), [])
-        assert again["condition_scores"] == report["condition_scores"]
-        assert again["item_scores"] == report["item_scores"]
-
-
 @pytest.mark.parametrize(
     "generator,committed",
     [
-        ("gen-json-schema", "assets/jsonschema/benchmark.schema.json"),
-        ("gen-pydantic", "src/ai_gene_review/datamodel/benchmark_model.py"),
+        ("gen-json-schema", PACKAGE / "schema" / "benchmark.schema.json"),
+        ("gen-pydantic", PACKAGE / "datamodel" / "benchmark_model.py"),
     ],
 )
-def test_generated_benchmark_models_are_current(generator: str, committed: str) -> None:
+def test_generated_benchmark_models_are_current(generator: str, committed: Path) -> None:
     """Regenerate with `just gen-benchmark-models` after editing schema/benchmark.yaml."""
     import shutil
     import subprocess
 
+    pytest.importorskip("linkml", reason="LinkML is a dev dependency")
     exe = shutil.which(generator)
     assert exe, f"{generator} not installed"
     out = subprocess.run(
-        [exe, "src/ai_gene_review/schema/benchmark.yaml"],
+        [exe, str(SCHEMA.relative_to(PACKAGE.parent))],
+        cwd=PACKAGE.parent,
         capture_output=True,
         text=True,
         check=True,
     ).stdout
-    assert out == Path(committed).read_text()
+    assert out == committed.read_text()
+
+
+@pytest.mark.parametrize(
+    "target_class,document",
+    [
+        ("CheckResult", {"check": "novelty", "status": "PASS", "message": "ok"}),
+        ("CheckResult", {"check": "novelty", "status": "MAYBE", "message": "ok"}),
+        ("CheckResult", {"check": "novelty", "status": "PASS"}),
+        ("CheckResult", {"check": "novelty", "status": "PASS", "message": "ok", "extra": 1}),
+        ("Prediction", {"item_id": "B-P1", "predictor": "p", "condition": "blind"}),
+        ("PredictionSet", {"predictions": [{"item_id": "B-P1", "verdict": "maybe"}]}),
+    ],
+)
+def test_validate_schema_matches_linkml(target_class: str, document: dict) -> None:
+    """The bundled JSON Schema gives the errors LinkML's closed validator gives.
+
+    Only their order may differ: the committed JSON Schema has sorted keys.
+    """
+    pytest.importorskip("linkml", reason="LinkML is a dev dependency")
+    from linkml.validator import Validator
+    from linkml.validator.plugins import JsonschemaValidationPlugin
+
+    validator = Validator(
+        str(SCHEMA), validation_plugins=[JsonschemaValidationPlugin(closed=True)]
+    )
+    expected = [r.message for r in validator.validate(document, target_class).results]
+    assert sorted(validate_schema(document, target_class)) == sorted(expected)
+
+
+def test_validate_schema_rejects_unknown_class() -> None:
+    with pytest.raises(ValueError, match="not a class"):
+        validate_schema({}, "NoSuchClass")
+
+
+def test_cli_entry_point_help() -> None:
+    result = CliRunner().invoke(benchmark_app, ["--help"])
+    assert result.exit_code == 0
+    for command in ("build", "check", "export", "import", "score", "validate"):
+        assert command in result.output

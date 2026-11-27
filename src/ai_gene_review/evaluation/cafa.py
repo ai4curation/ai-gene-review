@@ -21,15 +21,7 @@ from pathlib import Path
 import re
 from typing import TextIO
 
-DEFAULT_EXCLUDED_TERMS = frozenset(
-    {
-        "GO:0005515",  # protein binding
-        "GO:0005488",  # binding
-        "GO:0003674",  # molecular function
-        "GO:0008150",  # biological process
-        "GO:0005575",  # cellular component
-    }
-)
+from aigr_benchmark.terms import DEFAULT_EXCLUDED_TERMS
 
 DEFAULT_ASPECTS = ("all", "mf", "bp", "cc")
 ASPECT_ALIASES = {

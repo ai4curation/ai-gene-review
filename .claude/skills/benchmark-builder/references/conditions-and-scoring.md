@@ -25,7 +25,7 @@ a curator. Scoring reads only generic `Prediction` records.
    predictor write `Prediction` records itself:
    `just benchmark-import benchmarks/<id>/<id>.yaml runs/blind.jsonl --from peptalk -o benchmarks/<id>/predictions/blind-peptalk-<model>.jsonl`
    `just benchmark-import benchmarks/<id>/<id>.yaml <seeded genes folder> --from reviews --condition agent-review --predictor ai-gene-review:<model> --model <model> -o benchmarks/<id>/predictions/agent-review-<model>.jsonl`
-   A new tool needs only a small module in `src/ai_gene_review/benchmark/importers/`.
+   A new tool needs only a small module in `packages/aigr-benchmark/src/aigr_benchmark/importers/`.
 5. Score all prediction files together:
    `just benchmark-score benchmarks/<id>/<id>.yaml -p benchmarks/<id>/predictions/<file> -p ...`
    (add `--threshold` for predictors that give scores without verdicts).

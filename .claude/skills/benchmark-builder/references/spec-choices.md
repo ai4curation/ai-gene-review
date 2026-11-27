@@ -1,6 +1,6 @@
 # Spec choices
 
-The class is `BenchmarkSpec` in `src/ai_gene_review/schema/benchmark.yaml`.
+The class is `BenchmarkSpec` in `packages/aigr-benchmark/src/aigr_benchmark/schema/benchmark.yaml`.
 
 - **Taxon**: set `taxon.id`, `label` and `gaf_code`, the GO release species code
   (HUMAN, MOUSE, YEAST, ...).

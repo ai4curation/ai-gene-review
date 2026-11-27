@@ -14,13 +14,13 @@ from pathlib import Path
 
 import yaml
 
-from ai_gene_review.benchmark.checks import (
+from aigr_benchmark.checks import (
     REVIEW_CONTESTS,
     REVIEW_KEEPS,
     Context,
     find_review,
 )
-from ai_gene_review.benchmark.predictions import queries
+from aigr_benchmark.predictions import queries
 
 CORE_FUNCTION_SLOTS = (
     "molecular_function",

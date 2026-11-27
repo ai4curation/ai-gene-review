@@ -453,10 +453,27 @@ validate-benchmarks:
         for f in "$dir"/predictions/*; do uv run ai-gene-review benchmark validate "$f" --class PredictionSet; done
     done
 
-# Regenerate the benchmark schema's JSON Schema and Pydantic model (commit both)
+# Build aigr-benchmark, install the wheel alone in a fresh environment, and run its
+# tests and CLI there; fails if it imports ai-gene-review or needs LinkML at run time.
+test-aigr-benchmark-isolated:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    work="$(mktemp -d)"
+    trap 'rm -rf "$work"' EXIT
+    uv build --package aigr-benchmark --wheel --out-dir "$work/dist"
+    uv venv -q "$work/venv"
+    uv pip install -q --python "$work/venv" "$work"/dist/*.whl pytest
+    if "$work/venv/bin/python" -c "import ai_gene_review" 2>/dev/null; then
+        echo "aigr-benchmark pulled in ai-gene-review" >&2; exit 1
+    fi
+    (cd packages/aigr-benchmark && "$work/venv/bin/python" -I -m pytest -q -p no:cacheprovider -c pyproject.toml --rootdir . tests)
+    "$work/venv/bin/aigr-benchmark" validate benchmarks/human-goa-2025-06/human-goa-2025-06.yaml --class Benchmark
+
+# Regenerate the benchmark schema's JSON Schema and Pydantic model (commit both).
+# Run from the package's src/ so the recorded source_file does not depend on the checkout.
 gen-benchmark-models:
-    uv run gen-json-schema src/ai_gene_review/schema/benchmark.yaml > assets/jsonschema/benchmark.schema.json.tmp && mv assets/jsonschema/benchmark.schema.json.tmp assets/jsonschema/benchmark.schema.json
-    uv run gen-pydantic src/ai_gene_review/schema/benchmark.yaml > src/ai_gene_review/datamodel/benchmark_model.py.tmp && mv src/ai_gene_review/datamodel/benchmark_model.py.tmp src/ai_gene_review/datamodel/benchmark_model.py
+    cd packages/aigr-benchmark/src && uv run gen-json-schema aigr_benchmark/schema/benchmark.yaml > aigr_benchmark/schema/benchmark.schema.json.tmp && mv aigr_benchmark/schema/benchmark.schema.json.tmp aigr_benchmark/schema/benchmark.schema.json
+    cd packages/aigr-benchmark/src && uv run gen-pydantic aigr_benchmark/schema/benchmark.yaml > aigr_benchmark/datamodel/benchmark_model.py.tmp && mv aigr_benchmark/datamodel/benchmark_model.py.tmp aigr_benchmark/datamodel/benchmark_model.py
 
 # List shadow issues waiting for triage, shadow work, or rating
 outstanding-shadow-issues tracker="go-annotation" *args="":

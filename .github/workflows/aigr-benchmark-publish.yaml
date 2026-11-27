@@ -1,0 +1,52 @@
+name: Publish aigr-benchmark
+
+# Publishes the packages/aigr-benchmark workspace member to PyPI by trusted
+# publishing. Release it by creating a GitHub release tagged
+# aigr-benchmark-vX.Y.Z; uv-dynamic-versioning reads the version from that tag
+# (see packages/aigr-benchmark/pyproject.toml). Releases tagged vX.Y.Z publish
+# ai-gene-review itself (pypi-publish.yaml) and do not run this job.
+
+on:
+  workflow_dispatch:
+  release:
+    types: [created]
+
+jobs:
+  build-n-publish:
+    name: Build and publish aigr-benchmark to PyPI
+    if: ${{ startsWith(github.ref_name, 'aigr-benchmark-v') }}
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          # uv-dynamic-versioning needs the tags to compute the version.
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Build source and wheel archives
+        run: uv build --package aigr-benchmark --out-dir dist
+
+      - name: Smoke-test the wheel in a clean environment
+        run: |
+          uv venv /tmp/aigr-benchmark-smoke
+          uv pip install --python /tmp/aigr-benchmark-smoke dist/*.whl
+          /tmp/aigr-benchmark-smoke/bin/aigr-benchmark --help
+          /tmp/aigr-benchmark-smoke/bin/aigr-benchmark validate \
+            benchmarks/human-goa-2025-06/human-goa-2025-06.yaml --class Benchmark
+
+      - name: Publish
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist
+          verbose: true

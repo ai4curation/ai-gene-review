@@ -39,7 +39,7 @@ test: pytest doctest mypy format
 test-full: test pytest-integration test-examples
 
 pytest:
-  uv run pytest tests
+  uv run pytest tests packages/aigr-benchmark/tests
 
 # Run the Node tests for the GitHub Actions guard scripts (.github/scripts/).
 # Kept out of `just test` so a missing node does not break the Python workflow;
@@ -60,10 +60,10 @@ rerecord-cassettes:
 	uv run pytest -m integration --vcr-record=all -x -v
 
 doctest:
-  uv run pytest  --doctest-modules src
+  uv run pytest  --doctest-modules src packages/aigr-benchmark/src
 
 mypy:
-  uv run mypy src tests --exclude "src/ai_gene_review/(datamodel|tools|export)/"
+  uv run mypy src tests packages/aigr-benchmark/src packages/aigr-benchmark/tests --exclude "src/ai_gene_review/(datamodel|tools|export)/" --exclude "packages/aigr-benchmark/src/aigr_benchmark/datamodel/"
 
 format:
 	uv run ruff check .

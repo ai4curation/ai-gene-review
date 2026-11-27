@@ -97,7 +97,7 @@ linkml_meta = LinkMLMeta({'default_prefix': 'bench',
                             'prefix_reference': 'https://w3id.org/ai4curation/ai-gene-review/benchmark/'},
                   'linkml': {'prefix_prefix': 'linkml',
                              'prefix_reference': 'https://w3id.org/linkml/'}},
-     'source_file': 'src/ai_gene_review/schema/benchmark.yaml',
+     'source_file': 'aigr_benchmark/schema/benchmark.yaml',
      'title': 'Time-split protein annotation benchmarks'} )
 
 class AspectEnum(str, Enum):

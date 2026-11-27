@@ -21,7 +21,7 @@ from typing import Any
 
 import yaml
 
-from ai_gene_review.benchmark.checks import (
+from aigr_benchmark.checks import (
     DIFFICULTY_ORDER,
     Context,
     difficulty,
@@ -31,7 +31,7 @@ from ai_gene_review.benchmark.checks import (
     novelty,
     review_actions,
 )
-from ai_gene_review.benchmark.sources import (
+from aigr_benchmark.sources import (
     ASPECT_ROOTS,
     CAFA_EVIDENCE,
     DEFAULT_CACHE,
@@ -48,7 +48,7 @@ from ai_gene_review.benchmark.sources import (
     uniprot_records,
     uniprot_stream,
 )
-from ai_gene_review.evaluation.cafa import DEFAULT_EXCLUDED_TERMS
+from aigr_benchmark.terms import DEFAULT_EXCLUDED_TERMS
 
 REVIEW_TARGET_ACTIONS = frozenset({"ACCEPT", "NEW"})
 
