@@ -131,6 +131,34 @@ def gene_gap_cmd(
     )
 
 
+@litscan_app.command("rescore-gene-gap")
+def rescore_gene_gap_cmd(
+    packet: Annotated[Path, typer.Argument(help="GeneGapPacket JSON to rescore.")],
+    config: Annotated[
+        Path, typer.Option(help="GeneGapScanConfig YAML.")
+    ] = gene_gap.DEFAULT_CONFIG,
+    output_dir: Annotated[
+        Path, typer.Option(help="Packet output directory.")
+    ] = gene_gap.DEFAULT_OUTPUT,
+) -> None:
+    """Re-apply the scoring config to an existing packet, offline.
+
+    Use it to calibrate weights: every candidate keeps its earlier rank as
+    previous_rank. Only the packet's own candidates are re-ranked.
+    """
+    rescored = gene_gap.rescore_packet(
+        json.loads(packet.read_text()), gene_gap.load_config(config)
+    )
+    rescored["config_path"] = str(config)
+    json_path, md_path = gene_gap.write_packet(rescored, output_dir)
+    for cand in rescored["candidates"]:
+        typer.echo(
+            f"{cand['previous_rank']:>3} -> {cand['rank']:>3}  {cand['score']:>3}  "
+            f"{cand['gene']['symbol']}  {cand['paper']['reference_id']}"
+        )
+    typer.echo(f"Wrote {md_path} and {json_path}")
+
+
 @litscan_app.command("validate-gene-gap")
 def validate_gene_gap_cmd(
     paths: Annotated[

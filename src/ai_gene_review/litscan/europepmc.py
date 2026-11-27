@@ -27,6 +27,8 @@ class Publication:
     abstract: str
     source: str
     record_id: str
+    # Europe PMC holds the full text (``inEPMC``) or the article is open access.
+    full_text_available: bool = False
 
     @property
     def europe_pmc_url(self) -> str:
@@ -82,6 +84,7 @@ def publication_from_record(record: dict[str, Any]) -> Publication:
         abstract=normalize_text(record.get("abstractText")),
         source=source,
         record_id=record_id,
+        full_text_available="Y" in (record.get("inEPMC"), record.get("isOpenAccess")),
     )
 
 

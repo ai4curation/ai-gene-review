@@ -262,6 +262,19 @@ def informative_experimental(counts: dict[str, int]) -> int:
     return counts["experimental"] - counts["experimental_protein_binding"]
 
 
+def known_function_rows(counts: dict[str, int]) -> int:
+    """Informative experimental rows plus ISS/ISO/ISA/ISM transfers from homologs.
+
+    A transfer means the function is already known for an ortholog, so a new
+    paper on this product adds less than the experimental count alone suggests.
+
+    >>> known_function_rows({"experimental": 3, "experimental_protein_binding": 2,
+    ...                      "homology": 24})
+    25
+    """
+    return informative_experimental(counts) + counts["homology"]
+
+
 def _matches_any(patterns: Iterable[str], text: str) -> bool:
     return any(re.search(p, text, flags=re.IGNORECASE) for p in patterns)
 
@@ -282,9 +295,17 @@ def score_gene(gene: dict[str, Any], scoring: dict[str, Any]) -> list[dict[str, 
             )
 
     add(
-        "experimental_annotations",
+        "known_function_rows",
+        band_score(known_function_rows(counts), scoring["known_function_bands"]),
+    )
+    add(
+        "total_annotations",
+        band_score(counts["total"], scoring["total_annotation_bands"]),
+    )
+    add(
+        "experimental_aspects",
         band_score(
-            informative_experimental(counts), scoring["experimental_annotation_bands"]
+            counts["experimental_aspects"], scoring["experimental_aspect_bands"]
         ),
     )
     if counts["experimental_mf"] - counts["experimental_protein_binding"] <= 0:
@@ -324,36 +345,72 @@ def score_paper(
     *,
     gene_in_title: bool,
     matched_symbol: str = "",
+    full_text_available: bool = True,
 ) -> list[dict[str, Any]]:
     """Paper-side score components; each rule fires at most once.
+
+    Rules are applied in config order. A rule with ``unless_rules`` fires only
+    when none of those (earlier) rules fired.
 
     >>> rules = [{"id": "t", "points": 2, "label": "in title", "field": "gene_title"},
     ...          {"id": "r", "points": -5, "label": "review", "field": "title",
     ...           "patterns": [r"\\breview\\b"]}]
     >>> [c["rule"] for c in score_paper("A review", "", rules, gene_in_title=True)]
     ['t', 'r']
+
+    A co-subject is named in several abstract sentences, even when the title
+    leads with another gene; phenotype-only rules yield to mechanism rules:
+
+    >>> rules = [{"id": "focus", "points": 2, "label": "co-subject",
+    ...           "field": "gene_sentence_count", "min_sentences": 2},
+    ...          {"id": "assay", "points": 3, "label": "direct assay",
+    ...           "field": "gene_sentence", "patterns": ["pull-?down"]},
+    ...          {"id": "pheno", "points": -3, "label": "phenotype only",
+    ...           "field": "title_abstract", "patterns": ["tumou?r"],
+    ...           "unless_rules": ["assay"]},
+    ...          {"id": "abstract_only", "points": -1, "label": "no full text",
+    ...           "field": "abstract_only"}]
+    >>> abstract = "DTX3 ubiquitinates NPM3. NPM3 binds RUVBL1 in a pull-down. Tumor growth fell."
+    >>> [c["rule"] for c in score_paper("DTX3 in tumors", abstract, rules,
+    ...                                 gene_in_title=False, matched_symbol="NPM3")]
+    ['focus', 'assay']
+    >>> [c["rule"] for c in score_paper("DTX3 in tumors", "NPM3 loss slows tumor growth.",
+    ...      rules, gene_in_title=False, matched_symbol="NPM3", full_text_available=False)]
+    ['pheno', 'abstract_only']
     """
     symbol_re = re.compile(rf"(?<![\w]){re.escape(matched_symbol)}(?![\w])", re.I)
+    abstract_sentences = split_sentences(abstract)
     contexts = [
         sentence
-        for sentence in [title, *split_sentences(abstract)]
+        for sentence in [title, *abstract_sentences]
         if matched_symbol and symbol_re.search(sentence)
     ]
     components = []
+    fired_ids: set[str] = set()
     for rule in rules:
-        if rule["field"] == "gene_title":
+        field_name = rule["field"]
+        if field_name == "gene_title":
             fired = gene_in_title
-        elif rule["field"] == "gene_sentence":
+        elif field_name == "gene_sentence":
             fired = any(
                 _matches_any(rule["patterns"], sentence)
                 and not _matches_any(rule.get("exclude_patterns", []), sentence)
                 for sentence in contexts
             )
-        elif rule["field"] == "title":
+        elif field_name == "gene_sentence_count":
+            fired = bool(matched_symbol) and rule["min_sentences"] <= sum(
+                bool(symbol_re.search(sentence)) for sentence in abstract_sentences
+            )
+        elif field_name == "abstract_only":
+            fired = not full_text_available
+        elif field_name == "title":
             fired = _matches_any(rule["patterns"], title)
         else:
             fired = _matches_any(rule["patterns"], f"{title} {abstract}")
+        if fired and fired_ids & set(rule.get("unless_rules", [])):
+            fired = False
         if fired:
+            fired_ids.add(rule["id"])
             components.append(
                 {"rule": rule["id"], "points": rule["points"], "label": rule["label"]}
             )
@@ -374,14 +431,14 @@ def rank_candidates(
 ) -> list[dict[str, Any]]:
     """Sort by score, keep ``max_candidates`` and mark the issue-eligible ones.
 
-    Ties break on fewer informative experimental annotations, then reference
+    Ties break on fewer known-function rows (experimental or homolog), then reference
     and accession, so a re-run over the same data gives the same order.
     """
     ordered = sorted(
         candidates,
         key=lambda c: (
             -c["score"],
-            informative_experimental(c["gene"]["annotation_counts"]),
+            known_function_rows(c["gene"]["annotation_counts"]),
             c["paper"]["reference_id"],
             c["gene"]["accession"],
         ),
@@ -403,6 +460,58 @@ def rank_candidates(
     return ordered
 
 
+def score_candidate(
+    paper: dict[str, Any], gene: dict[str, Any], config: dict[str, Any]
+) -> dict[str, Any]:
+    """Score one (paper, gene) pair from its packet records."""
+    components = score_gene(gene, config["gene_scoring"]) + score_paper(
+        paper["title"],
+        paper.get("abstract", ""),
+        config["paper_scoring"],
+        gene_in_title=gene["matched_in_title"],
+        matched_symbol=gene["matched_symbol"],
+        full_text_available=paper.get("full_text_available", False),
+    )
+    return {
+        "score": sum(c["points"] for c in components),
+        "action": "UPDATE_REVIEW" if gene.get("review_path") else "NEW_REVIEW",
+        "ledger_marker": ledger_marker(paper["reference_id"], gene["accession"]),
+        "paper": paper,
+        "gene": gene,
+        "score_components": components,
+    }
+
+
+def rank_and_title(
+    candidates: list[dict[str, Any]], limits: dict[str, Any]
+) -> list[dict[str, Any]]:
+    """Rank candidates and attach issue titles and labels."""
+    ranked = rank_candidates(candidates, limits)
+    for cand in ranked:
+        cand["issue_title"] = issue_title(cand)
+        cand["issue_labels"] = issue_labels(cand)
+    return ranked
+
+
+def rescore_packet(packet: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+    """Re-apply a config's scoring to an existing packet, without network calls.
+
+    Only the packet's own candidates (at most ``max_candidates``) are re-ranked,
+    so a rescore calibrates weights; it does not replace a fresh scan. Earlier
+    ranks are kept as ``previous_rank``.
+    """
+    candidates = []
+    for old in packet["candidates"]:
+        cand = score_candidate(old["paper"], old["gene"], config)
+        cand["previous_rank"] = old["rank"]
+        candidates.append(cand)
+    return {
+        **packet,
+        "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "candidates": rank_and_title(candidates, config["limits"]),
+    }
+
+
 # ------------------------------------------------------------------ the run
 def _paper_record(pub: Publication, profiles: list[str]) -> dict[str, Any]:
     return {
@@ -418,6 +527,7 @@ def _paper_record(pub: Publication, profiles: list[str]) -> dict[str, Any]:
         "abstract": pub.abstract,
         "profiles": profiles,
         "is_preprint": pub.source == "PPR",
+        "full_text_available": pub.full_text_available,
     }
 
 
@@ -632,30 +742,11 @@ def run(
             "paper_in_goa": bool(paper_ids(pub) & profiles[accession].references),
         }
         gene = {k: v for k, v in gene.items() if v is not None}
-        components = score_gene(gene, scoring) + score_paper(
-            pub.title,
-            pub.abstract,
-            config["paper_scoring"],
-            gene_in_title=in_title,
-            matched_symbol=symbol,
-        )
         paper = _paper_record(pub, profiles_by_key[key])
-        candidates.append(
-            {
-                "score": sum(c["points"] for c in components),
-                "action": "UPDATE_REVIEW" if gene.get("review_path") else "NEW_REVIEW",
-                "ledger_marker": ledger_marker(paper["reference_id"], accession),
-                "paper": paper,
-                "gene": gene,
-                "score_components": components,
-            }
-        )
+        candidates.append(score_candidate(paper, gene, config))
     log(f"scored {len(candidates)} candidates; {client.calls} HTTP calls")
 
-    ranked = rank_candidates(candidates, limits)
-    for cand in ranked:
-        cand["issue_title"] = issue_title(cand)
-        cand["issue_labels"] = issue_labels(cand)
+    ranked = rank_and_title(candidates, limits)
     return {
         "job": JOB,
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
@@ -716,9 +807,11 @@ def gap_evidence_lines(gene: dict[str, Any]) -> list[str]:
         f"| experimental (EXP/IDA/IPI/IMP/IGI/IEP/HT*) | {c['experimental']} |",
         f"| of which bare protein binding (GO:0005515) | {c['experimental_protein_binding']} |",
         f"| experimental molecular function | {c['experimental_mf']} |",
+        f"| GO aspects with informative experimental annotations | {c['experimental_aspects']} |",
+        f"| ISS/ISO/ISA/ISM (transferred from a homolog) | {c['homology']} |",
         f"| IBA | {c['iba']} |",
         f"| IEA | {c['iea']} |",
-        f"| other (ISS/ISO/TAS/NAS/IC/ND...) | {c['other']} |",
+        f"| other (TAS/NAS/IC/ND...) | {c['other']} |",
         "",
     ]
     codes = ", ".join(
@@ -800,6 +893,12 @@ def issue_body(cand: dict[str, Any]) -> str:
         f"- Journal/date: {paper.get('journal') or 'n/a'}, {paper.get('publication_date') or 'n/a'}",
         f"- DOI: {paper.get('doi') or 'n/a'}",
         f"- Links: {paper.get('pubmed_url') or 'n/a'} | {paper['europe_pmc_url']}",
+        "- Full text in Europe PMC: "
+        + (
+            "yes"
+            if paper.get("full_text_available")
+            else "no (abstract only; find the full text before annotating)"
+        ),
         *preprint,
         "",
         "Abstract:",
@@ -864,16 +963,19 @@ def render_markdown(packet: dict[str, Any]) -> str:
         "",
         "## Ranked candidates",
         "",
-        "| # | score | gene | organism | exp (informative) | family exp members | action | paper | issue |",
-        "| ---: | ---: | --- | --- | ---: | ---: | --- | --- | --- |",
+        "| # | score | gene | organism | exp (informative) | homolog transfers | total GO | family exp members | full text | action | paper | issue |",
+        "| ---: | ---: | --- | --- | ---: | ---: | ---: | ---: | --- | --- | --- | --- |",
     ]
     for c in packet["candidates"]:
         gene, paper = c["gene"], c["paper"]
         fam = gene.get("family") or {}
+        counts = gene["annotation_counts"]
         lines.append(
             f"| {c['rank']} | {c['score']} | {gene['symbol']} ({gene['accession']}) "
-            f"| {gene['organism']} | {informative_experimental(gene['annotation_counts'])} "
-            f"| {fam.get('experimental_member_count', 'n/a')} | {c['action']} "
+            f"| {gene['organism']} | {informative_experimental(counts)} "
+            f"| {counts['homology']} | {counts['total']} "
+            f"| {fam.get('experimental_member_count', 'n/a')} "
+            f"| {'yes' if paper.get('full_text_available') else 'no'} | {c['action']} "
             f"| {paper['reference_id']}: {_short(paper['title'], 60)} "
             f"| {'yes' if c.get('issue_eligible') else ''} |"
         )

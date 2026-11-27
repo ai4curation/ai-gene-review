@@ -159,25 +159,49 @@ non_gene_expansions:
 
 # Gene-side rules: how big the function-knowledge gap is for the gene product.
 gene_scoring:
-  # Bands on QuickGO experimental annotations (the repository experimental
-  # evidence category), excluding bare GO:0005515
-  # protein binding, which identifies no function. First band whose `max` is
-  # >= the count wins; a band without `max` catches the rest.
-  experimental_annotation_bands:
+  # Bands on what is already known about the function: QuickGO rows in the
+  # repository experimental evidence category (excluding bare GO:0005515
+  # protein binding, which identifies no function) plus ISS/ISO/ISA/ISM rows
+  # transferred from a homolog. A rodent gene with one IMP row and 24 ISO rows
+  # from its human ortholog is not dark. First band whose `max` is >= the count
+  # wins; a band without `max` catches the rest.
+  known_function_bands:
     - max: 0
       points: 5
-      label: no informative experimental GO annotation
+      label: no informative experimental or homology-transferred GO annotation
     - max: 3
       points: 3
-      label: 1-3 informative experimental GO annotations
+      label: 1-3 informative experimental or homology-transferred GO annotations
     - max: 10
       points: 1
-      label: 4-10 informative experimental GO annotations
+      label: 4-10 informative experimental or homology-transferred GO annotations
+    - max: 40
+      points: -1
+      label: 11-40 informative experimental or homology-transferred GO annotations
+    - points: -4
+      label: well annotated (>40 informative experimental or homology-transferred GO annotations)
+  # Saturation: the total number of GO rows of any evidence.
+  total_annotation_bands:
     - max: 40
       points: 0
-      label: 11-40 informative experimental GO annotations
+      label: 40 or fewer GO annotations
+    - max: 100
+      points: -1
+      label: 41-100 GO annotations already
+    - points: -3
+      label: more than 100 GO annotations already
+  # Saturation by aspect: how many of MF, BP and CC already have informative
+  # experimental rows. A paper about a gene experimentally placed in both a
+  # process and a compartment rarely closes a gap.
+  experimental_aspect_bands:
+    - max: 1
+      points: 0
+      label: informative experimental annotations in at most one GO aspect
+    - max: 2
+      points: -3
+      label: informative experimental annotations already in two GO aspects
     - points: -4
-      label: well annotated (>40 informative experimental GO annotations)
+      label: informative experimental annotations already in all three GO aspects
   # No experimental molecular-function annotation other than protein binding.
   no_experimental_mf:
     points: 2
@@ -218,16 +242,34 @@ gene_scoring:
 # title plus abstract (`field: title_abstract`), case-insensitive. Each rule fires
 # at most once per paper.
 paper_scoring:
+  # Rules apply in this order; `unless_rules` names earlier rules whose firing
+  # cancels this one.
   - id: gene_in_title
-    points: 2
+    points: 1
     label: gene symbol in the title
     field: gene_title
+  # Co-subjects: the gene's own experiments are often reported under a title
+  # that leads with a partner (NPM3 under "DTX3 suppresses the NPM3-RUVBL1
+  # axis"), or with a full protein name instead of the symbol.
+  - id: gene_focus
+    points: 2
+    label: gene named in at least three abstract sentences
+    field: gene_sentence_count
+    min_sentences: 3
+  # Pseudoenzyme class words ("the pseudokinase TRIB2") are routine background
+  # in abstracts, so they count only in the title. Activity claims count in any
+  # sentence that names the candidate.
+  - id: pseudoenzyme_title
+    points: 3
+    label: title is about a pseudoenzyme
+    field: title
+    patterns: ['pseudo(enzyme|kinase|phosphatase|protease)']
   - id: refutation
     points: 3
-    label: candidate-specific language about pseudoenzymes or revised activity
+    label: candidate-specific language about lost or revised activity
     field: gene_sentence
     exclude_patterns: ['\bmutant', '\bmutagenesis', 'site.directed', '\bmutation']
-    patterns: ['pseudo(enzyme|kinase|phosphatase|protease)', 'catalytically (inactive|dead|impaired)',
+    patterns: ['catalytically (inactive|dead|impaired)',
                'lacks? (catalytic|enzymatic) activity', 'misannotat', 'moonlighting',
                'contrary to (its|the) (annotation|predicted)', 'not an? (active )?(enzyme|kinase|transporter)']
   - id: first_characterization
@@ -245,6 +287,23 @@ paper_scoring:
     patterns: ['knock.?out', 'knock.?down', '\bdeficien', 'loss of function', '\bpurified',
                'reconstitut', 'substrate specificity', 'loss of .{1,20} destabiliz',
                'rescued by', 'complementation', 'silencing']
+  # A molecular assay on the candidate itself: binding mapped with partners or
+  # residues, an enzyme, reporter or reconstitution assay.
+  - id: direct_assay
+    points: 3
+    label: candidate named in a sentence describing a direct molecular assay
+    field: gene_sentence
+    patterns: ['physically (interacts?|associates?|binds?)', 'direct(ly)? (binds?|interacts?)',
+               'binds? directly', 'interacts? with', 'pull-?down', 'co-?immunoprecipitat',
+               '\bresidues?\b', 'point mutant', 'reporter', 'luciferase', 'enzym(e|atic) activity',
+               '\bpurified', 'reconstitut', 'chromatin immunoprecipitation', '\bChIP\b',
+               'crystal structure', 'kinetic', 'substrate specificity', 'demethylat', '(?<!oxidative )phosphorylat']
+  # Rescue or epistasis that places the candidate in a pathway.
+  - id: rescue_or_epistasis
+    points: 2
+    label: rescue or epistasis experiment involving the candidate
+    field: gene_sentence
+    patterns: ['revers', 'counteract', 'abolish', 'rescu', 'restor', 'attenuated by']
   - id: biochemical_evidence
     points: 1
     label: direct biochemical or genetic evidence
@@ -252,6 +311,21 @@ paper_scoring:
     patterns: ['\bk(cat|m)\b', 'kinetic', 'crystal structure', 'cryo-?EM', 'recombinant',
                'in vitro', 'purified', 'substrate specificity', 'knock-?out', 'deletion mutant',
                'site-directed', 'catalytic (residue|site|mechanism)']
+  # Disease or knockout phenotype with no mechanism: necessity, not function.
+  - id: phenotype_only
+    points: -3
+    label: disease or knockout phenotype without a molecular assay or rescue
+    field: title_abstract
+    patterns: ['cancer', 'tumou?r', 'melanoma', 'carcinoma', 'glioma', 'leukemi', 'injur',
+               'disease', 'infertil', 'obes', 'diabet', 'fibrosis', 'prolifera']
+    unless_rules: [direct_assay, rescue_or_epistasis]
+  # Effects downstream of the candidate, or framing as a drug target.
+  - id: indirect_effect
+    points: -2
+    label: candidate framed by an indirect effect or as a therapeutic target
+    field: gene_sentence
+    patterns: ['upstream (regulator|modulator)', 'immune (evasion|phenotype|activation|sensing)',
+               '(therapeutic|potential|neuroprotective|druggable) target', '\bphenotype\b']
   - id: high_throughput
     points: -3
     label: high-throughput or omics study
@@ -270,3 +344,9 @@ paper_scoring:
     field: title_abstract
     patterns: ['case report', 'cohort', 'prognos', 'biomarker', 'nomogram', 'survival analysis',
                'clinical trial']
+  # The curator needs the methods and figures; flag papers Europe PMC holds only
+  # as an abstract.
+  - id: abstract_only
+    points: -1
+    label: full text not in Europe PMC (abstract only)
+    field: abstract_only
