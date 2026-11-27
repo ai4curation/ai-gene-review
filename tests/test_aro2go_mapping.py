@@ -6,7 +6,9 @@
   CURIE resolves and its label matches the ontology.
 """
 
+import importlib.util
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -17,7 +19,8 @@ SSSOM = REPO / "projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml"
 TERMS = REPO / "projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml"
 SCHEMA = REPO / "src/ai_gene_review/schema/aro_go_mapping.yaml"
 CONVERTER = REPO / "projects/ANTIMICROBIAL_RESISTANCE/sssom_to_terms.py"
-OAK_CONFIG = REPO / "conf/oak_config.yaml"
+AR_DIR = REPO / "projects/ANTIMICROBIAL_RESISTANCE"
+TRIAGE = AR_DIR / "aro_family_triage.yaml"
 
 
 def _load(path: Path) -> dict:
@@ -42,9 +45,12 @@ def test_sssom_structure():
             assert m["object_label"], m
             assert m["predicate_id"].split(":")[0] in {"RO", "skos"}, m
             assert m["predicate_label"], m
-    # subjects are unique (one mapping row per ARO term)
-    subjects = [m["subject_id"] for m in mappings]
-    assert len(subjects) == len(set(subjects)), "duplicate subject_id"
+    # (subject, object) pairs are unique; a bifunctional family may carry two GO rows
+    pairs = [(m["subject_id"], m["object_id"]) for m in mappings]
+    assert len(pairs) == len(set(pairs)), "duplicate (subject_id, object_id)"
+    for m in mappings:
+        if m["object_id"] != "sssom:NoTermFound":
+            assert 0 < m["confidence"] <= 1, m
 
 
 def test_gap_rows_present():
@@ -90,7 +96,10 @@ def test_subsumption_classifier():
 
 @pytest.mark.integration
 def test_term_validator_passes():
-    """linkml-term-validator confirms all ARO+GO ids resolve with matching labels."""
+    """linkml-term-validator confirms all ARO+GO ids resolve with matching labels.
+
+    Needs the pinned CARD release in .cache/aro (``just fetch-aro``).
+    """
     result = subprocess.run(
         [
             "uv", "run", "linkml-term-validator", "validate-data",
@@ -98,9 +107,153 @@ def test_term_validator_passes():
             "-s", str(SCHEMA),
             "-t", "AROGOMappingSet",
             "--labels",
-            "-c", str(OAK_CONFIG),
+            "--no-cache",
+            "-c", str(AR_DIR / "oak_config.yaml"),
         ],
         capture_output=True, text=True, cwd=REPO,
     )
     output = result.stdout + result.stderr
     assert "Validation passed" in output, output
+
+
+# ---------------------------------------------------------------------------
+# Propagation, release checks and triage (offline, on a miniature ARO)
+# ---------------------------------------------------------------------------
+
+def _load_module(name: str):
+    """Load a project script as a module (projects/ is not an importable package)."""
+    spec = importlib.util.spec_from_file_location(name, AR_DIR / f"{name}.py")
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module  # dataclasses resolve their module through sys.modules
+    spec.loader.exec_module(module)
+    return module
+
+
+aro_release = _load_module("aro_release")
+AroOntology = aro_release.AroOntology
+applicable_subjects = aro_release.applicable_subjects
+check = aro_release.check
+family_status = aro_release.family_status
+
+MINI = AroOntology.from_obo_text(aro_release.MINI_OBO)
+
+
+@pytest.mark.parametrize(
+    "gene,subject,relation",
+    [
+        ("ARO:4", "ARO:4", "exact"),
+        ("ARO:4", "ARO:2", "narrower"),
+        # mechanism reached by is_a* o participates_in o is_a*
+        ("ARO:4", "ARO:11", "participates_in"),
+        ("ARO:4", "ARO:10", "participates_in"),
+        ("ARO:2", "ARO:10", "participates_in"),
+    ],
+)
+def test_applicable_subjects(gene, subject, relation):
+    assert applicable_subjects(MINI, gene)[subject] == relation
+
+
+def test_mechanism_not_reached_without_participates_in():
+    """A gene in a family with no participates_in edge reaches no mechanism."""
+    onto = AroOntology.from_obo_text(aro_release.MINI_OBO.replace("relationship: participates_in ARO:11\n", ""))
+    assert "ARO:10" not in applicable_subjects(onto, "ARO:4")
+
+
+def test_mechanism_rows_are_related_match():
+    """Mechanism -> GO:0046677 rows cross axes, so they are relatedMatch, never enables."""
+    doc = _load(SSSOM)
+    mechanism_rows = [m for m in doc["mappings"] if m["object_id"] == "GO:0046677"]
+    assert mechanism_rows
+    for m in mechanism_rows:
+        assert m["predicate_id"] == "skos:relatedMatch", m
+
+
+PIN = {"card_version": "4.0.2", "aro_date": "2026-08-11"}
+META = {"card_version": "4.0.2", "aro_date": "2026-08-11"}
+SOURCE = "CARD 4.0.2 (ARO 2026-08-11)"
+
+
+def _sssom(*rows):
+    return {"subject_source_version": SOURCE, "mappings": list(rows)}
+
+
+def _row(subject, label, obj="GO:0008800"):
+    return {"subject_id": subject, "subject_label": label, "object_id": obj}
+
+
+def test_check_clean():
+    result = check(MINI, META, PIN, _sssom(_row("ARO:2", "beta-lactamase")), {"families": []}, {"ARO:3": "class A"})
+    assert result.ok, result
+
+
+def test_check_detects_label_drift():
+    result = check(MINI, META, PIN, _sssom(_row("ARO:2", "beta lactamase")), {"families": []}, {})
+    assert result.label_drift == [("aro2go.sssom.yaml", "ARO:2", "beta lactamase", "beta-lactamase")]
+
+
+def test_check_detects_missing_term():
+    result = check(MINI, META, PIN, _sssom(_row("ARO:99", "gone")), {"families": []}, {})
+    assert result.missing == [("aro2go.sssom.yaml", "ARO:99", "gone")]
+
+
+def test_check_detects_version_mismatch():
+    newer = {"card_version": "4.0.3", "aro_date": "2026-12-01"}
+    result = check(MINI, newer, PIN, _sssom(), {"families": []}, {})
+    assert result.version_mismatch
+
+
+def test_check_detects_untriaged_and_stale_triage():
+    families = {"ARO:2": "beta-lactamase", "ARO:10": "antibiotic inactivation"}
+    triage = {"families": [{"id": "ARO:2", "label": "beta-lactamase", "reason": "DEFERRED"}]}
+    result = check(MINI, META, PIN, _sssom(_row("ARO:2", "beta-lactamase")), triage, families)
+    assert result.untriaged_families == [("ARO:10", "antibiotic inactivation")]
+    assert result.stale_triage == [("ARO:2", "beta-lactamase")]
+
+
+def test_not_in_release_triage_is_not_a_missing_term():
+    triage = {"families": [{"id": "ARO:99", "label": "gone family", "reason": "NOT_IN_ONTOLOGY_RELEASE"}]}
+    result = check(MINI, META, PIN, _sssom(), triage, {"ARO:99": "gone family"})
+    assert result.ok, result
+
+
+def test_family_status_gap_via_ancestor():
+    sssom = {"mappings": [{"subject_id": "ARO:2", "object_id": "sssom:NoTermFound"}]}
+    assert family_status(MINI, {"ARO:3": "class A"}, sssom) == {"ARO:3": ("GO_GAP", "ARO:2")}
+
+
+def test_triage_file_validates():
+    result = subprocess.run(
+        ["uv", "run", "linkml-validate", "-s", str(SCHEMA), "-C", "AROFamilyTriage", str(TRIAGE)],
+        capture_output=True, text=True, cwd=REPO,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_triage_and_mapping_disjoint():
+    """A family is either mapped/gapped in the SSSOM file or triaged, never both."""
+    subjects = {m["subject_id"] for m in _load(SSSOM)["mappings"]}
+    triaged = {f["id"] for f in _load(TRIAGE)["families"]}
+    assert not subjects & triaged
+
+
+def test_release_pin_matches_sssom():
+    pin = _load(AR_DIR / "aro_release.yaml")
+    assert _load(SSSOM)["subject_source_version"] == f"CARD {pin['card_version']} (ARO {pin['aro_date']})"
+
+
+def test_cli_check_without_release_explains(tmp_path):
+    from typer.testing import CliRunner
+
+    result = CliRunner().invoke(aro_release.app, ["check", "--cache", str(tmp_path)])
+    assert result.exit_code != 0
+    assert "fetch-aro" in result.output
+
+
+@pytest.mark.integration
+def test_check_against_pinned_release():
+    """The mapping is consistent with the pinned CARD release (needs ``just fetch-aro``)."""
+    result = subprocess.run(
+        ["uv", "run", "python", str(AR_DIR / "aro_release.py"), "check"], capture_output=True, text=True, cwd=REPO
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
