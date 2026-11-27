@@ -497,10 +497,13 @@ def rank_and_title(
 def rescore_problem(packet: dict[str, Any]) -> str:
     """Why a packet cannot be rescored with the current config, or ''.
 
-    >>> rescore_problem({"candidates": [{"gene": {"symbol": "X", "annotation_counts": {}},
+    >>> rescore_problem({"date_to": "2026-11-26",
+    ...                  "candidates": [{"gene": {"symbol": "X", "annotation_counts": {}},
     ...                                  "paper": {}}]})
     '1 candidates (e.g. X) predate the homology and full-text fields; re-run the scan instead of rescoring this packet'
     """
+    if "date_to" not in packet:
+        return "the packet has no date_to; it is not a gene-gap packet"
     stale = [
         old["gene"]["symbol"]
         for old in packet["candidates"]
@@ -1001,7 +1004,7 @@ def render_markdown(packet: dict[str, Any]) -> str:
             f"| {gene['organism']} | {informative_experimental(counts)} "
             f"| {counts['homology']} | {counts['total']} "
             f"| {fam.get('experimental_member_count', 'n/a')} "
-            f"| {'yes' if paper.get('full_text_available') else 'no'} | {c['action']} "
+            f"| {'yes' if paper['full_text_available'] else 'no'} | {c['action']} "
             f"| {paper['reference_id']}: {_short(paper['title'], 60)} "
             f"| {'yes' if c.get('issue_eligible') else ''} |"
         )

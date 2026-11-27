@@ -273,6 +273,24 @@ def test_score_paper_rules(config: dict[str, Any], title: str, rule: str) -> Non
             {"phenotype_only"},
             {"rescue_or_epistasis", "direct_assay"},
         ),
+        # Passive loss-of-function reporting is not rescue either.
+        (
+            "FOO1 in tumour metabolism",
+            "Tumour growth was prevented by FOO1 knockout, and the glycolytic shift "
+            "was reversed by FOO1 silencing. FOO1 is re-expressed in metastases.",
+            True,
+            {"phenotype_only"},
+            {"rescue_or_epistasis"},
+        ),
+        # Pharmacological epistasis still counts.
+        (
+            "FOO1 in kidney disease",
+            "FOO1 overexpression aggravated the injury, an effect that was reversed "
+            "by a PPARα agonist.",
+            True,
+            {"rescue_or_epistasis"},
+            {"phenotype_only"},
+        ),
         # A mechanistic phenotype rescue is not an indirect effect.
         (
             "FOO1 in tumour metabolism",
@@ -665,7 +683,7 @@ def test_rescore_packet_keeps_previous_rank(config: dict[str, Any]) -> None:
         ],
         config["limits"],
     )
-    packet = {"job": gene_gap.JOB, "candidates": ranked}
+    packet = {"job": gene_gap.JOB, "date_to": "2026-11-26", "candidates": ranked}
     rescored = gene_gap.rescore_packet(packet, config)
     assert [c["previous_rank"] for c in rescored["candidates"]] == [1, 2]
     assert [c["score"] for c in rescored["candidates"]] == [c["score"] for c in ranked]

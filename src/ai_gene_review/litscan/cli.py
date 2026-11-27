@@ -150,6 +150,9 @@ def rescore_gene_gap_cmd(
     previous_rank. Only the packet's own candidates are re-ranked.
     """
     data = json.loads(packet.read_text())
+    problem = gene_gap.rescore_problem(data)
+    if problem:
+        raise typer.BadParameter(problem)
     target = output_dir / f"{data['date_to']}-{gene_gap.JOB}.json"
     if (
         target.resolve() == packet.resolve()
@@ -159,15 +162,12 @@ def rescore_gene_gap_cmd(
             "--output-dir must differ from the input packet's directory: writing "
             "there would replace the packet and the issue bodies that were filed"
         )
-    problem = gene_gap.rescore_problem(data)
-    if problem:
-        raise typer.BadParameter(problem)
     rescored = gene_gap.rescore_packet(data, gene_gap.load_config(config))
     rescored["config_path"] = str(config)
     json_path, md_path = gene_gap.write_packet(rescored, output_dir)
     for cand in rescored["candidates"]:
         typer.echo(
-            f"{cand['previous_rank']:>3} -> {cand['rank']:>3}  {cand['score']:>3}  "
+            f"{cand.get('previous_rank', '-'):>3} -> {cand['rank']:>3}  {cand['score']:>3}  "
             f"{cand['gene']['symbol']}  {cand['paper']['reference_id']}"
         )
     typer.echo(f"Wrote {md_path} and {json_path}")
