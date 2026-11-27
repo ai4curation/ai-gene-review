@@ -116,9 +116,20 @@ wrong and is withdrawn.** A later batch (BACSU/plsC, CHLRE/MITH1, CANAL/CYB5,
 submitted 2026-11-27 00:32) hung identically, all three reaching 2 h 01 m with no
 output directory. The last OpenScientist report to arrive in this campaign was
 BRUMA/bma-ben-1 at 2026-11-26 19:52:41; every submission after that time has
-returned nothing, five runs across four genes. Since 256 runs had succeeded before
-that cutoff, the cause is the submission path or the remote service, not this gene.
-A fourth plsY attempt was not made, and it would not have helped.
+returned nothing. As of 2026-11-27 04:38 that is **six runs across five genes over
+8 h 45 m**: plsY twice, then plsC, MITH1 and CYB5 together, then a single plsC
+canary launched at 02:37 purely to detect recovery, which also reached 2 h 01 m with
+no output directory. Since 256 runs had succeeded before the cutoff, the cause is the
+submission path or the remote service, not this gene. A fourth plsY attempt was not
+made, and it would not have helped.
+
+Probing stopped after the canary. Each attempt costs about two hours of wall clock
+and returns nothing, so the trigger for resuming should be the service being fixed,
+not elapsed time. Two of the three stranded batch-63 gaps were instead addressed by
+local reproducible sequence analysis, which is recorded in
+`genes/CANAL/CYB5/CYB5-bioinformatics/` and `genes/CHLRE/MITH1/MITH1-bioinformatics/`;
+both gaps correctly remain OPEN. The plsC gap was not amenable to that, since it turns
+on published kinetics and an in-situ-substrate confound rather than on sequence.
 
 Operational notes for whoever picks this up:
 
