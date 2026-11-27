@@ -39,11 +39,14 @@ A removal row (`exactMatch` + `predicate_modifier: Not`) drops the term from eve
 entry matches, including the members for which it is correct. Before adding one, run two checks
 and record the result at the end of the row's `comment`, starting "Rule cover (...)".
 
-This is the procedure for rows added from here on. It is not yet true of the whole set: 17 of the
-25 removal rows carry the note and **8 do not**, across six entries — `IPR017682` (`GO:0050660`,
-`GO:0051536`), `IPR017681` (`GO:0016151`, `GO:0050660`), `IPR017679` (`GO:0016151`),
-`IPR005778` (`GO:0050897`), `IPR002844` and `IPR036080` (both `GO:0008901`). Those eight are owed
-a backfill; until it is done, read the row rather than assuming the note is there.
+This is the procedure for rows added from here on. It is not yet true of the whole set: as of
+2026-11-27, 17 of the 25 removal rows carry the note and **8 do not**, across six entries —
+`IPR017682` (`GO:0050660`, `GO:0051536`), `IPR017681` (`GO:0016151`, `GO:0050660`),
+`IPR017679` (`GO:0016151`), `IPR005778` (`GO:0050897`), `IPR002844` and `IPR036080` (both
+`GO:0008901`). Those eight are owed a backfill; until it is done, read the row rather than
+assuming the note is there. This list is hand-maintained and is a list of *owed* work, so its
+failure mode is naming a row that has since been backfilled. Re-derive it rather than trusting
+it: a removal row has the note when its `comment` contains a `Rule cover (` clause.
 
 1. **Sole-source check.** List the reviewed annotations of the term whose only InterPro source is
    this entry. Those genes lose the annotation outright. Read their review actions: if reviewers
