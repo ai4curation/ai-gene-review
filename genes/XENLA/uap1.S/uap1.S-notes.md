@@ -52,3 +52,38 @@ Exact sequence mapping: [uap1.S-bioinformatics/RESULTS.md](uap1.S-bioinformatics
 
 > we
 > have solved the crystal structures of AGX1 and AGX2 in complexes with UDPGlcNAc
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+No ProtNLM files were opened for this re-review (the `*-protnlm-*` files, and the earlier `compare_sequences.py`, which reads its sequence from one of them). I worked from the UniProt flat file, the human UAP1 UniProt JSON, the PANTHER family/PAINT files, the cached publications and the falcon deep research.
+
+### Identity
+- Q6DCZ6 is the full-length uap1.S (S-homeolog) product, 507 aa. It is not a fragment or an alternative gene model. It aligns to human UAP1 Q16222 (522 aa, displayed isoform AGX2) over 505 residues with 382 identities (75.6%). The only gap is human 454-470, which is exactly the 17-residue segment missing from human isoform AGX1 (Q16222-2, 505 aa). The frog product therefore has the AGX1-type layout. Frog residues 506-507 are an extra C-terminal dipeptide. [file:XENLA/uap1.S/uap1.S-bioinformatics/RESULTS-rereview.md "| 454-470 | in isoform AGX1 | 0 |"]
+- All 15 ligand-labelled human UDP-GlcNAc/UDP-GalNAc contact positions are conserved (human K472 maps to frog K455). [RESULTS-rereview.md "Binding-site positions conserved: 15 of 15."]
+- New analysis files: `uap1.S-bioinformatics/compare_sequences_rereview.py` (PEP 723, `uv run --script`), `RESULTS-rereview.md` and `results-rereview.json`. The existing RESULTS.md, results.json, alignment.txt and compare_sequences.py were left untouched.
+
+### Evolutionary grounding
+- PANTHER: PTHR11952:SF4 (UDP-N-ACETYLHEXOSAMINE PYROPHOSPHORYLASE), the same subfamily as human UAP1. The family name PTHR11952 ("UDP- GLUCOSE PYROPHOSPHORYLASE") is broad and also covers the UGP branch, so subfamily placement is what decides the sugar substrate.
+- PAINT (interpro/panther/PTHR11952/PTHR11952-paint.tsv): node PTN000237224 (taxon Eukaryota) carries IBDs for GO:0003977, GO:0006048 and GO:0005829. They are seeded by human Q16222 plus yeast, Candida, fly, rat and Arabidopsis members. The only recorded loss is an IKR NOT at PTN000237286 (Caenorhabditis). GO:0052630 (UDP-GalNAc diphosphorylase), which human UAP1 has by IDA (PMID:9765219), was **not** propagated. I treat that as a deliberate decision, so GO:0052630 is not proposed and is raised as a suggested question instead.
+
+### Annotation decisions
+- GO:0003977 (IEA TreeGrafter): ACCEPT (core).
+- GO:0006048 (IEA TreeGrafter): ACCEPT. The enzyme catalyzes the terminal biosynthetic step, so this is participation and not just necessity.
+- GO:0070569 uridylyltransferase (IEA ARBA/InterPro): MODIFY to GO:0003977. It is a true parent (OLS ancestors checked) but uninformative, because the IPR002618 signature also matches UGPs.
+- NEW GO:0005829 cytosol, proposed on the basis of the PAINT IBD at PTN000237224. The frog product is missing it from its TreeGrafter set.
+- No downstream glycosylation or O-GlcNAc processes were added; those consume the product.
+
+### Substrate preference caveat
+Human AGX1 (no insert) "was 2-3 times more active with GalNAc-1-P than with GlcNAc-1-P" [PMID:9765219]. Under assay conditions the two human isoforms behave similarly when monomeric [PMID:11707391]. The frog enzyme may therefore also make UDP-GalNAc, but this is not annotated without frog data or a PAINT propagation.
+
+### Relative
+Closest characterised relative by phylogeny: human UAP1 (Q16222), the same PANTHER subfamily SF4 and a seed of the PAINT node. The repo review genes/human/UAP1/UAP1-ai-review.yaml has every annotation actioned and has core_functions, and modules/hexosamine_biosynthesis.yaml cites it as the completed review. Its `status` field still reads INITIALIZED.
+
+### Family / module notes
+- interpro/panther/PTHR11952/PTHR11952-review.yaml lists Q6DCZ6 under SF4. That placement agrees with this review, so there is no conflict.
+- modules/hexosamine_biosynthesis.yaml (uap1_activity) uses the whole family PANTHER:PTHR11952 as the participant. That family includes UDP-glucose pyrophosphorylases, so SF4 would be the more accurate grounding. This is recorded here only; the module was not edited.
+
+## 2026-10-21: PR #5308 review follow-up
+
+- The NEW GO:0005829 cytosol row previously cited only an incidental mention of pig-liver cytosol (PMID:11707391). It now cites the actual grounds: the PTHR11952 PAINT row (PTN000237224, GO:0005829, IBD, seeds AT5G52560 and Q16222) and the human UAP1 UniProt statement "SUBCELLULAR LOCATION: Cytoplasm, cytosol {ECO:0000269|PubMed:8025165}" (file:human/UAP1/UAP1-uniprot.txt).
+- Correction to the earlier PAINT note above: the IKR NOT at PTN000237286 is not the only recorded negation. The PAINT file also has an IRD NOT cytosol at PTN007553518. I checked the PANTHER treeinfo service for PTHR11952 on 2026-10-21: PTN007553518 subtends 165 protist leaves (Leishmania, Trypanosoma, Giardia, Trichomonas, Plasmodium, Paramecium, Thalassiosira, Phytophthora and others). uap1.S (Q6DCZ6) descends from PTN000237224 via PTN008986934 and is not under PTN007553518; human UAP1 and UAP1L1 are not under it either. The NEW cytosol row therefore does not contradict that negation.

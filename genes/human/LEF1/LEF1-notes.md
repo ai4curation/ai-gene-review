@@ -1,0 +1,9 @@
+# LEF1 notes
+
+## 2026-11-26 curation
+
+- Automated deep research did not run in this workspace: `just deep-research human LEF1 --provider perplexity` reported that `perplexity` was unavailable and only `claude_code` was configured. I used cached GOA evidence, UniProt, Reactome, PANTHER family data, and cached primary papers for manual synthesis instead.
+- LEF1 is the PTHR10373:SF11 member. Its core role is HMG-box binding to Wnt cis-regulatory chromatin plus beta-catenin-coupled transcriptional activation; Tutter et al. showed that recombinant beta-catenin enhanced LEF1 chromatin binding and transactivation in vitro and that the stable chromatin-bound LEF1-beta-catenin complex resisted CT-ARM, ICAT, and sulindac disruption [PMID:11751639, "Here we report that recombinant beta-catenin strongly enhances binding and transactivation by LEF-1 on chromatin templates in vitro"].
+- LEF1 has strong context-specific literature in granulopoiesis, prostate-cancer androgen-receptor regulation, Th2 cytokine repression through GATA3, osteoblast SLUG activation, endothelial beta-catenin signaling, and CD1D repression. I kept these direct transcriptional or developmental rows as non-core unless they simply restated the shared Wnt/chromatin mechanism.
+- GOA has two identical `GO:0045944` / `PMID:11751639` IDA rows that differ only in assigner/date fields that the YAML schema does not carry. I duplicated the corresponding `existing_annotations` block deliberately so the YAML has one entry per GOA row under issue #7042.
+- The obsolete `GO:0030331` nuclear estrogen receptor binding row from the Nkx3-1/LEF1 study was modified to `GO:0140416` transcription regulator inhibitor activity; the same evidence supports LEF1 as an inhibitor of estrogen-receptor-driven transcription rather than a live estrogen-receptor-binding term [PMID:18794125, "Nkx3-1 and LEF-1 function as transcriptional inhibitors of estrogen receptor activity"].

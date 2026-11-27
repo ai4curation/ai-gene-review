@@ -1,5 +1,7 @@
 # Paired horse–human reviews: cases 21–30
 
+> **Working notes from the initial pass.** ProtNLM2 verdicts here predate the 2026-10-23 gene re-review and the 2026-10-24 rescoring; the current calls are in each gene's `*-protnlm-predictions-review.yaml` and are summarised in [horse40-review-findings.md](../horse40-review-findings.md).
+
 All ten pairs have an initial annotation review and human research. Source-specific uncertainty is retained in the YAML; no PENDING rows remain. ProtNLM narrative and GO statements are assessed separately.
 
 | Gene | Human rows | Horse rows | ProtNLM GO | Narrative | Human research |

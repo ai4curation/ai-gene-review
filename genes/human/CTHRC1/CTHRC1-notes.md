@@ -1,0 +1,3 @@
+# CTHRC1 notes
+
+CTHRC1 is the human PTHR11903:SF18 member. It is a 243 aa secreted collagen triple-helix repeat protein rather than a PTGS-type heme enzyme, and the PTHR11903 PTGS node therefore over-propagates prostaglandin G/H synthase activity, cyclooxygenase pathway, cytoplasm and neuron-projection assertions into the CTHRC1 clade. Evidence supports extracellular localization in human plasma and ECM/matrisome proteomics (PMID:23056600, PMID:27068509, PMID:28675934, PMID:36399478). The mouse Wnt/Frizzled electronic transfers were left undecided because a later Cthrc1 study questions the secretion behavior of the HEK293T co-culture system used for the Wnt conclusion, but that does not by itself refute the original mouse paper.

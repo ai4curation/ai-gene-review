@@ -45,3 +45,32 @@ No target-specific primary finding is used to establish a molecular activity her
 ## Research provenance
 
 Genuine external literature research is requested through the repository Falcon wrapper, with perplexity-lite configured as fallback. Provider output is retained separately as `CG42404-deep-research-<provider>.md`; its source leads are checked against the underlying publications and exact sequence record.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+Scope: re-examined all four GOA rows, the description and core functions without consulting any ProtNLM2 output.
+
+### Identity
+- Q9VFA8 (1133 aa, TrEMBL, PE 4) is the full-length product of FBgn0259823/CG42404 and the only UniProt entry of that length for the gene. The other two UniProt entries for the gene are short fragments/alternative products: Q8MRY6 (145 aa, cDNA SD12744p) and A0A0C4DHG7 (105 aa). The benchmark accession is therefore the canonical product, not an isoform or fragment.
+- Position 106 is an unknown residue (X) inside the Phobius TM helix (103-125), a sequence ambiguity in the deposited record.
+- The first ~26 residues are hydrophobic and directly precede the VWFC domain, but no SIGNAL feature is annotated; topology is unresolved.
+
+### Evolutionary placement
+- PANTHER PTHR15256 (INTEGRAL MEMBRANE PROTEIN DGCR2/IDD), subfamily SF6, the same (only) subfamily as human DGCR2 P98153 and mouse Dgcr2 P98154 (interpro/panther/PTHR15256/PTHR15256-entries.csv; UniProt DR PANTHER line).
+- New analysis `CG42404-bioinformatics/compare_dgcr2_rereview.py` / `RESULTS-rereview.md`: fly residues 28-200 align to human DGCR2 270-455 at 34.7% identity, covering VWFC, TM, a basic juxtamembrane segment (RLRQRK vs RLRQRR) and a PPPYE (PPxY-type) motif. The fly protein lacks the LDL-A and C-type lectin domains of vertebrate DGCR2, and has a ~900-residue fly-specific disordered C-terminal extension.
+- PAINT node PTN000391897 propagates only GO:0016020 membrane (donor MGI:892866 mouse Dgcr2, experimental membrane from PMID:8630060 [PMID:8630060 "it encodes membrane-bound C-type lectin"]). The vertebrate process terms (human DGCR2 cognition IMP; mouse response to xenobiotic IDA) were not propagated by PAINT; treated as a deliberate decision.
+- Mouse Dgcr2 knockdown impairs radial migration of cortical projection neurons and DGCR2 associates with the Reelin complex [PMID:29305086 "we identified Dgcr2 as a novel member of the Reelin complex"]. These are not transferred to the fly protein.
+
+### Literature
+- Falcon deep research found only inclusion of CG42404 in wing gain-of-function/RNAi screening tables (Cruz 2009, Molnar 2012) with no specific phenotype; no mechanistic study.
+
+### Decisions
+- GO:0003674 ND: ACCEPT (no activity known; no MF propagated by PAINT).
+- GO:0005575 ND: MODIFY -> GO:0016020 membrane (TM helix + IBA).
+- GO:0008150 ND: ACCEPT (no process established; vertebrate DGCR2 neural-migration roles not transferred).
+- GO:0016020 IBA: ACCEPT (target inside SF6 clade, retains the TM helix).
+- Description rewritten to state family membership, the conserved VWFC-TM-PPxY core and the missing LDL-A/CTLD modules. Core function: membrane-located, activity unknown, with a BIOLOGY knowledge gap.
+
+### Relative to review next
+- Mouse Dgcr2 (P98154), same PANTHER subfamily SF6 and the PAINT donor (MGI:892866); no review exists in genes/mouse or genes/human (human DGCR2 P98153 also unreviewed).
+- PANTHER family review interpro/panther/PTHR15256/PTHR15256-review.yaml agrees on subfamily placement (SF6 lists Q9VFA8 as representative). No disagreement. No module in modules/ references DGCR2/PTHR15256 or CG42404.

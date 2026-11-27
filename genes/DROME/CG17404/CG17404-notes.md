@@ -64,3 +64,36 @@ The snapshot emits names and location/keyword statements, with no GO or EC predi
 ## Research provenance
 
 Genuine external literature research is requested through the repository Falcon wrapper, with perplexity-lite configured as fallback. Provider output is retained separately as `CG17404-deep-research-<provider>.md`; its source leads are checked against the underlying publications and exact sequence record.
+
+## 2026-10-21 — Full re-review, independent of the ProtNLM2 predictions
+
+This re-review ignores all ProtNLM/ProtNLM2 output, including the table above. Inputs were the UniProt record, the GOA rows, the cached publications (PMID:12568721 abstract only; PMID:30367934 full text), the existing falcon deep-research report, and two new analyses in `CG17404-bioinformatics/` (`check_sequence_rereview.py` and `panther_tree_rereview.py`, summarised in `RESULTS-rereview.md`).
+
+### Identity
+- Q9VGC0 is the only UniProt product of FBgn0038001 (CG17404/SP149): 275 aa, sequence version 3, unreviewed (PE 3). It is the full-length product with signal peptide, propeptide and complete S1 domain. It is not a fragment, isoform or alternative gene model.
+
+### Sequence findings
+- Catalytic triad intact: His80 (TAAHC), Asp124, Ser225 in GDSGGP.
+- The protein is single-domain. Only 14 residues (no Cys) separate the signal peptide (1-20) from the S1 domain (35-274), so there is no clip domain. The UniProt "CLIP subfamily" similarity note (ARBA only) and the deep-research text that follows it do not fit the sequence.
+- Predicted zymogen activation at R34-I35 (IVGG mature N terminus).
+- S1-pocket position 189 (chymotrypsin numbering) is Gly, not the Asp of trypsins. This does not by itself support the chymotrypsin (EC 3.4.21.1) name, which comes from a PROSITE rule. Specificity is left unresolved.
+
+### Evolutionary placement
+- PANTHER PTHR24256:SF562 (IP09525P-RELATED). The clade PTN009088600 (Eumetazoa) has 8 leaves: CG17404, CG12256 and CG3916 (an in-Drosophila tandem duplication, FBgn0038001-3), plus one Anopheles, two Tribolium and two Trichoplax genes. There is no vertebrate member and no characterised member.
+- SF562 branches directly from the Eumetazoa duplication node PTN001207268, which carries the IBD assertions for GO:0004252, GO:0006508 and GO:0005576. The sister clades are PTN007783152 (mammalian tryptases plus Drosophila Easter, Sp7 and CLIP SPs) and PTN009088603 (PRSS21/testisin and many Drosophila SPHs). All characterised relatives are therefore equidistant paralogs, and none of their clade-specific functions transfers.
+- The PAINT NOT GO:0004252 (IKR) nodes all fall on other SPH lineages, none on the Q9VGC0 lineage.
+
+### Annotation decisions (re-review)
+- GO:0004252 serine-type endopeptidase activity (IBA, IEA, ISM x2): ACCEPT. Root-node IBD, no negation on the lineage, intact triad.
+- GO:0005576 extracellular region (IBA): ACCEPT. Signal peptide, soluble architecture.
+- GO:0006508 proteolysis (IBA, IEA, ISM): ACCEPT. This is the most specific process supported. Easter (dorsoventral patterning), Sp7 (melanization) and tryptase processes are not transferred.
+- GO:0008233 peptidase activity, GO:0016787 hydrolase activity (IEA): MODIFY to GO:0004252.
+- No NEW terms proposed.
+- The description was rewritten to remove the CTRL-equivalence wording, which came from the ProtNLM name. Core function: GO:0004252 in GO:0005576, directly involved in GO:0006508. Added a BP_DARK knowledge gap, suggested questions and suggested experiments.
+
+### Relative for follow-up
+- There is no characterised ortholog. The nearest characterised relative chosen is Drosophila Easter (ea, P13582, FBgn0000533). It sits in sister clade PTN007783152 and is an experimental donor for all three PTN001207268 IBD terms. It is a paralog at the Eumetazoa duplication; it is closer in phylogenetic standing, though not in tree distance, than the mammalian tryptases. No review of ea exists in the repo.
+
+### Family review and modules
+- `interpro/panther/PTHR24256/PTHR24256-review.yaml` lists Q9VGC0 under "Benchmark members without resolved subfamily placement". PANTHER 19.0 resolves it to SF562, together with CG12256 and CG3916. The review's summary calls PTHR24256 an "insect protease-related family", but the family also contains the mammalian tryptases and PRSS21. Neither point changes the annotations here.
+- No module in `modules/` or GO-CAM in `gocams/index.tsv` includes CG17404.

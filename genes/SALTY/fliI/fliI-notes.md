@@ -46,7 +46,7 @@
 
 ## ATP-synthase-family GO rows
 - GO:0046933 (IBA, contributes_to) and GO:0045259 (IBA) from PANTHER:PTN008558586. Per
-  projects/TREEGRAFTER/rotary_atpase/node_placement.tsv, PTN008558586 is a DUPLICATION node whose
+  projects/CONSERVED_FUNCTION_RECOVERY/f_type_atp_synthase/node_placement.tsv, PTN008558586 is a DUPLICATION node whose
   children are PTN000390097 (FliI/SctN clade: SF9, SF62, SF81) and PTN008558588 (F1-beta clade).
   All seeds (E. coli AtpD P0ABB4, human ATP5F1B, yeast ATP2, S. pombe atp2, etc.) are in the F1-beta
   branch. The IBD therefore sits one node too deep: above the duplication that created the
@@ -63,3 +63,19 @@
 - REMOVE: 2x protein binding (FliT, FliJ; uninformative), GO:0046933, GO:0045259, GO:0015986.
 - NEW: GO:0008564 protein-exporting ATPase activity; GO:0120102 bacterial-type flagellum secretion
   apparatus.
+
+
+## 2026-11-06 comparative flagellar audit
+
+All 15 inherited rows, including NEW GO0008564 and GO0120102, and the genuine Falcon report remain payload-frozen. Broad ATPase and complex claims are refined rather than retained merely as redundant. The description separates native PMF-supported export, mutant bypass and 2018 IMV reconstitution (PMID29946050). Catalytic mutations differ in phenotype; the unqualified assertion that all catalytic mutations abolish flagellation was removed. SJW versus LT2 backgrounds remain explicit: reference-protein identity does not make every Salmonella assay a native LT2 measurement.
+
+Existing genuine Falcon report retained without refresh.
+
+All original annotation payloads, including any inherited NEW proposals, are preserved. Only reviewer-authored judgments and synthesis were updated. Identity bridges and construct limits are recorded under analysis/module_audits/bacterial_flagellar_assembly_export/comparative-panel/.
+
+
+## 2026-11-06 PR6138 round-1 clarification
+
+Accepted the independently supported ATP-hydrolysis and type III secretion-complex rows alongside the export activity and flagellar location. Current GO lacks the formerly implied hierarchy links; absence of an edge does not mean the export reaction lacks ATP hydrolysis. PMID8943245 directly measures Salmonella ATPase activity, and PMID29946050 reconstitutes ATP-dependent export. No original annotation payload or inherited NEW action changed.
+
+Ontology definitions and ancestor URLs, primary-source scope and reviewer disagreements are recorded in `analysis/module_audits/bacterial_flagellar_assembly_export/round1-consultation.md`.

@@ -1,6 +1,7 @@
 ---
 title: "Enzyme Specificity Project"
 maturity: COMPLETE
+last_reviewed: 2026-10-04
 tags: [PIPELINE, FLAGSHIP]
 species: [CANAL, human, SACEN]
 genes: [LPL1, GND1, PHYKPL, eryCIII, ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, ECHS1, HADH, ACAT1, ACAA2]
@@ -11,6 +12,10 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/16YgnHyBS1PjY9QWUZgZwZ
       title: Project brief
+    - href: https://claude.ai/artifact/GHRaq9M5SJkRknTDVgUFt6
+      title: Cutoff check
+      description: AI generated
+index_group: CROSS_CUTTING
 ---
 
 # Enzyme Specificity Project
@@ -38,10 +43,19 @@ looks amiss until someone checks the substrate, cofactor or subunit.
 
 ## Overview
 
-This project tracks genes where GO annotations fail to capture the correct enzyme specificity - either:
-1. **Too narrow**: Annotation to one substrate when enzyme has broader specificity
-2. **Too broad**: Generic enzyme class when specific activity is known
-3. **Wrong reaction**: Incorrect reaction type based on domain classification
+This project tracks GO molecular-function annotations that name the right broad
+enzyme family but miss a decisive specificity axis:
+
+1. **Substrate range or chain length**: an annotation names one substrate when
+   the enzyme has a broader range, or transfers a term from the wrong acyl-chain
+   paralog.
+2. **Cofactor or donor specificity**: the enzyme belongs to the right
+   transferase or dehydrogenase class, but the GO term names the wrong sugar
+   nucleotide or redox cofactor.
+3. **Reaction mechanism**: a domain-family hit supplies the wrong catalytic
+   type, as in a PLP enzyme that is a phospho-lyase rather than a transaminase.
+4. **Subunit, paralog or name-collision transfer**: a catalytic term belongs to
+   another subunit, paralog or historical synonym rather than the reviewed gene.
 
 Enzyme specificity is crucial for accurate functional annotation. Misannotated specificity can:
 - Mislead metabolic pathway reconstruction
@@ -54,14 +68,15 @@ Enzyme specificity is crucial for accurate functional annotation. Misannotated s
 
 ### 1. Substrate Specificity Errors
 
-**The Problem**: Enzyme annotated to specific substrate when it has broader or different specificity.
+**The Problem**: Enzyme annotated to a substrate term that is too narrow for
+the branch or belongs to the wrong ortholog/paralog.
 
 **Example - LPL1 (C. albicans)**:
 - Annotated: `GO:0004622` (phosphatidylcholine lysophospholipase activity)
-- Actual: Phospholipase B with three distinct activities:
-  1. sn-1/sn-2 fatty acid ester hydrolase
-  2. Lysophospholipase activity (on ALL glycerophospholipids, not just PC)
-  3. Transacylase activity
+- Review conclusion: Candida LPL1 belongs to the phospholipase B branch,
+  not a phosphatidylcholine-only or monoacylglycerol lipase branch. The
+  characterized *S. cerevisiae* LPL1 homolog has sn-1/sn-2 fatty-acid ester
+  hydrolase, lysophospholipase and transacylase activities on glycerophospholipids.
 - **Action**: MODIFY → `GO:0102545` (phospholipase B activity)
 
 ### 2. Reaction Mechanism Errors
@@ -89,7 +104,7 @@ Enzyme specificity is crucial for accurate functional annotation. Misannotated s
 
 **Example - Epe1 (S. pombe)** (see CONTESTED_FUNCTION.md):
 - Annotated: Histone demethylase, oxidoreductase, dioxygenase
-- Actual: Pseudo-enzyme with degenerate active site
+- Actual: pseudo-enzyme with a degenerate active site
 - **Action**: REMOVE all enzymatic annotations
 
 ## Featured Examples
@@ -174,7 +189,7 @@ term where one exists, and fall back to the general term where it does not**
 | Step | Gene | UniProt | MF term | Chain-length specificity |
 |------|------|---------|---------|--------------------------|
 | ① dehydrogenase | ACADVL | P49748 | `GO:0017099` | very-long/long-chain-specific |
-| ① dehydrogenase | ACAD9 | Q9H845 | `GO:0017099` | VLC + complex I assembly factor |
+| ① dehydrogenase | ACAD9 | Q9H845 | `GO:0004466` | long-chain FAO + complex I assembly factor |
 | ① dehydrogenase | ACADM | P11310 | `GO:0070991` | medium-chain-specific |
 | ① dehydrogenase | ACADS | P16219 | `GO:0016937` | short-chain-specific |
 | ② hydratase | HADHA | P40939 | `GO:0004300` | long-chain (no LC-specific MF; in MTP) |
@@ -196,9 +211,13 @@ term where one exists, and fall back to the general term where it does not**
 - **Cross-gene mis-attribution (REMOVE)**: cholesterol O-acyltransferase +
   ER localization on **ACAT1** — these came from a SOAT1/SOAT2 paper via the
   historical "ACAT1" nickname collision; mitochondrial T2 has no sterol activity.
-- **Paralog cross-transfer (REMOVE)**: several IEA/ISS terms on **ACADVL** were
-  propagated from mouse LCAD (*Acadl*), including a self-contradictory
-  "negative regulation of fatty acid oxidation".
+- **Evidence-scope correction (MODIFY)**: two very-long-chain `GO:0017099`
+  rows on **ACAD9** were refined to long-chain `GO:0004466` because the
+  supporting palmitoyl-CoA assays demonstrate C16 chemistry.
+- **Unresolved cross-species regulatory transfers (UNDECIDED)**: ACADVL
+  receives mouse VLCAD/P50544-derived fatty-acid oxidation regulation rows
+  whose donor identity is now clear but whose direct transferability still
+  needs full-text resolution.
 
 **Reaction-specificity / mapping gap (links to RHEA project):** the GO→RHEA
 chaining check on the module flags ① → ② as a break — step ① makes
@@ -227,8 +246,8 @@ would only duplicate it. See `genes/SACEN/eryCIII/`.
 ### Priority 1: Completed — fatty acid β-oxidation (acyl-chain-length specificity)
 | Gene | Species | Issue | Status |
 |------|---------|-------|--------|
-| ACADVL | human | Chain-length-specific MF; mouse-LCAD paralog cross-transfer removed | COMPLETE |
-| ACAD9 | human | VLC dehydrogenase + complex I assembly factor | COMPLETE |
+| ACADVL | human | Chain-length-specific MF; mouse VLCAD/P50544 regulatory transfers unresolved | COMPLETE |
+| ACAD9 | human | Long-chain dehydrogenase + complex I assembly factor | COMPLETE |
 | ACADM | human | Medium-chain-specific MF (`GO:0070991`) | COMPLETE |
 | ACADS | human | Short-chain-specific MF (`GO:0016937`) | COMPLETE |
 | HADHA | human | Generic→long-chain-specific MODIFY; thiolase MF removed (HADHB's) | COMPLETE |
@@ -247,8 +266,50 @@ would only duplicate it. See `genes/SACEN/eryCIII/`.
 
 1. **Verify substrate range**: Don't assume specificity from one characterized reaction
 2. **Check reaction mechanism**: Domain family doesn't guarantee mechanism
-3. **Distinguish promiscuity from core function**: Secondary activities → KEEP_AS_NON_CORE
+3. **Distinguish promiscuity from core function**: see the three tiers below
 4. **Propose specific terms**: When existing terms are too broad or narrow
+5. **Check family membership against a trusted cutoff**: For electronic enzyme rows,
+   score the protein against the NCBIfam family models for the annotated reaction
+   (`just enzyme-cutoff-check ACC --go GO:...`). A score below the trusted cutoff,
+   especially when a family for a different reaction passes, is the overprediction
+   pattern of Schnoes et al. 2009 [PMID:20011109]. Add `--library` to see the protein's
+   closest families from the whole NCBIfam library. See the
+   [trusted-cutoff check](ENZYME_SPECIFICITY/cutoff-check/RESULTS.md).
+6. **Check a specificity fingerprint where one is curated**: In superfamilies where
+   close paralogs catalyse different reactions, family membership does not fix the
+   substrate. `just enzyme-fingerprint-check ACC` reads the residues at positions an
+   alanine scan showed to decide the reaction, as in the histidinol-phosphate
+   phosphatase fingerprint of Kinateder et al. 2024 [PMID:38284491]. Fingerprints
+   are curated in `conf/specificity_fingerprints.yaml` from mutagenesis papers only.
+
+### Promiscuous and residual activities
+
+A measured activity is not automatically a function. The question is whether
+the protein evolved to catalyse the reaction, not whether it can be made to do
+so in a test tube. There is no numeric cutoff; it is a judgement call, made
+from the criteria below and stated in the `reason`. The tiers follow the
+categories of de Crécy-Lagard et al. 2025 (PMID:40703034).
+
+| Tier | Action | When |
+|---|---|---|
+| Genuine secondary activity | `KEEP_AS_NON_CORE` | Respectable efficiency, and a plausible physiological substrate or an in vivo phenotype; no other enzyme in the cell clearly owns the reaction |
+| In vitro activity, relevance unknown (their UNC) | `MARK_AS_OVER_ANNOTATED` | Activity is real but nothing shows it is used, and nothing else in the cell can be named as the enzyme that does the job |
+| Promiscuous noise (their PLI/NPI) | `REMOVE` | Most of: a dedicated enzyme for the same reaction exists in the same organism (ideally essential or non-redundant); the activity is orders of magnitude below it (as a guide, about 10³-fold or more); the protein sits in a different subfamily or lacks the specificity determinants; no in vivo phenotype for the reaction |
+
+`REMOVE` in the third tier does not doubt the assay. It accepts the
+measurement and argues that the activity is not the gene's function, which is
+the "genuinely contradicted function" case that permits removing an
+experimental annotation.
+
+Worked pair (both from the same ML-prediction paper, PMID:37963869):
+- **ECOLI/yciO**, TC-AMP synthase (`GO:0061710`): `REMOVE`. TsaC is the
+  essential dedicated enzyme, YciO's rate is about 10⁴-fold lower, and YciO
+  lacks the KRSN tetrad and sits in a different subfamily.
+- **ECOLI/yjdM**, phosphonoacetate hydrolase (`GO:0047400`):
+  `MARK_AS_OVER_ANNOTATED`. The link to phosphonates is a name collision
+  (positional `phnA` synonym) and YjdM is a zinc-ribbon protein, but E. coli has
+  no dedicated phosphonoacetate hydrolase, so the activity cannot be assigned
+  elsewhere.
 
 ---
 
@@ -263,9 +324,143 @@ would only duplicate it. See `genes/SACEN/eryCIII/`.
 ## Pending Reviews
 - (none)
 
-Last updated: 2026-09-04
+Last updated: 2026-11-24
 
 # NOTES
+
+## 2026-11-24
+
+**Extended the NCBIfam check through Rhea and triaged its class-term leads.**
+
+GO now cross-references many reaction terms only to Rhea, so the [release-table
+check](ENZYME_SPECIFICITY/ncbifam-metadata/RESULTS.md) maps them to EC numbers through Rhea's
+own EC table. It uses the route only when a term's Rhea reactions reach exactly one complete
+EC and the term has no EC cross-reference of its own, so generic terms such as ATP hydrolysis
+activity (nine ECs) and the NAD(P)-dependent CH-OH oxidoreductase class term (partial EC
+1.1.1.-) are left out. That makes 72 more pairs comparable; 68 agree with the model's EC and
+the 4 that do not are triaged (one new wrong-reaction entry, on two acetyl-CoA transferase
+models carrying the Kce term). The adenosine deaminase models now list GO:0004000 as their
+replacement candidate. All 84 class-term leads are now triaged. These are the pairs whose GO
+term carries only a partial EC, such as hydrolase activity, whose class neither contains nor
+lies inside the model's EC and is not a GO ancestor of a term for it, or else is narrower than
+a partial model EC (the other 695 of the 779 class-term pairs are true but broad): 31 pairs
+name the wrong kind of reaction, mostly following the protein family's fold rather than its
+reaction (glycoside hydrolase terms on the branching enzyme GlgB, aminoacyl-tRNA ligase on the
+EF-P modifier EpmA); 2 keep the reaction but name the wrong donor or acceptor (the BchX iron
+protein, which takes electrons from ferredoxin rather than NAD(P)H, and the CYP152
+peroxygenases, which use H₂O₂ rather than O₂ with a paired reductant); 35 are acceptable,
+mostly EC cross-reference artifacts; and 16 need the family's literature. The 49 pairs that
+are not acceptable (41 entries) are listed in
+[FEEDBACK.md](ENZYME_SPECIFICITY/ncbifam-metadata/FEEDBACK.md) beside the earlier change list;
+the acceptable ones are recorded in `triage.yaml` only. No review action changes.
+
+## 2026-11-23
+
+**Checked the whole NCBIfam release table for GO terms that contradict the model's own
+reaction.**
+
+The [release-table check](ENZYME_SPECIFICITY/ncbifam-metadata/RESULTS.md) extends the
+sweep's six models to all of NCBIfam 20.0. Of 18691 (model, GO term) pairs, 2847 have EC
+numbers on both sides and 263 of those disagree. The 231 that are not simply broader
+terms, together with four models from the sweep that are not among them, were triaged by hand
+in 134 entries, each grouping one or more models that share a term: 64 entries name another
+enzyme's reaction (PurK carrying PurE's AIR carboxylase, adenosine deaminase carrying adenine
+deaminase), 11 a different cofactor, 4 point to a
+wrong EC number, 32 need family knowledge and 23 are acceptable as stated. The change list for
+NCBIfam curators is [FEEDBACK.md](ENZYME_SPECIFICITY/ncbifam-metadata/FEEDBACK.md), ranked
+by RefSeq reach. Verdicts come from names and GO definitions, not literature. GO terms with
+no EC cross-reference, often Rhea-only, are not compared, and 84 class-term leads are
+listed in [CANDIDATES.md](ENZYME_SPECIFICITY/ncbifam-metadata/CANDIDATES.md) untriaged. No
+review action changes.
+
+## 2026-11-22
+
+**Swept the cutoff check, with a whole-library scan, over the KT2440 and E. coli reviews.**
+
+The check now scans each protein against every function-level NCBIfam model, so a
+below-cutoff verdict comes with the families the protein does fit. The
+[sweep](ENZYME_SPECIFICITY/cutoff-check/sweep/RESULTS.md) covers 1306 live electronic
+enzyme rows on 1043 proteins. 82% of the 1014 kept rows pass a family carrying the
+activity, but so do 47% of the 169 removed rows. The removed rows that pass are subunit
+models carrying the complex's EC number, pseudoenzymes and paralogs the reviews identified,
+broader substrate terms, and six NCBIfam models whose GO metadata names the sister
+reaction (models for PurT, ADP-glucose glycogen synthase, PS synthase and NrdG). The kept rows that fit
+another family are mostly partial reactions, cofactor variants and complex activities on a
+subunit. The ranked lists are in
+[DISAGREEMENTS.md](ENZYME_SPECIFICITY/cutoff-check/sweep/DISAGREEMENTS.md). No review
+action changes.
+
+## 2026-11-21
+
+**Followed up the UNDECIDED rows the cutoff check placed below cutoff; none is decided by it.**
+
+The 2026-11-18 re-run listed four UNDECIDED rows as reviews to revisit. A follow-up
+([followup_scan.py](ENZYME_SPECIFICITY/cutoff-check/followup_scan.py)) found that each
+flag said less than claimed. ptxD was scored only against GhrA, but it resembles GhrB;
+against NCBIfam's GhrB model, which carries no EC number and so was never a target, it
+scores 418.1 / 492, and no KT2440 protein passes that model, so its substrate stays open.
+PP_4638 fails the canonical MetF models that KT2440's own MetF passes, which the review
+already records; its open question, noncanonical folate chemistry, is outside what those
+models test. PP_0556's NAD+ kinase row is retired from GOA, and the runner now skips retired
+rows. No review action changes. RESULTS.md now states the sister-family limitation.
+
+## 2026-11-11
+
+**Added a specificity-fingerprint check from Kinateder et al. 2024 [PMID:38284491].**
+
+`ai_gene_review.validation.specificity_fingerprint` aligns a protein to a
+characterized reference and reads the residues at curated function-deciding positions.
+The first fingerprint is the HAD-superfamily histidinol-phosphate phosphatase of
+*P. aeruginosa* PA0335 (DxD at 16/18 and Y47 required; Y57 and T113 supporting), which
+separates it from the phosphoserine phosphatases many of its homologues are annotated
+as. *P. putida* PP_5147 (68% identical to PA0335) carries all five residues. A protein
+below the fingerprint's identity floor (45%) is reported as LOW_IDENTITY rather than
+given residue calls from an unreliable alignment.
+
+## 2026-10-24
+
+**Added tiers for promiscuous and residual activities (Curation Principle 3).**
+
+The old rule ("secondary activities → KEEP_AS_NON_CORE") did not separate a
+real secondary activity from noise-level in vitro activity, and would have
+kept E. coli yciO's TC-AMP synthase activity as non-core. Replaced it with three
+tiers aligned to de Crécy-Lagard et al. 2025 (PMID:40703034), with no numeric
+cutoff. Prompted by OpenScientist function-assignment runs on seven bacterial
+REMOVE/over-annotated calls (yciO, yjdM, traB, glpK, PP_3195, mdcD, kguE); all
+seven supported the direction of the existing calls. yciO stays REMOVE and
+yjdM stays MARK_AS_OVER_ANNOTATED, as in the worked pair above.
+
+## 2026-10-18
+
+**Added a trusted-cutoff check from Schnoes et al. 2009 [PMID:20011109].**
+
+`ai_gene_review.validation.enzyme_family_cutoff` scores a protein against the NCBIfam
+models for an annotated EC/GO activity and compares each score with the model's
+trusted and noise cutoffs (Schnoes steps 2 and 4). It also reports function-level
+families for other reactions that the protein passes. On 37 live electronic enzyme
+rows from 20 *P. putida* reviews plus human HADH, 11 of 12 ACCEPT rows with a model
+passed and 10 of 13 REMOVE rows with a model failed (counts as of the 2026-11-21
+re-run, which skips retired rows; see the 2026-11-21 note on the UNDECIDED rows). The
+three passing REMOVE rows were a
+pseudoenzyme (pyrC′, which needs a residue check), overlapping MetX donor families
+(metXS) and a paralog with ortholog biochemistry (PP_2325). The failing ACCEPT row was
+human HADH, below prokaryote-calibrated cutoffs. Details:
+[cutoff-check/RESULTS.md](ENZYME_SPECIFICITY/cutoff-check/RESULTS.md).
+
+## 2026-10-04
+
+**Project audit confirmed the 14-review set remains complete.**
+
+Rechecked the three frontmatter species and 14 listed genes against the current
+`*-ai-review.yaml` files. All 14 reviews are `COMPLETE`; LPL1, PHYKPL, eryCIII,
+GND1, HADHA, HADH, ACAT1, ACAD9 and ACADVL still carry the specificity actions
+summarized above. No pending genes remain. The overview taxonomy was refreshed
+so the older substrate/reaction/mechanism framing also names the cofactor,
+donor, subunit, paralog and name-collision errors that were added later. The
+ACAD9 and ACADVL beta-oxidation rows, slide text and SVG were brought into line
+with the current reviews: ACAD9 now points to long-chain GO:0004466, and the
+mouse VLCAD/P50544-derived ACADVL regulatory rows are UNDECIDED rather than a
+removed paralog-transfer example.
 
 ## 2026-09-04
 
@@ -309,7 +504,8 @@ Created project to track enzyme specificity annotation issues.
 - Phospholipase B enzymes have three activities in one protein
 - Current annotation (`GO:0004622`) captures only lysophospholipase on PC
 - Better term: `GO:0102545` (phospholipase B activity)
-- Also: `GO:0047372` (monoacylglycerol lipase) kept as non-core (likely promiscuous)
+- Also: `GO:0047372` (monoacylglycerol lipase) was initially kept as non-core,
+  then changed to REMOVE once the IBA source was traced to the ROG1 paralog
 
 **PHYKPL Key Points**:
 - Domain classification misleading (aminotransferase family)
@@ -329,10 +525,11 @@ long-chain 3-OH-acyl-CoA DH `GO:0016509`) and fall back to the general term wher
 none exists (the hydratases ECHS1/HADHA → `GO:0004300`; the straight-chain
 thiolases HADHB/ACAA2 → `GO:0003988`; short/medium HADH → `GO:0003857`).
 
-Specificity errors removed/modified: HADHA generic→long-chain MODIFY and the
-mis-attributed thiolase MF removed; the long-chain `GO:0016509` over-annotation
-on short-chain HADH flagged; ACAT1's SOAT1/cholesterol terms removed
-(nickname collision); ACADVL's mouse-LCAD paralog cross-transfers removed.
+Specificity errors removed/modified: ACAD9 very-long-chain→long-chain MODIFY,
+HADHA generic→long-chain MODIFY and the mis-attributed thiolase MF removed; the
+long-chain `GO:0016509` over-annotation on short-chain HADH flagged; ACAT1's
+SOAT1/cholesterol terms removed (nickname collision); ACADVL's mouse
+VLCAD/P50544-derived regulatory transfers left UNDECIDED.
 
 Cross-link: the cross-species `MODULE:fatty_acid_beta_oxidation` and its
 GO→RHEA chaining check (now generalized into the module tooling) surface a

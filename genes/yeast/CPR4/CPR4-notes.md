@@ -146,4 +146,11 @@ rhodopsins and CPR4's substrates are unknown.
 - file:yeast/CPR4/CPR4-deep-research-falcon.md — Falcon deep research synthesis. Used for the
   W121E-equivalent corroboration and general synthesis; independently consistent with my
   UniProt/sequence analysis.
+
+## 2026-10-01 current GOA refresh
+
+- Re-fetched CPR4 against current GOA/UniProt; the live GOA set stayed at eight rows, and the refresh backfilled the current `WITH/FROM` entities on all three IBA rows, both UniProt electronic rows, and the SGD ISS row.
+- Re-read cached PMID:1803821, PMID:9371805, PMID:15353296, PMID:15998457, and PMID:26928762 plus the Falcon deep-research synthesis. The literature still supports Cpr4 as a secretory/endomembrane cyclophilin PPIase with no known physiological substrate.
+- Rechecked the local PTHR11071 PAINT snapshot. CPR4 inherits PPIase activity and protein folding from the broad `PANTHER:PTN008511653` cyclophilin-family node, while its non-core ER localization traces to `PANTHER:PTN001338160`.
+- Web/PubMed searches for exact yeast CPR4/Cpr4/YCR069W mentions in 2024-2026 did not find a newer direct *S. cerevisiae* CPR4 primary paper that changed the GO review.
 </content>

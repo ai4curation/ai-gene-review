@@ -1,0 +1,56 @@
+# FTSJ1 biological notes
+
+Human FTSJ1 modifies ribose groups in tRNA anticodon loops using SAM. C32 methylation is supported by human-protein yeast complementation and patient-cell chemistry; THADA supplies the partner context supported by the later human structure. WDR6 supports G34 and C34 wobble chemistry in direct human reconstitutions and patient-tRNA studies (PMID:25404562, PMID:26310293, PMID:32558197, PMID:33771871, PMID:40483304). The three catalytic activities are represented separately, with C32 ribose process coverage retained beyond the position 34-only wobble process.
+
+Some apparent contradictions are assay-specific. Human FTSJ1 in the 2015 yeast experiment restored Cm but not Gm, while later human studies establish Gm34. A 2020 Trp assay was negative, whereas the 2021 patient-tRNA experiment and supplementary S3 identify C34 activity. Older Reactome reactions retain THADA even at G34; direct primary WDR6 biochemistry governs the partner synthesis. None of these distinctions justifies changing an incoming source identifier.
+
+Patient-LCL RiboMethSeq maps additional substrates with explicit coverage and scoring limits. Human DAP treatment affects neurite morphology without a significant difference in the measured differentiation fraction; fly behavior and mouse brain translation are separate model evidence. Translation is retained as a non-core consequence of preparing tRNA, without attributing a direct protein-synthesis assay to either PMID:32393790 or PMID:36720500 (PMID:36720500, PMID:33771871, PMID:32393790).
+
+Official sequence reconstruction establishes two documented products, 329 and 327 residues. The 219–220 deletion has not been functionally isolated by these studies. The actual target phylogeny grounds all four original IBA contexts at AN2; cytoplasm granularity is evaluated separately against cytosol, preserving literal qualifiers and donors.
+
+The scientific assessment was prepared before genuine acquisition. Its 40 original contexts and private forecast are retained alongside the actual native mapping in the [evidence archive](FTSJ1-source-evidence.yaml). Source-specific assay and access limits are documented in the [source guide](FTSJ1-source-guide.md). No new annotation or supporting quotation is proposed.
+
+## Genuine acquisition on 2026-11-01
+
+The repository tools produced an untouched 40-row PENDING seed and genuine 40-row GOA export. Every original context and all 16 export columns were reconciled using explicit raw, TSV and native indices. Both native products are retained exactly: 329 residues and the 327-residue product with the documented 219–220 deletion. The four incoming IBD assertions match the unchanged 16-row PAINT slice and the separately retained target lineage; no family source was regenerated.
+
+All 29 planned normal sources are present: 15 existing files were preserved byte-for-byte and 14 previously absent paths were fetched. Native fetch acquired the direct GOA dependencies; eight remaining publications and one broad Reactome pathway were fetched explicitly under the same source scope. Cache flags describe these files, while the selected original-paper and supplementary reading limits remain unchanged. No provider job was retried under the inherited credential limitation.
+
+The 40 accepted judgments, three core functions and 34 manual reference assessments have been applied to the genuine seed without changing its machine fields or product declarations. Complete question rationales are retained within the supported question text. Actual computed status, validation and history outcomes are recorded in the execution appendix below.
+
+## Validation outcomes on 2026-11-01
+
+Default schema, ontology, reference and best-practice validation passed, together with strict GOA reconciliation of all 40 annotations. The single advisory concerns the retained FTSJ1–CERT1 protein-binding context: its source-specific association does not establish a more informative shared molecular function. The native status audit confirms DRAFT. All 29 normal source files and both product declarations remain unchanged. The native CREATE history preserves its emitted session, timestamp and codex actor. No scientific judgment was changed to suppress a warning, and no new annotation or quotation was added.
+
+## Review follow-up: assay scope and substrate chemistry
+
+The initial notes and validation record above describe the first published version. The following reassessment corrects its translation summary and adds evidence without changing the source records.
+
+Human FTSJ1 knockout impairs UUU decoding in normalized HEK293T dual-luciferase reporters, with no corresponding UUC defect (PMID:32558197, Figure 7 and reporter Methods). Mouse brain ribosome profiling supplies separate evidence (PMID:33771871). FTSJ1 performs the preceding tRNA-modification chemistry; the ribosome performs peptide synthesis. The three broad cytoplasmic-translation assignments are therefore proposed as over-annotated, while the human phenotype and core methylation functions remain supported. Neither the NSCLC study nor the DAP-neuron study is relabeled as a protein-synthesis assay (PMID:32393790; PMID:36720500).
+
+The 2015 study actually coexpressed human FTSJ1 and human THADA in yeast lacking Trm7 and Trm732 and recovered Cm32. The human partner was tested experimentally, not merely proposed by homology. Gm34 remained undetectable in that host, whereas later human studies establish FTSJ1-WDR6 Gm34 activity (PMID:25404562; PMID:26310293; PMID:32558197). A source defect asks Reactome to check the original positive Gm34 EXP citation; it does not turn a host-limited negative result into universal enzyme inactivity. A second source query identifies the G34 model's THADA Requirement, leaving the valid C32 THADA reaction intact.
+
+The substrate scope extends beyond the three separately established catalytic activities. FTSJ1 knockout reduces Um32 in human tRNAArg(CCG), and patient-cell measurements show position 34 methylation dependence in tRNASec (PMID:32558197; PMID:33771871). These are cellular dependencies, distinct from isolated, site-resolved enzymatic reactions. The current GO:0160206 term includes both C32 and U32 chemistry; its existence does not itself establish the missing direct U32 assay. No new uridine-specific annotation is proposed. Leu(CAA) C34 is another reported substrate, but the 2020 paper cites earlier Leu work and excludes it from its new transcript screen. The negative 2020 Trp context and positive 2021 patient-tRNA reconstitution remain distinct.
+
+The human DAP-neuron experiment positively measures more thin protrusions and unchanged differentiation fraction. Neuron projection morphogenesis is part of projection development, neuron development, neuron differentiation and generation of neurons, which is a neurogenesis subclass. This supports retaining developmental context as non-core. The pharmacological assay does not establish that every morphology effect is FTSJ1-specific, and a more specific annotation would not resolve that attribution limit (PMID:36720500). Genetic perturbation/rescue remains a proposed discriminating experiment.
+
+The three core activities now have short exact-cache support, supplemented by assay and source-defect snippets: eight quotation occurrences in total, all verified against unchanged cached text. The complete original GOA/export/native provenance, two natural products, inherited IBA placements and 29 source objects are preserved. The reviewed follow-up has now been applied; actual history and validation outcomes are recorded below.
+
+## Follow-up validation outcomes on 2026-11-01
+
+The exact reviewed amendment was applied without changing the 40 original machine objects, two natural products or 29 normal sources. Default validation and strict GOA reconciliation passed. The one remaining advisory is the supported FTSJ1–CERT1 generic-binding row retained as non-core under the project instruction; the native status audit confirms DRAFT. The three translation actions are MARK_AS_OVER_ANNOTATED, giving 20 ACCEPT, four KEEP_AS_NON_CORE, 13 TOO_GENERAL and three MARK_AS_OVER_ANNOTATED.
+
+The native EDIT history preserves its generated session, timestamp and codex actor. All eight new quotation occurrences match unchanged cached text, including the complete FTSJ1-with-WDR6 catalytic subject. Four ontology-cache entries generated by validation were preserved in the private execution record, then the exact pre-check cache bytes were restored; no cache update is included in this amendment. Source defects remain unreported upstream, and no new annotation or provider output was added.
+
+
+## 2026-11-01 — Neurogenesis specificity follow-up
+
+The positive result in human DAP-treated developing neurons is a roughly 25% increase in thin neurite protrusions. The DCX-positive fraction used for the paper's neurogenesis quantification did not change significantly. The review now proposes GO:0048812 neuron projection morphogenesis for the existing GO:0022008 annotation, matching the positive endpoint more closely. The retained ontology path places morphology within neurogenesis; this refinement does not treat the null differentiation readout as a contradiction of every included developmental subprocess. [PMID:36720500](https://pmc.ncbi.nlm.nih.gov/articles/PMC9889914/)
+
+The 100 micromolar, 24-hour human assay remains pharmacological and lacks genetic FTSJ1 rescue. The annotation therefore retains explicit attribution limits and does not establish a core morphogenetic function. The original GO term, IDA evidence, reference, qualifier and existing quotation remain unchanged; the specific replacement is recorded only in the review. All other judgments, three catalytic cores, two natural products, 35 reference assessments and 29 source files are unchanged. Actual scoped-check outcomes are recorded below.
+
+## Morphology follow-up validation outcomes on 2026-11-01
+
+Default validation, strict GOA reconciliation, the status audit and native EDIT history validation passed. The same generic-binding advisory remains at the supported non-core row; the computed status is DRAFT. The final cautious reason describes a developmental phenotype associated with the inhibition experiment without treating the pharmacological result as a settled core mechanism. Current totals are 20 ACCEPT, three KEEP_AS_NON_CORE, 13 TOO_GENERAL, three MARK_AS_OVER_ANNOTATED and one MODIFY.
+
+The other 39 reviewed annotations, all 40 original machine objects, three catalytic cores, two natural products, 35 reference assessments, eight existing quotation occurrences and 29 normal source files are unchanged. Both prior history records and this journal's prior published text are preserved. Four incidental ontology-cache rows generated by validation were retained privately; the exact pre-check cache was restored. No new quotations, annotations or provider output were added.

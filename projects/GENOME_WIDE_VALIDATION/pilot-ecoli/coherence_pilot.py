@@ -27,9 +27,9 @@ this by closing the directly-annotated terms upward over ``is_a`` + ``part_of``.
 Scope & honesty
 ---------------
 * Uses **asserted** ``has_part`` axioms from ``go.obo``. The reference paper uses
-  an ELK reasoner to also recover *inferred* ``has_part some X`` subclasses (5038
-  pairs); the asserted set is a tractable, honest subset. The pair count we use
-  is reported in the output, not hard-coded.
+  an ELK reasoner to also recover thousands of *inferred*
+  ``has_part some X`` subclasses; the asserted set is a tractable, honest subset.
+  The pair count we use is reported in the output, not hard-coded.
 * Data are downloaded live (and cached) from official sources; nothing is
   fabricated. If a download fails the script exits non-zero rather than inventing
   numbers.
@@ -230,8 +230,8 @@ def main() -> None:
     lines.append(f"- **Coherence = {coherence:.1f}%**\n")
     lines.append("Each unsatisfied dependency is a reviewable lead — a process annotated in "
                  "the genome whose required part is annotated on no protein. See "
-                 "`violations.tsv` for the full list. Top examples:\n")
-    for c, f in sorted(missing)[:15]:
+                 "`violations.tsv` for the tabular copy. Rows:\n")
+    for c, f in sorted(missing):
         lines.append(f"- `{c}` {names.get(c, '?')} **has_part** `{f}` {names.get(f, '?')} — part not present")
     if not missing:
         lines.append("- (none — all activated dependencies satisfied)")
@@ -239,10 +239,11 @@ def main() -> None:
     for go_id, label, ok in probe_rows:
         lines.append(f"- {'✓' if ok else '✗'} `{go_id}` {label}")
     lines.append("\n## Caveats\n")
-    lines.append("- Asserted `has_part` only; the reference paper adds ELK-inferred pairs "
-                 "(~5038). A low count here reflects GO's sparse asserted process-level "
+    lines.append("- Asserted `has_part` only; the reference paper adds thousands of "
+                 "ELK-inferred pairs. A low count here reflects GO's sparse asserted process-level "
                  "`has_part`, so coherence is a *lower bound on detectable* violations.")
-    lines.append("- A violation can be a genuine biological gap **or** a missing annotation "
+    lines.append("- A violation can be annotation overreach, a missing annotation, a "
+                 "missing or too-specific GO axiom, or a true missing function "
                  "(this check never looks at sequence). Resolve flagged gaps with a "
                  "sequence-level tool (GapMind / Pathway Tools) before acting.")
     (HERE / "RESULTS.md").write_text("\n".join(lines) + "\n")

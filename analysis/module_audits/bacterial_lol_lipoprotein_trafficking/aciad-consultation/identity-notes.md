@@ -1,0 +1,11 @@
+# ADP1 assay identity and residue numbering
+
+The reproducible check_identity.py compares the immutable target UniProt sequences with official UniProt and RCSB polymer-entity JSON files in the parent identity directory. These are source records, not functional evidence inferred from existing GO annotations. The exact results and source hashes are in identity-mapping.yaml.
+
+A0ACM8PZZ0 and Q9EYM3 encode identical 411-residue sequences. The current genome-linked record names ACIAD2641/lolC; PMID:42736309 calls this homodimeric membrane component LolF. PDB 28MF, 29EB and 9R29 deposit 410-residue LolF entities under Q9EYM3; each is an exact match to positions 1–410 of the current A0ACM8PZZ0 sequence. Their source organism is Acinetobacter baylyi ADP1 (taxon 62977), with zero annotated mutations. This resolves the assay target without inventing a replacement accession or altering the seeded gene symbol.
+
+The LolD entities in these three structures are 224-residue exact matches to Q9EYM2 positions 3–226. The current complete target is 228 residues; the PDB native subsequence is not a different ATPase. The primary's tested K48, Y93, S148, E172 and H205 positions match Q9EYM2. The reported LolF substrate-contact, coupling and hook positions also match A0ACM8PZZ0 (enumerated in identity-mapping.yaml).
+
+PDB 29EB entity 4 is an exact 202-residue match to Q6F8G3 positions 29–230. The current complete target is 230 residues, with a predicted signal peptide at 1–28. The methods describe recombinant LolA as residues 29–231, which differs from the deposited native sequence extent by one C-terminal residue. This is recorded as an unresolved construct-numbering discrepancy, not silently mapped to a nonexistent native residue or treated as an identity failure. The publication explicitly describes A. baylyi LolA expressed in E. coli BL21(DE3), affinity-purified and cleaved from its N-terminal His-SUMO tag, retaining a Strep tag for the transfer assay.
+
+The short six-residue lipoprotein-like PDB entity is not definitive identification of the endogenous cargo. The paper says its molecular identity cannot be assigned unequivocally from density/mass spectrometry. Defined BamE is used separately in recombinant binding and single-cycle transfer experiments.

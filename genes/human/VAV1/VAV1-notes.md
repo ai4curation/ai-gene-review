@@ -1,0 +1,13 @@
+# VAV1 notes
+
+Deep research could not be generated in this environment: `just deep-research-falcon human VAV1 --fallback perplexity-lite` failed because the installed `deep-research-client` exposed only the `claude_code` provider, and this workstream is not using sub-workers.
+
+VAV1 is the hematopoietic VAV-family Rho GTPase guanine nucleotide exchange factor. Its conserved DH-PH-zinc-finger core catalyzes nucleotide exchange on Rac/Rho-family GTPases after tyrosine-kinase signalling. The family-level PAINT node PTN005252413 places `GO:0005085`, `GO:0005737`, and `GO:0007264` at the Opisthokonta node that contains all three human VAV paralogs, with human VAV1, VAV2, and VAV3 all present among the descendant evidence for the GEF activity [PTHR45818-paint.tsv, "PTHR45818	PTN005252413	GO:0005085	F	IBD	false"].
+
+Key direct VAV1 evidence is the phosphotyrosine activation of Rac exchange activity: Crespo et al. showed that phosphorylated Vav, but not non-phosphorylated Vav, catalyzes GDP/GTP exchange on Rac1 and activates JNK [PMID:8990121, "tyrosine-phosphorylated Vav, but not the non-phosphorylated protein, catalyses GDP/GTP exchange on Rac-1"]. Gulbins et al. showed increased guanine nucleotide-releasing factor activity in Vav immunoprecipitates from TCR-CD3-stimulated human T-cell lysates [PMID:8484124, "Human T cell lysates or Vav immunoprecipitates possessed GRF activity that increased after T cell antigen receptor (TCR)-CD3 triggering"].
+
+The many `protein binding` IPI rows are true as interaction edges but uninformative as molecular-function annotations, because the GO term does not identify VAV1's SH2/SH3 recruitment specificity or the catalytic activity downstream of these interactions. They are removed under the project protein-binding policy, not because the individual IntAct or UniProt interaction reports are false.
+
+Reactome models VAV1 in many receptor contexts, including KIT, BCR, TCR/CD28, FCERI, FCGR3A and VEGF signalling. These are context-specific routes to the same core GEF output, so the generic GEF and small-GTPase signalling rows are core, while platelet, VEGF, Fc receptor, T cell and NK-cell process rows are kept as non-core signalling contexts.
+
+The azathioprine `R-HSA-9751201` event is a special case: its own summary says 6-thio-GTP incorporation into RAC1 is "presumably mediated by VAV proteins" [Reactome:R-HSA-9751201, "can block RAC1 activity by binding to it instead of GTP (presumably mediated by VAV proteins)"]. That is a drug-action model rather than a native VAV1 biological process, so the generic GEF row is retained as GEF evidence but the xenobiotic-response rows are marked as over-annotated.

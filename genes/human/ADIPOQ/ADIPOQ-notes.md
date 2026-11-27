@@ -384,3 +384,9 @@ not by reading the diff — the change reads as reordering. Repaired by restorin
 `origin/main`'s file verbatim and appending only the three new rows at the end
 (never re-sorting), then re-running `just validate` and re-checking: no rows lost
 from main, three added, and the two pre-existing duplicates intact.
+
+## 2026-11-04 ORGANELLES ER batch 1 (endoplasmic reticulum rows)
+
+- Rows: one GO:0005783 row (ISS GO_REF:0000024 from mouse Q60994, located_in, KEEP_AS_NON_CORE). No ER sub-compartment row.
+- Source check: current mouse Q60994 UniProt subcellular location is only "Secreted {ECO:0000269|PubMed:23209641}" (fetched 2026-11-04 from rest.uniprot.org, not stored), but QuickGO lists an MGI IDA for mouse Q60994 to GO:0005783 from PMID:10444069 (fetched into publications/, full text). That paper shows endogenous ACRP30 in 3T3-L1 adipocytes partly in the ER [PMID:10444069 "whereas some ACRP30 staining overlaps with that of GRP94, and is presumably in the ER, additional ACRP30 staining does not overlap this marker and likely represents protein in peripheral storage vesicles"] and [PMID:10444069 "Thus, the data suggest that insulin stimulates movement of ACRP30 out of the ER."].
+- Outcome: KEEP_AS_NON_CORE kept (a real biosynthetic pool shown in the native cell type, so not MARK_AS_OVER_ANNOTATED); reason extended, PMID:10444069 added as reference. No NEW ER lumen row: cleaved signal peptide, no C-terminal retrieval motif (chain ends HDTN), the pool is transit, not residence.

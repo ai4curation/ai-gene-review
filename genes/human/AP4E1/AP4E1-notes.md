@@ -60,3 +60,10 @@ The source review's optional suggestion to restore an ARF1-effector finding is a
 The removal threshold used here comes from the user's session-supplied AGENTS.md instructions, not solely from repository CLAUDE.md. That action enum defines REMOVE as an annotation unlikely to be correct from the combined evidence, and the supplied experimental-removal guidance identifies genuinely contradicted functions. The local annotation-reviewer skill recommends a broader uninformativeness-based removal policy. Our interpretation of the user-provided criteria retains the directly inspected human epsilon–tepsin positive-control interaction as KEEP_AS_NON_CORE, outside the core-function synthesis. This is an intentional difference from the local skill recommendation; the current automated reviewer still requests REMOVE. No contradiction of the actual interaction, or same-source adaptor bridge, has been established. The two uninspected screen assertions remain UNDECIDED.
 
 All 25 original source assertions, the existing NEW, both alternative products and both core functions remain unchanged. The existing abstract-only PMID:32073997 cache is preserved; the separate primary-body reading and note-mediated quotation remain explicitly identified above.
+
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Endosome IEA (ARBA00028568, unvetted): UNDECIDED -> MARK_AS_OVER_ANNOTATED.
+- PMID:10436028 full text: tagged beta4 (AP-4) in Rat1 cells does not overlap transferrin receptor or lgp120 but coincides with mannosidase II and TGN38; immunogold puts AP-4 on non-clathrin vesicles near the TGN. A readable marker-controlled negative for endosomes (complex-level, beta4 not epsilon).
+- PMID:20230749 (abstract): the endosome is the destination of the APP cargo, not the adaptor's location.
+- GO:0031904 endosome lumen (Reactome TAS) is an existing endosome sub-compartment row (not root-only); REMOVE kept with a dated sentence (topologically impossible for a cytosolic coat).

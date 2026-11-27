@@ -1,5 +1,6 @@
 ---
 title: "Audit: CAUTION queries vs existing review actions"
+autolink_gene_symbols: false
 ---
 
 # Audit — do the CAUTION queries agree with curated review actions?

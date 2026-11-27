@@ -111,3 +111,39 @@ and GO:0031648 (protein destabilization) plus GO:0071456 (cellular response to h
 - Reactome R-HSA-6814153 — "ADO oxidises 2AET to HTAU" (cytosolic).
 - PMID:28514442, 32296183, 33961781 — large-scale interactome maps (bare protein-binding IPI).
 - PMID:34800366 — HTP mitochondrial proteome (ADO listed; localization not corroborated by UniProt).
+
+## 2026-10-24 ORGANELLES batch 2 (mitochondrion rows)
+
+Rows on GO:0005739: IBA GO_REF:0000033 (was MARK_AS_OVER_ANNOTATED), IEA
+GO_REF:0000107 Ensembl projection from mouse Q6PDY2 (was REMOVE), HTP PMID:34800366
+(was MARK_AS_OVER_ANNOTATED). The earlier review called all three co-purification
+and stated that UniProt places ADO in the cytosol. No sub-compartment rows.
+
+Checked:
+- UniProt Q96SZ5 has no SUBCELLULAR LOCATION comment at all, so no curated UniProt
+  location contradicts the mitochondrion; the cytosol call is Reactome TAS plus the
+  N-degron substrates.
+- PAINT (interpro/panther/PTHR22966/PTHR22966-paint.tsv): PTN000539917 GO:0005739
+  IBD seeded by MGI:MGI:2685083 (mouse Ado).
+- Mouse Q6PDY2 GO:0005739 (QuickGO): HDA PMID:18614015 (MitoCarta 2008, MGI) and IDA
+  PMID:37630723 (FlyBase). So the Ensembl projection is not circular.
+- PMID:37630723 (full text): nuclear/cytoplasmic/mitochondrial fractionation of
+  primary inguinal adipocytes and DE 2.3 brown adipocytes [PMID:37630723
+  "Intriguingly, subcellular fractionation experiments revealed that Ado is localized
+  to both the mitochondrial and cytoplasmic compartments yet only the upper band of
+  Ado localized in the cytoplasm while the lower band of Ado is present in both in the
+  cytoplasmic and mitochondrial"].
+- PMID:34800366 (MitoCoP): built to exclude contaminants [PMID:34800366 "To overcome
+  the limitations of individual approaches, we combined subtractive proteomics,
+  spatial proteomics, mitochondria-specific importomics, and literature/database
+  curation by stringent criteria."]. ADO itself is in the supplementary data only.
+- Sequence: N-terminus MPRDNMASLIQRIARQACLTFRGS is Arg-rich, but UniProt annotates
+  no transit peptide and no TM; MobiDB-lite disorder at 21-48.
+
+Outcome: root; all three rows changed to KEEP_AS_NON_CORE (dual cytosolic and
+mitochondrial distribution; cytosol stays core). The REMOVE on the IEA row was a
+consistency violation with the other rows and is no longer justified. No
+sub-compartment row: the processed-looking lower band is a single line, with no TM
+and no annotated presequence. Reference reviews for PMID:34800366, GO_REF:0000033
+and GO_REF:0000107 updated; PMID:37630723 added; suggested experiment extended with
+protease protection. This reverses an earlier call and should be double-checked.

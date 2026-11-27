@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/HF8et9f8zWj6HJupfFzNUf
       title: Project brief
+index_group: MAMMAL
 ---
 
 # Neural and Glial Cell Fate Determination Project

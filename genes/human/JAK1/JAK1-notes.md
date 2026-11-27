@@ -24,3 +24,8 @@
 - Additional retired annotations may need identification
 
 **Note**: JAK1 is a key component of the JAK-STAT signaling pathway involved in cytokine signaling, which explains the extensive annotation set and the ongoing changes in the GOA database as curation standards evolve.
+## 2026-11-23 ORGANELLES endosome batch 1
+
+- Two GO:0005768 rows: IEA from ARBA00028568 (a 115-condition-set ML rule for endosome, unvetted; checked via the UniProt REST API 2026-11-23) and Reactome TAS R-HSA-8983335 (a black-box IL15/IL15RA recycling event; JAK1 is included because the whole receptor complex was modelled).
+- Line found and cached: [PMID:20028207 "Shortly after IFN stimulation, robustly ubiquitinated IFNAR1 and a small amount of IFNAR2 were found in this endosomal compartment, which also contained tyrosine-phosphorylated Tyk2 and Jak1."] Endogenous, IFN-stimulated Daudi cells, EEA1 immunoisolation (abstract only, no PMC).
+- Both rows KEEP_AS_NON_CORE (unchanged): recruited, ligand-driven pool of a receptor-bound kinase. EEA1 is one line, so no GO:0005769 row. JAK family rule applied to JAK1-3: keep a JAK endosome row only where a readable source places that JAK itself in endosomes.
