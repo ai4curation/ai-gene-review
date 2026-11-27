@@ -101,13 +101,15 @@ To re-derive the 17:
 
 Where a term is right for only part of an entry, a conditional UniProt rule is often the better
 carrier than a mapping, because a rule can require a site, exclude a domain, or limit the taxon.
-Each cover note carries its own sources and date, and they are not uniform. The ten notes
-reproduced in the table below were checked against the UniProt UniRule API and the current
-interpro2go file on 2026-10-10. The other seven are later -- three on 2026-10-15, one on
-2026-11-02, one on 2026-11-05 and two on 2026-11-07 -- and six of those seven cite only the
-current interpro2go file rather than any UniProt rule source, the exception being `IPR018229`.
-Read the provenance off the note rather than from this sentence, and re-derive the 17-of-25
-split by the clause match given above.
+Every cover note carries its own sources and date, and they are not uniform. Of the 17 on
+removal rows, the ten reproduced in the table below were checked against the UniProt UniRule API
+and the current interpro2go file on 2026-10-10; the other seven are later -- three on
+2026-10-15, one on 2026-11-02, one on 2026-11-05 and two on 2026-11-07 -- and six of those seven
+cite only the current interpro2go file rather than any UniProt rule source, the exception being
+`IPR018229`. The six cover notes on `broadMatch` rows are later again, all citing interpro2go
+alone: two on 2026-11-05, three on 2026-11-15 and one on 2026-11-26. Read the provenance off the
+note rather than from this sentence, and re-derive the 17-of-25 split by the clause match given
+above.
 
 | Removal | What still supplies the term | Request |
 |---------|------------------------------|---------|
