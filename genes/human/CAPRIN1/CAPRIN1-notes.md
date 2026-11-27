@@ -156,14 +156,34 @@ and SNCA)."].
   term is used for CAPRIN1 and for FMR1 in `gomodel:63894f2500001378`, so this is an explicit
   argument with a modelling decision rather than a gap being filled.
 - **`GO:0140677 molecular function activator activity` (IDA, PMID:32302570) → MODIFY to
-  `GO:0140693`.** GO:0140677's own comment restricts it to a regulator that "directly
-  interacts with the enzyme"; the target here is G3BP1's condensate-scaffold activity, not an
-  enzyme. CAPRIN1 is one of the connecting nodes of the reconstituted SG protein-RNA network
+  `GO:0140693`.** GO:0140677's own comment restricts it to a regulator that directly interacts
+  with an enzyme: "This term should only be used in cases when the regulator directly
+  interacts with the enzyme, but does not result in a covalent modification." (confirmed
+  verbatim against the live ontology via OLS, 2026-11-27). The target here is G3BP1's
+  condensate-scaffold activity, not an enzyme. CAPRIN1 is one of the connecting nodes of the reconstituted SG protein-RNA network
   in that paper, which is condensate scaffolding, and the review accepts `GO:0140693` on three
   other IDA rows.
-- **`GO:0043232 intracellular membraneless organelle` → TOO_GENERAL.** `GO:0010494` and
-  `GO:0036464` are both asserted and both entail it; on its own the term does not say which
-  condensate.
+- **`GO:0043232 intracellular membraneless organelle` (IDA, PMID:31439799) → MODIFY to
+  `GO:0036464`.** On its own the term does not say which condensate, and `GO:0010494` and
+  `GO:0036464` are both asserted elsewhere in the review. The reason this is MODIFY rather
+  than TOO_GENERAL is that the row's own paper reaches the descendant: PMID:31439799 is one of
+  the two references UniProt cites for `Cytoplasm, Cytoplasmic ribonucleoprotein granule`
+  with experimental evidence [`CC:SUBCELLULAR LOCATION` "Cytoplasm, Cytoplasmic
+  ribonucleoprotein granule" `{ECO:0000269|PubMed:17210633, ECO:0000269|PubMed:31439799}`],
+  and the same reference carries the curated note that CAPRIN1 mediates formation of and
+  localises to cytoplasmic ribonucleoprotein membraneless compartments.
+- **`GO:0106288 regulation of deadenylation-dependent decapping of nuclear-transcribed mRNA`
+  (IDA, PMID:31439799) → MODIFY to `GO:0060213 positive regulation of nuclear-transcribed
+  mRNA poly(A) tail shortening`.** Right pathway, wrong step. What the paper and the curated
+  record show is CNOT7 recruitment and faster poly(A) shortening [UniProt `CC:FUNCTION` "In
+  these cytoplasmic ribonucleoprotein granules, CAPRIN1 mediates recruitment of CNOT7
+  deadenylase, leading to mRNA deadenylation and degradation"; PMID:31439799 "tune
+  deadenylation and translation rates in vitro"]. `GO:0106288` modulates the *decapping* step
+  that follows deadenylation in the same decay pathway, and neither source assays decapping,
+  so an effect there would be indirect. `GO:0060213` has "positive regulation of mRNA
+  deadenylation" as an exact synonym, so it names the assayed step and keeps the direction.
+  This is a lateral correction within the pathway, not a generalisation, and it disagrees with
+  the UniProt curator's term choice rather than with the annotation's substance.
 - **`GO:0000932 P-body` (ISS from rat Q5M9G3) → KEEP_AS_NON_CORE.** The rat row is an IDA
   from PMID:20516077, and PMID:34074792 independently describes CAPRIN1 as found in P-bodies.
   Supported, but peripheral to the stress-granule/transport-granule core.
@@ -171,8 +191,51 @@ and SNCA)."].
   interactions themselves (G3BP1, FXR2, FMR1, DDX3X, GIGYF2) are real and are recorded in the
   notes and in the informative MF/BP rows; removal says the generic term carries no functional
   information, not that the interactions are false.
-- The two `GO:0003723 RNA binding` HDA rows and the rat ISS row are MODIFYed to `GO:0003729
-  mRNA binding`, because each row's own evidence is mRNA-specific (poly(A)+ interactome
-  capture; the rat IDA shows mRNA binding). The IBA row stays `ACCEPT`: the PAINT node asserts
-  RNA binding across a family that includes the *Drosophila* member, and mRNA specificity is
-  not established at that depth.
+- All four `GO:0003723 RNA binding` rows are MODIFYed to `GO:0003729 mRNA binding`, because
+  each row's own evidence is mRNA-specific. The two HDA rows are oligo(dT)-based poly(A)+
+  interactome captures and the rat ISS traces to an IDA showing mRNA binding. For the IBA row
+  the evidence is the set of descendant experiments the PAINT curator used to place the IBD,
+  which is what the `WITH/FROM` lists: human CAPRIN1's own IDA for MYC and CCND2 mRNA
+  (PMID:17210633) and the rat IDA in PMID:20516077, both mRNA-specific, and the curated human
+  record states that caprin-1 binds its target mRNAs but not rRNA. So the row's own evidence
+  chain reaches mRNA, which is the bar the 2026-11-14 MODIFY ruling sets; it does not stop at
+  the general term. The node placement itself is sound and the MODIFY is **not** a request to
+  move the IBD: `GO:0003723` remains the right node-level statement at
+  `PANTHER:PTN001116222`, which also covers the *Drosophila* member, and the row's
+  `propagation_review` records that (`TERM_SCOPING_PROBLEM` / `GRANULARITY_MISMATCH`).
+
+## Review response (2026-11-27)
+
+Changes made in answer to the `CHANGES_REQUESTED` review on PR #6731.
+
+- **Blocking item — the notes contradicted the shipped IBA decision.** The paragraph above on
+  the four `GO:0003723` rows previously said the IBA row "stays `ACCEPT`" while the YAML
+  shipped it as `MODIFY`. Resolved in favour of keeping `MODIFY` (the reviewer's option 2) and
+  rewriting the paragraph, because for an IBA the row's own evidence *is* the set of descendant
+  experiments the PAINT curator used, which the `WITH/FROM` lists and which are mRNA-specific
+  here. The paragraph now states that basis explicitly instead of resting on node placement,
+  and says that the MODIFY is not a request to move the IBD. All four rows now carry the same
+  action, so nothing in `action_consistency` is split across the shared term.
+- **`GO:0043232` `TOO_GENERAL` → `MODIFY` to `GO:0036464`** (suggestion 2): accepted, because
+  the row's own reference is one UniProt cites for the granule location with `ECO:0000269`.
+- **`GO:0106288` `ACCEPT` → `MODIFY` to `GO:0060213`** (suggestion 1): accepted. The term named
+  the decapping step while every piece of evidence on the row is poly(A) shortening.
+- **`GO:0140677` comment confirmed verbatim** (suggestion 3) against the live ontology through
+  the OLS service, and now quoted exactly in both the `reason` and the paragraph above. The
+  text is unchanged from the paraphrase, so the MODIFY stands.
+- **The adaptor activity now lands in `core_functions`** (suggestion 4): `GO:0060090` is a
+  fourth core function with `GO:0060213` as its process, instead of being described only in
+  the prose of the condensate-scaffold core function. That also removes the duplication where
+  two core functions shared `GO:0140693` and one of them carried the mRNA-fate process.
+- **`GO:0005524` stays `KEEP_AS_NON_CORE`** (suggestion 5), with the alternative now argued in
+  `reason`: the relevance of the ATP association is established rather than unknown (UniProt
+  curates it as activity regulation and the enhancement/inhibition switch sits in the
+  millimolar range of cellular ATP), which is the `KEEP_AS_NON_CORE` tier rather than the
+  `MARK_AS_OVER_ANNOTATED` one.
+- **`GO:0030425` `reason` reworded** (suggestion 6): UniProt's dendrite statement carries human
+  experimental evidence (`ECO:0000269|PubMed:35979925`), so the earlier "inherited from the
+  rodent RNA-granule literature" described the row's IEA provenance but misdescribed the
+  curated record. The action is unchanged.
+
+Action tally after these changes: 28 ACCEPT, 11 KEEP_AS_NON_CORE, 15 REMOVE, 8 MODIFY, 1 NEW
+(no `TOO_GENERAL` rows remain).
