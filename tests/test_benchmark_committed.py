@@ -14,6 +14,7 @@ import pytest
 import yaml
 from typer.testing import CliRunner
 
+from aigr_benchmark.checks import SCHEMA, validate_schema
 from aigr_benchmark.predictions import read_prediction_set, verdicts
 from aigr_benchmark.run import score
 from ai_gene_review.cli import app
@@ -122,3 +123,24 @@ def test_committed_scores_reproduce_from_committed_predictions() -> None:
         again = score(benchmark, verdicts(benchmark, predictions), [])
         assert again["condition_scores"] == report["condition_scores"]
         assert again["item_scores"] == report["item_scores"]
+
+
+@pytest.mark.parametrize("bad_date", [None, "2025-13-45", "June 2025"])
+def test_bundled_json_schema_matches_linkml_on_the_example(bad_date: str | None) -> None:
+    """The example benchmark, with and without a bad date, validates as LinkML says.
+
+    It has date-formatted and date-patterned slots, which the package's own
+    data-free equivalence test does not cover.
+    """
+    from linkml.validator import Validator
+    from linkml.validator.plugins import JsonschemaValidationPlugin
+
+    benchmark = yaml.safe_load((EXAMPLE / "human-goa-2025-06.yaml").read_text())
+    if bad_date:
+        benchmark["spec"]["cutoff_date"] = bad_date
+    validator = Validator(
+        str(SCHEMA), validation_plugins=[JsonschemaValidationPlugin(closed=True)]
+    )
+    expected = [r.message for r in validator.validate(benchmark, "Benchmark").results]
+    assert sorted(validate_schema(benchmark, "Benchmark")) == sorted(expected)
+    assert bool(expected) == bool(bad_date)

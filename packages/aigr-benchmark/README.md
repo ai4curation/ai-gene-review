@@ -26,8 +26,9 @@ The package is not on PyPI yet. Install it from Git:
 uv add "aigr-benchmark @ git+https://github.com/ai4curation/ai-gene-review@<commit>#subdirectory=packages/aigr-benchmark"
 ```
 
-uv fetches only what it needs to build this subdirectory, but it still clones the
-repository. Pin a commit for reproducibility.
+This is expensive: uv checks out the whole repository working tree, not just this
+subdirectory. With a cold cache it took 331 s and 9.7 GB of uv git cache (November 2026).
+Prefer the PyPI release once there is one. Pin a commit for reproducibility.
 
 ## Command line
 

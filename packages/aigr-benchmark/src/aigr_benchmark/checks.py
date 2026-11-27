@@ -21,8 +21,9 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from jsonschema import Draft201909Validator
 from jsonschema.exceptions import best_match
+from jsonschema.protocols import Validator
+from jsonschema.validators import validator_for
 
 from aigr_benchmark.sources import (
     DEFAULT_CACHE,
@@ -692,7 +693,7 @@ def review_agreement(target: dict, item_id: str) -> Result | None:
 
 
 @functools.cache
-def json_schema_validator(target_class: str) -> Draft201909Validator:
+def json_schema_validator(target_class: str) -> Validator:
     """A validator for one class of the bundled JSON Schema.
 
     >>> json_schema_validator("Benchmark").schema["$ref"]
@@ -706,7 +707,10 @@ def json_schema_validator(target_class: str) -> Draft201909Validator:
         "$defs": schema["$defs"],
         "$ref": f"#/$defs/{target_class}",
     }
-    return Draft201909Validator(rooted, format_checker=Draft201909Validator.FORMAT_CHECKER)
+    # The class follows the dialect the generated schema declares, as LinkML's
+    # validator does, and checks formats (``date``) the same way.
+    cls = validator_for(rooted)
+    return cls(rooted, format_checker=cls.FORMAT_CHECKER)
 
 
 def validate_schema(data: dict, target_class: str) -> list[str]:
