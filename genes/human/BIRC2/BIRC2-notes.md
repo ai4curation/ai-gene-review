@@ -16,10 +16,14 @@
 - The direct nuclear and cell-cycle rows were kept as BIRC2-specific non-core biology.
   PMID:15665297 localizes cIAP1 to the nucleus and midbody in mitotic cells; PMID:21653699
   supports cIAP1 cooperation with E2F1 at cyclin promoters.
+- The ComplexPortal rows for regulation of apoptotic process, regulation of cell cycle,
+  and survivin complex all cite PMID:19153467, a cIAP1/SMAC/CASP9 structural paper, so
+  the review records a COMPLEX_PORTAL CHECK and leaves the GO:1990713 component row
+  undecided.
 - The PAINT caspase-inhibitor row at PTN000953271 is not retained for cIAP1. The cIAP
   branch has BIR domains and can bind SMAC/CASP9 peptides, but the direct human rows
-  reviewed here establish E3 ligase activity toward RIPK, TRAF, or BCL10-family signaling
-  substrates rather than an XIAP-like cysteine-type endopeptidase inhibitor activity.
+  reviewed here and PMID:16339151 establish caspase binding without XIAP-like caspase
+  inhibition plus E3 ligase activity toward RIPK, TRAF, or BCL10-family signaling substrates.
 - Most `GO:0005515 protein binding` rows are removed under the project bare-binding
   policy. The review keeps one existing annotation per GOA line, including rows that
   differ only by `WITH/FROM`.

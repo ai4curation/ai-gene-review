@@ -17,6 +17,9 @@
   pathway terms.
 - BIRC3 inherits the cIAP-specific PAINT necroptosis row at PTN002559449. That branch is
   separate from XIAP/BIRC8 and BIRC7, and no PAINT loss is present on the BIRC3 lineage.
+- The broad PTHR10044 caspase-inhibitor PAINT row at PTN000953271 is marked as
+  over-propagated into cIAP2 because PMID:16339151 shows that cIAP1/cIAP2 BIR domains can
+  bind caspases but do not directly inhibit them like XIAP.
 - The broad PTHR10044 cell-cycle row remains supported for BIRC2 but not for BIRC3; the
   BIRC3 review therefore marks `GO:0051726` over-propagated instead of inferring a
   cIAP2 cell-cycle function by paralogy.
