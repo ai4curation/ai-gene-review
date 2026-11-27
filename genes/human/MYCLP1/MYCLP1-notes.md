@@ -11,7 +11,8 @@ the cached primary literature, UniProt record, and PANTHER PAINT data used for t
   sequences and strong homology to the recently published DNA sequence of MYCL1" [PMID:2541066].
 - **Protein existence is still uncertain.** The reviewed UniProt entry names the product "Putative myc-like protein
   MYCLP1", assigns protein existence level `PE   5: Uncertain;`, and warns that it "Could be the product of a
-  pseudogene."
+  pseudogene." This review treats the locus as a pseudogene because neither the cached 1989 locus-characterization
+  abstract nor the UniProt record establishes an endogenous protein product.
 - **Sequence-only TF predictions.** MYCLP1 still has recognizable Myc-family and bHLH signatures, so the InterPro and
   PAINT propagation rows have a plausible sequence basis. I did not find a cached human MYCLP1 assay showing that an
   endogenous protein is made, enters nuclei, dimerizes with MAX, binds E-box DNA, or regulates Pol II transcription.
