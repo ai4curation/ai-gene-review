@@ -94,11 +94,10 @@ To re-derive the 17:
 2. Do not grep the file. The comments are block scalars and the phrase wraps mid-clause on
    `IPR018194` and `IPR021006`, so a line-based search returns 16 -- which reads as a stale page
    rather than as a broken check.
-3. Expect 17 as of 2026-11-27, not 18. A semantic reading can reach 18, because
-   the IPR017682 removal of
-   `GO:0050660` says where FAD binding does belong (FrhB, via IPR017679) without carrying a cover
-   clause. That row is excluded deliberately: it names cover for a *sibling* entry's members, not
-   for this entry's, which is the distinction the count is about.
+3. Expect 17 as of 2026-11-27, not 18. A semantic reading can reach 18, because the IPR017682
+   removal of `GO:0050660` says where FAD binding does belong (FrhB, via IPR017679) without
+   carrying a cover clause. That row is excluded deliberately: it names cover for a *sibling*
+   entry's members, not for this entry's, which is the distinction the count is about.
 
 Where a term is right for only part of an entry, a conditional UniProt rule is often the better
 carrier than a mapping, because a rule can require a site, exclude a domain, or limit the taxon.
@@ -107,8 +106,12 @@ removal rows, the ten reproduced in the table below were checked against the Uni
 and the current interpro2go file on 2026-10-10; the other seven are later -- three on
 2026-10-15, one on 2026-11-02, one on 2026-11-05 and two on 2026-11-07 -- and six of those seven
 cite only the current interpro2go file rather than any UniProt rule source, the exception being
-`IPR018229`. The six cover notes on `broadMatch` rows are later again, all citing interpro2go
-alone: two on 2026-11-05, three on 2026-11-15 and one on 2026-11-26. Read the provenance off the
+`IPR018229`. The six cover notes on `broadMatch` rows all cite interpro2go alone and run
+2026-11-05 to 2026-11-26 -- two on 2026-11-05, three on 2026-11-15 and one on 2026-11-26 -- so
+the two ranges overlap rather than one succeeding the other: the removals run 2026-10-10 to
+2026-11-07. Two entries carry a note in both sets, and in neither is the `broadMatch` note the
+later one: `IPR037893`'s precedes its own removal note by two days, and `IPR002956`'s is the
+same day as its own. Read the provenance off the
 note rather than from this sentence, and re-derive the 17-of-25 split by the clause match given
 above.
 
