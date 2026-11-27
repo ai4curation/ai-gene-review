@@ -319,8 +319,9 @@ went in `review.decomposed_into`: `gocam_associations` or `module_associations` 
 model), `in_core_functions` (Y is central to the gene), or `context_dropped: true` (Y is peripheral context or
 was itself the over-annotation). The replacement must be a claim you would `ACCEPT`: when the claim is
 non-core, keep the row `KEEP_AS_NON_CORE` on the precomposed term, or `MARK_AS_OVER_ANNOTATED` if GO has
-obsoleted it, and do not MODIFY it (the `decomposition_replacement_not_acceptable` check warns when the
-replacement sits on another row as non-core, over-annotated or removed). Ordinary refinements of a general
+obsoleted it (a request to keep a retired class is not one GO can act on), and do not MODIFY it (the
+`decomposition_replacement_not_acceptable` check warns when the replacement sits on another row as non-core,
+over-annotated, too general or removed). Ordinary refinements of a general
 term are not decompositions and keep their own rule above. Do not encode Y as an annotation extension (X plus `part_of(Y)` restates the
 retired class), and do not split the term into two unrelated annotations. Modules model reusable mechanisms,
 not tissue or developmental contexts: do not create a module per Y. GO's `consider` is curator advice: check each half against the evidence before using it. Its
