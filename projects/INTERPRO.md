@@ -98,6 +98,11 @@ clause match given above rather than trusting this sentence.
 | IPR006935 DNA binding | HAMAP UvrB rule MF_00204; nothing for RIG-I-like receptors or Dicer | Replace with `GO:0003676` |
 | IPR045122, IPR013380 (two), IPR005714 | Not needed; the terms are wrong for every member | Remove; for IPR045122 and IPR013380, add the correct family-wide terms as mappings |
 
+This table is a selection, not the whole set: seven of the seventeen cover notes are not listed
+here -- IPR019982, IPR018229, IPR017402, IPR001135, IPR037893, IPR002956 and IPR018194 -- so read
+the row's own `comment` in the mapping set when looking one up rather than concluding from this
+table that a removal has no cover note.
+
 The checks themselves are described in [Before proposing a removal](INTERPRO/README.md#before-proposing-a-removal).
 
 A recurring curation question is **whether a function holds across the matched
