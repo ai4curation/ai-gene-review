@@ -179,11 +179,15 @@ is left for a curator, with the reason in the run record:
   gene row; the affected subfamilies, proposed action and seeds of a family
   assessment), with white space collapsed and the quotes left out. `check` compares
   every applied row with its review: the row has to match one row of it, carry the
-  verdict that was read, quote its tree file and have the digest on record. A merge, or
+  verdict that was read, quote its tree file, have the digest on record, and hold in its
+  reason the text its record says was applied (the reader's sentence, the verifier's
+  where that was the one applied, or the corrected reason), word for word, unless the
+  record has a `correction` that says how the row was changed by hand. A merge, or
   anyone, that changes such a row makes `check` and the test suite name the row until
-  it has been read again and vouched for. The digests were first written on 2026-11-27,
-  when every applied row held its recorded sentence or carried a `correction` saying how
-  it had been changed by hand.
+  it has been read again and vouched for. The digest says that the row has not changed
+  since it was vouched for; the comparison of texts says that what was vouched for is
+  what was read. Of the 572 applied rows, 558 hold their recorded text and 14 carry a
+  `correction` (2026-11-27, when the digests were first written).
 - **Quoting around an adverse fact.** A reading must quote more than the sentence that
   names the term, and must quote every sentence that stands against the verdict: that the
   gene is itself a seed, that it is inside the clade the seeds span, that seeds share its

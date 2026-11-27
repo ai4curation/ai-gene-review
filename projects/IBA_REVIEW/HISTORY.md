@@ -335,7 +335,10 @@ had its GOA file changed, and no family with a listing its PAINT slice. 56 more 
 and 35 more families from main got an extract or a listing. Three things changed in the
 script. Every applied row now carries a digest of the review row its record vouches for,
 and a test fails when the verdict, the reason or the tree quote of such a row is no
-longer what was recorded. A row kept under main's text records what main changed and
+longer what was recorded. The same test compares the text each record says was applied
+with the row's reason, word for word, and passes a difference only where a `correction`
+says how the row was changed by hand: 558 rows hold their text and 14 carry a
+correction. A row kept under main's text records what main changed and
 what a reading of main's text found, as a row given up does. And the merge-time checks
 that had lived in scratch files are commands: `changed-on-main`, `vouch` and `check`.
 
@@ -358,7 +361,8 @@ that had lived in scratch files are commands: `changed-on-main`, `vouch` and `ch
 - **A record has to be checkable against the file it describes.** The run records said
   which sentence had been added to which row, and nothing compared the two. One merge
   by another agent was enough to make a record false without anyone seeing it. What a
-  record vouches for is now a digest of the row, and the comparison is a test.
+  record vouches for is now a digest of the row, the text it says was applied is
+  compared with the row's reason, and both comparisons are a test.
 - **Other agents will merge this branch.** The merge rule lived in this session's notes
   and scratch files, where the agent that made the tenth merge could not find it. A
   rule that only one session knows is not the repository's rule. It is in the README

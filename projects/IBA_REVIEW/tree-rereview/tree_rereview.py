@@ -1327,11 +1327,35 @@ def changed_fields(before: dict[str, Any] | None, after: dict[str, Any] | None, 
     ]
 
 
+def applied_text(row: dict[str, Any]) -> str:
+    """The text the script put into the reason of an applied row, as one paragraph.
+
+    The three cases of :func:`row_edit`: the verifier's own sentence where it faulted the
+    reading and its corrected reading was applied, the corrected reason where the reading
+    was a contradiction, and otherwise the reader's sentence.
+
+    >>> applied_text({"tree_sentence": "In the tree the  seeds\\n are paralogs."})
+    'In the tree the seeds are paralogs.'
+    >>> applied_text({"tree_reading": "REASON_CONTRADICTED", "tree_sentence": "Four are.", "reason_replacement": "The seeds differ. Four are."})
+    'The seeds differ. Four are.'
+    >>> faulted = {"agrees": False, "fixed": {"tree_reading": "SUPPORTS", "tree_sentence": "Four of five are."}}
+    >>> applied_text({"tree_sentence": "All five are.", "verifier": faulted, "outcome_detail": CORRECTED_BY_VERIFIER})
+    'Four of five are.'
+    """
+    if row.get("outcome_detail") == CORRECTED_BY_VERIFIER:
+        return one_paragraph(str(mapping(mapping(row.get("verifier")).get("fixed")).get("tree_sentence") or ""))
+    if row.get("tree_reading") == "REASON_CONTRADICTED":
+        return one_paragraph(str(row.get("reason_replacement") or ""))
+    return one_paragraph(str(row.get("tree_sentence") or ""))
+
+
 def applied_row_problems(row: dict[str, Any], document: dict[str, Any]) -> list[str]:
     """What is wrong with an applied row, given its review as committed: an empty list when nothing is.
 
     The row has to match exactly one row of the review, carry the verdict that was read,
-    quote its tree file, and be the row the record vouches for (:func:`row_digest`).
+    quote its tree file, hold the text its record says was applied (:func:`applied_text`)
+    unless a ``correction`` says how it was changed by hand, and be the row the record
+    vouches for (:func:`row_digest`).
     """
     family = bool(row.get("family"))
     reached = matching_rows(document, row)
@@ -1345,6 +1369,13 @@ def applied_row_problems(row: dict[str, Any], document: dict[str, Any]) -> list[
     quoted = [str(item.get("reference_id", "")) for item in review_row.get("supported_by") or [] if isinstance(item, dict)]
     if not any(reference.endswith(TREE_FILE_SUFFIX[family]) for reference in quoted):
         problems.append("the row does not quote its tree file")
+    text = applied_text(row)
+    reason = one_paragraph(str(review_row.get("assessment_reason" if family else "reason") or ""))
+    if not row.get("correction") and (not text or text not in reason):
+        problems.append(
+            "the text the record says was applied is not in the reason, and the record has no `correction` that says "
+            "how the row was changed by hand"
+        )
     if not row.get("row_digest"):
         problems.append("the record has no digest of the row it vouches for")
     elif row_digest(review_row, family) != row["row_digest"]:

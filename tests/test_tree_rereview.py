@@ -466,7 +466,7 @@ def test_a_row_given_up_to_main_says_what_mains_text_does_with_the_tree(recorded
     assert tr.main_text_finding(given_up) == finding
 
 
-GENE_ROW = {
+GENE_ROW: dict[str, Any] = {
     "action": "REMOVE", "reason": "The seeds are splicing factors and the gene is not. " + SENTENCE,
     "summary": "A transfer from paralogs.",
     "supported_by": [{"reference_id": REFERENCE, "supporting_text": NODE}],
@@ -521,6 +521,43 @@ def test_an_applied_row_that_is_as_its_record_has_it_has_no_problem() -> None:
 def test_an_applied_row_that_changed_after_it_was_vouched_for_is_named(committed: dict[str, Any], problem: str) -> None:
     problems = tr.applied_row_problems(applied_row(), review_with(committed))
     assert any(problem in found for found in problems), problems
+
+
+FIXED_SENTENCE = "In the PANTHER 19.0 tree four of the five seeds are paralogs of TEST and one is an ortholog."
+NOT_IN_REASON = "the text the record says was applied is not in the reason"
+
+
+def vouched(record: dict[str, Any], committed: dict[str, Any]) -> list[str]:
+    """The problems of an applied row whose digest is that of the committed row, so that only its text can be at fault."""
+    return tr.applied_row_problems({**record, "row_digest": tr.row_digest(committed, family=False)}, review_with(committed))
+
+
+@pytest.mark.parametrize(
+    ("record", "text"),
+    [
+        # the reader's sentence, added to the reason
+        (row(outcome="applied"), SENTENCE),
+        # the verifier faulted the reading and its own sentence was added
+        (row(outcome="applied", outcome_detail=tr.CORRECTED_BY_VERIFIER,
+             verifier={"agrees": False, "fixed": {"tree_reading": "SUPPORTS", "tree_sentence": FIXED_SENTENCE}}), FIXED_SENTENCE),
+        # the reading was a contradiction and the reason was replaced
+        (row(outcome="applied", tree_reading="REASON_CONTRADICTED", verifier=AGREED, reason_replacement=REPLACEMENT), REPLACEMENT),
+    ],
+)
+def test_an_applied_row_holds_the_text_its_record_says_was_applied(record: dict[str, Any], text: str) -> None:
+    assert tr.applied_text(record) == text
+    held = {**GENE_ROW, "reason": "Main's text, which may have changed and been read again. " + text}
+    assert vouched(record, held) == []
+    # the same row with the text reworded, however slightly, is named
+    reworded = {**GENE_ROW, "reason": "Main's text. " + text.replace("paralogs of TEST", "paralogs of the gene")}
+    assert any(NOT_IN_REASON in found for found in vouched(record, reworded))
+
+
+def test_an_applied_row_changed_by_hand_says_how_in_a_correction() -> None:
+    by_hand = {**GENE_ROW, "reason": "The seeds are splicing factors and the gene is not. By the tree four of the five seeds are paralogs."}
+    assert any(NOT_IN_REASON in found for found in vouched(row(outcome="applied"), by_hand))
+    corrected = row(outcome="applied", correction="2026-11-27: the sentence was shortened by hand after main rewrote the reason.")
+    assert vouched(corrected, by_hand) == []
 
 
 def test_an_applied_row_has_to_match_exactly_one_row_of_its_review() -> None:
