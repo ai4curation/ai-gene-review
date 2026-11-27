@@ -637,9 +637,11 @@ All four are now reviewed, and each turned out to be a different kind of error,
 which is the argument for grouping by shared claim rather than reviewing gene by
 gene.
 
-The rest span reviewed and unreviewed members, and those are worth re-reading as
-groups even where the members are done, because a shared claim reviewed gene by
-gene is where parallel batches drifted apart in tier 2. The largest are
+Every one of the 22 groups is now fully reviewed: each member is among the 142
+selected genes, carries a `review_folder`, and has its review on disk, so the script
+reports no incomplete group and none of the five review-less `genes/PSEAE` folders is
+a group member. They are still worth re-reading as groups, because a shared claim
+reviewed gene by gene is where parallel batches drifted apart in tier 2. The largest are
 `GO:0015385` from PMID:16030218 across PA1054-PA1059, `GO:0016987` from
 PMID:18086184 across five genes, and `GO:0015562` on
 opmQ/pvdR/pvdT, which carries three separate references for the same term.
@@ -662,18 +664,33 @@ The "re-read as groups" step is now mechanical:
 compares the review actions on each shared term across its members and reports
 the groups that disagree.
 
-Divergence is a prompt to read, not a verdict. All three *full* divergences — those
-whose every member could be compared — are deliberate: `ccoQ1`/`ccoQ2` sit at
-`MARK_AS_OVER_ANNOTATED` on `GO:0004129` while the six catalytic cbb3 subunits are
-`ACCEPT`, because the Q chains are accessory and absent from the cryo-EM
-models; `tse6` is `REMOVE` against `tsi6`'s `ACCEPT` on
-`GO:0097351` because of a recorded `WRONG_GENE_PRODUCT` defect; and on `GO:0016757`
-`wbpL` modifies to `GO:0016780` phosphotransferase activity while `wbpX` and `wbpY`
-accept, because `wbpL` is a WecA-type initiating enzyme that transfers a
-sugar-1-phosphate and is not a glycosyltransferase in GO's sense at all. Each is
-argued in the rows themselves, which is what makes them fine. The fourth divergence,
-among the comparable members of an incomplete group, is not deliberate; it is the
-`tatA`/`tatC` case described below.
+Divergence is a prompt to read, not a verdict. The script's own summary line is the
+figure to quote, and it currently reads `6 divergent, 16 consistent, 0 incomplete, 0
+with no verdict`. Five of the six are deliberate and argued in the rows themselves,
+which is what makes them fine:
+
+- `GO:0004129` — `ccoQ1`/`ccoQ2` sit at `MARK_AS_OVER_ANNOTATED` while the six
+  catalytic cbb3 subunits `ACCEPT`, because the Q chains are accessory and absent
+  from the cryo-EM models.
+- `GO:0097351` — `tse6` is `REMOVE` against `tsi6`'s `ACCEPT`, on a recorded
+  `WRONG_GENE_PRODUCT` defect.
+- `GO:0016757` — `wbpL` modifies to `GO:0016780` phosphotransferase activity while
+  `wbpX` and `wbpY` accept, because `wbpL` is a WecA-type initiating enzyme that
+  transfers a sugar-1-phosphate and is not a glycosyltransferase in GO's sense.
+- `GO:0016987` — `femA` is `REMOVE` against four ECF sigma factors' `ACCEPT`, for the
+  reason set out above: it is an outer-membrane TonB-dependent receptor and the sigma
+  factor activity belongs to PA1912. The paragraph above already says this group does
+  not agree, and an earlier version of this section contradicted it by counting only
+  three full divergences.
+- `GO:0047580` — `lhpL` modifies to `GO:0050346` trans-L-3-hydroxyproline dehydratase
+  while `PA1268` accepts the 4-hydroxyproline epimerase term, because the isomer is
+  wrong rather than the chemistry: `GO:0047580` is trans-4-hydroxy-L-proline to
+  cis-4-hydroxy-D-proline, and UniProt records the 3-hydroxyproline activity.
+
+The sixth is not deliberate: `GO:0008320` across `tatA`, `tatB` and `tatC`, where
+`tatA` modifies to `GO:0009977` while `tatB` and `tatC` are `TOO_GENERAL`. It is the
+case described below, and it is now a full divergence rather than a partial one,
+because `tatB`'s review closed the last gap in that group.
 
 The verdict the script compares is the action *plus the replacement term* where the
 action is MODIFY, and prefixed with `NOT:` where the row is negated. Comparing bare
@@ -690,7 +707,8 @@ things to a reader:
 - **divergent** — every member ruled on the claim, and they disagree. Read it.
 - **consistent** — every member ruled, and they agree.
 - **incomplete** — a member cannot be compared because its review does not exist.
-  That is curation backlog: someone has to review the gene. The *other* members are
+  That is curation backlog: someone has to review the gene. No group is presently in
+  it, so a reader meeting this bucket should not go looking for a missing review. The *other* members are
   still compared, and the line says so — most of these groups have three or more
   reviewed members, so waiting for the backlog before comparing them would hide a
   live divergence. An incomplete group whose comparable members disagree is marked
@@ -717,7 +735,8 @@ specific accepted term, here `GO:0009243` O antigen biosynthetic process, which 
 genes already carry. Widening the audit means building a process-aspect worklist (the
 builder takes `--all-aspects`) or reading shared claims from GOA directly.
 
-Comparing the reviewed members of incomplete groups found a third case immediately.
+Comparing the reviewed members of what was then an incomplete group found a third
+case immediately.
 `GO:0008320` protein transmembrane transporter activity from PMID:16621825 is
 `MODIFY`→`GO:0009977` on `tatA` and `TOO_GENERAL` on `tatC`. `tatB` was unreviewed
 when that was written and is now reviewed, and it settles the case the way this
