@@ -1,0 +1,7 @@
+# MCM2 review notes
+
+- `2026-11-27`: `just deep-research-falcon human MCM2 --fallback perplexity-lite` could not run because the local deep-research client reported only the Claude Code provider as available. The standard literature synthesis was therefore done manually in `MCM2-deep-research-manual.md`.
+- Core function: accept MCM2 as a nuclear MCM2-7/CMG subunit that contributes to ATP-dependent ssDNA helicase activity, plus the MCM2-specific H3-H4 binding function from the N-terminal tail.
+- Protein binding: all bare `GO:0005515` IPI rows were removed under the project protein-binding policy. Several of those interactions may be biologically real; preserving the generic MF term would still add no role beyond the better MCM2-7, CMG, ATPase, helicase and histone-binding rows.
+- Disease and cochlea rows from PMID:26196677 were kept separate from the core replication summary. Cytoplasmic MCM2 in terminal hair cells is a real location in that assay; apoptosis and cochlea-development terms are over-annotations from variant/overexpression phenotypes.
+- Reactome ContentService checks on 2026-11-27 placed the MCM2-containing inputs or outputs for R-HSA-176298, R-HSA-176318, R-HSA-68916, R-HSA-68917, R-HSA-68918, R-HSA-68919, R-HSA-68940, R-HSA-68944, R-HSA-68954, R-HSA-69019, R-HSA-9749253, R-HSA-9757258 and R-HSA-9926522 in GO:0005654 nucleoplasm; R-HSA-68944 uses the pre-replicative complex as the MCM2-containing participant, and R-HSA-9926522 produces MCM2 itself in nucleoplasm.
