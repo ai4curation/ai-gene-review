@@ -99,3 +99,23 @@ MF: GO:0004170 dUTP diphosphatase activity (with GO:0000287 magnesium ion bindin
 BP: dUTP catabolism (GO:0046081) coupled to dUMP biosynthesis (GO:0006226), feeding
     de novo dTMP biosynthesis (GO:0006231) and preventing uracil misincorporation.
 CC: cytosol (GO:0005829) / nucleus (GO:0005634) and mitochondrion (GO:0005739).
+
+## 2026-10-20 ORGANELLES batch 1 (mitochondrion rows)
+
+Scope: GO:0005739 rows plus a sub-compartment check (projects/ORGANELLES.md policy, rules 1-6).
+
+- Four mitochondrion rows. Direct: EXP (PMID:9070952, cited by UniProt for the isoform 3 location) and
+  HTP (MitoCoP, PMID:34800366), both ACCEPT, organelle-level assays. Synthesis: IEA GO_REF:0000044
+  (SL-0173 from the curated "[Isoform 3]: Mitochondrion" line, ECO:0000269) and TAS PMID:8631816
+  (traces to the paper's own fractionation), both kept ACCEPT after the check.
+- NEW GO:0005759 mitochondrial matrix (IC, isoform P33316-3). Lines of evidence:
+  1. Cleavable presequence, processed on import:
+     [PMID:9228092 "The amino-terminal region of the protein contains an arginine-rich, 69-residue mitochondrial targeting presequence that is absent in the mature protein."]
+     [PMID:9228092 "Mitochondrial import and processing studies demonstrate that the DUT-M precursor is processed into a 23-kDa protein and imported into mitochondria in vitro."]
+     UniProt TRANSIT 1..69, and the N-terminome study PMID:25944712 maps cleavage after Gly-69.
+  2. No transmembrane/intramembrane segment; the mature chain (70-252) is the same soluble trimer as DUT-N.
+  3. Function: dUTP-pool sanitation for DNA synthesis; in mitochondria that is mtDNA replication (matrix).
+  No sub-mitochondrial fractionation or protease protection was found, so IC, not IDA.
+- core_functions.locations left at nucleus + mitochondrion: no assay shows where inside mitochondria
+  the dUTPase activity is exercised (MMADHC lesson).
+- Cached PMID:9228092 (Ladner and Caradonna 1997) for this.

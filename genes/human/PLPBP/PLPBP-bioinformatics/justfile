@@ -1,0 +1,27 @@
+# Reproduce the PLPBP structure / variant analysis. Run from this directory.
+acc := "O94903"
+gene := "PLPBP"
+family_csv := "../../../../interpro/panther/PTHR10146/PTHR10146-entries.csv"
+templates := "--template data/1CT5.pdb:A --template data/1B54.pdb:A --template data/1W8G.pdb:A --template data/5NM8.pdb:A"
+
+all: fetch features variants tests control
+
+fetch:
+    uv run python fetch_data.py --accession {{acc}} --gene {{gene}} --family-csv {{family_csv}} --templates 1CT5 1W8G 1B54 5NM8 --refseq-mrna NM_007198.4 --outdir data
+
+features:
+    mkdir -p results
+    uv run python structure_features.py --query-fasta data/{{acc}}.fasta --model data/AF-{{acc}}.pdb --family-fasta data/family.fasta {{templates}} --out results/features.tsv --summary results/structure_summary.json
+
+variants:
+    uv run python map_variants.py --query-fasta data/{{acc}}.fasta --cds-fasta data/cds.fasta --model data/AF-{{acc}}.pdb --features results/features.tsv --literature literature_variants.yaml --clinvar data/clinvar.json --gnomad data/gnomad.json --gene {{gene}} --ligand-columns 1CT5_dist_PLP 1B54_dist_PLP 1W8G_dist_PLP 5NM8_dist_PLP
+
+tests:
+    uv run python spatial_tests.py --model data/AF-{{acc}}.pdb --query-fasta data/{{acc}}.fasta
+
+# Control: the same structure script on the mouse ortholog (Q9Z2Y8)
+control:
+    mkdir -p data/control results/control
+    curl -sfL -A plpbp-analysis --retry 4 https://rest.uniprot.org/uniprotkb/Q9Z2Y8.fasta -o data/control/Q9Z2Y8.fasta
+    curl -sfL -A plpbp-analysis --retry 4 https://alphafold.ebi.ac.uk/files/AF-Q9Z2Y8-F1-model_v6.pdb -o data/control/AF-Q9Z2Y8.pdb
+    uv run python structure_features.py --query-fasta data/control/Q9Z2Y8.fasta --model data/control/AF-Q9Z2Y8.pdb --family-fasta data/family.fasta {{templates}} --out results/control/features_Q9Z2Y8.tsv --summary results/control/structure_summary_Q9Z2Y8.json

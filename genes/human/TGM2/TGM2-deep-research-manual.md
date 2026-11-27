@@ -1,0 +1,11 @@
+# TGM2 manual deep research
+
+`just deep-research-perplexity-lite human TGM2` could not be run because the only configured provider in this checkout was `claude_code`, so this file records manual synthesis from cached UniProt, GOA, PAINT, and primary-publication records.
+
+TGM2 encodes tissue transglutaminase, a pleiotropic calcium-regulated enzyme. It catalyzes the same protein-glutamine gamma-glutamyltransferase reaction as other active PTHR11590 members, with human direct support from enzymology and structural papers including PMID:23941696 and PMID:31991788. Its acyltransferase active site can also transfer biogenic amines to glutaminyl residues; PMID:30867594 establishes histone H3Q5 serotonylation, PMID:32273471 establishes histone H3Q5 dopaminylation, and PMID:23797785 establishes histaminylation of fibrinogen. PMID:9623982 and PMID:20547769 support the hydrolytic protein-glutamine glutaminase activity relevant to gliadin deamidation and redox regulation.
+
+TGM2 has more non-catalytic signaling biology than TGM1 or TGM3. Human studies support GTP binding and coupling of alpha1-adrenergic receptors to phospholipase C through the historical Gh activity, while mitochondrial and perinuclear phenotypes in PMID:24349085 reflect cytosolic or mitochondrial TGM2 promoting RAP1GDS1 crosslinking, ER calcium release, mitochondrial calcium uptake, and apoptosis. These signaling rows are direct enough to keep but are secondary to the catalytic chemistry.
+
+The extracellular matrix is a well-supported TGM2 site of action. PMID:12506096 localizes active tissue transglutaminase with epsilon-(gamma-glutamyl)-lysine and fibronectin in proliferative vitreoretinopathy membranes, and PMID:28198360 shows that secreted CLIC3 reduces and activates extracellular TGM2 to promote cancer-associated fibroblast matrix remodeling, endothelial sprouting, and invasion. Large-scale ECM proteomics rows support extracellular-matrix presence but not additional molecular functions.
+
+Two CACAO plasma-membrane rows cite 1985 and 1993 keratinocyte-transglutaminase papers that describe the particulate, fatty-acylated keratinocyte enzyme now known as TGM1 rather than tissue transglutaminase/TGM2. Those rows should be removed with source-defect records rather than reinterpreted as TGM2 evidence.

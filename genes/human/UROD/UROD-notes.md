@@ -81,3 +81,15 @@ coproporphyrinogen III (plus 4 CO2), in the **cytosol**.
 
 falcon deep-research provider is out of credits (HTTP 402); no -deep-research-falcon.md was
 generated. Review grounded in UROD-uniprot.txt, the seeded GOA, and cached publications/PMID_*.md.
+
+## Completion pass (2026-11-10, Claude (AI-assisted))
+
+- All rows now carry complete verbatim quotes (UniProt CC:FUNCTION/CATALYTIC ACTIVITY tied to
+  the cited PMIDs; abstracts of PMID:14633982, 11719352, 12071824, 11069625, 1634232, 18004775;
+  full text of PMID:21668429; Reactome R-HSA-189425/190182; PANTHER PTHR21091:SF169 for IBA).
+- Five GO:0005515 interactome rows: MARK_AS_OVER_ANNOTATED -> REMOVE (protein-binding policy).
+- porphyrin-containing compound biosynthetic (IEA) and metabolic (IDA) process -> MODIFY to
+  heme biosynthetic process (correct but general).
+- Four catabolic-process IDA rows: MODIFY to heme biosynthetic process only (dropped the general
+  GO:0006779 co-replacement); recorded a PROBABLE WRONG_TERM source defect for UniProt (CHECK).
+- HPA nucleoplasm: MARK_AS_OVER_ANNOTATED -> KEEP_AS_NON_CORE (direct observation, peripheral).

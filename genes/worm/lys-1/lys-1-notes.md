@@ -29,7 +29,9 @@ Gene product: Lysozyme-like protein 1 (LYS-1). Precursor with N-terminal signal 
   resistance to Staphylococcus aureus."]; [PMID:21209831 "The TD50 (time required for 50% of
   the nematodes to die) for lys-1 was 4.7 days (p<0.0001) ... compared to 6.8 days for the
   GFP RNAi control."].
-- lys-1 is a **DAF-16/FOXO transcriptional target** and behaves as a synthetic dauer-formation
+- lys-1 is a **putative DAF-16/FOXO target** (it was in a screen of 513 putative DAF-16 targets
+  compiled from expression and ChIP studies: [PMID:21209831 "Our screen is defined by the 513
+  putative DAF-16 target genes we used."]) and behaves as a synthetic dauer-formation
   (SynDaf) gene, linking innate immunity to the insulin/IGF-1 signalling (dauer) axis:
   [PMID:21209831 "Two of the latter genes, lys-1 and cpr-1, are known to participate in innate
   immunity"] (the whole screen was of DAF-16 targets; lys-1 gave a SynDaf phenotype, Table 1,
@@ -133,3 +135,17 @@ Gene product: Lysozyme-like protein 1 (LYS-1). Precursor with N-terminal signal 
   protein-level characterization" statements underpinning the knowledge gaps.
 - PMID:16968778 (Shapira et al., PNAS 2006) — ABSTRACT-ONLY. ELT-2/GATA intestinal
   infection-response program; source of the HEP innate-immune-response annotation.
+
+## Follow-up: WormBase description regulators (2026-10-30)
+
+- WormBase says LYS-1 expression is promoted by DBL-1, TIR-1 and NSY-1 (perhaps ELT-2), is
+  induced by *P. aeruginosa*, and is not promoted by DAF-16. Likely sources are Mallo et al.
+  2002 (PMID:12176330, DBL-1 control of some infection-inducible genes: [PMID:12176330 "Certain
+  infection-inducible genes are under the control of the DBL-1/TGFbeta pathway."]) and Alper et
+  al. 2007 (PMID:17526726). Both are abstract-only in the cache. The PMID:12176330 abstract names
+  lys-1 only as a resistance factor against *S. marcescens* [PMID:12176330 "overexpression of the
+  lysozyme gene lys-1 augments the resistance of C. elegans to S. marcescens"], and neither abstract
+  links lys-1 expression to these regulators, so the gene-specific regulator claims are unverified.
+- The DAF-16 "target" wording in the review was softened: PMID:21209831 used a list of putative
+  targets and did not test DAF-16 dependence of lys-1 expression, so it does not contradict
+  WormBase's "not by DAF-16".

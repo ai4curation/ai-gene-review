@@ -11,6 +11,7 @@ import pytest
 import yaml
 
 from ai_gene_review.validation.family_residue_validator import (
+    InactiveEntryError,
     Outcome,
     SequenceCache,
     check_anchor_residues,
@@ -252,6 +253,63 @@ def test_sequence_cache_writes_and_reads_disk(tmp_path):
     assert cache.get("P12345") == "MACDEF"
 
 
+DELETED_RECORD = {
+    "entryType": "Inactive",
+    "primaryAccession": "C0H4F3",
+    "inactiveReason": {
+        "inactiveReasonType": "DELETED",
+        "deletedReason": "Deleted from sequence source (ENSEMBL)",
+    },
+    "extraAttributes": {"uniParcId": "UPI0001981FEE"},
+}
+
+
+def test_sequence_cache_raises_inactive_entry_error(tmp_path, monkeypatch):
+    """A deleted UniProt entry has no sequence; the cache says so instead of KeyError.
+
+    Regression for issue #6003 (C0H4F3 in PTHR21340). Nothing is written to disk, so the
+    accession is looked up again if UniProt restores it.
+    """
+    cache = SequenceCache(tmp_path)
+    monkeypatch.setattr(cache, "_fetch_json", lambda acc: DELETED_RECORD)
+    with pytest.raises(InactiveEntryError, match="DELETED"):
+        cache.get("UniProtKB:C0H4F3")
+    assert not (tmp_path / "C0H4F3.seq").exists()
+
+
+class _InactiveStub(StubCache):
+    def get(self, accession: str) -> str:
+        acc = accession.split(":")[-1]
+        if acc == "C0H4F3":
+            raise InactiveEntryError(acc, DELETED_RECORD)
+        return super().get(accession)
+
+
+def test_inactive_control_is_reported_as_a_failure_not_a_crash():
+    """One deleted control fails its own check; the other checks still run."""
+    review = _review(
+        [{"position": 3, "expected": ["C"]}],
+        pos_ctl=[
+            {"id": "UniProtKB:C0H4F3", "control_position": 3, "control_residue": "C"},
+            {"id": "UniProtKB:P00002", "control_position": 3, "control_residue": "C"},
+        ],
+    )
+    cache = _InactiveStub({"P00001": TOY, "P00002": TOY})
+    results = [r for r in check_controls(review, cache) if r.kind == "CONTROL_RESIDUE"]
+    by_acc = {r.accession: r for r in results}
+    assert by_acc["UniProtKB:C0H4F3"].outcome is Outcome.FAIL
+    assert "inactive" in by_acc["UniProtKB:C0H4F3"].message
+    assert by_acc["UniProtKB:P00002"].outcome is Outcome.PASS
+
+
+def test_inactive_anchor_is_reported_as_a_failure_not_a_crash():
+    review = _review([{"position": 3, "expected": ["C"]}])
+    review["residue_sites"][0]["anchor"] = {"id": "UniProtKB:C0H4F3"}
+    results = check_anchor_residues(review, _InactiveStub({}))
+    assert [r.outcome for r in results] == [Outcome.FAIL]
+    assert "inactive" in results[0].message
+
+
 @pytest.mark.integration
 def test_real_pgrp_family_review_validates():
     """The committed PGRP family review checks out against real UniProt sequences."""
@@ -311,9 +369,11 @@ def test_tandem_residues_hide_off_by_one_errors():
 class FakePaintRow:
     """Stand-in for module_validator.PaintAnnotationRow."""
 
-    def __init__(self, family: str, go_id: str):
+    def __init__(self, family: str, go_id: str, evidence: str = "IBD", negated: bool = False):
         self.family = family
         self.go_id = go_id
+        self.evidence = evidence
+        self.negated = negated
 
 
 PAINT = {
@@ -357,7 +417,8 @@ def test_node_assessment_outcomes(node, term, outcome, fragment):
     """A node/term pairing is checked against the family's own PAINT rows."""
     from ai_gene_review.validation.family_residue_validator import check_node_assessments
 
-    (result,) = check_node_assessments(_node_review(node, term), PAINT)
+    results = check_node_assessments(_node_review(node, term), PAINT)
+    (result,) = [r for r in results if r.kind != "NODE_POLARITY"]
     assert result.outcome is outcome
     assert fragment in result.message
 
@@ -372,6 +433,77 @@ def test_cross_family_node_names_the_real_family():
     assert "PTHR99999" in result.message
 
 
+LOSS_PAINT = {
+    "PANTHER:PTN000002": [FakePaintRow("PTHR00001", "GO:0007259", "IRD", True)],
+    "PANTHER:PTN000003": [FakePaintRow("PTHR00001", "GO:0004181", "IKR", True)],
+}
+
+
+def _loss_review(node, verdict, **declared):
+    return {
+        "family_id": "PANTHER:PTHR00001",
+        "node_assessments": [
+            {
+                "node_id": node,
+                "asserted_term": {"id": LOSS_PAINT[node][0].go_id, "label": "x"},
+                "assessment": verdict,
+                "assessment_reason": "test",
+                **declared,
+            }
+        ],
+    }
+
+
+@pytest.mark.parametrize(
+    "node,verdict,declared,outcome,fragment",
+    [
+        # a correctly declared IRD judged with a loss verdict
+        ("PANTHER:PTN000002", "LOSS_CONTRADICTED", {"negated": True, "evidence": "IRD"},
+         Outcome.PASS, "agree"),
+        ("PANTHER:PTN000003", "LOSS_SUPPORTED", {"negated": True, "evidence": "IKR"},
+         Outcome.PASS, "agree"),
+        # the pre-existing TYK2 pattern: an IRD assessed with a gain verdict, undeclared
+        ("PANTHER:PTN000002", "WRONG_NODE", {}, Outcome.FAIL, "declare negated: true"),
+        # declared as a loss but judged with a gain verdict
+        ("PANTHER:PTN000002", "SOUND", {"negated": True, "evidence": "IRD"},
+         Outcome.FAIL, "is for gain rows"),
+        # wrong evidence code for the row
+        ("PANTHER:PTN000002", "LOSS_SUPPORTED", {"negated": True, "evidence": "IKR"},
+         Outcome.FAIL, "PAINT records ['IRD']"),
+        # UNRESOLVED is allowed on either polarity
+        ("PANTHER:PTN000002", "UNRESOLVED", {"negated": True, "evidence": "IRD"},
+         Outcome.PASS, "agree"),
+    ],
+)
+def test_loss_rows_need_loss_declarations(node, verdict, declared, outcome, fragment):
+    """IRD/IKR rows must be declared negated and judged with LOSS_* verdicts."""
+    from ai_gene_review.validation.family_residue_validator import check_node_assessments
+
+    results = check_node_assessments(_loss_review(node, verdict, **declared), LOSS_PAINT)
+    (result,) = [r for r in results if r.kind == "NODE_POLARITY"]
+    assert result.outcome is outcome
+    assert fragment in result.message
+
+
+@pytest.mark.parametrize(
+    "verdict,declared,outcome",
+    [
+        ("SOUND", {}, Outcome.PASS),
+        ("LOSS_SUPPORTED", {}, Outcome.FAIL),  # loss verdict on a gain row
+        ("SOUND", {"negated": True, "evidence": "IRD"}, Outcome.FAIL),  # gain declared as loss
+    ],
+)
+def test_gain_rows_reject_loss_declarations(verdict, declared, outcome):
+    """An IBD row may not be declared negated or judged with a LOSS_* verdict."""
+    from ai_gene_review.validation.family_residue_validator import check_node_assessments
+
+    review = _node_review("PANTHER:PTN000001", "GO:0008745")
+    review["node_assessments"][0].update({"assessment": verdict, **declared})
+    results = check_node_assessments(review, PAINT)
+    (result,) = [r for r in results if r.kind == "NODE_POLARITY"]
+    assert result.outcome is outcome
+
+
 @pytest.mark.integration
 def test_real_pgrp_node_assessments_check_out():
     """The committed PGRP node assessments match the cached PAINT slice."""
@@ -379,7 +511,10 @@ def test_real_pgrp_node_assessments_check_out():
         Path("interpro/panther/PTHR11022/PTHR11022-review.yaml"),
         Path(".cache/uniprot_seq"),
     )
-    node_results = [r for r in results if r.accession.startswith("GO:")]
+    node_results = [
+        r for r in results
+        if r.accession.startswith("GO:") and r.kind != "NODE_PROPOSED_ACTION"
+    ]
     # two node/term pairings plus a seed check for each
     assert len(node_results) == 4, [str(r) for r in node_results]
     assert all(r.outcome is Outcome.PASS for r in node_results)
@@ -561,7 +696,12 @@ def test_sf0_really_contains_both_seld_and_sps1():
     """
     from ai_gene_review.etl.panther_families import load_member_index
 
-    members = load_member_index(Path("interpro/panther/panther-members.tsv"))
+    from ai_gene_review.etl.panther_families import member_index_path
+
+    path = member_index_path(Path("."))
+    if not path.exists():
+        pytest.skip("member index not built; run `just ensure-panther-members`")
+    members = load_member_index(path)
     assert members["P16456"] == "PTHR10256:SF0"   # SelD, catalytic
     assert members["O18373"] == "PTHR10256:SF0"   # Sps1, arginine-substituted
     assert members["Q99611"] == "PTHR10256:SF1"   # SEPHS2, the catalytic branch
@@ -775,3 +915,237 @@ def test_own_family_subfamily_in_a_subfamily_slot_is_accepted():
         r for r in check_panther_ids(review, PANTHER_LABELS, PANTHER_MEMBERS)
         if r.outcome is Outcome.FAIL
     ]
+
+
+def test_member_matching_only_uniprot_family_is_unresolved_not_failed():
+    """PANTHER's files and UniProt can disagree; either is accepted, with a report."""
+    from ai_gene_review.validation.family_residue_validator import check_panther_ids
+
+    review = _panther_review(members=("P00002",))
+    failing = [
+        r for r in check_panther_ids(review, PANTHER_LABELS, PANTHER_MEMBERS)
+        if r.kind == "PANTHER_MEMBERSHIP"
+    ]
+    assert [r.outcome for r in failing] == [Outcome.FAIL]
+
+    results = [
+        r for r in check_panther_ids(
+            review, PANTHER_LABELS, PANTHER_MEMBERS,
+            alternates={"P00002": "PTHR00001:SF1"},
+        )
+        if r.kind == "PANTHER_MEMBERSHIP"
+    ]
+    assert [r.outcome for r in results] == [Outcome.UNRESOLVED]
+    assert "sources disagree" in results[0].message
+
+
+# --- site_source: STRUCTURE -------------------------------------------------
+#
+# Added with the STRUCTURE enum value, for sites whose positions are read from
+# ligand contacts in deposited coordinates rather than from a feature table.
+
+SCHEMA_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "src"
+    / "ai_gene_review"
+    / "schema"
+    / "family_review.yaml"
+)
+
+
+def test_site_source_enum_offers_structure():
+    """A site read off deposited coordinates has a source value of its own.
+
+    Without it, such sites have to be filed as LITERATURE, which conflates "a paper
+    says these residues matter" with "these are the residues contacting the ligand in
+    this PDB entry" -- the latter being recomputable from the entry and the cutoff.
+    """
+    schema = yaml.safe_load(SCHEMA_PATH.read_text())
+    values = schema["enums"]["SiteSourceEnum"]["permissible_values"]
+    assert "STRUCTURE" in values
+    assert values["STRUCTURE"]["description"].strip()
+
+
+@pytest.mark.parametrize(
+    "source",
+    ["UNIPROT_FEATURE", "MCSA", "LITERATURE", "STRUCTURE", "ALIGNMENT_INFERENCE"],
+)
+def test_every_site_source_validates_the_same_residues(source):
+    """site_source records provenance only; it must not change residue checking."""
+    review = _review([{"position": 3, "expected": ["C"]}])
+    review["residue_sites"][0]["site_source"] = source
+    results = check_anchor_residues(review, CACHE)
+    assert [r.outcome for r in results] == [Outcome.PASS]
+
+
+# --- atom-level contact provenance on a residue ----------------------------
+#
+# A STRUCTURE-sourced site should remember WHICH atom makes the contact. The
+# motivating case: NTCP E257 coordinates sodium through its carboxylate (OE2,
+# 2.76 A) in PDB 7ZYI, while in 9QZQ the nearest atom is the backbone O at
+# 2.94 A. Residue-level provenance cannot tell those apart, and a backbone-only
+# contact is sequence-independent -- the distinction that stops a substitution
+# being scored as loss of a ligand.
+
+
+def test_residue_carries_atom_level_contact_provenance():
+    schema = yaml.safe_load(SCHEMA_PATH.read_text())
+    residue_slots = schema["classes"]["Residue"]["slots"]
+    for slot in (
+        "contact_atom",
+        "contact_via",
+        "contact_distance",
+        "contact_ligand",
+        "contact_structure",
+    ):
+        assert slot in residue_slots, f"Residue should accept {slot}"
+        assert schema["slots"][slot].get("description")
+    assert set(schema["enums"]["ContactViaEnum"]["permissible_values"]) == {
+        "SIDE_CHAIN",
+        "MAIN_CHAIN",
+    }
+
+
+def test_atom_provenance_is_optional_and_does_not_affect_checking():
+    """Provenance is recorded, not enforced: residue checking is unchanged."""
+    plain = _review([{"position": 3, "expected": ["C"]}])
+    annotated = _review([{
+        "position": 3,
+        "expected": ["C"],
+        "contact_atom": "SG",
+        "contact_via": "SIDE_CHAIN",
+        "contact_distance": 2.76,
+        "contact_ligand": "NA",
+        "contact_structure": "PDB:7ZYI",
+    }])
+    assert [r.outcome for r in check_anchor_residues(plain, CACHE)] == [Outcome.PASS]
+    assert [r.outcome for r in check_anchor_residues(annotated, CACHE)] == [Outcome.PASS]
+
+
+# --- PANTHER switch transition window ---------------------------------------
+# The previous release had PTHR00001:SF7 ("OLD SUBFAMILY") holding P00002, and named
+# SF1 "AN OLD NAME". In the current release SF7 is gone, SF1 is renamed and P00002
+# has moved to SF9 (see PANTHER_LABELS / PANTHER_MEMBERS above).
+
+def _previous():
+    from ai_gene_review.etl.panther_families import PreviousRelease
+    return PreviousRelease(
+        "19.0",
+        {**PANTHER_LABELS, "PANTHER:PTHR00001:SF1": "AN OLD NAME",
+         "PANTHER:PTHR00001:SF7": "OLD SUBFAMILY"},
+        {"P00001": "PTHR00001:SF1", "P00002": "PTHR00001:SF7"},
+    )
+
+
+def _outcomes(review, previous):
+    from ai_gene_review.validation.family_residue_validator import check_panther_ids
+    return [
+        (r.kind, r.outcome)
+        for r in check_panther_ids(review, PANTHER_LABELS, PANTHER_MEMBERS, previous=previous)
+        if r.outcome is not Outcome.PASS
+    ]
+
+
+@pytest.mark.parametrize(
+    ("review", "kind"),
+    [
+        # id gone in the current release, but valid (with this label) in the previous one
+        (_panther_review(sf_id="PANTHER:PTHR00001:SF7", sf_label="OLD SUBFAMILY",
+                         members=()), "PANTHER_ID"),
+        # id renamed: the review still carries the previous release's name
+        (_panther_review(sf_label="AN OLD NAME"), "PANTHER_LABEL"),
+    ],
+)
+def test_transition_downgrades_previous_release_ids_and_labels(review, kind):
+    assert _outcomes(review, None) == [(kind, Outcome.FAIL)]
+    assert _outcomes(review, _previous()) == [(kind, Outcome.UNRESOLVED)]
+
+
+def test_transition_downgrades_membership_that_matched_the_previous_release():
+    review = _panther_review(sf_id="PANTHER:PTHR00001:SF7", sf_label="OLD SUBFAMILY",
+                             members=("P00002",))
+    assert _outcomes(review, None) == [
+        ("PANTHER_ID", Outcome.FAIL), ("PANTHER_MEMBERSHIP", Outcome.FAIL)]
+    assert _outcomes(review, _previous()) == [
+        ("PANTHER_ID", Outcome.UNRESOLVED), ("PANTHER_MEMBERSHIP", Outcome.UNRESOLVED)]
+
+
+def test_transition_fails_a_gone_id_whose_label_was_never_right():
+    """A gone id is deferred only while it carries the previous release's name, as in modules."""
+    review = _panther_review(sf_id="PANTHER:PTHR00001:SF7", sf_label="COMPLETELY WRONG",
+                             members=())
+    assert _outcomes(review, _previous()) == [("PANTHER_ID", Outcome.FAIL)]
+
+
+def test_transition_does_not_excuse_errors_wrong_in_both_releases():
+    """A label or membership that was never right still fails during a switch."""
+    wrong_label = _panther_review(sf_label="PLAUSIBLE BUT WRONG")
+    assert _outcomes(wrong_label, _previous()) == [("PANTHER_LABEL", Outcome.FAIL)]
+    wrong_member = _panther_review(members=("P00002",))  # SF9 now, SF7 before; never SF1
+    assert _outcomes(wrong_member, _previous()) == [("PANTHER_MEMBERSHIP", Outcome.FAIL)]
+
+
+def test_transition_defers_unclassified_member_of_a_changed_id():
+    """A member the previous release did not classify, under an id the bump renamed,
+    waits for the remap; under an id the bump left alone, a mismatch still fails."""
+    renamed_sf = _panther_review(sf_label="AN OLD NAME", members=("P00003",))
+    members = {**PANTHER_MEMBERS, "P00003": "PTHR00001:SF9"}
+    from ai_gene_review.validation.family_residue_validator import check_panther_ids
+    outcomes = [
+        (r.kind, r.outcome)
+        for r in check_panther_ids(renamed_sf, PANTHER_LABELS, members, previous=_previous())
+        if r.outcome is not Outcome.PASS
+    ]
+    assert outcomes == [("PANTHER_LABEL", Outcome.UNRESOLVED), ("PANTHER_MEMBERSHIP", Outcome.UNRESOLVED)]
+    unchanged_family = {**_previous().labels, "PANTHER:PTHR00001:SF1": "A SUBFAMILY"}
+    from ai_gene_review.etl.panther_families import PreviousRelease
+    same_name = PreviousRelease("19.0", unchanged_family, _previous().members)
+    outcomes = [
+        (r.kind, r.outcome)
+        for r in check_panther_ids(_panther_review(members=("P00003",)), PANTHER_LABELS, members,
+                                   previous=same_name)
+        if r.outcome is not Outcome.PASS
+    ]
+    assert outcomes == [("PANTHER_MEMBERSHIP", Outcome.FAIL)]
+
+
+@pytest.mark.parametrize(
+    ("sf_id", "kind"),
+    [
+        # a family id in a slot that requires a subfamily
+        ("PANTHER:PTHR00003", "PANTHER_FAMILY_SCOPE"),
+        # a subfamily of a different family
+        ("PANTHER:PTHR00002:SF4", "PANTHER_FAMILY_SCOPE"),
+    ],
+)
+def test_transition_does_not_defer_release_independent_scope_errors(sf_id, kind):
+    """An id gone in the current release still fails a scope rule it breaks in every release."""
+    from ai_gene_review.etl.panther_families import PreviousRelease
+    from ai_gene_review.validation.family_residue_validator import check_panther_ids
+    # current release: the review's family exists, the id in the subfamily slot is gone
+    labels = {"PANTHER:PTHR00001": "SOME FAMILY", "PANTHER:PTHR00001:SF1": "A SUBFAMILY"}
+    previous = PreviousRelease("19.0", {sf_id: "OLD NAME"}, {})
+    review = {"family_id": "PANTHER:PTHR00001", "family_name": "SOME FAMILY",
+              "subfamilies": [{"subfamily_id": sf_id, "label": "OLD NAME"}]}
+    outcomes = [(r.kind, r.outcome) for r in check_panther_ids(review, labels, {}, previous=previous)
+                if r.site_id == "subfamilies[].subfamily_id"]
+    assert outcomes == [(kind, Outcome.FAIL)]
+
+
+def test_load_previous_release_is_offline_and_off_when_not_cached(tmp_path, capsys):
+    from ai_gene_review.etl.panther_families import load_previous_release
+    assert load_previous_release(tmp_path, "99.0") is None
+    assert "switch allowance is off" in capsys.readouterr().err
+
+    cache = tmp_path / ".cache" / "panther"
+    cache.mkdir(parents=True)
+    (cache / "PANTHER99.0_HMM_classifications").write_text("PTHR00001:SF7\tOLD SUBFAMILY\n")
+    (cache / "PTHR99.0_human").write_text(
+        "HUMAN|HGNC=1|UniProtKB=P00002\tP00002\tX\tPTHR00001:SF7\tOLD SUBFAMILY\n")
+    previous = load_previous_release(tmp_path, "99.0")  # other organisms absent: not fetched
+    assert previous is not None
+    err = capsys.readouterr().err
+    listed = err.split("classifications for ", 1)[1].split(" are not cached", 1)[0].split(", ")
+    assert "mouse" in listed and "human" not in listed
+    assert previous.labels == {"PANTHER:PTHR00001:SF7": "OLD SUBFAMILY"}
+    assert previous.members == {"P00002": "PTHR00001:SF7"}

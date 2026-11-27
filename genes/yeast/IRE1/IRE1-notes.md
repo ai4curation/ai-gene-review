@@ -1,5 +1,28 @@
 # IRE1 review notes
 
+## 2026-09-30 -- apoptosis IBA and broad-MF cleanup for APOPTOSIS
+
+The only death-related yeast IRE1 annotation is the GO_Central IBA to
+`GO:0070059 intrinsic apoptotic signaling pathway in response to endoplasmic
+reticulum stress`. I left this as `MARK_AS_OVER_ANNOTATED` and tightened the
+propagation review: the current local PANTHER cache places conserved ER
+localization, RNA endonuclease activity, Ser/Thr kinase activity, and
+IRE1-mediated UPR on the pan-eukaryotic IRE1-family node PTN000359335, but the
+ER-stress apoptosis term now appears on PTN000359344 with mouse ERN seeds. Yeast
+IRE1 is an adaptive IRE1-HAC1 UPR sensor/kinase/RNase, not a mediator of the
+metazoan IRE1/ERN apoptosis branch.
+
+Also cleaned the whole review before marking it complete: broad direct molecular
+function ancestors such as nucleotide binding, catalytic activity, kinase
+activity, transferase activity, RNA nuclease activity, hydrolase activity, and
+metal ion binding now `MODIFY` to ATP binding, protein Ser/Thr kinase activity,
+RNA endonuclease activity, or magnesium ion binding as appropriate. The generic
+IntAct `protein binding` row for DCR2 was changed to `REMOVE`; the DCR2-Ire1
+interaction is real [PMID:16990850 "Dcr2 physically interacts in vivo with
+Ire1-S840E,S841E, which mimics phosphorylated Ire1, and Dcr2 de-phosphorylates
+Ire1 in vitro"], but the specific phosphatase activity belongs to Dcr2 and
+`GO:0005515` adds no useful IRE1-side activity.
+
 ## 2026-09-02 Update: nuclear-localization annotation (GO:0005634, IDA, PMID:17035634)
 
 Audited the existing review for oversights. The IDA annotation of GO:0005634 (nucleus)

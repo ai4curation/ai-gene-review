@@ -1,8 +1,10 @@
 ---
 title: "Hypochlorous Acid Metabolic Process Terms — Obsoletion"
-maturity: SCOPING
+maturity: IN_PROGRESS
+last_reviewed: 2026-10-16
 tags: [OBSOLETION]
 species: [mouse]
+genes: [Mpo]
 manifest:
   slides:
     - href: HYPOCHLOROUS_ACID_OBSOLETION/slides/HYPOCHLOROUS_ACID_OBSOLETION-slides.html
@@ -15,20 +17,25 @@ manifest:
 # Hypochlorous Acid Metabolic Process Terms — Obsoletion
 
 **Bottom line:** GO has obsoleted all three hypochlorous acid (HOCl)
-process terms: the grouping term GO:0002148 went first, and OLS now lists
-the biosynthetic (GO:0002149) and catabolic (GO:0002150) terms as obsolete
-too. Their obsolete definitions give the final reason, "this BP term
-represents a MF term"; the originating ticket (go-ontology#22891) had
-instead flagged the wrong `is_a` parent (see Overview). HOCl is made in one
-enzymatic step, myeloperoxidase turning H2O2 and chloride into HOCl, so a
-process term adds nothing to the enzyme activity. We inventoried the
-annotations: one mouse Mpo IMP row (MGI, PMID:10085024), one rat Mpo ISO
-row copied from it, and nothing on the catabolic term. No review in this
-repo uses these terms and Mpo is not reviewed. Scoped, not yet started:
-the status notes below predate the obsoletion, and the molecular function
-an earlier draft proposed as the anchor was wrong: OLS labels GO:0140825
-*lactoperoxidase activity*, not an HOCl-forming chloride peroxidase
-activity (corrected in the body below).
+process terms — the grouping term GO:0002148 first, then the biosynthetic
+(GO:0002149) and catabolic (GO:0002150) terms — with the obsolete records
+giving the reason "this BP term represents a MF term"; the originating ticket
+(go-ontology#22891) had instead flagged the wrong `is_a` parent (see Overview).
+The affected annotation was a single MGI IMP on mouse Mpo (PMID:10085024), plus
+a rat ISO copy. **Both are already gone:** a fresh `just fetch-gene mouse Mpo`
+returns 85 GOA rows (84 distinct annotations) with no GO:0002149, and QuickGO returns 65 rat Mpo rows
+with none to GO:0002149, so the migration landed upstream and the rat row
+followed the mouse one as predicted. Mouse **Mpo** is now fully reviewed here
+(`genes/mouse/Mpo/`), which closes the deferred-review item and settles the MF
+question: GO has **no** term for the myeloperoxidase reaction
+(chloride + H2O2 + H+ = hypochlorous acid + H2O, EC 1.11.2.2, **RHEA:28218** —
+*not* RHEA:43232, which is isatin hydrolase), and the review therefore accepts
+GO:0004601 *peroxidase activity* — which carries "myeloperoxidase activity" as a
+narrow synonym and the Reactome xref for MPO-dependent HOCl production — while
+proposing a child term for the reaction itself (*hypochlorous acid synthase
+activity*, named so as not to read as a child of GO:0016691). GO:0016691 is organic
+chlorination and GO:0140825 is lactoperoxidase activity, as suspected.
+Remaining work is upstream (create the MF term) or optional (a human MPO review).
 
 ## Overview
 
@@ -43,22 +50,24 @@ The two rationales come from different stages. The originating ticket,
 go-ontology#22891, argued that the original parentage
 (`is_a` *organic acid metabolic process*, GO:0006082) is incorrect because
 hypochlorous acid contains no carbon and so is not an organic acid. The
-grouping-term obsoletion at the parent level (go-ontology#30524) already
-removed GO:0002148, which had no remaining annotations. The two child terms
-carried annotations and needed a curatorial decision first. When they were
-obsoleted, the reason recorded in their definitions was different: "The
-reason for obsoletion is that this BP term represents a MF term" (OLS,
-GO:0002149), i.e. HOCl formation is a single enzymatic step best captured
-as an MF.
+grouping-term obsoletion at the parent level (go-ontology#30524) removed
+GO:0002148, which had no remaining annotations. GO has since obsoleted the
+two child terms too; their obsolete definitions record a different final
+reason, "The reason for obsoletion is that this BP term represents a MF
+term" (QuickGO, GO:0002149/GO:0002150, rechecked 2026-10-16). The MGI mouse
+Mpo row has since left GO:0002149 in the GOA download, and the rat ISO copy
+with it, so the AI Gene Review action — review Mpo against the MF and
+host-defence context together — has now been carried out.
 
-This project tracks the impact on AI Gene Review. No genes in scope are
-currently reviewed here.
+This project tracks the impact on AI Gene Review. Mouse `Mpo` is reviewed as
+of 2026-10-16.
 
 ## Upstream tickets
 
-- Annotation tracker: [geneontology/go-annotation#6404](https://github.com/geneontology/go-annotation/issues/6404)
-- Ontology ticket (incorrect is-a parent): [geneontology/go-ontology#22891](https://github.com/geneontology/go-ontology/issues/22891)
-- Earlier grouping-term cleanup (GO:0002148 already obsoleted): [geneontology/go-ontology#30524](https://github.com/geneontology/go-ontology/issues/30524) — closed
+- Local follow-up tracker: [ai4curation/ai-gene-review#4098](https://github.com/ai4curation/ai-gene-review/issues/4098)
+- Annotation tracker: [geneontology/go-annotation#6404](https://github.com/geneontology/go-annotation/issues/6404) — open as of 2026-10-04
+- Ontology ticket (incorrect is-a parent): [geneontology/go-ontology#22891](https://github.com/geneontology/go-ontology/issues/22891) — closed 2026-06-08
+- Earlier grouping-term cleanup (GO:0002148 already obsoleted): [geneontology/go-ontology#30524](https://github.com/geneontology/go-ontology/issues/30524) — closed 2025-12-05
 - Affected annotations spreadsheet: [Google Sheet](https://docs.google.com/spreadsheets/d/1cEjK-1SbwIesQymn2RpMVtWx5mVwzO9f60GtILYOH3o/edit?usp=sharing)
 - Impacted groups (per upstream issue): MGI — 1 annotation to GO:0002149
 
@@ -86,12 +95,37 @@ for it, but OLS labels GO:0140825 *lactoperoxidase activity* ("2 a phenolic
 donor + H2O2 = 2 a phenolic radical donor + 2 H2O"), which is not the
 HOCl-forming reaction. The nearest GO term found by name,
 GO:0016691 *chloride peroxidase activity*, is defined as organic
-chlorination ("2 R-H + 2 chloride + H2O2 = 2 R-Cl + 2 H2O"), so whether GO
-has an MF term matching RHEA:43232 still needs checking (checked in OLS,
-2026-09-26).
-The pending obsoletion is therefore a clean Type B refresh:
+chlorination ("2 R-H + 2 chloride + H2O2 = 2 R-Cl + 2 H2O").
 
-- Migrate the IMP annotation away from the soon-to-be-obsolete BP term to
+**Resolved 2026-10-16.** Two corrections and one conclusion:
+
+1. The reaction identifier used earlier on this page and in issue #4098,
+   RHEA:43232, is wrong: it is `isatin + H2O = isatinate + H(+)`. The
+   myeloperoxidase reaction is **RHEA:28218**, which is what UniProt P11247
+   itself cites ("Reaction=chloride + H2O2 + H(+) = hypochlorous acid + H2O;
+   Xref=Rhea:RHEA:28218 … EC=1.11.2.2").
+2. Searching GO for RHEA:28218 and EC:1.11.2.2 (QuickGO term search plus an
+   xref scan of the local ontology build) returns **no term**. GO:0016691 is
+   EC:1.11.1.10 (organic chlorination) and GO:0140825 is EC:1.11.1.7; the only
+   other live HOCl-named terms are GO:1901531 *hypochlorite binding* and
+   GO:1901530 *response to hypochlorite*, neither catalytic.
+3. GO currently files this activity under **GO:0004601 peroxidase activity**,
+   which carries *myeloperoxidase activity* as a narrow synonym and the
+   Reactome xrefs R-HSA-6789126 / R-HSA-6789031 ("Myeloperoxidase (MPO)
+   produces hypochlorous acid (HOCl)"). The Mpo review therefore accepts
+   GO:0004601 as the most precise existing term and proposes a child,
+   *hypochlorous acid synthase activity* (skos:exactMatch RHEA:28218) - named to
+   avoid reading as a child of GO:0016691 - modelled on the sibling term GO:0036393
+   *thiocyanate peroxidase activity* (RHEA:69416), which already exists for the
+   pseudohalide version of the same reaction and is annotated to Mpo by the Rhea
+   pipeline. Creating the term is an upstream GO request.
+The cached human neutrophil extracellular trap GO-CAM `68fac5ed00000028`
+already models human MPO as GO:0004601 *peroxidase activity* with H2O2 input
+and HOCl output, which reinforces the GO-CAM/MF shape of the assertion
+while leaving the need for a precise HOCl-forming MF term unresolved.
+The GOA update is therefore a clean Type B refresh:
+
+- Migrate the IMP annotation away from the now-obsolete BP term to
   whichever target the upstream ticket settles on.
 - Most likely target classes the curators are choosing between are:
   - `GO:0042744 hydrogen peroxide catabolic process` (since Mpo consumes H2O2),
@@ -111,50 +145,51 @@ so this remains passive tracking until the upstream decision lands.
 
 ## Impact on this repo
 
-- No genes annotated to GO:0002148/0002149/0002150 are currently reviewed.
-- The mouse `genes/mouse/` tree exists and contains other genes, so adding
-  Mpo is a natural extension — but the work should wait until upstream
-  has a final replacement target so the review can record the correct
-  `MODIFY` / `proposed_replacement_terms` decision.
+- Mouse **Mpo** (P11247) is now reviewed: `genes/mouse/Mpo/Mpo-ai-review.yaml`
+  (84 distinct GOA annotations, status COMPLETE) with working notes in
+  `genes/mouse/Mpo/Mpo-notes.md`.
+- The obsoleted terms are **not** in the current GOA download for mouse Mpo, nor
+  in QuickGO's 65 rows for rat Mpo, so no review in this repo carries
+  GO:0002148/0002149/0002150 and none needs a `MODIFY` to a replacement term.
+- The chemistry the obsoleted BP term described is captured in the review by the
+  MF rows `GO:0004601 peroxidase activity` (IDA and IMP, both PMID:10085024 —
+  the same reference that backed GO:0002149) and by the process rows
+  `GO:0042744 hydrogen peroxide catabolic process` (IDA and IMP from the same
+  paper), all accepted.
+- Human `MPO` (P05164) is still unreviewed. It is the source of most ISS/ISO
+  rows in the mouse review and appears twice in the cached NET GO-CAM
+  `68fac5ed00000028`, so it is a worthwhile review on its own merits — but it
+  carried no GO:0002149 annotation and is not blocked by the obsoletion. Left as
+  an optional follow-on rather than a project dependency.
 - No isolated InterPro2GO, UniProt-Keywords, or UniRule mappings to any
   of the three terms are listed in the upstream issue.
 
-## Candidate gene for review (deferred)
+## Genes in scope
 
-| Tier | Gene | Organism | UniProt | Existing in repo? | Notes |
+| Tier | Gene | Organism | UniProt | Reviewed here? | Status |
 |---|---|---|---|---|---|
-| 1 | Mpo (myeloperoxidase) | Mus musculus | P11247 | No | Only gene with a direct IMP annotation to GO:0002149. Carries 20+ other GOA rows; a full `/review` would cover the broader heme-peroxidase / neutrophil-degranulation context. |
-| (follow-on) | Mpo | Rattus norvegicus | A0A0G2K1A2 | No | ISO descendant; will follow the mouse migration automatically. |
-| (follow-on) | MPO | Homo sapiens | P05164 | No | Not in the upstream affected list (no direct GO:0002149 annotation) but is the human ortholog and the textbook reference for the activity; reviewing only if the upstream replacement term is interesting cross-organism. |
+| 1 | Mpo (myeloperoxidase) | Mus musculus | P11247 | **Yes (2026-10-16)** | The only gene that had a direct IMP to GO:0002149. Full review of all 84 distinct GOA annotations (85 TSV rows, one duplicated); HOCl chemistry retained as MF + H2O2 catabolism; a child of GO:0004601 proposed for the reaction. |
+| (follow-on) | Mpo | Rattus norvegicus | A0A0G2K1A2 | No | ISO descendant; verified in QuickGO this session to carry no GO:0002149 row, so it followed the mouse migration. No residual RGD follow-up. |
+| (follow-on) | MPO | Homo sapiens | P05164 | No | Human ortholog; optional review, not required by the obsoletion. |
 
-## Proposed approach
+## Remaining work
 
-1. **Wait for upstream replacement-term decision.** The current upstream
-   ticket #6404 has zero comments and the ontology ticket #22891 only
-   raises the is-a parentage problem; no obsoletion PR has been opened.
-   There is no point migrating the annotation before the target is
-   chosen, since the current MGI IMP row is otherwise well-evidenced
-   (PMID:10085024).
-2. **When upstream lands**, run `just fetch-gene mouse Mpo` and do a full
-   `/review` — Mpo is a high-yield review target regardless of the
-   obsoletion (peroxidase MF, neutrophil/granule CC, immune-defense BP,
-   well-cited literature).
-3. **Identify the MF term for HOCl formation** (RHEA:43232, EC 1.11.2.2)
-   for Mpo's `core_functions`. Do not use GO:0140825, which is
-   *lactoperoxidase activity*; check whether GO:0016691 *chloride
-   peroxidase activity* (defined as organic chlorination) fits, or whether
-   a new term is needed.
-4. **Defer the rat ISO row** — it will follow the mouse migration
-   automatically through the standard ISO pipeline.
+1. **Upstream GO ontology request** — create a molecular-function child of
+   GO:0004601 for `chloride + H2O2 + H(+) = hypochlorous acid + H2O`
+   (EC 1.11.2.2, RHEA:28218). The proposal text, with parentage and mapping,
+   is in `proposed_new_terms` of the Mpo review. Not actionable in this repo.
+2. **Upstream annotation ticket** — geneontology/go-annotation#6404 can be
+   closed once the MGI migration is confirmed on their side; the GOA download
+   already shows the row gone. (That repository is not reachable from the
+   session that made this change, so its comment state was not re-read.)
+3. **Optional** — review human `MPO` (P05164), which would also let the cached
+   NET GO-CAM `68fac5ed00000028` be assessed against a gene review.
 
 ## Priority
 
-**Low.** Only one direct experimental annotation is affected, the
-obsoletion has no chosen target yet upstream, and the affected gene
-(Mpo) is not currently reviewed here. The opportunity is that Mpo is
-an otherwise unreviewed, well-characterized mammalian heme peroxidase
-that would extend the repo's mouse coverage, not that any existing
-review is blocked.
+**Low, and mostly finished.** One experimental annotation was affected, it has
+already migrated upstream, and the gene behind it is now reviewed. What is left
+is an ontology request that only GO can act on, plus an optional human review.
 
 ## Status
 
@@ -163,3 +198,15 @@ review is blocked.
   go-ontology#30524 (closed). Two child BP terms (GO:0002149,
   GO:0002150) still active. No replacement target chosen upstream. No
   reviews started in this repo.
+- 2026-10-04 — Rechecked OLS and GitHub state. GO:0002149 and GO:0002150
+  are obsolete with the "represents a MF term" rationale; go-annotation#6404
+  remains open for the MGI row with no comments; go-ontology#22891 is
+  closed; no mouse Mpo, rat Mpo, or human MPO review exists in this repo.
+  Opened #4098 to track the deferred Mpo review and the still-unresolved MF
+  lookup for RHEA:43232 / EC 1.11.2.2.
+- 2026-10-16 — Follow-ups worked through (issue #4098). Corrected the reaction
+  identifier (RHEA:28218, not RHEA:43232) and established that GO has no MF
+  term for it; completed the mouse `Mpo` review; confirmed via GOA and QuickGO
+  that both the mouse and rat GO:0002149 rows are gone; decided human `MPO` is
+  an optional follow-on rather than a dependency. Remaining item is the upstream
+  ontology request.

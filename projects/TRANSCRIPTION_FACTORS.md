@@ -1,40 +1,48 @@
 ---
 title: "Transcription Factor Annotation Review Project"
 maturity: IN_PROGRESS
+last_reviewed: 2026-11-04
 tags: [BIOLOGY_DOMAIN, EVALUATION]
-species: [human]
+species: [human, PSEPK]
 genes: [NTN1, NTN3, HDAC4, RPS3, RFXAP, RFXANK, NME2]
 manifest:
   slides:
     - href: TRANSCRIPTION_FACTORS/slides/TRANSCRIPTION_FACTORS-slides.html
-      description: AI generated
-  artifacts:
-    - href: https://claude.ai/artifact/EWvDWn4KdWLdxxpaqqUNod
-      title: Project brief
+index_group: MAMMAL
 ---
 
 # Transcription Factor Annotation Review Project
 
 **Bottom line:** having a DNA-binding domain does not make a protein a
 transcription factor, and GO's dbTF annotations (`GO:0003700` and descendants)
-are the place where that confusion shows up. We compared the 1,448 human
-Swiss-Prot proteins with a dbTF annotation against InterPro domains, the UniProt KW-0805
-keyword set (2,376 proteins) and the GREEKC consortium's curated dbTF target
-set (1,449 proteins), then reviewed the proteins where the sets disagreed. GOA
-and GREEKC agree on 1,385 proteins, 95.6%. Seven of the 62 GOA-only proteins
-were reviewed in detail and all seven were over-annotated: the netrins NTN1
-and NTN3 had dbTF activity and cis-regulatory DNA binding REMOVEd, HDAC4, RPS3
-and RFXAP were MODIFYed to `GO:0003713` transcription coactivator activity,
-RFXANK's DNA-binding row was REMOVEd, and NME2's activator row was kept as
-non-core. The netrin case traced to a single PAINT node, PTN000180816, which
-grouped the netrin/laminin family PTHR10574 with the POU domain family
-PTHR11636; a family review for PTHR10574 records the root cause.
+are the place where that confusion shows up. February 2026 local snapshots
+were used to compare InterPro domains, UniProt KW-0805 proteins and the
+GREEKC consortium's 1,449-protein curated dbTF target set. In the 1,447-protein
+GOA comparison set, GOA and GREEKC agree on 1,385 proteins, 95.6%; 62 proteins
+are GOA-only. Seven of those 62 were reviewed in detail: the netrins NTN1 and
+NTN3 had dbTF activity and cis-regulatory DNA binding REMOVEd. HDAC4, RPS3,
+RFXAP and RFXANK had dbTF activator or DNA-binding rows either MODIFYed to
+`GO:0003713` transcription coactivator activity, MODIFYed to `GO:0000976`
+transcription cis-regulatory region binding, or REMOVEd. NME2 instead proved
+to be a non-core, noncanonical promoter/G-quadruplex regulator. The netrin
+case traced to POU-seeded rows at PAINT node PTN000180816 in the cached
+PTHR10574 export; a family review records the provenance discrepancy that
+still needs upstream tracing.
 
 The false-negative direction came out clean. Homeobox-fold ceramide synthases,
 the bHLH inhibitors ID1-4 that lack a basic region, and the NCOA coactivators
 are all correctly excluded from dbTF. The planned ML second pass has not been
-run: 945 proteins whose dbTF annotation is IEA-only are still waiting for DeepTFactor
-validation, and 50 GREEKC-only proteins are unreviewed.
+run: 945 proteins in the 1,448-protein February 2026 raw QuickGO extraction
+have IEA-only dbTF support and are still waiting for DeepTFactor validation,
+and 50 GREEKC-only proteins are unreviewed.
+
+The bacterial workstream now uses **P. putida KT2440 (PSEPK)** as its pilot.
+The [bacterial regulon evidence plan](TRANSCRIPTION_FACTORS/bacterial-regulon-evidence.md)
+defines a genome-wide TF census and separately tracks TF identity, regulatory
+relationships, and expression-module membership. Existing iModulonDB code and a
+BenR report provide a prototype. A [provisional KT2440 census](P_PUTIDA/tf_census/data/coverage.md)
+now reconciles regulator identities and existing reviews; repairing module
+membership/weight import semantics still precedes batch use for curation.
 
 ## Objective
 
@@ -45,11 +53,13 @@ Use AI/ML tools as a **second-pass review** to validate, challenge, and enhance 
 ### The Problem
 
 Current GO annotations for TFs rely heavily on:
+
 - Pfam/InterPro domain detection (HMMs)
 - Sequence homology (BLAST)
 - Manual curation from literature
 
 These methods have limitations:
+
 - Miss novel TF families with no homology to known TFs
 - Cannot distinguish functional subtypes (activator vs repressor)
 - Don't capture proteins that lack canonical DNA-binding domains but function as cofactors
@@ -85,6 +95,7 @@ Input: UniProt sequence
 ```
 
 **Discrepancy flags:**
+
 - GOA says TF but DeepTFactor says non-TF (or vice versa)
 - DeepTFactor highlights non-canonical regions (no Pfam DBD match)
 - Protein clusters with TFs in embedding space but lacks TF annotation
@@ -92,21 +103,23 @@ Input: UniProt sequence
 ### Phase 2: Functional subtype analysis
 
 Current GO doesn't cleanly distinguish:
+
 - Sequence-specific DNA-binding TFs vs general TFs
 - Transcriptional activators vs repressors
 - Pioneer factors vs non-pioneer factors
 - Direct DNA binders vs cofactors
 
 **Approach:**
+
 1. Extract proteins with GO:0003700 (DNA-binding TF activity) and children
 2. Cross-reference with:
-   - GO:0001228 (activator) vs GO:0001227 (repressor)
-   - Presence/absence of transactivation domains
-   - Literature evidence codes (IDA, IMP vs IEA, ISS)
+    - GO:0001228 (activator) vs GO:0001227 (repressor)
+    - Presence/absence of transactivation domains
+    - Literature evidence codes (IDA, IMP vs IEA, ISS)
 3. Flag proteins with:
-   - Only IEA evidence for TF function
-   - Conflicting activator/repressor annotations
-   - TF annotation but no detectable DBD
+    - Only IEA evidence for TF function
+    - Conflicting activator/repressor annotations
+    - TF annotation but no detectable DBD
 
 ### Phase 3: Structure-based validation
 
@@ -124,26 +137,25 @@ Input: UniProt ID
 ```
 
 **Use cases:**
+
 - Validate DBD predictions via structural fold
 - Identify potential DNA-binding surfaces
 - Link "dark" proteins to annotated TF families via structure
 
-### Phase 4: Transcriptomic validation (where available)
+### Phase 4: Transcriptomic comparison (bacterial pilot)
 
-For bacterial TFs, leverage iModulon data:
+Use iModulonDB to compare expression modules with independently supported
+regulatory relationships. Membership does not identify a protein as a TF, prove
+direct regulation, or establish an activation/repression sign. A regulator can
+control a module without belonging to it, and a module can reflect multiple
+regulators or a physiological response.
 
-```
-Input: Gene symbol
-    │
-    ├─► iModulonDB lookup
-    │   └─► Is this gene associated with a known iModulon?
-    │
-    └─► Compare predicted regulon with GO annotations
-```
-
-**Validation criteria:**
-- TF annotation supported by iModulon membership
-- Predicted target genes consistent with GO BP annotations
+Track the published regulator assignment separately from module membership and
+from each experimentally supported TF-target relationship. Overlap metrics use
+the source's reference regulon; they are not independent validation when that
+same regulon was used to name the module. The
+[workstream plan](TRANSCRIPTION_FACTORS/bacterial-regulon-evidence.md) specifies
+the KT2440 pilot, source provenance, import repairs, and completion criteria.
 
 ## Implementation
 
@@ -156,7 +168,7 @@ Input: Gene symbol
 | ESM-2 | Meta AI | HuggingFace / local |
 | AlphaFold DB | EBI | REST API for structures |
 | Foldseek | [GitHub](https://github.com/steineggerlab/foldseek) | Local or web server |
-| iModulonDB | [imodulondb.org](https://imodulondb.org) | Web API |
+| iModulonDB | [imodulondb.org](https://imodulondb.org) | Existing supplementary-data prototype; repairs tracked in bacterial workstream |
 
 ### Data sources
 
@@ -195,7 +207,7 @@ existing_annotations:
 
 ### High priority targets
 
-1. **Human TFs with IEA-only evidence**: ~200 proteins
+1. **Human TFs with IEA-only evidence**: 945 proteins
 2. **Proteins with conflicting annotations**: activator AND repressor
 3. **"TF" annotations lacking any DBD domain**: potential cofactors
 4. **Bacterial y-ome candidates**: uncharacterized E. coli proteins predicted as TFs
@@ -205,6 +217,7 @@ existing_annotations:
 | Organism | Rationale |
 |----------|-----------|
 | Human | Clinical relevance, most annotations |
+| P. putida KT2440 (PSEPK) | Bacterial regulon evidence pilot; existing proteome inventory, gene reviews, and PRECISE321 prototype |
 | E. coli K-12 | Best characterized, iModulon data available |
 | S. cerevisiae | Well-studied TF network |
 | A. thaliana | Plant-specific TF families |
@@ -250,11 +263,13 @@ Two related documents exist:
 The PDF states it is "replaced by" the journal paper, but this is misleading — **both documents are needed**:
 
 **Journal paper (2021) provides:**
+
 - Formal rationale for GTF/dbTF/coTF classification
 - Peer-reviewed, citable reference
 - Conceptual framework for ontology structure
 
 **PDF guidelines (2023) provides content NOT in the paper:**
+
 - **4-question checklist** for annotation decisions
 - **Worked examples** with specific PMIDs:
   - GTF: GTF2H2 (PMID:10924514)
@@ -272,16 +287,18 @@ The PDF states it is "replaced by" the journal paper, but this is misleading —
 
 ### Human dbTF catalogue
 
-From Lovering et al. (2021) "A GO catalogue of human DNA-binding transcription factors" (PMID:34673265):
+From Lovering et al. (2021) "A GO catalogue of human DNA-binding transcription factors" (PMID:34673265) and the February 2026 local QuickGO export:
 
 | File | Description | Count |
 |------|-------------|-------|
-| `TRANSCRIPTION_FACTORS/human-dbTF-list.tsv` | UniProt ID + gene symbol for each human dbTF | 1,448 |
+| `TRANSCRIPTION_FACTORS/human-dbTF-list.tsv` | Raw QuickGO UniProt ID + gene symbol list | 1,448 |
 | `TRANSCRIPTION_FACTORS/human-dbTF-annotations-quickgo.tsv` | Full GO annotations with evidence codes | 5,020 rows |
+| `TRANSCRIPTION_FACTORS/goa-dbTF-ids.txt` | GOA dbTF IDs used in the GREEKC set comparison | 1,447 |
 
 **Source:** QuickGO API query for GO:0003700 descendants, taxon 9606, Swiss-Prot reviewed proteins.
 
 **Related resources:**
+
 - [QuickGO dbTF target set](https://www.ebi.ac.uk/QuickGO/targetset/dbTF)
 - [TFCheckpoint 2.0](https://www.tfcheckpoint.org) — cross-references 13 TF collections
 
@@ -292,53 +309,65 @@ From Lovering et al. (2021) "A GO catalogue of human DNA-binding transcription f
 ### 2026-02-04: Initial setup
 
 1. **Literature scan** on AI/ML methods for TF prediction from sequence
-   - Created query in `TRANSCRIPTION_FACTORS/ai-methods-query.txt`
-   - Ran deep research via perplexity → `TRANSCRIPTION_FACTORS/ai-methods-tf-prediction-perplexity.md`
-   - Key finding: DeepTFactor (2021) is primary tool; transformers underexplored for TF classification
+    - Created query in `TRANSCRIPTION_FACTORS/ai-methods-query.txt`
+    - Ran deep research via perplexity → `TRANSCRIPTION_FACTORS/ai-methods-tf-prediction-perplexity.md`
+    - Key finding: DeepTFactor (2021) is primary tool; transformers underexplored for TF classification
 
 2. **Reviewed Palsson et al. 2026** (Nature Microbiology)
-   - Comprehensive review of AI for gene function discovery
-   - Covers DeepTFactor, DeepECtransformer, CLEAN, Foldseek, iModulons
-   - 43 references vs 6 from deep research scan
-   - Added to project references
+    - Comprehensive review of AI for gene function discovery
+    - Covers DeepTFactor, DeepECtransformer, CLEAN, Foldseek, iModulons
+    - 43 references vs 6 from deep research scan
+    - Added to project references
 
 3. **Gathered GO annotation guidelines**
-   - Downloaded `TRANSCRIPTION_FACTORS/TF-annotation-guidelines.pdf` (GO Consortium)
-   - Compared with journal paper (PMID:34461313)
-   - Created `TRANSCRIPTION_FACTORS/tf-synthesized-guidelines.md` — concise operational version
+    - Downloaded `TRANSCRIPTION_FACTORS/TF-annotation-guidelines.pdf` (GO Consortium)
+    - Compared with journal paper (PMID:34461313)
+    - Created `TRANSCRIPTION_FACTORS/tf-synthesized-guidelines.md` — concise operational version
 
 4. **Defined ML-based review workflow** (this page)
-   - 4-phase approach: sequence → subtype → structure → transcriptomics
-   - Output format compatible with `ai-review.yaml` schema
+    - 4-phase approach: sequence → subtype → structure → transcriptomics
+    - Output format compatible with `ai-review.yaml` schema
 
 ---
 
 ## Status
 
 ### Phase 0: Dataset Comparison ✅
-- [x] Compare GREEKC curated dbTF set with GOA annotations (95.6% agreement)
-- [x] Identify 62 GOA-only proteins (potential over-annotations)
-- [x] Identify 50 GREEKC-only proteins (potential missing annotations)
+- Done: compare GREEKC curated dbTF set with GOA annotations (95.6% agreement)
+- Done: identify 62 GOA-only proteins (potential over-annotations)
+- Done: identify 50 GREEKC-only proteins (potential missing annotations)
 
 ### Phase 1: Manual Review (In Progress)
-- [x] Review 7 high-priority GOA-only proteins (all confirmed as over-annotations)
-  - NTN1, NTN3: REMOVE (secreted axon guidance, erroneous IBA)
-  - RFXAP, RFXANK, HDAC4, RPS3: MODIFY → GO:0003713 (coactivators, not dbTFs)
-  - NME2: REMOVE (G-quadruplex binding, not dsDNA TF)
-- [x] Create PTHR10574 (Netrin/Laminin) family review
-- [x] Document PANTHER IBA error root cause (PTN000180816)
-- [ ] Review remaining ~55 GOA-only proteins
-- [ ] Review 50 GREEKC-only proteins for potential annotation
+- Done: review 7 high-priority GOA-only proteins
+    - NTN1, NTN3: REMOVE dbTF and cis-regulatory DNA-binding IBAs
+    - HDAC4: MODIFY activator row → GO:0003713; MODIFY DNA-binding row → GO:0000976
+    - RPS3: MODIFY activator row → GO:0003713
+    - RFXAP: MODIFY activator and DNA-binding rows → GO:0003713
+    - RFXANK: MODIFY activator row → GO:0003713; REMOVE DNA-binding row
+    - NME2: KEEP_AS_NON_CORE (noncanonical promoter/G-quadruplex regulation)
+- Done: create PTHR10574 (Netrin/Laminin) family review
+- Done: document the POU-seeded PAINT provenance discrepancy at PTN000180816
+- Todo: review remaining ~55 GOA-only proteins
+- Todo: review 50 GREEKC-only proteins for potential annotation
+- Todo: trace whether the netrin PTN000180816 mismatch originated in tree placement, identifier mapping, or export assembly
 
-### Phase 2: ML Validation (Setup Complete)
-- [x] Extract 525 IEA-only proteins (dbTF annotation without experimental evidence)
-- [x] Fetch sequences from UniProt (`deeptfactor-validation/iea-only-sequences.fasta`)
-- [x] Clone DeepTFactor repository
-- [x] Create analysis pipeline scripts
-- [ ] Install conda/DeepTFactor environment (requires Python 3.6 + PyTorch 1.2)
-- [ ] Run DeepTFactor predictions
-- [ ] Analyze discrepancies
+Tracked in [ai-gene-review#4021](https://github.com/ai4curation/ai-gene-review/issues/4021).
 
-### Phase 3-4: Structure & Transcriptomics (Not Started)
-- [ ] Foldseek validation for ambiguous cases
-- [ ] iModulon integration for bacterial TFs
+### Phase 2: ML Validation (Planned)
+- Todo: extract 945 IEA-only proteins (dbTF annotation without experimental evidence)
+- Todo: fetch sequences from UniProt (`deeptfactor-validation/iea-only-sequences.fasta`)
+- Todo: create `deeptfactor-validation/` analysis pipeline
+- Todo: install conda/DeepTFactor environment (requires Python 3.6 + PyTorch 1.2)
+- Todo: run DeepTFactor predictions
+- Todo: analyze discrepancies
+
+### Phase 3-4: Structure & Transcriptomics
+- Todo: Foldseek validation for ambiguous cases
+- Done: inventory existing iModulonDB scripts, organism mappings, and BenR example
+- Done: define [bacterial regulon evidence workstream](TRANSCRIPTION_FACTORS/bacterial-regulon-evidence.md), with KT2440 as pilot
+- Done: repair the iModulon importer; verify all 84 PRECISE321 module memberships and weights against pinned source exports
+- Done: build the [provisional KT2440 TF census and coverage report](P_PUTIDA/tf_census/data/coverage.md), with unresolved identities retained
+- Done: select [20 calibration cases](P_PUTIDA/tf_census/data/calibration.tsv)
+- Done: complete [20 scoped evidence assessments](P_PUTIDA/tf_census/calibration-review.md), including identity conflicts and separate importer checks
+- Done: complete [first four full GO reviews](P_PUTIDA/batches/tf_carbon_utilization_01.md), with 12 supported regulatory relationships and pathway context
+- Todo: complete the remaining 16 calibration GO reviews, then expand regulatory-system/family batches

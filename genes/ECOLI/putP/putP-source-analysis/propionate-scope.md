@@ -1,0 +1,5 @@
+# PutP propionate evidence scope
+
+PMID17088549, Reed et al., full primary obtained from https://pmc.ncbi.nlm.nih.gov/articles/PMC1859954/?report=xml on 2026-11-06. The existing abstract-only cache was not refreshed. The model and experiments concern E. coli K-12 MG1655 and deletion derivatives.
+
+The Transport Activities section reports reduced growth of ΔputP on propionate, increased putP expression, and family-level similarity to Rhizobium MctP. Its exact conclusion is: “This combined evidence suggests that putP and idnT are responsible for the transport of propionate and 5-keto- d -gluconate, respectively.” This is a combined physiological and comparative inference, not a direct propionate uptake or coupling assay. The retained short-chain-fatty-acid transport claim is peripheral and inferred; it does not justify a newly specific propionate symporter molecular function or generalization to Pseudomonas PutP. PMID17088459 in the original annotation is a different, cardiovascular article; preserve that original payload and the structured source-defect correction to PMID17088549.

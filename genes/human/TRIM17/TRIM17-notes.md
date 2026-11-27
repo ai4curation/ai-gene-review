@@ -33,3 +33,10 @@ Tissue: almost exclusively testis.
 - GO:0006914 autophagy (core BP - regulation of selective autophagy)
 - GO:0030674 protein-macromolecule adaptor activity
 - GO:0005737 cytoplasm / GO:0005764 lysosome (CC)
+
+## 2026-11-22 ORGANELLES lysosome batch 2
+
+- Two GO:0005764 rows (IEA from UniProt, EXP PMID:27562068); both rest on the curated UniProt item "Lysosome {ECO:0000269|PubMed:27562068}". Review and GOA agree.
+- PMID:27562068 (PMC5087653, DOI 10.1242/jcs.190017): the cache holds abstract, introduction and discussion only, with no TRIM17 lysosome data; PMC returned no full text. Results and figures not read.
+- Call: both rows ACCEPT -> KEEP_AS_NON_CORE on curator deference (rule 9). Lysosome removed from core_functions.locations (adaptor/ligase work not shown at the lysosome). MARK_AS_OVER_ANNOTATED is the close alternative if the figures show TRIM17 in lysosomes only with autophagic cargo or under lysosomal inhibition.
+- The note above (line "Lysosome ... consistent with autophagy role") is superseded by this check.

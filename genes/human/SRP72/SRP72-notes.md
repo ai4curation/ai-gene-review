@@ -62,3 +62,13 @@ SRP72 is the largest subunit of the mammalian signal recognition particle (SRP),
 - Host-pathogen: Zika virus bypasses the SRP receptor via NS3-SRP54/translocon interactions and engages SRP machinery (incl. SRP72) during ER-translation remodeling [PMID:39621795 "Zika virus appears to maintain ER-localised translation via NS3-SRP54 interaction"]. Peripheral (relevance LOW).
 - Non-canonical SRP role: under acute heat shock, 7SL RNA/SRP arrest transcription and translation independent of signal peptides; SRP binds ribosomes and inhibits new protein synthesis [PMID:39952919 "Translational suppression occurs independently of the signal peptide and is abrogated by depleting SRP"]. SRP72-specific contribution not isolated (relevance LOW).
 - Quality-control framing: SRP-targeting failures couple to RAPP mRNA degradation, situating SRP as a proteostasis gatekeeper [PMID:37346176; PMID:37859801] — context noted, not added as SRP72-specific annotations.
+
+## 2026-11-06 ORGANELLES ER batch 4 (endoplasmic reticulum rows)
+
+Rows: GO:0005783 IEA (GO_REF:0000044), EXP (PMID:28369529), IDA (PMID:22541560); all located_in. No ER sub-compartment rows.
+
+- UniProt: "Endoplasmic reticulum {ECO:0000269|PubMed:22541560, ECO:0000269|PubMed:28369529}" (curated, not a prediction), so the IEA mapping is sourced.
+- PMID:28369529 (full text): GFP-SRP72 (pEGFP-C1) transfected into HeLa, stained with ER-Tracker Red; [PMID:28369529 "Both wild-type SRP72 and SRP68 showed uniform coincidence with an ER marker"]. Overexpressed tagged protein and a whole-organelle dye: cannot resolve membrane face vs lumen.
+- PMID:22541560 is abstract-only ("Transfection of these sequences into mammalian cells suggested that these proteins localize incorrectly within the cell"); curator deference, and the follow-up used the same protocol.
+- SRP72 is soluble (no signal peptide, no TM); its ER pool is the SRP docked on the cytosolic face via the SRP receptor -> recruited surface pool, stays at root, no GO:0005789 row.
+- Outcome: all three rows stay ACCEPT (handing the RNC to the ER is the particle's core activity); KEEP_AS_NON_CORE noted as the alternative. Reasons updated with dated checks; ER-marker quote added to the IEA and IDA rows.

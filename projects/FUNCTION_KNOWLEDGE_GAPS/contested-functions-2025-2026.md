@@ -1,6 +1,7 @@
 ---
 title: "Contested Functions: a 2025-2026 read-list"
 species: [human]
+last_reviewed: 2026-10-04
 ---
 
 # Contested Functions — a 2025-2026 read-list

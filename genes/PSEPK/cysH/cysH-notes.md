@@ -15,3 +15,10 @@
 
 CysH is the middle reaction of the direct APS route. An APS-kinase/PAPS-reductase
 route is not included in this module instance.
+
+
+## Comparative sulfate-assimilation audit — 2026-10-26
+
+Re-reviewed all eight rows, preserving the existing NEW sulfate-assimilation proposal. Native P. aeruginosa biochemical discrimination of APS versus PAPS ([PMID:10613872]), cluster evidence ([PMID:11940598]), and KT2440 HAMAP/APS-specific domain evidence support the conserved direct-APS reaction. Cytoplasm and the cluster are core-associated properties. Existing OpenScientist report was consulted as discovery, not substituted for primary evidence. PAPS reductase removal is based on substrate and domain divergence, not the broad family name.
+
+Research provenance: parent already attempted Falcon (403) and Perplexity-lite (401 quota) for this batch; no generated report was fabricated. Existing PSEPK OpenScientist reports were used only as discovery. Source caches were fetched normally and never hand-edited. All original annotation payloads were preserved, with a retirement marker only for the existing CysI donor-specific NEW proposal.

@@ -11,10 +11,10 @@ from ai_gene_review.compliance import GeneComplianceAnalyzer, GeneQCConfig
 SCHEMA = Path("src/ai_gene_review/schema/gene_review.yaml")
 
 
-def analyze(tmp_path, annotations, config=None):
+def analyze(tmp_path, annotations, config=None, **doc):
     """Analyze a minimal real YAML review through the schema and policy."""
     path = tmp_path / "review.yaml"
-    path.write_text(yaml.safe_dump({"existing_annotations": annotations}))
+    path.write_text(yaml.safe_dump({**doc, "existing_annotations": annotations}))
     return GeneComplianceAnalyzer(SCHEMA, config).analyze_file(path)
 
 
@@ -32,7 +32,7 @@ def metric(report, name):
     return next(s for s in report.aggregated_scores if s.slot_name == name)
 
 
-@pytest.mark.parametrize("evidence", ["IMP", "IDA", "EXP", "HDA", "TAS"])
+@pytest.mark.parametrize("evidence", ["IMP", "IDA", "EXP", "HDA", "TAS", "ECO:0007744"])
 @pytest.mark.parametrize(
     "action",
     ["ACCEPT", "MODIFY", "REMOVE", "KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED", "NEW"],
@@ -357,3 +357,50 @@ def test_comparison_policy_holds_action_changes_in_denominator(tmp_path):
     assert before.weighted_compliance == after.weighted_compliance
     for name in ("literature_support", "inference_support"):
         assert metric(before, name).total == metric(after, name).total == 1
+
+
+@pytest.mark.parametrize("supported_by,credited", [
+    ([], False),
+    ([{"reference_id": "file:yeast/X/X-deep-research-falcon.md",
+       "supporting_text": "no study of X was found"}], True),
+    ([{"reference_id": "file:yeast/X/X-notes.md", "supporting_text": "0 records"}], True),
+    ([{"reference_id": "PMID:2"}], True),
+    # the UniProt record is not a search, matching the nd_policy warning
+    ([{"reference_id": "file:yeast/X/X-uniprot.txt", "supporting_text": "PE   1"}], False),
+    # an unquoted search file, or another gene's, earns nothing
+    ([{"reference_id": "file:yeast/X/X-notes.md"}], False),
+    ([{"reference_id": "file:yeast/Y/Y-notes.md", "supporting_text": "0 records"}], False),
+])
+def test_accepted_nd_rewards_recorded_search(tmp_path, supported_by, credited):
+    """A guideline-conformant ND earns credit only for citing the literature search."""
+    report = analyze(
+        tmp_path, [annotation("ND", "ACCEPT", supported_by=supported_by)],
+        gene_symbol="X", id="P12345",
+    )
+    score = metric(report, "nd_search_support")
+    assert (score.populated, score.total) == (int(credited), 1)
+
+
+@pytest.mark.parametrize("action", ["REMOVE", "MODIFY"])
+def test_stale_nd_needs_literature_quote(tmp_path, action):
+    """Removing an ND claims literature exists, so only a quote from it earns credit."""
+    report = analyze(
+        tmp_path,
+        [
+            annotation("ND", action, supported_by=[{"reference_id": "file:x.md"}]),
+            annotation(
+                "ND",
+                action,
+                supported_by=[{"reference_id": "PMID:1", "supporting_text": "A quote"}],
+            ),
+        ],
+    )
+    score = metric(report, "nd_stale_support")
+    assert (score.populated, score.total) == (1, 2)
+
+
+def test_kept_nd_earns_no_credit(tmp_path):
+    report = analyze(tmp_path, [annotation("ND", "KEEP_AS_NON_CORE")])
+    assert not {"nd_search_support", "nd_stale_support"} & {
+        s.slot_name for s in report.aggregated_scores
+    }

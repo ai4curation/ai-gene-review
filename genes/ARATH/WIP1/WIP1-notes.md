@@ -43,3 +43,10 @@ Falcon deep research for WIP1 had not been generated at time of the initial revi
   - Pollen vegetative-nucleus migration: verified and cached PMID:26409047 (PubMed esummary: "SUN anchors pollen WIP-WIT complexes at the vegetative nuclear envelope and is necessary for pollen tube targeting and fertility", J Exp Bot 2015). Added to references, description and core function 1 support; the nuclear-migration question now cites it. No NEW process term added: evidence is dominant-negative SUN2 and wip/wit quintuple mutants (family-level), so paralog-specific participation is not resolved.
   - Redundancy caveat from deep research cited on the nucleus organization IGI row.
 - No actions changed. Status remains COMPLETE; validation passes.
+
+## 2026-10-15 journal: dimerization rows resolved (PR #5026 follow-up)
+
+Supersedes the "Homo-/heterodimerization -> UNDECIDED" line above.
+
+- GO:0042803 protein homodimerization activity and GO:0046982 protein heterodimerization activity (IPI, PMID:17600715) are both MARK_AS_OVER_ANNOTATED, not removed. The same laboratory's follow-up study (PMID:18591351, full text cached) did not detect WIP1 self-association or WIP1-WIP2a/WIP3 association in planta, while still invoking a low-abundance WIP1 dimer [PMID:18591351 "we propose that the WIP1 dimer concentration is low and that under wild-type concentrations, WIP1 is not sufficient for RanGAP1 binding"]. No function is tied to WIP-WIP association; WIP1's characterized activities are RanGAP1 anchoring and KASH-type SUN binding.
+- Full-text access for PMID:17600715 (Curr Biol 2007, doi:10.1016/j.cub.2007.05.076): `fetch-pmid --force` on 2026-10-15 cached abstract only (no PMC record); Europe PMC lists no PMCID. The original review session also reported a 403 from the publisher page (not re-tested). The original IPI assay was therefore not inspected.

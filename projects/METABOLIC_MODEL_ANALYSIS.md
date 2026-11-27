@@ -11,6 +11,7 @@ manifest:
   artifacts:
     - href: https://claude.ai/artifact/JcAT9tMrYkugHrVWdvf4jf
       title: Project brief
+index_group: CROSS_CUTTING
 ---
 
 # Metabolic Model Analysis Project

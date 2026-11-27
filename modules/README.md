@@ -151,6 +151,52 @@ prove the meaning of free text, substrate refinements, reaction chemistry, or
 biological context. A supported GO term can still accompany a more specific
 claim that needs manual review.
 
+### Process fit of exemplars
+
+The function check cannot see an exemplar whose activity is right and whose
+pathway is wrong. ADRB2, a Gs-coupled receptor, once stood as the exemplar of a
+"Gq-coupled receptor" annoton: it does have G protein-coupled receptor activity,
+so nothing fired. `ai_gene_review.module_process_conformance` therefore compares
+each concrete exemplar's GOA biological-process rows (from its local
+`GENE-goa.tsv`) with the process its annoton sits under: the annoton's own
+`processes` when stated, otherwise the GO process concepts of the nearest
+enclosing node.
+
+The validator **warns** (`Process conformance [SIBLING_PROCESS_ONLY]`) when all of
+these hold: the annoton's function is a signaling receptor activity
+(`GO:0038023`) or receptor ligand activity (`GO:0048018`); GOA has no positive
+row for the exemplar at or under the expected process (`is_a` and `part_of`);
+and GOA has an experimental row under a sibling of it. A process that the gene's
+own review asserts (a retained or `NEW` annotation, a `MODIFY` replacement, or a
+core function's `directly_involved_in`) counts as support, because GOA lags the
+reviews. The warning is limited to
+receptors and ligands because they decide which pathway a module is. For other
+participants the same pattern is recorded but not reported: across the corpus it
+is mostly shared downstream components (GRB2 or JAK1 in a receptor-specific
+module) whose annotation does not name that pathway.
+
+Treat a warning as a lead for checking the exemplar, never as proof. GOA is
+incomplete, a protein can act in two sibling pathways, and an exemplar with no
+local gene folder is not checked at all. Resolve it by choosing an exemplar that
+fits, by stating the annoton's real process in `processes`, or by leaving it when
+the literature supports the choice.
+
+The same comparison, read the other way, gives leads for gene annotation. A
+module that places a protein in a process neither GOA nor the protein's review
+carries is a candidate `NEW` annotation for that review:
+
+```bash
+just module-annotation-leads   # writes reports/module-annotation-leads.tsv
+```
+
+Each row is a lead, not an annotation. The module's placement is this project's
+own claim and cannot be cited as the evidence, so a row still needs a
+publication and the participation test in the curation guidelines; a component
+shared by many pathways (an adaptor, a JAK) is usually not annotated to each
+one. Rows are sorted with the most direct claims first: the annoton names the
+process itself, then receptor and ligand annotons, then proteins GOA already
+places in a sibling process.
+
 Design notes:
 
 - Use `parts` for required or optional submodules.
@@ -212,3 +258,116 @@ Design notes:
           activity: gomodel:568b0f9600000284/57ec3a7e00000079
           title: "Antibacterial innate immune response in the intestine via MAPK cascade (C. elegans)"
   ```
+
+#### Explaining GO-CAM edges
+
+Pins on both ends of a GO-CAM edge turn a module into an explanation of that
+edge. `just gocam-compartments` marks a GO-CAM causal edge between
+non-adjacent compartments as `EXPLAINED` when its upstream and downstream
+activities are pinned (`gocam_associations` with `activity`) to elements of one
+module, and the module's `connections` lead from the first to the second
+through a `TRANSPORT_STEP` node. Typical use: a GO-CAM edge from a
+plasma-membrane kinase directly to a nuclear transcription factor activity
+compresses release, partner binding and nuclear import; the module states those
+steps (including `karyopherin_nuclear_protein_import` by `module_ref`) and the
+pins say which GO-CAM activities the module's ends correspond to. Pins are
+curated claims; nothing matches genes to modules automatically. See
+`projects/GOCAM_COMPARTMENTS.md`.
+
+### Composing modules by reference (`module_ref`)
+
+An umbrella module (for example an organelle lifecycle) composes existing modules
+instead of copying their annotons. A node with `module_ref` stands in for another
+module, written like a conformance template: `<stem>` for the whole module, or
+`<stem>#<node_id>` for one node in it. The stem names a module file in the same
+directory as the referencing module; the engine, the validator and the renderer
+all resolve it that way.
+
+```yaml
+parts:
+  - order: 5
+    role: turnover
+    node:
+      id: mitochondrial_turnover
+      label: Mitophagy
+      module_ref: mitophagy
+  - order: 4
+    optional: true          # not every lineage has it; does not gate the umbrella
+    node:
+      id: respiration
+      label: Oxidative phosphorylation
+      module_ref: mitochondrial_complex_iv
+```
+
+`module_ref` means inclusion, which is different from `conforms_to` (an instance
+of a motif):
+
+- **Satisfiability.** `module_logic` compiles the referenced module in place, so
+  the umbrella node is satisfied exactly when the referenced module or node is.
+  `unsatisfied_steps` reports gaps at the umbrella step; `gap_report` follows
+  the reference down to the failing step inside it. Atoms reached through a reference are
+  namespaced `<stem>#<annoton_id>`, so a step reached twice is one atom.
+  Mark the enclosing part `optional` when a lineage may lack the referenced
+  module. Inlining multiplies route counts, so for umbrella modules use
+  `is_satisfied`, `unsatisfied_steps` and `core_atoms`, which do not enumerate
+  routes; `enumerate_routes` raises past `max_routes`. When two steps reference
+  the same module, each copy's variant sets are enumerated independently, so
+  routes can mix branches of one referenced variant set and are then not
+  guaranteed minimal.
+- **Validation (blocking).** The reference must resolve, references must not
+  form a cycle, and the referencing node must not carry its own `annotons`,
+  `parts` or `variant_sets`; label, description, concepts, context and
+  evidence are allowed. Problems inside a referenced module are reported when
+  that module itself is validated, not when the umbrella is.
+- **Rendering.** The node links to the referenced module page or node anchor,
+  it is not counted as an ungrounded leaf, and reference problems appear in the
+  page's QC panel.
+
+The Boolean-network translator (`module-to-bnet`) does not follow references yet,
+and warns when a document uses them.
+
+### Variant kinds and layered gap reports (`variant_kind`)
+
+A rule makes two kinds of claim. A process step requires a molecular function,
+which is close to binary. That function is carried out by one of several
+families, domains or complexes, which is open-world. A variant set belongs to
+one of the two layers, recorded in the optional `variant_kind`:
+
+- `REALIZER`: the variants are alternative carriers of one required activity
+  (families, isozymes, paralogs, lineage-specific proteins).
+- `ROUTE`: the variants are alternative ways of achieving the step, with
+  different activities (for example SCOT-dependent versus ligase-dependent
+  acetoacetate activation in `ketone_body_oxidation`).
+
+```yaml
+variant_sets:
+  - id: acetoacetate_activation_route
+    axis: acetoacetate activation chemistry   # free text
+    variant_kind: ROUTE
+    selection: EXACTLY_ONE
+```
+
+When `variant_kind` is omitted, `module_logic` infers `REALIZER` if every
+variant carries the same single molecular function, and otherwise leaves the
+set unclassified. Declare it where the inference cannot tell, chiefly for
+routes. `gap_report(circuit, holds)` returns each gap at its innermost failing
+element, with its path from the top-level step, its layer and the absent atoms:
+
+| layer | what failed | reading |
+|---|---|---|
+| `REALIZER` | a realizer variant set | the activity is required but no known carrier was found |
+| `ROUTE` | a route variant set | none of the modelled routes is present |
+| `UNCLASSIFIED` | a single-carrier step, or a variant set with no declared or inferable kind | either reading |
+
+A single-carrier step is unclassified because its structure cannot tell an
+undetected carrier from an unmodelled route. `abduce` narrows its hypotheses
+only for declared layers: a declared `REALIZER` gap gets the
+undetected-carrier explanation, a declared `ROUTE` gap the unmodelled-route
+one (plus the undetected-carrier one when an alternative is partly present,
+as in a complex missing one subunit). Unclassified and inferred gaps keep
+both, since inference from the modelled alternatives says nothing about
+routes the module does not model. `gap_candidates` list only the atoms that
+do not hold, and `abduce` evaluates each atom once. Compiled atoms also
+carry the participant's family and domain ids (`family_ids`, `domain_ids`),
+for oracles that scan a proteome with family models. The design is explained
+in `projects/ORGANELLE_LIFECYCLES/two-layer-model.md`.

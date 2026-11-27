@@ -30,3 +30,12 @@ publications and the UniProt record.
 - NEW: GO:0019761 glucosinolate biosynthetic process. Participation: FMO catalyzes a
   pathway step. Comparator: AOP2 carries GO:0019761 (IDA, PMID:11251105).
 - Core MF: GO:0080103; BP: GO:0019761. Subcellular location unknown (not asserted).
+
+
+## Module-member evidence audit — 2026-10-25
+
+Reviewed every original row (14) and core function using review/annotation-reviewer instructions, current cached primary publications and the existing research. Preserved all source annotation fields and all pre-existing proposed rows. Reused the existing genuine Falcon provider report and its artifacts. These plant targets do not require bacterial FEBA retrieval.
+
+Correct original target paper is PMID17461789 (Hansen2007). Full18799661 also directly re-assays GSOX1 as comparator in Fig4B on desulfo4-MTB and Fig5B on seed-derived substrates including8-MTO; not merely extrapolation from paralogs2–5. It accepts desulfo and intact glucosinolates, so sulfation-before-S-oxygenation is not an exclusive biochemical order. Current QuickGO definitions GO0080103–107 themselves contain longer-chain methylthiopropyl wording; original rows/labels preserved. Authored core now uses a supported proposed substrate-class MF (EC1.14.13.237;RHEA42208, checked in curated CC:CATALYTIC ACTIVITY), not the chemically malformed longer-chain term. Nuclear location is unresolved rather than biologically impossible.
+
+Broad and substrate-specific terms were assessed consistently across evidence codes. No NEW rows were added. Previously proposed rows were evaluated for direct participation rather than filled from pathway adjacency. Experimental cohort calls whose protein-level data were not verified were left UNDECIDED; full-text availability alone was not treated as proof of a target-specific assay. Original sources and provider reports were not hand-edited.

@@ -41,3 +41,20 @@ direct S. cerevisiae SHY1 paper. The relevant recent paper is Luo et al. 2024 on
 the S. pombe SURF1 homolog Shy1 [PMID:39289458], which is useful for IBA
 ortholog context because PomBase:SPBC1215.01 appears in the GOA
 `WITH/FROM` field for the mitochondrial IBA.
+
+## 2026-10-01 current GOA refresh
+
+Refreshing GOA added updated exact-source IBA rows for `GO:0005739
+mitochondrion` and `GO:0033617 mitochondrial respiratory chain complex IV
+assembly`, both still traced to the same SURF1-family PAINT node,
+`PANTHER:PTN000603741`. The 2026-10-01 PAINT export adds the mouse `MGI:MGI:98443`
+seed to both rows while retaining direct S. cerevisiae SHY1 support and the
+same inherited mitochondrial-localization and complex-IV-assembly calls, so I
+accepted the refreshed rows and marked the previous no-MGI/no-qualifier
+duplicates as retired provenance.
+
+The current GOA export has also withdrawn the `GO:0051082 unfolded protein
+binding` IMP row from PMID:11389896. I left that older MODIFY review in place
+with `retired: true` because the literature still supports a Shy1 role in
+stabilizing complex IV assembly intermediates rather than a broad
+unfolded-protein-binding activity.

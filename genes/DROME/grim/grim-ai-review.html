@@ -1,0 +1,4443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/svg+xml" href="/ai-gene-review/assets/favicon.svg">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>grim - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>grim</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q24570" target="_blank" class="term-link">
+                        Q24570
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "grim";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">23</span> Annotations</a>
+
+
+
+
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">2</span> Core Functions</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">17</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+        <a href="#review-questions" title="Suggested questions for experts"><span class="nav-count">2</span> Questions</a>
+
+
+
+        <a href="#review-experiments" title="Suggested experiments"><span class="nav-count">2</span> Experiments</a>
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q24570" data-a="DESCRIPTION: grim encodes a short Drosophila Reaper/Hid/Grim-fa..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>grim encodes a short Drosophila Reaper/Hid/Grim-family IAP antagonist that promotes apoptotic caspase activation. Grim binds BIR domains of DIAP1/DIAP2-family IAPs through its N-terminal IAP-binding motif, countering IAP restraint of DrICE-family caspases, and also uses an internal GH3 amphipathic helix to associate with mitochondria and remodel cytochrome-c distribution during apoptosis induction in selected developmental cell-death programs.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18166655" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18166655
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    DIAP2 functions as a mechanism-based regulator of drICE that...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0005515" data-r="PMID:18166655" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grim binds the DIAP2 BIR2 domain through its IAP-antagonist motif.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The DIAP2 interaction is real and maps to a baculovirus IAP repeat domain, so BIR domain binding is the informative replacement for generic protein binding.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990525" target="_blank" class="term-link">
+                                    BIR domain binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18166655" target="_blank" class="term-link">
+                                        PMID:18166655
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Rpr and Grim preferentially bound to the BIR2 domain of DIAP2</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21035895" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21035895
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Differential localization and processing of apoptotic protei...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0005634" data-r="PMID:21035895" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grim is detected in nuclei of Malpighian tubule cells that persist into adulthood.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nuclear sequestration of Grim in Malpighian tubules appears to be a tissue-specific survival context rather than the core pro-apoptotic site of Grim action.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21035895" target="_blank" class="term-link">
+                                        PMID:21035895
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">sequestered in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21035895" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21035895
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Differential localization and processing of apoptotic protei...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0005737" data-r="PMID:21035895" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cached Malpighian-tubule abstract does not verify cytoplasmic Grim localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The abstract reports nuclear sequestration of GRIM, HID, DRONC, and DRICE, but it does not expose the cytoplasmic staining that may have supported this IDA row.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21035895" target="_blank" class="term-link">
+                                        PMID:21035895
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">sequestered in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9857177" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9857177
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Drosophila grim induces apoptosis in mammalian cells.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0005737" data-r="PMID:9857177" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grim localizes partly to the cytosol when expressed in mouse fibroblasts.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The localization was observed in heterologous mammalian cells and is consistent with the cytosolic pool observed in Drosophila cells before strong mitochondrial relocalization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9857177" target="_blank" class="term-link">
+                                        PMID:9857177
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the cytosol and in the mitochondria of mouse fibroblasts</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9857177" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9857177
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Drosophila grim induces apoptosis in mammalian cells.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0005739" data-r="PMID:9857177" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grim localizes to mitochondria in heterologous mammalian cells and in Drosophila SL2 cells during apoptosis induction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The PMID:9857177 source observed mitochondrial Grim in mouse fibroblasts, and the Drosophila SL2 GH3 study independently showed GH3-dependent mitochondrial association.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9857177" target="_blank" class="term-link">
+                                        PMID:9857177
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">the cytosol and in the mitochondria of mouse fibroblasts</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12093734" target="_blank" class="term-link">
+                                        PMID:12093734
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Grim rings are mitochondria-associated</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005759" target="_blank" class="term-link">
+                                    GO:0005759
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12093734" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12093734
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GH3, a novel proapoptotic domain in Drosophila Grim, promote...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0005759" data-r="PMID:12093734" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grim-positive rings surround mitochondrial markers rather than placing Grim in the matrix.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cited Drosophila microscopy used a mitochondrial matrix marker to show Grim-associated mitochondrial rings; it supports mitochondrion localization, not import into the matrix compartment.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    mitochondrion
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12093734" target="_blank" class="term-link">
+                                        PMID:12093734
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Grim rings are mitochondria-associated</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21035895" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21035895
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Differential localization and processing of apoptotic protei...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0005886" data-r="PMID:21035895" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cached Malpighian-tubule abstract does not verify plasma-membrane Grim localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Full-text figures may contain plasma-membrane staining, but the locally available abstract only exposes nuclear sequestration in Malpighian tubules.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21035895" target="_blank" class="term-link">
+                                        PMID:21035895
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">sequestered in the nucleus</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006915" target="_blank" class="term-link">
+                                    GO:0006915
+                                </a>
+                            </span>
+                            <span class="term-label">apoptotic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11818065" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11818065
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The damage-responsive Drosophila gene sickle encodes a novel...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0006915" data-r="PMID:11818065" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cached Sickle abstract does not verify a Grim-specific apoptosis assay.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMID:11818065 uses Grim, Hid, and Reaper as IAP-antagonist comparators while characterizing Sickle; without full text, the Grim-specific IDA evidence behind this row is unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11818065" target="_blank" class="term-link">
+                                        PMID:11818065
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">unlike the N
+termini of Grim, Hid, and Rpr</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006915" target="_blank" class="term-link">
+                                    GO:0006915
+                                </a>
+                            </span>
+                            <span class="term-label">apoptotic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8698237" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8698237
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    grim, a novel cell death gene in Drosophila.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0006915" data-r="PMID:8698237" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> grim expression coincides with embryonic PCD and ectopic grim is sufficient to initiate p35-sensitive apoptosis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The original grim paper placed Grim upstream of ICE-like caspase effectors; that is a signaling role and is more specific than top-level apoptotic process.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097190" target="_blank" class="term-link">
+                                    apoptotic signaling pathway
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8698237" target="_blank" class="term-link">
+                                        PMID:8698237
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Expression of grim RNA coincided with the onset of
+programmed cell death</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006915" target="_blank" class="term-link">
+                                    GO:0006915
+                                </a>
+                            </span>
+                            <span class="term-label">apoptotic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12093734" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12093734
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GH3, a novel proapoptotic domain in Drosophila Grim, promote...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0006915" data-r="PMID:12093734" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The Grim GH3 domain drives a mitochondrial apoptotic-signaling route.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Loss of the GH3 domain blocks Grim pro-apoptotic function without disrupting IAP binding, supporting a specific mitochondrial signaling contribution rather than only the broad apoptotic-process term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097190" target="_blank" class="term-link">
+                                    apoptotic signaling pathway
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12093734" target="_blank" class="term-link">
+                                        PMID:12093734
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">deletion of the internal GH3 domain in a Grim protein still retaining the N-terminal domain also eliminates most of the Grim proapoptotic activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006915" target="_blank" class="term-link">
+                                    GO:0006915
+                                </a>
+                            </span>
+                            <span class="term-label">apoptotic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23940367" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23940367
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Caspase-dependent regulation of the ubiquitin-proteasome sys...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0006915" data-r="PMID:23940367" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Caspase cleavage stabilizes Grim and amplifies the apoptotic signal.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The DIAP1/UbcD1 study shows that Grim cleavage prevents K48-linked ubiquitinylation at Lys136 and starts a positive caspase-feedback branch, which is apoptotic signaling rather than the whole apoptotic process.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097190" target="_blank" class="term-link">
+                                    apoptotic signaling pathway
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23940367" target="_blank" class="term-link">
+                                        PMID:23940367
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">feed-forward caspase amplification loop</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006915" target="_blank" class="term-link">
+                                    GO:0006915
+                                </a>
+                            </span>
+                            <span class="term-label">apoptotic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/8698237" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:8698237
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    grim, a novel cell death gene in Drosophila.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0006915" data-r="PMID:8698237" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grim expression independently triggers caspase-dependent apoptotic signaling.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Chen et al. showed that Grim can trigger p35-blockable apoptosis without rpr or hid, placing Grim in the signal that activates the shared downstream caspase machinery.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097190" target="_blank" class="term-link">
+                                    apoptotic signaling pathway
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/8698237" target="_blank" class="term-link">
+                                        PMID:8698237
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">did not require the
+functions of rpr or hid</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008340" target="_blank" class="term-link">
+                                    GO:0008340
+                                </a>
+                            </span>
+                            <span class="term-label">determination of adult lifespan</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16303568" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16303568
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Neuronal expression of p53 dominant-negative proteins in adu...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0008340" data-r="PMID:16303568" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cached p53/lifespan abstract does not mention grim.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The PMID:16303568 abstract supports neuronal p53 dominant-negative effects on Drosophila lifespan, but Grim-specific full-text evidence is required before adjudicating this row.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16303568" target="_blank" class="term-link">
+                                        PMID:16303568
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">adult neurons extends life span</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010623" target="_blank" class="term-link">
+                                    GO:0010623
+                                </a>
+                            </span>
+                            <span class="term-label">programmed cell death involved in cell development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23519152" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23519152
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Essential role of grim-led programmed cell death for the est...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0010623" data-r="PMID:23519152" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grim is a developmental pro-apoptotic trigger in corazoninergic neuronal lineages.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> grim loss blocks developmental PCD of vCrz neurons and their EW3-sibling precursors; this is a real in vivo developmental context layered on top of Grim IAP-antagonist signaling.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23519152" target="_blank" class="term-link">
+                                        PMID:23519152
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We found grim as a chief proapoptotic gene</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0012501" target="_blank" class="term-link">
+                                    GO:0012501
+                                </a>
+                            </span>
+                            <span class="term-label">programmed cell death</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20558283" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20558283
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    grim promotes programmed cell death of Drosophila microchaet...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0012501" data-r="PMID:20558283" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grim is required for PCD of Drosophila microchaete glial cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The source identifies an endogenous grim-dependent death process in one lineage; mechanistically this is another apoptotic-signaling context and can be represented more specifically than broad programmed cell death.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097190" target="_blank" class="term-link">
+                                    apoptotic signaling pathway
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20558283" target="_blank" class="term-link">
+                                        PMID:20558283
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">required grim</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035006" target="_blank" class="term-link">
+                                    GO:0035006
+                                </a>
+                            </span>
+                            <span class="term-label">melanization defense response</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17356067" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17356067
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Crystal cell rupture after injury in Drosophila requires the...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0035006" data-r="PMID:17356067" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cached crystal-cell rupture abstract does not expose a grim-specific melanization phenotype.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The abstract links crystal-cell rupture and melanization to JNK, Rho GTPases, Eiger, and dying hemocytes, but the local evidence does not name Grim; full text is needed to verify whether grim was assayed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17356067" target="_blank" class="term-link">
+                                        PMID:17356067
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">melanization of the clot matrix</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035193" target="_blank" class="term-link">
+                                    GO:0035193
+                                </a>
+                            </span>
+                            <span class="term-label">larval central nervous system remodeling</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10821983" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10821983
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Metamorphosis in drosophila and other insects: the fate of n...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0035193" data-r="PMID:10821983" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cached insect-metamorphosis review abstract does not verify a direct grim assertion.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The source is a broad metamorphosis review that describes neuronal fates but does not expose the Grim evidence behind this TAS row in the local abstract.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10821983" target="_blank" class="term-link">
+                                        PMID:10821983
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">die before and immediately after eclosion</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042803" target="_blank" class="term-link">
+                                    GO:0042803
+                                </a>
+                            </span>
+                            <span class="term-label">protein homodimerization activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23940367" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23940367
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Caspase-dependent regulation of the ubiquitin-proteasome sys...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0042803" data-r="PMID:23940367" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grim self-associates in cells while being ubiquitinylated by DIAP1.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Self-association is experimentally supported and likely relevant to RHG complex behavior, but the row captures a modulatory property rather than the primary IAP-antagonist function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23940367" target="_blank" class="term-link">
+                                        PMID:23940367
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Grim self-associates in cells</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043065" target="_blank" class="term-link">
+                                    GO:0043065
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of apoptotic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15107838" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15107838
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular mechanisms of DrICE inhibition by DIAP1 and remova...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0043065" data-r="PMID:15107838" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grim antagonizes DIAP1 to relieve DrICE inhibition.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The structural DIAP1 study directly places Grim with Reaper and Hid as RHG peptides that counter DIAP1-mediated inhibition of the effector caspase DrICE.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15107838" target="_blank" class="term-link">
+                                        PMID:15107838
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">hence relieving DIAP1-mediated inhibition of DrICE</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051402" target="_blank" class="term-link">
+                                    GO:0051402
+                                </a>
+                            </span>
+                            <span class="term-label">neuron apoptotic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/21558369" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:21558369
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Coordinated expression of cell death genes regulates neurobl...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0051402" data-r="PMID:21558369" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grim is required for normal apoptosis of embryonic and larval neuroblasts.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The neuroblast phenotypes are strong in vivo developmental evidence for Grim-triggered apoptosis in the nervous system, but the cellular context is secondary to the IAP-antagonist mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/21558369" target="_blank" class="term-link">
+                                        PMID:21558369
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Deletion of grim alone blocks the death of
+neuroblasts in the larvae</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051402" target="_blank" class="term-link">
+                                    GO:0051402
+                                </a>
+                            </span>
+                            <span class="term-label">neuron apoptotic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/23784845" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:23784845
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Mechanisms of postecdysis-associated programmed cell death o...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0051402" data-r="PMID:23784845" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grim is the principal death inducer for CCAP peptidergic neurons during CNS metamorphosis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a real endogenous neuronal apoptosis context for Grim, but it is a cell-type deployment of Grim apoptotic signaling rather than a separate molecular activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/23784845" target="_blank" class="term-link">
+                                        PMID:23784845
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">grim functions as a principal death inducer</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0090200" target="_blank" class="term-link">
+                                    GO:0090200
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of release of cytochrome c from mitochondria</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12093734" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12093734
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    GH3, a novel proapoptotic domain in Drosophila Grim, promote...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0090200" data-r="PMID:12093734" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grim redistributes mitochondrial cytochrome c signal but does not cause substantial free cytochrome-c release in Drosophila cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Drosophila data support GH3-dependent apoptotic mitochondrial remodeling; the cited paper explicitly distinguishes this phenotype from vertebrate-style free cytochrome c release into the cytosol.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008637" target="_blank" class="term-link">
+                                    apoptotic mitochondrial changes
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12093734" target="_blank" class="term-link">
+                                        PMID:12093734
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">we thus found no substantial cytochrome c release to cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097190" target="_blank" class="term-link">
+                                    GO:0097190
+                                </a>
+                            </span>
+                            <span class="term-label">apoptotic signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IGI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10481910" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10481910
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Drosophila caspase inhibitor DIAP1 is essential for cell...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q24570" data-a="GO:0097190" data-r="PMID:10481910" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Grim genetically antagonizes DIAP1-dependent caspase restraint.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The DIAP1 paper shows that HID blocks DIAP1 and argues that RPR and GRIM act similarly to disrupt productive IAP-caspase interactions.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10481910" target="_blank" class="term-link">
+                                        PMID:10481910
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">RPR and GRIM can act similarly</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Grim uses its N-terminal IAP-binding motif to bind IAP BIR domains, antagonizing DIAP1 and DIAP2 interactions with caspases and promoting apoptotic caspase activation.</h3>
+                <span class="vote-buttons" data-g="Q24570" data-a="FUNCTION: Grim uses its N-terminal IAP-binding motif to bind..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990525" target="_blank" class="term-link">
+                            BIR domain binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097190" target="_blank" class="term-link">
+                                apoptotic signaling pathway
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043065" target="_blank" class="term-link">
+                                positive regulation of apoptotic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15107838" target="_blank" class="term-link">
+                                PMID:15107838
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">RHG proteins
+use their N-terminal IAP-binding motifs to bind to the same surface groove</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18166655" target="_blank" class="term-link">
+                                PMID:18166655
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Rpr and Grim preferentially bound to the BIR2 domain of DIAP2</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10481910" target="_blank" class="term-link">
+                                PMID:10481910
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">RPR, HID, and GRIM promote apoptosis by
+disrupting productive IAP-caspase interactions</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Grim uses its GH3 amphipathic helix to associate with mitochondria and remodel cytochrome c distribution, a mitochondrial pro-apoptotic route separable from its N-terminal IAP antagonism.</h3>
+                <span class="vote-buttons" data-g="Q24570" data-a="FUNCTION: Grim uses its GH3 amphipathic helix to associate w..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008637" target="_blank" class="term-link">
+                                apoptotic mitochondrial changes
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0097190" target="_blank" class="term-link">
+                                apoptotic signaling pathway
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                mitochondrion
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12093734" target="_blank" class="term-link">
+                                PMID:12093734
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">GH3, a 15 amino acid internal Grim domain absolutely required for its
+proapoptotic activity</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12093734" target="_blank" class="term-link">
+                                PMID:12093734
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Grim rings are mitochondria-associated</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12093734" target="_blank" class="term-link">
+                                PMID:12093734
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Two independent pathways may thus be triggered by Grim</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10481910" target="_blank" class="term-link">
+                            PMID:10481910
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Drosophila caspase inhibitor DIAP1 is essential for cell survival and is negatively regulated by HID.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10821983" target="_blank" class="term-link">
+                            PMID:10821983
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Metamorphosis in drosophila and other insects: the fate of neurons throughout the stages.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11818065" target="_blank" class="term-link">
+                            PMID:11818065
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The damage-responsive Drosophila gene sickle encodes a novel IAP binding protein similar to but distinct from reaper, grim, and hid.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12093734" target="_blank" class="term-link">
+                            PMID:12093734
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">GH3, a novel proapoptotic domain in Drosophila Grim, promotes a mitochondrial death pathway.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15107838" target="_blank" class="term-link">
+                            PMID:15107838
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular mechanisms of DrICE inhibition by DIAP1 and removal of inhibition by Reaper, Hid and Grim.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16303568" target="_blank" class="term-link">
+                            PMID:16303568
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Neuronal expression of p53 dominant-negative proteins in adult Drosophila melanogaster extends life span.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17356067" target="_blank" class="term-link">
+                            PMID:17356067
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal cell rupture after injury in Drosophila requires the JNK pathway, small GTPases and the TNF homolog Eiger.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18166655" target="_blank" class="term-link">
+                            PMID:18166655
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DIAP2 functions as a mechanism-based regulator of drICE that contributes to the caspase activity threshold in living cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20558283" target="_blank" class="term-link">
+                            PMID:20558283
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">grim promotes programmed cell death of Drosophila microchaete glial cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21035895" target="_blank" class="term-link">
+                            PMID:21035895
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Differential localization and processing of apoptotic proteins in Malpighian tubules of Drosophila during metamorphosis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21558369" target="_blank" class="term-link">
+                            PMID:21558369
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Coordinated expression of cell death genes regulates neuroblast apoptosis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23519152" target="_blank" class="term-link">
+                            PMID:23519152
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Essential role of grim-led programmed cell death for the establishment of corazonin-producing peptidergic nervous system during embryogenesis and metamorphosis in Drosophila melanogaster.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23784845" target="_blank" class="term-link">
+                            PMID:23784845
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Mechanisms of postecdysis-associated programmed cell death of peptidergic neurons in Drosophila melanogaster.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23940367" target="_blank" class="term-link">
+                            PMID:23940367
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Caspase-dependent regulation of the ubiquitin-proteasome system through direct substrate targeting.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/8698237" target="_blank" class="term-link">
+                            PMID:8698237
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">grim, a novel cell death gene in Drosophila.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9857177" target="_blank" class="term-link">
+                            PMID:9857177
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Drosophila grim induces apoptosis in mammalian cells.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DROME/grim/grim-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">grim UniProtKB record Q24570</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section" id="review-questions">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Should GO provide a molecular-function term for the Grim/Reaper/Sickle GH3-side mitochondrial effector activity, so this domain is not represented only by broad apoptotic mitochondrial changes process terms?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q24570" data-a="Q: Should GO provide a molecular-function term for th..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which endogenous Drosophila death contexts require Grim-DIAP2 binding in addition to canonical DIAP1 antagonism, given that DIAP2 is primarily curated as a drICE threshold regulator and Imd-pathway ubiquitin ligase?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q24570" data-a="Q: Which endogenous Drosophila death contexts require..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-experiments">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use endogenous grim rescue transgenes carrying separable IAP-binding-motif and GH3 mutations to quantify which developmental death events require BIR-domain binding, mitochondrial association, or both domains.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q24570" data-a="EXPERIMENT: Use endogenous grim rescue transgenes carrying sep..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Image tagged Grim at endogenous expression levels with DIAP1, DIAP2, active DrICE, and mitochondrial markers to distinguish cytosolic, nuclear, and mitochondrial pools across cells that die versus survive.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q24570" data-a="EXPERIMENT: Image tagged Grim at endogenous expression levels ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(grim-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q24570" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="grim-apoptosis-curation-notes">grim apoptosis curation notes</h1>
+<h2 id="2026-09-30">2026-09-30</h2>
+<ul>
+<li>Reviewed all 23 seeded FlyBase GOA rows for <code>grim</code> using the local UniProt record and cached publications.</li>
+<li>Treated Grim as an RHG/IAP antagonist with two separable pro-apoptotic regions:<br />
+  an N-terminal IAP-binding motif that binds IAP BIR domains and a GH3 amphipathic<br />
+  helix that supports mitochondrial apoptotic changes.</li>
+<li>Downcasted generic <code>GO:0006915 apoptotic process</code> and <code>GO:0012501 programmed
+  cell death</code> rows to <code>GO:0097190 apoptotic signaling pathway</code> where the source<br />
+  assayed Grim as the upstream pro-death trigger.</li>
+<li>Replaced the generic DIAP2 <code>GO:0005515 protein binding</code> row with<br />
+<code>GO:1990525 BIR domain binding</code>; Ribeiro et al. directly state that Rpr and<br />
+  Grim preferentially bind the BIR2 domain of DIAP2 <a href="https://pubmed.ncbi.nlm.nih.gov/18166655">PMID:18166655</a>.</li>
+<li>Broadened the <code>GO:0005759 mitochondrial matrix</code> row to<br />
+<code>GO:0005739 mitochondrion</code>; Claveria et al. used a matrix marker to show that<br />
+  Grim-positive rings are mitochondria associated, not that Grim enters the<br />
+  matrix <a href="https://pubmed.ncbi.nlm.nih.gov/12093734">PMID:12093734</a>.</li>
+<li>Broadened <code>positive regulation of release of cytochrome c from mitochondria</code><br />
+  to <code>GO:0008637 apoptotic mitochondrial changes</code> because the same paper reports<br />
+  no substantial free cytochrome-c release into the cytosol in Grim-expressing<br />
+  Drosophila cells, only cytochrome-c redistribution into Grim-positive puncta<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/12093734">PMID:12093734</a>.</li>
+<li>Kept Malpighian tubule nuclear localization and neuronal/glial developmental<br />
+  death rows as non-core or context-specific: they are real deployments or<br />
+  restraint contexts of the Grim program rather than separate molecular<br />
+  activities.</li>
+<li>Left rows from abstract-only papers <code>UNDECIDED</code> when the visible cache did not<br />
+  expose Grim-specific evidence, notably lifespan, melanization, larval CNS<br />
+  remodeling, plasma membrane, and one Sickle-paper top-level apoptosis row.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q24570
+gene_symbol: grim
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: &#39;grim encodes a short Drosophila Reaper/Hid/Grim-family IAP antagonist that promotes apoptotic
+  caspase activation. Grim binds BIR domains of DIAP1/DIAP2-family IAPs through its N-terminal IAP-binding
+  motif, countering IAP restraint of DrICE-family caspases, and also uses an internal GH3 amphipathic
+  helix to associate with mitochondria and remodel cytochrome-c distribution during apoptosis induction
+  in selected developmental cell-death programs.&#39;
+existing_annotations:
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:18166655
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q24307
+  review:
+    summary: Grim binds the DIAP2 BIR2 domain through its IAP-antagonist motif.
+    action: MODIFY
+    reason: The DIAP2 interaction is real and maps to a baculovirus IAP repeat domain, so BIR domain
+      binding is the informative replacement for generic protein binding.
+    proposed_replacement_terms:
+    - id: GO:1990525
+      label: BIR domain binding
+    supported_by:
+    - reference_id: PMID:18166655
+      supporting_text: Rpr and Grim preferentially bound to the BIR2 domain of DIAP2
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IDA
+  original_reference_id: PMID:21035895
+  qualifier: located_in
+  review:
+    summary: Grim is detected in nuclei of Malpighian tubule cells that persist into adulthood.
+    action: KEEP_AS_NON_CORE
+    reason: Nuclear sequestration of Grim in Malpighian tubules appears to be a tissue-specific
+      survival context rather than the core pro-apoptotic site of Grim action.
+    supported_by:
+    - reference_id: PMID:21035895
+      supporting_text: sequestered in the nucleus
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:21035895
+  qualifier: located_in
+  review:
+    summary: The cached Malpighian-tubule abstract does not verify cytoplasmic Grim localization.
+    action: UNDECIDED
+    reason: The abstract reports nuclear sequestration of GRIM, HID, DRONC, and DRICE, but it does
+      not expose the cytoplasmic staining that may have supported this IDA row.
+    supported_by:
+    - reference_id: PMID:21035895
+      supporting_text: sequestered in the nucleus
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:9857177
+  qualifier: located_in
+  review:
+    summary: Grim localizes partly to the cytosol when expressed in mouse fibroblasts.
+    action: ACCEPT
+    reason: The localization was observed in heterologous mammalian cells and is consistent with the
+      cytosolic pool observed in Drosophila cells before strong mitochondrial relocalization.
+    supported_by:
+    - reference_id: PMID:9857177
+      supporting_text: the cytosol and in the mitochondria of mouse fibroblasts
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IDA
+  original_reference_id: PMID:9857177
+  qualifier: located_in
+  review:
+    summary: Grim localizes to mitochondria in heterologous mammalian cells and in Drosophila SL2
+      cells during apoptosis induction.
+    action: ACCEPT
+    reason: The PMID:9857177 source observed mitochondrial Grim in mouse fibroblasts, and the
+      Drosophila SL2 GH3 study independently showed GH3-dependent mitochondrial association.
+    additional_reference_ids:
+    - PMID:12093734
+    supported_by:
+    - reference_id: PMID:9857177
+      supporting_text: the cytosol and in the mitochondria of mouse fibroblasts
+      reference_section_type: ABSTRACT
+    - reference_id: PMID:12093734
+      supporting_text: Grim rings are mitochondria-associated
+- term:
+    id: GO:0005759
+    label: mitochondrial matrix
+  evidence_type: IDA
+  original_reference_id: PMID:12093734
+  qualifier: located_in
+  review:
+    summary: Grim-positive rings surround mitochondrial markers rather than placing Grim in the
+      matrix.
+    action: MODIFY
+    reason: The cited Drosophila microscopy used a mitochondrial matrix marker to show
+      Grim-associated mitochondrial rings; it supports mitochondrion localization, not import into
+      the matrix compartment.
+    proposed_replacement_terms:
+    - id: GO:0005739
+      label: mitochondrion
+    supported_by:
+    - reference_id: PMID:12093734
+      supporting_text: Grim rings are mitochondria-associated
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IDA
+  original_reference_id: PMID:21035895
+  qualifier: located_in
+  review:
+    summary: The cached Malpighian-tubule abstract does not verify plasma-membrane Grim
+      localization.
+    action: UNDECIDED
+    reason: Full-text figures may contain plasma-membrane staining, but the locally available
+      abstract only exposes nuclear sequestration in Malpighian tubules.
+    supported_by:
+    - reference_id: PMID:21035895
+      supporting_text: sequestered in the nucleus
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0006915
+    label: apoptotic process
+  evidence_type: IDA
+  original_reference_id: PMID:11818065
+  qualifier: involved_in
+  review:
+    summary: The cached Sickle abstract does not verify a Grim-specific apoptosis assay.
+    action: UNDECIDED
+    reason: PMID:11818065 uses Grim, Hid, and Reaper as IAP-antagonist comparators while
+      characterizing Sickle; without full text, the Grim-specific IDA evidence behind this row is
+      unresolved.
+    supported_by:
+    - reference_id: PMID:11818065
+      supporting_text: &#34;unlike the N\ntermini of Grim, Hid, and Rpr&#34;
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0006915
+    label: apoptotic process
+  evidence_type: IEP
+  original_reference_id: PMID:8698237
+  qualifier: involved_in
+  review:
+    summary: grim expression coincides with embryonic PCD and ectopic grim is sufficient to initiate
+      p35-sensitive apoptosis.
+    action: MODIFY
+    reason: The original grim paper placed Grim upstream of ICE-like caspase effectors; that is a
+      signaling role and is more specific than top-level apoptotic process.
+    proposed_replacement_terms:
+    - id: GO:0097190
+      label: apoptotic signaling pathway
+    supported_by:
+    - reference_id: PMID:8698237
+      supporting_text: &#34;Expression of grim RNA coincided with the onset of\nprogrammed cell death&#34;
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0006915
+    label: apoptotic process
+  evidence_type: IMP
+  original_reference_id: PMID:12093734
+  qualifier: involved_in
+  review:
+    summary: The Grim GH3 domain drives a mitochondrial apoptotic-signaling route.
+    action: MODIFY
+    reason: Loss of the GH3 domain blocks Grim pro-apoptotic function without disrupting IAP
+      binding, supporting a specific mitochondrial signaling contribution rather than only the broad
+      apoptotic-process term.
+    proposed_replacement_terms:
+    - id: GO:0097190
+      label: apoptotic signaling pathway
+    supported_by:
+    - reference_id: PMID:12093734
+      supporting_text: deletion of the internal GH3 domain in a Grim protein still retaining the
+        N-terminal domain also eliminates most of the Grim proapoptotic activity
+- term:
+    id: GO:0006915
+    label: apoptotic process
+  evidence_type: IMP
+  original_reference_id: PMID:23940367
+  qualifier: involved_in
+  review:
+    summary: Caspase cleavage stabilizes Grim and amplifies the apoptotic signal.
+    action: MODIFY
+    reason: The DIAP1/UbcD1 study shows that Grim cleavage prevents K48-linked ubiquitinylation at
+      Lys136 and starts a positive caspase-feedback branch, which is apoptotic signaling rather than
+      the whole apoptotic process.
+    proposed_replacement_terms:
+    - id: GO:0097190
+      label: apoptotic signaling pathway
+    supported_by:
+    - reference_id: PMID:23940367
+      supporting_text: feed-forward caspase amplification loop
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0006915
+    label: apoptotic process
+  evidence_type: IMP
+  original_reference_id: PMID:8698237
+  qualifier: involved_in
+  review:
+    summary: Grim expression independently triggers caspase-dependent apoptotic signaling.
+    action: MODIFY
+    reason: Chen et al. showed that Grim can trigger p35-blockable apoptosis without rpr or hid,
+      placing Grim in the signal that activates the shared downstream caspase machinery.
+    proposed_replacement_terms:
+    - id: GO:0097190
+      label: apoptotic signaling pathway
+    supported_by:
+    - reference_id: PMID:8698237
+      supporting_text: &#34;did not require the\nfunctions of rpr or hid&#34;
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0008340
+    label: determination of adult lifespan
+  evidence_type: IMP
+  original_reference_id: PMID:16303568
+  qualifier: involved_in
+  review:
+    summary: The cached p53/lifespan abstract does not mention grim.
+    action: UNDECIDED
+    reason: The PMID:16303568 abstract supports neuronal p53 dominant-negative effects on Drosophila
+      lifespan, but Grim-specific full-text evidence is required before adjudicating this row.
+    supported_by:
+    - reference_id: PMID:16303568
+      supporting_text: adult neurons extends life span
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0010623
+    label: programmed cell death involved in cell development
+  evidence_type: IMP
+  original_reference_id: PMID:23519152
+  qualifier: involved_in
+  review:
+    summary: Grim is a developmental pro-apoptotic trigger in corazoninergic neuronal lineages.
+    action: KEEP_AS_NON_CORE
+    reason: grim loss blocks developmental PCD of vCrz neurons and their EW3-sibling precursors;
+      this is a real in vivo developmental context layered on top of Grim IAP-antagonist signaling.
+    supported_by:
+    - reference_id: PMID:23519152
+      supporting_text: We found grim as a chief proapoptotic gene
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0012501
+    label: programmed cell death
+  evidence_type: IMP
+  original_reference_id: PMID:20558283
+  qualifier: involved_in
+  review:
+    summary: Grim is required for PCD of Drosophila microchaete glial cells.
+    action: MODIFY
+    reason: The source identifies an endogenous grim-dependent death process in one lineage;
+      mechanistically this is another apoptotic-signaling context and can be represented more
+      specifically than broad programmed cell death.
+    proposed_replacement_terms:
+    - id: GO:0097190
+      label: apoptotic signaling pathway
+    supported_by:
+    - reference_id: PMID:20558283
+      supporting_text: required grim
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0035006
+    label: melanization defense response
+  evidence_type: IMP
+  original_reference_id: PMID:17356067
+  qualifier: involved_in
+  review:
+    summary: The cached crystal-cell rupture abstract does not expose a grim-specific melanization
+      phenotype.
+    action: UNDECIDED
+    reason: The abstract links crystal-cell rupture and melanization to JNK, Rho GTPases, Eiger, and
+      dying hemocytes, but the local evidence does not name Grim; full text is needed to verify
+      whether grim was assayed.
+    supported_by:
+    - reference_id: PMID:17356067
+      supporting_text: melanization of the clot matrix
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0035193
+    label: larval central nervous system remodeling
+  evidence_type: TAS
+  original_reference_id: PMID:10821983
+  qualifier: involved_in
+  review:
+    summary: The cached insect-metamorphosis review abstract does not verify a direct grim
+      assertion.
+    action: UNDECIDED
+    reason: The source is a broad metamorphosis review that describes neuronal fates but does not
+      expose the Grim evidence behind this TAS row in the local abstract.
+    supported_by:
+    - reference_id: PMID:10821983
+      supporting_text: die before and immediately after eclosion
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0042803
+    label: protein homodimerization activity
+  evidence_type: IPI
+  original_reference_id: PMID:23940367
+  qualifier: enables
+  supporting_entities:
+  - FB:FBgn0015946
+  review:
+    summary: Grim self-associates in cells while being ubiquitinylated by DIAP1.
+    action: KEEP_AS_NON_CORE
+    reason: Self-association is experimentally supported and likely relevant to RHG complex
+      behavior, but the row captures a modulatory property rather than the primary IAP-antagonist
+      function.
+    supported_by:
+    - reference_id: PMID:23940367
+      supporting_text: Grim self-associates in cells
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0043065
+    label: positive regulation of apoptotic process
+  evidence_type: IDA
+  original_reference_id: PMID:15107838
+  qualifier: involved_in
+  review:
+    summary: Grim antagonizes DIAP1 to relieve DrICE inhibition.
+    action: ACCEPT
+    reason: The structural DIAP1 study directly places Grim with Reaper and Hid as RHG peptides that
+      counter DIAP1-mediated inhibition of the effector caspase DrICE.
+    supported_by:
+    - reference_id: PMID:15107838
+      supporting_text: hence relieving DIAP1-mediated inhibition of DrICE
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0051402
+    label: neuron apoptotic process
+  evidence_type: IMP
+  original_reference_id: PMID:21558369
+  qualifier: involved_in
+  review:
+    summary: Grim is required for normal apoptosis of embryonic and larval neuroblasts.
+    action: KEEP_AS_NON_CORE
+    reason: The neuroblast phenotypes are strong in vivo developmental evidence for Grim-triggered
+      apoptosis in the nervous system, but the cellular context is secondary to the IAP-antagonist
+      mechanism.
+    supported_by:
+    - reference_id: PMID:21558369
+      supporting_text: &#34;Deletion of grim alone blocks the death of\nneuroblasts in the larvae&#34;
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0051402
+    label: neuron apoptotic process
+  evidence_type: IMP
+  original_reference_id: PMID:23784845
+  qualifier: involved_in
+  review:
+    summary: Grim is the principal death inducer for CCAP peptidergic neurons during CNS
+      metamorphosis.
+    action: KEEP_AS_NON_CORE
+    reason: This is a real endogenous neuronal apoptosis context for Grim, but it is a cell-type
+      deployment of Grim apoptotic signaling rather than a separate molecular activity.
+    supported_by:
+    - reference_id: PMID:23784845
+      supporting_text: grim functions as a principal death inducer
+      reference_section_type: ABSTRACT
+- term:
+    id: GO:0090200
+    label: positive regulation of release of cytochrome c from mitochondria
+  evidence_type: IDA
+  original_reference_id: PMID:12093734
+  qualifier: involved_in
+  review:
+    summary: Grim redistributes mitochondrial cytochrome c signal but does not cause substantial
+      free cytochrome-c release in Drosophila cells.
+    action: MODIFY
+    reason: The Drosophila data support GH3-dependent apoptotic mitochondrial remodeling; the cited
+      paper explicitly distinguishes this phenotype from vertebrate-style free cytochrome c release
+      into the cytosol.
+    proposed_replacement_terms:
+    - id: GO:0008637
+      label: apoptotic mitochondrial changes
+    supported_by:
+    - reference_id: PMID:12093734
+      supporting_text: we thus found no substantial cytochrome c release to cytosol
+- term:
+    id: GO:0097190
+    label: apoptotic signaling pathway
+  evidence_type: IGI
+  original_reference_id: PMID:10481910
+  qualifier: involved_in
+  supporting_entities:
+  - FB:FBgn0260635
+  review:
+    summary: Grim genetically antagonizes DIAP1-dependent caspase restraint.
+    action: ACCEPT
+    reason: The DIAP1 paper shows that HID blocks DIAP1 and argues that RPR and GRIM act similarly
+      to disrupt productive IAP-caspase interactions.
+    supported_by:
+    - reference_id: PMID:10481910
+      supporting_text: RPR and GRIM can act similarly
+      reference_section_type: ABSTRACT
+references:
+- id: PMID:10481910
+  title: The Drosophila caspase inhibitor DIAP1 is essential for cell survival and is negatively
+    regulated by HID.
+  findings: []
+- id: PMID:10821983
+  title: &#39;Metamorphosis in drosophila and other insects: the fate of neurons throughout the stages.&#39;
+  findings: []
+- id: PMID:11818065
+  title: The damage-responsive Drosophila gene sickle encodes a novel IAP binding protein similar to
+    but distinct from reaper, grim, and hid.
+  findings: []
+- id: PMID:12093734
+  title: GH3, a novel proapoptotic domain in Drosophila Grim, promotes a mitochondrial death
+    pathway.
+  findings: []
+- id: PMID:15107838
+  title: Molecular mechanisms of DrICE inhibition by DIAP1 and removal of inhibition by Reaper, Hid
+    and Grim.
+  findings: []
+- id: PMID:16303568
+  title: Neuronal expression of p53 dominant-negative proteins in adult Drosophila melanogaster
+    extends life span.
+  findings: []
+- id: PMID:17356067
+  title: Crystal cell rupture after injury in Drosophila requires the JNK pathway, small GTPases and
+    the TNF homolog Eiger.
+  findings: []
+- id: PMID:18166655
+  title: DIAP2 functions as a mechanism-based regulator of drICE that contributes to the caspase
+    activity threshold in living cells.
+  findings: []
+- id: PMID:20558283
+  title: grim promotes programmed cell death of Drosophila microchaete glial cells.
+  findings: []
+- id: PMID:21035895
+  title: Differential localization and processing of apoptotic proteins in Malpighian tubules of
+    Drosophila during metamorphosis.
+  findings: []
+- id: PMID:21558369
+  title: Coordinated expression of cell death genes regulates neuroblast apoptosis.
+  findings: []
+- id: PMID:23519152
+  title: Essential role of grim-led programmed cell death for the establishment of
+    corazonin-producing peptidergic nervous system during embryogenesis and metamorphosis in
+    Drosophila melanogaster.
+  findings: []
+- id: PMID:23784845
+  title: Mechanisms of postecdysis-associated programmed cell death of peptidergic neurons in
+    Drosophila melanogaster.
+  findings: []
+- id: PMID:23940367
+  title: Caspase-dependent regulation of the ubiquitin-proteasome system through direct substrate
+    targeting.
+  findings: []
+- id: PMID:8698237
+  title: grim, a novel cell death gene in Drosophila.
+  findings: []
+- id: PMID:9857177
+  title: Drosophila grim induces apoptosis in mammalian cells.
+  findings: []
+- id: file:DROME/grim/grim-uniprot.txt
+  title: grim UniProtKB record Q24570
+  findings: []
+core_functions:
+- description: Grim uses its N-terminal IAP-binding motif to bind IAP BIR domains, antagonizing
+    DIAP1 and DIAP2 interactions with caspases and promoting apoptotic caspase activation.
+  molecular_function:
+    id: GO:1990525
+    label: BIR domain binding
+  directly_involved_in:
+  - id: GO:0097190
+    label: apoptotic signaling pathway
+  - id: GO:0043065
+    label: positive regulation of apoptotic process
+  supported_by:
+  - reference_id: PMID:15107838
+    supporting_text: &#34;RHG proteins\nuse their N-terminal IAP-binding motifs to bind to the same surface
+      groove&#34;
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:18166655
+    supporting_text: Rpr and Grim preferentially bound to the BIR2 domain of DIAP2
+  - reference_id: PMID:10481910
+    supporting_text: &#34;RPR, HID, and GRIM promote apoptosis by\ndisrupting productive IAP-caspase interactions&#34;
+    reference_section_type: ABSTRACT
+- description: Grim uses its GH3 amphipathic helix to associate with mitochondria and remodel
+    cytochrome c distribution, a mitochondrial pro-apoptotic route separable from its N-terminal IAP
+    antagonism.
+  directly_involved_in:
+  - id: GO:0008637
+    label: apoptotic mitochondrial changes
+  - id: GO:0097190
+    label: apoptotic signaling pathway
+  locations:
+  - id: GO:0005739
+    label: mitochondrion
+  supported_by:
+  - reference_id: PMID:12093734
+    supporting_text: &#34;GH3, a 15 amino acid internal Grim domain absolutely required for its\nproapoptotic
+      activity&#34;
+    reference_section_type: ABSTRACT
+  - reference_id: PMID:12093734
+    supporting_text: Grim rings are mitochondria-associated
+  - reference_id: PMID:12093734
+    supporting_text: Two independent pathways may thus be triggered by Grim
+proposed_new_terms: []
+suggested_questions:
+- question: Should GO provide a molecular-function term for the Grim/Reaper/Sickle GH3-side
+    mitochondrial effector activity, so this domain is not represented only by broad apoptotic
+    mitochondrial changes process terms?
+- question: Which endogenous Drosophila death contexts require Grim-DIAP2 binding in addition to
+    canonical DIAP1 antagonism, given that DIAP2 is primarily curated as a drICE threshold regulator
+    and Imd-pathway ubiquitin ligase?
+suggested_experiments:
+- description: Use endogenous grim rescue transgenes carrying separable IAP-binding-motif and GH3
+    mutations to quantify which developmental death events require BIR-domain binding, mitochondrial
+    association, or both domains.
+- description: Image tagged Grim at endogenous expression levels with DIAP1, DIAP2, active DrICE,
+    and mitochondrial markers to distinguish cytosolic, nuclear, and mitochondrial pools across
+    cells that die versus survive.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 ---
 title: "Pennycress AOP2 gene-model check"
 species: [THLAR, ARATH]
+autolink_gene_symbols: false
 ---
 
 # Pennycress AOP gene models

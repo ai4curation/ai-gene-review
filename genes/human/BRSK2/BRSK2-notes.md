@@ -58,3 +58,10 @@ The single kinase core now explicitly lists axonogenesis (GO:0007409) and regula
 This is alignment of the structured synthesis with already reviewed source assertions, not a new annotation or a second catalytic core. The retained core description and evidence explicitly limit the mouse loss experiments to combined SAD A/B deficiency; no exclusive human BRSK2 effect, new direction of regulation, or direct phosphorylation of a new substrate is inferred. All 48 annotation objects and decisions, 17 reference records, six products, two short quotations and nine explicit uncertainties are unchanged. Existing sources and earlier histories are preserved.
 
 The focused core-process correction passed independent scientific review and normal canonical validation with one expected generic-binding warning. The page was regenerated and a standard EDIT history record was validated. Biological status remains DRAFT.
+
+## 2026-11-04 ORGANELLES ER batch 1 (endoplasmic reticulum rows)
+
+- Rows: GO:0005783 IDA PMID:23907667 and IEA GO_REF:0000044 (SL-0095), both located_in. No ER sub-compartment row.
+- Evidence: [PMID:22713462 "we also observed that ER stress induces endogenous BRSK2 to localize to the ER"]; [file:human/BRSK2/BRSK2-uniprot.txt "Localizes to the endoplasmic reticulum in response to stress caused by tunicamycin."]; [PMID:23907667 "Immunofluorescence demonstrated that BRSK2 and VCP/p97 were co-localized"] (abstract only; ER not named in the abstract, curator deferred to).
+- BRSK2 is a soluble cytosolic kinase (no signal peptide, TM or retention motif): the ER pool is a stress-induced recruited pool on the cytosolic face, like recruited pools on mitochondria (TRAF3). Stays at root.
+- Outcome: both rows KEEP_AS_NON_CORE with ORGANELLES reasons and verbatim supporting_text added (the rows previously had reference ids without quotes). No NEW row.

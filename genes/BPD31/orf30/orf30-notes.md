@@ -103,3 +103,10 @@ GO:0039504 assertion should be dropped from the module on the above grounds.
 The module's parts 4 (Aca autoregulation) is not asserted for this gene: no *aca* gene has
 been assigned to the D3112 locus in the evidence reviewed here, and the AcrF8-style
 promoter-burst-then-repression regime is documented for the ZF40 locus, not this one.
+
+
+## 2026-10-25 comparative anti-CRISPR audit
+
+PMID:36805026 and PDB 8DFS directly extend Q6TM72/AcrIF2 to Desulfovibrio vulgaris type I-C Cascade. Earlier type I-F versus I-E selectivity results do not justify universal I-F restriction. The proposed mimicry activity definition now describes the mechanism without unsupported universal reversibility or concentration requirements. The original GOA broad immune terms retain their prior evidence-backed refinement to GO:0098672.
+
+Existing GOA assertions were preserved. Earlier reviewer-authored NEW proposals were reassessed independently. Primary references were obtained through the normal publication cache. A normal Falcon attempt with perplexity-lite fallback failed; logs are in `.cache/module-audit-logs/anti-crispr-deep-BPD31-orf30.log`. These are manual research notes, not provider-generated research.
