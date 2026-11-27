@@ -422,9 +422,9 @@ the category table above. The research findings that drove their reviews:
   review leaves it `UNDECIDED` on the `IEP`-versus-`IMP` reading that the
   evidence-code category above is built on, and diverges from PA2412, which
   `ACCEPT`s the same PseudoCAP row from the same reference on independent
-  deletion-mutant data (PMID:17502378, Drake et al. 2007). A paper on another gene of the same cluster
-  cannot support a PA2403 annotation, which is why the same row is sound there
-  and undecided here.
+  deletion-mutant data (PMID:17502378, Drake et al. 2007). A paper on another
+  gene of the same cluster cannot support a PA2403 annotation, which is why the
+  same row is sound there and undecided here.
 
 ### Patterns
 
