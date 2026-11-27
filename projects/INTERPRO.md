@@ -25,9 +25,14 @@ family is copied onto all of them. We harvested every InterPro2GO annotation our
 gene reviews had already judged (3,652 records on 1,706 genes, joined to 1,826
 source entries), ranked the entries by how often reviewers flagged them, and ran
 family-level deep research on the top of that list. The result so far is a set of
-36 proposed mapping edits across fifteen entries: ten removals (for example ATP
-binding and protein phosphorylation on the protein kinase domain, IPR000719), twelve
-proposals to narrow or qualify a mapping, and fourteen endorsements. These are
+66 rows across 38 entries: 25 removals (for example ATP binding and protein
+phosphorylation on the protein kinase domain, IPR000719), 25 proposals to narrow or
+qualify a mapping, and 16 endorsements. Those three sum to the 66, and each is a count
+over `projects/INTERPRO/interpro2go.sssom.yaml` rather than a figure maintained by
+hand: a removal is `skos:exactMatch` with `predicate_modifier: Not`, a narrowing is
+`skos:broadMatch`, and an endorsement is an unmodified `skos:exactMatch`. Re-derive
+them from the file rather than editing this sentence, because the previous version of
+it said 36 across fifteen and stayed self-consistent while the set nearly doubled. These are
 proposals for InterPro curators, not changes InterPro has adopted, and the
 worklist below the first dozen entries is not yet assessed.
 
@@ -65,15 +70,19 @@ experimental evidence.
 | IPR013380 — Type 3 secretion system ATPase SctN | An SctN-specific entry mapped to rotational proton-transporting ATPase activity and ATP biosynthesis. SctN is a soluble protein-exporting ATPase with no Fo partner; the terms are wrong for every member (915 annotations). | Remove `GO:0046961` and `GO:0006754`; retain the type III secretion process and complex mappings; consider adding `GO:0008564` protein-exporting ATPase activity. |
 | IPR004100 — ATPase, F1/V1/A1 α/β, N-terminal domain | Sound for rotary ATPase subunits, but the domain is shared by the FliI/SctN export ATPases, which do not transport protons. | Narrow `GO:1902600` and `GO:0046034`: ideally suppress when IPR005714 (FliI/YscN) also matches; if per-entry mappings cannot express that, remove them or move them to narrower entries that exclude FliI/SctN. |
 | IPR005714 — ATPase, type III secretion system, FliI/YscN | `GO:0009058` biosynthetic process remains in the 2025-09 mapping file, a remnant of the ATP synthase ancestry. | Remove it; the entry's other four mappings are sound. |
+| IPR023720 — Trehalase, periplasmic (TreA) | `GO:0071474` cellular hyperosmotic response was filed as a removal and the research reversed it. An *E. coli* `treA` null accumulates trehalose extracellularly only under osmotic stress, which is participation evidence rather than mere induction, so the term is earned by the characterised enzyme. It is nevertheless over-broad: the osmotic content is in the circuit around the enzyme — an osmotically regulated promoter, OtsAB synthesis, trehalose excretion — and a trehalase signature detects none of those, so an *E. coli* K-12 regulatory finding reaches all 472 members. | Record as `skos:broadMatch` rather than removing: no other entry and no UniRule supplies the term to periplasmic trehalases, so a removal would strip it from *E. coli* TreA where it is supported. A `rules/curated/` rule cannot separate the members either, because the condition is "the organism runs an osmotically regulated trehalose cycle" — neither a sequence feature nor a taxon. Ask for the term to move to a source that can carry the regulatory condition, or be curated per gene where induction or a stress-specific phenotype is shown. |
 | IPR006935 — Helicase/UvrB, N-terminal | The entry is dominated by DNA-acting enzymes, but the same fold occurs in the RNA-sensing RIG-I-like receptors, so IFIH1 (MDA5) inherits DNA binding. | Replace the DNA-binding mapping with `GO:0003676` nucleic acid binding, as on the sibling helicase entries IPR011545 and IPR006555; the nucleic-acid substrate is a property of the enzyme, not of the shared fold. ATP binding and hydrolase activity are unaffected. |
 
 ### Rule cover for the removals
 
-Each removal row in the mapping set ends with a note on what still supplies the term to the members
-that should keep it. Where a term is right for only part of an entry, a conditional UniProt rule is
-often the better carrier than a mapping, because a rule can require a site, exclude a domain, or limit
-the taxon. The notes were checked against the UniProt UniRule API and the current interpro2go file on
-2026-10-10.
+Most removal rows in the mapping set end with a note on what still supplies the term to the members
+that should keep it: 17 of the 25 do. The remaining eight carry no such note, across six entries --
+IPR002844, IPR005778, IPR017679, IPR036080 and, with two rows each, IPR017681 and IPR017682 -- so a reader should
+not take the note's presence for granted when checking a removal. Where a term is right for only part
+of an entry, a conditional UniProt rule is often the better carrier than a mapping, because a rule can
+require a site, exclude a domain, or limit the taxon. The notes were checked against the UniProt
+UniRule API and the current interpro2go file on 2026-10-10; the 17-of-25 split is a count over the
+mapping set's `comment` fields, so re-derive it rather than trusting this sentence.
 
 | Removal | What still supplies the term | Request |
 |---------|------------------------------|---------|
