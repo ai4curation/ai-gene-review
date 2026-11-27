@@ -20,3 +20,8 @@ the cached primary literature, Reactome summaries, UniProt record, and PANTHER P
 - **TGF-beta/angiogenesis TAS rows.** The abstract cached for PMID:14522471 is a TGF-beta signaling review and
   does not mention ID1; any ID1-specific author statement was not visible, so the old BHF-UCL TAS rows from that
   review are left undecided unless supported by other rows.
+- **2026-11-27 follow-up on ID1 angiogenesis.** The BHF-UCL PMID:14522471 batch is deliberate and aligns with
+  primary ID1 vascular literature: Goumans et al. place Id1 downstream of endothelial TGF-beta/ALK1-Smad signaling,
+  while Volpert et al. show reduced Id1-null neovascularization and endothelial-migration inhibition through
+  thrombospondin-1 derepression. I resolved the TAS rows as supported non-core angiogenesis/TGF-beta outputs rather
+  than source defects.
