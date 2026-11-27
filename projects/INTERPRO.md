@@ -75,27 +75,35 @@ experimental evidence.
 
 ### Rule cover for the removals
 
-Most removal rows in the mapping set carry a note on what still supplies the term to the members
-that should keep it: 17 of the 25 do. Test by containment rather than by position: 14 of the 17
-notes run to more than one sentence, so a reader looking for a single trailing clause will miss
-most of them. Position would in fact succeed here -- in all 17 the note is the last element of its
-`comment` -- but only two rows have trailing material that is not cover content (`IPR000719`
-`GO:0005524`, followed by the sole-source check result, and `IPR018194`, followed by an
-`IPR002844`/`IPR036080` cross-reference), and where a note ends is a judgement rather than a
-marked boundary. Containment is the robust test, not the one the counts force.
-To re-derive the split, parse the YAML
-and test each removal row's `comment` value for a `Rule cover (` clause. Do not grep the file:
-the comments are block scalars and the phrase wraps mid-clause on `IPR018194` and `IPR021006`, so
-a line-based search returns 16 and reads as a stale page rather than a broken check. A semantic
-reading can reach 18, because the IPR017682 removal of `GO:0050660` says where FAD binding does belong (FrhB, via IPR017679) without
-carrying a cover clause. That row is excluded deliberately: it names cover for a *sibling* entry's
-members, not for this entry's, which is the distinction the count is about. The remaining eight carry no such note, across six entries --
-IPR002844, IPR005778, IPR017679, IPR036080 and, with two rows each, IPR017681 and IPR017682 -- so a reader should
-not take the note's presence for granted when checking a removal. Where a term is right for only part
-of an entry, a conditional UniProt rule is often the better carrier than a mapping, because a rule can
-require a site, exclude a domain, or limit the taxon. The notes were checked against the UniProt
-UniRule API and the current interpro2go file on 2026-10-10; re-derive the 17-of-25 split by the
-clause match given above rather than trusting this sentence.
+Most removal rows in the mapping set carry a note on what still supplies the term to the
+members that should keep it: 17 of the 25 do, as of 2026-11-27. The remaining eight carry no
+such note, across six entries -- IPR002844, IPR005778, IPR017679, IPR036080 and, with two rows
+each, IPR017681 and IPR017682 -- so a reader should not take the note's presence for granted
+when checking a removal.
+
+Test for the note by containment, not by position. Position would nearly succeed: in all 17 the
+cover note is the last *topic* in its `comment`. But in two of them the comment's final sentence
+is something else -- `IPR000719` `GO:0005524` ends with the sole-source check result, and
+`IPR018194` with an `IPR002844`/`IPR036080` cross-reference -- so where a note ends is a
+judgement rather than a marked boundary. A single trailing clause is the wrong thing to look for
+in any case: 14 of the 17 notes run to more than one sentence.
+
+To re-derive the 17:
+
+1. Parse the YAML and test each removal row's `comment` value for a `Rule cover (` clause.
+2. Do not grep the file. The comments are block scalars and the phrase wraps mid-clause on
+   `IPR018194` and `IPR021006`, so a line-based search returns 16 -- which reads as a stale page
+   rather than as a broken check.
+3. Expect 17, not 18. A semantic reading can reach 18, because the IPR017682 removal of
+   `GO:0050660` says where FAD binding does belong (FrhB, via IPR017679) without carrying a cover
+   clause. That row is excluded deliberately: it names cover for a *sibling* entry's members, not
+   for this entry's, which is the distinction the count is about.
+
+Where a term is right for only part of an entry, a conditional UniProt rule is often the better
+carrier than a mapping, because a rule can require a site, exclude a domain, or limit the taxon.
+The notes were checked against the UniProt UniRule API and the current interpro2go file on
+2026-10-10; re-derive the 17-of-25 split by the clause match given above rather than trusting
+this sentence.
 
 | Removal | What still supplies the term | Request |
 |---------|------------------------------|---------|
