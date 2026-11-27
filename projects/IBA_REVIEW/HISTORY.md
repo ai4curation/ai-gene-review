@@ -303,7 +303,41 @@ its node; they state nothing the extract contradicts and wait for a new reading.
 ids and leaf counts that main's rewritten texts cite match the release tree, but for one
 leaf count that is off by one (yeast SSZ1). The run records now say for each of the 54
 rows what the reading found (`main_text_read`), the work list counts rows given up
-without it, and a test holds that count at 0.
+without it, and a test holds that count at 0. The review of that push asked for two
+things more, both done with the next push: the PAINT-row quote of the corrected
+assessment runs through the seed list, so that the fact the passage turns on is in a
+quote, and `agrees` is defined by what bears on the verdict, since one such record
+notes a leaf count that is off by one.
+
+**Tenth merge with main (2026-11-23), made by another agent.** While this session was
+down, the repository's merge agent merged main into the branch. Four family reviews
+conflicted. It kept main's refined text and put the re-read's sentence and quotes after
+it, which is not what the nine merges before had done: they had given every such row up.
+In five rows main had changed something the re-read had edited (PTHR22573, PTHR31310,
+PTHR43206, PTHR43452, PTHR43765). In one of them, PTHR43206, the merge reworded the
+verified sentence to fit main's new text, and no record said so: the run record and the
+history record went on describing a sentence that was no longer in the review. The
+review of that merge asked for the rewording to be undone or recorded, and for a test
+that would have caught it.
+
+**Eleventh merge with main (2026-11-27).** Ten conflicts after 320 commits on main: nine
+reviews and one import. Main's work on PAINT losses had changed eleven rows the re-read
+had edited, mostly by naming the node for the loss. Each was set to main's text and
+main's text read against the listing and the release tree. Seven rows keep the re-read's
+sentence, put back word for word under main's text; in each the node main names is the
+clade the sentence counts. Four are main's rows now: two PTHR24220 rows whose corrected
+reason main's rewrite makes unnecessary, a PTHR43668 row to which main added a second
+objection, and yeast PET100, whose disputed IBA is gone from GOA. That is 54 rows given
+up over the merges and 12 kept under a change of main's, with 572 applied. The
+PTHR43206 rewording was checked against the tree, kept, and recorded as a correction.
+PET100's extract was made again from its new GOA file; no other gene with an extract
+had its GOA file changed, and no family with a listing its PAINT slice. 56 more genes
+and 35 more families from main got an extract or a listing. Three things changed in the
+script. Every applied row now carries a digest of the review row its record vouches for,
+and a test fails when the verdict, the reason or the tree quote of such a row is no
+longer what was recorded. A row kept under main's text records what main changed and
+what a reading of main's text found, as a row given up does. And the merge-time checks
+that had lived in scratch files are commands: `changed-on-main`, `vouch` and `check`.
 
 - **Two re-reads of the same rows ran at once without knowing of each other.** Both were
   about the tree, both edited the reason of a `REMOVE` row, and sixteen rows had to be
@@ -321,6 +355,14 @@ without it, and a test holds that count at 0.
   given-up sentence is read against the same tree file, every time, and the record says
   so. A check made at one merge and skipped at the next was a habit, not a rule; it is a
   rule once something fails when it is skipped.
+- **A record has to be checkable against the file it describes.** The run records said
+  which sentence had been added to which row, and nothing compared the two. One merge
+  by another agent was enough to make a record false without anyone seeing it. What a
+  record vouches for is now a digest of the row, and the comparison is a test.
+- **Other agents will merge this branch.** The merge rule lived in this session's notes
+  and scratch files, where the agent that made the tenth merge could not find it. A
+  rule that only one session knows is not the repository's rule. It is in the README
+  and in the script's commands now.
 
 ---
 

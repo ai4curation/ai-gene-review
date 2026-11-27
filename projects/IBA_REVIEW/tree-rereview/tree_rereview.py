@@ -33,6 +33,10 @@ Usage (from the repository root):
     uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py worklist        # needs-curator.yaml
     uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py requote         # complete the quotes of applied rows
     uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py references      # list quoted tree files under references
+    uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py check           # is every applied row still the row its record vouches for?
+    uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py changed-on-main BASE MAIN   # rows whose review row differs between two revisions
+    uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py vouch f014 PTHR43206 GO:0005739 --node PANTHER:PTN000241230 \\
+        --date YYYY-MM-DD --changed "what main changed" --read "agrees: what was read"       # record a reading of a kept row
 """
 
 from __future__ import annotations
@@ -40,6 +44,7 @@ from __future__ import annotations
 import argparse
 import contextlib
 import csv
+import hashlib
 import importlib.util
 import io
 import json
@@ -1050,6 +1055,17 @@ def history_details(unit: str, rows: list[dict[str, Any]], unshared: bool = Fals
     return "\n".join(lines)
 
 
+def history_slug(family: str, root: Path = ROOT) -> str:
+    """The history folder of a family review: the one that already holds its records, where there is one.
+
+    Family reviews have history under two names, ``PTHR12345`` and ``PTHR12345-family-review``.
+    A new record goes where main already keeps the review's history, so that a reader finds
+    one folder; the bare name is used only for a family that has no such folder.
+    """
+    preferred = f"{family}-family-review"
+    return preferred if (root / "history" / "other" / preferred).is_dir() else family
+
+
 def history_arguments(unit: str, applied: list[dict[str, Any]], pr: str = "", unshared: bool = False) -> list[str]:
     """Arguments for the history scaffolder for one changed review."""
     count = f"{len(applied)} {'row' if len(applied) == 1 else 'rows'}"
@@ -1059,7 +1075,7 @@ def history_arguments(unit: str, applied: list[dict[str, Any]], pr: str = "", un
         summary = f"Re-read {count} of overruled IBA annotation against the PANTHER tree; extract quoted"
     else:
         target = [
-            "--kind", "other", "--slug", unit, "--path", f"interpro/panther/{unit}/{unit}-review.yaml",
+            "--kind", "other", "--slug", history_slug(unit), "--path", f"interpro/panther/{unit}/{unit}-review.yaml",
             "--sections", "node_assessments",
         ]
         summary = f"Re-read {count} of disputed node placement against the PANTHER tree; node listing quoted"
@@ -1160,7 +1176,12 @@ def apply_batch(batch: str, jobs: int = 4, pr: str = "") -> Counter[str]:
             review_path_of(gene).write_text(originals[gene], encoding="utf-8")
             undo_applied(record, gene, applied, _first_error(output))
             continue
-        unshared = alias_count(review_path_of(gene).read_text(encoding="utf-8")) < alias_count(originals[gene])
+        edited = review_path_of(gene).read_text(encoding="utf-8")
+        unshared = alias_count(edited) < alias_count(originals[gene])
+        document = yaml.load(edited, Loader=Loader) or {}
+        for row in applied:
+            # the record vouches for the row as the edit left it
+            row["row_digest"] = row_digest(matching_rows(document, row)[0], bool(row.get("family")))
         records.append(write_history(scaffolder, history_arguments(gene, applied, pr, unshared)))
     path.write_text(dump(record), encoding="utf-8")
     valid, output = validate_history(records)
@@ -1249,6 +1270,189 @@ def _first_error(output: str) -> str:
     return line[:300]
 
 
+#: The fields of a review row that a reading depends on. A change in any of them after the
+#: reading means the row has to be read again; a quote that someone else adds does not.
+VOUCHED_FIELDS = {
+    True: ("assessment", "assessment_reason", "affected_subfamilies", "proposed_action", "seeds"),
+    False: ("action", "reason", "summary", "propagation_review", "proposed_replacement_terms"),
+}
+#: The tree file a row of each kind quotes.
+TREE_FILE_SUFFIX = {True: "-tree-nodes.yaml", False: "-phylo.yaml"}
+
+
+def _settled(value: Any) -> Any:
+    """``value`` with the white space of every string in it collapsed, so that re-wrapping is no change."""
+    if isinstance(value, str):
+        return one_paragraph(value)
+    if isinstance(value, dict):
+        return {str(key): _settled(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_settled(item) for item in value]
+    return value
+
+
+def row_digest(review_row: dict[str, Any], family: bool) -> str:
+    """Digest of the fields of a review row that a reading of it depends on (:data:`VOUCHED_FIELDS`).
+
+    An applied row's record carries the digest of the row as it was when the edit was made
+    or last checked. The record vouches for that row and no other: when the verdict, the
+    reason or another of those fields changes, by a merge or by anyone, the digests differ
+    and :func:`applied_row_problems` names the row until it has been read again.
+
+    >>> row = {"action": "REMOVE", "reason": "Seeds are paralogs.  In the tree\\nthey are."}
+    >>> row_digest(row, family=False) == row_digest({**row, "reason": "Seeds are paralogs. In the tree they are."}, family=False)
+    True
+    >>> row_digest(row, family=False) == row_digest({**row, "action": "MODIFY"}, family=False)
+    False
+    """
+    picked = {name: _settled(review_row.get(name)) for name in VOUCHED_FIELDS[family]}
+    text = json.dumps(picked, sort_keys=True, ensure_ascii=False, default=str)
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
+
+
+def changed_fields(before: dict[str, Any] | None, after: dict[str, Any] | None, family: bool) -> list[str]:
+    """The fields a reading depends on, and ``supported_by``, that differ between two versions of a review row.
+
+    >>> changed_fields({"action": "REMOVE", "reason": "a  b"}, {"action": "MODIFY", "reason": "a b"}, family=False)
+    ['action']
+    >>> changed_fields({"action": "REMOVE"}, None, family=False)
+    ['(the row is gone)']
+    """
+    if before is None or after is None:
+        return ["(the row is gone)" if after is None else "(the row is new)"]
+    return [
+        name
+        for name in (*VOUCHED_FIELDS[family], "supported_by")
+        if _settled(before.get(name)) != _settled(after.get(name))
+    ]
+
+
+def applied_row_problems(row: dict[str, Any], document: dict[str, Any]) -> list[str]:
+    """What is wrong with an applied row, given its review as committed: an empty list when nothing is.
+
+    The row has to match exactly one row of the review, carry the verdict that was read,
+    quote its tree file, and be the row the record vouches for (:func:`row_digest`).
+    """
+    family = bool(row.get("family"))
+    reached = matching_rows(document, row)
+    if len(reached) != 1:
+        return [f"{len(reached)} rows of the review match"]
+    review_row = reached[0]
+    problems = []
+    verdict = review_row.get("assessment" if family else "action")
+    if verdict != row.get("action"):
+        problems.append(f"the verdict is {verdict}, and {row.get('action')} was read")
+    quoted = [str(item.get("reference_id", "")) for item in review_row.get("supported_by") or [] if isinstance(item, dict)]
+    if not any(reference.endswith(TREE_FILE_SUFFIX[family]) for reference in quoted):
+        problems.append("the row does not quote its tree file")
+    if not row.get("row_digest"):
+        problems.append("the record has no digest of the row it vouches for")
+    elif row_digest(review_row, family) != row["row_digest"]:
+        problems.append(
+            "the row is not the row this record vouches for: its verdict, reason or another field a reading depends on "
+            "has changed since; read it against the tree file again and record that (`vouch`)"
+        )
+    return problems
+
+
+def applied_problems(runs: Path = RUNS) -> dict[str, list[str]]:
+    """Every applied row of the run records that has a problem (:func:`applied_row_problems`), by a label of the row."""
+    documents: dict[str, dict[str, Any]] = {}
+    found: dict[str, list[str]] = {}
+    for path in sorted(runs.glob("*.yaml")):
+        record = load(path)
+        for row in record["rows"]:
+            if row.get("outcome") != "applied":
+                continue
+            unit = unit_of(row)
+            if unit not in documents:
+                documents[unit] = yaml.load(review_path_of(unit).read_text(encoding="utf-8"), Loader=Loader) or {}
+            problems = applied_row_problems(row, documents[unit])
+            if problems:
+                found[" ".join(part for part in (record["batch"], unit, row.get("node", ""), row["term"]) if part)] = problems
+    return found
+
+
+def _git_show(revision: str, path: str) -> str | None:
+    """The text of a file at a revision, or ``None`` when the revision does not have it."""
+    done = subprocess.run(["git", "show", f"{revision}:{path}"], cwd=ROOT, capture_output=True, text=True, check=False)
+    return done.stdout if done.returncode == 0 else None
+
+
+def changed_between(base: str, main: str, runs: Path = RUNS) -> list[dict[str, Any]]:
+    """Rows of the run records whose review row differs between two revisions, with the fields that differ.
+
+    Run it at a merge with the merge base and main's tip: an applied row main changed has
+    to be read again before its edit is kept or given up, and so has a row that was
+    already left to main or to a curator and that main changed once more.
+    """
+    names = subprocess.run(
+        ["git", "diff", "--name-only", base, main], cwd=ROOT, capture_output=True, text=True, check=True
+    ).stdout.split("\n")
+    touched = set(names)
+    versions: dict[str, tuple[dict[str, Any], dict[str, Any]]] = {}
+    found = []
+    for path in sorted(runs.glob("*.yaml")):
+        record = load(path)
+        for row in record["rows"]:
+            unit = unit_of(row)
+            relative = str(review_path_of(unit).relative_to(ROOT))
+            if relative not in touched:
+                continue
+            if unit not in versions:
+                old, new = _git_show(base, relative), _git_show(main, relative)
+                versions[unit] = (
+                    yaml.load(old, Loader=Loader) or {} if old else {},
+                    yaml.load(new, Loader=Loader) or {} if new else {},
+                )
+            before, after = (matching_rows(document, row) for document in versions[unit])
+            family = bool(row.get("family"))
+            fields = (
+                [f"({len(before)} rows at the base, {len(after)} on main)"]
+                if len(before) != 1 or len(after) != 1
+                else changed_fields(before[0], after[0], family)
+            )
+            if fields:
+                found.append({
+                    "batch": record["batch"], "unit": unit, "node": row.get("node", ""), "term": row["term"],
+                    "outcome": row.get("outcome", ""), "fields": fields,
+                    "main_text_read": str(row.get("main_text_read") or "")[:10],
+                })
+    return found
+
+
+def vouch(batch: str, unit: str, term: str, node: str, date: str, changed: str, read: str) -> str:
+    """Record that a kept row main changed has been read again, and vouch for the row as it now is.
+
+    ``changed`` says what main changed and ``read`` what the reading of main's present text
+    against the tree file found (``agrees: ...``). The row has to be applied and free of
+    every other problem; its digest is then the committed row's.
+    """
+    path = run_path(batch)
+    record = load(path)
+    hits = [
+        row for row in record["rows"]
+        if unit_of(row) == unit and row["term"] == term and (not node or row.get("node") == node)
+    ]
+    if len(hits) != 1:
+        raise SystemExit(f"{len(hits)} rows of {batch} match {unit} {node} {term}")
+    row = hits[0]
+    if row.get("outcome") != "applied":
+        raise SystemExit("only an applied row is vouched for; a row left to main records main_text_read")
+    value = f"{date}: {read}"
+    if not main_text_finding({"main_text_read": value}):
+        raise SystemExit("--read has to start with agrees:, silent: or contradicted:, and the date has to be YYYY-MM-DD")
+    document = yaml.load(review_path_of(unit).read_text(encoding="utf-8"), Loader=Loader) or {}
+    row["row_digest"] = row_digest(matching_rows(document, row)[0], bool(row.get("family")))
+    others = [problem for problem in applied_row_problems(row, document)]
+    if others:
+        raise SystemExit("; ".join(others))
+    row["changed_on_main"] = f"{date}: {changed}" if not changed[:4].isdigit() else changed
+    row["main_text_read"] = value
+    path.write_text(dump(record), encoding="utf-8")
+    return f"{batch} {unit} {node} {term}: vouched for, digest {row['row_digest']}"
+
+
 WORKLIST = HERE / "needs-curator.yaml"
 WORKLIST_FIELDS = (
     "action", "tree_reading", "outcome", "outcome_detail", "changed_on_main", "main_text_read", "proposed_action",
@@ -1293,11 +1497,14 @@ def main_text_finding(row: dict[str, Any]) -> str:
     A row that main changed after it was read is taken as on main, and the sentence and the
     quotes of the re-read go. Before they go, main's text is read against the row's tree
     file, and ``main_text_read`` records the date, the finding and what was read:
-    ``agrees`` (the text states nothing the tree file contradicts and leaves out no fact
-    that stands against its present verdict), ``silent`` (it leaves out such a fact that
-    the given-up sentence carried) or ``contradicted`` (it states something the tree file
-    contradicts; such a row is corrected by hand before the merge is pushed, as a
-    contradiction left by the script is, so that it is applied again and no longer here).
+    ``agrees`` (nothing the text states that bears on its present verdict is contradicted
+    by the tree file, and it leaves out no fact that stands against that verdict),
+    ``silent`` (it leaves out such a fact that the given-up sentence carried) or
+    ``contradicted`` (it states something the tree file contradicts, and the verdict or
+    what it asks for rests on that; such a row is corrected by hand before the merge is
+    pushed, as a contradiction left by the script is, so that it is applied again and no
+    longer here). A slip that does not bear on the verdict, such as a leaf count that is
+    off by one, is noted in the record and does not change the finding.
     Returns ``""`` for a row without the record, or with one that does not say when it was
     read and which of the three was found: the reading has not been done.
 
@@ -1312,6 +1519,22 @@ def main_text_finding(row: dict[str, Any]) -> str:
     """
     found = _MAIN_TEXT_READ.match(str(row.get("main_text_read") or ""))
     return found.group(1) if found else ""
+
+
+def kept_over_main_change(row: dict[str, Any]) -> bool:
+    """True for an applied row whose review row main changed after the reading, with the edit kept.
+
+    A merge can keep the sentence and the quotes of such a row under main's new text. The
+    text above the sentence is then one nobody read against the tree file, so the row
+    records what main changed (``changed_on_main``) and what a reading of main's present
+    text found (``main_text_read``), as a row given up to main does.
+
+    >>> kept_over_main_change({"outcome": "applied", "changed_on_main": "2026-11-23: main named a target node"})
+    True
+    >>> kept_over_main_change({"outcome": "applied"})
+    False
+    """
+    return row.get("outcome") == "applied" and bool(row.get("changed_on_main"))
 
 
 def _contradiction_left(row: dict[str, Any]) -> bool:
@@ -1366,7 +1589,7 @@ def worklist(runs: Path = RUNS) -> dict[str, Any]:
     list the file under ``references``, with the reason the entry could not be added.
     """
     groups: dict[str, list[dict[str, Any]]] = {"adjudicate": [], "not_read": [], "applied_with_note": []}
-    standing = disputed = moved = 0
+    standing = disputed = moved = kept = 0
     main_text: Counter[str] = Counter()
     unlisted: dict[str, str] = {}
     for path in sorted(runs.glob("*.yaml")):
@@ -1379,6 +1602,9 @@ def worklist(runs: Path = RUNS) -> dict[str, Any]:
         unlisted.update({unit: str(why) for unit, why in mapping(record.get(NOT_LISTED)).items() if unit in quoting})
         for row in record["rows"]:
             outcome = row.get("outcome", "")
+            if kept_over_main_change(row):
+                kept += 1
+                main_text[main_text_finding(row) or "unread"] += 1
             group = outcome if outcome in ("adjudicate", "not_read") else "applied_with_note" if row.get("note") else ""
             if not group:
                 continue
@@ -1427,13 +1653,19 @@ def worklist(runs: Path = RUNS) -> dict[str, Any]:
             "when main rewrote it (changed_on_main says what changed). Its action, tree_reading and note "
             "describe the review as it was read and may no longer describe the committed one. Such a row is "
             "in neither of the two contradiction counts. Before such a row is given up, main's present text is "
-            "read against the row's tree file, and main_text_read says when and what was found: agrees (the "
-            "text states nothing the tree file contradicts and leaves out no fact that stands against its "
-            "present verdict), silent (it leaves out such a fact that the given-up sentence carried; counted "
-            "as main_text_silent) or contradicted (it states something the tree file contradicts; counted as "
+            "read against the row's tree file, and main_text_read says when and what was found: agrees "
+            "(nothing the text states that bears on its present verdict is contradicted by the tree file, and "
+            "it leaves out no fact that stands against that verdict), silent (it leaves out such a fact that "
+            "the given-up sentence carried; counted as main_text_silent) or contradicted (it states something "
+            "the tree file contradicts, and the verdict or what it asks for rests on that; counted as "
             "main_text_contradicted and normally 0, because such a row is corrected by hand before the merge "
-            "is pushed and is then applied again). main_text_unread counts rows given up without that "
-            "reading and is 0 when a merge is pushed. tree_file_not_listed names each review that quotes "
+            "is pushed and is then applied again). A slip that does not bear on the verdict, such as a leaf "
+            "count that is off by one, is noted in the entry and does not change the finding. "
+            "kept_over_main_change counts applied rows whose review row "
+            "main changed after the reading and whose sentence and quotes a merge kept under main's new text; "
+            "each records changed_on_main and main_text_read in the same way. main_text_unread counts rows "
+            "given up, or kept, without that reading and is 0 when a merge is pushed. tree_file_not_listed "
+            "names each review that quotes "
             "its tree file in an applied row and does not list the file under references, with the reason "
             "the script could not add the entry; a curator adds a references list to such a review."
         ),
@@ -1442,6 +1674,7 @@ def worklist(runs: Path = RUNS) -> dict[str, Any]:
             "contradicted_and_left": standing,
             "contradiction_disputed": disputed,
             "needs_new_reading": moved,
+            "kept_over_main_change": kept,
             "main_text_unread": main_text["unread"],
             "main_text_silent": main_text["silent"],
             "main_text_contradicted": main_text["contradicted"],
@@ -1658,6 +1891,18 @@ def main(argv: list[str] | None = None) -> int:
     done.add_argument("--pr", default="", help="pull request number or URL for the history records")
     commands.add_parser("status")
     commands.add_parser("worklist")
+    commands.add_parser("check")
+    drift = commands.add_parser("changed-on-main")
+    drift.add_argument("base", help="the merge base")
+    drift.add_argument("main", help="main's tip")
+    vouched = commands.add_parser("vouch")
+    vouched.add_argument("batch")
+    vouched.add_argument("unit", help="org/GENE or PTHR family")
+    vouched.add_argument("term")
+    vouched.add_argument("--node", default="", help="PANTHER:PTN... for a family row")
+    vouched.add_argument("--date", required=True)
+    vouched.add_argument("--changed", required=True, help="what main changed in the row")
+    vouched.add_argument("--read", required=True, help="agrees: ..., silent: ... or contradicted: ...")
     for name in ("requote", "references"):
         again = commands.add_parser(name)
         again.add_argument("--jobs", type=int, default=4)
@@ -1689,6 +1934,21 @@ def main(argv: list[str] | None = None) -> int:
         made = worklist()
         WORKLIST.write_text(dump(made), encoding="utf-8")
         print(f"{WORKLIST.relative_to(ROOT)}: {made['counts']}")
+    elif args.command == "check":
+        problems = applied_problems()
+        for label, found in problems.items():
+            print(f"{label}: {'; '.join(found)}")
+        print(f"{len(problems)} applied rows with a problem")
+        return 1 if problems else 0
+    elif args.command == "changed-on-main":
+        changes = changed_between(args.base, args.main)
+        for change in changes:
+            read = f"; main's text last read {change['main_text_read']}" if change["main_text_read"] else ""
+            label = " ".join(part for part in (change["batch"], change["unit"], change["node"], change["term"]) if part)
+            print(f"{label} [{change['outcome']}]: {', '.join(change['fields'])}{read}")
+        print(f"{len(changes)} rows of the run records changed between {args.base[:10]} and {args.main[:10]}")
+    elif args.command == "vouch":
+        print(vouch(args.batch, args.unit, args.term, args.node, args.date, args.changed, args.read))
     elif args.command == "requote":
         print("\n".join(requote(args.pr, args.jobs)) or "every applied row already quotes what it has to")
     elif args.command == "references":

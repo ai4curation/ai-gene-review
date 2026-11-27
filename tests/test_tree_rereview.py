@@ -351,8 +351,8 @@ def test_the_worklist_marks_and_counts_both_kinds_of_contradiction(tmp_path: Pat
 
     assert worklist["counts"] == {
         "adjudicate": 4, "not_read": 0, "applied_with_note": 1, "contradicted_and_left": 1, "contradiction_disputed": 1,
-        "needs_new_reading": 2, "main_text_unread": 1, "main_text_silent": 1, "main_text_contradicted": 0,
-        "tree_file_not_listed": 0,
+        "needs_new_reading": 2, "kept_over_main_change": 0, "main_text_unread": 1, "main_text_silent": 1,
+        "main_text_contradicted": 0, "tree_file_not_listed": 0,
     }
     by_term = {entry["term"]: entry for entry in worklist["adjudicate"]}
     assert by_term["GO:0000398"]["contradicted_and_left"] is True and "contradiction_disputed" not in by_term["GO:0000398"]
@@ -389,7 +389,8 @@ def test_the_committed_worklist_agrees_with_its_own_counts() -> None:
     assert all(entry["outcome_detail"].startswith(tr.NOT_REAPPLIED) or entry.get("changed_on_main") for entry in moved)
     assert worklist["counts"]["tree_file_not_listed"] == len(worklist["tree_file_not_listed"])
     assert not any(entry.get("contradicted_and_left") or entry.get("contradiction_disputed") for entry in moved)
-    # no row is given up to main without main's present text being read against the tree file
+    # no row is given up to main, or kept over a change of main's, without main's present text being read
+    # against the tree file
     assert worklist["counts"]["main_text_unread"] == 0
     assert all(tr.main_text_finding(entry) for entry in moved)
     for finding in ("silent", "contradicted"):
@@ -463,6 +464,113 @@ def test_a_row_given_up_to_main_says_what_mains_text_does_with_the_tree(recorded
     if recorded is not None:
         given_up["main_text_read"] = recorded
     assert tr.main_text_finding(given_up) == finding
+
+
+GENE_ROW = {
+    "action": "REMOVE", "reason": "The seeds are splicing factors and the gene is not. " + SENTENCE,
+    "summary": "A transfer from paralogs.",
+    "supported_by": [{"reference_id": REFERENCE, "supporting_text": NODE}],
+}
+
+
+def test_a_row_digest_follows_what_a_reading_depends_on_and_not_the_layout() -> None:
+    digest = tr.row_digest(GENE_ROW, family=False)
+    # re-wrapping the text is not a change, and neither is another quote
+    rewrapped = {**GENE_ROW, "reason": GENE_ROW["reason"].replace(". ", ".\n    ")}
+    assert tr.row_digest(rewrapped, family=False) == digest
+    more_support = {**GENE_ROW, "supported_by": [*GENE_ROW["supported_by"], {"reference_id": "PMID:1", "supporting_text": "x"}]}
+    assert tr.row_digest(more_support, family=False) == digest
+    # the verdict, the reason, the summary and the failure modes are
+    for changed in (
+        {**GENE_ROW, "action": "MARK_AS_OVER_ANNOTATED"},
+        {**GENE_ROW, "reason": GENE_ROW["reason"].replace("paralogs of TEST", "paralogs of TEST, so no whole subfamily is at issue")},
+        {**GENE_ROW, "summary": "A transfer from orthologs."},
+        {**GENE_ROW, "propagation_review": {"failure_modes": ["WRONG_ORTHOLOG_OR_PARALOG"]}},
+    ):
+        assert tr.row_digest(changed, family=False) != digest
+    # a family assessment is vouched for with its verdict, reason, affected subfamilies, proposed action and seeds
+    node = {"assessment": "NEEDS_PRUNING", "assessment_reason": "The fungal clade should be pruned.", "seeds": [{"id": "SGD:S1"}]}
+    assert tr.row_digest({**node, "proposed_action": {"paint_action": "ADD_IRD"}}, family=True) != tr.row_digest(node, family=True)
+    assert tr.row_digest({**node, "gene_review": "genes/yeast/X"}, family=True) == tr.row_digest(node, family=True)
+
+
+def applied_row(**fields: Any) -> dict[str, Any]:
+    return row(outcome="applied", row_digest=tr.row_digest(GENE_ROW, family=False), **fields)
+
+
+def review_with(*rows: dict[str, Any]) -> dict[str, Any]:
+    return {"existing_annotations": [{"term": {"id": "GO:0000398"}, "evidence_type": "IBA", "review": item} for item in rows]}
+
+
+def test_an_applied_row_that_is_as_its_record_has_it_has_no_problem() -> None:
+    assert tr.applied_row_problems(applied_row(), review_with(GENE_ROW)) == []
+
+
+@pytest.mark.parametrize(
+    ("committed", "problem"),
+    [
+        # a merge that folds another clause into the verified sentence
+        ({**GENE_ROW, "reason": GENE_ROW["reason"].replace("which is what the review says", "so no subfamily is at issue")},
+         "is not the row this record vouches for"),
+        # main rewrote its half of the reason and the sentence was kept: the text above the sentence has not been read
+        ({**GENE_ROW, "reason": "The seeds are spliceosomal and the gene is a kinase. " + SENTENCE}, "is not the row this record vouches for"),
+        ({**GENE_ROW, "action": "MARK_AS_OVER_ANNOTATED"}, "the verdict is MARK_AS_OVER_ANNOTATED, and REMOVE was read"),
+        ({**GENE_ROW, "supported_by": [{"reference_id": "PMID:1", "supporting_text": "x"}]}, "does not quote its tree file"),
+    ],
+)
+def test_an_applied_row_that_changed_after_it_was_vouched_for_is_named(committed: dict[str, Any], problem: str) -> None:
+    problems = tr.applied_row_problems(applied_row(), review_with(committed))
+    assert any(problem in found for found in problems), problems
+
+
+def test_an_applied_row_has_to_match_exactly_one_row_of_its_review() -> None:
+    assert tr.applied_row_problems(applied_row(), review_with()) == ["0 rows of the review match"]
+    assert tr.applied_row_problems(applied_row(), review_with(GENE_ROW, GENE_ROW)) == ["2 rows of the review match"]
+
+
+def test_an_applied_row_without_a_digest_is_not_vouched_for() -> None:
+    unvouched = row(outcome="applied")
+    assert tr.applied_row_problems(unvouched, review_with(GENE_ROW)) == ["the record has no digest of the row it vouches for"]
+
+
+def test_every_applied_row_is_still_the_row_its_record_vouches_for() -> None:
+    # a merge, or anyone, that changes the verdict, the reason or the tree quote of a row the re-read edited
+    # has to read the row again and record it (`vouch`); see the README on merges
+    assert tr.applied_problems() == {}
+
+
+def test_the_fields_that_changed_between_two_versions_of_a_row_are_named() -> None:
+    before = {"assessment": "NEEDS_PRUNING", "assessment_reason": "Prune the fungal clade.", "supported_by": [{"reference_id": "PMID:1"}]}
+    after = {**before, "assessment_reason": "Prune the\n  fungal clade.", "proposed_action": {"paint_action": "ADD_IRD"},
+             "supported_by": [{"reference_id": "PMID:1"}, {"reference_id": "PMID:2"}]}
+    # re-wrapped text is no change; a new proposed action and a new quote are
+    assert tr.changed_fields(before, after, family=True) == ["proposed_action", "supported_by"]
+    assert tr.changed_fields(before, before, family=True) == []
+    assert tr.changed_fields(before, None, family=True) == ["(the row is gone)"]
+
+
+def test_a_kept_row_that_main_changed_needs_a_reading_of_mains_text_too(tmp_path: Path) -> None:
+    kept = row(
+        term="GO:0005686", outcome="applied",
+        changed_on_main="2026-11-23: main rewrote the reason and named a target node; the sentence was kept after it",
+    )
+    read = {**kept, "term": "GO:0005687", "main_text_read": "2026-11-27: agrees: the node main names is the three-leaf clade the sentence counts"}
+    untouched = row(term="GO:0005688", outcome="applied")
+    (tmp_path / "g901.yaml").write_text(tr.dump({"batch": "g901", "rows": [kept, read, untouched]}), encoding="utf-8")
+
+    counts = tr.worklist(tmp_path)["counts"]
+
+    assert counts["kept_over_main_change"] == 2
+    assert counts["main_text_unread"] == 1
+    # neither is a row for a curator: the edit stands, and the reading says so
+    assert counts["adjudicate"] == 0 and counts["needs_new_reading"] == 0
+
+
+def test_a_family_reviews_history_goes_to_the_folder_that_already_holds_it(tmp_path: Path) -> None:
+    (tmp_path / "history" / "other" / "PTHR00001-family-review").mkdir(parents=True)
+    assert tr.history_slug("PTHR00001", tmp_path) == "PTHR00001-family-review"
+    # a family whose history has no such folder keeps the bare name
+    assert tr.history_slug("PTHR00002", tmp_path) == "PTHR00002"
 
 
 def test_what_finish_reports_about_a_batch_beyond_its_outcomes() -> None:

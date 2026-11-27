@@ -28,23 +28,23 @@ are read against the family's node listing (`<PTHR>-tree-nodes.yaml`) in the sam
 with two additions from the release tree: where each seed sits, and how many leaves of
 each subfamily the review names as affected lie below the node.
 
-## Status (2026-11-23)
+## Status (2026-11-27)
 
 | | Batches | Rows read | Applied | Left for adjudication |
 |---|---:|---:|---:|---:|
-| Gene reviews, candidate genes (`g001` to `g012`) | 12 of 73 | 278 | 217 | 59, and 2 not read |
+| Gene reviews, candidate genes (`g001` to `g012`) | 12 of 73 | 278 | 216 | 60, and 2 not read |
 | Gene reviews, pilot of the corrected rules (`g013`, `g014`) | 2 of 73 | 47 | 41 | 6 |
 | Gene reviews, the rest (`g015` to `g073`) | 0 of 59 | 0 | | |
-| Family reviews (`f001` to `f018`) | 18 of 18 | 386 | 318, three of them by hand | 68 |
+| Family reviews (`f001` to `f018`) | 18 of 18 | 386 | 315, three of them by hand | 71 |
 
 `tree_rereview.py status` prints the current counts. Results and what they show are in
 [tree-evidence.md](../tree-evidence.md#the-re-read). What is left for a curator is in
 [`needs-curator.yaml`](needs-curator.yaml).
 
 The 59 unread gene batches hold 1,350 rows in 919 genes that are still overruled. Since
-the plans were made, reviews merged on main have added 348 overruled IBA rows in 237
-genes and 284 disputed node assessments: 268 in 149 families the plan does not cover, and
-16 new ones in 10 families it had read (as of the ninth merge, 2026-11-23). Those have
+the plans were made, reviews merged on main have added 445 overruled IBA rows in 293
+genes and 363 disputed node assessments: 343 in 184 families the plan does not cover, and
+20 new ones in 12 families it had read (as of the eleventh merge, 2026-11-27). Those have
 extracts and listings, and are not in either plan; `plan` makes a plan once and does not
 extend it, so they need batches of their own.
 
@@ -130,35 +130,60 @@ is left for a curator, with the reason in the run record:
   `contradiction_disputed` and counts them apart (12 today), with the verifier's objection;
   they need a new reading, and `finish` prints how many a batch leaves. A contradiction
   the verifier never saw would be counted here too; there is none today.
-- **A row whose review changed on main after it was read is not re-applied.** The row is
-  taken as on main, and the work list marks it `needs_new_reading` (54 today): its
-  `action`, `tree_reading` and `note` describe the review as it was read and may no longer
-  describe the committed one. A row that was already waiting for a curator when main
-  rewrote it gets the same mark: its run record keeps why it was left (`outcome_detail`)
-  and says what main changed (`changed_on_main`). Five of the 54 are of this kind.
-- **Main's text is read against the tree file before such a row is given up.** Taking a
-  row as on main drops a sentence that may have been the only place where the review
-  faced a fact of the tree, and that the row is main's says nothing about whether main's
-  text is right. So before a merge is pushed, main's present text of every row marked
-  `needs_new_reading` at that merge is read against the row's extract or listing: for
-  what the given-up sentence carried, and for whatever the text itself says about the
-  tree. The run record says when and what
-  was found (`main_text_read`): `agrees` (the text states nothing the tree file
-  contradicts and leaves out no fact that stands against its present verdict), `silent`
-  (it leaves out such a fact that the given-up sentence carried) or `contradicted` (it
-  states something the tree file contradicts). A `silent` row waits for a new reading
+- **A row main changed after it was read is read again before a merge is pushed.** At a
+  merge, `changed-on-main BASE MAIN` lists every row of the run records whose review row
+  differs between the merge base and main's tip. Each is first set to main's text, whole,
+  and main's new text is then read against the row's extract or listing: for what the
+  re-read's sentence carried, and for whatever the text itself says about the tree. That
+  the row is main's says nothing about whether main's text is right, and the sentence
+  may have been the only place where the review faced a fact of the tree.
+  - **Kept.** Where the sentence still holds and neither repeats nor contradicts main's
+    text, it goes back under main's text word for word, with its quotes, through the
+    script's editor. The row stays `applied`. Its record says what main changed
+    (`changed_on_main`) and what the reading found (`main_text_read`); `vouch` writes
+    both and renews the row's digest (below). 12 rows today.
+  - **Given up.** Where main's text now says the same itself, or the sentence no longer
+    describes the row, the row stays main's. The work list marks it `needs_new_reading`
+    (58 today): its `action`, `tree_reading` and `note` describe the review as it was
+    read and may no longer describe the committed one. A row that was already waiting
+    for a curator when main rewrote it gets the same mark: its record keeps why it was
+    left (`outcome_detail`) and says what main changed. Five of the 58 are of this kind.
+  - **A sentence is never reworded at a merge.** New wording is a new reading. It is
+    made by hand, checked against the tree file and recorded in `correction`.
+
+  The reading is recorded either way (`main_text_read`): `agrees` (nothing the text states that bears on its
+  present verdict is contradicted by the tree file, and it leaves out no fact that stands
+  against that verdict), `silent` (it leaves out such a fact that the given-up sentence
+  carried) or `contradicted` (it states something the tree file contradicts, and the
+  verdict or what it asks for rests on that). A slip that does not bear on the verdict is
+  noted in the record and does not change the finding: main's text for yeast SSZ1 gives a
+  node 326 leaves where the tree has 325, and reads `agrees`. A `silent` row waits for a new reading
   with the rest, marked in the work list (`main_text_silent`, 3 today: E. coli kdpC, mlaB
   and mlaF, each the only seed of its own node). A `contradicted` row is corrected by
   hand before the merge is pushed, as a contradiction the script left is: the fact goes
   back as a sentence checked against the tree file as it now is, with its quotes, the row
   is `applied` again, and `correction` says what was done. The work list counts rows
-  given up without the reading (`main_text_unread`), and a test holds the committed count
-  at 0. The rule dates from the review of the ninth merge. That merge had given up the
-  sentence saying that S. pombe spo9 is itself a seed of FPP biosynthesis at the PTHR11525
-  root, under a text of main's that treats the term like the FPPS activity on the same
-  node, for which spo9 is no seed. All 55 rows marked until then (50 given up, 5 rewritten
-  by main while they waited for a curator) were read on 2026-11-23, and that row was the
-  only one to be corrected.
+  given up or kept without the reading (`main_text_unread`), and a test holds the
+  committed count at 0. The rule dates from the review of the ninth merge. That merge
+  had given up the sentence saying that S. pombe spo9 is itself a seed of FPP
+  biosynthesis at the PTHR11525 root, under a text of main's that treats the term like
+  the FPPS activity on the same node, for which spo9 is no seed. All 55 rows marked until
+  then (50 given up, 5 rewritten by main while they waited for a curator) were read on
+  2026-11-23, and that row was the only one to be corrected. The tenth merge, which
+  another agent made, kept the sentences of five rows under main's rewritten text and
+  reworded one of them (PTHR43206) with no record of it. Kept rows have been recorded
+  since then, and that rewording is recorded as a correction.
+- **Every applied row is vouched for.** The record of an applied row carries a digest of
+  the review row as the edit left it (`row_digest`): the verdict, the reason and the
+  other fields a reading depends on (the summary, failure modes and source notes of a
+  gene row; the affected subfamilies, proposed action and seeds of a family
+  assessment), with white space collapsed and the quotes left out. `check` compares
+  every applied row with its review: the row has to match one row of it, carry the
+  verdict that was read, quote its tree file and have the digest on record. A merge, or
+  anyone, that changes such a row makes `check` and the test suite name the row until
+  it has been read again and vouched for. The digests were first written on 2026-11-27,
+  when every applied row held its recorded sentence or carried a `correction` saying how
+  it had been changed by hand.
 - **Quoting around an adverse fact.** A reading must quote more than the sentence that
   names the term, and must quote every sentence that stands against the verdict: that the
   gene is itself a seed, that it is inside the clade the seeds span, that seeds share its
@@ -166,6 +191,13 @@ is left for a curator, with the reason in the run record:
   paralog; for a family review, that the seeds bracket a node assessed as `TOO_DEEP`. The
   same rule is a validation warning for every gene review
   (`tree_evidence_adverse_unquoted`, [docs/phylo.md](../../../docs/phylo.md)).
+- **A seed-list fact is quoted from the PAINT row.** A family's node listing gives the
+  number of seeds of an assertion and where they sit, not which genes they are, and its
+  sentence on the branches is the same for many nodes. So when a passage turns on a gene
+  being, or not being, among the seeds of a node and term, the quote of the family's
+  `-paint.tsv` row runs through the seed column, far enough to show it. The PTHR11525
+  assessment of FPP biosynthesis at the family root quotes the row of that term, which
+  names spo9, and the row of the FPPS activity, which does not.
 - **An edit that would reach more than one row.** A row is matched by term, evidence code
   and negation (by node, term and negation in a family review). When a review has several
   such rows the edit is not made.
@@ -195,7 +227,8 @@ horizontal-transfer node between it and the gene is never a one-to-one ortholog.
   verifier's check where there was one, and the outcome: `applied`, `adjudicate` or
   `not_read`, with the reason in `outcome_detail`. `quotes_added` lists sentences added to
   a row's quotes afterwards (`requote`), and `correction` says what was put right by hand
-  after review.
+  after review. An applied row has its `row_digest`. A row main changed has
+  `changed_on_main` and `main_text_read`.
 - `needs-curator.yaml`: what the re-read leaves for a curator, from the run records: every
   row left for adjudication or not read, and every applied row on which the reader left a
   note. An applied row quotes its tree file, so it leaves the work list and the validator's
@@ -211,9 +244,12 @@ horizontal-transfer node between it and the gene is never a one-to-one ortholog.
 - `workflows/`: the instructions the reading and verifying agents work from, as workflow
   scripts. They define the readings.
 - `tree_rereview.py`: `plan`, `dossier`, `inputs`, `record`, `apply`, `finish`, `status`,
-  `worklist`, and two repair commands for rows applied before a rule existed: `requote`
-  (add the sentences a row must quote) and `references` (list the quoted tree file under
-  the review's `references`; `apply` now does this itself). Tests are in
+  `worklist`; three commands for merges, `check` (is every applied row still the row its
+  record vouches for), `changed-on-main` (rows whose review row differs between two
+  revisions) and `vouch` (record the reading of a kept row and renew its digest); and
+  two repair commands for rows applied before a rule existed: `requote` (add the
+  sentences a row must quote) and `references` (list the quoted tree file under the
+  review's `references`; `apply` now does this itself). Tests are in
   `tests/test_tree_rereview.py`.
 
 ## Reproduce
@@ -230,11 +266,21 @@ arguments for the workflow in `workflows/`; the workflow returns the readings; `
 records with the pull request linked, and renews `needs-curator.yaml`. Before the batch
 is pushed, the rows `finish` names as contradicted and left are corrected by hand.
 
-A merge with main is checked in the same spirit before it is pushed: every applied row
-still has the verdict that was read and still quotes its tree file; a row main changed is
-taken as on main and its run record says so; main's present text of each such row is read
-against the tree file and the finding recorded (`main_text_read`, above); and `worklist`
-then reports `main_text_unread: 0`.
+A merge with main is finished in the same spirit before it is pushed:
+
+```bash
+uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py changed-on-main BASE MAIN
+uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py vouch f014 PTHR43363 GO:0032265 \
+    --node PANTHER:PTN001262736 --date YYYY-MM-DD --changed "what main changed" --read "agrees: what was read"
+uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py check
+uv run python projects/IBA_REVIEW/tree-rereview/tree_rereview.py worklist
+```
+
+Every row `changed-on-main` lists is read against its tree file, and is then kept or
+given up as described under "What the script will not do". `check` then reports no
+applied row with a problem, and `worklist` reports `main_text_unread: 0`. A gene whose
+GOA file main changed has its extract made again, and a family whose PAINT slice main
+changed its listing, before the quotes of their rows are trusted.
 
 The readings themselves are agent output and are not regenerated by a command; the run
 records are their record.
