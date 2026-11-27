@@ -14,8 +14,12 @@ dimers and uses a conserved amphipathic groove to bind phosphorylated Ser/Thr
 motifs in client proteins. Its best supported distinctive human branches are
 epithelial and keratinocyte functions, including PKP3/desmosome control
 [PMID:24124604], DAPK2, LRRK2 and other phosphorylated clients, GBP1 cytosolic
-retention in innate immunity [PMID:37797010], and p53-associated G2/M
-checkpoint biology [PMID:9659898].
+retention in innate immunity [PMID:37797010], and p53-associated CDK1-CCNB1
+sequestration in the G2/M DNA damage checkpoint [PMID:9659898;
+Reactome:R-HSA-6803875]. The checkpoint role is not proposed as a new broad
+cell-cycle biological-process row here because human 14-3-3 GOA and the cached
+SFN GO-CAMs place the SFN side of that checkpoint on protein sequestering
+activity.
 
 The seeded GOA file is dominated by bare `GO:0005515 protein binding` IPI rows.
 Those are reviewed one row at a time, retaining the `WITH/FROM` interactor on

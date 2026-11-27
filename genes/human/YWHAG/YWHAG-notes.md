@@ -22,3 +22,9 @@ Those are reviewed one row at a time, retaining the `WITH/FROM` interactor on
 each row, but the action follows the project protein-binding policy: physical
 interaction with a client is not by itself an informative GO molecular
 function for a 14-3-3 adaptor.
+
+The IEA vesicle, synapse and presynapse rows are Ensembl ortholog projections
+from rat Ywhag, not direct human YWHAG measurements; the review treats them as
+peripheral or over-annotated client-context locations because cached human YWHAG
+evidence establishes a soluble cytosolic 14-3-3 adaptor with inducible
+mitochondrial-matrix recruitment but not a core vesicle or synaptic site.

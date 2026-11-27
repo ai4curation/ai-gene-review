@@ -21,3 +21,9 @@ Those are reviewed one row at a time, retaining the `WITH/FROM` interactor on
 each row, but the action follows the project protein-binding policy: physical
 interaction with a client is not by itself an informative GO molecular
 function for a 14-3-3 adaptor.
+
+The IEA actin-binding, synapse, presynapse, glutamatergic-synapse and
+cerebellar granule cell to Purkinje cell synapse rows are Ensembl ortholog
+projections from mouse or rat Ywhah; cached human YWHAH papers support a
+soluble 14-3-3 eta adaptor with cardiac-channel and glucocorticoid-receptor
+client branches, not direct actin binding or a defining synaptic site.
