@@ -77,3 +77,25 @@ Falcon (Edison Scientific) deep research completed after ~27 min (`VAM10-deep-re
 - vam10Δ does not show a strong VPS/CPY-secretion sorting phenotype, consistent with a role specific to homotypic vacuole fusion rather than biosynthetic trafficking; the VPS5-proximity caveat is noted but in-vitro biochemistry supports a direct Vam10p role.
 
 No annotation actions changed as a result; falcon strengthens the ACCEPT calls and the honesty of the knowledge-gaps section.
+
+### 2026-09-29 — IBA project rereview
+
+This rereview found no GO_REF:0000033 / IBA rows in either `VAM10-ai-review.yaml`
+or `VAM10-goa.tsv`, and the UniProt record still has no PANTHER family cross-reference
+from which local PAINT node support could be checked. The four existing GOA rows
+remain appropriately reviewed against the cached Kato & Wickner 2003 abstract:
+the fungal-type vacuole membrane IC and non-autophagic vacuole-fusion IMP rows are
+supported, the UniProt-SubCell vacuolar-membrane IEA is consistent with the more
+specific SGD location, and the ND root molecular-function row honestly marks Vam10p
+as MF-dark.
+
+The 2025 Vps5/Vps17 retromer structure paper mentions VAM10 only in its strain
+and plasmid design: Vam10p was ectopically supplied at `LEU2`, and the VPS5-HA
+plasmids mutated the overlapping VAM10 start codon so the VPS5 coding sequence
+was preserved without making Vam10p [PMID:40234461 "Vam10 was cloned into
+pRS305 vector using Not1/Sma1 restriction sites to generate an integrative
+plasmid that was linearized, transformed and integrated ectopically";
+"A point mutation was introduced in the start codon of VAM10 (M-to-I) by
+site-directed mutagenesis, because VAM10 overlaps with VPS5"]. It supports the
+genomic-overlap caveat but does not define any new Vam10p molecular activity or
+GO annotation.

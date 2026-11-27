@@ -1,0 +1,22 @@
+# xdhA (PP_4278; Q88F21) curation notes
+
+## Evidence retained
+
+- UniProt/InterPro identify the bacterial XDH small-subunit architecture, including FAD- and [2Fe-2S]-binding domains [file:PSEPK/xdhA/xdhA-uniprot.txt, "DR   InterPro; IPR014307; Xanthine_DH_ssu."].
+- Purified XDH from P. putida strain 86 oxidizes hypoxanthine and xanthine with NAD+ as preferred acceptor and contains 91.0- and 46.2-kDa subunits [PMID:11341925, "XDH from P. putida 86 consists of 91.0 kDa and 46.2 kDa"]. This is a homologous strain-level exemplar, not direct KT2440 evidence.
+- The OpenScientist report correctly separates XdhA's electron-transfer role from the XdhB molybdenum catalytic role and acknowledges that the KT2440 protein has not been studied directly [file:PSEPK/xdhA/xdhA-deep-research-openscientist.md, "No direct biochemical study of the KT2440 protein."].
+- KT2440 can use hypoxanthine and xanthine as sole nitrogen sources, supporting pathway operation in the target strain without assigning the phenotype directly to XdhA [PMID:26355499, "permitting their use as sole nitrogen sources"].
+
+## Curation decisions
+
+- Change complete xanthine dehydrogenase activity from `enables` to `contributes_to`.
+- Add intrinsic GO:0009055 electron transfer activity and complex-level contributions to hypoxanthine and xanthine dehydrogenase activities.
+- Accept the specific FAD and [2Fe-2S] binding annotations. Mark iron ion binding as over-annotated because iron-sulfur cluster binding does not entail free iron-ion binding; treat the remaining broad redox/cofactor parents as non-core or over-annotations.
+- Ground intrinsic electron-transfer activity in the measured, closely matched midpoint potentials of the molybdenum, FeSI, and FAD centers [PMID:11341925, "The midpoint potentials determined for the molybdenum, FeSI and FAD redox couples are close to each other"].
+- Add immediate hypoxanthine/xanthine catabolic processes and urate production, all explicitly inferred from the homologous bacterial complex.
+- Do not assert a KT2440 oligomer, localization, exact electron path, or XdhC requirement from homolog data alone.
+
+## Completion pass
+
+- Completion pass (2026-11-09): restored GOA's `enables` qualifier on the GO:0004854 row (the review's MODIFY to `contributes_to` is now explicit, with a WRONG_QUALIFIER source defect); set the redundant FAD-binding and iron-sulfur-cluster parents to TOO_GENERAL (their accepted children GO:0071949 and GO:0051537 entail them); kept iron ion and metal ion binding as MARK_AS_OVER_ANNOTATED because cluster binding is not under metal ion binding in GO; added vetted supported_by to every row. Status set to COMPLETE.
+- Review follow-up (PR #6212): the premise that the XdhA flavin is the NAD+-reducing site is not stated by the cited sources, so the subunit-level GO:0016491 oxidoreductase row is now MARK_AS_OVER_ANNOTATED; added a paired NEW GO:0004854 contributes_to row beside the MODIFY of the GOA enables row (SDH relation-only pattern); WRONG_QUALIFIER cause set to PRACTICE_CHANGE.

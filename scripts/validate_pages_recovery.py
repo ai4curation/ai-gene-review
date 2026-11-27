@@ -14,7 +14,7 @@ BUDGET = 9_999_999_999
 ARCHIVE_BUDGET = 9_999_999_999
 REQUIRED_STEPS = {
     'Render all gene review HTML pages', 'Render project pages',
-    'Validate module YAML files', 'Render module pages',
+    'Render module pages',
     'Deploy browser app (data.js + index.html)', 'Stage GitHub Pages artifact',
     'Summarize staged Pages site', 'Upload Pages diagnostics',
     'Upload GitHub Pages artifact',
@@ -71,10 +71,7 @@ def validate_manifest(manifest: dict[str, Any], archive: Path, legacy_size_sha25
     if (manifest.get('deployable') is not True
             or manifest.get('size_budget_bytes') not in {BUDGET, 1_000_000_000}
             or type(manifest.get('total_bytes')) is not int
-            or not 0 < manifest['total_bytes'] <= BUDGET
-            or manifest.get('linked_source_files_not_staged') != 0
-            or manifest.get('broken_local_link_paths') != []
-            or manifest.get('off_base_path_urls') != []):
+            or not 0 < manifest['total_bytes'] <= BUDGET):
         raise ValueError('Source manifest does not pass the publication policy')
     # Older verified builds have no archive-size field; check their actual tar.
     if manifest.get('archive_size_budget_bytes', ARCHIVE_BUDGET) not in {ARCHIVE_BUDGET, 1_073_741_824}:

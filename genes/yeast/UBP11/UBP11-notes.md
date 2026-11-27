@@ -116,3 +116,24 @@ unknown. These notes record what is KNOWN vs NOT-KNOWN with provenance.
   zinc-ion-binding annotation. (abstract only in cache)
 - SGD locus page S000001806 (UBP11) — paralog UBP7/WGD; BP & CC unknown.
 - `file:yeast/UBP11/UBP11-bioinformatics/RESULTS.md` — catalytic-dyad integrity check.
+
+## 2026-09-29 IBA project alignment
+
+All four IBA annotations are still present in the current local
+`PTHR21646-paint.tsv` export at `PTN002541993`: `GO:0004843`
+cysteine-type deubiquitinase activity, `GO:0005634` nucleus, `GO:0005829`
+cytosol, and `GO:0031647` regulation of protein stability.
+
+The catalytic IBA is a core, well-supported USP/UBP-family transfer and matches
+UBP11's intact Cys307/His649 catalytic dyad plus the direct in-vitro evidence.
+The two localization transfers and the broad regulation-of-protein-stability
+transfer remain biologically plausible but non-core because no UBP11-specific
+localization, substrate, or pathway has been established.
+
+Searches for 2025-2026 UBP11 literature did not find a new paper that
+establishes an in-vivo substrate or non-redundant pathway for Ubp11. The review
+therefore keeps the existing conservative BP-dark model.
+
+## ND literature-search citations (2026-11-06)
+
+- existing_annotations[8], GO:0005575 cellular_component (ND, GO_REF:0000015), ACCEPT: the ND may be stale. UBP11-deep-research-falcon.md reports that a systematic localization study of budding-yeast DUBs places Ubp11 in the cytoplasm (cited through the Suresh et al. 2020 review). If the underlying screen is confirmed, it identifies a location for this gene product in S. cerevisiae. The primary study is not cached, so a curator should check it before adding a CC annotation. The review action was left unchanged.

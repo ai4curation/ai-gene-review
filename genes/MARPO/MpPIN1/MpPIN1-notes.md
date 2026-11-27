@@ -1,0 +1,20 @@
+# Marchantia MpPIN1/MpPINZ evidence notes
+
+## Reproducible identity
+Seeded A0A2R6WHW5 (MARPO_0089s0050, PTQ33423.1) is719 aa. `MpPIN1-source-analysis/verify_clone_identity.py` normally retrieves the published clone's UniProt JSON and compares its sequence with the seeded raw UniProt sequence. A0A075ILB5, linked to KJ664532/AIF28545.1, is exactly identical across all719 aa (SHA256 in clone-identity.json). The script, unchanged official JSON and result are retained. No extra gene is created for the same protein. PMID:36880411 publisher Results identifies MpPIN1 (Mp3g21660) as the protein previously called MpPINZ; Marchantia has five PIN genes, only one canonical long-loop representative. The abstract's compressed wording is not read as one PIN total.
+
+## Measured export and native context
+PMID:37528584 full text tests MpPINZ-GFP in inducible moss lines: H3-IAA release into medium is greater than WT. This is a measured exporter assay in a heterologous moss host, not direct native Marchantia tissue flux or a purified transporter. The source separately examines 35S::MpPINZ-GFP in Marchantia, finding broad PM distribution and context-dependent enrichment near emerging rhizoids.
+
+PMID:36880411 native CRISPR and rescue with native-promoter Citrine establish target-specific biology. The full publisher page was inspected: the complementation reporter is functional; most tissues are not conspicuously polarized, while gametangiophore stalks show basal localization and mutants have defective orthotropic growth. Thallus plagiotropism and rhizoid tropisms are retained, so MpPIN1 is not required for all tropisms. Normal PMID cache remains abstract-only and normal publisher acquisition returned 403; no unavailable full-text quotation is inserted under the PMID identity.
+
+## Conservative annotation coverage
+Both seeded rows are retained and refined: membrane→PM, transmembrane transport→auxin export across PM. The demonstrated MF is in the core with direct assay support. No NEW MF is added: live QuickGO (2026-10-26) places GO:0010329 part_of GO:0010315, which descends from seeded GO:0055085. A new descendant would duplicate the already refined transport claim under the conservative no ancestor/descendant NEW policy. No developmental BP proposals are manufactured from perturbation phenotypes.
+
+## Review method and access (2026-10-26)
+
+All original rows were reviewed individually from the seeded YAML. Only review judgments were changed; original terms, labels, evidence, source references, supporting entities, qualifiers and flags are retained. Provider/publication jobs were run by the coordinating agent in parallel: all normal publication jobs completed; genuine Falcon and perplexity-lite attempts failed authentication (shared log `.cache/module-audit-logs/auxin-polar-fetch/provider-publication-results.json`). No provider report was fabricated or used as primary evidence. Additional primary retrievals used normal `just fetch-pmid` or `ReferenceFetcher` URL acquisition. No raw source cache was hand-edited. No GOA file was used as functional support.
+
+References below are source-specific: full-text availability is recorded in each normal publication cache. `PMID:37528584` was recovered after a real initial HTTP 429 and a later successful retry. The full author PDF of `PMID:25448004` was normally acquired from https://folia.unifr.ch/documents/304040/files/gei_dat.pdf; its PMID cache remains abstract-only. Wiley publisher pages for `PMID:36696950` and `PMID:36880411` were inspected through the web reader; normal direct URL acquisition attempts returned 403, so their PMID caches remain abstract-only. This difference is not concealed by modifying the cached PMID record.
+
+The comparison distinguishes cellular export into culture medium from native directional tissue flow. It does not infer a complete AUX1/ABCB/AGC-kinase circuit in rice, moss or liverwort from transporter conservation or phosphorylation motifs. Core descriptions remain gene biology, with these workflow limits kept here.

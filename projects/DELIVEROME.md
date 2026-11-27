@@ -4,6 +4,8 @@ species:
   - human
   - mouse
 maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN]
+genes: [TFRC, CLTC, RAB7A, Rab7]
 priority: high
 last_reviewed: 2026-07-19
 scope: Exploratory Deliverome-to-GO project focused on delivery-address semantics, internal trafficking model systems, and a human and mouse Rab7 comparison for post-internalization routing
@@ -22,10 +24,10 @@ review_sets:
     - update_model_system_stance
     - harmonize_RAB7A_core_function_synthesis
     - revisit_mouse_Rab7_SynGO_annotations
+    - draft_GO_CAM_like_delivery_route_template
   pending_tasks:
     - build_GO_derived_human_surfaceome_prior
     - select_small_delivery_address_pilot_set
-    - draft_GO_CAM_like_delivery_route_template
 sidecars:
   notes: DELIVEROME.md
 external_sources:
@@ -34,9 +36,39 @@ external_sources:
   - https://deliverome.org/platform/
   - https://deliverome.org/platform/progress/
   - https://geneontology.org/docs/go-annotations/
+manifest:
+  slides:
+    - href: DELIVEROME/slides/DELIVEROME-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/6c2seZotkYZQ22pTQxPvMR
+      title: Project brief
+index_group: MAMMAL
 ---
 
 # Deliverome GO Collaboration
+
+**Bottom line:** the Deliverome Project plans an open atlas of human
+cell-surface proteins that therapeutic cargo could use as a "delivery
+address", which depends on surface abundance, internalization and where the
+receptor routes cargo after uptake. This project works out how GO could
+supply vocabulary, priors and GO-CAM route structure to that atlas, and how
+Deliverome assays could feed back into GO without mixing engineered delivery
+with endogenous biology. So far we defined what a delivery address means,
+mapped Deliverome concepts to 17 GO anchor terms, set a model-system stance,
+and compared the human RAB7A and mouse Rab7 reviews as a worked example of
+post-internalization routing. The comparison found the two reviews agree on
+conserved Rab GTPase activity, endosome maturation and retromer binding;
+mouse Rab7 adds in vivo liver evidence that Rab7 loss increases lipid
+nanoparticle escape (PMID:41814093), and its SynGO synapse rows are kept as
+non-core. Six of nine planned tasks are done; the GO-derived surfaceome
+prior, a pilot set of address proteins and a delivery-route template are not
+started.
+
+We did this because GO already annotates most of the machinery a delivery
+atlas needs (cell surface, receptor internalization, endosomal routing), and
+settling the boundary between GO annotation and delivery phenotype early
+keeps later Deliverome data from polluting normal-function annotations.
 
 ## Overview
 
@@ -124,6 +156,16 @@ The human and mouse comparison is reassuring for GO transfer: both reviews conve
 | Late endosome-to-lysosome route | GO:1902774 late endosome to lysosome transport |
 | Recycling to surface | GO:0099638 endosome to plasma membrane protein transport |
 
+## Executable Agent-Based Delivery Route Suite
+
+To make post-internalization routing quantitatively testable directly from curated GO-CAM-like module topology, we implemented a suite of **Agent-Based Models (`model_type: AGENT_BASED`, `derivation: DERIVED_FROM_MODULE`)** spanning the core Deliverome receptor addresses and intracellular sorting pathways:
+
+- **Project documentation**: [Agent-Based Modeling of Intracellular Trafficking](ABM_TRAFFICKING.md)
+- **TfR1 (`TFRC`) & LNP Endosomal Routing (`endosomal_trafficking_routing`)**: [`modules/endosomal_trafficking_routing.yaml`](../modules/endosomal_trafficking_routing.html) / [interactive ABM](../models/endosomal_trafficking_abm.html) — `TFRC` $\to$ `CLTC`/`AP2M1` $\to$ `ATP6V1A` early endosome acidification $\to$ `EHD1` recycling (47%) vs. `TSG101`/`RAB7A` late endosome maturation $\to$ `CTSD` lysosomal degradation (43%) vs. pre-lysosomal cytosolic cargo escape (10% baseline, rising to 47% upon `RAB7A`/`Rab7` loss; PMID:41814093).
+- **Hepatocyte ASGR1/ASGR2 GalNAc-Conjugate Delivery (`asgr_galnac_hepatocyte_delivery`)**: [`modules/asgr_galnac_hepatocyte_delivery.yaml`](../modules/asgr_galnac_hepatocyte_delivery.html) / [interactive ABM](../models/asgr_galnac_delivery_abm.html) — `ASGR1`/`ASGR2` $\to$ `AP2M1`/`CLTC`/`DNM2` coated-pit scission $\to$ `ATP6V1A` acidic $\text{Ca}^{2+}$ uncoupling $\to$ `EHD1` receptor recycling (47%) vs. `TSG101`/`RAB7A`/`CTSD` lysosomal depot sequestration (43%) vs. productive cytosolic oligonucleotide escape (10% baseline, rising to 47% on `RAB7A` loss under uniform uncalibrated ABM rates extrapolated qualitatively from hepatic LNP delivery in PMID:41814093; in vivo only a minuscule portion of endocytosed GalNAc-ASO/siRNA escapes into the cytosol per PMID:29069408).
+- **FcRn (`FCGRT`/`B2M`) pH-Dependent IgG & Albumin Salvage and Transcytosis (`fcrn_igg_albumin_salvage_transcytosis`)**: [`modules/fcrn_igg_albumin_salvage_transcytosis.yaml`](../modules/fcrn_igg_albumin_salvage_transcytosis.html) / [interactive ABM](../models/fcrn_salvage_transcytosis_abm.html) — `ALB`/IgG uptake $\to$ `ATP6V1A` acidification (pH ~6.0 histidine switch) $\to$ `FCGRT`/`B2M` acidic salvage capture $\to$ `EHD1`/`SNAP23` exocytic release at pH 7.4 (80%) vs. `RAB7A`/`CTSD` lysosomal catabolism (20% baseline, 100% under FcRn blockade).
+- **Retromer (`VPS35`/`VPS26A`/`VPS29`) & `SORL1` Endosome-to-TGN Retrieval (`retromer_endosome_to_tgn_retrieval`)**: [`modules/retromer_endosome_to_tgn_retrieval.yaml`](../modules/retromer_endosome_to_tgn_retrieval.html) / [interactive ABM](../models/retromer_retrograde_sorting_abm.html) — `SORL1` $\to$ `AP2M1`/`CLTC`/`DNM2` $\to$ `ATP6V1A` sorting endosome $\to$ `VPS35`/`VPS26A`/`VPS29` retromer retrieval $\to$ `RAB9A`/`AP1B1`/`AP1G1` trans-Golgi network delivery (80%) vs. `TSG101`/`RAB7A`/`CTSD` lysosomal proteolysis (20% baseline, 100% upon retromer loss; PMID:18193032, PMID:32286230).
+
 ## Open Questions
 
 - What evidence threshold should Deliverome surface proteomics meet before it supports a GO cellular-component annotation?
@@ -144,9 +186,9 @@ The human and mouse comparison is reassuring for GO transfer: both reviews conve
 - [x] Compare human RAB7A and mouse Rab7/Rab7a.
 - [x] Harmonize human RAB7A core-function synthesis with mouse Rab7/Rab7a for early-to-late endosome maturation, late endosome membrane localization, and retromer binding.
 - [x] Revisit mouse SynGO AMPA-receptor trafficking annotations from PMID:24217640.
+- [x] Draft a GO-CAM-like delivery route template (`modules/endosomal_trafficking_routing.yaml`) with an executable Agent-Based Model (`endosomal_trafficking_abm`).
 - [ ] Build GO-derived human surfaceome prior.
 - [ ] Select a small delivery-address pilot set.
-- [ ] Draft a GO-CAM-like delivery route template.
 
 # NOTES
 

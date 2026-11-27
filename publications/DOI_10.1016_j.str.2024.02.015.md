@@ -18,6 +18,7 @@ journal: Structure
 year: '2024'
 doi: 10.1016/j.str.2024.02.015
 content_type: full_text_html
+full_text_available: false
 full_text_attempted: true
 full_text_provider: openalex
 full_text_url: "https://research.rug.nl/en/publications/f45c64f1-fdc2-44b0-99bf-63cb6cccdbbc"

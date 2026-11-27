@@ -115,3 +115,85 @@ functionally meaningful complex is established for PHGDH from these screens.
 Non-core / moonlighting: (R)-2-hydroxyglutarate (NAD+) dehydrogenase (GO:0120568,
 D-2-HG production), L-malate dehydrogenase (GO:0030060, in-vitro promiscuity),
 extracellular exosome localization, brain development (downstream phenotype).
+
+---
+
+## 2026 update: the enzyme-independent "moonlighting" claims
+
+Added as an update to an already-substantive review. The review previously had essentially
+no coverage of the non-canonical PHGDH claims. **Nothing in `existing_annotations` changed**
+— see "Effect on the annotation set" below.
+
+### Claim 1 — nuclear transcriptional regulator (Cell 2025)
+
+Chen et al., Cell 2025 [PMID:40273909 "Transcriptional regulation by PHGDH drives amyloid
+pathology in Alzheimer's disease"] report that astrocytic PHGDH drives amyloid pathology
+[PMID:40273909 "modulates AD pathology in mice and human brain organoids independent of its
+enzymatic activity"], via what they call a new activity
+[PMID:40273909 "PHGDH has an uncharacterized role in transcriptional regulation"] promoting
+IKKa and HMGB1 transcription.
+
+Two points worth recording about the evidence:
+- Catalysis was excluded with an active-site R236Q "enzymatic-dead" mutant
+  [PMID:40273909 "does not ameliorate the pathological changes induced by PHGDH
+  overexpression"].
+- The DNA-binding element is **predicted, not solved**: an AlphaFold-derived
+  helix-helix-turn-helix subdomain (aa 103-165) sitting *inside* the nucleotide-binding
+  domain [PMID:40273909 "we observed a helix-helix-turn-helix (HHTH) subdomain within the
+  nucleotide binding domain"], called DNA-binding on the basis of structural similarity
+  [PMID:40273909 "which exhibits structural similarity to the three amino acid loop
+  extension (TALE) homeodomain, a DNA-binding structural motif"]. That it lies within the
+  Rossmann NAD(H)-binding fold is the obvious confound: the HHTH deletion
+  [PMID:40273909 "we deleted this domain from PHGDH to create a variant named PHGDH-dHHTH"]
+  could plausibly perturb cofactor binding or tetramer assembly rather than DNA binding
+  specifically.
+- Nuclear localization is reported only in astrocytes
+  [PMID:40273909 "PHGDH exhibited both cytosolic and nuclear localization in astrocytes"],
+  not in hESCs or HEK293T.
+
+### Claim 2 — RNA-binding protein (PNAS 2026)
+
+The **same senior author** published a second, different enzyme-independent mechanism within
+a year [PMID:41701839 "PHGDH binds the 3'UTR of EIF2AK1 mRNA, enabling the physical
+interaction between PHGDH and the EIF2AK1 protein"], promoting BACE1 translation via
+EIF2alpha phosphorylation, and explicitly
+[PMID:41701839 "independent of its canonical enzymatic or transcriptional roles"] — i.e. it
+does not subsume or refine Claim 1, it sits beside it. A distinct RNA-binding surface is
+asserted [PMID:41701839 "this process requires a specific RNA-binding surface within PHGDH
+and the EIF2AK1 3'UTR"].
+
+### The correction (PMID:41838922) — checked, and it is minor
+
+I fetched it specifically because a correction on a single-source moonlighting claim would
+matter. It does not: [PMID:41838922 "The authors note that the reviewer name Andrew Piper
+should instead appear as Andrew Pieper."] No data, figure, or conclusion was corrected. So
+the correction is **not** a reason for extra scepticism.
+
+The correction notice does incidentally document the submission route:
+[PMID:41838922 "Contributed by Shu Chien; received November 11, 2025; accepted January 18,
+2026; reviewed by Lana Garmire and Andrew Pieper"] — a PNAS Contributed-track paper where
+Shu Chien is also a co-author, so editorial handling was not fully arms-length. Recorded as
+a fact, not as a judgement on the science.
+
+### Why scepticism, stated precisely
+
+Not "this is wrong". The specific pattern is: two **mutually independent** non-catalytic
+mechanisms (DNA-binding and RNA-binding) for one metabolic enzyme, from one laboratory,
+within twelve months, each sufficient on its own to produce the amyloid phenotype, with no
+independent replication and no structure of either complex. Any one of those features is
+unremarkable; together they warrant waiting for replication.
+
+### Effect on the annotation set
+
+**None.** Checked every row of `PHGDH-goa.tsv`: there is no `GO:0005634 nucleus`, no
+DNA-binding, no RNA-binding and no transcription-regulation annotation on PHGDH. Both claims
+therefore affect zero existing annotations, and no action changed. The core function was
+deliberately **not** restructured: serine biosynthesis remains the sole core function.
+
+What was recorded instead: three references with `findings` and `reference_review`
+(`DISPUTED` for the two primary papers, `VERIFIED` for the correction), one `knowledge_gaps`
+entry, four `suggested_questions`, two `suggested_experiments`, and two sentences in
+`description`.
+
+Also set `status: INITIALIZED` -> `COMPLETE` (the file was already substantively reviewed;
+the status field had not been updated).

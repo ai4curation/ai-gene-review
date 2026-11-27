@@ -53,8 +53,29 @@ from engineered CXXC variants and does not infer function from those mutants.
   during ER protein accumulation, but Eug1p is an effector rather than a UPR
   sensor or signaling protein.
 - Leave both “unfolded protein binding” annotations UNDECIDED because the full
-  direct assay is not cached, while marking both uninformative “protein binding”
-  annotations over-annotated.
+  direct assay is not cached, while removing both uninformative “protein
+  binding” annotations.
+
+## 2026-10-01 current-GOA / IBA review
+
+- Forced a current `just fetch-gene yeast EUG1 --force` refresh. Current GOA
+  materializes 20 rows; four older signatures are no longer live and are now
+  retained with `retired: true`: the broad `GO:0016853` UniProt keyword row,
+  the ARBA and IDA `GO:0051082` unfolded-protein-binding rows, and the stale
+  high-throughput `GO:0005515` row from PMID:27107014.
+- Rechecked all four PTHR18929 IBA rows against current PAINT. PTN000432607 is
+  the PDI-family root and safely transfers ER localization, protein folding,
+  response to ER stress, and protein disulfide isomerase activity to Eug1p.
+  The ER-stress row remains `KEEP_AS_NON_CORE` because Eug1p is a downstream
+  UPR-induced ER folding effector rather than an Ire1/Hac1-like signaler.
+- Migrated both `GO:0005515 protein binding` IPI rows from the legacy
+  `MARK_AS_OVER_ANNOTATED` action to `REMOVE`. The Eps1 interaction in
+  PMID:16002399 is real but does not define a specific Eug1p molecular
+  function, and the PMID:27107014 interaction row is no longer in current GOA.
+- A 2024-2026 PubMed/Web search found no new direct EUG1/YDR518W paper that
+  resolves the native client spectrum, the unresolved unfolded-protein-binding
+  assays, or the exact physiological balance between Eug1p redox catalysis and
+  noncatalytic chaperone-like assistance.
 
 ## Research-file provenance
 

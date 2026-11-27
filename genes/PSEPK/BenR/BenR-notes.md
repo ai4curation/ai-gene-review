@@ -182,3 +182,41 @@ BenR is an **effector-responsive transcriptional activator** that:
 **Primary biological process**: Regulation of aromatic compound (specifically benzoate) catabolic processes
 
 **Cellular component**: Cytoplasm (bacterial nucleoid region)
+
+## 2026-11-08 — carbon-utilization batch re-review
+
+This dated audit supersedes unsupported mechanistic and strain-generalized claims in the earlier notes above. The KT2440-derived BenR/PP_3161 promoter pair supports transcriptional activation; purified BenR-DNA binding was not verified in this batch.
+
+### Primary evidence and strain scope
+
+- **PMID:38113125**, Pearson et al., *Characterization and Diversification of AraC/XylS Family Regulators Guided by Transposon Sequencing*: the [indexed author manuscript](https://escholarship.org/uc/item/802967bs) identifies PP_3159 with the fragment upstream of PP_3161 (Table 1; Fig. 3). A KT2440 promoter reporter responds to benzoate; regulator-dependent activation was tested with KT2440-derived components in an engineered E. coli two-plasmid system. Fig. 3 names “inducible BenR (PP_3159)”. Separate one-plasmid constructs respond to substituted benzoates. Docking and response-loss mutants suggest mechanism, but do not establish direct ligand binding. Full results were inspected through the primary indexed manuscript; direct PDF endpoints returned access errors. The locally cached PMID is abstract-only.
+- **PMID:18156252**, Moreno and Rojo, [primary full text](https://journals.asm.org/doi/10.1128/jb.01604-07): methods identify KT2442 as a rifampin-resistant KT2440 derivative. Its chromosomal PbenA reporter and transcript measurements support the ben-gene activation context. The key distinction is that BenR controls the peripheral ben genes, whereas CatR and PcaR control subsequent pathway units. Quote from the cached abstract: “decreasing BenR levels below those required for the full expression of the benABCD genes.” This study does not supply a purified BenR footprinting assay. Its historical Crc-binding interpretation is outside this BenR audit and is not asserted as a new result.
+- **PMID:11053377**, Cowles et al., [primary paper](https://journals.asm.org/doi/10.1128/jb.182.22.6339-6346.2000): principal native experiments use PRS2000, with heterologous E. coli experiments. The cached abstract says “It is likely that BenR binds” and describes the pcaK effect as probably indirect. These findings are comparative context, not a new KT2440 pcaK target assertion. The formerly repeated 15-fold/25-fold induction and pcaK/uptake figures must retain that strain provenance.
+
+### GO decisions and pathway interpretation
+
+Reviewed all six seeded GO rows. Refine DNA-binding terms to cis-regulatory sequence-specific DNA binding, supported by promoter function plus AraC architecture rather than a falsely claimed footprint. Refine DNA-binding TF activity to the bacterial-compatible activator term GO:0001216. Do not retain GO:0141097 as the required specificity while biochemical ligand binding remains unverified. Refine the two broad BP rows to positive regulation of DNA-templated transcription (GO:0045893); the former KEEP_AS_NON_CORE rationales confused breadth with peripherality. Retain the existing inferred cytoplasmic annotation and its non-circular architecture rationale.
+
+Withdraw the earlier author-proposed NEW GO:0043639 benzoate catabolic process row. BenR activates transcription; BenABC/BenD perform catabolic reactions. The core function now describes that mechanism, with pathway context retained in the regulatory-evidence sidecar. No new process annotation is proposed. QuickGO definitions and ancestor relations were checked for author-supplied terms, including GO:0045893 descending from GO:0009893. No Q88I42 entry was found in gocams/index.tsv; there are no IBA rows to adjudicate. The previous two core functions redundantly represented DNA recognition and transcriptional activation and are consolidated.
+
+### Source quality and acquisition
+
+The cached UniProt Q88I42 record maps to chromosomal benR/PP_3159 but its ARBA-derived FUNCTION comment describes TOL-plasmid XylS. A source_defects entry requests correction; the cached source is unchanged. Earlier provider reports are retained as literature leads and marked UNVERIFIED for unchecked mechanism/strain claims rather than used as experimental proof. The prescribed Falcon run returned a cached provider result and regenerated its artifact through the provider tool. Publication caching added PMID:38113125; the other cited PMIDs were already cached. PSEPK has no configured MOD-description provider. FEBA retrieval failed because no configured local database or reachable remote source was available; no fitness artifact or fitness-based claim was fabricated.
+
+### Structured targets and remaining gaps
+
+See BenR-regulatory-evidence.yaml for the supported promoter relationship, experimental host context, pathway-regulatory mechanism and directness limitation. Only one promoter relationship is captured here; this is not a complete regulon. The published ten-member BenR iModulon remains expression association and supplies no additional direct targets. A direct biochemical ligand assay, purified promoter-binding assay and native-context tests of substituted benzoates remain evidence needs.
+
+
+## 2026-11-10 — preserve the original provider research
+
+The 2026-11-08 Falcon command rewrote an existing provider report from cached output. Restored the report and its associated artifacts byte-for-byte from before this batch (parent of commit 8e42884c19). Provider output must not be manually corrected or incidentally replaced during curation. The primary-source assessments and curation decisions above remain in these notes and the review YAML.
+
+
+## 2026-11-11 — PR review follow-up
+
+Replaced notes-as-evidence with primary cached quotations: PMID:11053377 supplies the benA reporter activation and XylS-like promoter-repeat observations; PMID:18156252 explicitly identifies BenR as the ben-gene activator. The former is PRS2000/heterologous evidence, the latter uses KT2442 derivatives of KT2440. Neither is relabeled as a purified KT2440 binding assay. GO:0000987 remains an explicitly inferred molecular function from promoter function, the promoter-repeat comparison and the KT2440 AraC HTH domain. This is compatible with the stricter sidecar criterion leaving physical directness unresolved.
+
+The PMID:38113125 cache is abstract-only. Removed the uncheckable Fig. 3 quotation from the regulatory evidence, rather than treating the source URL or our notes as a substitute for cached primary text. Earlier author-manuscript observations remain in the dated access record above, but the machine-validated target assertions now cite the available primary quotations with their strain limitations. Provider files and publication caches were not edited.
+
+Refined the metabolic-regulation row to GO:0062013 positive regulation of small molecule metabolic process, keeping GO:0045893 on the transcription row. QuickGO definitions and is_a/part_of ancestry checked on 2026-11-11 show that GO:0062013 is a descendant of GO:0009893. BenR supplies the regulatory step, not BenABC/BenD chemistry. The earlier inference that coexpression establishes additional direct targets is superseded by the corrected iModulon comparison.

@@ -26,11 +26,11 @@ This provides an ideal test case for distinguishing between:
 
 ## Status
 
-- [x] Initial exploration complete (2026-01-31)
-- [x] Deep research for 2 genes (2026-01-31)
-- [x] Annotation review complete (2026-01-31)
-- [x] Write-up complete (2026-01-31)
-- [ ] Additional T3SS effectors (nleB2, nleE, etc.) - future work
+- Complete: Initial exploration (2026-01-31)
+- Complete: Deep research for 2 genes (2026-01-31)
+- Complete: Annotation review (2026-01-31)
+- Complete: Write-up (2026-01-31)
+- Future work: Additional T3SS effectors (nleB2, nleE, etc.)
 
 ---
 

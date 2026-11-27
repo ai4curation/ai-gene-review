@@ -15,6 +15,7 @@ import yaml
 from typer.testing import CliRunner
 
 from ai_gene_review.cli import app
+from ai_gene_review.etl.panther_families import member_index_path
 
 runner = CliRunner()
 
@@ -24,7 +25,8 @@ def repo(tmp_path: Path) -> Path:
     """A minimal repo skeleton the command can be pointed at."""
     (tmp_path / "modules").mkdir()
     (tmp_path / "interpro" / "panther").mkdir(parents=True)
-    (tmp_path / "interpro" / "panther" / "panther-members.tsv").write_text(
+    member_index_path(tmp_path).parent.mkdir(parents=True)
+    member_index_path(tmp_path).write_text(
         "uniprot_accession\tpanther_family_sf\nP1\tPTHR1:SF1\n"
     )
     (tmp_path / "interpro" / "panther" / "panther.obo").write_text(
@@ -99,9 +101,7 @@ def write_members(repo: Path, members: dict[str, str]) -> None:
     """Write the accession -> family:subfamily index."""
     rows = ["uniprot_accession\tpanther_family_sf"]
     rows += [f"{accession}\t{family}" for accession, family in members.items()]
-    (repo / "interpro" / "panther" / "panther-members.tsv").write_text(
-        "\n".join(rows) + "\n"
-    )
+    member_index_path(repo).write_text("\n".join(rows) + "\n")
 
 
 def write_family_module(

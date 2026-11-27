@@ -36,12 +36,10 @@ UniProt: **P35736** (YKF0_YEAST); systematic name **YKL050C**; SGD standard name
   direct enzymatic assignment.
 
 - **Reported lipase activity.** Yifrach 2022 attribute "clear lipase activity" of Ykl050c to
-  Ploier et al. 2013 [PMID:24187129]. **Caveat:** the Ploier 2013 abstract (all we can access
-  — `full_text_available: false`) names **Ayr1p** as the novel triacylglycerol lipase and
-  confirms **Lpx1p**; it does NOT mention Ykl050c in the abstract. Ykl050c was one of the
-  GXSXG-motif candidate hydrolases screened; the specific "clear lipase activity" statement
-  lives in the Ploier full text / supplement, which is not in our cache. So the biochemical
-  lipase claim for LPX2 is second-hand and NOT directly verifiable from cached text.
+  Ploier et al. 2013 [PMID:24187129]. **Caveat:** the Ploier full text names Ykl050cp as one
+  of the GXSXG-motif candidate hydrolases screened, but explicitly reports that only Lpx1p
+  and Ayr1p showed in-vivo lipase activity and that all other candidates did not. So the
+  biochemical lipase claim for LPX2 is contradicted by its cited primary source.
 
 - **Regulation.** Expression is induced by the AZF1 transcription factor
   [UniProt CC INDUCTION, ECO:0000269|PubMed:16467472; PMID:16467472 Slattery 2006]. AZF1
@@ -139,3 +137,23 @@ UniProt: **P35736** (YKF0_YEAST); systematic name **YKL050C**; SGD standard name
   is an overstatement, and this strengthens the MF-unknown conclusion.
 - PMID:16467472 Slattery 2006 — AZF1 regulates LPX2 expression (UniProt-curated). MEDIUM.
 - PMID:16338374 Tang 2005 — SCF/Cdc4 substrate screen (SGD-curated turnover). LOW/MEDIUM.
+
+## 2026-09-28 IBA and literature re-review
+
+- Re-checked the PTHR28298 PAINT export. UniProt still exposes a non-GOA `GO:0070941`
+  `eisosome assembly` IBA for LPX2; the current local PAINT row is `PANTHER:PTN002001648`
+  seeded by bona fide EIS1 (`SGD:S000004633`). LPX2 remains in the same
+  `PTHR28298:SF1` subfamily as EIS1, so the failure is a paralog/function divergence
+  across the EIS1/LPX2 split rather than a bad EIS1 source annotation.
+- Re-read the now-cached full text of Ploier et al. 2013. The old note that Ykl050cp was
+  not directly checkable from cached text is superseded: Ykl050cp is named among the
+  GXSXG hydrolase candidates and the paper reports that only Lpx1p and Ayr1p were
+  confirmed as in-vivo lipases.
+- A newer-paper search found Das et al. 2026 (PMID:41686312), which detects Lpx2/YKL050C
+  in the absolute yeast peroxisomal proteome and reports higher abundance under glucose
+  than oleate among the partially peroxisomal proteins. This adds quantitative context
+  but does not establish a molecular activity or contradict the MF_DARK call.
+
+## ND literature-search citations (2026-11-06)
+
+- `existing_annotations[2]` GO:0008150 biological_process (ND) may be stale. Yifrach et al. 2022 [PMID:36164978] report that the ykl050c (LPX2) deletion causes the largest lipidome change in glucose medium, an increase in lyso-phosphatidylglycerol, which is a mutant phenotype in this species tied to a specific process (glycerophospholipid metabolism). A curator should decide whether this supports a process annotation; the row action is unchanged.

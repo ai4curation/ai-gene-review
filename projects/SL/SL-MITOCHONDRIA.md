@@ -13,9 +13,9 @@ curators — differing only in how specific the location is.
 
 | SL | GO term | Reviewed | Issues | Rate |
 |---|---|---|---|---|
-| SL-0171 | GO:0031966 mitochondrial **membrane** | 13 | 4 | **31%** |
-| SL-0168 | GO:0005743 mitochondrial **inner** membrane | 19 | 2 | **11%** |
-| SL-0170 | GO:0005759 mitochondrial **matrix** | 14 | 1 | **7%** |
+| SL-0171 | GO:0031966 mitochondrial **membrane** | 14 | 5 | **36%** |
+| SL-0168 | GO:0005743 mitochondrial **inner** membrane | 21 | 2 | **10%** |
+| SL-0170 | GO:0005759 mitochondrial **matrix** | 16 | 1 | **6%** |
 
 The under-specified location is flagged three to four times as often as its precise siblings.
 Because the organelle, the pipeline, the mapping mechanism, and the reviewer pool are all held
@@ -24,7 +24,7 @@ mitochondria.
 
 ## The SL-0171 flags are all the same complaint
 
-All four resolve to "should be the inner membrane":
+The first four all resolve to "should be the inner membrane":
 
 - **yeast PET100** — "Pet100 is an inner-membrane protein, so the broader mitochondrial
   membrane annotation should be replaced by the specific compartment." → GO:0005743
@@ -57,8 +57,8 @@ localization errors that a precise term makes visible:
 Under-specification and mis-assignment are different diseases with different treatments.
 Making an SL location more specific does not reduce the number of *errors*; it converts
 un-checkable vagueness into checkable claims, some of which then turn out to be wrong. That is
-an improvement — a 7% error rate on precise terms is more useful than a 31% vagueness rate on
+an improvement — a 6-10% error rate on precise terms is more useful than a 36% vagueness rate on
 imprecise ones — but it should not be sold as error reduction.
 
-No annotations were changed under this subproject; all four SL-0171 cases had already been
+No annotations were changed under this subproject; the initial SL-0171 cases had already been
 flagged by prior reviews.

@@ -127,3 +127,20 @@ Two catalytic MFs constitute the core evolved function:
 Directly involved in: GO:0006635 fatty acid beta-oxidation; bile acid biosynthesis. Location:
 GO:0005782 peroxisomal matrix.
 </content>
+
+## 2026-10-09 review completion (alignment with dismech DBP deficiency)
+
+- Core functions now also list GO:0033540 (fatty acid beta-oxidation using acyl-CoA oxidase) and
+  GO:0140493 (very long-chain fatty acid beta-oxidation) as directly_involved_in, each added as a
+  NEW annotation. Mouse Hsd17b4 carries GO:0033540 by IMP (QuickGO, P51660); the human gene had
+  only the generic GO:0006635. DBP catalyzes steps 2-3 of the spiral, so this is participation
+  [PMID:9482850 "plays an essential role in the peroxisomal β-oxidation pathway"].
+- Bile acid biosynthetic process (GO:0006699) was considered but not proposed: no HSD17B4
+  ortholog in human/mouse/rat carries it in QuickGO, and the bile-acid branch is represented by
+  the substrate-specific MF GO:0033989 (kept non-core) and Reactome TAS rows.
+- GO:0080023 is an is_a child of GO:0004300 in the current GO graph (OLS), so the MODIFY
+  GO:0004300 -> GO:0080023 rows are refinements, not corrections of a wrong term.
+- dismech kb/disorders/D-Bifunctional_Protein_Deficiency.yaml previously bound GO:0035380
+  (very long-chain (3S)-3-hydroxyacyl-CoA dehydrogenase activity, wrong stereochemistry for DBP);
+  it was changed there to GO:0106386 and GO:0080023 to match these core functions.
+- Status set to COMPLETE.

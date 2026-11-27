@@ -34,6 +34,13 @@ evidence against the terms: direct yeast work independently establishes both
 transport and Golgi-like membrane association. The target's own SGD source is
 valid descendant evidence and is not circular.
 
+2026-09-29 IBA project alignment: all three IBA rows keep the ancestral
+`PANTHER:PTN...` entry as the PAINT node and retain curated descendant gene
+donors as structured `source_entities`. The PTN entry is not itself a donor;
+the extant `SGD:S000003063` self-seeds and `MGI:MGI:891965` source for
+`GO:0000139` remain legitimate GOA WITH/FROM evidence behind the PAINT
+placements.
+
 ## Core biology
 
 Vps45 is a Sec1/Munc18-family regulator of SNARE-dependent Golgi/endosomal
@@ -81,13 +88,15 @@ SNARE binding and SNARE-assembly regulation already express the demonstrated
 activity.
 
 All 12 generic protein-binding physical rows are retained one-for-one. The seven
-rows whose WITH/FROM partner is the syntaxin SNARE Tlg1 or Tlg2 are MODIFY to
-GO:0000149 SNARE binding; the other five remain over-annotated. Several are
-informative interaction data, yet `GO:0005515` loses the partner and role
-specificity. PMID:12553664 is especially limited: its
-cached abstract is entirely about Ivy1, Ypt7, and Vps33, not Vps45; without full
-text the row is not called wrong, but the reference is recorded as relevance
-NONE/correctness UNVERIFIED.
+rows whose WITH/FROM partner is the budding-yeast syntaxin SNARE Tlg1 or Tlg2
+are MODIFY to GO:0000149 SNARE binding; the other five are REMOVE because the
+generic `GO:0005515` term loses the partner and role specificity without
+support for a narrower molecular-function replacement. Several are informative
+interaction data even though the generic GO row is not. PMID:12553664 is
+especially limited: its cached abstract is about Ivy1, Ypt7, and Vps33 and does
+not expose the Vps45-Vac1/Pep7 experiment, so the Vac1/Pep7 row is removed for
+genericity rather than because the interaction is called false; the reference
+is recorded as relevance LOW/correctness UNVERIFIED.
 
 The cytosol IDA from PMID:9624182 remains UNDECIDED. The cached abstract is
 explicitly a Vps33 study and contains no Vps45 observation, while full text is
@@ -103,5 +112,6 @@ defective in vacuolar acidification."].
 
 ## Final action profile
 
-The 40 physical rows have 20 ACCEPT, 9 MARK_AS_OVER_ANNOTATED, 7 MODIFY, 3
-KEEP_AS_NON_CORE, and 1 UNDECIDED decisions. There are no PENDING or NEW rows.
+The 40 physical rows have 20 ACCEPT, 4 MARK_AS_OVER_ANNOTATED, 7 MODIFY, 5
+REMOVE, 3 KEEP_AS_NON_CORE, and 1 UNDECIDED decisions. There are no PENDING or
+NEW rows.

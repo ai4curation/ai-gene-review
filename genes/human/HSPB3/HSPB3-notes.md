@@ -29,3 +29,7 @@
 - "response to unfolded protein" (BP, TAS x2) — accept as core stress-response process for this sHSP.
 - Localization terms: cytoplasm (accept), nucleus (accept), nuclear speck (keep-as-non-core; IBA transfer + HPA IDA, but the speckle residence is a hallmark of HSPB7 not robustly shown for HSPB3 as constitutive).
 </content>
+
+## GO:0051082 migration (2026-09-27)
+
+Recombinant human HSPB3 alone shows chaperone-like activity [PMID:22610661 "HspB3 exhibits molecular chaperone-like activity in preventing the heat-induced aggregation of alcohol dehydrogenase (ADH)"], but is target-dependent [PMID:22610661 "However, it does not prevent the DTT-induced aggregation of insulin, indicating that it exhibits target protein-dependent molecular chaperone-like activity."]. This answers the earlier question of whether HSPB3 has holdase activity on its own; the core function now uses the proposed 'holdase chaperone activity' term.

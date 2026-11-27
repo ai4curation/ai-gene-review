@@ -2,12 +2,22 @@
 title: "ISOFORMS: Genes with Clear Functional Differences Between Isoforms"
 maturity: MATURE
 tags: [PIPELINE, FLAGSHIP]
-genes: [POMC, App, APP, AGRN, WT1, BCL2L1, Ang2, Ghr, Myc, Akt1, Casp3, VEGFA, FAS, CASP9, FN1, TPM1, FGFR2, PKM]
+genes: [POMC, App, APP, AGRN, WT1, BCL2L1, Ang2, Ghr, Myc, Akt1, Casp3, VEGFA, FAS, CASP9, FN1, TPM1, TPM3, DSCAM, FGFR2, PKM, STAT3, SYNGAP1, RASAL2]
 species: [human, mouse, rat, DROME]
 sidecars:
   genes: ISOFORMS/genes.csv
+manifest:
+  slides:
+    - href: ISOFORMS/slides/ISOFORMS-slides.html
+      description: AI generated
+  artifacts:
+    - href: https://claude.ai/artifact/7VHDo7VPudGeN5Lo7yzWtU
+      title: Project brief
+index_group: MAMMAL
 ---
 # ISOFORMS: Genes with Clear Functional Differences Between Isoforms
+
+**Bottom line:** most GO annotations are made at the gene level, but alternative splicing and proteolytic cleavage can give one gene products with opposite functions, such as anti-apoptotic Bcl-xL and pro-apoptotic Bcl-xS, or neuroprotective sAPPalpha and neurotoxic amyloid-beta from APP. We reviewed every existing GO annotation on 16 paradigm genes (13 splicing cases in three tiers, plus the POMC and APP/App polyproteins), 2,774 annotation rows in all, and extended the data model to record which isoform an annotation was made on (`isoform`), NOT annotations (`negated`), and curator-defined functionally distinct products (`functional_isoforms`). We did this to measure how often gene-level annotation merges functions that belong to different products, and to give reviewers a way to say so. The conflation pattern holds across the set: 246 rows were marked over-annotated, often because one isoform's function was attached to the whole gene (8 in BCL2L1 for pro/anti-apoptotic conflation; 21 in VEGFA, whose VEGF165B isoform is anti-angiogenic; 63 in mouse App, where the page's notes attribute them to amyloid-beta-specific terms). Thirteen of the 16 reviews are marked COMPLETE; WT1 and VEGFA are still IN_PROGRESS and DSCAM is a DRAFT, and PTBP1/2 and MST1R have not been started. The checkboxes under Priority Genes predate the status section below.
 
 ## Overview
 
@@ -95,6 +105,44 @@ This project should:
 
 **Important caveat**: Just because an annotation was made on a specific isoform doesn't necessarily mean the function is isoform-specific. Researchers may have used a particular isoform for convenience. The `isoform` field indicates *what was tested*, not necessarily *what is unique to that isoform*.
 
+## Where UniProt and the literature disagree about isoforms
+
+A review sometimes finds that the isoforms the literature describes do not match
+the isoforms the UniProt entry records. These cases matter for annotation: a
+function stated for "the protein" may belong to an isoform the entry does not
+contain, and residue numbers in a paper may refer to an isoform that is not the
+displayed sequence. Cases found so far:
+
+| Gene | UniProt entry | What the literature says | What UniProt records | Kind of mismatch |
+|---|---|---|---|---|
+| SYNGAP1 | Q96PV0 | Four C-terminal splice forms (alpha1, alpha2, beta, gamma); only alpha1 ends in the class I PDZ ligand -QTRV that binds PSD-95 (PMID:32579114) | Four named isoforms, none ending in -QTRV. The alpha1 C-terminus exists as RefSeq NP_001123538.1 (1292 aa), which the entry cross-references without assigning it to an isoform, and as unreviewed entries B7ZCA0 and A0A2R8Y6T2 | Literature isoform missing from the reviewed entry |
+| RASAL2 | Q9UJF2 | Phosphosites S351 (PMID:33563064) and Ser237 (PMID:33096593) | Both are serines only in isoform 2 (Q9UJF2-2, 1280 aa, the RefSeq NP_733793.2 form); in the displayed sequence (Q9UJF2) they are Ser203 and Ser89 | Residue numbering uses a non-displayed isoform |
+
+Both were found while reviewing the SynGAP RasGAP subfamily (PRs #5338, #5364
+and the SYNGAP1 follow-up). In each case the error propagated into prose: the
+SYNGAP1 description attributed the PDZ ligand to the whole protein, and a deep-
+research report placed RASAL2 S351 in the PH domain, which is correct for
+neither numbering.
+
+### How these are recorded
+
+Each kind of mismatch has a structured home, so the cases can be counted and
+the ones that are UniProt's to fix can be reported to UniProt:
+
+1. **A literature isoform missing from UniProt** is a `functional_isoforms`
+   entry whose `maps_to` names the sequences that carry it (`REFSEQ_PROTEIN`,
+   `UNIPROTKB_UNREVIEWED`) and has no `UNIPROT_ISOFORM` mapping, plus a
+   `source_defects` item (`MISSING_ISOFORM`, resource `UNIPROT`,
+   `requested_change: ADD`). `just export-source-defects` writes these into the
+   report for UniProt. SYNGAP1 `SYNGAP1_ALPHA1` is the first.
+2. **Residue numbers given on a non-displayed isoform** are not an error in
+   UniProt, so they are not source defects. The finding carries
+   `residue_mappings`: the residue as the paper numbers it (`as_reported`, e.g.
+   `UniProtKB:Q9UJF2-2` 351 S) and the same residue in the displayed sequence
+   (`canonical`, `UniProtKB:Q9UJF2` 203 S). The validator resolves both against
+   the real sequences and fails a number read on the wrong one. The two RASAL2
+   findings are the first.
+
 ## References
 
 Key reviews and resources:
@@ -121,7 +169,7 @@ Key reviews and resources:
 ### Tier 2 Genes
 - [x] FN1 - **COMPLETE** - 193 annotations | EDA/EDB domain developmental splicing
 - [x] TPM1 - **COMPLETE** - 55 annotations | 9 OVER_ANNOTATED (muscle vs cytoskeletal isoforms)
-- [x] TPM3 - **COMPLETE** - 39 annotations | 16 OVER_ANNOTATED (slow muscle vs TM30nm cytoskeletal)
+- [x] TPM3 - **COMPLETE** - 39 annotations | 17 OVER_ANNOTATED (slow muscle vs TM30nm cytoskeletal)
 - [x] DSCAM - **COMPLETE** - 50 annotations | 4 OVER_ANNOTATED (human has only 2 isoforms, not 38,016!)
 
 ### Tier 3 Genes
@@ -247,14 +295,14 @@ Remaining: PTBP1/2 (splicing regulators - different focus), RON/MST1R
 |------|-------|--------|----------|----------------|-------------|
 | FN1 | 193 | 62 | 39 | 0 | EDA/EDB developmental splicing |
 | TPM1 | 55 | 34 | 12 | 9 | Muscle vs cytoskeletal isoforms |
-| TPM3 | 39 | 19 | 4 | 16 | Slow muscle vs TM30nm cytoskeletal |
+| TPM3 | 39 | 7 | 14 | 17 | Slow muscle vs TM30nm cytoskeletal |
 | DSCAM | 50 | 42 | 3 | 4 | Only 2 isoforms (not like Drosophila!) |
 
 **Key Tier 2 Findings:**
 
 1. **FN1**: 17 isoforms with EDA/EDB domain variation. Plasma FN (hepatocyte) vs cellular FN (fibroblast). EDA/EDB+ isoforms are oncofetal antigens used in cancer imaging.
 
-2. **TPM1/TPM3**: Tissue-specific tropomyosin isoforms - skeletal muscle, smooth muscle, cardiac, and cytoskeletal variants. Annotations for "muscle contraction" often apply only to muscle isoforms. TPM3 had highest over-annotation rate (16/39).
+2. **TPM1/TPM3**: Tissue-specific tropomyosin isoforms - skeletal muscle, smooth muscle, cardiac, and cytoskeletal variants. Annotations for "muscle contraction" often apply only to muscle isoforms. TPM3 had highest over-annotation rate (17/39).
 
 3. **DSCAM**: CRITICAL CAVEAT - Human DSCAM has only 2 isoforms, NOT the 38,016 of Drosophila Dscam1! Vertebrates use protocadherins instead. Some IBA annotations may be inappropriately extrapolated from fly.
 

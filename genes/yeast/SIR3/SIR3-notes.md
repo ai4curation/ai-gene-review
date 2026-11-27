@@ -74,5 +74,79 @@ Also addressed two smaller review points:
   PMID:9501103 annotation — from one experiment assaying SIR2, SIR3 and SIR4
   together — is currently adjudicated three different ways across the repo
   (SIR2 `REMOVE`, SIR3 this entry, SIR4 `MARK_AS_OVER_ANNOTATED`). Those sibling
-  entries should be reconciled with the NEJ1 rationale above in a separate pass;
-  a note to that effect is now in the SIR3 `reason`.
+  entries should be reconciled with the NEJ1 rationale above in a separate pass.
+
+## 2026-09-29 Update
+
+Aligned SIR3 with the IBA propagation review:
+
+- The `GO:0006270` transfer from the ORC1/CDC6 PAINT family still carries a
+  `PROPAGATION_BAD`/`WRONG_ORTHOLOG_OR_PARALOG` propagation review because Sir3
+  is an ORC1-derived silent-chromatin scaffold that suppresses, rather than
+  initiates, MCM loading at euchromatic origins. The `GO:0003688` transfer is now
+  `TERM_SCOPING_PROBLEM`: SIR3 itself is in that seed list via SGD's
+  over-scoped origin-binding IDA from PMID:29795547, whose data support Sir3
+  binding to origin-adjacent nucleosomes rather than origin DNA itself.
+- The `GO:0033314` checkpoint-signaling IBA points to the same PTN in the cached
+  GOA row but is no longer present in the local 2026 PTHR10763 PAINT export, so
+  it was marked `SOURCE_STALE_OR_MISSING`.
+- The five remaining `GO:0005515 protein binding` rows from RAP1/SIR4
+  interaction and high-throughput complex papers are now `REMOVE`: the physical
+  interactions are not disputed, but no more-specific RAP1- or Sir4-binding MF
+  term exists and generic protein binding should not be retained.
+
+The newer full-text SIR3 literature does not reopen the IBA calls. Brothers and
+Rine 2022 refine Sir3 recruitment and spread by Sir3-M.EcoGII/Nanopore mapping
+but do not support origin-DNA binding or initiation. Bordelet et al. 2022 do
+require a correction to the September NHEJ rationale: the original NEJ1
+rescue literature still shows an indirect SIR contribution through HML/HMR
+silencing, but SIR3 also has a direct Sae2-binding role that limits
+MRX-dependent resection and promotes NHEJ [PMID:34817085 "Via physical
+interaction with the Sae2 protein, Sir3 impairs Sae2-dependent functions of the
+MRX (Mre11-Rad50-Xrs2) complex, thereby limiting Mre11-mediated resection,
+delaying MRX removal from DSB ends, and promoting NHEJ"]. The existing
+`GO:0006303` action therefore remains `MODIFY`, but the replacement is now the
+directional `GO:2001034 positive regulation of double-strand break repair via
+nonhomologous end joining`. Because the same paper explicitly describes Sir3 as
+"a direct negative regulator of Sae2", the proposed Sae2-directed molecular
+function is the direction-preserving `GO:0140678 molecular function inhibitor
+activity`.
+
+## 2026-10-16: GO:0070481 nonstop decay row resolved (issue #4027)
+
+The September note left `GO:0070481` UNDECIDED pending Table 2 of
+PMID:17660569 or the underlying SGD detail. The table is still not in the
+cached text (the PMC copy is not open access and the publisher page is
+paywalled), but SGD's phenotype curation for this reference
+(`https://www.yeastgenome.org/backend/reference/17660569/phenotype_details`,
+retrieved 2026-10-16) lists sir3-null in the systematic mutation set as
+"RNA accumulation: increased", together with SKI3, SKI7, SKI8, SSN2, SSN3,
+MED1, NUP2, HTZ1, IPK1 and YGR122W; PRE9, UMP1 and RKR1 are scored instead for
+increased protein accumulation. So SIR3 was one of the eleven hits that raised
+the Protein A-nonstop reporter mRNA [PMID:17660569 "This experiment showed that
+deletion of 11 of the 15 mutants tested also increased the abundance of our
+Protein A-nonstop mRNA"]. The paper gives no mechanism for SIR3, and notes that
+most new hits did not behave like general exosome factors [PMID:17660569
+"This observation suggests that these genes are not required for general
+cytoplasmic exosome activity."].
+
+Decision: `MARK_AS_OVER_ANNOTATED`. The phenotype is verified, so REMOVE is
+not justified, but a deletion-screen hit shows necessity rather than
+participation, and Sir3 is a nuclear heterochromatin protein with no known
+activity in cytoplasmic mRNA surveillance. An indirect route through loss of
+silencing is plausible (compare the indirect NEJ1/HML-HMR contribution to NHEJ
+discussed above) but untested.
+
+Follow-up after PR #5072 review (2026-10-16): the reason now quotes and answers
+the authors' own reading of the eleven RNA-increased strains [PMID:17660569
+"Importantly, these data showed that suppression in these 11 strains was not
+specific to the his3 -nonstop reporter, but was most likely due to a general
+defect in the nonstop mRNA decay pathway."]. sir3-null passed the heterologous
+Protein A reporter control, so the HIS3-promoter caveat (which the paper raises
+for SSN2/SSN3/MED1) was dropped as support. The reviewer suggested sir3-null
+must be one of the "eight other mutants" with a longer Protein A-nonstop
+half-life in Figure 6. The count does not close: SGD's eight non-SKI,
+non-proteasome RNA-increased strains (SIR3, YGR122W, HTZ1, SSN2, SSN3, NUP2,
+MED1, IPK1) plus ylr021w, which the text puts in Figure 6 but SGD does not list
+in that phenotype set, give nine candidates for eight slots. Either way the
+action stands, because a half-life increase is also a necessity readout.

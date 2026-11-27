@@ -1,0 +1,33 @@
+# aga1 (SPBC1271.14, UniProt O94346) notes
+
+## Identity
+- ArgJ-family bifunctional protein, ortholog of S. cerevisiae ARG7 (PTHR23100:SF0, TIGR00120) [UniProt:O94346 "Belongs to the ArgJ family."]. UniProt has no gene name (ORFNames only); fetched with `-u O94346`.
+- Precursor autoproteolytically split into alpha/beta chains (CHAIN 1..225, 226..445; ACT_SITE 226) [UniProt:O94346 "The alpha and beta chains are autoproteolytically processed from a"].
+
+## Activity (inferred, not assayed in S. pombe)
+- Ornithine acetyltransferase EC 2.3.1.35 [UniProt:O94346 "Reaction=N(2)-acetyl-L-ornithine + L-glutamate = N-acetyl-L-glutamate +"] and family-level EC 2.3.1.1 [UniProt:O94346 "Reaction=L-glutamate + acetyl-CoA = N-acetyl-L-glutamate + CoA + H(+);"]; both HAMAP-rule based.
+- Anaplerotic NAGS in S. pombe is arg6 (module fungal_nags variant), so GO:0004042 kept as non-core (matches ARG7 review).
+
+## Localisation / phenotype
+- Mitochondrion in ORFeome screen (HDA PMID:16823372) [PMID:16823372 "we determined the localization of 4,431 proteins"].
+- Arginine auxotrophy in the deletion-collection screen [PMID:32896087 "This screen identified 31 mutants that grew substantially better when supplemented with arginine"]; per-gene calls in Dataset EV1 (not cached) - deferred to curator.
+- PomBase GO-CAM gomodel:6690711d00000916: aga1 enables GO:0004358 in mitochondrial matrix (ISS/TAS), downstream of arg1.
+
+## Decisions
+- Core: GO:0004358; BP GO:0006592 + GO:0006526; mitochondrial matrix. Consistent with ARG7 core.
+- ARBA generic BPs MODIFY -> GO:0006526.
+
+
+## 2026-10-26 systematic fungal annotation audit
+
+Reviewed all 12 existing rows and the core functions with the review and annotation-reviewer workflows. Preserved every machine-sourced term, evidence code, qualifier, source identifier, WITH/FROM entry and row order. No new annotations were added in this audit.
+
+Recycling activity is supported by conserved ArgJ architecture and the characterized budding-yeast donor. The secondary acetyl-CoA activity is retained as a non-core PAINT/curated-family inference at PTN000559455, not a direct S. pombe assay or proven initiation route. ArgJ membership alone does not establish bifunctionality throughout the family. Native processing kinetics and quantitative initiation contribution remain open.
+
+Normal publication caching completed. Normal Falcon research with Perplexity-lite fallback was attempted for this gene; authentication/quota failures prevented a generated report. Manual review used the actual cached primary sources and curated UniProt, and no provider-named research file was fabricated. Per-gene attempts and validation logs are in `.cache/module-audit-logs/arginine-SCHPO-aga1-*`. Abstract-only or bibliographic-only sources are distinguished from full text in reference reviews; unavailable source details are not treated as experimental refutations.
+
+Actions: ACCEPT 7, KEEP_AS_NON_CORE 2, MODIFY 3. Record sections were backfilled; focused schema/reference validation passed on the initial complete panel. Final targeted checks and HTML rendering are recorded in the audit logs.
+
+## PR #5563 follow-up, 2026-10-26
+
+Restored supported GO:0005739 mitochondrion rows to ACCEPT under the explicit root-organelle policy; existing matrix rows remain separate. Reasons distinguish organelle screens, direct targeting, publication-linked curated evidence and unavailable full text. No original annotation payload changed. Cytosol decisions use target-specific fractionation/processing evidence rather than relationship qualifiers or generic precursor transit. For Aga1, matrix inference does not imply universal post-import autoproteolysis.

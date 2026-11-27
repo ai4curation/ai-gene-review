@@ -16,7 +16,15 @@ from ai_gene_review.validation.validator import get_schema_path
 
 
 def _run_term_validator(yaml_file: Path) -> subprocess.CompletedProcess:
-    """Run linkml-term-validator on a file and return the result."""
+    """Run linkml-term-validator on a file and return the result.
+
+    These assertions compare the validator's output text, so they depend on the
+    cited terms (GO, and NCBITaxon:9606) resolving from the committed offline
+    cache -- a fixture using an uncached CHEBI/NCBITaxon id would become
+    sensitive to an ontology-service (EBI) outage. This call is intentionally
+    NOT routed through scripts/term_validate.sh (which would mask an outage as a
+    skip); keep these fixtures on cached ids. See tests/test_taxon.py.
+    """
     return subprocess.run(
         [
             "uv", "run", "linkml-term-validator", "validate-data",

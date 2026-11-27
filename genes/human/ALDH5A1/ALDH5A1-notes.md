@@ -1,5 +1,9 @@
 # ALDH5A1 (SSADH) review notes
 
+The historical decision summary below is superseded by the 2026-09-27 audit appended
+at the end, particularly the NAD(P)+ parent-term, glutamate-pathway, homotetramer and
+clinical-source assessments.
+
 UniProtKB: P51649 (SSDH_HUMAN). HGNC:408. EC 1.2.1.24. 535 aa precursor with an
 N-terminal mitochondrial transit peptide (1..47); mature chain 48..535.
 
@@ -63,3 +67,169 @@ hypotonia, intellectual disability, ataxia, seizures, behavioural disturbance
   experimental IMP whose full text we cannot read).
 - CC GO:0005739 mitochondrion (IBA, IEA, IDA/HPA, HDA, HTP) and GO:0005759 mitochondrial
   matrix (TAS Reactome): all ACCEPT; matrix is the more precise, correct location.
+
+## 2026-09-27 full substantive audit
+
+Approved HGNC:408 symbol ALDH5A1, UniProt P51649, aliases SSADH/SSDH were checked.
+The five canonical files matched main `ba3ff58d7d2de76dbe3c24b16e05e12369f463fc`;
+canonical and alias PR searches and alias-directory checks found no overlap. The
+25 original annotation source objects, two alternative products, 16 original
+reference identities, GOA and UniProt are preserved. The completed decisions are
+22 ACCEPT, two MODIFY and one KEEP_AS_NON_CORE, with no NEW annotation. Four donor
+references were added and all 20 references manually assessed.
+
+### Catalysis, assembly and pathway scope
+
+- Human brain cDNA yields active recombinant SSADH in bacteria, with NAD+ and SSA
+  kinetic measurements and an apparent homotetramer [PMID:16199352]. The specific
+  catalytic function remains GO:0004777. Identical-protein binding is ACCEPT as
+  enzyme assembly integrated into the one catalytic core, not a separate generic
+  interaction function.
+- The live [GO:0009013 definition and children](https://amigo.geneontology.org/amigo/term/GO:0009013)
+  encompass NAD+ and NADP+ enzymes; the parent does not require both cofactors in
+  one protein. MODIFY to the measured NAD+-dependent activity improves specificity
+  without claiming an unread NADP+ negative assay. Generic GO:0016491 is refined
+  by the same positive substrate/cofactor evidence. These replace the historical
+  overannotation judgments.
+- The live [GABA-shunt definition and parents](https://amigo.geneontology.org/amigo/term/GO:0006540)
+  explicitly connect glutamate, GABA, SSA and succinate. GO:0006540 is an is_a child
+  of both GO:0006536 and GO:0006105. SSADH executes a step in that pathway and
+  directly produces succinate; both broader process annotations are therefore
+  accepted as core. Immediate glutamate binding or catalysis is not required for
+  this pathway membership.
+- The patient MRS study [PMID:15037717] corroborates altered GABA/GHB metabolism;
+  it does not itself measure purified SSADH chemistry. Human enzymology supplies
+  that independent participation evidence [PMID:12208142; PMID:16199352].
+- The 2003 variant abstract explicitly reports one exception to the below-5%
+  activity statement for missense alleles considered disease-causing and describes
+  other variants without strong activity effects [PMID:14635103]. That qualification
+  is retained throughout. Transcript polyadenylation results [PMID:12208142] do not
+  establish catalytic equivalence of all protein isoforms.
+
+### Primary source resolution and limitations
+
+The original [PMID:19300440 full Results/Methods](https://pmc.ncbi.nlm.nih.gov/articles/PMC2670868/)
+were recovered through indexed primary PMC text although direct opens were challenged.
+SSA is the substrate in the ligand complex; only the ADP portion of soaked NAD+ is
+resolved. The structures are not a succinate-product complex or evidence of an ADP
+cofactor. NADH-formation assays support catalysis. The oxidant/reductant work includes
+recombinant protein and overexpressing HEK293 cells followed by lysate measurements;
+quantitative control of endogenous neural GABA flux remains an open question. Crystal
+assembly and the biochemical tetramer observation support oligomerization, while
+disease-mutant assembly effects inferred from structure are not direct measurements.
+The local publication remains abstract-only.
+
+The full original [PMID:9683595 institutional PDF](https://art.torvergata.it/retrieve/e291c0d3-7a76-cddb-e053-3a05fe0aa144/Chambliss_AJHG_1998.pdf)
+was independently read by the annotation-reviewer peer and this author. Human
+recombinant GST-SSADH, patient/relative cell activity and splice-genotype segregation
+support enzyme identity. Clinical developmental/speech delay grounds the existing
+non-core developmental association; the paper does not assay a CNS morphogenetic or
+differentiation step. Its discussion reports no established residual-activity/GHB-to-
+clinical-severity correlation. Historical ALDH4A1 allele labels here denote SSADH,
+not the modern ALDH4A1 protein. The short full-text quotation in row 22 was checked
+against page 407 and is stored as `supporting_text_fulltext`; the cache stays unchanged.
+
+PMID:7814412 experimentally validates rat cDNA through bacterial activity and purified
+rat-brain sequence, alongside human partial cDNA and sequence comparisons. The ISS
+donor is rat P51650. Later human expression studies independently establish the
+conserved reaction; the rat expression experiment is not relabeled as human.
+
+All nine original GOA PMID caches were read. Local full-text flags follow machine
+cache availability: seven are abstract-only, while PMID:20833797 and PMID:34800366
+have full-text metadata. The former extraction actually contains abstract/Discussion
+and omits important experimental sections/tables. The latter main article was read,
+but neither individual ALDH5A1 supplementary identification was re-extracted. Both
+curated mitochondrial annotations are accepted with independent human localization
+support, without inferring contamination or unmeasured submitochondrial resolution.
+GO_REF:0000052 verifies the immunofluorescence curation method; its original antibody
+images were not independently re-scored. Matrix localization in the integrated core
+is independently supported by the human literature and cached Reactome R-HSA-888548.
+
+### Propagation provenance
+
+The cached PTHR43353 PAINT records identify PTN008681047 for SSADH activity/GABA
+catabolism and PTN000192583 for mitochondrial localization. These are ancestral IBD
+assertions, not a count of similar extant proteins. Human experimental descendants
+are valid ancestral grounding; no circularity or function loss is inferred. The full
+historical tree/MSA was not reconstructed. Twelve propagation blocks identify the
+PAINT ancestral nodes for IBA and the traced donors or mapping identifiers for other
+inferences, with rule predicates left UNRESOLVED where not inspected.
+
+Mouse Q8BWF0 is Aldh5a1 (MGI:MGI:2441982). The cached GO-CAM
+`gocams/68d5ebd600002976/68d5ebd600002976-src.yaml` models SSADH catalysis and GABA-shunt
+participation with IMP [PMID:11544478] and matrix context with IDA [PMID:14651853].
+The model supplies a positive pathway role rather than a gap warranting NEW.
+
+The [MGI donor graph](https://www.informatics.jax.org/marker/gograph/MGI:2441982)
+is labeled generated 2023-03-10; it is a historical source snapshot, not a fresh GOA
+export. [MouseMine](https://www.mousemine.org/mousemine/keywordSearchResults.do?searchTerm=Aldh5a1)
+resolves its reference IDs: J:125589 is PMID:12065715 for succinate-process IMP,
+J:128716 is PMID:17854388 for glutamate-process IMP, and J:86816 is PMID:14651853 for
+mitochondrial evidence. J identifiers are not PMIDs.
+
+- [PMID:12065715 primary abstract](https://pubmed.ncbi.nlm.nih.gov/12065715/) describes
+  mouse treatment, survival and GABA/GHB responses. A donor succinate-flux assay was
+  not resolved; direct human product formation independently grounds acceptance.
+- [PMID:17854388 primary abstract](https://pubmed.ncbi.nlm.nih.gov/17854388/) describes
+  mouse cortical isotope labeling and metabolite changes. These are system-level
+  pathway observations, not direct glutamate catalysis. Its introductory NADP wording
+  is not used to assign human cofactor specificity; direct human NAD+ kinetics are
+  the relevant evidence.
+- [PMID:11544478 primary Nature record](https://www.nature.com/articles/ng727)
+  and indexed original-paper excerpts verify the knockout/rescue citation used in
+  the mouse model. The whole paper was not recovered.
+- The cached PMID:14651853 abstract establishes mouse organelle-proteomics scope;
+  the individual Aldh5a1 peptide record was not recovered. Human compartment evidence
+  independently supports transfer.
+
+### Research execution and cache gates
+
+One genuine Falcon request with automatic perplexity-lite fallback was launched
+concurrently with standard GOA-publication caching, using isolated writable temporary
+UV directories. Both providers failed during dependency retrieval from PyPI due to
+DNS errors before provider contact; no provider artifact was produced or authored.
+Logs: `/tmp/ALDH5A1-fresh-research.log` and `/tmp/ALDH5A1-fetch-goa.log` (9/9 original
+PMIDs already cached). This is a manual primary-source review.
+
+The three newly traced donor PMIDs 11544478, 17854388 and 12065715 were submitted to
+the normal fetcher; `/tmp/ALDH5A1-donor-fetch.log` records DNS failures and 0/3 cached.
+They remain required cache gates for a future recovery batch. PMID:14651853 was already cached. No cache
+was manually fabricated or edited. Status is DRAFT until the required sources and
+validation warnings are resolved. The notes-inclusive authored PMID set is the nine
+original publications plus these four donor papers; there are no provider-only PMIDs.
+
+The parent independently reviewed every annotation, reference assessment, core and
+question and found no biological blocker. Source preservation and all 43 cached
+supporting snippets were independently checked with case-sensitive whitespace
+normalization. The clinical full-text excerpt was checked against the institutional
+PDF, page 407. No action was changed merely to eliminate a validation warning.
+
+
+## 2026-09-27 — Source6 publication-cache closure
+
+PR #3268 remained at exact head `8d48f6840058c4387f535908b1eb1baedd1804b8`; all five canonical file blobs matched before authoring. The three required donor records are now genuine normal-fetch artifacts imported by the parent without overwrites from source run 36297910960, attempt 1, head `41e41a94fb65b65ddc78627208d955fa1e7eb1c7`. The source archive and staged record hashes were verified separately; each canonical publication byte sequence matches `tmp/source6-canonical-import-receipt.json`. All three are **abstract-only**, not newly available full papers. This supersedes the earlier operational missing-cache gate, not the full-source limitations.
+
+- PMID:11544478 reports Aldh5a1-null mice, elevated GABA/GHB in urine and brain/liver homogenates, lethal seizures and pharmacologic rescue. It corroborates the mouse GO-CAM donor context; it is not relabeled a direct human enzymatic assay.
+- PMID:12065715 reports intervention-dependent lifespan extension and high-dose vigabatrin-associated GABA elevation without a parallel GHB decrease. The original succinate-process donor is retained with independent human product-forming chemistry; the recovered abstract does not add a succinate-flux assay.
+- PMID:17854388 measures glucose/acetate isotope incorporation and cortical metabolite pools in 17-day-old mice. Its introductory NADP-dependent statement is not an experimental cofactor-specificity result. Direct human NAD+ kinetics and the existing integrated core remain unchanged. An independent annotation-reviewer peer read this recovered abstract and confirmed this source boundary.
+
+Each recovered reference assessment now states actual local access and includes an exact abstract finding. No annotation reason/action, original source assertion, alternative product, core, original title, machine source, or published history has been rewritten. The publication census covers the entire gene tree, including DOI strings, institutional PDF and primary-page links, and confirms 13 required PMIDs and the reviewed Reactome event R-HSA-888548 are cached. There are no provider artifacts or new DOI-only publication gates. Nine raw UniProt bibliography entries remain separately inventoried because they are not invoked for retained substantive claims; the homotetramer claim is independently grounded in the existing human biochemical/structural references. The broader UniProt Reactome cross-reference R-HSA-916853 is likewise not an additional reviewed source assertion. These inventories do not replace source-specific evidence judgments.
+
+Status is COMPLETE after closure of the three operational cache gates and warning-free targeted validation; the documented limits of abstract-only donor evidence remain explicit. The normal provider attempts from the full review are preserved as failed pre-contact attempts, with no fabricated report and no unnecessary repeat.
+
+The targeted validator completed successfully with no review warnings. Exact preservation checks retain all 25 complete annotation objects, both alternative products, the core and 20 reference identities/titles. All 46 cached snippets are case-sensitive verbatim matches after whitespace normalization, and the unchanged external clinical excerpt matches its retained primary-PDF receipt. New-history validation and HTML rendering also passed.
+
+
+## 2026-09-27 — PR #3268 pathway-core and evidence follow-up
+
+At published head `643b13985aa097cf259d1e0804fc59b0c01d6cad`, all five canonical gene-file blobs matched before editing. Formal review 5329963687 and full comment 5855089062 were read. The proposed downgrade of glutamate metabolism was independently assessed against the live ontology and positive human enzyme evidence.
+
+The live [GABA-shunt definition](https://amigo.geneontology.org/amigo/term/GO:0006540) explicitly places SSADH at the final SSA-to-succinate step of the glutamate-to-GABA-to-succinate pathway and lists glutamate metabolic process and succinate metabolic process as `is_a` parents. ALDH5A1 performs that step; it is not merely required for the pathway through an indirect disease effect. Accordingly, the existing glutamate-process `ACCEPT` and `NO_FAILURE_CORE` remain appropriate, without asserting that glutamate is the immediate substrate. The integrated core is a compact synthesis of that catalytic work, not an exhaustive list of all valid pathway labels. Its GABA-catabolism description therefore does not negate the broader core-process annotation. The annotation-reviewer peer and parent independently agreed with this participation distinction. Succinate-process acceptance also remains grounded in actual product formation. All 25 decisions and source assertions remain unchanged: 22 ACCEPT, two MODIFY and one KEEP_AS_NON_CORE; no NEW assertion.
+
+[Live GO:0004777](https://amigo.geneontology.org/amigo/term/GO:0004777) directly confirms GO:0009013 as a parent, so the cofactor-specific refinement and parent wording stand. An exact cached UniProt reaction/EC/RHEA excerpt now accompanies the electronic reaction row. The same record and live GO reaction participants support explicit core substrate entries for 4-oxobutanoate (succinate semialdehyde) and NAD(1-); these are the measured substrates in PMID:16199352, not additional activities. The standalone description now includes aldehyde-dehydrogenase family membership and mitochondrial targeting; UniProt's 1–47 transit-peptide boundary is predictive (ECO:0000255) and no newly measured cleavage site is claimed. Redox inhibition remains biological prose without assay-workflow framing.
+
+The earlier Nature URL is corrected to `ng727`, matching the unchanged normal PMID:11544478 record. The provenance summary now distinguishes the IBA ancestral-node entries from traced ortholog/mapping sources. Published history remains untouched. The public institutional PMID:9683595 clinical excerpt remains documented by its existing primary-PDF receipt and page 407; its external-public provenance now appears in the reason instead of the field reserved for nonshareable full text. The developmental judgment and the abstract-only local availability flag are unchanged.
+
+No new source was introduced. The recursive authored/provider DOI, PMID, PDF and link census retains the same 13 required cached publications and reviewed Reactome R-HSA-888548. Bare unused UniProt bibliography entries remain outside the required functional-source set. There are no provider artifacts, new retrievals, source edits or cache gates in this follow-up.
+
+Targeted validation completed without review warnings; history validation and rendering passed. All 47 cached supporting excerpts are exact after case-sensitive whitespace normalization. Integrity checks preserve all 25 source rows/actions, both isoforms, all 20 reference objects and immutable raw-source bytes. The bounded YAML delta changes only the description, three annotation-review evidence/rationale blocks and two core substrate entries. No new source gate was introduced.

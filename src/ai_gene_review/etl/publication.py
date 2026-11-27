@@ -48,6 +48,12 @@ import yaml
 from bs4 import BeautifulSoup, Tag
 from pydantic import BaseModel
 import fitz  # type: ignore  # PyMuPDF
+
+# No cycle: validation/supporting_text imports only stdlib and yaml.
+from ai_gene_review.validation.supporting_text import (
+    NO_FULL_TEXT_CONTENT_TYPES,
+    clear_publication_caches,
+)
 from PyPDF2 import PdfReader
 from Bio import Entrez  # type: ignore[import-untyped]
 
@@ -167,6 +173,12 @@ class Publication:
     doi: Optional[str] = None
     keywords: Optional[List[str]] = None
     pubmed_publication_types: Optional[List[str]] = None  # raw PubMed PT list
+    #: Frontmatter keys this dataclass has no field for, preserved verbatim on write.
+    #: publication_warm writes full_text_provider, full_text_url, oa_status, license and
+    #: full_text_attempted straight into frontmatter, so a rewrite through Publication
+    #: silently dropped them -- including `license`, which governs redistribution of the
+    #: very text a carry-forward is preserving.
+    extra_frontmatter: Optional[Dict[str, Any]] = None
 
     @property
     def publication_type(self) -> Optional[str]:
@@ -194,6 +206,8 @@ class Publication:
         }
         if self.full_text_extraction_method:
             data["full_text_extraction_method"] = self.full_text_extraction_method
+        for key, value in (self.extra_frontmatter or {}).items():
+            data.setdefault(key, value)
         if self.pmcid:
             data["pmcid"] = self.pmcid
         if self.doi:
@@ -332,19 +346,80 @@ def convert_doi_publication(
         print(f"PMID file already exists: {pmid_file.name}, skipping conversion")
         return False
 
-    # Build a Publication in the standard schema
+    # Build a Publication in the standard schema.
+    #
+    # An explicit `full_text_available` wins over `content_type`. Deriving it from
+    # content_type alone made this a third writer that silently overrides a considered
+    # judgement: four cached records were marked `false` by hand because their bodies are
+    # openalex landing pages plus RIS citation exports, and two of those are
+    # `content_type: full_text_html`, so this converter would have written `true` straight
+    # back over them on the next `just convert-doi-publications`.
+    #
+    # The negative list is imported rather than repeated. It was a literal tuple here while
+    # `NO_FULL_TEXT_CONTENT_TYPES` was authoritative elsewhere, which makes the constant
+    # authoritative in name only -- a new value would diverge this converter from both the
+    # validator and the flag audit.
+    declared = frontmatter.get("full_text_available")
     content_type = frontmatter.get("content_type", "unavailable")
-    full_text_available = content_type not in ("unavailable", "abstract_only")
+    if isinstance(declared, bool):
+        full_text_available = declared
+    elif isinstance(content_type, str):
+        full_text_available = content_type.lower() not in NO_FULL_TEXT_CONTENT_TYPES
+    else:
+        # Mirror cached_full_text_available, which returns None for a non-string
+        # content_type. `str(content_type).lower()` turned an explicit `content_type:`
+        # (null) into "none", which is not in the negative list, so the record failed
+        # *open* and was recorded as having full text.
+        full_text_available = False
 
     # Extract abstract from body if present
     body = parts[2]
-    abstract = ""
+    content = ""
+    needed_stripping = False
     if "## Content" in body:
         abstract_section = body.split("## Content", 1)[1].strip()
+        # The lift is guarded for the same reason the flag is. `to_markdown` emits this
+        # as `## Abstract` with no availability test, and for an abstract-only record the
+        # validator tells authors to "quote a verbatim substring of the cached abstract" --
+        # so a citation export lifted here becomes quotable text and a quote from its
+        # `N2  -` line verifies. Conversion also drops content_type, full_text_provider,
+        # full_text_url and oa_status, so `TY  - JOUR` is the only surviving signal that
+        # the body is junk; checking it here is the last chance to notice.
         if abstract_section:
-            abstract = abstract_section
-    if not abstract:
-        abstract = "No abstract available."
+            needed_stripping = _carries_stub_marker(abstract_section)
+            content = (
+                _strip_stub_lines(abstract_section)
+                if needed_stripping
+                else abstract_section
+            )
+
+    # `## Content` is "the text we have"; `content_type` says which kind it is. Routing it
+    # always to `abstract` produced a record that claimed full_text_available: true, stored
+    # the text under `## Abstract`, and emitted no `## Full Text` -- so
+    # cached_full_text_available called it complete while publication_warm's
+    # `bool(flag) and FULL_TEXT_HEADER in body` called it a candidate for re-fetching. Two
+    # consumers disagreeing about one record. Found by self-audit, not a regression from
+    # this PR; fixed here because this PR has already edited this function twice.
+    # A section that needed stripping was a landing page, so whatever survived is at best
+    # abstract-grade -- on the live records the residue IS the abstract. Promoting it to
+    # `full_text` would be bulk without body one writer over.
+    #
+    # `is_usable_full_text` has three rejection criteria and this converter can only apply
+    # the first: the marker list. The other two -- "contained in the already-cached
+    # abstract" and "adds less than MIN_FULL_TEXT_CHARS beyond it" -- are exactly what a
+    # stripped landing page fails, and there is no separately cached abstract here to
+    # compare against. So the conservative reading of a stripped section is the honest one.
+    #
+    # Gating the revision below on `if not content` alone made it unreachable whenever any
+    # prose survived, which is the strip's whole purpose.
+    if not content or needed_stripping:
+        # An explicit `full_text_available` in the source still wins; only a derived one
+        # is revised.
+        if not isinstance(declared, bool):
+            full_text_available = False
+
+    full_text = content if (content and full_text_available) else None
+    abstract = "No abstract available." if (full_text or not content) else content
 
     pub = Publication(
         pmid=pmid,
@@ -354,11 +429,18 @@ def convert_doi_publication(
         year=str(frontmatter.get("year", "Unknown")),
         abstract=abstract,
         doi=doi,
+        full_text=full_text,
         full_text_available=full_text_available,
+        full_text_extraction_method=(
+            content_type.removeprefix("full_text_")
+            if isinstance(content_type, str) and full_text
+            else None
+        ),
     )
 
     pmid_file.write_text(pub.to_markdown())
     doi_file.unlink()
+    clear_publication_caches()
     print(f"Converted {doi_file.name} -> {pmid_file.name}")
     return True
 
@@ -403,6 +485,112 @@ def get_cached_publication(
     # For now, return None to always fetch fresh for full data
     # Could implement full markdown parsing if needed
     return None
+
+
+def _carries_stub_marker(text: str) -> bool:
+    """True when *text* is a paywall stub, landing page or citation export, not prose."""
+    from ai_gene_review.etl.publication_warm import FULL_TEXT_STUB_MARKERS
+
+    return any(marker in text for marker in FULL_TEXT_STUB_MARKERS)
+
+
+def _strip_stub_lines(text: str) -> str:
+    """Drop the landing-page and citation-export lines, keep the paper's own prose.
+
+    Rejecting the whole section was all-or-nothing and threw away real content: both DOI
+    records this guards carry the paper's genuine abstract alongside the junk --
+    `mmbr.00181-23` opens with ~1,500 characters of real SUMMARY before the
+    `Research output` header and the RIS block, and `j.str.2024.02.015` has the marker
+    first and the abstract after. Keeping the prose is equally safe, since what survives
+    is the paper's own words.
+
+    A RIS record is line-oriented (`TY  - JOUR`, `AU  - ...`, `ER  -`), so dropping tagged
+    lines and marker lines leaves the prose paragraphs intact.
+    """
+    from ai_gene_review.etl.publication_warm import FULL_TEXT_STUB_MARKERS
+
+    ris_tag = re.compile(r"^[A-Z][A-Z0-9]\s{2}-\s?")
+    kept = [
+        line
+        for line in text.splitlines()
+        if not ris_tag.match(line.strip())
+        and not any(marker in line for marker in FULL_TEXT_STUB_MARKERS)
+        and line.strip() != "}"
+    ]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(kept)).strip()
+
+
+PROVENANCE_KEYS = (
+    "full_text_provider",
+    "full_text_url",
+    "oa_status",
+    "license",
+    "full_text_attempted",
+)
+
+
+def _existing_accepted_full_text(
+    path: Path,
+) -> tuple[Optional[str], Optional[str], Dict[str, Any]]:
+    """The cached record's full text, but only if the record itself vouches for it.
+
+    Returns ``(None, None, {})`` unless the frontmatter says ``full_text_available: true``.
+    Presence of a ``## Full Text`` section is not enough: 888 cached records carry one
+    while declaring ``false``, because the body was rejected or is a heading plus the
+    abstract (e.g. ``PMID_7262539``).
+    """
+    # A fourth hand-rolled parse of this format. The duplication is forced, not careless:
+    # importing linkml_reference_validator's parser would drag that dependency into this
+    # module, and validator.py treats it as optional.
+    text = path.read_text()
+    if not text.startswith("---"):
+        return None, None, {}
+    end = text.find("\n---", 3)
+    if end == -1:
+        return None, None, {}
+    frontmatter = yaml.safe_load(text[3:end])
+    if not isinstance(frontmatter, dict) or not frontmatter.get("full_text_available"):
+        return None, None, {}
+    body = text[end + 4 :]
+    marker = "\n## Full Text\n"
+    if marker not in body:
+        return None, None, {}
+    # No truncation at the next `## `. Both writers of this file append `## Full Text`
+    # LAST -- `to_markdown` emits Abstract then Full Text and stops, and `apply_full_text`
+    # rstrips the body and appends -- so every `## ` line inside the section is content,
+    # not a sibling heading. Cutting there dropped 61% of PMID_26063905 (at the
+    # extractor's own `## Results (full text retrieved from PMC HTML, ...)` label) and 62%
+    # of PMID_37865089 (at a `## Splitting 50 PDBs...` shell comment in a code listing),
+    # in a function whose entire purpose is to preserve that body. Substring-for-structure,
+    # the same shape as the `"\n## Full Text" in existing` test this replaced.
+    section = body.split(marker, 1)[1].strip()
+    if not section:
+        return None, None, {}
+    method = frontmatter.get("full_text_extraction_method")
+    provenance = {k: frontmatter[k] for k in PROVENANCE_KEYS if k in frontmatter}
+    return section, method if isinstance(method, str) else None, provenance
+
+
+def accept_full_text(content: str | None, is_complete: bool, abstract: str) -> bool:
+    """Whether fetched PMC text may be recorded as ``full_text_available``.
+
+    ``FullTextResult.is_complete`` reports what the provider *claimed*, not what it
+    returned. ``fetch_pmc_fulltext``'s HTML and PDF fallbacks can yield a repository
+    landing page or a citation export that satisfies it, and this path used to set the
+    flag straight from it -- which is how a RIS dump became "full text" for PMID:12534463
+    and cost twelve accurate ``full_text_unavailable`` flags across ten reviews. The warm
+    sweep already applied a content guard; this writer did not, and it is the path
+    ``cache_publication(force=True)`` uses and the validator's error message recommends.
+
+    Split out as a named function rather than left inline so it can be tested without
+    faking Entrez. A first attempt monkeypatched a function that does not exist, so the
+    stub was inert and the test passed with the guard deleted.
+    """
+    if not is_complete or not content:
+        return False
+    from ai_gene_review.etl.publication_warm import is_usable_full_text_for_abstract
+
+    return is_usable_full_text_for_abstract(content, abstract)
 
 
 def fetch_pubmed_data(
@@ -522,10 +710,22 @@ def fetch_pubmed_data(
         # Try to fetch full text from PMC if available
         if pmcid:
             full_text_result = fetch_pmc_fulltext(pmcid)
-            publication.full_text = full_text_result.content
-            # Only mark as available if we got the complete article, not just abstract
-            publication.full_text_available = full_text_result.is_complete
-            publication.full_text_extraction_method = full_text_result.extraction_method
+            accepted = accept_full_text(
+                full_text_result.content,
+                bool(full_text_result.is_complete),
+                abstract or "",
+            )
+            # Judge before writing, as publication_warm.apply_full_text already does.
+            # Guarding only the flag left the rejected text in `## Full Text`, which is the
+            # body `supporting_text` quotes are matched against -- so the flag would stop
+            # lying while the cache file started to. A quote lifted from a landing page
+            # would then verify verbatim.
+            if accepted:
+                publication.full_text = full_text_result.content
+                publication.full_text_extraction_method = (
+                    full_text_result.extraction_method
+                )
+            publication.full_text_available = accepted
 
         # Cache the publication if we fetched it
         if use_cache:
@@ -533,6 +733,7 @@ def fetch_pubmed_data(
             cache_file = cache_dir / f"PMID_{pmid}.md"
             try:
                 cache_file.write_text(publication.to_markdown())
+                clear_publication_caches()
             except Exception:
                 # Silently fail on cache write errors
                 pass
@@ -980,14 +1181,51 @@ def cache_publication(
 
     # Fetch publication data
     print(f"Fetching PMID {pmid}...")
-    publication = fetch_pubmed_data(pmid)
+    # use_cache=False, deliberately. Its default is True with cache_dir=Path("publications"),
+    # which is the same file cache_publication is about to write -- so the inner write
+    # overwrote the existing record *before* the carry-forward guard below could read it,
+    # making both the 888-record fix and the provenance carry-forward dead on the path they
+    # were written for. It also caused every call to write the record twice, and to drop a
+    # stray record into ./publications/ relative to CWD whenever output_dir was somewhere
+    # else. Skipping the read is correct too: cache_publication has already returned above
+    # if the file exists and force is not set, so reaching here always means "re-fetch".
+    publication = fetch_pubmed_data(pmid, use_cache=False)
 
     if not publication:
         print(f"Failed to fetch PMID {pmid}")
         return False
 
+    # A forced re-fetch must not destroy good cached full text when the new fetch is
+    # rejected -- `force=True` is what the validator's error message recommends. But
+    # skipping the whole write was the wrong remedy: it keyed on the *presence* of a
+    # `## Full Text` section rather than on whether that text is good, and 888 cached
+    # records are `full_text_available: false` while carrying one. For every one of those,
+    # a forced re-fetch wrote nothing at all -- not the body, and not a refreshed title,
+    # authors, journal, year, pmcid, doi or abstract -- while returning True. That is the
+    # `full_text_attempted` trap with a different key.
+    #
+    # Gate on the existing record's own verdict instead, and carry its body forward rather
+    # than declining to write.
+    if output_file.exists() and not publication.full_text_available:
+        kept_text, kept_method, kept_provenance = _existing_accepted_full_text(
+            output_file
+        )
+        if kept_text:
+            print(
+                f"PMID {pmid}: re-fetch returned no usable full text; keeping the "
+                f"cached body and refreshing the metadata"
+            )
+            publication.full_text = kept_text
+            publication.full_text_available = True
+            publication.full_text_extraction_method = kept_method
+            # Keep the body's provenance with the body. `license` governs redistribution
+            # of the very text being preserved, and the previous skip-the-write behaviour
+            # kept it by accident.
+            publication.extra_frontmatter = kept_provenance
+
     # Write to file
     output_file.write_text(publication.to_markdown())
+    clear_publication_caches()
 
     if publication.full_text_available and publication.full_text:
         print(f"Cached PMID {pmid} with full text from PMC")

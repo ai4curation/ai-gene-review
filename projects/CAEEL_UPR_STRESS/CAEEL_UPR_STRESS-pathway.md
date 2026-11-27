@@ -183,7 +183,7 @@ flowchart TB
 | **hsp-6** | P11141 | mtHSP70 | ATP-dependent protein folding, mitochondrial protein import motor |
 | **hsp-60** | P50140 | HSP60 chaperonin | GroEL-type protein folding, ATP hydrolysis |
 
-**Error Corrected**: HSP-60 annotation GO:0061629 (RNA polymerase II TF binding) was removed. The cited paper (PMID:30057120) described DVE-1 binding the hsp-60 promoter, not HSP-60 protein binding to transcription factors.
+**Open question**: HSP-60 annotation GO:0061629 (RNA polymerase II-specific DNA-binding TF binding; IPI, PMID:17925224) is UNDECIDED rather than removed. WormBase curated the reciprocal row from the same paper (dve-1 GO:0051087 protein-folding chaperone binding, IPI WITH hsp-60), so a physical HSP-60/DVE-1 interaction was recorded; only the abstract is cached, so the assay behind it cannot be checked.
 
 **Usage**: hsp-6::GFP and hsp-60p::GFP are standard reporters for UPR-mt activation.
 
@@ -275,7 +275,7 @@ flowchart TB
 | dve-1 | SATB1 | UPR-mt | 31 | 28 ACCEPT, 1 MARK_AS_OVER_ANNOTATED, 1 UNDECIDED |
 | ubl-5 | UBL5 | UPR-mt | 11 | 10 ACCEPT, **1 REMOVE** (critical fix) |
 | hsp-6 | HSPA9 | UPR-mt | 19 | 13 ACCEPT, 3 KEEP_AS_NON_CORE, 1 MODIFY, 2 NEW |
-| hsp-60 | HSPD1 | UPR-mt | 21 | 14 ACCEPT, 3 KEEP_AS_NON_CORE, 2 MODIFY, **1 REMOVE** |
+| hsp-60 | HSPD1 | UPR-mt | 21 | 14 ACCEPT, 3 KEEP_AS_NON_CORE, 2 MODIFY, 1 UNDECIDED |
 | clpp-1 | CLPP | UPR-mt | 16 | ALL ACCEPT |
 | gcn-2 | EIF2AK4 | ISR | 26 | 25 ACCEPT, 1 MARK_AS_OVER_ANNOTATED |
 | met-2 | SETDB1 | Epigenetic | 32 | 19 ACCEPT, 5 KEEP_AS_NON_CORE, 4 MODIFY, 1 REMOVE |

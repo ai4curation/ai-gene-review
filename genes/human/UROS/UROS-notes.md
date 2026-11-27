@@ -54,3 +54,16 @@ uroporphyrin(ogen) I isomer. Numerous CEP missense variants documented in UniPro
 1. MF GO:0004852 uroporphyrinogen-III synthase activity
 2. directly_involved_in BP GO:0006783 heme biosynthetic process
 3. located_in CC GO:0005829 cytosol
+
+## Completion pass (2026-11-10, Claude (AI-assisted))
+
+- All rows now carry complete verbatim quotes (UniProt CC lines tied to PubMed:11689424/18004775;
+  abstracts of PMID:3174619, 3805019, 18004775; full text of PMID:11689424; Reactome; PANTHER
+  PTHR12390 for IBA).
+- heme B biosynthetic process (ARBA IEA, IDA): MARK_AS_OVER_ANNOTATED -> ACCEPT. Humans make no
+  siroheme/chlorophyll/cobalamin, so the uroporphyrinogen III branch point leads only to heme;
+  same convention as for the other pathway enzymes.
+- tetrapyrrole biosynthetic process -> MODIFY to uroporphyrinogen III biosynthetic process.
+- mitochondrion ISS (mouse P51163) stays REMOVE: cytosolic enzyme, purified from erythrocytes
+  (no mitochondria) [PMID:3805019].
+- folic acid binding (rat Compara) stays REMOVE: no cofactor needed [PMID:3805019].

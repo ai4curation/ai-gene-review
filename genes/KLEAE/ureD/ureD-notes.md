@@ -1,0 +1,8 @@
+# ureD (Q09063) notes -- Klebsiella aerogenes urease accessory protein UreD
+
+Deep research: `just deep-research KLEAE ureC --provider perplexity` was attempted once (2026-10-23) and failed ("Provider 'perplexity' not available. Available: falcon, openscientist"). No deep-research file was generated for any KLEAE ure gene; this review relies on cached primary literature and the reviewed UniProt entry.
+
+- ureD deletion abolishes activatable urease; UreD-apoprotein complexes are activated in proportion to bound UreD [PMID:7909161 "extracts of cells containing a ureD deletion derivative failed to generate active urease"].
+- UreDFG-apoprotein complexes are the activation-competent form [PMID:7721685 "We propose that the UreD-UreF-UreG-urease apoprotein complexes represent the activation-competent form of urease apoprotein in the cell."].
+- MBP-UreD binds ~2.5 Ni (Kd ~50 uM) but Zn 10-fold tighter; pulls down UreF, UreG, UreABC in vivo [PMID:20207756 "Zn2+ directly competes with 10-fold higher affinity"].
+- Decisions: per orchestrator/PAINT, core MF = GO:0018237 urease activator activity (NEW, IMP PMID:7909161) in GO:0150006 urease activator complex (NEW). GO:0044183 protein folding chaperone (used in PSEPK) NOT added: it is part_of protein folding, and the apoprotein is already folded (PMID:8718850); the "chaperone" wording of PMID:7909161 refers to stabilizing an activation-competent conformation, which GO:0018237 captures better. Nickel binding KEEP_AS_NON_CORE. NEW urea catabolic process justified by GO:0150006 being capable_of_part_of GO:0043419 (participation via the activation step), mirroring PSEPK.

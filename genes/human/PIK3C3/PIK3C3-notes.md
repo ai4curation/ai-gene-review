@@ -12,3 +12,32 @@
 The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
 
 - Moved out of the YAML description: the Proteostasis Network context emphasized the autophagy-initiation complex and macroautophagy as central core claims, with endosomal trafficking and cytokinesis as supported contextual extensions.
+
+
+## 2026-09-20 IBA re-review
+
+Restored membrane and endosomal/type-II-complex annotations as core; added endosomal lipid-kinase core synthesis. Separated pexophagy from peroxisomal localization for adjudication; withdrew unsupported abstract-only and untraced context exclusions. Corrected generic protein-binding action semantics.
+
+Evidence inspected: [PMID:14617358](https://pubmed.ncbi.nlm.nih.gov/14617358/), [PMID:20643123](https://pubmed.ncbi.nlm.nih.gov/20643123/), [PMID:40442316](https://pubmed.ncbi.nlm.nih.gov/40442316/), [PMID:17307798](https://pubmed.ncbi.nlm.nih.gov/17307798/), [PMID:25327288](https://pubmed.ncbi.nlm.nih.gov/25327288/).
+
+Remaining questions:
+
+- Pexophagy participation and peroxisome residence assessed separately (OpenScientist running).
+- Second opinion on GO:0006897 uptake-step participation versus the directly established post-uptake trafficking role.
+- Recover specific neuronal/nutrient ortholog evidence and full text for PMID:17307798 and PMID:25327288 localization claims.
+
+The project audit records all changed row indices and decisions in `projects/IBA_REVIEW/rereview-2026-09-20/localization.yaml`.
+
+
+## 2026-09-20 recovered pexophagy report and primary check
+
+Recovered and assessed the exact OpenScientist final report from a cancelled job via its artifact bundle (see hypothesis recovery-provenance.json). Pexophagy is retained as a conserved conditional process. Catalytic PI3P production is execution work. Full Grunau PMID:21121900 confirms peroxisome association under biogenesis conditions, disproving the report’s proposed cargo-confusion explanation; other locations do not exclude it. Human peroxisome localization remains UNDECIDED, with no further provider job pending. See the primary-check note for methods and limits.
+
+
+## Recovery review consistency follow-up (2026-09-22)
+
+Restored readable identifiers in manual prose. Where applicable, reconciled AP3M2 reference notes with the retained contextual claim, removed unrelated PIK3C3 support from unresolved projections, separated PIK3C3 aspect-specific reasons, and documented the surviving/renamed ATG14 membrane term. Source assertion fields and verbatim quotations are unchanged.
+
+## 2026-11-21 ORGANELLES peroxisome/lysosome batch 1
+
+- Peroxisome IBA (is_active_in, PTN000005955, eukaryote node, single yeast seed SGD:S000004230): UNDECIDED -> KEEP_AS_NON_CORE. The seed is readable and positive [PMID:21121900 "We have discovered a PtdIns3P-synthesizing activity in peroxisomes of Saccharomyces cerevisiae"], and the earlier full-text check (PIK3C3-PMID21121900-primary-check.md) records cofractionation with peroxisomal markers. No human-specific loss or readable negative; under the IBA and evidence-depth rules the root stands as a non-core recruited pool. is_active_in matches the seed (activity shown in yeast peroxisomes), so no qualifier defect. No sub-compartment: no TM/PTS, no tethering partner, and GO has no cytoplasmic-side peroxisome term. Close call: UNDECIDED remains defensible.
