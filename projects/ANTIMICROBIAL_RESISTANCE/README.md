@@ -184,7 +184,7 @@ See [FAMILY_COVERAGE.md](FAMILY_COVERAGE.md) for every CARD 4.0.2 AMR gene famil
 grouped in `aro2go.sssom.yaml` as mechanism → BP, the CARD-reviewed family rows, the rows added after
 that review (glycopeptide-resistance genes, site-specific rRNA methyltransferases, acquired
 target-replacement enzymes, cell-envelope enzymes, ABC-F ribosomal protection, SMR pumps, porins), and
-gap rows. Each row has a `confidence` and a justification in `comment`; rows the CARD team reviewed
+gap rows. Each GO row has a `confidence`, and every row a justification in `comment`; rows the CARD team reviewed
 carry `reviewer_label`. The mphA/mphB determinant rows were removed as redundant with the MPH family
 row.
 

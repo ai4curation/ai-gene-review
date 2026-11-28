@@ -71,4 +71,7 @@ maintaining it with the same checks, and the handover is moving the file and its
   `GO:0015520`) or stay at family level?
 - The 18 AMR gene family ids absent from `aro.obo`, and CrcB under the MATE family node (ARO
   describes it as a Camphor Resistance Protein family member): are these known?
+- ARO:3001298 'TlrA-like 23S rRNA methyltransferase' sits under the G748 N1-methyltransferase node,
+  but the published tlrA of *S. fradiae* is ermSF (A2058), and its member EmtA methylates G2470
+  (PMID:11580839). Should the node be renamed, and EmtA moved?
 - Would CARD co-sign the GO term requests in [GO_TERM_REQUESTS.md](GO_TERM_REQUESTS.md)?

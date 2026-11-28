@@ -2,7 +2,7 @@
 """Report the candidate GO annotations UniProt would gain from the ARO->GO mappings.
 
 For every UniProtKB entry that carries a CARD cross-reference (``DR CARD`` -> an ARO id), apply the
-curated ARO->GO mappings with **exact-or-narrower** propagation and compare the proposed GO terms to
+curated ARO->GO mappings (propagated along ARO ``is_a`` and ``participates_in``) and compare the proposed GO terms to
 the entry's existing GO annotations. A proposed term that is not already annotated is a *candidate new
 annotation* (a lead for a curator, not an automatic assertion).
 
@@ -103,7 +103,11 @@ def classify_candidate(
 
 
 def build_go_descendant_index(mappings: list[dict], adapter_string: str) -> dict[str, set[str]]:
-    """Map each candidate (object) GO id -> the set of its is_a descendant GO ids (excluding self)."""
+    """Map each candidate (object) GO id -> the set of its is_a descendant GO ids (excluding self).
+
+    Only is_a is followed. For a BP candidate a part_of child would also subsume it; that does not
+    arise for the current rows (the one BP target, GO:0046677, is suppressed by its is_a children).
+    """
     from oaklib import get_adapter
     from oaklib.datamodels.vocabulary import IS_A
 
@@ -114,8 +118,13 @@ def build_go_descendant_index(mappings: list[dict], adapter_string: str) -> dict
     return index
 
 
+RESISTANCE_VARIANT = "ARO:0000031"  # antibiotic resistance gene variant or mutant
+
+
 def propose(onto: AroOntology, aros: list[str], by_subject: dict[str, list[tuple[str, str, str]]]):
-    """Return ``go_id -> (mapped_subject, relation, predicate, go_label)`` for one entry.
+    """Return ``go_id -> (mapped_subject, relation, predicate, go_label, gene_aro)`` for one entry.
+
+    ``gene_aro`` is the entry's own ARO term (one of ``aros``) that produced the proposal.
 
     Relations follow :func:`aro_release.applicable_subjects`; when several mapped subjects
     give the same GO term the most specific provenance wins (exact > narrower > participates_in).
@@ -123,16 +132,16 @@ def propose(onto: AroOntology, aros: list[str], by_subject: dict[str, list[tuple
     >>> aro = AroOntology.from_obo_text(MINI_OBO)
     >>> by_subject = {"ARO:2": [("GO:0008800", "beta-lactamase activity", "RO:0002327")],
     ...               "ARO:10": [("GO:0046677", "response to antibiotic", "skos:relatedMatch")]}
-    >>> sorted((g, v[1]) for g, v in propose(aro, ["ARO:4"], by_subject).items())
-    [('GO:0008800', 'narrower'), ('GO:0046677', 'participates_in')]
+    >>> sorted((g, v[1], v[4]) for g, v in propose(aro, ["ARO:4"], by_subject).items())
+    [('GO:0008800', 'narrower', 'ARO:4'), ('GO:0046677', 'participates_in', 'ARO:4')]
     """
     rank = {"exact": 0, "narrower": 1, "participates_in": 2}
-    proposed: dict[str, tuple[str, str, str, str]] = {}
+    proposed: dict[str, tuple[str, str, str, str, str]] = {}
     for aro in aros:
         for subj, relation in applicable_subjects(onto, aro).items():
             for go_id, go_label, pred in by_subject.get(subj, []):
                 if go_id not in proposed or rank[relation] < rank[proposed[go_id][1]]:
-                    proposed[go_id] = (subj, relation, pred, go_label)
+                    proposed[go_id] = (subj, relation, pred, go_label, aro)
     return proposed
 
 
@@ -159,11 +168,10 @@ def compute(mappings, onto: AroOntology, uniprot_rows, go_descendants=None):
     by_row: Counter = Counter()  # (subject, go_id, verdict) -> n; verdict in matched/new/already/redundant
 
     for acc, aros, existing in uniprot_rows:
-        entry_aro = aros[0]  # the determinant ARO (first CARD xref)
         proposed = propose(onto, aros, by_subject)
         if proposed:
             entries_matched += 1
-        for go_id, (subj, relation, pred, go_label) in proposed.items():
+        for go_id, (subj, relation, pred, go_label, gene_aro) in proposed.items():
             matched_by_go[go_id] += 1
             matched_by_subject[subj] += 1
             matched_by_relation[relation] += 1
@@ -182,7 +190,8 @@ def compute(mappings, onto: AroOntology, uniprot_rows, go_descendants=None):
             candidate_rows.append(
                 {
                     "uniprot_acc": acc,
-                    "gene_aro_id": entry_aro,
+                    "gene_aro_id": gene_aro,
+                    "gene_is_resistance_variant": RESISTANCE_VARIANT in onto.isa_ancestors_or_self(gene_aro),
                     "mapped_aro_id": subj,
                     "aro_relation": relation,
                     "predicate_id": pred,
@@ -316,7 +325,10 @@ def main(
     candidate_rows, stats = compute(mappings, onto, uniprot_rows, go_descendants)
 
     out_tsv.parent.mkdir(parents=True, exist_ok=True)
-    cols = ["uniprot_acc", "gene_aro_id", "mapped_aro_id", "aro_relation", "predicate_id", "go_id", "go_label"]
+    cols = [
+        "uniprot_acc", "gene_aro_id", "gene_is_resistance_variant", "mapped_aro_id", "aro_relation",
+        "predicate_id", "go_id", "go_label",
+    ]
     with out_tsv.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t")
         w.writeheader()

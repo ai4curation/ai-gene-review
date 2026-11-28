@@ -98,11 +98,11 @@ def parse_uniprot_card(uniprot_text: str) -> tuple[str, list[AroHit]]:
 def parse_rgi_output(path: Path) -> list[AroHit]:
     """Parse ARO ids from an RGI tab-delimited results file (``rgi main`` output).
 
-    RGI output has a header row; the relevant columns are typically ``ORF_ID`` (or the
-    contig/sequence name) and ``Best_Hit_ARO`` / ``ARO`` (the ARO *accession number*,
-    without the ``ARO:`` prefix). We accept either ``ARO`` or ``Best_Hit_ARO`` and
-    normalise to the ``ARO:NNNNNNN`` CURIE. The sequence/ORF name is stored as the
-    ``uniprot_acc`` so the caller can join it back to a UniProt accession.
+    RGI output has a header row. The ARO *accession* (without the ``ARO:`` prefix) is read from the
+    first of ``ARO``, ``Best_Hit_ARO_accession`` or ``ARO_accession`` present, and normalised to the
+    ``ARO:NNNNNNN`` CURIE. The sequence name is read from the first of ``ORF_ID``, ``Contig`` or
+    ``Best_Hit_ARO`` present and stored as ``uniprot_acc`` so the caller can join it back to a
+    UniProt accession; ``Best_Hit_ARO`` (the ARO name) also fills ``aro_label``.
 
     This function only *parses* RGI output; it does not run RGI.
     """

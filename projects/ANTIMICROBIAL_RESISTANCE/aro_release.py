@@ -61,8 +61,19 @@ PIN_FILE = PROJECT_DIR / "aro_release.yaml"
 SSSOM_FILE = PROJECT_DIR / "aro2go.sssom.yaml"
 TRIAGE_FILE = PROJECT_DIR / "aro_family_triage.yaml"
 
-CARD_ONTOLOGY_URL = "https://card.mcmaster.ca/latest/ontology"
-CARD_DATA_URL = "https://card.mcmaster.ca/latest/data"
+CARD_LATEST_URLS = ("https://card.mcmaster.ca/latest/ontology", "https://card.mcmaster.ca/latest/data")
+
+
+def card_release_urls(version: str) -> tuple[str, str]:
+    """Download URLs (ontology, data) of one CARD release, so a pinned release stays fetchable.
+
+    >>> card_release_urls("4.0.2")[0]
+    'https://card.mcmaster.ca/download/5/ontology-v4.0.2.tar.bz2'
+    """
+    return (
+        f"https://card.mcmaster.ca/download/5/ontology-v{version}.tar.bz2",
+        f"https://card.mcmaster.ca/download/0/broadstreet-v{version}.tar.bz2",
+    )
 
 NOT_IN_RELEASE = "NOT_IN_ONTOLOGY_RELEASE"
 
@@ -325,6 +336,10 @@ def family_status(onto: AroOntology, families: dict[str, str], sssom: dict) -> d
     """Classify each AMR gene family: ``MAPPED``, ``COVERED_BY_ANCESTOR``, ``GO_GAP`` (a
     NoTermFound row on the family or an ancestor) or ``UNMAPPED``, with the deciding ARO subject.
 
+    Precedence is deliberate: a GO term inherited from a mapped ancestor outranks a gap row, so a
+    family with both is counted as covered (its gap row still stands as a request for a more
+    specific term).
+
     >>> aro = AroOntology.from_obo_text(MINI_OBO)
     >>> sssom = {"mappings": [{"subject_id": "ARO:2", "object_id": "GO:0008800"}]}
     >>> family_status(aro, {"ARO:2": "beta-lactamase", "ARO:3": "class A"}, sssom)
@@ -354,6 +369,11 @@ def check(onto: AroOntology, release_meta: dict, pin: dict, sssom: dict, triage:
     if release_meta["card_version"] != pin["card_version"]:
         result.version_mismatch.append(
             f"cached CARD release {release_meta['card_version']} != pinned {pin['card_version']}"
+        )
+    elif release_meta["aro_obo_sha256"] != pin["aro_obo_sha256"]:
+        result.version_mismatch.append(
+            f"cached aro.obo sha256 {release_meta['aro_obo_sha256'][:12]}... differs from the pinned "
+            f"{pin['aro_obo_sha256'][:12]}... for the same CARD version"
         )
     pinned_source = f"CARD {pin['card_version']} (ARO {pin['aro_date']})"
     if sssom.get("subject_source_version") != pinned_source:
@@ -391,12 +411,15 @@ def check(onto: AroOntology, release_meta: dict, pin: dict, sssom: dict, triage:
 @app.command()
 def fetch(
     cache: Path = typer.Option(DEFAULT_CACHE, help="Cache directory for the release files"),
+    latest: bool = typer.Option(False, help="Fetch CARD's latest release instead of the pinned one"),
     update_pin: bool = typer.Option(False, help="Rewrite aro_release.yaml to the fetched release"),
 ) -> None:
-    """Download the latest CARD ontology + data release into the cache."""
+    """Download a CARD release (the pinned one by default) into the cache."""
+    pin = yaml.safe_load(PIN_FILE.read_text())
+    urls = CARD_LATEST_URLS if latest else card_release_urls(pin["card_version"])
     cache.mkdir(parents=True, exist_ok=True)
-    onto_files = _members(_download(CARD_ONTOLOGY_URL), {"aro.obo"})
-    data_files = _members(_download(CARD_DATA_URL), {"aro_categories.tsv", "aro_index.tsv", "card.json"})
+    onto_files = _members(_download(urls[0]), {"aro.obo"})
+    data_files = _members(_download(urls[1]), {"aro_categories.tsv", "aro_index.tsv", "card.json"})
     (cache / "aro.obo").write_bytes(onto_files["aro.obo"])
     (cache / "aro_categories.tsv").write_bytes(data_files["aro_categories.tsv"])
     (cache / "aro_index.tsv").write_bytes(data_files["aro_index.tsv"])
@@ -407,7 +430,7 @@ def fetch(
         "aro_date": aro_date,
         "aro_obo_sha256": sha256(cache / "aro.obo"),
         "fetched": date.today().isoformat(),
-        "sources": [CARD_ONTOLOGY_URL, CARD_DATA_URL],
+        "sources": list(card_release_urls(card_version)),
     }
     (cache / "release.yaml").write_text(yaml.safe_dump(meta, sort_keys=False))
     typer.echo(f"Fetched CARD {card_version} (ARO {aro_date}) into {cache}")
@@ -415,7 +438,8 @@ def fetch(
         pin = {k: meta[k] for k in ("card_version", "aro_date", "aro_obo_sha256", "sources")}
         PIN_FILE.write_text(
             "# The CARD/ARO release the ARO->GO mapping was last checked against.\n"
-            "# Written by `aro_release.py fetch --update-pin`; `just check-aro-release` compares to it.\n"
+            "# Written by `aro_release.py fetch --latest --update-pin`; `just check-aro-release` compares to it\n"
+            "# (CARD version and the sha256 of aro.obo).\n"
             + yaml.safe_dump(pin, sort_keys=False)
         )
         typer.echo(f"Updated {PIN_FILE.name}")

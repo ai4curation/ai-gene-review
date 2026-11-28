@@ -222,7 +222,7 @@ annotation-gain: _ensure-aro
 # Publish the AR project's sub-products (markdown -> HTML via the project template + the SSSOM HTML)
 # under pages/projects/ANTIMICROBIAL_RESISTANCE/ (next to the rendered project page).
 render-ar-pages:
-	uv run python -c "from pathlib import Path; from ai_gene_review.render_projects import render_project; [render_project(Path('projects/ANTIMICROBIAL_RESISTANCE')/f, output_dir=Path('pages/projects/ANTIMICROBIAL_RESISTANCE')) for f in ['README.md','ANNOTATION_GAIN.md','SPOT_REVIEW.md','FAMILY_COVERAGE.md','GO_TERM_REQUESTS.md','MAPPING_HOME_OPTIONS.md']]"
+	uv run python -c "from pathlib import Path; from ai_gene_review.render_projects import render_project; d=Path('projects/ANTIMICROBIAL_RESISTANCE'); out=Path('pages/projects/ANTIMICROBIAL_RESISTANCE'); [render_project(d/f, output_dir=out) for f in ['README.md','ANNOTATION_GAIN.md','SPOT_REVIEW.md','FAMILY_COVERAGE.md','GO_TERM_REQUESTS.md','MAPPING_HOME_OPTIONS.md']]; [render_project(f, output_dir=out/'go_term_requests') for f in sorted((d/'go_term_requests').glob('*.md'))]"
 	cp projects/ANTIMICROBIAL_RESISTANCE/aro2go.html pages/projects/ANTIMICROBIAL_RESISTANCE/aro2go.html
 
 # ============== Hidden internal recipes ==============

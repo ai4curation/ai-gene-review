@@ -169,8 +169,8 @@ def test_mechanism_rows_are_related_match():
         assert m["predicate_id"] == "skos:relatedMatch", m
 
 
-PIN = {"card_version": "4.0.2", "aro_date": "2026-08-11"}
-META = {"card_version": "4.0.2", "aro_date": "2026-08-11"}
+PIN = {"card_version": "4.0.2", "aro_date": "2026-08-11", "aro_obo_sha256": "abc"}
+META = {"card_version": "4.0.2", "aro_date": "2026-08-11", "aro_obo_sha256": "abc"}
 SOURCE = "CARD 4.0.2 (ARO 2026-08-11)"
 
 
@@ -198,9 +198,14 @@ def test_check_detects_missing_term():
 
 
 def test_check_detects_version_mismatch():
-    newer = {"card_version": "4.0.3", "aro_date": "2026-12-01"}
+    newer = {"card_version": "4.0.3", "aro_date": "2026-12-01", "aro_obo_sha256": "def"}
     result = check(MINI, newer, PIN, _sssom(), {"families": []}, {})
     assert result.version_mismatch
+
+
+def test_check_detects_changed_obo_for_same_version():
+    result = check(MINI, {**META, "aro_obo_sha256": "other"}, PIN, _sssom(), {"families": []}, {})
+    assert result.version_mismatch and "sha256" in result.version_mismatch[0]
 
 
 def test_check_detects_untriaged_and_stale_triage():
