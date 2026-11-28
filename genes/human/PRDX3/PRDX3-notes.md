@@ -19,6 +19,7 @@ Key evidence:
   with MAP3K13/LZK, RPS6KC1/RPK118, TNNI3K, and LRRK2, respectively.
 - PMID:12011429 and PMID:18262354 establish mitochondrial phenotypes after PRDX3 perturbation, but
   do not make PRDX3 a direct mitochondrial organizing factor or caspase inhibitor.
+- PMID:17893648 supports H2O2-specific PRDX3 induction in human lens epithelial cells and rat lenses.
 
 Decisions:
 
@@ -28,5 +29,7 @@ Decisions:
   under the organelle policy.
 - Cytosolic and early-endosome rows are peripheral and linked to kinase-binding contexts rather than
   the core mitochondrial peroxide-detoxification function.
+- Cellular ROS and H2O2 response terms from perturbation or induction studies are kept as non-core
+  PRDX3 phenotypes rather than treated as the direct catalytic function.
 - Generic `GO:0005515` rows are removed unless the row names a kinase interactor and can be refined
   to `GO:0019901`.

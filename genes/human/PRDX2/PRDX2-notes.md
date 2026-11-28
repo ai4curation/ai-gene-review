@@ -19,13 +19,15 @@ Key evidence:
   SH-SY5Y neuroblastoma cells.
 - PMID:20978343 is mouse VSMC work in which Cd36/Nrf2 signaling changes Prdx2 abundance; it does
   not directly show that PRDX2 removes superoxide radicals.
+- PMID:25402766 shows that PRDX2 forms a redox-relay complex with STAT3 in H2O2 signaling; this supports
+  transcription factor binding rather than a bare protein-binding row.
 
 Decisions:
 
 - The core retained function is cytosolic thioredoxin-dependent peroxiredoxin activity in hydrogen
   peroxide catabolism and cell redox homeostasis.
-- The three `GO:0019430` removal-of-superoxide-radicals rows are over-propagated from mouse vascular
-  phenotypes and do not match the known PRDX2 hydroperoxide-reducing chemistry.
+- The three `GO:0019430` removal-of-superoxide-radicals rows do not match the known PRDX2
+  hydroperoxide-reducing chemistry and require removal of the PAINT IBD that spreads this process.
 - The `GO:0002357` defense-response-to-tumor-cell row from PMID:30429596 is not retained: the cached
   full text is a murine endothelial-cell-to-HSC conversion protocol and does not support a PRDX2
   function in tumor-cell defense.

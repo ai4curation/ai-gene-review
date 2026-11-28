@@ -27,6 +27,7 @@ Decisions:
 - Obsolete or broad MF rows are either refined to `GO:0140824` where their evidence supports the
   same catalytic reaction, or marked over-annotated when they add only a broad antioxidant or
   oxidoreductase parent.
-- Bare `GO:0005515` protein-binding IPI rows are removed as uninformative per project policy.
+- Bare `GO:0005515` protein-binding IPI rows are removed as uninformative per project policy unless
+  the row's own paper supports a specific binding term, as for androgen receptor and MST1/STK4 binding.
 - High-throughput RNA-binding, exosome, and cadherin-binding rows are not treated as core PRDX1
   function.
