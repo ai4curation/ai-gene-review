@@ -20,7 +20,7 @@ All 17 zero-IBA organisms in the coverage panel are absent from the PAINT leaf-G
 
 Their nonzero PANTHER family coverage in UniProtKB comes from family/subfamily sequence classification and does not imply that the taxon is a PAINT reference leaf eligible for a PTN-backed IBA export. The PANTHER per-species sequence-classification directory has matching files for 134 of 144 supported-genome API entries; none of these zero-IBA taxa has a supported-genome entry.
 
-The PAINT inventory contains no Toxoplasma, Cryptosporidium, Babesia, Theileria, Encephalitozoon, Enterocytozoon, Nematocida, Aedes, or Nakaseomyces leaf. Plasmodium falciparum 3D7 is the only apicomplexan in the PAINT set; Anopheles gambiae PEST is the only mosquito.
+The PAINT inventory contains no Toxoplasma, Cryptosporidium, Babesia, Theileria, Encephalitozoon, Enterocytozoon, Nematocida, Aedes, or Nakaseomyces leaf.
 
 | Site | Taxon | Mnemonic | QuickGO exact IBA | QuickGO species+desc IBA | GO ref? | PANTHER ref? | PAINT rows | GO GAFs | Diagnosis |
 |---|---|---:|---:|---:|---|---|---:|---|---|
@@ -54,14 +54,14 @@ The full PAINT leaf-GAF inventory also reveals a distinct VectorBase lead. Ixode
 
 The sibling reference genomes below carry rows in the same data sources, which rules out a blanket PAINT export failure for VEuPathDB-relevant clades.
 
-| Site | PAINT taxon | PANTHER short name | Sequence file | PAINT rows | GO GAF IBA rows by file | GO GAFs |
-|---|---|---:|---|---:|---|---|
-| PlasmoDB | Plasmodium falciparum 3D7 | `PLAF7` | `PTHR19.0_plasmodium` | 9120 | PLAF7-uniprot.gaf.gz=8962 | `PLAF7-uniprot.gaf.gz` |
-| TriTrypDB | Trypanosoma brucei TREU927 | `TRYB2` | `PTHR19.0_t_brucei` | 12458 | TRYB2-uniprot.gaf.gz=12269 | `TRYB2-uniprot.gaf.gz` |
-| TriTrypDB | Leishmania major Friedlin | `LEIMA` | `PTHR19.0_leishmania` | 13223 | LEIMA-uniprot.gaf.gz=12974 | `LEIMA-uniprot.gaf.gz` |
-| VectorBase | Anopheles gambiae PEST | `ANOGA` | `PTHR19.0_mosquito` | 30330 | ANOGA-uniprot.gaf.gz=28585 | `ANOGA-uniprot.gaf.gz` |
-| FungiDB | Candida albicans SC5314 | `CANAL` | `PTHR19.0_candida` | 15274 | CANAL-mod.gaf.gz=15027; CANAL-uniprot.gaf.gz=15107 | `CANAL-mod.gaf.gz,CANAL-uniprot.gaf.gz` |
-| FungiDB | Cryptococcus deneoformans JEC21 | `CRYNJ` | `PTHR19.0_cryptococcus` | 15050 | CRYD1-uniprot.gaf.gz=14858 | `CRYD1-uniprot.gaf.gz` |
+| Site | PAINT taxon | PANTHER short name | Sequence file | PAINT rows | PAINT/GPI overlap | GO GAF IBA rows by file | GO GAFs |
+|---|---|---:|---|---:|---:|---|---|
+| PlasmoDB | Plasmodium falciparum 3D7 | `PLAF7` | `PTHR19.0_plasmodium` | 9120 | 2743 (99.56%) | PLAF7-uniprot.gaf.gz=8962 | `PLAF7-uniprot.gaf.gz` |
+| TriTrypDB | Trypanosoma brucei TREU927 | `TRYB2` | `PTHR19.0_t_brucei` | 12458 | 3891 (99.87%) | TRYB2-uniprot.gaf.gz=12269 | `TRYB2-uniprot.gaf.gz` |
+| TriTrypDB | Leishmania major Friedlin | `LEIMA` | `PTHR19.0_leishmania` | 13223 | 4160 (99.57%) | LEIMA-uniprot.gaf.gz=12974 | `LEIMA-uniprot.gaf.gz` |
+| VectorBase | Anopheles gambiae PEST | `ANOGA` | `PTHR19.0_mosquito` | 30330 | 8531 (96.18%) | ANOGA-uniprot.gaf.gz=28585 | `ANOGA-uniprot.gaf.gz` |
+| FungiDB | Candida albicans SC5314 | `CANAL` | `PTHR19.0_candida` | 15274 | 4337 (99.98%) | CANAL-mod.gaf.gz=15027; CANAL-uniprot.gaf.gz=15107 | `CANAL-mod.gaf.gz,CANAL-uniprot.gaf.gz` |
+| FungiDB | Cryptococcus deneoformans JEC21 | `CRYNJ` | `PTHR19.0_cryptococcus` | 15050 | 4536 (99.98%) | CRYD1-uniprot.gaf.gz=14858 | `CRYD1-uniprot.gaf.gz` |
 
 ## Notes by taxon
 
@@ -113,6 +113,6 @@ Against GO release 2026-08-05 and PANTHER 19.0, these exact taxa are absent from
 
 Can GO/PANTHER either add PAINT reference-proteome and IBA export coverage for these VEuPathDB organisms, or document why these current pathogen/vector proteomes are intentionally out of scope? Candida/Nakaseomyces glabratus is a useful edge case: GO already publishes `CANGA-mod` and `CANGA-uniprot` GAF/GPAD/GPI files, but neither carries PAINT/IBA rows because the PAINT reference set includes `CANAL` rather than `CANGA`.
 
-Ixodes is a separate accession-set lead: taxon `6945` is present in PAINT with 25034 IBA rows on 7360 accessions, but only 27 of those accessions are present in the current `IXOSC-uniprot.gpi.gz`. Can the PANTHER Ixodes leaf be rebuilt or remapped to current IXOSC identifiers?
+Ixodes is a separate accession-set lead: taxon `6945` is present in PAINT with 25034 IBA rows on 7360 accessions, but only 27 of those accessions are present in the current `IXOSC-uniprot.gpi.gz`, versus 96.18%-99.98% for the other PAINT-bearing controls checked here. Can the PANTHER Ixodes leaf be rebuilt or remapped to current IXOSC identifiers?
 
 One label is worth checking as well: GO's `go-reference-species.yaml` labels taxon `214684` as `Cryptococcus neoformans`, while the GO GAF/GPI export uses the `CRYD1` mnemonic for Cryptococcus deneoformans JEC21. That can make it look as though Cryptococcus neoformans H99 (`CRYN9`, taxon `235443`) is already represented.

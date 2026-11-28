@@ -42,6 +42,18 @@ USER_AGENT = "ai-gene-review-eukaryotic-pathogens/iba-zero-diagnosis"
 # Below this overlap, a PAINT leaf is mostly absent from the current GO GPI.
 LOW_GPI_ACCESSION_OVERLAP_RATIO = 0.10
 
+ABSENT_GENERA = (
+    "Toxoplasma",
+    "Cryptosporidium",
+    "Babesia",
+    "Theileria",
+    "Encephalitozoon",
+    "Enterocytozoon",
+    "Nematocida",
+    "Aedes",
+    "Nakaseomyces",
+)
+
 
 @dataclass(frozen=True)
 class Probe:
@@ -475,6 +487,20 @@ def write_paint_taxa(
     write_tsv(rows, path)
 
 
+def paint_organisms(
+    paint: PaintGafSummary,
+    go_reference: dict[int, dict[str, str | int]],
+    panther_genomes: dict[int, dict[str, str | int]],
+) -> list[str]:
+    organisms = []
+    for taxon_id in sorted(paint.row_counts):
+        go_ref = go_reference.get(taxon_id, {})
+        panther = panther_genomes.get(taxon_id, {})
+        organism = go_ref.get("organism") or panther.get("long_name", "")
+        organisms.append(str(organism))
+    return organisms
+
+
 def row_category(
     go_ref: dict[str, str | int] | None,
     panther: dict[str, str | int] | None,
@@ -558,10 +584,39 @@ def validate_paint_panther_taxa(
         )
 
 
+def validate_absent_genera(organisms: list[str]) -> None:
+    present_genera = {organism.split(maxsplit=1)[0] for organism in organisms}
+    present = sorted(set(ABSENT_GENERA) & present_genera)
+    if present:
+        raise SystemExit(f"PAINT inventory now contains: {present}")
+
+
 def format_percent(numerator: int, denominator: int) -> str:
     if denominator == 0:
         return ""
     return f"{numerator / denominator:.2%}"
+
+
+def format_or_list(values: tuple[str, ...]) -> str:
+    if len(values) <= 1:
+        return "".join(values)
+    return ", ".join(values[:-1]) + f", or {values[-1]}"
+
+
+def format_overlap(row: dict[str, str | int]) -> str:
+    return (
+        f"{row['paint_accessions_in_go_gpi']} "
+        f"({format_percent(row['paint_accessions_in_go_gpi'], row['paint_leaf_gaf_accessions'])})"
+    )
+
+
+def format_overlap_range(rows: list[dict[str, str | int]]) -> str:
+    ratios = [
+        row["paint_accessions_in_go_gpi"] / row["paint_leaf_gaf_accessions"]
+        for row in rows
+        if row["paint_leaf_gaf_accessions"]
+    ]
+    return f"{min(ratios):.2%}-{max(ratios):.2%}"
 
 
 def write_report(
@@ -627,11 +682,8 @@ def write_report(
         ),
         "",
         (
-            "The PAINT inventory contains no Toxoplasma, Cryptosporidium, "
-            "Babesia, Theileria, Encephalitozoon, Enterocytozoon, Nematocida, "
-            "Aedes, or Nakaseomyces leaf. Plasmodium falciparum 3D7 is the only "
-            "apicomplexan in the PAINT set; Anopheles gambiae PEST is the only "
-            "mosquito."
+            f"The PAINT inventory contains no {format_or_list(ABSENT_GENERA)} "
+            "leaf."
         ),
         "",
         "| Site | Taxon | Mnemonic | QuickGO exact IBA | "
@@ -679,8 +731,7 @@ def write_report(
                 f"{row['paint_leaf_gaf_rows']} | "
                 f"{row['paint_leaf_gaf_accessions']} | "
                 f"{row['go_gpi_uniprotkb_identifiers']} | "
-                f"{row['paint_accessions_in_go_gpi']} "
-                f"({format_percent(row['paint_accessions_in_go_gpi'], row['paint_leaf_gaf_accessions'])}) | "
+                f"{format_overlap(row)} | "
                 f"{row['go_gaf_iba_rows_by_file']} |"
             )
 
@@ -696,8 +747,8 @@ def write_report(
             ),
             "",
             "| Site | PAINT taxon | PANTHER short name | Sequence file | "
-            "PAINT rows | GO GAF IBA rows by file | GO GAFs |",
-            "|---|---|---:|---|---:|---|---|",
+            "PAINT rows | PAINT/GPI overlap | GO GAF IBA rows by file | GO GAFs |",
+            "|---|---|---:|---|---:|---:|---|---|",
         ]
     )
     for row in reference_rows:
@@ -706,6 +757,7 @@ def write_report(
             f"`{row['panther_short_name']}` | "
             f"`{row['panther_sequence_file']}` | "
             f"{row['paint_leaf_gaf_rows']} | "
+            f"{format_overlap(row)} | "
             f"{row['go_gaf_iba_rows_by_file']} | "
             f"`{row['go_gaf_files']}` |"
         )
@@ -797,7 +849,9 @@ def write_report(
                     f"rows on {ixosc['paint_leaf_gaf_accessions']} accessions, "
                     "but only "
                     f"{ixosc['paint_accessions_in_go_gpi']} of those accessions "
-                    "are present in the current `IXOSC-uniprot.gpi.gz`. Can the "
+                    "are present in the current `IXOSC-uniprot.gpi.gz`, versus "
+                    f"{format_overlap_range(reference_rows)} for the other "
+                    "PAINT-bearing controls checked here. Can the "
                     "PANTHER Ixodes leaf be rebuilt or remapped to current "
                     "IXOSC identifiers?"
                 ),
@@ -831,6 +885,7 @@ def main() -> None:
     gpi_files = directory_filenames(f"{GO_RELEASE_BASE}/annotations/gpi/index.html")
     paint = paint_gaf_summary()
     validate_paint_panther_taxa(paint, panther_genomes)
+    validate_absent_genera(paint_organisms(paint, go_reference, panther_genomes))
     expected_sequence_files = {
         f"PTHR{PANTHER_RELEASE}_{panther['name']}"
         for panther in panther_genomes.values()
