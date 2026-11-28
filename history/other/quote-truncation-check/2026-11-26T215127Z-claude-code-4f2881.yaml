@@ -1,0 +1,243 @@
+history_version: 1
+target:
+  kind: other
+  slug: quote-truncation-check
+  path: src/ai_gene_review/validation/quote_truncation.py
+session:
+  id: 2026-11-26T215127Z-claude-code-4f2881
+  timestamp: '2026-11-26T21:51:27Z'
+  actors:
+  - type: ai_agent
+    name: claude-code
+    model: claude-opus-5
+    agent_tool: claude-code
+links:
+  issues: []
+  prs: []
+  urls: []
+events:
+- type: CREATE
+  outcome: changed
+  summary: Add a check for supporting_text quotes cut in the middle of a word
+  details: |
+    A supporting_text copied out of a line-wrapped source is easy to stop at the hyphen the wrap
+    left behind, and nothing in the corpus notices. validate-quotes collapses whitespace before
+    matching, so such a quote genuinely is a verbatim substring of its source; it is simply not a
+    complete one, and what it loses is usually the term it was cited for. QueF's row reads
+    "reduction of 7-cyano-7-" where the substrate is 7-cyano-7-deazaguanine, so the quote names no
+    substrate at all. PTHR14614 quotes "protein-lysine N-" for a methyltransferase term, cutting
+    the word "methyltransferase" itself.
+
+    quote_truncation detects these and proposes the completing token, reusing the source resolution
+    and renderings that validate-quotes uses so the two cannot disagree about whether a quote is in
+    its source. It reports and exits 0: repairing one edits curated prose, and an extension can
+    change what the quote supports.
+
+    Two kinds, deliberately not equally strong. MID_WORD means the source continues with a word
+    character, so a word was broken in half and there is no reading on which the quote is complete.
+    TOKEN_BOUNDARY means it continues after a space, so the quote ends on a real token and whether
+    it is enough is a judgement about the argument rather than a mechanical defect.
+
+    Three bugs came out of running it on the corpus rather than on its tests, which is the part
+    worth recording.
+
+    The first run proposed "formation of L-aspartate-CC". The continuation line of a UniProt flat
+    file begins with the file's two-letter line code, so the completing token was the left margin.
+    source_renderings already offers a de-prefixed rendering for exactly this reason; I had read the
+    raw file instead. Fixed by using the renderings, most-processed first, and pinned by a test.
+
+    A quote re-typed with a unicode dash was skipped, because the scan filtered on a literal "-"
+    while the matcher folded dashes. The filter and the matcher have to agree about what a hyphen
+    is.
+
+    The third is the interesting one. TAM41's "in a CTP-" and ALG11's "to Man3-" are the same
+    construction, a suspended hyphen ("CTP- and Mg2+-dependent", "Man3- and Man4GlcNAc2-PP-Dol"),
+    which is correct English and not wrap damage at all. The check classified one MID_WORD and the
+    other TOKEN_BOUNDARY, for no reason but where each source file happened to wrap. The class now
+    keys on the following conjunction, which holds whatever the source does at that point, and the
+    two agree. A heuristic that reads a line break as evidence about language gives different
+    answers to the same sentence in two files.
+
+    On the scope, and on an instrument I got wrong again: a grep for supporting_text lines ending
+    in a hyphen reports 1937 across 661 files, and the parsed corpus contains 24. A YAML plain
+    scalar wraps, so almost all of those hyphens sit mid-value rather than at a quote's end. The
+    scanner reports all 24 of the 24, so its recall is complete; it was the grep that was wrong.
+    Fourth time in this session I have taken a tool's window for the data, after a head -20 on a
+    UniProt CC block and a single-line grep for a quote that spanned a wrap.
+
+    The ~1900 others are a different defect and are deliberately not reported: a quote whose middle
+    reads "similarly low activ- ity" came from a source that wrapped inside the word, and the
+    cached publication still contains that break, so the quote matches its source and repairing it
+    to "activity" would make it stop matching. The artifact is in the cache, not the review.
+
+    The 24 findings are not repaired here. That edits curated prose in genes/, interpro/panther/
+    and modules/, each a content slice of its own, and two of them raise a separate question: they
+    quote a mutable -ai-review.yaml, which CLAUDE.md says to avoid in favour of a primary
+    publication or stable record. A follow-up PR does the repairs. One of them, fruK, is not wrap
+    damage either: the stored quote begins "CC   -!- FUNCTION:", so the line code was copied into
+    the quote and it matches only the raw rendering.
+
+    Not a gate, and the docs say why a clean result proves nothing: the check finds the one
+    truncation that leaves a syntactic trace. A quote cut at a comma, a word or a sentence boundary
+    is indistinguishable from a short quote.
+
+    20 tests including doctests pass; ruff check, ruff format and mypy clean on the new module and
+    its tests. The full `just test` run was still going when this was committed, so it is not
+    claimed here; CI is the check on it.
+- type: EDIT
+  outcome: changed
+  sections:
+  - results
+  summary: The audit's default scope excluded gene reviews, so its "whole corpus" count
+    was measured inside its own window
+  details: |
+    Review of this PR requested changes on a finding that is correct and is the same error
+    this check was built to catch, committed by the check itself.
+
+    main() fell back to quote_check.default_files(), whose DEFAULT_GLOBS reach genes/ only
+    through *-predictions-review.yaml and *-regulatory-evidence.yaml. *-ai-review.yaml is
+    deliberately absent, because validator.py already checks that gene-review quotes match their
+    sources. That rationale does not carry over: validator.py checks whether a quote MATCHES its
+    source, and nothing checked whether it was CUT. So the audit silently skipped the largest
+    holder of supporting_text in the repository while the docs labelled the no-argument run
+    "whole corpus" and the PR body said "24 such quotes in the corpus" and "recall is complete".
+
+    Recall was complete over iter_quotes(default_files()). It was not complete over the corpus,
+    and the difference is not marginal: 4,749 files in the default scope against 12,511 gene
+    reviews excluded. The review verified three MID_WORD cases by hand that the audit could not
+    have seen, and the sharpest is that genes/yeast/ACO1 and interpro/panther/PTHR43160 quote the
+    same UniProt sentence, "isomerization of citrate to isocitrate via cis-", and only the family
+    review was in scope. The audit reported one half of one sentence.
+
+    This is the fifth time in this session I have taken an instrument's window for the data, and
+    the worst instance, because the instrument was mine and I had written the warning against it
+    in the same change. docs/quote_truncation.md said "do not read the finding count as a measure
+    of the problem" and "parse the YAML rather than grepping it" while the parse was scoped to
+    exclude two thirds of the files. Being right about the grep is not being right about the
+    corpus.
+
+    Fixed by giving the audit its own scope rather than borrowing one: audit_files() is
+    default_files() plus genes/*/*/*-ai-review.yaml, with the reason for diverging written where
+    the divergence is. Verified against the review's own cases: ACO1 now reports four occurrences
+    completing to cis-aconitate, and murF four completing to
+    gamma-D-glutamyl-meso-2,6-diaminopimelate -- the UDP-MurNAc-tripeptide that is murF's actual
+    substrate, so the same substrate-identity loss as the rest.
+
+    The second requested change was also right and is a trap I left. source_text() returned the
+    FIRST rendering, which is the raw one -- exactly the bug the CC-margin fix was about -- while
+    scan_document iterates reversed() to avoid it. Exported in __all__, unused, untested: a
+    plausible-looking function that would reintroduce the fixed bug for its first caller. Deleted
+    rather than repaired, since source_renderings_for is the real interface.
+
+    Three of the suggestions are now fixed too. The suspended-hyphen override fired on the
+    conjunction alone, so a wrapped "comm-" before "and" read as punctuation -- the exact mirror
+    of the andro-/and case I had already written a test for, and I did not think to check the
+    other direction. It now needs positive evidence of the construction: a coordinating
+    conjunction and a following word carrying its own internal hyphen. Note the coordinate's
+    hyphen is often preceded by punctuation rather than a letter ("Mg2+-dependent"), so the test
+    matches a word-internal hyphen rather than a tokenised word; the first two attempts failed on
+    exactly that and the doctest caught both. A malformed YAML file now yields no findings instead
+    of aborting the run, as quote_check does, because an audit that dies on the first bad file
+    reports a partial count as a complete one. And an absolute path from outside the checkout no
+    longer raises from Path.relative_to.
+
+    Two of the review's answers are taken as given. The conjunction list stays narrow, because
+    widening it only moves findings from the certain class to the uncertain one. And the hard
+    counts are now out of the docs entirely rather than updated: a number written into prose goes
+    stale silently, which is the failure this check exists to catch, so the docs say to run the
+    audit.
+
+    Recorded and not done here: warning on MID_WORD inside validate-quotes via the
+    only-ever-shrinks baseline once the repairs land, keeping TOKEN_BOUNDARY audit-only. Also
+    newly documented as a limitation rather than fixed: this audit shares source_renderings with
+    validate-quotes but not its matcher, so a quote written with an explicit "..." elision is not
+    located here and is absent from the report rather than reported as unchecked.
+
+    The companion repair PR (#7132) is approved and correct for what it covers, but it is now
+    known to be incomplete: it repairs the 24 the narrow scope found, and the gene-review slice
+    needs its own pass. A corpus-wide re-count under the corrected scope was still running when
+    this was committed and is deliberately not quoted.
+
+    25 tests including doctests pass; ruff check, ruff format and mypy clean.
+- type: EDIT
+  outcome: changed
+  sections:
+  - results
+  summary: The corrected scope gives 1,957 gene-review truncations, which also refutes
+    my dismissal of the original grep
+  details: |
+    The corpus-wide re-count under the corrected scope finished: 1,945 MID_WORD and 12
+    TOKEN_BOUNDARY truncations in gene reviews, 1,957 in all, across 550 of 12,511 files. With
+    the 24 the narrow scope found, the corpus figure is about 1,981 rather than 24 -- out by a
+    factor of eighty.
+
+    That number refutes a second claim of mine, and the second error is the more instructive one.
+    These docs said, and the PR body and the earlier history event repeated, that grepping for
+    hyphen-terminal lines "reports well over a thousand such hyphens where there are two dozen
+    truncated quotes", and concluded that almost all of those hyphens sat mid-value. The
+    reasoning was: grep says 1,937, the parse says 24, therefore 1,913 are wrap artifacts. The
+    parse was the narrow one. With gene reviews included the parsed count is in the same order as
+    the grep's, so the grep was approximately right all along and what was wrong was the
+    instrument I used to overrule it.
+
+    I had the two instruments the right way round in principle -- parse the YAML rather than
+    grepping it -- and drew the opposite conclusion to the truth, because a parse scoped to a
+    third of the files is not more trustworthy than a grep over all of them. That is now written
+    into the docs as the lesson rather than left as a corrected number: a more rigorous
+    instrument pointed at less of the data beats nothing.
+
+    The mid-value wrap class is still real -- the aspartate-to-threonine module has twelve lines
+    beginning with the same sentence of which only four end a scalar, so a line-based repair
+    there would corrupt eight complete quotes to make four fixes -- and the docs keep that as the
+    reason for parsing. What they no longer do is offer it as the explanation for a large grep
+    count. The two populations are separate and only measuring each separately says how big
+    either is.
+
+    Consequence for the companion PR: #7132 is approved and correct for what it covers, and it
+    covers 24 of about 1,981. The gene-review slice needs its own repair pass, and at 550 files
+    it is a campaign rather than a batch. The 12 TOKEN_BOUNDARY cases are the judgement calls;
+    the 1,945 MID_WORD ones are mechanical in kind, though each still needs its completion read
+    against its own source, as the HOM2-versus-asd spelling split showed.
+
+    Top affected files are concentrated in yeast metabolic genes -- HOM2 36, ADE57 31, FAS1 27,
+    YNK1 27, ADE3 22, ADE1 21 -- which is consistent with long UniProt CATALYTIC ACTIVITY blocks
+    full of hyphenated metabolite names wrapping mid-name, the same mechanism as the 24 already
+    repaired.
+- type: EDIT
+  outcome: changed
+  sections:
+  - src/ai_gene_review/validation/quote_truncation.py
+  - tests/test_quote_truncation.py
+  - docs/quote_truncation.md
+  summary: >-
+    A quote carrying its own CC margin was completed by the margin rather than by the record. The
+    continuation is now de-prefixed where it is taken.
+  details: >-
+    Review finding, open across two rounds and correct. A supporting_text value that copied the
+    UniProt line code in with it - "CC   -!- FUNCTION: ... of fructose-l-" - matches only the raw
+    rendering, because the de-prefixed rendering no longer contains the "CC   " the quote opens
+    with. So scan_document's most-processed-first loop cannot reach a rendering whose next token is
+    the record's own text, and _TOKEN.match on the remainder returned the left margin of the
+    wrapped continuation line.
+
+    Written as a failing test first, against the row the review named: PTHR46566-review.yaml's
+    fruK quote returned "CC" where the record says "phosphate". Fixed by stripping a line-code
+    margin from the remainder before tokenising it, with the strip placed after the gap has already
+    decided MID_WORD versus TOKEN_BOUNDARY so the kind is unaffected - the line break before the
+    margin is still what marks the cut as mid-word.
+
+    All three rows the review traced now complete from the record:
+    PTHR46566-review.yaml fructose-l- to phosphate, MYCTU/dnaE2 LexA- to regulated, and ECOLI/rbsK
+    D-ribose 5- to phosphate. 22 tests pass, ruff check and format clean.
+
+    Worth recording why the existing regression test did not catch it. The review's point is exact:
+    test_uniprot_line_code_is_not_offered_as_the_completion forbids precisely this output, and
+    passes without the fix only because its fixture quote does not itself begin with a line code.
+    The test was written against the symptom as first observed - a completion ending in CC - and
+    the fixture reproduced the source but not the quote shape that causes it. A regression test
+    inherits the scope of the case that motivated it, which is the same thing recorded on the
+    INTERPRO page about checks derived from failures. The new test differs from it in exactly one
+    respect, the quote's own prefix, which is the variable that matters.
+
+    The docs gain a section on the class, since the reason the loop cannot help is not obvious from
+    reading either function alone.
