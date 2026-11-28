@@ -201,11 +201,20 @@ PROBES: tuple[Probe, ...] = (
         "ANOGA / Anopheles gambiae PEST",
     ),
     Probe(
+        "VectorBase",
+        "Ixodes scapularis Wikel",
+        "IXOSC",
+        6945,
+        "under_exported",
+        6945,
+    ),
+    Probe(
         "PlasmoDB",
         "Plasmodium falciparum 3D7",
         "PLAF7",
         36329,
         "paint_reference",
+        5833,
     ),
     Probe(
         "TriTrypDB",
@@ -445,8 +454,13 @@ def row_category(
     quickgo_exact: int,
     quickgo_species_descendants: int | str,
 ) -> str:
+    species_control_passes = (
+        quickgo_species_descendants == "" or quickgo_species_descendants > 0
+    )
+    if go_ref and panther and paint_rows > 0 and 0 < quickgo_exact * 10 < paint_rows:
+        return "under_exported"
     if go_ref and panther and paint_rows > 0 and quickgo_exact > 0:
-        return "paint_reference"
+        return "paint_reference" if species_control_passes else "contradiction"
     if (
         not go_ref
         and not panther
@@ -498,6 +512,7 @@ def write_report(
 ) -> None:
     zero_rows = [row for row in rows if row["category"] == "zero"]
     reference_rows = [row for row in rows if row["category"] == "paint_reference"]
+    under_exported_rows = [row for row in rows if row["category"] == "under_exported"]
 
     lines = [
         "---",
@@ -533,9 +548,11 @@ def write_report(
         "## Diagnosis",
         "",
         (
-            "All 17 zero-IBA organisms in the coverage panel are absent from "
-            "GO's PAINT reference-species list, the PANTHER supported-genomes "
-            "API, and the PANTHER PAINT leaf GAF. Their exact taxon and "
+            f"All {len(zero_rows)} zero-IBA organisms in the coverage panel are "
+            "absent from the PAINT leaf-GAF taxon inventory, which contains "
+            f"{metadata['paint_taxa']} taxa total. They are also absent from "
+            "GO's PAINT reference-species list and the PANTHER supported-genomes "
+            "API. Their exact taxon and "
             "species-plus-descendant QuickGO IBA queries both returned zero "
             "annotations."
         ),
@@ -544,9 +561,10 @@ def write_report(
             "Their nonzero PANTHER family coverage in UniProtKB comes from "
             "family/subfamily sequence classification and does not imply that the "
             "taxon is a PAINT reference leaf eligible for a PTN-backed IBA export. "
-            "The PANTHER per-species sequence-classification directory contains "
-            "files for the supported-genome API entries; none of these 17 taxa "
-            "has a supported-genome entry."
+            f"The PANTHER per-species sequence-classification directory has "
+            f"matching files for {metadata['panther_sequence_file_matches']} of "
+            f"{metadata['panther_supported_genomes']} supported-genome API "
+            "entries; none of these zero-IBA taxa has a supported-genome entry."
         ),
         "",
         "| Site | Taxon | Mnemonic | QuickGO exact IBA | "
@@ -564,6 +582,29 @@ def write_report(
             f"{row['paint_leaf_gaf_rows']} | "
             f"`{row['go_gaf_files'] or 'none'}` | "
             f"{zero_diagnosis(row)} |"
+        )
+
+    lines.extend(
+        [
+            "",
+            "## PAINT-covered QuickGO export gap",
+            "",
+            (
+                "The full PAINT leaf-GAF inventory also reveals a distinct "
+                "VectorBase lead: Ixodes is a PAINT reference taxon, but only a "
+                "small fraction of its PAINT rows appear in QuickGO."
+            ),
+            "",
+            "| Site | Taxon | Mnemonic | QuickGO exact IBA | PAINT rows | "
+            "GO GAF IBA rows by file |",
+            "|---|---|---:|---:|---:|---|",
+        ]
+    )
+    for row in under_exported_rows:
+        lines.append(
+            f"| {row['site']} | {row['organism']} | `{row['mnemonic']}` | "
+            f"{row['quickgo_iba_exact_hits']} | {row['paint_leaf_gaf_rows']} | "
+            f"{row['go_gaf_iba_rows_by_file']} |"
         )
 
     lines.extend(
@@ -666,6 +707,14 @@ def write_report(
                 "files, but neither carries PAINT/IBA rows because the PAINT "
                 "reference set includes `CANAL` rather than `CANGA`."
             ),
+            "",
+            (
+                "A separate VectorBase export lead is worth checking too: "
+                "Ixodes scapularis (`IXOSC`, taxon `6945`) is present in the "
+                f"same PAINT leaf GAF with {under_exported_rows[0]['paint_leaf_gaf_rows']} "
+                "IBA rows, but the exact QuickGO query currently returns only "
+                f"{under_exported_rows[0]['quickgo_iba_exact_hits']} IBA rows."
+            ),
         ]
     )
     path.write_text("\n".join(lines) + "\n")
@@ -682,6 +731,10 @@ def main() -> None:
     gpad_files = directory_filenames(f"{GO_RELEASE_BASE}/annotations/gpad/index.html")
     gpi_files = directory_filenames(f"{GO_RELEASE_BASE}/annotations/gpi/index.html")
     paint = paint_gaf_summary()
+    expected_sequence_files = {
+        f"PTHR{PANTHER_RELEASE}_{panther['name']}"
+        for panther in panther_genomes.values()
+    }
 
     quickgo_exact = {
         taxon_id: quickgo_iba_hits(taxon_id)
@@ -760,6 +813,11 @@ def main() -> None:
         rows,
         {
             "paint_gaf_date": paint.header_date,
+            "paint_taxa": str(len(paint.row_counts)),
+            "panther_sequence_file_matches": str(
+                len(expected_sequence_files & sequence_files)
+            ),
+            "panther_supported_genomes": str(len(panther_genomes)),
             "retrieved_date": retrieved_date,
         },
         out_dir / "iba_zero_diagnosis.md",
