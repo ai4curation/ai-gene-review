@@ -12,7 +12,7 @@ import json
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 
-from ai_gene_review.benchmark.predictions import VERDICTS, fasta_id
+from aigr_benchmark.predictions import VERDICTS, fasta_id
 
 CLAIM_COLUMNS = ("id", "task", "term", "label", "position", "residue")
 TASK = "ask-function"

@@ -8,6 +8,9 @@ on:
 jobs:
   build-n-publish:
     name: Build and publish Python 🐍 distributions 📦 to PyPI
+    # aigr-benchmark-v* releases publish packages/aigr-benchmark instead
+    # (aigr-benchmark-publish.yaml).
+    if: ${{ !startsWith(github.ref_name, 'aigr-benchmark-v') }}
     runs-on: ubuntu-latest
     environment: release
     permissions:
@@ -30,6 +33,14 @@ jobs:
 
       - name: Build source and wheel archives
         run: uv build
+
+      # ai-gene-review depends on aigr-benchmark (packages/aigr-benchmark). The
+      # wheel's requirements must resolve from PyPI alone, without the workspace,
+      # so a release made before aigr-benchmark is on PyPI fails here.
+      - name: Check the wheel's requirements resolve from PyPI
+        run: |
+          uv venv /tmp/resolve-check
+          uv pip install --dry-run --python /tmp/resolve-check dist/ai_gene_review-*.whl
 
       - name: Publish
         uses: pypa/gh-action-pypi-publish@release/v1

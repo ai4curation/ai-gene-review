@@ -1,12 +1,19 @@
 # Time-split annotation benchmarks
 
-`ai-gene-review benchmark` builds benchmarks of protein function annotations
+`ai-gene-review benchmark` (or `aigr-benchmark`) builds benchmarks of protein function annotations
 that no predictor could have seen. A target is an annotation that is in a later
 GO release and absent from a baseline release on or before a cutoff date. The
 targets are then checked, mostly by code, for leakage, near-duplication and
-balance. The schema is `src/ai_gene_review/schema/benchmark.yaml` (LinkML). The
+balance. The schema is `packages/aigr-benchmark/src/aigr_benchmark/schema/benchmark.yaml` (LinkML). The
 skill that drives it is `.claude/skills/benchmark-builder/`. The worked example is
 `benchmarks/human-goa-2025-06/`.
+
+The code is its own installable package, `aigr-benchmark` (import name
+`aigr_benchmark`), a uv workspace member in `packages/aigr-benchmark/`. It
+depends only on jsonschema, pydantic, PyYAML, requests and Typer, so another
+project can build and score benchmarks without installing ai-gene-review; see
+its [README](../packages/aigr-benchmark/README.md). `ai-gene-review benchmark`
+is the same command-line app, and the `just benchmark-*` recipes call it.
 
 ## Purpose
 
@@ -35,8 +42,8 @@ The benchmark knows nothing about any particular predictor. Any of them can
 be evaluated under any condition it supports: an LLM tool, a sequence tool
 (InterProScan, PANNZER, a DeepGO-style model), an ai-gene-review agent review,
 or a curator. The interface has two halves, both LinkML classes in the schema
-(with a generated JSON Schema in `assets/jsonschema/benchmark.schema.json` and
-a Pydantic model in `src/ai_gene_review/datamodel/benchmark_model.py`):
+(with a generated JSON Schema in `packages/aigr-benchmark/src/aigr_benchmark/schema/benchmark.schema.json` and
+a Pydantic model in `packages/aigr-benchmark/src/aigr_benchmark/datamodel/benchmark_model.py`):
 
 - **Claims out.** `benchmark export` writes `<id>.fasta` and `<id>-claims.yaml`,
   a `ClaimSet` with one `Claim` (item, protein, FASTA id, GO term) per target,
@@ -50,7 +57,7 @@ a Pydantic model in `src/ai_gene_review/datamodel/benchmark_model.py`):
   An attempt that returned no answer counts as missing. A score without a verdict counts only with `--threshold`.
 
 An **importer** converts a predictor's native output into predictions
-(`src/ai_gene_review/benchmark/importers/`). Two exist: `peptalk` (the JSONL
+(`packages/aigr-benchmark/src/aigr_benchmark/importers/`). Two exist: `peptalk` (the JSONL
 of `peptalk ask`, an example LLM predictor; `export --for peptalk` also writes
 its claims TSV) and `reviews` (a folder of ai-gene-review reviews). To evaluate
 another tool, add a small importer module, or have the tool write predictions

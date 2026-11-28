@@ -19,7 +19,7 @@ from pathlib import Path
 
 import yaml
 
-from ai_gene_review.benchmark.yaml_io import load_yaml
+from aigr_benchmark.yaml_io import load_yaml
 
 SHUFFLED = "SHUFFLED|"
 VERDICTS = ("yes", "no", "uncertain")

@@ -1,4 +1,4 @@
-"""``ai-gene-review benchmark`` commands: build, check, export, import, score, validate."""
+"""`aigr-benchmark` commands (also `ai-gene-review benchmark`): build, check, export, import, score, validate."""
 
 from __future__ import annotations
 
@@ -9,23 +9,23 @@ from typing import Annotated, Optional
 import typer
 import yaml
 
-from ai_gene_review.benchmark.build import build_from_reviews, build_goa, load_context
-from ai_gene_review.benchmark.checks import report_markdown, run_checks, validate_schema
-from ai_gene_review.benchmark.importers import peptalk as peptalk_importer
-from ai_gene_review.benchmark.importers import reviews as reviews_importer
-from ai_gene_review.benchmark.predictions import (
+from aigr_benchmark.build import build_from_reviews, build_goa, load_context
+from aigr_benchmark.checks import report_markdown, run_checks, validate_schema
+from aigr_benchmark.importers import peptalk as peptalk_importer
+from aigr_benchmark.importers import reviews as reviews_importer
+from aigr_benchmark.predictions import (
     Verdicts,
     claims,
     read_prediction_set,
     verdicts,
     write_predictions,
 )
-from ai_gene_review.benchmark.run import export, score, score_markdown
-from ai_gene_review.benchmark.sources import DEFAULT_CACHE, sha256
-from ai_gene_review.benchmark.yaml_io import load_yaml
+from aigr_benchmark.run import export, score, score_markdown
+from aigr_benchmark.sources import DEFAULT_CACHE, sha256
+from aigr_benchmark.yaml_io import load_yaml
 
 benchmark_app = typer.Typer(
-    help="Time-split protein annotation benchmarks (see docs/benchmarks.md)."
+    help="Time-split protein annotation benchmarks (see the aigr-benchmark README)."
 )
 
 CacheOpt = Annotated[

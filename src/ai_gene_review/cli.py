@@ -42,7 +42,7 @@ from ai_gene_review.validation import (
 from ai_gene_review.validation.goa_validator import GOAValidator
 from ai_gene_review.validation.validator import get_project_root, get_schema_path
 from ai_gene_review.draw import ReviewVisualizer
-from ai_gene_review.benchmark.cli import benchmark_app
+from aigr_benchmark.cli import benchmark_app
 from ai_gene_review.litscan.cli import litscan_app
 from ai_gene_review.shadow_issues.cli import shadow_issues_app
 from ai_gene_review.sequence_read.cli import sequence_read_app

@@ -10,6 +10,8 @@ are held to the same tests.
 
 from __future__ import annotations
 
+import functools
+import json
 import re
 import statistics
 from collections import Counter, defaultdict
@@ -19,8 +21,11 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from jsonschema.exceptions import best_match
+from jsonschema.protocols import Validator
+from jsonschema.validators import validator_for
 
-from ai_gene_review.benchmark.sources import (
+from aigr_benchmark.sources import (
     DEFAULT_CACHE,
     Annotation,
     InformationContent,
@@ -28,7 +33,9 @@ from ai_gene_review.benchmark.sources import (
     uniprot_entry,
 )
 
-SCHEMA = Path(__file__).resolve().parents[1] / "schema" / "benchmark.yaml"
+#: The LinkML schema, and the closed JSON Schema generated from it (`just gen-models`).
+SCHEMA = Path(__file__).resolve().parent / "schema" / "benchmark.yaml"
+JSON_SCHEMA = SCHEMA.with_suffix(".schema.json")
 #: Review actions that keep a claim; anything else contests it.
 REVIEW_KEEPS = frozenset({"ACCEPT", "KEEP_AS_NON_CORE", "NEW", "TOO_GENERAL"})
 REVIEW_CONTESTS = frozenset({"REMOVE", "MARK_AS_OVER_ANNOTATED"})
@@ -685,15 +692,45 @@ def review_agreement(target: dict, item_id: str) -> Result | None:
     return result("review_agreement", "INFO", f"review action {action}", item_id, term)
 
 
-def validate_schema(data: dict, target_class: str) -> list[str]:
-    """LinkML (closed JSON Schema) validation problems for a document."""
-    from linkml.validator import Validator
-    from linkml.validator.plugins import JsonschemaValidationPlugin
+@functools.cache
+def json_schema_validator(target_class: str) -> Validator:
+    """A validator for one class of the bundled JSON Schema.
 
-    validator = Validator(
-        str(SCHEMA), validation_plugins=[JsonschemaValidationPlugin(closed=True)]
-    )
-    return [r.message for r in validator.validate(data, target_class).results]
+    >>> json_schema_validator("Benchmark").schema["$ref"]
+    '#/$defs/Benchmark'
+    """
+    schema = json.loads(JSON_SCHEMA.read_text())
+    if target_class not in schema["$defs"]:
+        raise ValueError(f"{target_class} is not a class in {SCHEMA.name}")
+    rooted = {
+        "$schema": schema["$schema"],
+        "$defs": schema["$defs"],
+        "$ref": f"#/$defs/{target_class}",
+    }
+    # The class follows the dialect the generated schema declares, as LinkML's
+    # validator does, and checks formats (``date``) the same way.
+    cls = validator_for(rooted)
+    return cls(rooted, format_checker=cls.FORMAT_CHECKER)
+
+
+def validate_schema(data: dict, target_class: str) -> list[str]:
+    """Closed JSON Schema validation problems for a document, one message per error.
+
+    The JSON Schema is generated from the LinkML schema, so this gives the same
+    results as ``linkml-validate`` with the closed JSON Schema plugin, without
+    needing LinkML at run time.
+
+    >>> validate_schema({"check": "novelty", "status": "PASS", "message": "ok"}, "CheckResult")
+    []
+    >>> validate_schema({"check": "novelty", "status": "MAYBE", "message": "ok"}, "CheckResult")
+    ["'MAYBE' is not one of ['PASS', 'INFO', 'WARN', 'FAIL'] in /status"]
+    """
+    return [
+        f"{error.message} in /{'/'.join(str(p) for p in error.absolute_path)}"
+        for error in (
+            best_match([e]) for e in json_schema_validator(target_class).iter_errors(data)
+        )
+    ]
 
 
 def stats(benchmark: dict, ic: InformationContent) -> tuple[dict, list[Result]]:

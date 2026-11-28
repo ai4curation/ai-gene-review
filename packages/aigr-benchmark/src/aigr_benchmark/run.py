@@ -25,15 +25,15 @@ from typing import Any
 
 import yaml
 
-from ai_gene_review.benchmark.checks import Context
-from ai_gene_review.benchmark.predictions import (
+from aigr_benchmark.checks import Context
+from aigr_benchmark.predictions import (
     SHUFFLED,
     Verdicts,
     claims,
     fasta_id,
     queries,
 )
-from ai_gene_review.benchmark.sources import Annotation
+from aigr_benchmark.sources import Annotation
 
 GOA_COLUMNS = (
     "GENE PRODUCT DB",
