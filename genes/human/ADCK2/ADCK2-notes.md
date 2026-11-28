@@ -413,3 +413,13 @@ readout. Both are ADCK1-specific and neither bears on ADCK2.
 
 - The GO:0016020 membrane row (IEA, GO_REF:0000044) is now MODIFY to GO:0005743 mitochondrial inner membrane. The 2026-10-20 entry above says that row was left unmodified; that changed during review of PR #5223.
 - The MODIFY and the NEW GO:0005743 row rest on the same three lines (predicted TM 103-123, protease protection in PMID:31480808, yeast Cqd1 in PMID:37073556). The NEW row's reason now says so, so the two rows are not read as independent support.
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 33, Q7Z695. Author evidence category: **?**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`transit_peptide(1-72); Cytoplasmic(73-96); interfacial(97-120); Cytoplasmic(121-128); interfacial(129-139); Cytoplasmic(140-626)`
+
+**Assessment: Qualify inference; topology unresolved.** Human protease protection in PMID:31480808 permits matrix or inner-membrane association. The UniProt spanning-helix model and the S20 interfacial model describe the same hydrophobic region and are not independent evidence. Retain the existing provisional inner-membrane IC inference using membrane-contact prediction plus yeast Cqd1 evidence (PMID:37073556), but remove the argument that a demonstrated spanning helix forces that conclusion. Do not assign a membrane face. Carbonate extraction and human topology mapping remain needed.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

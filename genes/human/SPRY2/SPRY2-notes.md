@@ -28,3 +28,13 @@ Context: reviewed as a negative-feedback regulator of RTK/Ras-ERK signalling for
 ### Paralog comparison (for module)
 
 The shared family activity is GO:0004860 (RAF antagonism; IBA at PTN000961788). SPRY2 adds two features of its own: GRB2-SH3 sequestration through the PXXPXR motif, and CBL/CIN85 sequestration that inverts the sign of its effect on EGFR. SPRY4 instead directly inhibits TESK1 and lacks the CBL-inhibitory output.
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 6, O43597. Author evidence category: **Peripheral**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Nucleus matrix(1-251); reentrant(252-272); Nucleus matrix(273-315)`
+
+**Assessment: Retain; insertion geometry unproven.** PMID:41362608 studies SPRY2-Ras membrane organization and proposes a C-terminal amphipathic helix, alongside cysteine acylation and protein interactions. This is not direct proof of a reentrant segment at 252-272. Retain current recruitment/localization; the S20 Nucleus matrix label should not override the independently supported membrane biology.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

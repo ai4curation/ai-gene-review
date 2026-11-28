@@ -9,3 +9,13 @@
 - Decisions: GO:0034993 (meiotic LINC) rows MODIFY to non-meiotic parent GO:0106094 (evidence is mostly somatic nesprin-1/2/3 complexes); protein binding rows with nesprin partners MODIFY to GO:0140444, lamin rows to GO:0005521, HTP/viral/targeting-machinery rows REMOVE; TAS microtubule binding and mitotic spindle organization (from worm UNC-84 paper) REMOVE; endosome membrane (overexpressed rab5ip, PMID:10818110) MARK_AS_OVER_ANNOTATED.
 - Deep research (falcon) consistent: SUN2 as non-catalytic LINC structural adaptor; 2023-2024 work on luminal disulfide regulation and nuclear actin/RNAPII coupling noted but not used for annotation.
 - Module check (modules/nucleokinesis.yaml): GO:0140444 in nuclear inner membrane for SUN1/SUN2 and GO:0106094 LINC complex agree with this review.
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 45, Q9UH99. Author evidence category: **?**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Nucleus matrix(1-197); interfacial(198-203); Nucleus matrix(204-717)`
+
+**Assessment: Reject predicted topology change.** S20 explicitly acknowledges a missed transmembrane helix in this known single-pass protein. Retain the existing inner-nuclear-membrane type II topology and LINC-complex model (PMID:15082709 and the current review). A short adjacent IF198-203 call does not relocate the SUN domain from the perinuclear space or demonstrate a new compartment.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

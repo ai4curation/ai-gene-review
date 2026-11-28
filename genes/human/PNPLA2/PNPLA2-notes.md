@@ -59,3 +59,13 @@ consistent with keeping the retinyl esterase annotations as non-core.
 - General IEA parents (hydrolase activity, lipid (catabolic) metabolic process) and the
   InterPro-derived "positive regulation of triglyceride catabolic process" modified to the
   direct catalytic terms.
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 37, Q96AD5. Author evidence category: **Element**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Cytoplasmic(1-344); interfacial(345-354); Cytoplasmic(355-504)`
+
+**Assessment: Retain; correct interpretation of supplement.** The S20 text describes the predicted PNPLA2 element using a basic patch in PNPLA5. PMID:23741432 directly distinguishes these mechanisms: PNPLA5/Brummer use basic residues, while human ATGL/PNPLA2 uses a hydrophobic region, including deletion/truncation analyses around residues 320-360. The predicted 345-354 segment lies within that region but does not map its full determinant or establish its geometry. Keep existing lipid-droplet annotations; do not transfer the PNPLA5 basic-patch mechanism.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

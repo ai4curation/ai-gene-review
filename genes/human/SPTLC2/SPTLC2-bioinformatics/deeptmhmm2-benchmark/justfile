@@ -1,0 +1,23 @@
+source_commit := "526f6c60f93c0868c7315413da8e669d12373cc3"
+
+install:
+    uv sync --frozen
+
+weights:
+    git clone https://github.com/fteufel/DeepTMHMM2.git .cache/source
+    git -C .cache/source checkout {{source_commit}}
+    mkdir -p .cache/deeptmhmm2
+    cp .cache/source/checkpoints/*.ckpt .cache/deeptmhmm2/
+
+prepare:
+    uv run --frozen python prepare_fasta.py inputs.fasta ../../SPTLC2-uniprot.txt ../../../DPM1/DPM1-uniprot.txt
+
+benchmark:
+    mkdir -p results
+    /usr/bin/time -l uv run --frozen python -u benchmark.py inputs.fasta results/basic --model-dir .cache/deeptmhmm2 --threads 8 --repeats 2 --unbatch-api > results/basic.stdout.txt 2> results/basic.stderr.txt
+
+marginals:
+    /usr/bin/time -l uv run --frozen python -u benchmark.py inputs.fasta results/marginals --model-dir .cache/deeptmhmm2 --threads 8 --repeats 1 --marginals --unbatch-api > results/marginals.stdout.txt 2> results/marginals.stderr.txt
+
+cli:
+    /usr/bin/time -l uv run --frozen dtm2 inputs.fasta results/cli --model-dir .cache/deeptmhmm2 --device cpu --threads 8 --batch-size 1 > results/cli.stdout.txt 2> results/cli.stderr.txt

@@ -69,3 +69,13 @@ Five IntAct IPIs (PMID:27499296: COQ9 O75208, COQ7 Q99807, COQ3 Q9NZJ6, COQ6 Q9Y
 
 ### Reactome TAS (matrix + reaction terms)
 Multiple Reactome TAS to GO:0005759 (matrix) and to GO:0008425 / GO:0006744. The reaction-specific ones (R-HSA-2162188 "COQ5 methylates MDMQ10H2") are correctly COQ5's step; others (R-HSA-2162186 COQ3, -2162187 COQ6, -2162193 COQ3, -2162194 COQ7:COQ9, -2162195 COQ4) are other pathway steps but Reactome co-annotates all synthome members to the matrix location. TAS location annotations: KEEP_AS_NON_CORE (correct location, non-experimental, redundant with IDA matrix). The R-HSA-2162188 GO:0008425 TAS is directly COQ5 → ACCEPT.
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 32, Q5HYK3. Author evidence category: **Element**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`transit_peptide(1-43); Cytoplasmic(44-257); interfacial(258-272); Cytoplasmic(273-327)`
+
+**Assessment: Retain topology; retain root organelle.** The S20 element assignment relies on a yeast Coq5 structure (PMID:25084328), not a human residue-level assay. Only the abstract of that paper was recovered, so the proposed gorge-to-human-coordinate mapping was not independently verified. Keep the existing peripheral matrix-side inner-membrane description. Correct root mitochondrion actions to ACCEPT: a supported organelle location is core even when its membrane subcompartment is also known.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

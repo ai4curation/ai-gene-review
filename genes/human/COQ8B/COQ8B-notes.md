@@ -63,3 +63,13 @@ Taxon: Homo sapiens (NCBITaxon:9606). 544 aa; two isoforms (Q96D53-1 displayed, 
 ## 2026-10-11 completion pass (claude-code)
 
 Core MF changed from protein kinase activity to ATP hydrolysis activity (GO:0016887) [PMID:27499294 "COQ8 has ATPase activity and interacts with lipid CoQ intermediates"; PMID:38425362 "this pair stimulates ATPase activity of COQ8B by ten-fold"]. The COQ3 phosphorylation [PMID:38425362 "COQ3, but not COQ6, is phosphorylated by COQ8B at multiple sites"] used reconstituted ancestral proteins [PMID:38425362 "Unless otherwise stated, all the experimental work was performed using the tetrapod ancestral COQ proteins."]. Its IDA row is kept as non-core rather than removed. Status COMPLETE.
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 35, Q96D53. Author evidence category: **Peripheral**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`transit_peptide(1-45); Cytoplasmic(46-92); interfacial(93-114); Cytoplasmic(115-544)`
+
+**Assessment: Refine location from direct human evidence.** PMID:29194833 directly studies human COQ8B-HA in HEK293 mitochondria: protease protection places the C terminus in the matrix, and carbonate extraction distinguishes peripheral association from integral insertion. This is not merely a COQ8A analogy. Refine all three mitochondrial-membrane rows to mitochondrial inner membrane, while retaining root mitochondrion rows. The experiments do not map the predicted 93-114 element or establish the predicted transit-peptide cleavage boundary.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.

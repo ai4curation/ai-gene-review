@@ -71,3 +71,13 @@ cascade) and cooperate as hetero-oligomers.
 - OpenScientist (2 iterations; `SPRY1-hypotheses/spry1-grb2-sh3-motif/openscientist.md`) scanned human, mouse and zebrafish SPRY1, SPRY2 and SPRY4 for the PxxPxR GRB2 SH3-binding motif. The only canonical C-terminal motif is SPRY2 PTVPPR (position 304); SPRY1 has none. This agrees with Lao 2006/2007 [PMID:16893902 "found exclusively on Spry2"; PMID:17255109 "An exclusive, necessary, but cryptic PXXPXR motif in the C terminus of Spry2"].
 - SPRY1 keeps the N-terminal NEYTEG Tyr53, so any SPRY1-GRB2 binding would be phospho-tyrosine dependent (Hanafusa 2002, PMID:12402043, abstract only). Gross 2001 (PMID:11585837) disputes sequestration. Even for SPRY2, GRB2 binding was dispensable for ERK inhibition in one study [PMID:17689925 "These results are evidence that the Sprouty2 mechanism of ERK inhibition is independent of Grb2 binding."].
 - Decision: deleted the NEW GO:0140311 protein sequestering activity proposal. A refuted or unsupported AI proposal is deleted, not set to REMOVE. Accepted the IBA GO:0004860 protein kinase inhibitor activity and made it the core MF. GRB2 sequestration is kept as a lead in the description and suggested questions.
+
+## 2026-11-04: DeepTMHMM2 S20 topology audit
+
+Source: [DeepTMHMM2 v1](https://doi.org/10.64898/2026.08.24.746435), supplied workbook `media-1.xlsx`, S20 row 9, O43609. Author evidence category: **Peripheral**. These are the authors' predictions, with one-based inclusive coordinates:
+
+`Cytoplasmic(1-256); reentrant(257-275); Cytoplasmic(276-319)`
+
+**Assessment: Retain; paralog hypothesis.** The S20 row refers to SPRY2. PMID:41362608 proposes a C-terminal amphipathic membrane-interacting helix for SPRY2; it does not establish a reentrant SPRY1 segment at 257-275. Retain current membrane recruitment/localization and record the segment only as a paralog-supported candidate.
+
+The complete source row, workbook hash and cross-gene decisions are retained in [the audit](../../../projects/DEEPTMHMM2.md). Membrane-contact geometry is considered separately from organelle localization and molecular function; no new function/process annotation is derived from this prediction.
