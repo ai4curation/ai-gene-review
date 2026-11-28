@@ -56,8 +56,11 @@ the vectorial (ratchet/motor) inward movement of the incoming polypeptide.
   mitochondrial *inner membrane*, but the human ortholog is matrix-localized and only *loosely*
   membrane-associated (PMID:10339406); whether worm TIN-44 is peripheral on the matrix face or
   more tightly membrane-anchored is untested.
-- **Loss-of-function phenotype / essentiality in C. elegans not characterized** in the cached
-  literature. (Mammalian TIMM44 is essential; worm phenotype not established here.)
+- **Essentiality established; import activity not characterized.** A homozygous-lethal deletion
+  allele exists (`T09B4.9(ok1792)`, CGC strain VC1344, balanced over hT2; non-GFP homozygotes
+  arrest as early larvae; https://cgc.umn.edu/strain/VC1344), consistent with the essential
+  mammalian TIMM44. What remains uncharacterised in the cached literature is TIN-44's direct
+  mitochondrial-import activity and its preprotein client classes (no biochemical worm assay).
 
 ## Existing GOA annotations (6) — review plan
 
