@@ -37,6 +37,8 @@ channel expressed in HEK293T cells and gated by patch pressure supports
 `GO:0008381` or `GO:0140135`, but it does not prove detection of touch, flow, or
 cartilage compression.
 
+### Osmotic channel MF
+
 Hypotonic-swelling assays can support osmotic channel terms, such as
 `GO:1990760` **osmolarity-sensing monoatomic cation channel activity**, when the
 paper identifies the channel that opens after the osmotic stimulus. Use
@@ -46,20 +48,20 @@ hypotonic medium is not enough by itself.
 
 ### Mechanical-detection BP
 
-`GO:0050982` is **detection of mechanical stimulus**. Its children name
-specialized contexts such as `GO:0050976` **detection of mechanical stimulus
-involved in sensory perception of touch**, `GO:0050973` **detection of
-mechanical stimulus involved in equilibrioception**, `GO:0050974` **detection
-of mechanical stimulus involved in sensory perception**, and `GO:0035995`
-**detection of muscle stretch**.
+`GO:0050982` is **detection of mechanical stimulus**. Its descendants name
+specialized contexts such as `GO:0050974` **detection of mechanical stimulus
+involved in sensory perception** and its children `GO:0050976` **detection of
+mechanical stimulus involved in sensory perception of touch**, `GO:0050973`
+**detection of mechanical stimulus involved in equilibrioception**, plus other
+descendants such as `GO:0035995` **detection of muscle stretch**.
 
 Use this biological-process branch when the gene product acts at the point of
 conversion from force into the first biological signal in a real sensory or
 mechanotransducing cell. This follows the same logic that Syeda et al. used to
-ask whether a candidate is expressed in the mechanosensory cell, required for
-the mechanically activated current, and sufficient after heterologous
-expression or purification (PMID:27829145). For a mechanotransduction ion
-channel, require a chain like this:
+ask whether a candidate channel is expressed in mechanosensitive cells,
+required for mechanosensitivity without broadly disrupting the cell,
+pore-forming, and altered by pore mutations (PMID:27829145). For a
+mechanotransduction ion channel, require a chain like this:
 
 - the gene is expressed at the force-sensing site in the relevant cell
 - loss or acute inhibition of the gene reduces the mechanically evoked response
@@ -75,17 +77,20 @@ paper measures channel activity.
 
 `GO:0009612` **response to mechanical stimulus** and `GO:0071260` **cellular
 response to mechanical stimulus** are broad response terms, not synonyms for the
-initial detection step. When a review accepts `GO:0050982` or a child,
-`GO:0009612` is a true but less informative ancestor and should normally be
-`TOO_GENERAL`. Keep `GO:0071260` only when the evidence supports a real cellular
-response that is downstream or contextual rather than the core detection
-mechanism.
+initial detection step. Use `KEEP_AS_NON_CORE` when the evidence shows a real
+mechanical-stimulus response that is peripheral to the gene product's direct
+function. Use `MARK_AS_OVER_ANNOTATED` when a row rests only on a distal
+knockout phenotype, expression change, or matrix-remodeling effect and the
+evidence does not place the gene in the immediate cellular response or detection
+step. Use `MODIFY` to `GO:0050982` or a child only when that row's own evidence
+reaches the first mechanotransduction step; a propagated IEA or IBA row that
+stops at a response term should not be refined past its evidence.
 
 ## Assay-to-annotation mapping
 
 | Assay or perturbation | MF support | BP support | Curation rule |
 | --- | --- | --- | --- |
-| Pressure clamp of a cell-attached, inside-out, or whole-cilium patch | Direct support for `GO:0008381` or a child when a pressure-response curve gates a defined current and loss, mutation, or expression identifies the channel | Alone, weak; combine with cell expression and loss of the native mechanical response | Record the pressure range. A clear monotonic response in the same operating range as established mechanosensitive channels is strong. In comparable cell-attached recordings, mouse Piezo1 was half-maximal at about 28-31 mm Hg; the PKD1L1/PKD2L1 complex had no measurable increase from 0 to 60 mm Hg and only responded at 80-100 mm Hg. Activation only at extreme pressure is a caution flag, not automatic support for a core BP. |
+| Pressure clamp of a cell-attached, inside-out, or whole-cilium patch | Direct support for `GO:0008381` or a child when a pressure-response curve gates a defined current and loss, mutation, or expression identifies the channel | Alone, weak; combine with cell expression and loss of the native mechanical response | Record the pressure range and compare it with a known sensor measured in a comparable assay; do not apply a fixed pressure cutoff across assay systems. A clear monotonic response in the same operating range as established mechanosensitive channels is strong. In comparable cell-attached recordings, mouse Piezo1 was half-maximal at about 28-31 mm Hg; the PKD1L1/PKD2L1 complex had no measurable increase from 0 to 60 mm Hg and only responded at 80-100 mm Hg. Activation only at extreme pressure relative to a positive sensor is a caution flag, not automatic support for a core BP. |
 | Whole-cell indentation or poking with a blunt probe | Strong support when expression of the candidate gives a current to naive cells or loss of the candidate removes the native current | Strong in a native sensory cell when the candidate is expressed at that site and loss removes a mechanically evoked receptor current | The stimulus reaches the channel through cell shape, membrane, cortex, and attachments, so the assay can identify a cellular mechanotransducer without proving force-from-lipids gating. |
 | Deflection of a calibrated pillar, probe, cilium, neurite, or hair bundle | Usually indirect for MF unless a channel current is measured or the candidate is independently shown to be the pore | Can be strong for the BP when the deflected structure is the physiological force-sensing organelle and gene loss specifically removes the response | Distinguish direct sensors from structural components that place the sensor correctly. A bundle scaffold may be required for sound detection without being a mechanosensitive channel. |
 | Laminar or oscillatory fluid shear/flow | Insufficient for MF by itself | Strong for endothelial, ciliary, or other flow-detection BPs when shear is defined and gene loss blocks the immediate response | Flow can activate channels, junctions, cilia, ATP release, GPCRs, integrins, and nitric-oxide signaling. Annotate MF only when a channel is tied to a mechanically gated conductance. |
@@ -97,24 +102,25 @@ mechanism.
 
 Some channels open under pressure or stretch but only after the stimulus has
 left the normal working range of an established mechanotransduction assay.
+The project does **not** set a fixed pressure or membrane-tension cutoff; judge
+the response against a known mechanosensor measured in a comparable assay, such
+as PIEZO1 in cell-attached pressure-clamp recordings, and use a closer positive
+control when one exists.
+
 Treat these as high-threshold hits:
 
+- record the applied range, inactive lower range, and comparator used for the
+  threshold judgment
 - do **not** use high-pressure opening as the sole evidence for a core
   `detection of mechanical stimulus` BP
 - do **not** call a primary-cilium or flow role mechanical when the same paper
   tested physiological pressure and found no response
-- for MF, record the applied range and whether lower pressures were inactive
-- when the only response is at an extreme stimulus, leave the annotation
-  `UNDECIDED` or mark it over-annotated until the project settles a threshold
+- when the only response is at an extreme stimulus relative to that comparator,
+  mark the annotation `MARK_AS_OVER_ANNOTATED`; reserve `UNDECIDED` for evidence
+  that cannot be checked
 - rescue the claim only with independent evidence that the cell truly reaches
   that force range or that another mechanical geometry gates the channel at a
   plausible membrane tension
-
-The policy decision that remains open is numeric. The guide should make
-reviewers record pressure in mm Hg, kPa, or membrane tension when the paper
-provides it, but this project still needs cmungall to decide whether there is a
-hard cutoff for cell-attached pressure clamp or a relative rule keyed to each
-published assay.
 
 ## Worked examples
 
@@ -202,18 +208,13 @@ PKD1L1/PKD2L1 pressure response is far beyond Piezo1's usual operating range
 That evidence supports PKD2L1 as part of a ciliary cation channel, not as a
 normal-threshold mechanosensitive channel or as a detector of physiological
 mechanical stimulus. Use it as the template for high-threshold rows: quote the
-pressure range, avoid a core BP unless another paper supplies physiological
-mechanosensation evidence, and list any cutoff decision for cmungall rather
-than deciding it ad hoc inside one gene review.
+pressure range, compare it with a known sensor from a comparable assay, avoid a
+core BP unless another paper supplies physiological mechanosensation evidence,
+and mark existing mechanosensitive MF rows over-annotated when the only opening
+is far beyond the comparator range.
 
 ## Open questions for cmungall
 
-- Should this project adopt a hard pressure or membrane-tension cutoff for
-  `GO:0008381`, or only require comparison with positive and negative controls
-  in the same assay?
-- Is activation only at 80 to 100 mm Hg in a cell-attached patch ever enough
-  for non-core `GO:0008381`, or should it be treated as over-threshold noise
-  unless a native cell reaches an equivalent force?
 - Which BP should be preferred when hypotonicity activates a channel through
   membrane stretch: an osmotic response term, `detection of mechanical
   stimulus`, or both only after orthogonal mechanical assays?
