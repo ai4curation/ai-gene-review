@@ -1,19 +1,21 @@
-"""Compare benchmark conditions target by target (peptalk runs and agent-review).
+"""Compare benchmark conditions and predictors target by target.
 
-Writes a Markdown report: a summary table (targets yes, NOT targets yes, decoys
-yes per condition), targets split by whether the baseline GOA input already
-entails them (any evidence code: the agent-review condition is handed these
-rows and scores yes by keeping one), the same split by GO aspect, and one row
-per target with each condition's verdict.
+Reads generic Prediction files (the same inputs as ``benchmark score``) and
+writes a Markdown report: a summary table (targets yes, NOT targets yes, decoys
+yes per condition and predictor), targets split by whether the baseline GOA
+input already entails them (any evidence code: the agent-review condition is
+handed these rows and scores yes by keeping one), the same split by GO aspect,
+and one row per target with each run's verdict.
 
     uv run python projects/SEQFUN_BENCHMARK/scripts/compare_conditions.py \\
         benchmarks/human-goa-2025-06/human-goa-2025-06.yaml \\
-        --peptalk benchmarks/human-goa-2025-06/runs/blind-claude-opus-5-5.jsonl ... \\
-        --reviews-dir benchmarks/human-goa-2025-06/runs/agent-review/genes \\
+        -p benchmarks/human-goa-2025-06/predictions/blind-peptalk-claude-opus-5-5.jsonl ... \\
+        -p benchmarks/human-goa-2025-06/predictions/agent-review-ai-gene-review-claude-opus-5-5.jsonl \\
         --baseline-dir benchmarks/human-goa-2025-06/run-inputs/baseline-goa \\
         -o projects/SEQFUN_BENCHMARK/human-goa-2025-06-comparison.md
 """
 
+import csv
 from collections import Counter
 from pathlib import Path
 
@@ -21,11 +23,10 @@ import typer
 import yaml
 
 from ai_gene_review.benchmark.build import load_context
-from ai_gene_review.benchmark.run import (
-    peptalk_verdicts,
+from ai_gene_review.benchmark.predictions import (
     queries,
-    read_jsonl,
-    review_verdicts,
+    read_prediction_set,
+    verdicts as prediction_verdicts,
 )
 from ai_gene_review.benchmark.sources import DEFAULT_CACHE
 
@@ -49,35 +50,37 @@ def baseline_terms(goa: Path) -> set[str]:
 
     >>> import tempfile
     >>> p = Path(tempfile.mkdtemp()) / "x-goa.tsv"
-    >>> rows = ["h", "\t".join(["U", "A", "S", "enables", "GO:1"]),
-    ...         "\t".join(["U", "A", "S", "NOT|enables", "GO:2"])]
+    >>> rows = ["QUALIFIER\tGO TERM", "enables\tGO:1", "NOT|enables\tGO:2"]
     >>> _ = p.write_text("\n".join(rows) + "\n")
     >>> sorted(baseline_terms(p))
     ['GO:1']
     """
-    terms = set()
-    for line in goa.read_text().splitlines()[1:]:
-        cols = line.split("\t")
-        if not cols[3].startswith("NOT"):
-            terms.add(cols[4])
-    return terms
+    with goa.open(newline="") as fh:
+        return {
+            row["GO TERM"]
+            for row in csv.DictReader(fh, delimiter="\t")
+            if not row["QUALIFIER"].startswith("NOT")
+        }
 
 
 @app.command()
 def main(
     benchmark_file: Path,
-    peptalk: list[Path] = typer.Option(...),
-    reviews_dir: Path = typer.Option(...),
+    predictions: list[Path] = typer.Option(
+        ..., "--predictions", "-p", help="Prediction files (.jsonl or .yaml)."
+    ),
     baseline_dir: Path = typer.Option(..., help="run-inputs/baseline-goa folder."),
-    review_label: str = typer.Option("agent-review"),
     output: Path = typer.Option(..., "--output", "-o"),
 ) -> None:
     benchmark = yaml.safe_load(benchmark_file.read_text())
     ctx, _ = load_context(benchmark["spec"], DEFAULT_CACHE)
-    verdicts = peptalk_verdicts(benchmark, read_jsonl(peptalk))
-    verdicts.update(review_verdicts(benchmark, ctx, reviews_dir, review_label))
-    runs = sorted({(c, m) for c, m, _, _ in verdicts})
-    names = [f"{c} {m}".strip() for c, m in runs]
+    verdicts: dict[tuple[str, str, str, str], str] = {}
+    for path in predictions:
+        verdicts.update(
+            prediction_verdicts(benchmark, read_prediction_set(path)["predictions"])
+        )
+    runs = sorted({(c, p) for c, p, _, _ in verdicts})
+    names = [f"{c} {p}" for c, p in runs]
 
     rows = []
     for item in benchmark["items"]:
@@ -97,15 +100,15 @@ def main(
                         for g in given
                     ),
                     "verdicts": [
-                        verdicts.get((c, m, item["id"], term), "missing")
-                        for c, m in runs
+                        verdicts.get((c, p, item["id"], term), "missing")
+                        for c, p in runs
                     ],
                 }
             )
 
     lines = [f"# Condition comparison: {benchmark['id']}", ""]
     lines += [
-        "| condition | targets yes | NOT targets yes | decoys yes |",
+        "| condition and predictor | targets yes | NOT targets yes | decoys yes |",
         "|---|---|---|---|",
     ]
     for i, name in enumerate(names):
@@ -127,10 +130,10 @@ def main(
         "",
         f"{n_in} of {len(targets)} targets are entailed by a term (any evidence code) in "
         "the baseline GOA file that the agent-review condition was given. A review "
-        "scores yes on these by keeping a row it was handed; the peptalk conditions "
-        "never see that file.",
+        "scores yes on these by keeping a row it was handed; the blind and organism "
+        "conditions never see that file.",
         "",
-        f"| condition | in baseline input (n={n_in}) | not in baseline input "
+        f"| condition and predictor | in baseline input (n={n_in}) | not in baseline input "
         f"(n={len(targets) - n_in}) |",
         "|---|---|---|",
     ]
@@ -147,7 +150,7 @@ def main(
     lines += ["", "## Targets yes, by GO aspect", ""]
     aspects = sorted({r["aspect"] for r in rows if r["role"] == "TARGET"})
     lines += [
-        "| condition | " + " | ".join(aspects) + " |",
+        "| condition and predictor | " + " | ".join(aspects) + " |",
         "|---" * (len(aspects) + 1) + "|",
     ]
     for i, name in enumerate(names):

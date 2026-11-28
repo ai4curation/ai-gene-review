@@ -1,38 +1,38 @@
 # Condition comparison: human-goa-2025-06
 
-| condition | targets yes | NOT targets yes | decoys yes |
+| condition and predictor | targets yes | NOT targets yes | decoys yes |
 |---|---|---|---|
-| agent-review claude-opus-5-5 | 10/50 | 1/1 | not asked |
-| blind claude-fable-5-2 | 32/50 | 1/1 | 1/72 |
-| blind-opus claude-opus-5-5 | 28/50 (5 uncertain) | 1/1 | 3/72 (6 uncertain) |
-| organism claude-fable-5-2 | 31/50 (1 missing) | 1/1 | 1/72 |
-| organism-opus claude-opus-5-5 | 28/50 (7 uncertain) | 1/1 | 6/72 (3 uncertain) |
+| agent-review ai-gene-review:claude-opus-5-5 | 10/50 | 1/1 | not asked |
+| blind peptalk:claude-fable-5-2 | 32/50 | 1/1 | 1/72 |
+| blind peptalk:claude-opus-5-5 | 28/50 (5 uncertain) | 1/1 | 3/72 (6 uncertain) |
+| organism peptalk:claude-fable-5-2 | 31/50 (1 missing) | 1/1 | 1/72 |
+| organism peptalk:claude-opus-5-5 | 28/50 (7 uncertain) | 1/1 | 6/72 (3 uncertain) |
 
 ## Targets yes, split by whether the baseline input already entails them
 
-7 of 50 targets are entailed by a term (any evidence code) in the baseline GOA file that the agent-review condition was given. A review scores yes on these by keeping a row it was handed; the peptalk conditions never see that file.
+7 of 50 targets are entailed by a term (any evidence code) in the baseline GOA file that the agent-review condition was given. A review scores yes on these by keeping a row it was handed; the blind and organism conditions never see that file.
 
-| condition | in baseline input (n=7) | not in baseline input (n=43) |
+| condition and predictor | in baseline input (n=7) | not in baseline input (n=43) |
 |---|---|---|
-| agent-review claude-opus-5-5 | 7/7 | 3/43 |
-| blind claude-fable-5-2 | 7/7 | 25/43 |
-| blind-opus claude-opus-5-5 | 6/7 | 22/43 (5 uncertain) |
-| organism claude-fable-5-2 | 7/7 | 24/43 (1 missing) |
-| organism-opus claude-opus-5-5 | 6/7 | 22/43 (7 uncertain) |
+| agent-review ai-gene-review:claude-opus-5-5 | 7/7 | 3/43 |
+| blind peptalk:claude-fable-5-2 | 7/7 | 25/43 |
+| blind peptalk:claude-opus-5-5 | 6/7 | 22/43 (5 uncertain) |
+| organism peptalk:claude-fable-5-2 | 7/7 | 24/43 (1 missing) |
+| organism peptalk:claude-opus-5-5 | 6/7 | 22/43 (7 uncertain) |
 
 ## Targets yes, by GO aspect
 
-| condition | C | F | P |
+| condition and predictor | C | F | P |
 |---|---|---|---|
-| agent-review claude-opus-5-5 | 4/11 | 2/15 | 4/24 |
-| blind claude-fable-5-2 | 8/11 | 11/15 | 13/24 |
-| blind-opus claude-opus-5-5 | 5/11 (3 uncertain) | 10/15 | 13/24 (2 uncertain) |
-| organism claude-fable-5-2 | 6/11 | 11/15 (1 missing) | 14/24 |
-| organism-opus claude-opus-5-5 | 6/11 (1 uncertain) | 9/15 (2 uncertain) | 13/24 (4 uncertain) |
+| agent-review ai-gene-review:claude-opus-5-5 | 4/11 | 2/15 | 4/24 |
+| blind peptalk:claude-fable-5-2 | 8/11 | 11/15 | 13/24 |
+| blind peptalk:claude-opus-5-5 | 5/11 (3 uncertain) | 10/15 | 13/24 (2 uncertain) |
+| organism peptalk:claude-fable-5-2 | 6/11 | 11/15 (1 missing) | 14/24 |
+| organism peptalk:claude-opus-5-5 | 6/11 (1 uncertain) | 9/15 (2 uncertain) | 13/24 (4 uncertain) |
 
 ## Per target
 
-Y yes, n no, ? uncertain, - missing. Columns: 1 = agent-review claude-opus-5-5; 2 = blind claude-fable-5-2; 3 = blind-opus claude-opus-5-5; 4 = organism claude-fable-5-2; 5 = organism-opus claude-opus-5-5.
+Y yes, n no, ? uncertain, - missing. Columns: 1 = agent-review ai-gene-review:claude-opus-5-5; 2 = blind peptalk:claude-fable-5-2; 3 = blind peptalk:claude-opus-5-5; 4 = organism peptalk:claude-fable-5-2; 5 = organism peptalk:claude-opus-5-5.
 
 | gene | term | role | aspect | in baseline input | 1 | 2 | 3 | 4 | 5 |
 |---|---|---|---|---|---|---|---|---|---|

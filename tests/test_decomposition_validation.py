@@ -233,6 +233,7 @@ def _row(term: dict, action: str, **review) -> dict:
         ("KEEP_AS_NON_CORE", True),
         ("MARK_AS_OVER_ANNOTATED", True),
         ("REMOVE", True),
+        ("TOO_GENERAL", True),
         ("ACCEPT", False),
     ],
 )
@@ -249,6 +250,27 @@ def test_decomposition_replacement_must_be_acceptable(other_action, warns):
     ]
     found = "decomposition_replacement_not_acceptable" in _check_rows(rows)
     assert found is warns
+
+
+@pytest.mark.parametrize(
+    "other_action,remedy",
+    [
+        ("KEEP_AS_NON_CORE", "KEEP_AS_NON_CORE on the precomposed term"),
+        ("TOO_GENERAL", "more specific term"),
+    ],
+)
+def test_suggestion_names_the_remedy_for_the_action(other_action, remedy):
+    """TOO_GENERAL never says the claim is false, so its remedy differs."""
+    rows = [
+        _row(PRECOMPOSED, "MODIFY", proposed_replacement_terms=[GENUS]),
+        _row(GENUS, other_action),
+    ]
+    report = ValidationReport(file_path=Path("test"), is_valid=True)
+    check_decomposition({"existing_annotations": rows}, report, get_project_root())
+    (issue,) = [
+        i for i in report.issues if i.check_type == "decomposition_replacement_not_acceptable"
+    ]
+    assert remedy in (issue.suggestion or "")
 
 
 def test_genus_replacement_without_decomposed_into_is_checked_too():

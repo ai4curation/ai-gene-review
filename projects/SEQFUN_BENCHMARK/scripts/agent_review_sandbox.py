@@ -20,6 +20,7 @@ Usage::
         benchmarks/human-goa-2025-06/human-goa-2025-06.yaml SANDBOX_ROOT
 """
 
+import csv
 import json
 import shutil
 import subprocess
@@ -58,16 +59,17 @@ def cited_pmids(goa: Path) -> set[str]:
 
     >>> import tempfile
     >>> p = Path(tempfile.mkdtemp()) / "x.tsv"
-    >>> _ = p.write_text("h\\n" + "\\t".join(["a"] * 9 + ["PMID:12|GO_REF:1"]) + "\\n")
+    >>> _ = p.write_text("GO TERM\\tREFERENCE\\nGO:1\\tPMID:12|GO_REF:1\\n")
     >>> sorted(cited_pmids(p))
     ['12']
     """
-    pmids = set()
-    for line in goa.read_text().splitlines()[1:]:
-        for ref in line.split("\t")[9].split("|"):
-            if ref.startswith("PMID:"):
-                pmids.add(ref.split(":", 1)[1])
-    return pmids
+    with goa.open(newline="") as fh:
+        return {
+            ref.split(":", 1)[1]
+            for row in csv.DictReader(fh, delimiter="\t")
+            for ref in row["REFERENCE"].split("|")
+            if ref.startswith("PMID:")
+        }
 
 
 def pub_year(path: Path) -> int | None:

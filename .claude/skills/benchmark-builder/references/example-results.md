@@ -15,7 +15,7 @@ The four pseudoenzyme items use their own paper floor of 2023-01-01. The full re
 | homolog_leakage | 3 | 47 | 0 | 0 |
 | near_duplicate | 33 | 15 | 2 | 0 |
 | uniprot_leakage | 49 | 48 | 5 | 0 |
-| reference_recency | 0 | 153 | 153 | 0 |
+| reference_recency | 0 | 51 | 102 | 0 |
 | header_leakage | 45 | 0 | 6 | 0 |
 | decoy | 72 | 0 | 0 | 0 |
 | review_agreement | 12 | 6 | 0 | 0 |
@@ -52,7 +52,8 @@ The four pseudoenzyme items use their own paper floor of 2023-01-01. The full re
 These are `peptalk ask` runs on the 123 claims (50 targets, 1 NOT target, 72
 decoys), with shuffled copies of each sequence in the blind conditions, all at
 high effort. The scores are in `human-goa-2025-06-scores.{yaml,md}`; the raw
-JSONL lives in the git-ignored `runs/`. Actual spend was $22.04 by peptalk's
+JSONL lives in the git-ignored `runs/`; the converted predictions are committed
+in `predictions/` and reproduce the scores exactly. Actual spend was $22.04 by peptalk's
 log, canaries included: Fable 5.2 blind $12.79, Fable 5.2 organism $4.15, Opus
 5.5 blind $3.11, Opus 5.5 organism $1.95. The calls were direct API calls. Batch
 was not used because `peptalk batch submit` takes one parameter set for every
@@ -81,14 +82,17 @@ as missing. Opus refused none.
 
 ## Agent-review run (2026-11-26)
 
-The AGENT_REVIEW condition was run on all 24 items with Opus 5.5 at high
-effort, each gene in a sandbox holding only the baseline GOA, the UniProt entry
+The AGENT_REVIEW condition was run on all 24 items by the
+`ai-gene-review:claude-opus-5-5` predictor (Opus 5.5 at high effort), each gene in a sandbox holding only the baseline GOA, the UniProt entry
 version of the baseline date and pre-baseline cached papers, for $14.33. It
 found 10 of the 50 targets. Seven of those were targets already present in
 the baseline GOA file it was given (IBA, IEA or ISS rows, the `prior_prediction`
 WARNs), which it kept. It found 3 of the other 43. A review must name a term
 unprompted, while the peptalk runs are asked about each target, so compare the
 two with care, and split agent-review targets by whether the input already
-entails them. The
+entails them. The reviews were converted with `benchmark import --from
+reviews` into `predictions/agent-review-ai-gene-review-claude-opus-5-5.jsonl`
+(51 predictions; decoys are not asked of a review), which reproduces the
+earlier agent-review scores exactly. The
 method, the leakage audit and the comparison table are in
 `projects/SEQFUN_BENCHMARK.md`.

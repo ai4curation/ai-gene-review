@@ -26,7 +26,7 @@ from pathlib import Path
 import typer
 import yaml
 
-from ai_gene_review.benchmark.run import review_claims
+from ai_gene_review.benchmark.importers.reviews import review_claims
 
 NETWORK = re.compile(
     r"curl|wget|https?://|requests\.|urllib|rest\.uniprot|ebi\.ac\.uk|ncbi"

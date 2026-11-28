@@ -1,0 +1,49 @@
+# NOS3 review notes
+
+Seed: NOS3, a reviewed human Swiss-Prot nitric-oxide synthase in PANTHER
+PTHR43410.
+
+`just deep-research-claude-code human NOS1` failed before a NOS1 provider file
+could be written because the only configured deep-research provider in this
+runtime was not logged in. The same provider/session limitation applied to the
+NOS family, so no provider-style deep-research file was created for NOS3. The
+review used the fetched UniProt record, GOA-seeded publication caches, Reactome
+records, the cached PTHR43410 family review, and
+`interpro/panther/PTHR43410/PTHR43410-paint.tsv`.
+
+`just paint-losses human NOS3` reported that P29474 is not a leaf of the cached
+PTHR43410 tree and therefore losses could not be checked at the leaf level; no
+IRD or IKR loss was reported for the NOS3 lineage.
+
+Main curation decisions:
+
+- Keep nitric-oxide synthase activity, the L-arginine-to-NO process and all
+  catalytic cofactor-binding rows as the NOS3 core.
+- Keep Golgi, Golgi-membrane, caveola and plasma-membrane rows because eNOS
+  lipidation and trafficking place its main endothelial activity at these
+  compartments.
+- Keep vasodilation, blood-pressure, angiogenesis and aortic-valve rows as
+  eNOS-specific vascular signaling, but keep developmental and endothelial-cell
+  migration rows non-core where they reflect one tissue context or downstream NO
+  signaling.
+- Mark uncoupled superoxide production as over-annotated rather than a normal
+  evolved NOS3 activity, and remove every bare `GO:0005515` row under the
+  project protein-binding policy while preserving each high-throughput
+  interaction row separately.
+- Remove `GO:0019430 removal of superoxide radicals` because the cited BH4
+  recycling paper reports eNOS uncoupling with increased eNOS-dependent
+  superoxide and reduced NO production, the reverse of superoxide radical
+  removal [PMID:19666465].
+- Remove the legacy cadmium-binding row because the cited NOS-III mutagenesis
+  paper establishes Cys-99 involvement in tetrahydrobiopterin binding and heme
+  retention, not cadmium as a NOS3 cofactor [PMID:7488039].
+- A second review pass kept the pulmonary-valve and endocardial-cushion rows as
+  non-core mouse-orthology developmental phenotypes instead of rejecting them
+  with the human aortic-valve Notch1/NOS3 paper. It also changed the parent
+  `GO:0008217 regulation of blood pressure` row to TOO_GENERAL because the
+  accepted `GO:0045776 negative regulation of blood pressure` child captures the
+  vascular-tone direction more precisely.
+- The legacy cadmium-binding row was changed to MODIFY toward `GO:0008270 zinc
+  ion binding`, the obsolete tetrahydrobiopterin-metabolism row was removed, and
+  the scaffold protein binding row was kept because UniProt records NOS3
+  interactions with NOSIP, NOSTRIN and HSP90AB1.
