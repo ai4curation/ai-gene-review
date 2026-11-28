@@ -27,3 +27,5 @@ PTHR23255 contains BMP, activin/nodal, AMH and TGF-beta receptor branches. The s
 - Direct TGF-beta ligand-binding rows were supported with PMID:7852346, while receptor-complex assembly was supported with PMID:1333888 and Reactome R-HSA-170846.
 - The seeded TGFBR2 `SMAD binding` rows were left `UNDECIDED`: the cached papers support TGFBR2-dependent signaling and TGFBR1 recruitment, but did not show that TGFBR2 itself directly binds R-SMAD substrates.
 - Cholesterol/caveola/membrane-raft rows were kept only where PMID:17878231 directly placed TGF-beta receptors in caveolae or lipid rafts; abstract-only ROS, proliferation, xenobiotic, EMT, and endocardial-cushion rows were left unresolved.
+
+- PMID:34568316 supports TGFBR2-SE as a secreted soluble splice variant and explains the extracellular-region rows as isoform-specific rather than a localization of the canonical transmembrane receptor.

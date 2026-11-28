@@ -23,6 +23,6 @@ PTHR23255 contains BMP, activin/nodal, AMH and TGF-beta receptor branches. The s
 
 ## TGFBR1-specific calls
 
-- TGFBR1/ALK5 was treated as the canonical type-I TGF-beta receptor. Activin-specific rows inherited from the ALK4/ALK7 branch were removed instead of projected onto ALK5.
+- TGFBR1/ALK5 was treated as the canonical type-I TGF-beta receptor. Activin-specific PAINT rows inherited from the ALK4/ALK7 branch were marked as activin-branch over-annotation rather than projected onto ALK5.
 - PMID:9311995 was used for direct TGFBR1-SMAD binding; the receptor-complex papers were not used as evidence for SMAD binding.
 - Only contextual outputs with exact cached support, such as EMT/migration, membrane raft regulation, cholesterol response, and I-SMAD binding, were kept. Many proliferation, junction-disassembly, wound-healing, and broad transcriptional outputs were left `UNDECIDED`.

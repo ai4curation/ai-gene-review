@@ -23,6 +23,8 @@ PTHR23255 contains BMP, activin/nodal, AMH and TGF-beta receptor branches. The s
 
 ## ACVR1-specific calls
 
-- PMID:9748228 separated ALK2 BMP7-SMAD1/5 signaling from activin-ALK4 signaling; ACVR1 activin/TGF-beta ligand-binding and activin receptor-complex rows were therefore removed or left unresolved rather than carried forward from old activin-receptor nomenclature.
+- PMID:8242742 was retained for direct ActR-I activin receptor activity/complex rows, while PMID:9748228 separated the preferred wild-type ALK2 BMP7-SMAD1/5 response from ALK4 activin signaling. TGF-beta binding was left unresolved because the cached PMID:8242742 abstract assigns shared TGF-beta/activin type-I activity to TSR-I rather than ActR-I.
 - PMID:18436533 supports ACVR1A as the preferred type-I receptor for BMP6/7 signaling in primary human mesenchymal stem cells, including osteoblastic differentiation outputs.
 - The cached PMID:19506109 abstract verifies defective ALK2 L343P kinase/BMP reporter activity and abnormal atrioventricular canal formation, but did not by itself verify the more specific mitral-valve, endocardial-cushion, septum, or dorsal-identity rows; those were left `UNDECIDED`.
+
+- PMID:26333933 established the FOP-specific ACVR1 R206H activin-A gain of response: wild-type ACVR1 is normally antagonized by activin A in BMP6 signaling, whereas the R206H mutant signals through SMAD1/5 in response to activin A and drives heterotopic ossification in the knock-in mouse model.
