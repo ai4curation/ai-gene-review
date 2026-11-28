@@ -36,7 +36,17 @@ experiments:
   in stretch-sensitive neuronal activity in proprioceptive muscle afferents ex
   vivo"].
 
-The renal blood-flow row is newer and context-specific. Hill et al. 2025
+Human biallelic PIEZO2 loss-of-function papers support the same somatosensory
+reading as the mouse loss-of-function work: Chesler et al. 2016 found selective
+loss of discriminative touch and profound loss of proprioception in two patients
+with compound-inactivating variants [PMID:27653382 "Each patient carried
+compound-inactivating variants in PIEZO2, and each had a selective loss of
+discriminative touch perception"], and Mahmud et al. 2017 reported a
+homozygous truncating PIEZO2 variant in three siblings with proprioception and
+touch-sensation deficits [PMID:27607563 "These siblings also displayed deficits
+in proprioception and touch sensation"].
+
+The renal blood-flow row is newer and context-specific. Hill et al. 2026
 localized Piezo2 to mouse juxtaglomerular and mesangial cells, showed that
 cells of the renin lineage have mechanically activated currents, and found that
 Piezo2 loss dysregulates JG-cell calcium oscillations and renin
