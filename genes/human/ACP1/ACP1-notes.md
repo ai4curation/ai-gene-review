@@ -12,6 +12,8 @@
 - PMID:11971983 was not in the ACP1 GOA source list but was fetched to evaluate the orthology-based `GO:0017124` SH3 domain binding row. The abstract says the alpha II-spectrin SH3 domain specifically binds the ACP1/LMW-PTP A isoform and not the B or C isoforms.
 - PMID:9499402 directly reports recruitment of LMW-PTP to EphB1 receptor complexes; PMID:15846844 and PMID:25556234 describe broad viral-protein interaction screens. All three rows assert only bare `GO:0005515`, so they are removed by the generic-protein-binding policy without claiming that the reported interaction is false.
 - PMID:19056867 and PMID:23533145 are exosome proteomics studies. The available cached text describes high-throughput urinary or EPS-urine exosome proteome surveys but does not name ACP1 in the body text, consistent with the GOA rows coming from supplementary tables.
+- QuickGO showed that the rat GO:0007268 source rows on UniProtKB:P41498 are RGD IEP and NAS rows from PMID:10480315. That PubMed abstract reports abundance of rat LMW-PTP in nerve-ending fractions and suggests an important role in synaptic function, but the full rat source was not read here, so the Ensembl-Compara GO:0007268 transfer and its derived GOC GO:0045202 row are left undecided.
+- PMID:10336608 shows that LMPTP-B inhibits PDGF-induced c-fos induction, and PMID:9499402 reports EphB1-dependent LMW-PTP recruitment to receptor complexes. Those leads were preserved as gaps/questions rather than a NEW PDGF or Eph biological-process annotation because the abstract-only records do not identify an endogenous direct substrate in human cells.
 
 ## Family/module scope
 
