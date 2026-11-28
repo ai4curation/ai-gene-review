@@ -1,0 +1,19 @@
+# Curation Notes for Escherichia phage Mu mom (P06018)
+
+## Summary of Gene Function
+- **Gene symbol**: `mom` (locus tag `Mup55`; UniProt `P06018`, Methylcarbamoylase mom / N6-carbamoylmethyladenine synthase Mom)
+- **Organism**: *Escherichia phage Mu* (`NCBITaxon:2681603`)
+- **Function**: Mom (`Mup55`, 241 aa) is a specialized GNAT-superfamily tRNA-dependent DNA aminoacyltransferase (`GO:0016755` `aminoacyltransferase activity`) that catalyzes the hypermodification of ~15% of adenine residues in double-stranded DNA (at `5'-C/G-A-G/C-N-Py-3'` consensus sequences) to **N6-carbamoylmethyladenine (`6-NcmdA` / `ncm6A`)** (`GO:0006304` `DNA modification`), rendering the packaged phage Mu genome resistant to cleavage by a broad spectrum of bacterial host type I, II, and III restriction endonucleases (`GO:0099018` `symbiont-mediated evasion of host restriction-modification system`) [PMID:41932883, file:BPMU/mom/mom-uniprot.txt].
+- **Resolution of the 50-Year Biochemical Mechanism (PMID:41932883, 2026)**:
+  - Although earlier homology modeling and indirect assays had suggested acetyl-CoA binding (still reflected in the older UniProt text from `PubMed:32369169`), **PMID:41932883** (*Nature Communications*, 2026, "A single viral enzyme drives tRNA-dependent hypermodification of DNA at adenine") definitively reconstituted the complete Mom reaction in vitro and resolved how a single enzyme installs a two-carbon amide-linked carbamoylmethyl adduct on DNA:
+  - **Step 1 (tRNAGly-dependent glycyl transfer)**: Mom hijacks host glycyl-tRNAGly (`Gly-tRNAGly`, specifically recognizing the `U73` discriminator base and `C2-G71`/`G3-C70` acceptor stem base pairs of isoacceptors `tRNAGly1`/`tRNAGly2`/`tRNAGly3`) and catalyzes direct transfer of the glycyl moiety from the 3'-CCA terminus of charged `Gly-tRNAGly` onto the exocyclic `N6` amino group of adenine in dsDNA, forming an `N6-glycyl-2'-deoxyadenosine` (`6-gdA`) intermediate.
+  - **Step 2 (Oxygen-dependent oxidative rearrangement to `6-NcmdA`)**: In a second step catalyzed within the Mom active site in the presence of molecular oxygen (`O2`), the `6-gdA` intermediate undergoes an oxidative on-base rearrangement (via peroxy/Schiff-base intermediates, releasing water and ammonia and swapping the `N6` nitrogen with the terminal alpha-amino nitrogen of glycine, as proven by `15N`-glycine and `18O2` isotopic tracing) to yield `N6-carbamoylmethyl-2'-deoxyadenosine` (`6-NcmdA`), conferring complete protection against host restriction endonucleases such as HinfI.
+  - Mom also binds iron (`Fe2+`/`Fe3+`; `GO:0005506` `iron ion binding`) [file:BPMU/mom/mom-uniprot.txt].
+
+## Annotation Review Decisions
+- `GO:0016755` (`aminoacyltransferase activity`, IDA `PMID:41932883`): `ACCEPT` (core catalytic activity of Mom transferring glycine from `Gly-tRNAGly` to DNA adenine `N6`).
+- `GO:0099018` (`symbiont-mediated evasion of host restriction-modification system`, IDA `PMID:41932883` & IEA `GO_REF:0000043`): `ACCEPT` (both rows).
+- `GO:0030430` (`host cell cytoplasm`, IEA): `ACCEPT`.
+- `GO:0046872` (`metal ion binding`, IEA): `MODIFY` to `GO:0005506` (`iron ion binding`) (supported by UniProt `COFACTOR: Name=Fe(2+)... Name=Fe(3+)`, which notes undetectable interaction with Mn2+, Zn2+, Mg2+, Ca2+, Co2+, and Cu2+).
+- Broad parent IEA terms (`GO:0016740` `transferase activity`, `GO:0052031` `symbiont-mediated perturbation of host defense response`, `GO:0052170` `symbiont-mediated suppression of host innate immune response`): `TOO_GENERAL` because they are entailed by `GO:0016755` (`aminoacyltransferase activity`) and `GO:0099018` (`symbiont-mediated evasion of host restriction-modification system`).
+- `NEW` `GO:0006304` (`DNA modification`, `involved_in`, `PMID:41932883`): Mom directly modifies adenine bases in double-stranded DNA to `N6-carbamoylmethyladenine` (`6-NcmdA`).
