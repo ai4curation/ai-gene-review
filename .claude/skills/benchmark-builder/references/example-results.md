@@ -79,3 +79,20 @@ two on target terms, which score as missing (the 2 refused above), and two on
 decoy terms, which are not scored for shuffled sequences. The fifth was on an
 organism-condition target (LRP4 virus receptor activity), which also scores
 as missing. Opus refused none.
+
+## Agent-review run (2026-11-26)
+
+The AGENT_REVIEW condition was run on all 24 items by the
+`ai-gene-review:claude-opus-5-5` predictor (Opus 5.5 at high effort), each gene in a sandbox holding only the baseline GOA, the UniProt entry
+version of the baseline date and pre-baseline cached papers, for $14.33. It
+found 10 of the 50 targets. Seven of those were targets already present in
+the baseline GOA file it was given (IBA, IEA or ISS rows, the `prior_prediction`
+WARNs), which it kept. It found 3 of the other 43. A review must name a term
+unprompted, while the peptalk runs are asked about each target, so compare the
+two with care, and split agent-review targets by whether the input already
+entails them. The reviews were converted with `benchmark import --from
+reviews` into `predictions/agent-review-ai-gene-review-claude-opus-5-5.jsonl`
+(51 predictions; decoys are not asked of a review), which reproduces the
+earlier agent-review scores exactly. The
+method, the leakage audit and the comparison table are in
+`projects/SEQFUN_BENCHMARK.md`.
