@@ -12,6 +12,6 @@
 ## PAINT observations
 
 - `PANTHER:PTN000902303` has the ACP2 acid-phosphatase and lysosome IBD rows. The node includes human ACP2 and ACP4, but the ACP4 clade has diverged to ERBB4-directed protein tyrosine phosphatase activity.
-- `PANTHER:PTN002611605` is the 13-leaf ACP4/ACPT node and is the right target for an IRD that prunes the ACP2-like lysosome and acid-phosphatase assertions.
+- `PANTHER:PTN002611605` is the 13-leaf ACP4/ACPT node and is the right target for an IRD that prunes the ACP2-like lysosome assertion; the acid-phosphatase row may be over-propagated, but direct ACP4 acid-phosphatase evidence should be checked before requesting an IRD.
 - `PANTHER:PTN002480348` is the 21-leaf ACP6 node. LPA phosphatase activity and mitochondrion are supported there; lysobisphosphatidic-acid metabolism is not.
 - `PANTHER:PTN000170711` is an existing IRD that stops the root phosphatase IBD before FRA10AC1.
