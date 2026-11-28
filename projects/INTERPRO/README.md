@@ -37,7 +37,21 @@ just validate-interpro-mappings   # SSSOM structure + GO term/label validation
 
 A removal row (`exactMatch` + `predicate_modifier: Not`) drops the term from every protein the
 entry matches, including the members for which it is correct. Before adding one, run two checks
-and record the result at the end of the row's `comment`, starting "Rule cover (...)".
+and record the result in the row's `comment` as a clause starting "Rule cover (...)". Convention
+is to put it last, but the test is containment, not position.
+
+This is the procedure for rows added from here on. It is not yet true of the whole set: as of
+2026-11-27, 17 of the 25 removal rows carry the note and **8 do not**, across six entries —
+`IPR017682` (`GO:0050660`, `GO:0051536`), `IPR017681` (`GO:0016151`, `GO:0050660`),
+`IPR017679` (`GO:0016151`), `IPR005778` (`GO:0050897`), `IPR002844` and `IPR036080` (both
+`GO:0008901`). Those eight are owed a backfill; until it is done, read the row rather than
+assuming the note is there. This list is hand-maintained and is a list of *owed* work, so its
+failure mode is naming a row that has since been backfilled. Re-derive it rather than trusting
+it: a removal row has the note when its **parsed** `comment` value contains a `Rule cover (`
+clause. Parse the YAML — do not grep the file. The comments are block scalars, so the phrase
+wraps mid-clause on at least two rows (`IPR018194` and `IPR021006`), and a line-based search for
+the literal string silently drops them. That undercount reads as a stale page rather than as a
+broken check, which is the failure this file exists to prevent.
 
 1. **Sole-source check.** List the reviewed annotations of the term whose only InterPro source is
    this entry. Those genes lose the annotation outright. Read their review actions: if reviewers
