@@ -1,6 +1,7 @@
 ---
-title: "Complex Portal Annotation Correctness"
+title: "Complex Portal: Annotation Correctness and Protein-versus-Complex Function"
 maturity: SCOPING
+description: Evaluates the GO annotations Complex Portal generates, and asks when an activity belongs to a protein and when to its complex.
 tags: [PIPELINE]
 species: [human, yeast, DROME, worm, SCHPO, mouse, ECOLI, ARATH, rat]
 genes: [gaa1, CHMP3, BAK1, DFFB, ced-3, PPP3CA, SDHB, ESPL1, MBL2, PDGFA, CLCN7, TERT, CAC2, pstS, DYNC2H1, RPL18A, Actb]
@@ -8,7 +9,7 @@ autolink_gene_symbols: false
 index_group: CROSS_CUTTING
 ---
 
-# Complex Portal Annotation Correctness
+# Complex Portal: Annotation Correctness and Protein-versus-Complex Function
 
 **Bottom line:** Complex Portal (CP) annotates protein complexes, and GOA copies each complex's
 process (BP) and location (CC) terms, but not its function (MF), to every subunit, under
@@ -26,6 +27,32 @@ found a direct contradiction, CHMP3, where CP and UniProt draw opposite conclusi
 paper. The review verdicts judge terms, not references, so reference problems are under-counted.
 The gaa1 case shows one: the fission-yeast GPI transamidase record rests on a paper that only
 predicts GPI-modification sites.
+
+The project's second question is the one behind many of those errors: does an activity belong to
+a protein or to its complex? CP puts the molecular function on the complex entity. GO puts it on
+subunits, as `enables` or `contributes_to`. Several other projects here have met the question
+separately. The sub-page [Does a function belong to the protein or the complex?](COMPLEXPORTAL/protein-or-complex.md)
+draws them together and makes a first measurement. In 877 pairs of a CP complex and one of its MF
+terms, with every subunit reviewed here, GOA gives the activity `enables` on every subunit in 255
+pairs and our reviews do so in 70. At subunit level, 492 GOA `enables` rows are `contributes_to`
+in the reviews. They come mostly from channels, rotary ATPases, complex I and RNA polymerases.
+
+## Two strands
+
+1. **Evaluating CP annotations** (this page). Are the BP and CC rows that CP rolls down to every
+   subunit correct, and do the cited papers support them?
+2. **Protein or complex?** ([sub-page](COMPLEXPORTAL/protein-or-complex.md)). When the evidence
+   for an activity comes from a complex, which chains should carry it (`enables`,
+   `contributes_to` or membership only), and how do CP, GO, GO-CAM and our reviews differ? This
+   strand builds on [PROTEIN_COMPLEX_FUNCTIONS](PROTEIN_COMPLEX_FUNCTIONS.md),
+   [SDH_GP2TERM_CONTRIBUTES_TO](SDH_GP2TERM_CONTRIBUTES_TO.md), [OXPHOS](OXPHOS.md),
+   [BGC](BGC.md) and [FUNCTION_REQUIREMENT_RULES](FUNCTION_REQUIREMENT_RULES.md), and keeps their
+   findings in one place without duplicating their case work.
+
+The two strands meet in CP's own data. The roll-down errors in strand 1 are mostly attribution
+errors: a regulation term on the regulated subunit, a partner's activity in BP form, a
+promiscuous subunit inheriting every complex's processes. CP's complex-level MF is the natural
+reference point for strand 2.
 
 ## Scope and questions
 
@@ -375,6 +402,18 @@ budding yeast CPX-1275) and four predicted human complexes containing GPAA1.
       `reference_review` `MISCITED`.
 - [ ] Prepare feedback for CP and UniProt curators once there are several confirmed cases.
 
+Protein-versus-complex strand (details and further items on the
+[sub-page](COMPLEXPORTAL/protein-or-complex.md#next-steps)):
+
+- [x] Synthesise sibling projects into a working framework (chain, complex with contributors,
+      member only, no stable unit).
+- [x] First measurement: CP complex MF against subunit GOA qualifiers and review
+      `core_functions` ([`data/cp_mf_attribution.yaml`](COMPLEXPORTAL/data/cp_mf_attribution.yaml)).
+- [ ] Adjudicate a stratified sample of the 492 GOA `enables` / review `contributes_to` subunits.
+- [ ] Re-review leads: SCHPO/gaa1 (`core_functions` uses `molecular_function` while its prose says
+      it contributes) and the human EMC subunits that are given `enables` membrane insertase activity.
+- [ ] Ask GO for the convention on heteromeric ion channels and transcription-factor heterodimers.
+
 ## Reproduce
 
 Run from the repo root. Step 1 parses every gene review (about 2 minutes) and writes an
@@ -389,10 +428,31 @@ uv run python $D/scripts/cp_pmid_pubtypes.py $D/data/cp_pmid_usage.yaml     # ad
 uv run python $D/scripts/cp_flag_rules.py /tmp/cp_joined.json $D/data/cp_pmid_usage.yaml $D/data/cp_rule_eval.yaml
 ```
 
+The protein-versus-complex measurement has its own recipe on the
+[sub-page](COMPLEXPORTAL/protein-or-complex.md#reproduce).
+
 Step 1 also writes `data/cp_rejected_rows.yaml` (rows whose action is `MARK_AS_OVER_ANNOTATED`,
 `MODIFY` or `REMOVE`). It matches review annotations on (term, evidence, reference), skips
 `negated` review rows so that a CP row cannot inherit the verdict on a NOT row with the same key,
 and reports any remaining ambiguous matches.
+
+## Related projects
+
+- [PROTEIN_COMPLEX_FUNCTIONS](PROTEIN_COMPLEX_FUNCTIONS.md): attribution framework, review rubric
+  and GO-CAM active/accessory member proposal.
+- [SDH_GP2TERM_CONTRIBUTES_TO](SDH_GP2TERM_CONTRIBUTES_TO.md): upstream ruling for complex II.
+- [OXPHOS](OXPHOS.md): the largest applied case set.
+- [BGC](BGC.md): obligate heterodimers with interface active sites.
+- [FUNCTION_REQUIREMENT_RULES](FUNCTION_REQUIREMENT_RULES.md): rule flags that turned out to be
+  `enables`-versus-`contributes_to` errors.
+- [PSEUDOCAP](PSEUDOCAP.md), [IBA_REVIEW](IBA_REVIEW.md): propagation of complex activity to
+  every subunit.
+- [PROTEIN_DIMERIZATION_TERMS](PROTEIN_DIMERIZATION_TERMS.md),
+  [MOLECULAR_ADAPTOR_ACTIVITY](MOLECULAR_ADAPTOR_ACTIVITY.md): what a non-catalytic subunit's
+  own activity should be.
+- [RNAP_II_HOLOENZYME_OBSOLETION](RNAP_II_HOLOENZYME_OBSOLETION.md),
+  [CHROMATIN_SILENCING_COMPLEX_OBSOLETION](CHROMATIN_SILENCING_COMPLEX_OBSOLETION.md): complex
+  terms without a stable unit.
 
 ## Sources
 
@@ -401,3 +461,6 @@ and reports any remaining ambiguous matches.
 - QuickGO annotation API for UniProtKB:Q9W464
 - `genes/SCHPO/gaa1/gaa1-goa.tsv`, `genes/SCHPO/gaa1/gaa1-ai-review.yaml`
 - PMID:15003443, PMID:23250212, PMID:33496978
+- Complex Portal `complextab` species files, downloaded 2026-11-22
+  (`https://ftp.ebi.ac.uk/pub/databases/intact/complex/current/complextab/`)
+- GO annotation relations: https://geneontology.org/docs/go-annotations/
