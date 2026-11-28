@@ -126,6 +126,21 @@ def candidates(gaf: Path, obo: Path, genes_dir: Path) -> List[dict]:
     return rows
 
 
+def header_value(path: Path, prefix: str, max_lines: int = 500) -> str:
+    """Return the value of the first line starting with ``prefix`` in the file header.
+
+    Records which release of an input was used (the GAF's ``!date-generated:``, the
+    ontology's ``data-version:``) so the worklist can be reproduced. Only the first
+    ``max_lines`` lines are read; returns "" if the prefix is not found there.
+    """
+    opener = gzip.open if path.suffix == ".gz" else open
+    with opener(path, "rt", encoding="utf-8") as fh:
+        for _, line in zip(range(max_lines), fh):
+            if line.startswith(prefix):
+                return line[len(prefix):].strip()
+    return ""
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--gaf", type=Path, required=True)
@@ -146,6 +161,8 @@ def main() -> None:
         "generated": args.date,
         "organism": args.organism,
         "gaf": args.gaf.name,
+        "gaf_date_generated": header_value(args.gaf, "!date-generated:"),
+        "go_data_version": header_value(args.obo, "data-version:"),
         "filters": {"min_non_duplicative_iba": args.min_novel,
                     "min_experimental_pmids": args.min_exp_pmids},
         "unreviewed_genes_with_any_non_duplicative_iba": len(rows),
