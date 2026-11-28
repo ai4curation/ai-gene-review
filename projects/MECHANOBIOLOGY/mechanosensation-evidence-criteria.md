@@ -14,23 +14,22 @@ compression responses.
 ### Mechanosensitive ion-channel MF
 
 `GO:0008381` is **mechanosensitive monoatomic ion channel activity**. Its
-direct cation child, `GO:0140135` **mechanosensitive monoatomic cation channel
-activity**, specifies the conducted ion class rather than strict selectivity:
-the annotation means that the channel conducts cations. It does not require a
-demonstration that the channel is selective for cations over every other
-possible ion. In contrast, a child whose name specifies a single ion or says
-"selective", such as `GO:0015275` **stretch-activated, monoatomic
-cation-selective, calcium channel activity**, requires evidence that the
-mechanically activated current carries that ion preferentially.
+cation child, `GO:0140135` **mechanosensitive monoatomic cation channel
+activity**, and more specific conducted-ion terms such as `GO:0015275`
+**stretch-activated, monoatomic cation-selective, calcium channel activity**
+name ions that the channel conducts. By the rule from issue #7187, an annotation
+to "X channel activity" needs evidence that the channel conducts X; it does not
+mean the channel is selective for X. A nonselective stretch-activated cation
+channel that conducts Ca2+ can therefore support `GO:0015275`.
 
 Use this molecular-function branch when the evidence shows that the gene
 product is a pore-forming or pore-contributing subunit of a channel gated by
 mechanical force. The strongest evidence is a force-response curve for a
 current in a patch-clamp assay, plus heterologous sufficiency or a purified
 protein reconstituted into a bilayer. When the evidence also shows a
-stretch-gated, Ca2+-preferring current, annotate `GO:0015275`. Cell-free gating
-is stronger than heterologous expression because it shows that a lipid bilayer
-can transmit the force without another cellular component.
+stretch-gated, Ca2+-conducting cation current, annotate `GO:0015275`. Cell-free
+gating is stronger than heterologous expression because it shows that a lipid
+bilayer can transmit the force without another cellular component.
 
 MF annotations do not by themselves say which tissue uses the channel. A Piezo
 channel expressed in HEK293T cells and gated by patch pressure supports
@@ -90,7 +89,7 @@ stops at a response term should not be refined past its evidence.
 
 | Assay or perturbation | MF support | BP support | Curation rule |
 | --- | --- | --- | --- |
-| Pressure clamp of a cell-attached, inside-out, or whole-cilium patch | Direct support for `GO:0008381` or a child when a pressure-response curve gates a defined current and loss, mutation, or expression identifies the channel | Alone, weak; combine with cell expression and loss of the native mechanical response | Record the pressure range and compare it with a known sensor measured in a comparable assay; do not apply a fixed pressure cutoff across assay systems. A clear monotonic response in the same operating range as established mechanosensitive channels is strong. In comparable cell-attached recordings, mouse Piezo1 was half-maximal at about 28-31 mm Hg; the PKD1L1/PKD2L1 complex had no measurable increase from 0 to 60 mm Hg and only responded at 80-100 mm Hg. Activation only at extreme pressure relative to a positive sensor is a caution flag, not automatic support for a core BP. |
+| Pressure clamp of a cell-attached, inside-out, or whole-cilium patch | Direct support for `GO:0008381` or a child when a pressure-response curve gates a defined current and loss, mutation, or expression identifies the channel | Alone, weak; combine with cell expression and loss of the native mechanical response | Record the pressure range and compare it with a known sensor measured in as close an assay configuration as possible; do not apply a fixed pressure cutoff across systems. Piezo1 reaches P50 at 28-31 mm Hg in magnitude in cell-attached negative-pressure patches. DeCaen et al. applied 0-60 mm Hg, with no sign reported, to PKD1L1/PKD2L1 in whole-cilium and excised inside-out patches and saw no measurable increase until 80-100 mm Hg; that mismatch makes the comparison magnitude-only. Activation only at extreme pressure relative to a positive sensor is a caution flag, not automatic support for a core BP. |
 | Whole-cell indentation or poking with a blunt probe | Strong support when expression of the candidate gives a current to naive cells or loss of the candidate removes the native current | Strong in a native sensory cell when the candidate is expressed at that site and loss removes a mechanically evoked receptor current | The stimulus reaches the channel through cell shape, membrane, cortex, and attachments, so the assay can identify a cellular mechanotransducer without proving force-from-lipids gating. |
 | Deflection of a calibrated pillar, probe, cilium, neurite, or hair bundle | Usually indirect for MF unless a channel current is measured or the candidate is independently shown to be the pore | Can be strong for the BP when the deflected structure is the physiological force-sensing organelle and gene loss specifically removes the response | Distinguish direct sensors from structural components that place the sensor correctly. A bundle scaffold may be required for sound detection without being a mechanosensitive channel. |
 | Laminar or oscillatory fluid shear/flow | Insufficient for MF by itself | Strong for endothelial, ciliary, or other flow-detection BPs when shear is defined and gene loss blocks the immediate response | Flow can activate channels, junctions, cilia, ATP release, GPCRs, integrins, and nitric-oxide signaling. Annotate MF only when a channel is tied to a mechanically gated conductance. |
@@ -118,6 +117,9 @@ Treat these as high-threshold hits:
 - when the only response is at an extreme stimulus relative to that comparator,
   mark the annotation `MARK_AS_OVER_ANNOTATED`; reserve `UNDECIDED` for evidence
   that cannot be checked
+- use `REMOVE`, with a `source_defects` entry, for a demonstrably wrong
+  electronic mapping or propagation to a non-channel or to a paralog that has
+  lost the mechanosensitive pore function
 - rescue the claim only with independent evidence that the cell truly reaches
   that force range or that another mechanical geometry gates the channel at a
   plausible membrane tension
@@ -178,8 +180,11 @@ reported that hypotonicity in the physiological range gated the channel
 (PMID:11081638). Strotmann et al. independently described OTRPC4/TRPV4 as a
 nonselective cation channel whose activity changed with extracellular
 osmolarity (PMID:11025659). Those papers are good evidence for TRPV4 as an
-osmotic or mechano-osmotic channel, but hypotonic swelling alone should not be
-expanded to every mechanical-detection BP.
+osmotic or mechano-osmotic channel; they can support `GO:0015275` when
+hypotonicity gates a Ca2+-permeable cation current and `GO:0005034` where TRPV4
+itself senses osmolarity to initiate a downstream signaling response, but
+hypotonic swelling alone should not be expanded to every mechanical-detection
+BP.
 
 Suzuki et al. found that Trpv4 knockout mice had impaired tail pressure and
 acidic nociception and that TRPV4 expressed in CHO cells opened after membrane
@@ -196,14 +201,15 @@ touch/sound sensory detection from the chondrocyte loading paper.
 ### PKD1L1-PKD2L1: an extreme-pressure caution
 
 DeCaen et al. identified a PKD1L1/PKD2L1 heteromer as a calcium-permeant
-primary-cilium channel. They also tested the complex with pressure clamp and
-found no change in single-channel activity from 0 to 60 mm Hg in primary cilia
-or heterologous expression; activity increased only at 80 to 100 mm Hg, and the
-paper concluded that the channel lacks the sensitivity of designated
-mechanosensitive channels. The negative 0 to 60 mm Hg range spans the roughly
-30 mm Hg P50 of heterologous mouse Piezo1 on the same pressure scale, so the
-PKD1L1/PKD2L1 pressure response is far beyond Piezo1's usual operating range
-(PMID:20813920, PMID:24336289).
+primary-cilium channel. They also tested the complex with pressure clamp in
+whole-cilium and excised inside-out patch recordings and found no change in
+single-channel activity from 0 to 60 mm Hg, with no pressure sign reported;
+activity increased only at 80 to 100 mm Hg, and the paper concluded that the
+channel lacks the sensitivity of designated mechanosensitive channels. Compare
+this only by magnitude with heterologous mouse Piezo1 in cell-attached
+negative-pressure patches, whose P50 was about 28-31 mm Hg; the assay
+configurations differ, but PKD1L1/PKD2L1 did not respond across a 0-60 mm Hg
+span that includes Piezo1's P50 magnitude (PMID:20813920, PMID:24336289).
 
 That evidence supports PKD2L1 as part of a ciliary cation channel, not as a
 normal-threshold mechanosensitive channel or as a detector of physiological
@@ -212,6 +218,9 @@ pressure range, compare it with a known sensor from a comparable assay, avoid a
 core BP unless another paper supplies physiological mechanosensation evidence,
 and mark existing mechanosensitive MF rows over-annotated when the only opening
 is far beyond the comparator range.
+
+This PKD1L1/PKD2L1 result does not carry over to PKD1/PKD2; review those
+paralogs on their separate literature.
 
 ## Open questions for cmungall
 
