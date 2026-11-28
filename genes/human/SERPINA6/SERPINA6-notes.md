@@ -132,7 +132,7 @@ from its `RESULTS.md`.
 | P246Q | p.Pro268Gln | secretion defect (PMID:25322275) | buried, invariant Pro | loss of a conserved buried proline | secretion-defective LoF |
 | Athens W371S | p.Trp393Ser | no binding (PMID:22948765) | pocket, 2.9 A from steroid | removes the indole that stacks on the steroid; invariant in 73 orthologues | binding LoF |
 | R260L | p.Arg282Leu | no binding (PMID:25322275) | pocket, 3.2 A | removes a steroid-contacting Arg and its salt bridge to Asp23 | binding LoF |
-| Lyon D367N | p.Asp389Asn | 4-fold lower affinity (PMID:10634411); no measurable binding (PMID:22948765) | buried, 4.6 A from steroid | carboxylate caps the 366-371 loop (H-bonds to F369 N, T370 N and OG1) that carries pocket residues F366, H368, W371 | binding LoF |
+| Lyon D367N | p.Asp389Asn | 4-fold lower affinity (PMID:10634411); no measurable binding (PMID:22948765); almost devoid of binding, heat-labile (PMID:20226861) | buried, 4.6 A from steroid | carboxylate caps the 366-371 loop (H-bonds to F369 N, T370 N and OG1) that carries pocket residues F366, H368, W371 | binding LoF |
 | G237V | p.Gly259Val | no binding (PMID:20610591) | next to glycosylated Asn238 | Gly has phi +111; a beta-branched Val cannot adopt it; neighbour of pocket residue H368 and of the Asn238 sequon | binding LoF |
 | Leuven L93H | p.Leu115His | 3-fold lower affinity (PMID:1504007) | helix 4 (serpin helix D), 13 A | part of a His14-His89-Leu93 contact cluster on helix D | binding LoF, second shell, mechanism unresolved |
 | H14Q / H14R | p.His36Gln / p.His36Arg | lower affinity / capacity (PMID:25322275) | N-terminal segment, 9 A | same cluster | binding LoF, second shell, mechanism unresolved |
@@ -168,9 +168,14 @@ almost no purifying selection, so sequence-based predictors see little signal.
 
 ### Disagreements between sources (recorded, not resolved)
 
-- **Lyon D367N severity.** PMID:10634411 measured a 4-fold affinity reduction in recombinant protein;
-  PMID:22948765 found no measurable cortisol binding of recombinant D367N. Both are abstract-level reads.
-  The structural placement (buried cap of the pocket loop) is compatible with either.
+- **Lyon D367N severity.** PMID:10634411 measured a 4-fold affinity reduction in recombinant protein
+  (CHO cells); PMID:22948765 found no measurable cortisol binding of recombinant D367N; and a third
+  expression system (293-EBNA) found it nearly inactive and heat-labile
+  [PMID:20226861 "Certain mutants are almost devoid of cortisol binding activity (Q232R and CBG Lyon), some display higher sensitivity for heat inactivation (G335V, Q232R and CBG Lyon)"].
+  Two of three recombinant studies therefore say near-null. All are abstract-level reads. The structural
+  placement (buried carboxylate capping the pocket loop) fits a destabilised, heat-sensitive site.
+  PMID:20226861 was pointed out by the companion dismech session and then fetched and read here; it also
+  states [PMID:20226861 "So far no CBG serpin partner protease has been identified."].
 - **Resting free corticosterone in Cbg-/- mice**: 10-fold raised (PMID:16980625) versus normal (PMID:20022933).
 - **Review text error.** PMID:41180195 says of Leu93His "this mutation was named CBG A224S"; it is CBG Leuven.
 - **ClinVar.** Lyon and Leuven are "Conflicting classifications of pathogenicity"; given allele
