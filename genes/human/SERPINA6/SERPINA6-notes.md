@@ -263,5 +263,21 @@ helix D". The knowledge gap in the review YAML was reworded accordingly. One dif
 report finds the cluster partly solvent-exposed in the cleaved crystal structures, whereas the AlphaFold
 (native-like) model buries His14 (RSA 0.03); the two describe different conformational states.
 
-The second hypothesis job (GO:0004867 as a neutral function hypothesis) was still running when this was
-written.
+### 2026-11-28: hypothesis report received (GO:0004867 as a neutral function hypothesis)
+
+`SERPINA6-hypotheses/function-hypothesis-go-0004867/openscientist.md`. The job was given only the term,
+its IBA evidence and the reference, with no review decision. Verdict: over-annotated, refuted at the level
+of direct activity, which matches the REMOVE on the three rows.
+`[file:human/SERPINA6/SERPINA6-hypotheses/function-hypothesis-go-0004867/openscientist.md "It does not inhibit serine proteases. CBG is the substrate in every protease experiment published on it"]`
+
+- It surfaced a primary source my search missed, which I fetched and read:
+  [PMID:3143075 "Apparently evolution has completely adapted the serpin structure for its new role in these proteins as a transport agent, as there is no evidence of any retained protease inhibitory activity."]
+  This is now cited on the removed rows.
+- It agrees with the local analysis on the register (P1 = mature Thr349-Ser350; elastase cuts P6-P5).
+- Its caveat is fair and is adopted: the refutation rests on an explicit negative statement, the
+  elastase experiment in which the enzyme stayed active (PMID:2370299) and the absence of any reported
+  inhibition constant or covalent complex, not on a published kinetic assay of zero inhibition.
+- Not re-computed here (leads for the family review): 36 of 38 reviewed human serpins carry GO:0004867 by
+  IBA, including SERPINA7, AGT, SERPINB11, SERPINF1 and SERPINH1; the reactive-bond residue is conserved
+  in only 12 of 22 SERPINA6 species. It also warns that rat CBG behaves differently (PMID:23300763), so
+  the human result should not be transferred across species without checking.
