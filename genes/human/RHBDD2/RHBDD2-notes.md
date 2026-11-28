@@ -10,8 +10,8 @@ at the Golgi in retinal fractions and by GM130 colocalization and reported a
 homozygous human R85H variant that co-segregated with autosomal recessive
 retinitis pigmentosa in one family [PMID:23386608, "only the S 2 fraction (the
 Golgi membrane fraction) contains an appreciable amount of RHBDD2 protein";
-PMID:23386608, "We identified a homozygous mutation in the human RHBDD2 gene,
-R85H, that co-segregated with disease in a family affected with arRP"]. The
+PMID:23386608, "We found a homozygous mutation in the RHBDD2 gene, R85H, that
+co-segregates with disease in a family affected with arRP"]. The
 reviewed UniProt record places human RHBDD2 at the Golgi/cis-Golgi network
 membrane and cautions that the protein is related to the S54 peptidase family
 but lacks the conserved active sites, making peptidase activity unsupported
