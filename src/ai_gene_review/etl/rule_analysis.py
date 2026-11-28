@@ -206,6 +206,22 @@ def get_swissprot_count_for_funfam(
     return count
 
 
+def panther_xref_query(panther_id: str) -> str:
+    """UniProt query clause for a PANTHER family or subfamily cross-reference.
+
+    A subfamily id contains a colon, which UniProt's query parser rejects
+    (HTTP 400) unless the value is quoted.
+
+    >>> panther_xref_query("PTHR12714")
+    '(xref:panther-PTHR12714)'
+    >>> panther_xref_query("PTHR10982:SF21")
+    '(xref:"panther-PTHR10982:SF21")'
+    """
+    if ":" in panther_id:
+        return f'(xref:"panther-{panther_id}")'
+    return f"(xref:panther-{panther_id})"
+
+
 def get_swissprot_count_for_panther(
     panther_id: str,
     reviewed_only: bool = True,
@@ -230,7 +246,7 @@ def get_swissprot_count_for_panther(
         >>> count >= 0 # doctest: +SKIP
         True
     """
-    query_parts = [f"(xref:panther-{panther_id})"]
+    query_parts = [panther_xref_query(panther_id)]
     if reviewed_only:
         query_parts.append("(reviewed:true)")
 
@@ -383,7 +399,7 @@ def get_swissprot_count_for_mixed_conditions(
         elif condition_type == "funfam":
             query_parts.append(f'("{condition_id}")')
         elif condition_type == "panther":
-            query_parts.append(f"(xref:panther-{condition_id})")
+            query_parts.append(panther_xref_query(condition_id))
         elif condition_type == "go":
             # UniProt expects numeric ID without "GO:" prefix
             numeric_id = condition_id.replace('GO:', '') if condition_id.startswith('GO:') else condition_id
