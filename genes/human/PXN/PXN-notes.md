@@ -49,3 +49,8 @@ component rows are modeled with both `cytosol` and `plasma membrane`
 compartments in the Reactome ContentService. The component calls are retained
 as non-core locations because paxillin is a cytosolic adaptor recruited to
 plasma-membrane-proximal focal adhesions.
+
+The Human Protein Atlas PXN subcellular profile
+(https://www.proteinatlas.org/ENSG00000089159-PXN/subcellular) reports that
+paxillin is "Mainly localized to the focal adhesion sites. In addition
+localized to the cytosol and centrosome."
