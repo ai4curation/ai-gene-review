@@ -9,5 +9,5 @@ Key decisions:
 - SOCS6 is a long-N-terminal SOCS-box protein with substrate-adaptor evidence for tyrosine-phosphorylated kinases. PMID:21030588 supports SH2-domain recognition of the phosphorylated KIT pY568 peptide and SOCS6 ubiquitin-ligase activity toward KIT.
 - PMID:20007709 gives direct T-cell evidence that SOCS6 is recruited to the immunological synapse, binds active LCK, promotes LCK ubiquitination, and targets it to the proteasome. Those rows are kept, but T-cell activation itself remains a non-core specialization.
 - PMID:9344848 cloned CIS4/SOCS6 but reports JAK2/JAK-STAT inhibition for CIS3 and JAB rather than CIS4; its cached abstract is not positive support for a SOCS6 JAK-STAT or defense-response function.
-- The generic SOCS-box InterPro/UniPathway `protein ubiquitination` row is kept as non-core because direct KIT and LCK evidence support a ubiquitination role, but the exact core molecular function is substrate-adaptor activity.
+- The generic SOCS-box InterPro/UniPathway `protein ubiquitination` row is accepted because direct KIT and LCK evidence support a core ubiquitination role, with the exact molecular function refined to substrate-adaptor activity.
 - The bare `GO:0005515 protein binding` IPI rows are each removed as uninformative while leaving their distinct references and WITH/FROM entities intact.
