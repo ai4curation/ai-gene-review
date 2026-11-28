@@ -23,9 +23,11 @@ carotenoid treatment depolarized mitochondria and induced ROS in HepG2 cells.
 BCO2 keeps the eccentric 9,10-carotenoid-cleaving activity and carotene/xanthophyll catabolic
 process rows. The generic carotenoid dioxygenase row is also true for BCO2, but the inherited
 `GO:0003834` 15,15'-dioxygenase IBA is wrong for the BCO2 paralog and should be pruned at the
-vertebrate BCO2 node. The `retinal metabolic process` IBA from the BCO1/RPE65/BCO2 ancestor and
-the early NAS retinoic-acid/retinal rows overstate a speculative apocarotenoid-to-retinoid
-connection; they are marked `MARK_AS_OVER_ANNOTATED` rather than `REMOVE`.
+vertebrate BCO2 node. The `retinal metabolic process` IBA from the BCO1/RPE65/BCO2 ancestor is
+left `UNDECIDED` because mouse Bco2 seeds the PAINT assertion and PMID:24106281 supports a minor,
+BCO1-dependent route from BCO2-produced apocarotenoids into retinoids. The early NAS
+retinoic-acid/retinal rows still overstate the speculative route in PMID:11278918 and are marked
+`MARK_AS_OVER_ANNOTATED` rather than `REMOVE`.
 
 The mitochondrial root term is accepted under the root-organelle policy. The Reactome
 mitochondrial-matrix TAS row is left `UNDECIDED`: the cached event text supports BCO2 in the
