@@ -1,10 +1,14 @@
-# LMTK1 review notes
+# AATK / PTHR24417 review notes
 
-## 2026-08-09 setup, naming, and research provenance
+## 2026-11-28 symbol migration
 
-- HGNC REST (`HGNC:21`, checked 2026-08-09) now approves **LMTK1** (lemur tail kinase 1) as the human symbol and records **AATK** as the previous symbol; the symbol-change date is 2026-07-09. The same record maps LMTK1 to UniProt Q6ZMQ8, NCBI Gene 9625, Ensembl ENSG00000181409, and mouse MGI:1197518. The live NCBI Gene 9625 record also uses LMTK1.
-- The upstream protein/annotation records have not yet fully absorbed this very recent rename. UniProt Q6ZMQ8 entry version 169 is dated 2026-06-10, one month before the HGNC change: its entry name and recommended protein name use LMTK1, but its gene line still reads `Name=AATK` with `LMTK1` among the synonyms. Live QuickGO rows likewise use AATK as the gene-product symbol. This is an upstream lag, not a second human gene.
-- Accordingly, bare `just fetch-gene human LMTK1` did not accept the synonym-only UniProt match. `just fetch-gene human LMTK1 --uniprot-id Q6ZMQ8` correctly seeded the review under the approved HGNC symbol while retaining the source GOA rows for Q6ZMQ8.
+- The previous `genes/human/LMTK1/` folder reviewed UniProt Q6ZMQ8. The
+  current UniProt and HGNC records use **AATK** as the human gene symbol and
+  list LMTK1 as a synonym, so that folder was migrated to
+  `genes/human/AATK/` rather than keeping two reviews for the same accession.
+
+## 2026-08-09 setup and research provenance
+
 - Falcon deep research failed with Edison HTTP 402. The Perplexity fallback failed with HTTP 401. No provider-branded deep-research file was created or replaced with manual content. This note therefore records manual synthesis from the cached primary papers, live HGNC/NCBI/QuickGO checks, and the reviewed UniProt record.
 
 ## Identity and isoform boundaries
