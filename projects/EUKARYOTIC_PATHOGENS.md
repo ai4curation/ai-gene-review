@@ -43,9 +43,9 @@ index_group: OTHER_ORGANISM
 across the eukaryotic pathogen and vector reference organisms in VEuPathDB. The
 first pass samples one to five reference genomes per VEuPathDB site, counts
 their UniProtKB proteins with PANTHER cross-references, IBA annotations, and
-experimental GO annotations, and uses the missing-IBA or missing-PANTHER
-Swiss-Prot rows to seed the first curation batches. The generated coverage
-table and candidates live under
+experimental GO annotations, then splits the first candidate batches into
+PANTHER-classification gaps and within-PANTHER propagation/export gaps. The
+generated coverage table and candidates live under
 [EUKARYOTIC_PATHOGENS/](EUKARYOTIC_PATHOGENS/); no per-clade gene reviews have
 started yet.
 
@@ -57,7 +57,8 @@ This page keeps the planning surface small. The reproducible data products are:
   Markdown report, grouped by VEuPathDB site.
 - [coverage.tsv](EUKARYOTIC_PATHOGENS/coverage.tsv) - organism-level counts.
 - [candidate_genes.tsv](EUKARYOTIC_PATHOGENS/candidate_genes.tsv) - the first
-  50 reviewed or experimentally annotated proteins per organism that lack IBA.
+  50 reviewed or experimentally annotated UniProtKB proteins per organism that
+  lack IBA after denominator filtering, grouped by PANTHER-family membership.
 - [veupathdb_panther_coverage.py](EUKARYOTIC_PATHOGENS/veupathdb_panther_coverage.py)
   - the stdlib-only script that queries VEuPathDB, UniProtKB, and QuickGO.
 
@@ -67,9 +68,9 @@ Counts were generated from:
   per-row gene counts.
 - UniProtKB REST, release 2026_04, for accession totals, UniProt mnemonics,
   Swiss-Prot status, and PANTHER cross-references.
-- QuickGO annotation search, counting IBA as `ECO:0000318` and direct
-  experimental GO evidence as EXP, IDA, IPI, IMP, IGI, IEP, HTP, HDA, HMP, HGI,
-  and HEP.
+- QuickGO annotation search, counting unique in-denominator UniProtKB proteins
+  with IBA as `ECO:0000318` and direct experimental GO evidence as EXP, IDA,
+  IPI, IMP, IGI, IEP, HTP, HDA, HMP, HGI, and HEP.
 - Local `genes/` review folders, counted by UniProt mnemonic, for existing
   AI Gene Review coverage.
 
@@ -79,6 +80,15 @@ current UniProtKB coverage. Those cases are flagged in
 [coverage.tsv](EUKARYOTIC_PATHOGENS/coverage.tsv). The exact *Enterocytozoon
 bieneusi* H348 taxon has only 26 UniProtKB accessions against 3,806 VEuPathDB
 genes, so its PANTHER percentage is not a genome-wide coverage estimate.
+Raw QuickGO `numberOfHits` totals are retained beside the filtered IBA and
+experimental protein counts so that QuickGO accessions absent from the selected
+UniProtKB denominator do not seed false candidate rows.
+
+A sampled organism with PANTHER-family proteins but zero IBA rows is treated as
+a PAINT/GOA export or taxon-mapping diagnostic before any per-gene curation.
+Proteins that lack a PANTHER family are classification or family-coverage
+candidates; proteins that already have a PANTHER family but no terminal IBA row
+are the propagation/export candidates.
 
 ## Confirmed Site Panel
 
@@ -90,7 +100,7 @@ genes, so its PANTHER percentage is not a genome-wide coverage estimate.
 | TriTrypDB | 89 | *Trypanosoma brucei brucei* TREU927 `TRYB2`; *T. cruzi* Dm28c 2014 `TRYCR`; *Leishmania major* Friedlin `LEIMA`; *L. donovani* BPK282A1 `LEIDO` | 7 |
 | GiardiaDB | 16 | *Giardia* Assemblage A isolate WB `GIAIC` | 0 |
 | AmoebaDB | 43 | *Entamoeba histolytica* HM-1:IMSS `ENTH1` | 0 |
-| TrichDB | 6 | *Trichomonas vaginalis* G3 `TRIV3`, plus existing `TRIVA` reviews | 2 |
+| TrichDB | 6 | *Trichomonas vaginalis* G3 `TRIV3`, plus existing `TRIVA` reviews | 3 |
 | PiroplasmaDB | 25 | *Babesia bovis* T2Bo `BABBO`; *B. microti* RI `BABMR`; *Theileria annulata* Ankara `THEAN`; *T. parva* Muguga `THEPA` | 0 |
 | MicrosporidiaDB | 55 | *Encephalitozoon cuniculi* GB-M1 `ENCCU`; *E. intestinalis* ATCC 50506 `ENCIT`; *Enterocytozoon bieneusi* H348 `ENTBH`; *Nematocida parisii* ERTm3 `NEMP3` | 0 |
 | FungiDB | 347 | *Aspergillus fumigatus* Af293 `ASPFU`; *Candida albicans* SC5314 `CANAL`; *Nakaseomyces glabratus* CBS 138 `CANGA`; *Cryptococcus neoformans* H99 `CRYN9`; *C. deneoformans* JEC21 `CRYD1` | 154 |
@@ -113,16 +123,19 @@ Changes from the seed list:
 
 1. **FungiDB** - large existing `ASPFU`, `CANAL`, and `CANGA` review base; many
    experimentally annotated Swiss-Prot adhesins, wall proteins, hydrophobins,
-   and virulence regulators lack PANTHER or IBA.
-2. **PlasmoDB** - *P. falciparum* has 399 experimentally annotated proteins
+   and virulence regulators expose PANTHER classification gaps, while
+   zero-IBA `CANGA` and `CRYN9` need a terminal-export check.
+2. **PlasmoDB** - *P. falciparum* has 377 experimentally annotated proteins
    with no IBA, and *P. vivax* plus *P. berghei* have reviewed proteins but no
-   current IBA rows in QuickGO.
+   current IBA rows in QuickGO, so the first non-falciparum task is the same
+   terminal-export diagnosis.
 3. **TriTrypDB** - kinetoplastid-specific RNA-editing, glycosome, surface, and
    chromosomal-passenger proteins expose both missing PANTHER families and IBA
-   gaps in *Trypanosoma* and *Leishmania*.
+   gaps in *Trypanosoma* and *Leishmania*; zero-IBA *T. cruzi* and
+   *L. donovani* come after an export/taxon check.
 4. **VectorBase** - not pathogens, but mosquito and tick saliva, immunity, and
-   host-anticoagulation proteins are well-studied, host-interface enriched, and
-   often outside PANTHER.
+   host-anticoagulation proteins are well-studied and host-interface enriched;
+   *Aedes* first needs the zero-IBA export diagnostic.
 5. **ToxoDB** - a compact reviewed experimental set can test whether the
    complete absence of ME49 IBA rows is a PAINT coverage issue or a strain/taxon
    mapping issue.
@@ -137,11 +150,12 @@ Changes from the seed list:
    make this important, but its first pass should be a targeted audit of the
    few experimentally supported PTN placements rather than a broad gene batch.
 10. **PiroplasmaDB** - no sampled Babesia or Theileria protein currently has an
-    IBA row; the first pass is a small Swiss-Prot surface-antigen and enzyme
-    triage.
-11. **MicrosporidiaDB** - no sampled microsporidian protein has IBA; start with
-    *E. cuniculi* polar-tube/spore-wall proteins and Nematocida family coverage
-    after the richer sites have established the review pattern.
+    IBA row, so diagnose terminal IBA export before Swiss-Prot surface-antigen
+    and enzyme triage.
+11. **MicrosporidiaDB** - no sampled microsporidian protein has IBA; diagnose
+    terminal IBA export first, then start with *E. cuniculi* polar-tube and
+    spore-wall anchors and Nematocida family coverage after the richer sites
+    have established the review pattern.
 
 ## Subprojects
 
@@ -153,28 +167,33 @@ sexual-stage proteins that are Swiss-Prot plus experimental but lack PANTHER,
 including PfSUB1-ProM, apicortin/DCX, RhopH2/RhopH3, MSP1/MSP2, RH1, Pfs16,
 RH5, and CyRPA. A second small batch should add the *P. vivax* DBP, PMV, LAP,
 RBP2b, and PNP rows and the *P. berghei* G37, OMG1, ICP, AP2-Z, PIMMS2, CSP,
-and P45/48 rows.
+and P45/48 rows, after verifying why those two taxa have no exported IBA rows.
 
 ### ToxoDB
 
 The sampled ME49 proteome has PANTHER families for 4,801 of 8,306 UniProtKB
-proteins but no IBA rows in the QuickGO query. First batch: RON2 and RON2L2
-rhoptry neck proteins, MAF1a1, CEN1/CEN2, AQP, ApiAT1/NPT1, and BFD1.
+proteins but no IBA rows in the QuickGO query. Step 0 is to verify whether this
+is a PAINT coverage issue or a strain/taxon export issue; the first candidate
+batch after that is RON2 and RON2L2 rhoptry neck proteins, MAF1a1, CEN1/CEN2,
+AQP, ApiAT1/NPT1, and BFD1.
 
 ### CryptoDB
 
 The *C. parvum* Iowa II sample has 2,467 PANTHER-family proteins but no IBA.
-Start with its three Swiss-Prot experimental anchors, SSAT, SKSR1, and the
-ADP/ATP translocase CpAAC, then add FEN1, ASNA1, COQ4, SLX1, and DRE2 as
-reviewed conserved proteins that test whether apicomplexan propagation stops at
-Cryptosporidium or only lacks terminal IBA export.
+Start with the zero-IBA export diagnostic. If that confirms organism-specific
+coverage gaps, the first review set is its three Swiss-Prot experimental
+anchors, SSAT, SKSR1, and the ADP/ATP translocase CpAAC, then FEN1, ASNA1,
+COQ4, SLX1, and DRE2 as reviewed conserved proteins that test whether
+apicomplexan propagation stops at Cryptosporidium or only lacks terminal IBA
+export.
 
 ### TriTrypDB
 
 *T. brucei* has heavy experimental GO coverage but thousands of rows without
 IBA, so the first batch should stay reviewed and compact: mitochondrial
 RNA-editing ligases REL1/REL2, kinetoplastid-specific CPC1/CPC2, glycosomal
-PEX13.1/PEX13.2, CWC21, XAC1, and PuREBP2. Follow with cross-genus surface and
+PEX13.1/PEX13.2, CWC21, XAC1, and PuREBP2. Zero-IBA *T. cruzi* and
+*L. donovani* need the terminal-export check before cross-genus surface and
 glycosome anchors: *T. cruzi* NETNES, KMP-11, AdoMetDC, TCP17, TOR, and
 chagasin; *Leishmania major* gp63, IU-nucleoside hydrolase, and ecotins; and
 *L. donovani* G5K, PEX5, PEX14, eIF5A, DHS, DOHH, and GMPR.
@@ -205,25 +224,32 @@ Swiss-Prot for paralog-specific propagation.
 
 ### PiroplasmaDB
 
-None of the sampled Babesia or Theileria taxa has an IBA row. Because the
-experimental set is tiny, the first batch should be a Swiss-Prot spot review:
-Babesia BABR/high-molecular-weight antigens, Theileria p23/p67/p104 surface or
-apical antigens, and the experimentally annotated Theileria PIN1 and
-thioredoxin-domain proteins.
+None of the sampled Babesia or Theileria taxa has an IBA row. First confirm
+that these are terminal export gaps rather than individual propagation gaps.
+Because the experimental set is tiny, the first follow-up batch should be a
+Swiss-Prot spot review: Babesia BABR/high-molecular-weight antigens, Theileria
+p23/p67/p104 surface or apical antigens, and the experimentally annotated
+Theileria PIN1 and thioredoxin-domain proteins.
 
 ### MicrosporidiaDB
 
-The first pass should avoid the under-represented *E. bieneusi* H348 taxon and
-use *E. cuniculi* polar-tube and spore-wall anchors: PTP1, PTP2, PTP3, SWP3,
-EnP1, the ECU11_0510 polysaccharide-deacetylase-domain protein, and adenylate
-kinase. Nematocida has the lowest sampled PANTHER-family coverage at 43.8%;
-after the *E. cuniculi* anchors, use it to look for lineage-specific families
-that need either a family review or a note that no PTN family exists.
+No sampled microsporidian taxon has an IBA row, so the first pass is the
+terminal IBA export diagnostic, avoiding the under-represented *E. bieneusi*
+H348 taxon. The first follow-up batch should use *E. cuniculi* polar-tube and
+spore-wall anchors: PTP1, PTP2, PTP3, SWP3, EnP1, the ECU11_0510
+polysaccharide-deacetylase-domain protein, and adenylate kinase. Nematocida has
+the lowest sampled PANTHER-family coverage at 43.8%; after the *E. cuniculi*
+anchors, use it to look for lineage-specific families that need either a family
+review or a note that no PTN family exists.
 
 ### FungiDB
 
 This subproject should reuse the [FUNGAL_PAINT_FAMILIES](FUNGAL_PAINT_FAMILIES.md)
 pattern for cross-species family work and avoid duplicating that status page.
+`CANGA` and `CRYN9` first need the zero-IBA diagnostic; no-PANTHER adhesins and
+host-interface proteins should be treated as classification or family-coverage
+gaps, not as missed IBA propagation.
+
 First concrete batches:
 
 - *A. fumigatus*: RodA/RodB/RodC hydrophobins, asp-hemolysin, pptB, cwhA, fumR,
@@ -239,10 +265,11 @@ First concrete batches:
 
 VectorBase is in scope because mosquito and tick host-interface proteins show
 the same PAINT blind spots as pathogen secretomes, but it should stay visibly
-separate from pathogen clades. First batch: *Anopheles* SAMSP1, Yob, Def3,
-gSG6, anophelin, EBP, D7R3, and TEP1; *Aedes* Aegyptin, vitelline membrane
-protein 15a-2, Head peptide, Nix, CPB1, Ir8a, Ir76b, and SGS1; and *Ixodes*
-Dae2, ISAMP, microplusin, TSLPI, P23, ixonnexin, and ixodegrins.
+separate from pathogen clades. First run the zero-IBA diagnostic for *Aedes*;
+the first gene batch after that is *Anopheles* SAMSP1, Yob, Def3, gSG6,
+anophelin, EBP, D7R3, and TEP1; *Aedes* Aegyptin, vitelline membrane protein
+15a-2, Head peptide, Nix, CPB1, Ir8a, Ir76b, and SGS1; and *Ixodes* Dae2,
+ISAMP, microplusin, TSLPI, P23, ixonnexin, and ixodegrins.
 
 ## Status
 

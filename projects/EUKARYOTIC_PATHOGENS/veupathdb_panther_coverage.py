@@ -13,6 +13,7 @@ import urllib.parse
 import urllib.request
 from collections import Counter
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from email.message import Message
 from pathlib import Path
 from typing import Iterable
@@ -52,6 +53,29 @@ class OrganismSpec:
     uniprot_taxon_id: int
     repo_mnemonics: tuple[str, ...] = ()
     note: str = ""
+
+
+@dataclass
+class QuickGOResult:
+    accessions: set[str]
+    ptns_by_accession: dict[str, set[str]]
+    number_of_hits: int
+
+    def restrict(self, accessions: set[str]) -> "QuickGOResult":
+        kept = self.accessions & accessions
+        ptns_by_accession = {
+            accession: ptns
+            for accession, ptns in self.ptns_by_accession.items()
+            if accession in kept
+        }
+        return QuickGOResult(kept, ptns_by_accession, self.number_of_hits)
+
+    def ptns(self) -> set[str]:
+        return {
+            ptn
+            for accession_ptns in self.ptns_by_accession.values()
+            for ptn in accession_ptns
+        }
 
 
 ORGANISMS: tuple[OrganismSpec, ...] = (
@@ -172,8 +196,22 @@ ORGANISMS: tuple[OrganismSpec, ...] = (
         ("ANOGA",),
         "VEuPathDB PEST row paired with the species-level UniProt taxon.",
     ),
-    OrganismSpec("VectorBase", "vectors", "Aedes aegypti LVP_AGWG", 7159, ("AEDAE",)),
-    OrganismSpec("VectorBase", "vectors", "Ixodes scapularis Wikel", 6945),
+    OrganismSpec(
+        "VectorBase",
+        "vectors",
+        "Aedes aegypti LVP_AGWG",
+        7159,
+        ("AEDAE",),
+        "VEuPathDB strain row paired with the species-level UniProt taxon.",
+    ),
+    OrganismSpec(
+        "VectorBase",
+        "vectors",
+        "Ixodes scapularis Wikel",
+        6945,
+        (),
+        "VEuPathDB Wikel row paired with the species-level UniProt taxon.",
+    ),
 )
 
 
@@ -244,7 +282,7 @@ def next_link(headers: Message) -> str | None:
     return match.group(1) if match else None
 
 
-def load_veupathdb() -> tuple[dict[str, dict], dict[str, str]]:
+def load_veupathdb() -> tuple[dict[str, dict], dict[str, str], Counter[str]]:
     attrs = [
         "primary_key",
         "species",
@@ -264,13 +302,15 @@ def load_veupathdb() -> tuple[dict[str, dict], dict[str, str]]:
     )
     by_key: dict[str, dict] = {}
     releases: dict[str, str] = {}
+    site_counts: Counter[str] = Counter()
     for record in data["records"]:
         row = dict(record["attributes"])
         by_key[row["primary_key"]] = row
+        site_counts[row["project_id"]] += 1
         match = re.search(r"-(\d+)_", row.get("URLproteinFasta") or "")
         if match:
             releases[row["project_id"]] = match.group(1)
-    return by_key, releases
+    return by_key, releases, site_counts
 
 
 def count_repo_reviews(root: Path) -> Counter[str]:
@@ -312,13 +352,12 @@ def uniprot_rows(taxon_id: int) -> tuple[list[dict[str, str]], dict[str, str]]:
     return rows, releases
 
 
-def quickgo_accessions(
-    taxon_id: int, evidence: Iterable[str]
-) -> tuple[set[str], set[str]]:
+def quickgo_accessions(taxon_id: int, evidence: Iterable[str]) -> QuickGOResult:
     accessions: set[str] = set()
-    ptns: set[str] = set()
+    ptns_by_accession: dict[str, set[str]] = {}
     page = 1
-    total = 0
+    total: int | None = None
+    fetched = 0
     while True:
         data, _ = get_json(
             QUICKGO_SEARCH_URL,
@@ -330,22 +369,39 @@ def quickgo_accessions(
             },
         )
         results = data.get("results") or []
-        total = int(data.get("numberOfHits") or total)
+        page_total = int(data.get("numberOfHits") or 0)
+        if total is None:
+            total = page_total
+        elif total != page_total:
+            raise RuntimeError(
+                f"QuickGO total changed for taxon {taxon_id}: {total} != {page_total}"
+            )
+        if not results and fetched < total:
+            raise RuntimeError(
+                f"QuickGO returned an empty page {page} after "
+                f"{fetched}/{total} rows for taxon {taxon_id}"
+            )
         for result in results:
             gene_product_id = result.get("geneProductId") or ""
+            accession = ""
             if gene_product_id.startswith("UniProtKB:"):
-                accessions.add(gene_product_id.split(":", 1)[1])
+                accession = gene_product_id.split(":", 1)[1]
+                accessions.add(accession)
+            result_ptns: set[str] = set()
             for group in result.get("withFrom") or []:
                 for xref in group.get("connectedXrefs") or []:
                     if xref.get("db") == "PANTHER" and str(
                         xref.get("id", "")
                     ).startswith("PTN"):
-                        ptns.add(str(xref["id"]))
-        if page * QUICKGO_PAGE_LIMIT >= total or not results:
+                        result_ptns.add(str(xref["id"]))
+            if accession:
+                ptns_by_accession.setdefault(accession, set()).update(result_ptns)
+        fetched += len(results)
+        if fetched >= total:
             break
         page += 1
         time.sleep(0.05)
-    return accessions, ptns
+    return QuickGOResult(accessions, ptns_by_accession, total or 0)
 
 
 def mnemonic(rows: list[dict[str, str]]) -> str:
@@ -372,13 +428,21 @@ def write_tsv(path: Path, rows: list[dict[str, object]]) -> None:
         path.write_text("")
         return
     with path.open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]), lineterminator="\n")
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=list(rows[0]),
+            delimiter="\t",
+            lineterminator="\n",
+        )
         writer.writeheader()
         writer.writerows(rows)
 
 
 def write_report(
-    path: Path, rows: list[dict[str, object]], releases: dict[str, str]
+    path: Path,
+    rows: list[dict[str, object]],
+    releases: dict[str, str],
+    site_counts: Counter[str],
 ) -> None:
     by_site: dict[str, list[dict[str, object]]] = {}
     for row in rows:
@@ -391,14 +455,28 @@ def write_report(
         "",
         "## Data sources",
         "",
-        f"- VEuPathDB organism search, Release {releases.get('veupathdb_release', 'unknown')}.",
+        f"- VEuPathDB organism search, Release "
+        f"{releases.get('veupathdb_release', 'unknown')}; retrieved "
+        f"{releases.get('veupathdb_retrieved', 'unknown')}.",
         f"- UniProtKB REST, Release {releases.get('uniprot_release', 'unknown')} "
         f"({releases.get('uniprot_release_date', 'unknown')}).",
-        "- QuickGO annotation search for IBA and experimental GO annotation counts.",
+        "- QuickGO annotation search for unique UniProtKB protein counts with IBA "
+        "and experimental GO annotations.",
         "",
-        "## Coverage by site",
+        "## VEuPathDB organism rows",
         "",
+        "| Site | Release 71 rows |",
+        "|---|---:|",
     ]
+    for site, count in sorted(site_counts.items()):
+        lines.append(f"| {site} | {count} |")
+    lines.extend(
+        [
+            "",
+            "## Coverage by site",
+            "",
+        ]
+    )
     for site in sorted(by_site):
         site_rows = by_site[site]
         lines.extend(
@@ -445,10 +523,25 @@ def write_report(
 def main() -> None:
     root = Path(__file__).resolve().parents[2]
     out_dir = Path(__file__).resolve().parent
-    veupath_rows, veupath_releases = load_veupathdb()
+    veupath_rows, veupath_releases, site_counts = load_veupathdb()
+    sampled_sites = {spec.site for spec in ORGANISMS}
+    missing_sites = sorted(sampled_sites - set(site_counts))
+    if missing_sites:
+        raise SystemExit(
+            "VEuPathDB organism results missing sampled sites: "
+            + ", ".join(missing_sites)
+        )
+    site_counts = Counter({site: site_counts[site] for site in sampled_sites})
     repo_counts = count_repo_reviews(root)
+    veupathdb_release = sorted(set(veupath_releases.values()))
+    if len(veupathdb_release) != 1:
+        raise SystemExit(
+            "Expected one VEuPathDB release, found: "
+            + ", ".join(veupathdb_release or ["unknown"])
+        )
     release_info = {
-        "veupathdb_release": ",".join(sorted(set(veupath_releases.values()))),
+        "veupathdb_release": veupathdb_release[0],
+        "veupathdb_retrieved": datetime.now(timezone.utc).date().isoformat(),
         "uniprot_release": "",
         "uniprot_release_date": "",
     }
@@ -464,23 +557,29 @@ def main() -> None:
             )
         uniprot, uniprot_release = uniprot_rows(spec.uniprot_taxon_id)
         release_info.update({k: v for k, v in uniprot_release.items() if v})
+        by_accession = {row["Entry"]: row for row in uniprot}
+        uniprot_accessions = set(by_accession)
+        uniprot_mnemonic = mnemonic(uniprot)
         panther = panther_accessions(uniprot)
         print(
             f"{spec.site}: {spec.primary_key} QuickGO IBA", file=sys.stderr, flush=True
         )
-        iba, ptns = quickgo_accessions(spec.uniprot_taxon_id, IBA_EVIDENCE)
+        iba_all = quickgo_accessions(spec.uniprot_taxon_id, IBA_EVIDENCE)
+        iba = iba_all.restrict(uniprot_accessions)
         print(
             f"{spec.site}: {spec.primary_key} QuickGO experimental",
             file=sys.stderr,
             flush=True,
         )
-        experimental, _ = quickgo_accessions(
+        experimental_all = quickgo_accessions(
             spec.uniprot_taxon_id, EXPERIMENTAL_EVIDENCE
         )
+        experimental = experimental_all.restrict(uniprot_accessions)
         reviewed = {
             row["Entry"] for row in uniprot if row.get("Reviewed") == "reviewed"
         }
-        aigr_reviews = sum(repo_counts[m] for m in spec.repo_mnemonics)
+        repo_mnemonics = tuple(dict.fromkeys((*spec.repo_mnemonics, uniprot_mnemonic)))
+        aigr_reviews = sum(repo_counts[m] for m in repo_mnemonics)
 
         proteome_count = len(uniprot)
         coverage_rows.append(
@@ -491,30 +590,33 @@ def main() -> None:
                 "veupathdb_project": veupath["project_id"],
                 "veupathdb_gene_count": veupath.get("genecount") or "",
                 "uniprot_taxon_id": spec.uniprot_taxon_id,
-                "uniprot_mnemonic": mnemonic(uniprot),
+                "uniprot_mnemonic": uniprot_mnemonic,
                 "uniprot_proteins": proteome_count,
                 "panther_family_proteins": len(panther),
                 "panther_family_pct": pct(len(panther), proteome_count),
-                "iba_proteins": len(iba),
-                "iba_pct": pct(len(iba), proteome_count),
-                "experimental_go_proteins": len(experimental),
-                "experimental_without_iba": len(experimental - iba),
+                "quickgo_iba_hits": iba_all.number_of_hits,
+                "iba_proteins": len(iba.accessions),
+                "iba_pct": pct(len(iba.accessions), proteome_count),
+                "quickgo_experimental_hits": experimental_all.number_of_hits,
+                "experimental_go_proteins": len(experimental.accessions),
+                "experimental_without_iba": len(
+                    experimental.accessions - iba.accessions
+                ),
                 "reviewed_uniprot_entries": len(reviewed),
-                "reviewed_without_iba": len(reviewed - iba),
-                "ptn_nodes": len(ptns),
+                "reviewed_without_iba": len(reviewed - iba.accessions),
+                "ptn_nodes": len(iba.ptns()),
                 "aigr_reviews": aigr_reviews,
-                "repo_mnemonics": ",".join(spec.repo_mnemonics),
                 "note": spec.note,
+                "repo_mnemonics": ",".join(repo_mnemonics),
             }
         )
 
-        by_accession = {row["Entry"]: row for row in uniprot}
-        flagged = (reviewed | experimental) - iba
+        flagged = (reviewed | experimental.accessions) - iba.accessions
         candidate_order = sorted(
             flagged,
             key=lambda accession: (
                 accession not in reviewed,
-                accession not in experimental,
+                accession not in experimental.accessions,
                 accession in panther,
                 accession,
             ),
@@ -525,22 +627,26 @@ def main() -> None:
                 {
                     "site": spec.site,
                     "organism": spec.primary_key,
-                    "uniprot_mnemonic": mnemonic(uniprot),
+                    "uniprot_mnemonic": uniprot_mnemonic,
                     "accession": accession,
                     "entry_name": row.get("Entry Name", ""),
                     "gene": row.get("Gene Names (primary)", ""),
                     "protein_name": row.get("Protein names", ""),
                     "reviewed": "yes" if accession in reviewed else "no",
-                    "experimental_go": "yes" if accession in experimental else "no",
+                    "experimental_go": (
+                        "yes" if accession in experimental.accessions else "no"
+                    ),
                     "has_panther_family": "yes" if accession in panther else "no",
-                    "has_iba": "yes" if accession in iba else "no",
+                    "has_iba": "yes" if accession in iba.accessions else "no",
                 }
             )
         time.sleep(0.1)
 
     write_tsv(out_dir / "coverage.tsv", coverage_rows)
     write_tsv(out_dir / "candidate_genes.tsv", candidate_rows)
-    write_report(out_dir / "coverage_report.md", coverage_rows, release_info)
+    write_report(
+        out_dir / "coverage_report.md", coverage_rows, release_info, site_counts
+    )
 
 
 if __name__ == "__main__":
