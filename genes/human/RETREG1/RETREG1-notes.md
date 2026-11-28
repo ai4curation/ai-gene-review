@@ -236,11 +236,17 @@ The question is also routed upstream rather than left in this file: the
 GO:0005794 row carries a `source_defects` entry against UniProt Q9H6L5
 (`OUTDATED_STATEMENT`, `requested_change: CHECK`, `confidence: SUSPECTED`) asking
 UniProt to re-examine the by-similarity `Golgi apparatus, cis-Golgi network
-membrane` location, since mapping that location to GO is the sole source of both
-the GO:0005794 and the GO:0005801 rows. `CHECK` at `SUSPECTED` is the right
-strength: no study has tested and excluded a human Golgi pool, and the mouse
-source is a genuine IDA, so this is a request to look again, not an assertion
-that the location is false.
+membrane` location. Mapping that location to GO is the source of the two
+UniProt-assigned Golgi rows — GO:0005794 (IEA, `GO_REF:0000044`, from
+`UniProtKB-SubCell:SL-0132`) and GO:0005801 (ISS, `GO_REF:0000024`, from
+`UniProtKB:Q8VE91`) — but not of the third: the second GO:0005801 row is IEA
+from `GO_REF:0000107` and `assigned_by Ensembl`, an Ensembl Compara projection of
+the *mouse GO annotation* rather than of this CC line, so a UniProt fix would not
+clear it. That row needs the mouse annotation or the projection to change, which
+is why one upstream request does not retire the Golgi claim on its own.
+`CHECK` at `SUSPECTED` is the right strength: no study has tested and excluded a
+human Golgi pool, and the mouse source is a genuine IDA, so this is a request to
+look again, not an assertion that the location is false.
 
 ### Viral exploitation (context, not a proposed annotation)
 
