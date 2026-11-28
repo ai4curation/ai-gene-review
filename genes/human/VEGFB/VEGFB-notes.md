@@ -8,6 +8,8 @@ VEGFB is a secreted disulfide-linked VEGF-family homodimer. Human VEGF-B186 and 
 
 PMID:9751730 established the best direct human functional evidence in the current GOA set: VEGF-B binds selectively to VEGFR1/FLT1, competes with VEGF for that receptor, and stimulates endothelial expression/activity of urokinase-type plasminogen activator and PAI-1. This supports core extracellular VEGFR1 ligand activity and VEGF receptor signaling. It supports migration-related extracellular-matrix remodeling better than a broad proliferation claim.
 
+PMID:20228789 showed that VEGF-B controls endothelial fatty-acid uptake through transcriptional regulation of vascular fatty-acid transport proteins mediated by endothelial VEGFR1 and neuropilin-1. This is a VEGFB-specific endothelial transport phenotype rather than a sprouting-angiogenesis or mitogenic growth-factor assay.
+
 ## Peripheral and unresolved rows
 
 PMID:19275959 directly shows that VEGF-B167 induces human mast-cell chemotaxis; this is a real but inflammatory-context function rather than the defining VEGFB role.
@@ -15,3 +17,5 @@ PMID:19275959 directly shows that VEGF-B167 induces human mast-cell chemotaxis; 
 The PMID:19483306 IPI row records an extracellular tenascin-X/VEGFB interaction. It supports the interaction but does not establish a more specific GO molecular function than receptor binding.
 
 The PMID:32296183 and PMID:40205054 KLHL12 rows come from large interaction maps and remain unresolved here: VEGFB is secreted, KLHL12 is a cytosolic COPII/Cullin-3 adaptor, and the exact constructs or pair-specific validation were not checked.
+
+The inherited VEGFB GO:0001666 response-to-hypoxia row was not supported by a VEGFB hypoxia paper in this review; the direct VEGFB literature instead supports FLT1/VEGFR1 binding, matrix-remodeling signaling, mast-cell chemotaxis, and endothelial fatty-acid uptake.
