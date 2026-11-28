@@ -9,6 +9,8 @@ with ``ai_gene_review.etl.panther_trees.load_family`` (the cached compact refere
 tree under ``.cache/panther_trees/`` or the PANTHER treeinfo service). PAINT rows come from
 each family's ``<PTHR>-paint.tsv``. Nothing is hard-coded: every line is derived from the
 tree and the PAINT table. Families with no PAINT rows still get a leaf inventory.
+Each family also gets a list of every internal node with the leaves it covers, so a
+narrower clade (for example a target for a moved IBD) can be cited from this output.
 """
 
 from __future__ import annotations
@@ -41,6 +43,9 @@ def main() -> None:
                      + ", ".join(f"{k}={v}" for k, v in sorted(sfc.items())))
         for leaf in sorted(leaves, key=lambda x: (leaves[x]["subfamily"], leaves[x]["organism"])):
             lines.append(f"  leaf {leaf}: {fmt(leaves[leaf])}")
+        for node, below in sorted(tree["under"].items(), key=lambda kv: (-len(kv[1]), kv[0])):
+            members = ", ".join(f"{leaves[x]['symbol']} [{leaves[x]['organism']}]" for x in sorted(below))
+            lines.append(f"  clade {node}: {len(below)} leaves: {members}")
         paint = PANTHER / fam / f"{fam}-paint.tsv"
         rows = list(csv.DictReader(open(paint), delimiter="\t")) if paint.exists() else []
         seen: set[str] = set()
