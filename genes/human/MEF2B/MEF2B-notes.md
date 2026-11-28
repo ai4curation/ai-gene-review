@@ -8,4 +8,10 @@ MEF2B is especially well represented in structural corepressor studies. A crysta
 
 The high-throughput HT-SELEX row from PMID:28473536 directly supports sequence-specific double-stranded DNA binding, but not the extra cis-regulatory context of RNA polymerase II promoter/enhancer binding. Several `GO:0005515` rows come from Cabin1/HDAC or large human interactome screens; Cabin1 and HDAC interactions are useful mechanistic evidence, but the bare protein-binding term is removed under the project protein-binding policy rather than used as a standalone molecular function.
 
-The PANTHER family projects a high-level heart-development row to MEF2B. MEF2B has MEF2-family transcription-factor activity, but available human MEF2B evidence and the structural papers do not specifically establish a role in heart development, so that row is treated as likely over-propagated in this paralog. The old `muscle organ development` TAS row from the original human MEF2 cloning literature is kept as a broad, non-core family context.
+The PANTHER family projects a heart-development row to MEF2B from a PAINT node
+with zebrafish `mef2cb` and `mef2d` donors. MEF2B has MEF2-family
+transcription-factor activity, but those donors are on MEF2C/MEF2D branches
+rather than the human MEF2B branch, and available human MEF2B evidence and the
+structural papers do not specifically establish a MEF2B role in heart
+development. The old `muscle organ development` TAS row from the original human
+MEF2 cloning literature is kept as a broad, non-core family context.
