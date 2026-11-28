@@ -13,3 +13,5 @@
 
 - FXR2 inherits the PTHR10603 family-root rows for mRNA binding, mRNA stability, positive regulation of translation and animal organ development. Those rows are plausible as broad FMR/FXR-family properties but rely mostly on FMR1/FXR1/model-organism evidence.
 - The FXR2 stress-granule IBA includes UniProtKB:P51116 as a seed; because that direct seed could not be verified from the visible PMID:12417522 abstract, the family node and FXR2 rows remain unresolved rather than accepted.
+- The Bilateria positive long-term-plasticity and presynaptic-translation rows should be kept as non-core inherited neuronal contexts. Their local PAINT rows each have one rat Fmr1 seed, but a single curated seed is not weak by count.
+- The `GO_REF:0000108` `GO:0098793 presynapse` row is a logical cellular-component assertion derived from `GO:0099577 regulation of translation at presynapse, modulating synaptic transmission`. Keep `GO:0098793` with the same non-core status as the PAINT presynaptic-translation row.
