@@ -14,34 +14,52 @@ compression responses.
 ### Mechanosensitive ion-channel MF
 
 `GO:0008381` is **mechanosensitive monoatomic ion channel activity**. Its
-children specify the conducted ion class, not strict selectivity: for example,
-a `mechanosensitive monoatomic cation channel activity` annotation means the
-channel conducts cations. It does not require a demonstration that the channel
-is selective for cations over every other possible ion.
+direct cation child, `GO:0140135` **mechanosensitive monoatomic cation channel
+activity**, specifies the conducted ion class rather than strict selectivity:
+the annotation means that the channel conducts cations. It does not require a
+demonstration that the channel is selective for cations over every other
+possible ion. In contrast, a child whose name specifies a single ion or says
+"selective", such as `GO:0015275` **stretch-activated, monoatomic
+cation-selective, calcium channel activity**, requires evidence that the
+mechanically activated current carries that ion preferentially.
 
 Use this molecular-function branch when the evidence shows that the gene
 product is a pore-forming or pore-contributing subunit of a channel gated by
 mechanical force. The strongest evidence is a force-response curve for a
 current in a patch-clamp assay, plus heterologous sufficiency or a purified
-protein reconstituted into a bilayer. Cell-free gating is stronger than
-heterologous expression because it shows that a lipid bilayer can transmit the
-force without another cellular component.
+protein reconstituted into a bilayer. When the evidence also shows a
+stretch-gated, Ca2+-preferring current, annotate `GO:0015275`. Cell-free gating
+is stronger than heterologous expression because it shows that a lipid bilayer
+can transmit the force without another cellular component.
 
 MF annotations do not by themselves say which tissue uses the channel. A Piezo
 channel expressed in HEK293T cells and gated by patch pressure supports
-`GO:0008381`, but it does not prove detection of touch, flow, or cartilage
-compression.
+`GO:0008381` or `GO:0140135`, but it does not prove detection of touch, flow, or
+cartilage compression.
+
+Hypotonic-swelling assays can support osmotic channel terms, such as
+`GO:1990760` **osmolarity-sensing monoatomic cation channel activity**, when the
+paper identifies the channel that opens after the osmotic stimulus. Use
+`GO:0005034` **osmosensor activity** only for a product that receives the
+osmotic stimulus and initiates a signaling response; a Ca2+ imaging response to
+hypotonic medium is not enough by itself.
 
 ### Mechanical-detection BP
 
 `GO:0050982` is **detection of mechanical stimulus**. Its children name
-specialized contexts such as detection of mechanical stimulus involved in
-sensory perception of touch, sound, or pain.
+specialized contexts such as `GO:0050976` **detection of mechanical stimulus
+involved in sensory perception of touch**, `GO:0050973` **detection of
+mechanical stimulus involved in equilibrioception**, `GO:0050974` **detection
+of mechanical stimulus involved in sensory perception**, and `GO:0035995`
+**detection of muscle stretch**.
 
 Use this biological-process branch when the gene product acts at the point of
 conversion from force into the first biological signal in a real sensory or
-mechanotransducing cell. For a mechanotransduction ion channel, require a
-chain like this:
+mechanotransducing cell. This follows the same logic that Syeda et al. used to
+ask whether a candidate is expressed in the mechanosensory cell, required for
+the mechanically activated current, and sufficient after heterologous
+expression or purification (PMID:27829145). For a mechanotransduction ion
+channel, require a chain like this:
 
 - the gene is expressed at the force-sensing site in the relevant cell
 - loss or acute inhibition of the gene reduces the mechanically evoked response
@@ -55,6 +73,14 @@ In vivo knockout phenotypes can support the BP when they are tied back to the
 sensory cell. They do not license the ion-channel MF unless the same or another
 paper measures channel activity.
 
+`GO:0009612` **response to mechanical stimulus** and `GO:0071260` **cellular
+response to mechanical stimulus** are broad response terms, not synonyms for the
+initial detection step. When a review accepts `GO:0050982` or a child,
+`GO:0009612` is a true but less informative ancestor and should normally be
+`TOO_GENERAL`. Keep `GO:0071260` only when the evidence supports a real cellular
+response that is downstream or contextual rather than the core detection
+mechanism.
+
 ## Assay-to-annotation mapping
 
 | Assay or perturbation | MF support | BP support | Curation rule |
@@ -63,7 +89,7 @@ paper measures channel activity.
 | Whole-cell indentation or poking with a blunt probe | Strong support when expression of the candidate gives a current to naive cells or loss of the candidate removes the native current | Strong in a native sensory cell when the candidate is expressed at that site and loss removes a mechanically evoked receptor current | The stimulus reaches the channel through cell shape, membrane, cortex, and attachments, so the assay can identify a cellular mechanotransducer without proving force-from-lipids gating. |
 | Deflection of a calibrated pillar, probe, cilium, neurite, or hair bundle | Usually indirect for MF unless a channel current is measured or the candidate is independently shown to be the pore | Can be strong for the BP when the deflected structure is the physiological force-sensing organelle and gene loss specifically removes the response | Distinguish direct sensors from structural components that place the sensor correctly. A bundle scaffold may be required for sound detection without being a mechanosensitive channel. |
 | Laminar or oscillatory fluid shear/flow | Insufficient for MF by itself | Strong for endothelial, ciliary, or other flow-detection BPs when shear is defined and gene loss blocks the immediate response | Flow can activate channels, junctions, cilia, ATP release, GPCRs, integrins, and nitric-oxide signaling. Annotate MF only when a channel is tied to a mechanically gated conductance. |
-| Hypotonic swelling or osmotic shock | Supports a mechano-osmotic or osmosensitive channel only when the paper connects the swelling response to membrane tension or channel gating | Supports detection of osmotic stimulus more directly than detection of mechanical stimulus; use a mechanical-detection term only with independent force evidence | A Ca2+ imaging response to hypotonicity is still a downstream readout unless the assayed gene is the channel or osmosensor. |
+| Hypotonic swelling or osmotic shock | Supports `GO:1990760` when the osmotic stimulus gates the cation channel itself | Supports a mechanical-detection BP only with independent force evidence or with a native context where swelling-generated membrane tension is the physiological stimulus | A Ca2+ imaging response to hypotonicity is still a downstream readout unless the assayed gene is the channel or osmosensor. |
 | Purified protein reconstituted into liposomes, giant proteoliposomes, droplet interface bilayers, or planar lipid bilayers | Strongest sufficiency evidence for MF if mechanical tension, osmotic stress, or bilayer deformation gates a channel and controls rule out contaminating channels | No physiological BP support by itself | A constitutively open reconstituted channel shows pore activity but not mechanosensitive gating. Require an acute mechanical stimulus or a lipid-tension manipulation for `GO:0008381`. |
 | In vivo knockout or conditional knockout with a mechanosensory phenotype | No MF support by itself | Strong for BP only when expression and physiology place the gene in the sensory cell and control for development, viability, and generic excitability | Behavior alone is too distal. Pair it with skin-nerve, cilium, endothelial, or hair-cell physiology whenever possible. |
 
@@ -108,10 +134,10 @@ with defined pore properties, that purified Piezo1 complexes lacked another
 detectable ion-channel protein, and that purified mouse Piezo1 reconstituted
 into both droplet bilayers and proteoliposomes produced Ruthenium Red-sensitive
 cation channel activity (PMID:22343900). That paper established pore identity,
-but its reconstituted channels were largely constitutive. Syeda et al. closed
-the force-from-lipids gap by showing that purified Piezo1 in droplet bilayers
-is acutely activated by an osmotic gradient or by solvent injection that
-expands one droplet monolayer (PMID:27829145).
+but its reconstituted channels were spontaneously active without a mechanical
+stimulus. Syeda et al. closed the force-from-lipids gap by showing that
+purified Piezo1 in droplet bilayers is acutely activated by an osmotic gradient
+or by solvent injection that expands one droplet monolayer (PMID:27829145).
 
 Those papers support `GO:0008381` and `GO:0140135` for PIEZO1 orthologs. The
 shear-flow BP requires cellular evidence: Ranade et al. showed that Piezo1 is
@@ -133,10 +159,10 @@ poking, and touch-dome afferents in skin-nerve preparations had impaired
 sustained firing (PMID:24717433). Ranade et al. then induced Piezo2 loss in
 adult sensory neurons and Merkel cells and found loss of low-threshold
 mechanosensitivity in cultured DRG neurons, A-beta afferents, and behavioral
-touch assays, with thermal and high-force pain responses spared
-(PMID:25471886). Together those papers support detection of low-threshold
-mechanical stimuli involved in touch sensation for mouse Piezo2; human PIEZO2
-can inherit that claim only through the usual orthology-aware review.
+touch assays, with thermal and high-force pain responses spared (PMID:25471886).
+Together those papers support `GO:0050976` **detection of mechanical stimulus
+involved in sensory perception of touch** for mouse Piezo2; human PIEZO2 can
+inherit that claim only through the usual orthology-aware review.
 
 ### TRPV4: osmotic and compression responses are not proof of a direct pore
 
@@ -168,8 +194,9 @@ primary-cilium channel. They also tested the complex with pressure clamp and
 found no change in single-channel activity from 0 to 60 mm Hg in primary cilia
 or heterologous expression; activity increased only at 80 to 100 mm Hg, and the
 paper concluded that the channel lacks the sensitivity of designated
-mechanosensitive channels. That is at least 2.6-fold higher than the roughly
-30 mm Hg P50 of heterologous mouse Piezo1 on the same pressure scale
+mechanosensitive channels. The negative 0 to 60 mm Hg range spans the roughly
+30 mm Hg P50 of heterologous mouse Piezo1 on the same pressure scale, so the
+PKD1L1/PKD2L1 pressure response is far beyond Piezo1's usual operating range
 (PMID:20813920, PMID:24336289).
 
 That evidence supports PKD2L1 as part of a ciliary cation channel, not as a
@@ -188,7 +215,7 @@ than deciding it ad hoc inside one gene review.
   for non-core `GO:0008381`, or should it be treated as over-threshold noise
   unless a native cell reaches an equivalent force?
 - Which BP should be preferred when hypotonicity activates a channel through
-  membrane stretch: `detection of osmotic stimulus`, `detection of mechanical
+  membrane stretch: an osmotic response term, `detection of mechanical
   stimulus`, or both only after orthogonal mechanical assays?
 - Should chondrocyte, endothelial, and other non-neuronal flow/compression
   systems use the root `detection of mechanical stimulus`, or should they be
