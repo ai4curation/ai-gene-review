@@ -21,8 +21,13 @@ from ai_gene_review.validation.validation_report import (
 
 INVOLVED_IN = " involved in "
 CATEGORY = "Decomposition"
-#: actions that say a claim is not one the review would accept
-NOT_ACCEPTABLE = frozenset({"KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED", "REMOVE"})
+#: actions under which a term is not a claim the review would accept as a
+#: replacement: the first three judge the claim (non-core, over-annotated,
+#: wrong); TOO_GENERAL judges only the term, which a more specific term the
+#: review asserts already entails, so its remedy is to propose that term
+NOT_ACCEPTABLE = frozenset(
+    {"KEEP_AS_NON_CORE", "MARK_AS_OVER_ANNOTATED", "REMOVE", "TOO_GENERAL"}
+)
 #: actions that assert a claim the review accepts
 ACCEPTING = frozenset({"ACCEPT", "NEW"})
 
@@ -150,6 +155,26 @@ def _issue(
         suggestion=suggestion,
         validation_category=CATEGORY,
         check_type=check_type,
+    )
+
+
+def _replacement_remedy(held: set[str]) -> str:
+    """Say how to fix a decomposition MODIFY whose replacement is held elsewhere.
+
+    >>> "more specific term" in _replacement_remedy({"TOO_GENERAL"})
+    True
+    >>> "KEEP_AS_NON_CORE on the precomposed term" in _replacement_remedy({"REMOVE"})
+    True
+    """
+    base = "A MODIFY's replacement must be a claim the review would accept. "
+    if held == {"TOO_GENERAL"}:
+        return base + (
+            "The review calls the replacement too general, so propose the more specific "
+            "term it already asserts instead"
+        )
+    return base + (
+        "Keep a non-core claim as KEEP_AS_NON_CORE on the precomposed term "
+        "(MARK_AS_OVER_ANNOTATED if that term is obsolete)"
     )
 
 
@@ -316,8 +341,6 @@ def check_decomposition(
                         f"Decomposition MODIFY proposes {t.get('id')}, which this review "
                         f"marks {held} on another row",
                         base,
-                        "A MODIFY's replacement must be a claim the review would accept. "
-                        "Keep a non-core claim as KEEP_AS_NON_CORE on the precomposed term "
-                        "(MARK_AS_OVER_ANNOTATED if that term is obsolete)",
+                        _replacement_remedy(acts & NOT_ACCEPTABLE),
                         "decomposition_replacement_not_acceptable",
                     )

@@ -86,3 +86,65 @@ The IBA on pvdE itself is supported.
   experimental evidence on oligomeric state; plausible homodimeric half
   transporter).
 - GO:0015833 peptide transport, GO:0055085 transmembrane transport: ACCEPT.
+
+---
+
+## Review written (batch 5, 2026-11-23)
+
+The analysis above was done in an earlier session (committed with the tier-1 PR) but the
+review file never landed, so this entry records implementing it and where I diverged.
+
+`GO:0015440 ABC-type peptide transporter activity` was re-checked in OLS: the label is right,
+its definition does name "siderophores from Gram-negative bacteria" among the exported
+peptides, and it is a descendant of `GO:0042626`, `GO:0140359` and `GO:1904680`, so all three
+can legitimately be refined to it.
+
+### Two divergences from the decision list above
+
+The earlier notes predate the **2026-11-14 maintainer ruling**, which narrowed `TOO_GENERAL`
+and raised the bar for `MODIFY` to *this row's own evidence for the deeper term*. Two calls
+change under it:
+
+- **`GO:0016020 membrane` → `TOO_GENERAL`, not `MODIFY`.** `GO:0005886 plasma membrane` is
+  accepted on this gene as its own row, so the specific term is already asserted elsewhere and
+  there is nothing to propose. CLAUDE.md names `membrane` ("which membrane?") as the canonical
+  example of the action.
+- **`GO:0000166 nucleotide binding` → `TOO_GENERAL`, not `MODIFY`.** Same shape: `GO:0005524
+  ATP binding` is accepted as its own row, and "nucleotide binding" is imprecise on its own.
+
+### One refinement the decision list did not make
+
+The list sent `GO:0042626`, `GO:0140359` and `GO:1904680` all to `GO:0015440`. Keying each row
+to *its own* evidence splits them:
+
+| row | its evidence | action |
+|---|---|---|
+| `GO:0042626` IMP | the mutant lacks the periplasmic **precursor peptide** | `MODIFY` → `GO:0015440` |
+| `GO:0042626` IBA | node seeded by this gene's own IMP | `MODIFY` → `GO:0015440` |
+| `GO:1904680` IEA | `IPR005898`, the cyclic **peptide** transporter family (SyrD/YojI) | `MODIFY` → `GO:0015440` |
+| `GO:0140359` IEA | `IPR011527`, a generic ABC transmembrane domain | `TOO_GENERAL` |
+
+`IPR011527` supports "ABC-type transporter" but says nothing about the substrate, so that row's
+evidence stops at the general term — which the ruling says is not a `MODIFY`. The peptide
+specificity comes from the mutant phenotype and from `IPR005898`, and only the rows resting on
+those are refined.
+
+### The IBD over-propagation finding stands
+
+Recorded as a `GO_CENTRAL` defect on the `GO:0042626` IBA row at `PROBABLE` with
+`requested_change: CHECK`, as the earlier analysis proposed. The bioinformatics result is the
+substance: of 140 leaves inheriting the IBA, 126 are NBD-only soluble ATPases and only 6 have a
+membrane domain, so an `enables` transporter activity sits at a node defined by the
+nucleotide-binding domain. The seed itself is sound for PvdE.
+
+Note the `GO:0042626` IBA lists `UniProtKB:Q9I183` — this gene — in its `WITH/FROM`. That is
+the expected self-appearance, not circularity: pvdE's own IMP is the descendant evidence behind
+the IBD, and it is in fact the *sole* seed.
+
+### What is deliberately not annotated
+
+`GO:0180061 native siderophore export across plasma membrane` is not proposed, for the reason
+the earlier notes give: its definition ends in the extracellular region, whereas PvdE exports a
+precursor into the periplasm, and mature pyoverdine leaves the cell by a different route
+(PvdRT-OpmQ). The avirulence of a ΔpvdE mutant in keratitis is a downstream consequence of
+losing pyoverdine, not a function of this protein, and is not annotated.

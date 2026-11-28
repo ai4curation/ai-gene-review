@@ -382,6 +382,23 @@ descriptions-status organism *args="":
 litscan-module-member *args="":
     uv run ai-gene-review litscan module-member {{args}}
 
+# LitScan gene-gap: rank recent papers by the function-knowledge gap they could
+# close (dark genes, unknown-function families, refuted annotations). Writes a
+# packet + ready-to-file issue bodies to reports/litscan/gene-gap/; never touches
+# GitHub. Scoring rules: conf/litscan/gene_gap.yaml. See docs/litscan_gene_gap.md.
+#   just litscan-gene-gap --days 30
+#   just litscan-gene-gap --date-from 2026-10-27 --date-to 2026-11-26 --include-preprints
+litscan-gene-gap *args="":
+    uv run ai-gene-review litscan gene-gap {{args}}
+
+# Re-apply conf/litscan/gene_gap.yaml to an existing packet, offline (calibration).
+litscan-rescore-gene-gap packet *args="":
+    uv run ai-gene-review litscan rescore-gene-gap {{packet}} {{args}}
+
+# Validate gene-gap scan configs and packets against their LinkML schema.
+litscan-validate-gene-gap *paths="conf/litscan/gene_gap.yaml":
+    uv run ai-gene-review litscan validate-gene-gap {{paths}}
+
 # Shadow issue trackers (issues/<tracker>/, see projects/GO_ANNOTATION_TRACKER.md).
 # Read-only mirror of upstream issues: never reference them by URL or org/repo#N
 # in commits or PRs, and never at-mention anyone but cmungall.
@@ -393,6 +410,53 @@ litscan-module-member *args="":
 # Fetch new and updated upstream issues into issues/<tracker>/ (read-only)
 sync-shadow-issues tracker="go-annotation" *args="":
     uv run ai-gene-review shadow-issues sync {{tracker}} {{args}}
+
+# --- Time-split annotation benchmarks (docs/benchmarks.md) ---
+#   just benchmark-build benchmarks/human-goa-2025-06/human-goa-2025-06-spec.yaml
+#   just benchmark-check benchmarks/human-goa-2025-06/human-goa-2025-06.yaml
+#   just benchmark-export benchmarks/human-goa-2025-06/human-goa-2025-06.yaml
+#   just benchmark-import benchmarks/human-goa-2025-06/human-goa-2025-06.yaml runs/blind.jsonl --from peptalk -o benchmarks/human-goa-2025-06/predictions/blind-peptalk-m.jsonl
+#   just benchmark-score benchmarks/human-goa-2025-06/human-goa-2025-06.yaml -p benchmarks/human-goa-2025-06/predictions/blind-peptalk-m.jsonl
+
+# Draw a benchmark from a BenchmarkSpec into the spec's folder
+benchmark-build spec *args="":
+    uv run ai-gene-review benchmark build {{spec}} -o $(dirname {{spec}}) {{args}}
+
+# Run the deterministic checks; writes <id>-check-report.yaml and .md beside the benchmark
+benchmark-check benchmark *args="":
+    uv run ai-gene-review benchmark check {{benchmark}} {{args}}
+
+# Write generic run inputs: FASTA, claims (ClaimSet YAML) and baseline GOA files
+benchmark-export benchmark *args="":
+    uv run ai-gene-review benchmark export {{benchmark}} {{args}}
+
+# Convert a predictor's native output (--from peptalk|reviews) into Prediction records
+benchmark-import benchmark *args="":
+    uv run ai-gene-review benchmark import {{benchmark}} {{args}}
+
+# Score Prediction files (JSONL or PredictionSet YAML) per condition, predictor and item
+benchmark-score benchmark *args="":
+    uv run ai-gene-review benchmark score {{benchmark}} {{args}}
+
+# Validate every committed benchmark spec, benchmark, check report, agent evaluation and score report
+validate-benchmarks:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+    for spec in benchmarks/*/*-spec.yaml; do
+        dir=$(dirname "$spec"); id=$(basename "$spec" -spec.yaml)
+        uv run ai-gene-review benchmark validate "$spec" --class BenchmarkSpec
+        uv run ai-gene-review benchmark validate "$dir/$id.yaml" --class Benchmark
+        for f in "$dir/$id"-check-report.yaml; do uv run ai-gene-review benchmark validate "$f" --class CheckReport; done
+        for f in "$dir"/*-agent-evaluation.yaml; do uv run ai-gene-review benchmark validate "$f" --class AgentEvaluation; done
+        for f in "$dir"/*-scores.yaml; do uv run ai-gene-review benchmark validate "$f" --class ScoreReport; done
+        for f in "$dir"/predictions/*; do uv run ai-gene-review benchmark validate "$f" --class PredictionSet; done
+    done
+
+# Regenerate the benchmark schema's JSON Schema and Pydantic model (commit both)
+gen-benchmark-models:
+    uv run gen-json-schema src/ai_gene_review/schema/benchmark.yaml > assets/jsonschema/benchmark.schema.json.tmp && mv assets/jsonschema/benchmark.schema.json.tmp assets/jsonschema/benchmark.schema.json
+    uv run gen-pydantic src/ai_gene_review/schema/benchmark.yaml > src/ai_gene_review/datamodel/benchmark_model.py.tmp && mv src/ai_gene_review/datamodel/benchmark_model.py.tmp src/ai_gene_review/datamodel/benchmark_model.py
 
 # List shadow issues waiting for triage, shadow work, or rating
 outstanding-shadow-issues tracker="go-annotation" *args="":
@@ -414,6 +478,15 @@ validate-shadow-issues tracker="go-annotation":
 # Check a commit message or PR body file for text that would notify upstream curators.
 check-upstream-refs +files:
     python3 src/ai_gene_review/shadow_issues/guard.py {{files}}
+
+# Optional isolated sequence read through the claude CLI (FEAT + PSEUDO prompts of
+# fable-sequence-to-function, with shuffled and catalytic/decoy controls). Bills 3-5
+# model calls to the signed-in claude account. For a clean blind control use
+# peptalk-llm (`sequence-read blind-fasta` / `import-peptalk`); the default mode is the
+# reviewing agent's own in-context read. See .claude/skills/sequence-read/SKILL.md.
+# Example: just sequence-read human PTEN --model claude-fable-5-2 --effort high
+sequence-read organism gene *args="":
+    uv run ai-gene-review sequence-read run {{organism}} {{gene}} {{args}}
 
 # Generic provider-selecting entry point documented in AGENTS.md and automation prompts.
 # Supports --provider, --alias, --fallback, --timeout, and --extra-args (which must come last).
@@ -1465,6 +1538,18 @@ local-quote-baseline *args:
 [group('QC')]
 ec-class-audit *files:
     uv run python -m ai_gene_review.validation.ec_class_consistency {{files}}
+
+# List every GO:0005737 cytoplasm row the cytoplasm policy (projects/CYTOPLASM.md)
+# would change: eukaryotic ACCEPT/NEW rows, MODIFYs to cytoplasm and core locations
+# (also warned by `just validate`), MODIFY on propagated eukaryotic rows,
+# TOO_GENERAL rows nothing entails, and prokaryotic TOO_GENERAL rows. Prints
+# domain x action tallies and writes reports/cytoplasm-policy.tsv (git-ignored).
+# Loads the GO sqlite snapshot (downloaded on first use) for the TOO_GENERAL
+# entailment; --no-ontology skips it, e.g. offline.
+# Example: just cytoplasm-audit --no-ontology genes/human/TP53/TP53-ai-review.yaml
+[group('QC')]
+cytoplasm-audit *files:
+    uv run python -m ai_gene_review.validation.cytoplasm_policy {{files}}
 
 # List author-supplied GO ids (NEW rows and their extensions, core_functions,
 # proposed_replacement_terms, proposed_parent, isoform_specific_terms) that an

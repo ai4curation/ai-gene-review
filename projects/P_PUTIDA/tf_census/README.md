@@ -4,7 +4,7 @@ Start with the generated [coverage report](data/coverage.md), the
 [prioritized candidate inventory](data/candidates.tsv), and the
 [20-case calibration worklist](data/calibration.tsv). The
 [scoped assessments](calibration-review.md) and [importer checks](imodulon/calibration-results.md)
-are complete; [four full GO re-reviews](../batches/tf_carbon_utilization_01.md)
+are complete; [four carbon-utilization re-reviews](../batches/tf_carbon_utilization_01.md) and [four signaling/RNA re-reviews](../batches/tf_signaling_rna_02.md)
 and [structured regulatory evidence](regulatory-evidence.md) now follow that initial pass. The
 [bacterial regulon evidence workstream](../../TRANSCRIPTION_FACTORS/bacterial-regulon-evidence.md)
 sets the biological scope and subsequent curation tasks.

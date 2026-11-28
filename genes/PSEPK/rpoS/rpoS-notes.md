@@ -26,3 +26,15 @@
 - GO:0006352 DNA-templated transcription initiation and GO:2000142 regulation of DNA-templated transcription initiation capture the direct process-level role better than GO:0006355 regulation of DNA-templated transcription or GO:0010468 regulation of gene expression.
 - GO:0003677 DNA binding is too generic for a sigma factor whose core activity is promoter specificity within RNA polymerase holoenzyme rather than a standalone DNA-binding regulator.
 - Biofilm formation is well supported but should be treated as a non-core pleiotropic output of the RpoS regulon rather than the main evolved function of the protein.
+
+## 2026-11-16 — TF batch 2: sigma-factor activity and PwspA
+
+All eight machine-seeded annotations were re-reviewed. Generic DNA binding is true and is refined to GO:0001046 core promoter sequence-specific DNA binding, supported by the experimentally required -10 motif. Sigma factor activity is the specific TF activity. Transcription/gene-expression regulation refines to the already annotated transcription-initiation regulation. A lack of standalone enzymatic activity does not negate promoter binding by a sigma factor.
+
+[PMID:9642197, Cloning, sequencing, and phenotypic characterization of the rpoS gene from Pseudomonas putida KT2440] replaces notes-as-evidence for the retained starvation-response IMP. The generic stress-response NEW is an ancestor of starvation response and was withdrawn as redundant. The authored biofilm-formation execution proposal and secondary non-core biofilm core-function block were withdrawn. The proposed stationary-phase-specific sigma MF is unnecessary: existing sigma activity plus biological context suffice.
+
+[PMID:39589111, Tetracycline induces wsp operon expression to promote biofilm formation in Pseudomonas putida] full text supports direct activation of PwspA/PP_1488. Purified His-RpoS EMSA with competitor probes and CTATACT→TCGGCAC -10 mutation agree with promoter-lacZ deletion/complementation assays. Standard motif reporter assays used ten-hour LB cultures; the separate tetracycline assays added 6 µg/mL for four hours after six-hour preculture at 28°C. The quoted Fig. 5 motif experiments are not themselves labeled tetracycline-treated. The sidecar represents the major promoter, not seven independent contacts. PwspF effects were indirect. This evidence establishes transcriptional regulation of Wsp/c-di-GMP signaling; WspR and downstream biofilm machinery execute the other processes. No additional biofilm GO proposal was introduced without a separate comparator audit.
+
+The 2026 sigma-regulon study's full PDF is accessible at https://link.springer.com/content/pdf/10.1186/s13036-026-00769-z_reference.pdf and was inspected during annotation-reviewer consultation. Its unproductive-initiation model remains proposed; supplementary target table S6 was not inspected, so no bulk target import was made.
+
+Provider research and existing machine/publication sources remain byte-identical. FEBA was unavailable and no fitness artifact was created. No MOD-description provider applies to PSEPK.
