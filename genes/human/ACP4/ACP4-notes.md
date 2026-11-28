@@ -8,4 +8,4 @@
 
 ## PAINT
 
-The ACP4 clade has its own PAINT node, `PANTHER:PTN002611605`, for protein tyrosine phosphatase activity, receptor tyrosine kinase binding, ERBB4 signaling, and synaptic-plasticity regulation. ACP2-like lysosomal acid phosphatase activity and lysosomal localization should be pruned before this clade.
+The ACP4 clade has its own PAINT node, `PANTHER:PTN002611605`, for protein tyrosine phosphatase activity, receptor tyrosine kinase binding, ERBB4 signaling, and synaptic-plasticity regulation. ACP2-like lysosomal localization should be pruned before this clade; the ACP2-derived acid-phosphatase IBD is an over-propagation concern, but ACP4 itself retains histidine-acid-phosphatase catalytic residues and was therefore not treated as a proven activity loss.
