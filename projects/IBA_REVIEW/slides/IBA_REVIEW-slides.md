@@ -90,7 +90,7 @@ Catalytic activity transferred to proteins that lost the active site but kept th
 
 When a subfamily evolved the **opposite reaction** or a family mixes opposite-sign members.
 
-- **Cds1** (M. tuberculosis, V. cholerae; PTHR10314 SF135) — `GO:0019344` cysteine **biosynthesis** propagated from the family root, but Cds1 catalyzes cysteine **catabolism** (EC 4.4.1.1: L-Cys → H2S + pyruvate). The most severe error type — *directionally opposite*. SF135 has the longest branch length (0.528) and only ~24% identity to synthases. (PMID:34439535, PMID:34283874)
+- **Cds1** (M. tuberculosis, V. cholerae; PTHR10314 SF135) — `GO:0019344` cysteine **biosynthesis** propagated from the family root, but Cds1 catalyzes cysteine **catabolism** (EC 4.4.1.1: L-Cys → H2S + pyruvate). The most severe error type — *directionally opposite*. No seed of the row sits in the SF135 branch (all 19 are paralogs of Cds1), and SF135 is only ~24% identical to the synthases. (PMID:34439535, PMID:34283874)
 - **BCL2** (human, mouse) — `GO:0043065` **positive** regulation of apoptosis, but BCL2 is the prototypical **anti-apoptotic** guardian. The IBA node (PTN000135648) mixes pro-apoptotic BAX/BAK1 with anti-apoptotic members. *(Caveat: a separate NAS annotation + context-dependent pro-apoptotic roles exist → "sign unreliable", not "impossible".)*
 
 ---

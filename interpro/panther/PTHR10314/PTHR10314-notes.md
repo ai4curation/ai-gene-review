@@ -28,7 +28,7 @@ PTHR10314 (Family)
             ├── PTN000034466 [SF194 - CBS/CysK] (branch 0.412)
             │   └── EC 4.2.1.22 / 2.5.1.47 - BIOSYNTHESIS ✓
             │
-            ├── PTN008304321 [SF135 - Cds1] (branch 0.528)  ← LONGEST BRANCH
+            ├── PTN008304321 [SF135 - Cds1] (branch 0.528)  ← NO SEED IN THIS BRANCH
             │   └── EC 4.4.1.1 - CATABOLISM ✗ (WRONG ANNOTATION)
             │
             ├── PTN000741516 [SF5 - Threonine synthase] (branch 0.659)
@@ -51,7 +51,13 @@ PTHR10314 (Family)
 
 ### Evidence: SF135 is Functionally Distinct
 
-1. **Longest branch length (0.528)** from root indicates greatest sequence divergence
+1. **No seed of the root annotation lies in this branch.** In the PANTHER 19.0 tree the
+   root (PTN000034104) is a duplication with five branches. All 19 seeds of `GO:0019344`
+   sit in three of the other four, so every seed is a paralog of Cds1, and *M.
+   tuberculosis* Cds1 is 21-27% identical to them in the family alignment
+   (`genes/MYCTU/cds1/cds1-phylo.yaml`). An earlier version of this list gave "longest
+   branch length (0.528)" as the first evidence. The Cds1 branch is the second longest
+   below the root: the threonine synthase branch is 0.659 (see the table above).
 2. **Different EC number**: 4.4.1.1 (lyase) vs 2.5.1.47 (transferase)
 3. **Opposite reaction direction**:
    - SF194/SF162: O-Ac-L-Ser + H2S → L-Cys (BIOSYNTHESIS)
@@ -164,7 +170,7 @@ Position 1352: Lysine conserved >97% in all subfamilies - this is the catalytic 
 ### For Gene Reviews
 
 Mark GO:0019344 as REMOVE for any SF135 protein with reason:
-> "Incorrect IBA propagation - enzyme is catabolic (EC 4.4.1.1 desulfhydrase), not biosynthetic (EC 2.5.1.47 synthase). Source proteins in WITH/FROM are from SF194/SF162 (true synthases), but target is in SF135 (desulfhydrase subfamily) which diverged early with longest branch length (0.528) indicating neo-functionalization."
+> "Incorrect IBA propagation - enzyme is catabolic (EC 4.4.1.1 desulfhydrase), not biosynthetic (EC 2.5.1.47 synthase). Source proteins in WITH/FROM are from SF194/SF162 (true synthases), but target is in SF135 (desulfhydrase subfamily), a separate branch below the root duplication that holds none of the seeds."
 
 ## Deep Research Findings (Falcon 2026-01-06)
 

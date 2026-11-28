@@ -203,6 +203,32 @@ paint-review-coverage *args="":
 paint-losses organism gene:
     uv run python -m ai_gene_review.validation.gene_paint_losses {{organism}} {{gene}}
 
+# Download the PANTHER release trees (speciation/duplication/transfer events, branch
+# lengths), family alignments and full-length sequences into the git-ignored
+# .cache/panther_release/ (one SQLite file, about 1.3 GB; a few minutes). Needed once per
+# PANTHER release by `just phylo` and `just phylo-family`. The live PANTHER tree service
+# times out on many families; this reads the release bundle instead.
+# Example: just fetch-panther-release
+# Example: just fetch-panther-release --force
+fetch-panther-release *args="":
+    uv run python -m ai_gene_review.etl.panther_release fetch {{args}}
+
+# Write genes/<org>/<GENE>/<GENE>-phylo.yaml: for every IBA row, where the PAINT node, its
+# seeds and the gene sit in the PANTHER tree (events, steps, duplications, seed spread),
+# how the gene compares with the seeds in the family alignment, PAINT losses on the path,
+# and the family's curated residue sites read off the alignment. Derived file; a review
+# that overrules an IBA quotes the row's `summary` in supported_by.
+# Example: just phylo human CIRBP
+phylo organism gene:
+    uv run python -m ai_gene_review.etl.gene_phylo {{organism}} {{gene}}
+
+# Write interpro/panther/<PTHR>/<PTHR>-tree-nodes.yaml: for every node of the family's
+# PAINT slice, what it covers in the tree and whether its seeds bracket it or all sit in
+# one branch below it. A node assessment that disputes a placement quotes its `summary`.
+# Example: just phylo-family PTHR11801
+phylo-family family:
+    uv run python -m ai_gene_review.etl.gene_phylo --family {{family}}
+
 # Copy PAINT facts into family-review node_assessments: `evidence` (IBD/IRD/IKR),
 # `negated: true` on losses, and a loss's blocked IBD node as `seeds`. Never sets a
 # verdict or overwrites a curated field; lists losses still judged with a gain verdict.

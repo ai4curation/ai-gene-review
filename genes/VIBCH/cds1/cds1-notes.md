@@ -19,7 +19,14 @@ See family-level analysis: [interpro/panther/PTHR10314/PTHR10314-notes.md](../..
 The IBA annotation **GO:0019344 (L-cysteine biosynthetic process)** is INCORRECT for this gene.
 
 - **Reason**: SF135 (Cds1 subfamily) performs cysteine CATABOLISM (EC 4.4.1.1), not biosynthesis
-- **Branch length**: 0.528 from root - longest branch, indicating significant functional divergence
+- **Tree position**: in the PANTHER 19.0 tree the IBA's node (PTN000034104) is the family root, a
+  duplication with five branches. All 19 seeds of the row sit in three of the other four branches and
+  none in the Cds1 branch (PTN008304321), so every seed is a paralog of cds1 (`cds1-phylo.yaml`,
+  from `just phylo VIBCH cds1`).
+  *Correction 2026-11-10: this line used to read "Branch length: 0.528 from root - longest branch,
+  indicating significant functional divergence". The five root branches are 0.412, 0.528, 0.659, 0.458
+  and 0.402, so the Cds1 branch is the second longest (the threonine synthase branch is the longest),
+  and branch length was not the evidence in any case.*
 - **Correct annotations**: GO:0019450 (cysteine catabolic process), GO:0080146 (L-cysteine desulfhydrase activity)
 
 ## Gene-Specific Notes
