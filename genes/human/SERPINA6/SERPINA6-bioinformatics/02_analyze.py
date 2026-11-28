@@ -323,6 +323,16 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
         # would the reported number also match if (mis)read in the other numbering scheme?
         other = v["pos"] if v["numbering"] == "mature" else v["pos"] - sp_len
         other_res = seq[other - 1] if 0 < other <= len(seq) else None
+        alias_notes = []
+        for al in v.get("also_reported_as", []):
+            ap = al["pos"] + sp_len if v["numbering"] == "mature" else al["pos"]
+            if seq[ap - 1] != al["ref"]:
+                alias_notes.append({
+                    "variant": v["name"], "label": al["label"], "reported": f"{al['ref']}{al['pos']}{al['alt']}",
+                    "precursor_pos": ap, "canonical_residue": seq[ap - 1], "references": al["references"],
+                    "note": ("reference and alternate are swapped relative to the UniProt canonical sequence"
+                             if seq[ap - 1] == al["alt"] else "reference residue does not match the canonical sequence")})
+        v["alias_notes"] = alias_notes
         v.update(precursor_pos=p, mature_pos=p - sp_len, canonical_residue=canon, ref_matches_canonical=ok,
                  numbering_note=alt_note, residue_if_read_in_other_numbering=other_res)
         numbering_rows.append(v)
@@ -333,6 +343,7 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
             {k: v[k] for k in ("name", "numbering", "ref", "pos", "alt", "precursor_pos", "canonical_residue", "numbering_note")}
             for v in numbering_rows if not v["ref_matches_canonical"]
         ],
+        "alias_mismatches": [n for v in numbering_rows for n in v["alias_notes"]],
         "ambiguous_if_numbering_confused": [
             v["name"] for v in numbering_rows
             if v["ref_matches_canonical"] and v["residue_if_read_in_other_numbering"] == v["ref"]
@@ -870,6 +881,9 @@ def write_markdown(R: dict, lit_rows: list[dict], cv_rows: list[dict], sp_len: i
     for m in nc["mismatches"]:
         w(f"- Mismatch: {m['name']} is reported as {m['ref']}{m['pos']}{m['alt']} ({m['numbering']} numbering), but canonical residue "
           f"{m['precursor_pos']} is {m['canonical_residue']}; {m['numbering_note'] or 'unexplained'}.")
+    for m in nc["alias_mismatches"]:
+        w(f"- Alternative name: {m['variant']} is also written {m['label']} ({m['reported']}; {', '.join(m['references'])}), but canonical residue "
+          f"{m['precursor_pos']} is {m['canonical_residue']}; {m['note']}.")
     if nc["ambiguous_if_numbering_confused"]:
         w("- Variants whose reference residue would also match if the reported number were read in the other numbering "
           "scheme (cannot be disambiguated by the residue check alone): " + ", ".join(nc["ambiguous_if_numbering_confused"]) + ".")

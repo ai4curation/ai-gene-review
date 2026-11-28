@@ -107,11 +107,13 @@ ascertainment bias in families found through fatigue clinics. The authors of the
 Everything in this section is computed by `SERPINA6-bioinformatics/02_analyze.py`; numbers are quoted
 from its `RESULTS.md`.
 
-- Numbering check: 19 of 20 literature variants have the reported reference residue at the converted
-  position. The exception is the common "A224S" polymorphism: the canonical residue 246 is Ser and the
-  first report had it the right way round [PMID:1504007 "another which encodes a Ser----Ala substitution at residue 224"];
-  gnomAD gives p.Ser246Ala an allele frequency of 0.48. Later papers that write "A224S" swap reference and
-  alternate. `[file:human/SERPINA6/SERPINA6-bioinformatics/RESULTS.md "reference and alternate are swapped relative to the UniProt canonical sequence"]`
+- Numbering check: all 20 literature variants have the reported reference residue at the converted
+  position. One naming trap: the common polymorphism at canonical Ser246 was first reported the right way
+  round [PMID:1504007 "another which encodes a Ser----Ala substitution at residue 224"]; gnomAD gives
+  p.Ser246Ala an allele frequency of 0.48. Later papers that write "A224S" swap reference and alternate.
+  `[file:human/SERPINA6/SERPINA6-bioinformatics/RESULTS.md "reference and alternate are swapped relative to the UniProt canonical sequence"]`
+  (Until the 2026-11-28 review round the input file encoded this variant as A224S, so earlier text and the
+  first history record say 19 of 20; the record is now S224A with A224S as a checked alias.)
 - "p.Gly237Val" in PMID:20610591 is mature numbering written with a p. prefix: c.776G>T changes codon 259,
   i.e. p.Gly259Val. Leu93/Leu115 and Glu102/Glu124 are both the reported residue in either numbering, so
   only the cDNA position disambiguates them (c.344T>A, c.371A>G).

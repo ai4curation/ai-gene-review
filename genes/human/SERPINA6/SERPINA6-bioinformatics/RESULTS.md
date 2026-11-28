@@ -8,8 +8,8 @@ unless marked *mature*.
 
 - UniProt P08185 sequence version 1 is 405 residues; the signal peptide is residues 1-22 (`MPLLLYTCLLWLPTSGLWTVQA`), so the secreted chain has 383 residues and starts `MDPNAAYV`.
 - Mature (literature and PDB author) numbering = precursor (HGVS p.) numbering - 22.
-- 19 of 20 literature variants have a reference residue that matches the canonical sequence after conversion.
-- Mismatch: CBG A224S polymorphism is reported as A224S (mature numbering), but canonical residue 246 is S; reference and alternate are swapped relative to the UniProt canonical sequence.
+- 20 of 20 literature variants have a reference residue that matches the canonical sequence after conversion.
+- Alternative name: CBG S224A polymorphism ("A224S") is also written CBG A224S (A224S; PMID:22948765, PMID:34308089), but canonical residue 246 is S; reference and alternate are swapped relative to the UniProt canonical sequence.
 - Variants whose reference residue would also match if the reported number were read in the other numbering scheme (cannot be disambiguated by the residue check alone): CBG Leuven (L93H), CBG E102G.
 - N-x-S/T sequons at precursor positions 31, 96, 176, 260, 330, 369 (mature 9, 74, 154, 238, 308, 347); UniProt annotates glycosylation at 31, 96, 176, 260, 330, 369.
 - Cysteines in the secreted chain (mature numbering): 60, 228.
@@ -80,7 +80,7 @@ Residues with a heavy atom within 4.0 A of the bound steroid (human cleaved CBG:
 | CBG I48N | p.Ile70Asn | SECRETION_DEFECT | helix 2 (67-78) | 15.15 | 0.01 | 0.92 | 0.724 LPath | 1.24e-05 (0) | buried residue remote from the steroid site (fold stability / secretion) |
 | CBG P246Q | p.Pro268Gln | SECRETION_DEFECT | strand 10 (261-268) | 17.49 | 0.04 | 1.00 | 0.859 LPath | 1.24e-06 (0) | buried residue remote from the steroid site (fold stability / secretion) |
 | CBG I179V | p.Ile201Val | PROTEASE_RESISTANCE | strand 6 (194-209) | 13.78 | 0.01 | 0.88 | 0.108 LBen | 2.48e-06 (0) | buried residue remote from the steroid site (fold stability / secretion) |
-| CBG A224S polymorphism | p.Ala246Ser | NO_EFFECT | strand 9 (246-257) | 16.59 | 0.72 | 0.63 | 0.076 LBen | 4.84e-01 (197569) | solvent-exposed residue remote from the steroid site |
+| CBG S224A polymorphism ("A224S") | p.Ser246Ala | NO_EFFECT | strand 9 (246-257) | 16.59 | 0.72 | 0.63 | 0.076 LBen | 4.84e-01 (197569) | solvent-exposed residue remote from the steroid site |
 
 - binding-defective missense variants (n=10): median distance to the steroid 9.53 A; 2 in direct contact, 3 within 8 A; median RSA 0.17; median orthologue identity 0.94; median AlphaMissense 0.170.
 - secretion-defective missense variants (n=3): median distance to the steroid 17.49 A; 0 in direct contact, 0 within 8 A; median RSA 0.01; median orthologue identity 0.92; median AlphaMissense 0.720.
@@ -108,7 +108,7 @@ Residue labels in this table are in mature numbering.
 | CBG I48N | none | none | none | no | -66/-43 | none |
 | CBG P246Q | none | none | none | no | -76/154 | none |
 | CBG I179V | none | none | none | no | -134/137 | none |
-| CBG A224S polymorphism | none | none | none | no | -98/-20 | none |
+| CBG S224A polymorphism ("A224S") | none | none | none | no | -98/-20 | none |
 
 - Binding-defective missense positions more than 8 A from the steroid (mature numbering): H14 [loop/unassigned], H89 [helix 4 (102-117)], L93 [helix 4 (102-117)], E102 [strand 3 (123-134)], G237 [loop/unassigned], I279 [strand 11 (293-302)].
 - Of these, pairs whose side chains are in contact (<= 4.5 A, AlphaFold model): H14-H89 (3.24 A); H14-L93 (3.61 A); H89-L93 (3.01 A); pairs on the same helix or strand: H89-L93.
