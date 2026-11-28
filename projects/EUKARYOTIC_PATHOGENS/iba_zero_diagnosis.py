@@ -39,6 +39,9 @@ QUICKGO_URL = "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
 
 USER_AGENT = "ai-gene-review-eukaryotic-pathogens/iba-zero-diagnosis"
 
+# Below this overlap, a PAINT leaf is mostly absent from the current GO GPI.
+LOW_GPI_ACCESSION_OVERLAP_RATIO = 0.10
+
 
 @dataclass(frozen=True)
 class Probe:
@@ -205,7 +208,7 @@ PROBES: tuple[Probe, ...] = (
         "Ixodes scapularis Wikel",
         "IXOSC",
         6945,
-        "under_exported",
+        "paint_gpi_accession_mismatch",
         6945,
     ),
     Probe(
@@ -272,11 +275,13 @@ IBA_DIAGNOSIS_FIELDS = (
     "go_gaf_files",
     "go_gpad_files",
     "go_gpi_files",
+    "go_gpi_uniprotkb_identifiers",
     "go_gaf_iba_total_rows",
     "go_gaf_iba_rows_by_file",
     "nearest_paint_reference",
     "paint_leaf_gaf_rows",
     "paint_leaf_gaf_accessions",
+    "paint_accessions_in_go_gpi",
 )
 
 
@@ -393,6 +398,29 @@ def gaf_iba_count(filename: str) -> int:
     return count
 
 
+def gpi_identifiers(filename: str) -> set[str]:
+    url = f"{GO_RELEASE_BASE}/annotations/gpi/{filename}"
+    identifiers: set[str] = set()
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    with urllib.request.urlopen(request, timeout=60) as response:
+        with gzip.GzipFile(fileobj=response) as gzip_file:
+            for raw_line in gzip_file:
+                line = raw_line.decode()
+                if line.startswith("!"):
+                    continue
+                fields = line.rstrip("\n").split("\t")
+                if fields and fields[0].startswith("UniProtKB:"):
+                    identifiers.add(fields[0].removeprefix("UniProtKB:"))
+    return identifiers
+
+
+def gpi_identifiers_for_files(filenames: list[str]) -> set[str]:
+    identifiers: set[str] = set()
+    for filename in filenames:
+        identifiers.update(gpi_identifiers(filename))
+    return identifiers
+
+
 def files_for_mnemonics(files: set[str], mnemonics: tuple[str, ...]) -> list[str]:
     return sorted(
         name for name in files if any(name.startswith(f"{m}-") for m in mnemonics)
@@ -451,15 +479,23 @@ def row_category(
     go_ref: dict[str, str | int] | None,
     panther: dict[str, str | int] | None,
     paint_rows: int,
+    paint_accessions: int,
+    paint_gpi_accessions: int,
+    go_gpi_accessions: int,
     quickgo_exact: int,
     quickgo_species_descendants: int | str,
 ) -> str:
     species_control_passes = (
         quickgo_species_descendants == "" or quickgo_species_descendants > 0
     )
-    if go_ref and panther and paint_rows > 0 and 0 < quickgo_exact * 10 < paint_rows:
-        return "under_exported"
     if go_ref and panther and paint_rows > 0 and quickgo_exact > 0:
+        if (
+            go_gpi_accessions > 0
+            and paint_accessions > 0
+            and paint_gpi_accessions / paint_accessions
+            < LOW_GPI_ACCESSION_OVERLAP_RATIO
+        ):
+            return "paint_gpi_accession_mismatch"
         return "paint_reference" if species_control_passes else "contradiction"
     if (
         not go_ref
@@ -507,12 +543,35 @@ def validate_expectations(rows: list[dict[str, str | int]]) -> None:
         raise SystemExit("Contradictory zero-IBA diagnosis:\n- " + "\n- ".join(errors))
 
 
+def validate_paint_panther_taxa(
+    paint: PaintGafSummary, panther_genomes: dict[int, dict[str, str | int]]
+) -> None:
+    paint_taxa = set(paint.row_counts)
+    panther_taxa = set(panther_genomes)
+    if paint_taxa != panther_taxa:
+        missing_in_panther = sorted(paint_taxa - panther_taxa)
+        missing_in_paint = sorted(panther_taxa - paint_taxa)
+        raise SystemExit(
+            "PAINT/PANTHER taxon mismatch:\n"
+            f"- in PAINT only: {missing_in_panther}\n"
+            f"- in PANTHER only: {missing_in_paint}"
+        )
+
+
+def format_percent(numerator: int, denominator: int) -> str:
+    if denominator == 0:
+        return ""
+    return f"{numerator / denominator:.2%}"
+
+
 def write_report(
     rows: list[dict[str, str | int]], metadata: dict[str, str], path: Path
 ) -> None:
     zero_rows = [row for row in rows if row["category"] == "zero"]
     reference_rows = [row for row in rows if row["category"] == "paint_reference"]
-    under_exported_rows = [row for row in rows if row["category"] == "under_exported"]
+    gpi_mismatch_rows = [
+        row for row in rows if row["category"] == "paint_gpi_accession_mismatch"
+    ]
 
     lines = [
         "---",
@@ -549,10 +608,10 @@ def write_report(
         "",
         (
             f"All {len(zero_rows)} zero-IBA organisms in the coverage panel are "
-            "absent from the PAINT leaf-GAF taxon inventory, which contains "
-            f"{metadata['paint_taxa']} taxa total. They are also absent from "
-            "GO's PAINT reference-species list and the PANTHER supported-genomes "
-            "API. Their exact taxon and "
+            "absent from the PAINT leaf-GAF taxon inventory and the identical "
+            f"{metadata['paint_taxa']}-taxon PANTHER supported-genomes API set. "
+            "They are also absent from GO's PAINT reference-species list. Their "
+            "exact taxon and "
             "species-plus-descendant QuickGO IBA queries both returned zero "
             "annotations."
         ),
@@ -565,6 +624,14 @@ def write_report(
             f"matching files for {metadata['panther_sequence_file_matches']} of "
             f"{metadata['panther_supported_genomes']} supported-genome API "
             "entries; none of these zero-IBA taxa has a supported-genome entry."
+        ),
+        "",
+        (
+            "The PAINT inventory contains no Toxoplasma, Cryptosporidium, "
+            "Babesia, Theileria, Encephalitozoon, Enterocytozoon, Nematocida, "
+            "Aedes, or Nakaseomyces leaf. Plasmodium falciparum 3D7 is the only "
+            "apicomplexan in the PAINT set; Anopheles gambiae PEST is the only "
+            "mosquito."
         ),
         "",
         "| Site | Taxon | Mnemonic | QuickGO exact IBA | "
@@ -584,28 +651,38 @@ def write_report(
             f"{zero_diagnosis(row)} |"
         )
 
-    lines.extend(
-        [
-            "",
-            "## PAINT-covered QuickGO export gap",
-            "",
-            (
-                "The full PAINT leaf-GAF inventory also reveals a distinct "
-                "VectorBase lead: Ixodes is a PAINT reference taxon, but only a "
-                "small fraction of its PAINT rows appear in QuickGO."
-            ),
-            "",
-            "| Site | Taxon | Mnemonic | QuickGO exact IBA | PAINT rows | "
-            "GO GAF IBA rows by file |",
-            "|---|---|---:|---:|---:|---|",
-        ]
-    )
-    for row in under_exported_rows:
-        lines.append(
-            f"| {row['site']} | {row['organism']} | `{row['mnemonic']}` | "
-            f"{row['quickgo_iba_exact_hits']} | {row['paint_leaf_gaf_rows']} | "
-            f"{row['go_gaf_iba_rows_by_file']} |"
+    if gpi_mismatch_rows:
+        lines.extend(
+            [
+                "",
+                "## PAINT/GPI accession mismatch",
+                "",
+                (
+                    "The full PAINT leaf-GAF inventory also reveals a distinct "
+                    "VectorBase lead. Ixodes is a PAINT reference taxon, but "
+                    "only a near-zero fraction of the PAINT accessions are "
+                    "present in GO's current IXOSC GPI export; that points to "
+                    "a PAINT/reference-proteome accession mismatch rather than "
+                    "a dropped-row export failure."
+                ),
+                "",
+                "| Site | Taxon | Mnemonic | QuickGO exact IBA | PAINT rows | "
+                "PAINT accessions | IXOSC GPI IDs | PAINT/GPI overlap | "
+                "GO GAF IBA rows by file |",
+                "|---|---|---:|---:|---:|---:|---:|---:|---|",
+            ]
         )
+        for row in gpi_mismatch_rows:
+            lines.append(
+                f"| {row['site']} | {row['organism']} | `{row['mnemonic']}` | "
+                f"{row['quickgo_iba_exact_hits']} | "
+                f"{row['paint_leaf_gaf_rows']} | "
+                f"{row['paint_leaf_gaf_accessions']} | "
+                f"{row['go_gpi_uniprotkb_identifiers']} | "
+                f"{row['paint_accessions_in_go_gpi']} "
+                f"({format_percent(row['paint_accessions_in_go_gpi'], row['paint_leaf_gaf_accessions'])}) | "
+                f"{row['go_gaf_iba_rows_by_file']} |"
+            )
 
     lines.extend(
         [
@@ -707,13 +784,35 @@ def write_report(
                 "files, but neither carries PAINT/IBA rows because the PAINT "
                 "reference set includes `CANAL` rather than `CANGA`."
             ),
+        ]
+    )
+    if gpi_mismatch_rows:
+        ixosc = gpi_mismatch_rows[0]
+        lines.extend(
+            [
+                "",
+                (
+                    "Ixodes is a separate accession-set lead: taxon `6945` is "
+                    f"present in PAINT with {ixosc['paint_leaf_gaf_rows']} IBA "
+                    f"rows on {ixosc['paint_leaf_gaf_accessions']} accessions, "
+                    "but only "
+                    f"{ixosc['paint_accessions_in_go_gpi']} of those accessions "
+                    "are present in the current `IXOSC-uniprot.gpi.gz`. Can the "
+                    "PANTHER Ixodes leaf be rebuilt or remapped to current "
+                    "IXOSC identifiers?"
+                ),
+            ]
+        )
+    lines.extend(
+        [
             "",
             (
-                "A separate VectorBase export lead is worth checking too: "
-                "Ixodes scapularis (`IXOSC`, taxon `6945`) is present in the "
-                f"same PAINT leaf GAF with {under_exported_rows[0]['paint_leaf_gaf_rows']} "
-                "IBA rows, but the exact QuickGO query currently returns only "
-                f"{under_exported_rows[0]['quickgo_iba_exact_hits']} IBA rows."
+                "One label is worth checking as well: GO's "
+                "`go-reference-species.yaml` labels taxon `214684` as "
+                "`Cryptococcus neoformans`, while the GO GAF/GPI export uses the "
+                "`CRYD1` mnemonic for Cryptococcus deneoformans JEC21. That can "
+                "make it look as though Cryptococcus neoformans H99 (`CRYN9`, "
+                "taxon `235443`) is already represented."
             ),
         ]
     )
@@ -731,6 +830,7 @@ def main() -> None:
     gpad_files = directory_filenames(f"{GO_RELEASE_BASE}/annotations/gpad/index.html")
     gpi_files = directory_filenames(f"{GO_RELEASE_BASE}/annotations/gpi/index.html")
     paint = paint_gaf_summary()
+    validate_paint_panther_taxa(paint, panther_genomes)
     expected_sequence_files = {
         f"PTHR{PANTHER_RELEASE}_{panther['name']}"
         for panther in panther_genomes.values()
@@ -754,6 +854,7 @@ def main() -> None:
         panther = panther_genomes.get(probe.taxon_id)
         go_ref = go_reference.get(probe.taxon_id)
         probe_gaf = files_for_mnemonics(gaf_files, probe.all_go_mnemonics())
+        probe_gpi = files_for_mnemonics(gpi_files, probe.all_go_mnemonics())
         go_gaf_iba_rows_by_file = {
             filename: gaf_iba_count(filename) for filename in probe_gaf
         }
@@ -761,10 +862,16 @@ def main() -> None:
         if probe.species_taxon_id is not None:
             quickgo_species_hits = quickgo_species_descendants[probe.species_taxon_id]
         paint_rows = paint.row_counts[probe.taxon_id]
+        paint_accessions = paint.accessions[probe.taxon_id]
+        go_gpi_ids = gpi_identifiers_for_files(probe_gpi)
+        paint_gpi_accessions = len(paint_accessions & go_gpi_ids)
         category = row_category(
             go_ref,
             panther,
             paint_rows,
+            len(paint_accessions),
+            paint_gpi_accessions,
+            len(go_gpi_ids),
             quickgo_exact[probe.taxon_id],
             quickgo_species_hits,
         )
@@ -788,15 +895,15 @@ def main() -> None:
                 "go_gpad_files": csv_list(
                     files_for_mnemonics(gpad_files, probe.all_go_mnemonics())
                 ),
-                "go_gpi_files": csv_list(
-                    files_for_mnemonics(gpi_files, probe.all_go_mnemonics())
-                ),
+                "go_gpi_files": csv_list(probe_gpi),
+                "go_gpi_uniprotkb_identifiers": len(go_gpi_ids),
                 "go_gaf_iba_total_rows": sum(go_gaf_iba_rows_by_file.values()),
                 "go_gaf_iba_rows_by_file": format_file_counts(
                     go_gaf_iba_rows_by_file
                 ),
                 "paint_leaf_gaf_rows": paint_rows,
-                "paint_leaf_gaf_accessions": len(paint.accessions[probe.taxon_id]),
+                "paint_leaf_gaf_accessions": len(paint_accessions),
+                "paint_accessions_in_go_gpi": paint_gpi_accessions,
                 "nearest_paint_reference": probe.nearest_paint_reference,
             }
         )
