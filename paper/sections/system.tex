@@ -1,0 +1,88 @@
+\section{An agentic review system}\label{sec:system}
+
+\begin{figure}[t]\centering
+\resizebox{\linewidth}{!}{\input{figures/tikz/system}}
+\caption{The agentic review system. Each gene review passes fetch, deep research, agent review,
+validation and pull-request review; validated findings feed reports to upstream resources.}
+\label{fig:system}
+\end{figure}
+
+\subsection{The review document}
+One YAML document per gene (LinkML schema, \texttt{gene\_review.yaml}): a standalone
+description, the references used, one entry per existing annotation with an action, summary,
+reason and \texttt{supported\_by} quotes, the gene's \emph{core functions} (MF + process +
+location + complex), proposed new terms, knowledge gaps, suggested experiments.
+
+\subsection{The action vocabulary}
+\begin{description}[nosep,font=\normalfont\scshape]
+  \item[accept] correct and part of the core function.
+  \item[keep\_as\_non\_core] correct and as precise as warranted, but peripheral.
+  \item[modify] sound but a better term exists (more specific, or sign/lateral correction);
+        carries proposed replacements.
+  \item[too\_general] true but entailed by a more specific term in the review.
+  \item[mark\_as\_over\_annotated] not strictly false, but an over-reach.
+  \item[remove] unlikely to be correct on the combined evidence.
+  \item[undecided] evidence insufficient or inaccessible.
+  \item[new] proposed annotation absent from GOA.
+\end{description}
+\note{Make explicit: actions judge \emph{claims}, not evidence codes; rows sharing a term must be
+consistent; ``correct but general'' is \act{MODIFY} not \act{KEEP\_AS\_NON\_CORE}.}
+
+\subsection{Guardrails against hallucination}
+\begin{itemize}[nosep]
+  \item Cached sources only; every \texttt{supporting\_text} must be a verbatim substring of the
+        cached paper, UniProt record, Reactome entry or analysis file.
+  \item Reference titles are checked against the fetched record (catches transposed PMIDs).
+  \item Author-supplied term ids are validated against ontology branches; GOA ids are trusted.
+  \item Policy validators encode curation conventions (protein binding, ND, root organelle
+        terms, IBA reading, ``do not add what curators declined to add'').
+  \item Experimental annotations whose full text is not cached are not removed (\act{UNDECIDED}).
+  \item Bioinformatics analyses are reproducible scripts; results never hardcoded.
+  \item Every change is a reviewed pull request with an append-only history record.
+\end{itemize}
+
+\subsection{Sequence and structure checks}\label{sec:seqchecks}
+Many review decisions turn on whether a protein still has the residues its characterised relatives use:
+a pseudoenzyme that lost its nucleophile, a paralog that kept a metal site, a transfer whose target
+lacks the catalytic loop. Such arguments are cheap to assert and hard to check, so the schema gives them
+a machine-checkable form. A \emph{residue claim} on a transferred annotation names an anchor protein
+known to carry a functional residue, the corresponding residue in the target, its mechanistic role,
+whether the target retained, conservatively substituted or lost it, and how the two positions were
+matched (Table~\ref{tab:residueclaims}). Positions are recorded in each protein's own numbering, never
+as alignment columns, because columns shift between family releases and a stale column still resolves,
+to the wrong residue. Because both residues are stated, a validator can resolve each side against its own
+sequence and contradict a wrong claim without re-running the alignment (\S\ref{sec:methods-residue}).
+
+Claims can cite a curated family-level site: \nFamSites{} functional sites are declared in \nFamSiteFamilies{}
+PANTHER family reviews, and \nResSiteRef{} gene-level claims cite one, so a gene review cannot silently
+disagree with its family. The alignments, structure superpositions and conservation scores behind the
+claims are reproducible analyses in each gene's bioinformatics folder, following a fixed method: define
+the site from ligand contacts in a deposited structure, map positions by sequence alignment rather than
+geometric proximity, and record that a retained site shows the residues are present, not that the
+activity is (\proj{STRUCTURAL\_REASONING.md}).
+
+\begin{table}[t]\centering\small
+\caption{Residue claims in the corpus (\nResClaims{} claims on \nResGenes{} genes), by how anchor and target
+positions were matched and what the claim asserts. A further \nResNotApplicable{} transferred annotations
+record why their argument is not a point-residue question.}
+\label{tab:residueclaims}
+\input{generated/tab_residue_claims}
+\end{table}
+
+\subsection{Gene selection}
+\todo{Describe honestly: not a random sample. Mix of (a) whole-proteome campaigns (e.g.\
+\textit{P. putida}, \textit{S. pombe}, yeast), (b) thematic projects (proteostasis, immunity,
+\ldots), (c) term-centric audits (all annotations to a term slated for obsoletion), (d) human
+gene sets. Quantify selection; report results per campaign type to show robustness.}
+
+\subsection{Models and agents}
+Reviews were written by several agent frameworks driving several model families. Append-only history
+records (\nHistory{} records on \nHistoryGenes{} genes, \historyFirst--\historyLast) name the agent tool
+for each curation session and, for recent sessions, the model (Table~\ref{tab:agents}).
+\todo{history records start in \historyFirst; earlier reviews need their agent and model recovered from
+PR metadata. Deep-research providers; cost per gene; wall-clock.}
+\begin{table}[t]\centering\small
+\caption{Curation sessions by agent tool and model family, from history records.}
+\label{tab:agents}
+\input{generated/tab_agents}
+\end{table}
