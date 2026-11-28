@@ -12,11 +12,12 @@ complete EC number: 1306 rows on 1043 proteins, NCBIfam release 20.0. The review
 action is read afterwards and is never an input to the verdict. Proposed (`NEW`) rows
 are skipped. **No review is changed here.**
 
-Three accessions have two review folders each: Q88JG9 (`aldB-II` and `pedI`), Q88IJ7
-(`aroE` and `aroE__Q88IJ7`) and Q88JU3 (`quiC1` and `quiC1_qsuB`). The sweep merges their
-rows under the first folder in sort order. For Q88JG9 the two reviews disagree on
-`GO:0004029` and `GO:0004030`. The open question for each pair is whether both folders
-should exist, and the generated list names both.
+The first run found three accessions with two review folders each: Q88JG9 (`aldB-II` and
+`pedI`), Q88IJ7 (`aroE` and `aroE__Q88IJ7`) and Q88JU3 (`quiC1` and `quiC1_qsuB`). Each pair
+has since been merged into one folder: `aldB-II`, `aroE__Q88IJ7` and `quiC1`. The merges
+reconciled the two rows the Q88JG9 reviews disagreed on (`GO:0004029` and `GO:0004030`).
+They also corrected Q88IJ7, which its structure places in the AroE-like1 (Ael1) class
+rather than among canonical AroE enzymes. The sweep was re-run after the merges.
 
 - Runner: [`run_sweep.py`](run_sweep.py), about 6 minutes once sequences and the pressed
   library are cached. `--rerender` re-derives the lists from saved scores.

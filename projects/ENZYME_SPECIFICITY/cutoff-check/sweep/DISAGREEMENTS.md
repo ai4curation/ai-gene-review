@@ -17,20 +17,15 @@ RESULTS.md for how to read each case.
 | NO_MODEL | 50 | 9 | 9 | 8 | 10 | 2 | 1 |
 | SFA | 17 | 7 | 8 | 6 | 14 | 1 | 2 |
 
-## Electronic rows on one protein and term with different actions (2)
+## Electronic rows on one protein and term with different actions (0)
 
 The sweep keeps one row per protein and term (the first folder in sort order). These pairs disagree; each names the review folder it comes from.
 
-- PSEPK Q88JG9 GO:0004029 aldehyde dehydrogenase (NAD+) activity: aldB-II: ACCEPT vs pedI: MODIFY
-- PSEPK Q88JG9 GO:0004030 aldehyde dehydrogenase [NAD(P)+] activity: aldB-II: KEEP_AS_NON_CORE vs pedI: MARK_AS_OVER_ANNOTATED
 
-## Accessions with more than one review folder (3)
+## Accessions with more than one review folder (0)
 
 Their rows are merged in this sweep. Each pair needs a decision on whether both folders should exist.
 
-- Q88IJ7: genes/PSEPK/aroE, genes/PSEPK/aroE__Q88IJ7
-- Q88JG9: genes/PSEPK/aldB-II, genes/PSEPK/pedI
-- Q88JU3: genes/PSEPK/quiC1, genes/PSEPK/quiC1_qsuB
 
 ## Kept rows whose protein passes a family for another activity (41)
 
