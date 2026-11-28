@@ -45,10 +45,6 @@ sister reviews of Capsaspora coYki (`genes/CAPO3/coYki/`) and S. rosetta yorkie
 - Organ size [PMID:21808241 "Extensive research led to the identification of the Hippo tumour-suppressor pathway as a key regulator of organ size in Drosophila and mammals"].
 - MSC fate (YAP1/TAZ together) [PMID:29496737 "kindlin-2 regulates MSC differentiation through controlling YAP1/TAZ at both the transcript and protein levels"].
 - Ciliogenesis (YAP/TAZ together) [PMID:25849865 "knockdown of YAP/TAZ is sufficient to induce ciliogenesis"].
-  A full-text check of the Nature Communications PDF showed that YAP/TAZ act as
-  transcriptional coactivators upstream of AURKA and PLK1 in this system; this supports
-  `negative regulation of cilium assembly`, not `negative regulation of transcription by
-  RNA polymerase II`.
 
 **Paralog caution:** many studies (PMID:25849865, PMID:29496737, PMID:25796446,
 PMID:21145499, PMID:35429439) manipulate YAP and TAZ (WWTR1) together. I accepted
@@ -96,8 +92,7 @@ GO:0030859, which I kept as non-core rather than removing.
 - REMOVE GO:0000976 and GO:0000978 (sequence-specific DNA binding): YAP1 lacks a DBD.
 - MARK_AS_OVER_ANNOTATED: chromatin binding (indirect), heart process, protein-containing
   complex assembly (x2), negative regulation of gene expression.
-- REMOVE GO:0000122: the ciliogenesis paper supports YAP/TAZ coactivation of genes that
-  suppress cilium assembly, not negative regulation of RNA polymerase II transcription.
-- REMOVE GO:0035331: the WWC/SuperHippo paper places YAP/TAZ downstream of Hippo signaling,
-  not as negative regulators of it.
+- UNDECIDED GO:0000122 and GO:0035331: the cached records for the ciliogenesis and
+  WWC/SuperHippo papers are abstract-only and do not expose the experimental bases for
+  the existing UniProt rows.
 - No NEW annotations proposed.
