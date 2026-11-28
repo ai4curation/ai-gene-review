@@ -460,8 +460,23 @@ def parse_offline_output(
             )
 
 
+def record_batch_output(
+    output: str, returncode: int, files: list[Path], report: CoverageReport
+) -> None:
+    """Parse a batch and count only files with fully accounted-for results."""
+    unchecked_before = len(report.unchecked_files)
+    parse_offline_output(output, returncode, files, report)
+    report.files_checked += len(files) - (
+        len(report.unchecked_files) - unchecked_before
+    )
+
+
 def ltv_command(
-    kind: DocumentKind, files: list[Path], offline: bool, cache_dir: Path
+    kind: DocumentKind,
+    files: list[Path],
+    offline: bool,
+    cache_dir: Path,
+    config: Path = OAK_CONFIG,
 ) -> list[str]:
     """Build the LTV ``validate-data`` command for one batch of same-kind files.
 
@@ -481,7 +496,7 @@ def ltv_command(
         kind.target_class,
         "--labels",
         "-c",
-        OAK_CONFIG.as_posix(),
+        config.as_posix(),
         "--cache-dir",
         cache_dir.as_posix(),
     ]
@@ -545,11 +560,7 @@ def offline_pass(
             file=sys.stderr,
         )
         output, returncode = run_ltv(kind, batch, offline=True, cache_dir=cache_dir)
-        unchecked_before = len(report.unchecked_files)
-        parse_offline_output(output, returncode, batch, report)
-        report.files_checked += len(batch) - (
-            len(report.unchecked_files) - unchecked_before
-        )
+        record_batch_output(output, returncode, batch, report)
     return report
 
 

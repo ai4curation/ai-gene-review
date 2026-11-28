@@ -47,7 +47,7 @@ def _delimiter(path: Path) -> str:
 
 
 def _read(path: Path) -> tuple[list[str], list[list[str]]]:
-    with path.open(newline="") as f:
+    with path.open(newline="", encoding="utf-8") as f:
         rows = list(csv.reader(f, delimiter=_delimiter(path)))
     if not rows:
         return [], []
@@ -82,7 +82,7 @@ def normalize_file(path: Path) -> bool:
     if ordered == data:
         return False
     delim = _delimiter(path)
-    with path.open("w", newline="") as f:
+    with path.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f, delimiter=delim, lineterminator="\n")
         if header:
             w.writerow(header)
