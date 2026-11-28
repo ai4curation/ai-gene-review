@@ -215,5 +215,25 @@ transport"; human SERPINA6 lacks any BP annotation other than the Reactome row r
   — do H14/H89/L93 variants act through helix D?
 
 All three were first launched on 2026-11-26 and lost when the container restarted (empty output
-directories); relaunched 2026-11-28. Status at commit time is recorded in the history record. The local
-`SERPINA6-bioinformatics/RESULTS.md` was not given to OpenScientist.
+directories); relaunched 2026-11-28. The local `SERPINA6-bioinformatics/RESULTS.md` was not given to
+OpenScientist.
+
+### 2026-11-28: deep-research report received
+
+`SERPINA6-deep-research-openscientist.md` (with `_artifacts/`) completed in about 25 minutes. It was
+written without sight of the local analysis and agrees with it on every point that matters for the
+review: non-inhibitory serpin carrier, S-to-R transition repurposed for release, liver-made and
+extracellular, Lyon on the pocket wall and Leuven on helix D.
+`[file:human/SERPINA6/SERPINA6-deep-research-openscientist.md "there is no protease inhibition: the loop is a substrate that is consumed, not a bait that forms the covalent acyl-enzyme complex defining an inhibitory serpin"]`
+Differences checked:
+
+- Its contact distances are shorter than mine (Trp371 1.85 A versus 2.87 A; Asp367 4.08 A versus 4.59 A).
+  The 4C49 cortisol model carries hydrogen atoms; recomputing with hydrogens reproduces 1.85 and 4.08 A.
+  My analysis uses heavy atoms only, so the two agree.
+- Its pocket (4.5 A cutoff, 15 residues) adds Phe26 and Asp367 to my 13 (4.0 A cutoff).
+- New to me and not independently verified: cleaved and intact CBG have the same half-life in rabbit
+  (PMID:25636722); the elastase P1 and P1' residues are poorly conserved in rodents, so the human cleavage
+  site should not be assumed for mouse models; the reported membrane CBG receptor has two affinities
+  8700-fold apart and no molecular identity. None of these changes an annotation decision.
+
+The two hypothesis jobs were still running when this was written; their outcome is in the history record.
