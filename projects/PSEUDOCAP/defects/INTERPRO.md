@@ -1,10 +1,11 @@
 # Source-record defects for INTERPRO
 
-7 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
+9 open defect(s), generated from `source_defects` blocks in this repository's reviews. Do not edit by hand.
 
 ## 1. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
-- **Record:** UniProtKB:Q9I4V0 enables GO:0018580 nitronate monooxygenase activity (IEA, GO_REF:0000002)
+- **Record:** InterPro:IPR004136
+- **Subject:** UniProtKB:Q9I4V0
 - **Field:** GO_ID
 - **Change:** check GO:0018580 (alternatives in the explanation)
 - **Likely cause:** OTHER
@@ -27,7 +28,8 @@ Resource is InterPro (InterPro2GO; assigned_by InterPro in GOA). The InterPro2GO
 
 ## 3. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
-- **Record:** UniProtKB:Q9HTH6 involved_in GO:0015871 choline transport (IEA, GO_REF:0000002)
+- **Record:** InterPro:IPR017783
+- **Subject:** UniProtKB:Q9HTH6
 - **Field:** GO ID
 - **Change:** delete the record asserting GO:0015871
 - **Likely cause:** OTHER
@@ -37,7 +39,8 @@ InterPro2GO maps IPR017783 (ABC_choline_sub-bd, NCBIfam TIGR03414) to choline tr
 
 ## 4. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
-- **Record:** UniProtKB:Q9HTH6 enables GO:0033265 choline binding (IEA, GO_REF:0000002)
+- **Record:** InterPro:IPR017783
+- **Subject:** UniProtKB:Q9HTH6
 - **Field:** GO ID
 - **Change:** GO:0033265 → GO:0050997
 - **Likely cause:** OTHER
@@ -47,7 +50,8 @@ InterPro2GO maps IPR017783 (ABC_choline_sub-bd) to choline binding. The signatur
 
 ## 5. WRONG_TERM (PROBABLE, NOT_REPORTED)
 
-- **Record:** UniProtKB:Q9HTH8 involved_in GO:0006631 fatty acid metabolic process (IEA, GO_REF:0000002)
+- **Record:** InterPro:IPR006108|InterPro:IPR006176|InterPro:IPR022694
+- **Subject:** UniProtKB:Q9HTH8
 - **Field:** GO ID
 - **Change:** delete the record asserting GO:0006631
 - **Likely cause:** OTHER
@@ -57,7 +61,8 @@ InterPro2GO maps IPR006108/IPR006176/IPR022694 (3-hydroxyacyl-CoA dehydrogenase 
 
 ## 6. WRONG_TERM (CONFIRMED, NOT_REPORTED)
 
-- **Record:** UniProtKB:Q9HTH7 enables GO:0043720 3-keto-5-aminohexanoate cleavage activity (IEA, GO_REF:0000002)
+- **Record:** InterPro:IPR008567
+- **Subject:** UniProtKB:Q9HTH7
 - **Field:** GO ID
 - **Change:** GO:0043720 → GO:0016747
 - **Likely cause:** OTHER
@@ -77,3 +82,27 @@ InterPro2GO (resource: InterPro; GO_REF:0000002) maps IPR003481 (FliD_N, the N-t
 
 > A FliD (also called HAP2) oligomer forms the cap protein complex that is located at the tip of the flagellar filament (Yonekura et al.
 > — PMID:27664419
+
+## 8. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+
+- **Record:** InterPro:IPR028359
+- **Subject:** UniProtKB:G3XD94
+- **Change:** GO:0016628 → GO:0016616 (oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor)
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/wbpA/wbpA-ai-review.yaml`
+
+InterPro2GO: IPR028359 (UDP-ManNAc/GlcNAc dehydrogenase) maps to GO:0016628 (CH-CH group of donors). Family members (WbpA EC 1.1.1.136, WecC EC 1.1.1.336) oxidise the C6 hydroxymethyl group of the sugar, a CH-OH donor. The mapping should be GO:0016616.
+
+## 9. WRONG_TERM (CONFIRMED, NOT_REPORTED)
+
+- **Record:** InterPro:IPR007812
+- **Subject:** UniProtKB:P25060
+- **Field:** GO_ID
+- **Change:** delete the record asserting GO:0009276
+- **Likely cause:** OTHER
+- **Recorded in:** `genes/PSEAE/xcpY/xcpY-ai-review.yaml`
+
+The InterPro2GO mapping of IPR007812 (T2SS protein GspL) includes GO:0009276 Gram-negative-bacterium-type cell wall. That term is a subclass of GO:0009274 peptidoglycan-based cell wall, so it asserts location in the peptidoglycan layer. GspL proteins are bitopic inner-membrane subunits of the type II secretion assembly platform: for P. aeruginosa XcpY (P25060) the topology was mapped experimentally (PubMed:8763961) as cytoplasmic 1-233, transmembrane 234-254 and periplasmic 255-382, and the family is described throughout as an inner-membrane component. Please remove GO:0009276 from the IPR007812 mapping; GO:0005886 plasma membrane and GO:0015627 type II protein secretion system complex already cover the location correctly.
+
+> SUBCELLULAR LOCATION: Cell inner membrane {ECO:0000269|PubMed:8763961}; CC Single-pass membrane protein {ECO:0000269|PubMed:8763961}.
+> — file:PSEAE/xcpY/xcpY-uniprot.txt
