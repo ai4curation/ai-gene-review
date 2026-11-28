@@ -12,7 +12,7 @@ The output (``aro2go.terms.yaml``, class ``AROGOMappingSet``) is then checked wi
 
     uv run linkml-term-validator validate-data projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml \
         -s src/ai_gene_review/schema/aro_go_mapping.yaml -t AROGOMappingSet \
-        --labels -c conf/oak_config.yaml
+        --labels --no-cache -c projects/ANTIMICROBIAL_RESISTANCE/oak_config.yaml
 
 This keeps the SSSOM file as the single source of truth; the nested file is generated.
 """
@@ -29,7 +29,7 @@ HEADER = (
     "# Regenerate: uv run python projects/ANTIMICROBIAL_RESISTANCE/sssom_to_terms.py "
     "projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml -o projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml\n"
     "# Validate:   uv run linkml-term-validator validate-data projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml "
-    "-s src/ai_gene_review/schema/aro_go_mapping.yaml -t AROGOMappingSet --labels -c conf/oak_config.yaml\n"
+    "-s src/ai_gene_review/schema/aro_go_mapping.yaml -t AROGOMappingSet --labels --no-cache -c projects/ANTIMICROBIAL_RESISTANCE/oak_config.yaml\n"
 )
 
 

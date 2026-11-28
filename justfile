@@ -111,10 +111,42 @@ check-alignment-page-guards *ARGS:
 # recipes, not invoked by any workflow, so an ontology-service outage is not a
 # merge-queue jam path -- it just surfaces as an ordinary failure to re-run. Only
 # the CI-invoked term-validation paths are wrapped for outage tolerance.
-validate-mappings:
+#
+# ARO terms are checked against the pinned CARD release in .cache/aro (`just fetch-aro`), via
+# projects/ANTIMICROBIAL_RESISTANCE/oak_config.yaml, with --no-cache so that the committed
+# cache/aro/terms.csv (which predates CARD 4.0.2) cannot answer for the release.
+# Validate the ARO->GO SSSOM mapping, its family triage, and its ARO/GO terms and labels.
+validate-mappings: _ensure-aro
 	uv run linkml-validate -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" -C "mapping set" projects/ANTIMICROBIAL_RESISTANCE/*.sssom.yaml
+	uv run linkml-validate -s src/ai_gene_review/schema/aro_go_mapping.yaml -C AROFamilyTriage projects/ANTIMICROBIAL_RESISTANCE/aro_family_triage.yaml
 	uv run python projects/ANTIMICROBIAL_RESISTANCE/sssom_to_terms.py projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml -o projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml
-	uv run linkml-term-validator validate-data projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml -s src/ai_gene_review/schema/aro_go_mapping.yaml -t AROGOMappingSet --labels -c conf/oak_config.yaml
+	uv run linkml-term-validator validate-data projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml -s src/ai_gene_review/schema/aro_go_mapping.yaml -t AROGOMappingSet --labels --no-cache -c projects/ANTIMICROBIAL_RESISTANCE/oak_config.yaml
+	uv run python projects/ANTIMICROBIAL_RESISTANCE/aro_release.py check
+
+# Pass --latest for CARD's newest release, and --latest --update-pin to re-pin the mapping to it.
+# Download the pinned CARD release (ARO ontology + AMR gene family categories) into .cache/aro.
+fetch-aro *ARGS:
+	uv run python projects/ANTIMICROBIAL_RESISTANCE/aro_release.py fetch {{ARGS}}
+
+# Checks label drift, ids missing from the release, and that every CARD AMR gene family is
+# mapped, covered, a recorded GO gap, or triaged.
+# Check the ARO->GO mapping against the fetched CARD release.
+check-aro-release: _ensure-aro
+	uv run python projects/ANTIMICROBIAL_RESISTANCE/aro_release.py check
+
+# This is the drift probe: it fails when CARD has released past the pin or the mapping has drifted.
+# Check the ARO->GO mapping against CARD's LATEST release (fetched into .cache/aro-latest).
+check-aro-latest:
+	uv run python projects/ANTIMICROBIAL_RESISTANCE/aro_release.py fetch --latest --cache .cache/aro-latest
+	uv run python projects/ANTIMICROBIAL_RESISTANCE/aro_release.py check --cache .cache/aro-latest
+
+# Regenerate FAMILY_COVERAGE.md (status of every CARD AMR gene family).
+aro-family-coverage: _ensure-aro
+	uv run python projects/ANTIMICROBIAL_RESISTANCE/aro_release.py coverage
+
+[private]
+_ensure-aro:
+	test -f .cache/aro/release.yaml || uv run python projects/ANTIMICROBIAL_RESISTANCE/aro_release.py fetch
 
 # Validate the RGD Pathway Ontology -> GO mapping sets against the SSSOM schema: the
 # hand-curated pw_go_curated.sssom.yaml and the generated pw_go_mappings.sssom.yaml.
@@ -186,17 +218,17 @@ aro2go-pipeline: validate-mappings
 	uv run python projects/ANTIMICROBIAL_RESISTANCE/uniprot2aro2go.py --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml 'genes/**/*-uniprot.txt'
 
 # Render the ARO->GO mapping set to a curator-facing HTML page.
-render-mappings:
-	uv run python projects/ANTIMICROBIAL_RESISTANCE/render_sssom_html.py --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml --gain-tsv projects/ANTIMICROBIAL_RESISTANCE/data/candidate_new_annotations.tsv -o projects/ANTIMICROBIAL_RESISTANCE/aro2go.html
+render-mappings: _ensure-aro
+	uv run python projects/ANTIMICROBIAL_RESISTANCE/render_sssom_html.py --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml --stats projects/ANTIMICROBIAL_RESISTANCE/data/mapping_row_stats.tsv -o projects/ANTIMICROBIAL_RESISTANCE/aro2go.html
 
 # Report the candidate GO annotations UniProt would gain from the mappings (uses the cached snapshot).
-annotation-gain:
-	uv run python projects/ANTIMICROBIAL_RESISTANCE/annotation_gain_report.py --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml --uniprot projects/ANTIMICROBIAL_RESISTANCE/data/uniprot_card_xrefs.tsv --out-md projects/ANTIMICROBIAL_RESISTANCE/ANNOTATION_GAIN.md --out-tsv projects/ANTIMICROBIAL_RESISTANCE/data/candidate_new_annotations.tsv
+annotation-gain: _ensure-aro
+	uv run python projects/ANTIMICROBIAL_RESISTANCE/annotation_gain_report.py --sssom projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml --uniprot projects/ANTIMICROBIAL_RESISTANCE/data/uniprot_card_xrefs.tsv --out-md projects/ANTIMICROBIAL_RESISTANCE/ANNOTATION_GAIN.md --out-tsv projects/ANTIMICROBIAL_RESISTANCE/data/candidate_new_annotations.tsv --out-stats projects/ANTIMICROBIAL_RESISTANCE/data/mapping_row_stats.tsv
 
 # Publish the AR project's sub-products (markdown -> HTML via the project template + the SSSOM HTML)
 # under pages/projects/ANTIMICROBIAL_RESISTANCE/ (next to the rendered project page).
 render-ar-pages:
-	uv run python -c "from pathlib import Path; from ai_gene_review.render_projects import render_project; [render_project(Path('projects/ANTIMICROBIAL_RESISTANCE')/f, output_dir=Path('pages/projects/ANTIMICROBIAL_RESISTANCE')) for f in ['README.md','ANNOTATION_GAIN.md','SPOT_REVIEW.md']]"
+	uv run python -c "from pathlib import Path; from ai_gene_review.render_projects import render_project; d=Path('projects/ANTIMICROBIAL_RESISTANCE'); out=Path('pages/projects/ANTIMICROBIAL_RESISTANCE'); [render_project(d/f, output_dir=out) for f in ['README.md','ANNOTATION_GAIN.md','SPOT_REVIEW.md','FAMILY_COVERAGE.md','GO_TERM_REQUESTS.md','MAPPING_HOME_OPTIONS.md']]; [render_project(f, output_dir=out/'go_term_requests') for f in sorted((d/'go_term_requests').glob('*.md'))]"
 	cp projects/ANTIMICROBIAL_RESISTANCE/aro2go.html pages/projects/ANTIMICROBIAL_RESISTANCE/aro2go.html
 
 # ============== Hidden internal recipes ==============

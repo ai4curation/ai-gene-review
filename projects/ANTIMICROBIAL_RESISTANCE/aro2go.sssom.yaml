@@ -2,35 +2,52 @@
 #
 # CARD/ARO carries no native GO cross-references (verified against aro.owl: hasDbXref
 # namespaces are ARO/PMID/PubChem/ChEBI/ChEMBL/CAS/PDB/ISBN/RO/DOID, zero GO). This file is the
-# hand-curated ARO->GO bridge described in projects/ANTIMICROBIAL_RESISTANCE.md, seeded from the
-# macrolide phosphotransferase (MPH) family.
+# hand-curated ARO->GO bridge described in projects/ANTIMICROBIAL_RESISTANCE.md.
 #
 # Every entity is given as a CURIE + label tuple (subject_id/subject_label,
 # predicate_id/predicate_label, object_id/object_label) so the rows are self-describing.
+# Every ARO label is checked against the pinned CARD release (aro_release.yaml) by
+# `just check-aro-release`; every GO id/label by `just validate-mappings`.
 #
-# Validate with linkml-validate (ltv) -- either via the just recipe:
-#   just validate-mappings
-# or directly (schema ships with the sssom_schema pip package):
-#   uv run linkml-validate \
-#     -s "$(uv run python -c 'import sssom_schema,os;print(os.path.join(os.path.dirname(sssom_schema.__file__),"schema","sssom_schema.yaml"))')" \
-#     -C "mapping set" projects/ANTIMICROBIAL_RESISTANCE/aro2go.sssom.yaml
+# Propagation (see aro_release.py): a row on an AMR gene family applies to that family and its
+# is_a descendants; a row on a resistance-mechanism term applies to every gene that reaches the
+# mechanism through ARO's participates_in relation (is_a* o participates_in o is_a*).
+#
+# Gap rows (object_id sssom:NoTermFound) record ARO families for which GO has no suitable term.
+# AMR gene families that are deliberately NOT mapped, with the reason, are listed in
+# aro_family_triage.yaml; FAMILY_COVERAGE.md reports every CARD AMR gene family's status.
 
 mapping_set_id: https://w3id.org/ai4curation/ai-gene-review/mappings/aro2go
+mapping_set_version: "2026-11-27"
 mapping_set_title: ARO to GO mapping (AMR gene families and resistance mechanisms)
 mapping_set_description: >-
-  Curated mappings from Antibiotic Resistance Ontology (ARO / CARD) determinant, AMR-gene-family,
-  and resistance-mechanism terms to Gene Ontology molecular-function and biological-process terms.
+  Curated mappings from Antibiotic Resistance Ontology (ARO / CARD) AMR-gene-family and
+  resistance-mechanism terms to Gene Ontology molecular-function and biological-process terms.
   CARD provides no native ARO->GO cross-references, so these are manually asserted to seed and
-  quality-check GO annotations of AMR genes (e.g. MphA Q47396 / ARO:3000316, MphB A0A0H3EUF3 /
-  ARO:3000318). Coverage: the macrolide phosphotransferase (MPH) family plus beta-lactamase,
-  chloramphenicol acetyltransferase, aminoglycoside-modifying enzymes (APH/AAC/ANT), Erm rRNA
-  methyltransferases, trimethoprim-resistant DHFR and sulfonamide-resistant DHPS, and the six ARO
-  resistance-mechanism classes. Every ARO id is verified against aro.owl; every GO id/label against
-  QuickGO. Gene/family -> MF use 'enables' (RO:0002327); mechanism -> BP use skos:relatedMatch.
+  quality-check GO annotations of AMR genes. Gene family -> MF rows use 'enables' (RO:0002327) when
+  every member of the family enables the GO term, and skos:relatedMatch when the GO term is broader
+  than the family's activity or a minority of members may differ; mechanism -> BP rows use
+  skos:relatedMatch. Each row carries a confidence (0-1) and a justification in its comment.
 license: https://creativecommons.org/licenses/by/4.0/
 creator_label:
 - AI Gene Review project
-mapping_date: "2026-06-12"
+subject_source: obo:aro
+subject_source_version: CARD 4.0.2 (ARO 2026-08-11)
+object_source: obo:go.owl
+object_source_version: GO as served by sqlite:obo:go (semsql build of 2026-11-03), checked 2026-11-27
+mapping_date: "2026-11-27"
+see_also:
+- https://ai4curation.io/ai-gene-review/pages/projects/ANTIMICROBIAL_RESISTANCE.html
+comment: >-
+  Reviewed by the CARD curation team (CARD review of the aro2go table, received 2026-11-27). CARD
+  confirmed that all ARO accessions used were current, that the enzyme-family mappings were right
+  (beta-lactamase, APH, AAC, ANT, CAT, MPH, Erm, trimethoprim-resistant DHFR, sulfonamide-resistant
+  folP, MCR-type phosphoethanolamine transferases), that the FosA rows were appropriately cautious,
+  and that the GO-gap list was accurate. Rows CARD reviewed carry reviewer_label; rows added after
+  that review do not. CARD also pointed out that mechanism rows reached no genes under is_a-only
+  propagation (fixed: they now propagate along participates_in), that ARO:3000560 and ARO:3000202
+  had been relabelled (updated), and that the separate mphA/mphB rows were redundant with the MPH
+  family row (removed).
 curie_map:
   ARO: http://purl.obolibrary.org/obo/ARO_
   GO: http://purl.obolibrary.org/obo/GO_
@@ -41,42 +58,11 @@ curie_map:
   obo: http://purl.obolibrary.org/obo/
 
 mappings:
-# --- Determinant (gene) -> molecular function ---
-- subject_id: ARO:3000316
-  subject_label: mphA
-  predicate_id: RO:0002327
-  predicate_label: enables
-  object_id: GO:0050073
-  object_label: macrolide 2'-kinase activity
-  mapping_justification: semapv:ManualMappingCuration
-  comment: >-
-    mph(A) / macrolide 2'-phosphotransferase I enables the GO macrolide 2'-kinase activity (the
-    determinant is not a GO term, so this is an enables relation, not a term equivalence).
-
-- subject_id: ARO:3000318
-  subject_label: mphB
-  predicate_id: RO:0002327
-  predicate_label: enables
-  object_id: GO:0050073
-  object_label: macrolide 2'-kinase activity
-  mapping_justification: semapv:ManualMappingCuration
-  comment: >-
-    mph(B) / macrolide 2'-phosphotransferase II enables the same GO MF; substrate-scope differences
-    (16-membered macrolides) are finer than the GO term and recorded separately as ChEBI substrates.
-
-# --- AMR gene family -> molecular function ---
-- subject_id: ARO:3000333
-  subject_label: macrolide phosphotransferase (MPH)
-  predicate_id: RO:0002327
-  predicate_label: enables
-  object_id: GO:0050073
-  object_label: macrolide 2'-kinase activity
-  mapping_justification: semapv:ManualMappingCuration
-  comment: >-
-    Family-level mapping: every member of the ARO macrolide phosphotransferase (MPH) family is a
-    macrolide 2'-kinase. Useful for propagating a candidate GO MF to other MPH members (mphC/E/G).
-
-# --- Resistance mechanism -> biological process ---
+# =============================================================================================
+# Resistance mechanism -> biological process
+# =============================================================================================
+# Mechanism terms are reached from gene families by ARO participates_in, not is_a. Every ARO
+# mechanism class relates to GO:0046677 'response to antibiotic' (relatedMatch: different axes).
 - subject_id: ARO:0001004
   subject_label: antibiotic inactivation
   predicate_id: skos:relatedMatch
@@ -84,14 +70,13 @@ mappings:
   object_id: GO:0046677
   object_label: response to antibiotic
   mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.8
   comment: >-
     Mechanism axis (ARO 'antibiotic inactivation') relates to the GO biological process 'response to
-    antibiotic'; relatedMatch (not exact) because the two terms sit on different axes. This row is the
-    mechanism->BP QC prior: an inactivation-mechanism determinant should carry GO:0046677.
+    antibiotic'; relatedMatch (not exact) because the two terms sit on different axes. Reaches genes
+    whose family participates_in this mechanism or one of its is_a children (e.g. ARO:3000105
+    phosphorylation of antibiotic conferring resistance).
 
-# --- Other resistance mechanisms -> biological process ---
-# All ARO mechanism-axis terms relate to GO:0046677 'response to antibiotic' (relatedMatch; the BP an
-# AMR determinant participates in, regardless of the specific mechanism). Verified ARO ids from aro.owl.
 - subject_id: ARO:0010000
   subject_label: antibiotic efflux
   predicate_id: skos:relatedMatch
@@ -99,9 +84,11 @@ mappings:
   object_id: GO:0046677
   object_label: response to antibiotic
   mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.7
   comment: >-
-    Efflux determinants additionally have a transmembrane-transporter MF, but GO lacks a specific
-    'antibiotic/efflux transmembrane transporter activity' term, so only the BP prior is asserted here.
+    Reaches efflux pump subunits (ARO:3000159 participates_in antibiotic efflux) and the efflux
+    regulators (ARO:3000451). Transporter MFs are mapped per pump family below where the family is
+    homogeneous enough.
 
 - subject_id: ARO:0001001
   subject_label: antibiotic target alteration
@@ -110,6 +97,12 @@ mappings:
   object_id: GO:0046677
   object_label: response to antibiotic
   mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.7
+  comment: >-
+    Reaches target-modifying enzymes (ARO:3000519) and, through ARO:0000031 participates_in
+    'mutation conferring antibiotic resistance', the resistance variants of housekeeping targets
+    (gyrA, rpoB, ...). For those variants the BP is a property of the variant allele; curators
+    should weigh it against the wild-type gene's annotation.
 
 - subject_id: ARO:0001003
   subject_label: antibiotic target protection
@@ -118,6 +111,9 @@ mappings:
   object_id: GO:0046677
   object_label: response to antibiotic
   mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.8
+  comment: >-
+    Reaches target-protection proteins (Qnr, Tet-type ribosomal protection proteins, ABC-F proteins) through ARO:3000185 participates_in this mechanism.
 
 - subject_id: ARO:0001002
   subject_label: antibiotic target replacement
@@ -126,6 +122,9 @@ mappings:
   object_id: GO:0046677
   object_label: response to antibiotic
   mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.8
+  comment: >-
+    Reaches acquired, drug-insensitive replacements of the target (dfr, sul, mecA-type PBP2a) through ARO:3000381 participates_in this mechanism.
 
 - subject_id: ARO:3000244
   subject_label: reduced permeability to antibiotic
@@ -134,10 +133,29 @@ mappings:
   object_id: GO:0046677
   object_label: response to antibiotic
   mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.6
+  comment: >-
+    Reaches porins and other permeability proteins (ARO:3000270). Lower confidence: resistance here
+    is usually loss or down-regulation of the protein, so the BP describes the phenotype of the
+    altered allele more than the activity of the protein.
 
-# --- Other AMR gene families -> molecular function (enables) ---
-# Family-level 'enables' mappings: every member of the ARO family carries the named GO MF. Useful for
-# propagating a candidate GO MF to family members. Verified: ARO ids from aro.owl, GO ids/labels from QuickGO.
+# =============================================================================================
+# AMR gene family -> molecular function (reviewed by CARD)
+# =============================================================================================
+- subject_id: ARO:3000333
+  subject_label: macrolide phosphotransferase (MPH)
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0050073
+  object_label: macrolide 2'-kinase activity
+  mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
+  confidence: 0.95
+  comment: >-
+    Every member of the ARO MPH family is a macrolide 2'-kinase. Covers mphA and mphB, which earlier
+    had separate determinant rows (removed as redundant with this family row).
+
 - subject_id: ARO:3000001
   subject_label: beta-lactamase
   predicate_id: RO:0002327
@@ -145,6 +163,11 @@ mappings:
   object_id: GO:0008800
   object_label: beta-lactamase activity
   mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
+  confidence: 0.95
+  comment: >-
+    Every member hydrolyses the beta-lactam ring; classes A, C and D are serine enzymes and class B metallo-enzymes, all within this one GO activity.
 
 - subject_id: ARO:3000122
   subject_label: chloramphenicol acetyltransferase (CAT)
@@ -153,6 +176,11 @@ mappings:
   object_id: GO:0008811
   object_label: chloramphenicol O-acetyltransferase activity
   mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
+  confidence: 0.95
+  comment: >-
+    Every CAT acetylates the 3-hydroxyl of chloramphenicol with acetyl-CoA, which is exactly this GO activity.
 
 - subject_id: ARO:3000114
   subject_label: aminoglycoside phosphotransferase (APH)
@@ -161,6 +189,11 @@ mappings:
   object_id: GO:0034071
   object_label: aminoglycoside phosphotransferase activity
   mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
+  confidence: 0.95
+  comment: >-
+    Every APH phosphorylates an aminoglycoside hydroxyl; regiospecific APH(3'), APH(2'') etc. are left to the more specific GO children at the member level.
 
 - subject_id: ARO:3000121
   subject_label: aminoglycoside acetyltransferase (AAC)
@@ -169,6 +202,11 @@ mappings:
   object_id: GO:0034069
   object_label: aminoglycoside N-acetyltransferase activity
   mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
+  confidence: 0.95
+  comment: >-
+    Every AAC N-acetylates an aminoglycoside amine; regiospecific children (e.g. GO:0047663 6'-N) are left to member-level curation.
 
 - subject_id: ARO:3000218
   subject_label: aminoglycoside nucleotidyltransferase (ANT)
@@ -177,19 +215,28 @@ mappings:
   object_id: GO:0034068
   object_label: aminoglycoside nucleotidyltransferase activity
   mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
+  confidence: 0.95
+  comment: >-
+    Every ANT adenylylates an aminoglycoside hydroxyl; regiospecific children (e.g. GO:0009012 3'') are left to member-level curation.
 
 - subject_id: ARO:3000560
-  subject_label: Erm 23S ribosomal RNA methyltransferase
+  subject_label: Erm-like 23S rRNA methyltransferase
   predicate_id: RO:0002327
   predicate_label: enables
   object_id: GO:0008988
   object_label: rRNA (adenine-N6-)-methyltransferase activity
   mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
+  confidence: 0.9
   comment: >-
-    Family-safe term: all Erm methylate the N6 of 23S rRNA adenine A2058, so every member enables
-    GO:0008988 (rRNA adenine-N6-methyltransferase). The N6,N6-DImethyltransferase term GO:0052910 (a
-    descendant of GO:0008988) is correct only for the di-methylating majority and would over-annotate
-    mono-methylating Erm variants, so it is applied at the allele level, not the family node.
+    Label updated to the CARD 4.0.2 name (was 'Erm 23S ribosomal RNA methyltransferase').
+    Family-safe term: all Erm methylate N6 of 23S rRNA A2058, so every member enables GO:0008988.
+    The dimethyltransferase descendant GO:0052910 is correct only for the di-methylating majority
+    (ARO itself records mono-methylating members such as ErmN and ErmO-srmA) and is left to
+    allele-level curation.
 
 - subject_id: ARO:3001218
   subject_label: trimethoprim resistant dihydrofolate reductase dfr
@@ -198,9 +245,12 @@ mappings:
   object_id: GO:0004146
   object_label: dihydrofolate reductase activity
   mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
+  confidence: 0.95
   comment: >-
-    Target-replacement resistance: a drug-insensitive Dfr variant that retains dihydrofolate reductase
-    activity (the resistance is to trimethoprim, not loss of the GO MF).
+    Target-replacement resistance: an acquired, drug-insensitive Dfr that retains dihydrofolate
+    reductase activity.
 
 - subject_id: ARO:3003415
   subject_label: sulfonamide resistant dihydropteroate synthase folP
@@ -209,58 +259,12 @@ mappings:
   object_id: GO:0004156
   object_label: dihydropteroate synthase activity
   mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
+  confidence: 0.95
   comment: >-
-    Target-replacement resistance: a sulfonamide-insensitive Sul/FolP variant that retains dihydropteroate
-    synthase activity.
-
-- subject_id: ARO:3000149
-  subject_label: FosA
-  predicate_id: skos:relatedMatch
-  predicate_label: related match
-  object_id: GO:0004364
-  object_label: glutathione transferase activity
-  mapping_justification: semapv:ManualMappingCuration
-  comment: >-
-    Re-anchored from the heterogeneous parent ARO:3000133 'fosfomycin thiol transferase' to the
-    glutathione-specific FosA: FosA adds glutathione to fosfomycin's epoxide and genuinely has GST
-    activity. The parent node also contains FosB (bacillithiol/L-cysteine thiol transferase, NOT
-    glutathione) and FosX (an epoxide hydrolase), for which GO:0004364 would be wrong. relatedMatch
-    because GO:0004364 is the general GST activity (no fosfomycin-specific term; GO:0034797/0034798 are
-    obsolete). The other FosA-type GSTs (FosA2/FosA3/fosA5) are ARO siblings (not descendants) and are
-    mapped separately below; FosB/FosX are deliberately excluded.
-
-- subject_id: ARO:3002804
-  subject_label: FosA2
-  predicate_id: skos:relatedMatch
-  predicate_label: related match
-  object_id: GO:0004364
-  object_label: glutathione transferase activity
-  mapping_justification: semapv:ManualMappingCuration
-  comment: >-
-    FosA-type Mn2+/K+-dependent glutathione S-transferase (chromosomal FosA of Enterobacter cloacae);
-    same fosfomycin-GSH conjugation activity as FosA. relatedMatch to the general GST term.
-
-- subject_id: ARO:3002872
-  subject_label: FosA3
-  predicate_id: skos:relatedMatch
-  predicate_label: related match
-  object_id: GO:0004364
-  object_label: glutathione transferase activity
-  mapping_justification: semapv:ManualMappingCuration
-  comment: >-
-    FosA-type glutathione S-transferase; the most widespread plasmid-borne FosA in ESBL-producing
-    Enterobacterales. relatedMatch to the general GST term.
-
-- subject_id: ARO:3003209
-  subject_label: fosA5
-  predicate_id: skos:relatedMatch
-  predicate_label: related match
-  object_id: GO:0004364
-  object_label: glutathione transferase activity
-  mapping_justification: semapv:ManualMappingCuration
-  comment: >-
-    FosA-type glutathione S-transferase (K. pneumoniae origin); same fosfomycin-GSH conjugation
-    activity. relatedMatch to the general GST term.
+    Sulfonamide-insensitive FolP variants that retain dihydropteroate synthase activity. The
+    acquired sul1-4 genes are a separate ARO family (ARO:3004238), mapped below.
 
 - subject_id: ARO:3004112
   subject_label: phosphoethanolamine transferase conferring colistin resistance
@@ -269,11 +273,65 @@ mappings:
   object_id: GO:0043838
   object_label: phosphatidylethanolamine:Kdo2-lipid A phosphoethanolamine transferase activity
   mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
+  confidence: 0.9
   comment: >-
-    Colistin resistance (last-resort): MCR/EptA-type enzymes transfer phosphoethanolamine onto lipid A,
-    reducing the net negative charge that polymyxins bind. This ARO family node covers the mobile MCR
-    alleles plus pmr and intrinsic chromosomal phosphoethanolamine transferases (>110 descendant ARO
-    terms), all of which enable this exact GO MF.
+    MCR/EptA-type enzymes transfer phosphoethanolamine onto lipid A, reducing the net negative
+    charge that polymyxins bind. Covers the mobile MCR alleles and the chromosomal
+    phosphoethanolamine transferases under this node.
+
+- subject_id: ARO:3000149
+  subject_label: FosA
+  predicate_id: skos:relatedMatch
+  predicate_label: related match
+  object_id: GO:0004364
+  object_label: glutathione transferase activity
+  mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
+  confidence: 0.8
+  comment: >-
+    Anchored on the glutathione-specific FosA rather than the heterogeneous parent ARO:3000133
+    'fosfomycin thiol transferase'. The parent node also contains FosB (bacillithiol/L-cysteine thiol
+    transferase, NOT glutathione) and FosX (an epoxide hydrolase). relatedMatch because GO:0004364 is the general GST
+    activity (no fosfomycin-specific term; GO:0034797/0034798 are obsolete).
+
+- subject_id: ARO:3002804
+  subject_label: FosA2
+  predicate_id: skos:relatedMatch
+  predicate_label: related match
+  object_id: GO:0004364
+  object_label: glutathione transferase activity
+  mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
+  confidence: 0.8
+  comment: FosA-type glutathione S-transferase; ARO sibling (not descendant) of FosA, so mapped separately.
+
+- subject_id: ARO:3002872
+  subject_label: FosA3
+  predicate_id: skos:relatedMatch
+  predicate_label: related match
+  object_id: GO:0004364
+  object_label: glutathione transferase activity
+  mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
+  confidence: 0.8
+  comment: FosA-type glutathione S-transferase; ARO sibling of FosA.
+
+- subject_id: ARO:3003209
+  subject_label: fosA5
+  predicate_id: skos:relatedMatch
+  predicate_label: related match
+  object_id: GO:0004364
+  object_label: glutathione transferase activity
+  mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
+  confidence: 0.8
+  comment: FosA-type glutathione S-transferase; ARO sibling of FosA.
 
 - subject_id: ARO:3004271
   subject_label: 16S rRNA methyltransferase (G1405)
@@ -282,94 +340,488 @@ mappings:
   object_id: GO:0070043
   object_label: rRNA (guanine-N7-)-methyltransferase activity
   mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.85
   comment: >-
-    High-level aminoglycoside resistance: ArmA/RmtA-H-type 16S rRNA methyltransferases methylate N7 of
-    G1405 in the aminoglycoside binding site. relatedMatch (not enables) because GO:0070043 is the general
-    rRNA guanine-N7-methyltransferase activity (which also covers housekeeping enzymes such as RsmG); the
-    G1405-specific resistance methyltransferase is narrower than this term, so the GO MF still propagates.
+    ArmA/RmtA-H-type 16S rRNA methyltransferases methylate N7 of G1405 in the aminoglycoside binding
+    site. relatedMatch because GO:0070043 is the general rRNA guanine-N7-methyltransferase activity
+    (which also covers housekeeping enzymes such as RsmG).
 
-# --- Gaps: ARO families with NO suitable GO molecular-function term ---
-# Recorded with the SSSOM no-match convention (object_id: sssom:NoTermFound, object_source: obo:go.owl)
-# so the gap lives in the mapping file itself rather than only in prose. These are candidates for GO
-# new-term requests. predicate_id is the relation we WOULD use (skos:exactMatch) had a term existed.
+# =============================================================================================
+# AMR gene family -> molecular function (added 2026-11-27, after the CARD review)
+# =============================================================================================
+# --- glycopeptide resistance (van cluster) ---
+- subject_id: ARO:3002978
+  subject_label: D-Ala-D-Lac ligase
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0160220
+  object_label: D-alanine-(R)-lactate ligase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.95
+  comment: >-
+    Previously a gap row (only GO:0008716 D-Ala-D-Ala ligase existed). GO now has the
+    D-alanyl-(R)-lactate-forming ligase activity made by VanA/B/D/F/M/O/I/P, the ARO children of this
+    node.
+
+- subject_id: ARO:3002979
+  subject_label: D-Ala-D-Ser ligase
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0160222
+  object_label: D-alanine-D-serine ligase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.95
+  comment: VanC/E/G/L/N-type ligases make D-Ala-D-Ser, the low-level vancomycin-resistance precursor.
+
+- subject_id: ARO:3000011
+  subject_label: vanX
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0160237
+  object_label: D-Ala-D-Ala dipeptidase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.95
+  comment: VanX hydrolyses the D-Ala-D-Ala dipeptide so that only the resistant precursor is incorporated.
+
+- subject_id: ARO:3000496
+  subject_label: vanXY
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0160237
+  object_label: D-Ala-D-Ala dipeptidase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.85
+  comment: Bifunctional VanXY (vanC/E/G/L/N clusters) has the VanX D,D-dipeptidase activity; see the next row for its carboxypeptidase activity.
+
+- subject_id: ARO:3000496
+  subject_label: vanXY
+  predicate_id: skos:relatedMatch
+  predicate_label: related match
+  object_id: GO:0009046
+  object_label: zinc D-Ala-D-Ala carboxypeptidase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.7
+  comment: >-
+    The VanY-like D,D-carboxypeptidase half of VanXY. relatedMatch: the GO definition names the
+    model substrate (Ac)2-L-Lys-D-Ala-D-Ala, while VanXY acts on peptidoglycan precursors.
+
+- subject_id: ARO:3000077
+  subject_label: vanY
+  predicate_id: skos:relatedMatch
+  predicate_label: related match
+  object_id: GO:0009046
+  object_label: zinc D-Ala-D-Ala carboxypeptidase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.75
+  comment: >-
+    VanY is a zinc-dependent D,D-carboxypeptidase that removes the terminal D-Ala of peptidoglycan
+    precursors. relatedMatch for the same substrate-definition reason as vanXY.
+
+- subject_id: ARO:3000006
+  subject_label: vanH
+  predicate_id: skos:relatedMatch
+  predicate_label: related match
+  object_id: GO:0047809
+  object_label: D-lactate dehydrogenase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.75
+  comment: >-
+    VanH reduces pyruvate to D-lactate, the substrate of the D-Ala-D-Lac ligase. Mapped to the
+    acceptor-unspecified D-lactate dehydrogenase term rather than the NAD+-specific child, because
+    cofactor preference is not uniform across the vanH alleles under this node.
+
+- subject_id: ARO:3000372
+  subject_label: vanT
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0030378
+  object_label: serine racemase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.85
+  comment: VanT is the membrane-bound serine racemase that supplies D-serine for D-Ala-D-Ser precursors.
+
+- subject_id: ARO:3000071
+  subject_label: vanS
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0000155
+  object_label: phosphorelay sensor kinase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.9
+  comment: VanS is the sensor histidine kinase of the VanRS two-component system that induces the van cluster.
+
+- subject_id: ARO:3000574
+  subject_label: vanR
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0000156
+  object_label: phosphorelay response regulator activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.9
+  comment: VanR is the response regulator of the VanRS two-component system.
+
+# --- rRNA methyltransferases ---
+- subject_id: ARO:3004272
+  subject_label: 16S rRNA methyltransferase (A1408)
+  predicate_id: skos:relatedMatch
+  predicate_label: related match
+  object_id: GO:0016433
+  object_label: rRNA (adenine) methyltransferase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.8
+  comment: >-
+    NpmA/KamB methylate N1 of A1408 in 16S rRNA (the partner family CARD suggested alongside G1405).
+    GO has no site-specific term, and GO:0106142 'rRNA (adenine-N1-)-methyltransferase activity' is
+    defined for A645 of 25S rRNA despite its general label, so the family is mapped to the general
+    rRNA adenine methyltransferase term. A '16S rRNA (adenine(1408)-N(1))-methyltransferase
+    activity' term would be the exact target.
+
+- subject_id: ARO:3001298
+  subject_label: TlrA-like 23S rRNA methyltransferase
+  predicate_id: skos:relatedMatch
+  predicate_label: related match
+  object_id: GO:0052912
+  object_label: 23S rRNA (guanine(748)-N(1))-methyltransferase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.6
+  comment: >-
+    ARO places this family under ARO:3009653 '23S rRNA (guanine(748)-N(1))-methyltransferase', and
+    four of its five members (TlrB, MyrA, RlmA(II), ChrB) are G748 methyltransferases by their ARO
+    definitions. relatedMatch at reduced confidence because the fifth member, EmtA, methylates G2470
+    (PMID:11580839), and because the node's name is misleading: the published tlrA of S. fradiae is
+    ermSF, an A2058 N6-methyltransferase. Both are raised with CARD.
+
+- subject_id: ARO:3009652
+  subject_label: tsnR 23S rRNA methyltransferase
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0030743
+  object_label: 23S rRNA (adenosine(1067)-2'-O-ribose)-methyltransferase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.9
+  comment: TsnR 2'-O-methylates A1067 of 23S rRNA (thiostrepton self-resistance); GO has the exact activity.
+
+# --- target replacement: acquired, drug-insensitive copies of the target enzyme ---
+- subject_id: ARO:3004238
+  subject_label: sulfonamide resistant sul
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0004156
+  object_label: dihydropteroate synthase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.95
+  comment: Acquired sul1-sul4 dihydropteroate synthases; same rationale as the CARD-reviewed folP row.
+
+- subject_id: ARO:3000446
+  subject_label: antibiotic-resistant isoleucyl-tRNA synthetase (ileS)
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0004822
+  object_label: isoleucine-tRNA ligase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.9
+  comment: >-
+    Mupirocin-resistant isoleucyl-tRNA synthetases (acquired mupA/mupB and resistant ileS alleles)
+    all retain isoleucine-tRNA ligase activity.
+
+# --- cell-envelope modifying enzymes ---
+- subject_id: ARO:3003421
+  subject_label: antibiotic resistant mprF
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0050071
+  object_label: phosphatidylglycerol lysyltransferase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.85
+  comment: >-
+    MprF lysinylates phosphatidylglycerol, adding positive charge that repels cationic peptides and
+    daptomycin. Mapped at the parent of the two AMR gene families 'defensin resistant mprF' and
+    'daptomycin resistant mprF', so it covers both.
+
+- subject_id: ARO:3003398
+  subject_label: undecaprenyl pyrophosphate related proteins
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0050380
+  object_label: undecaprenyl-diphosphatase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.85
+  comment: BacA/UppP and the PAP2-type BcrC both dephosphorylate undecaprenyl pyrophosphate (bacitracin resistance).
+
+# --- antibiotic inactivation enzymes ---
+- subject_id: ARO:3007419
+  subject_label: aminoglycoside bifunctional resistance protein
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0047663
+  object_label: aminoglycoside 6'-N-acetyltransferase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.85
+  comment: >-
+    Every bifunctional protein under this node (AAC(6')-Ie-APH(2''), ANT(3'')-II-AAC(6')-IId,
+    AAC(6')-30/AAC(6')-Ib', AAC(3)-Ib/AAC(6')-Ib'') carries an AAC(6') domain. The second activity
+    differs between members and is left to member-level curation.
+
+- subject_id: ARO:3004961
+  subject_label: antibiotic-resistant eis
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0034069
+  object_label: aminoglycoside N-acetyltransferase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.85
+  comment: >-
+    Eis (enhanced intracellular survival) is a multi-site aminoglycoside N-acetyltransferase;
+    resistance comes from promoter mutations that raise its expression, so the enzyme activity is
+    that of the wild-type protein. Mapped at the parent of the kanamycin- and amikacin-resistant eis
+    AMR gene families.
+
+- subject_id: ARO:3004261
+  subject_label: viomycin phosphotransferase
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0050394
+  object_label: viomycin kinase activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.9
+  comment: Vph phosphorylates viomycin (EC 2.7.1.103); GO has the exact activity.
+
+# --- ribosomal protection ---
+- subject_id: ARO:3004469
+  subject_label: ABC-F ATP-binding cassette ribosomal protection protein
+  predicate_id: skos:relatedMatch
+  predicate_label: related match
+  object_id: GO:0016887
+  object_label: ATP hydrolysis activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.7
+  comment: >-
+    ABC-F proteins (vga, lsa, msr, sal, OptrA, PoxtA, ...) bind the ribosome and use ATP hydrolysis
+    to dislodge bound antibiotics. Mapped at their common ARO parent, covering the five ABC-F AMR gene
+    families. relatedMatch: ATP hydrolysis is true of every member but GO has no term for the
+    ribosome-protection activity itself.
+
+# --- transport ---
+- subject_id: ARO:0010003
+  subject_label: small multidrug resistance (SMR) antibiotic efflux pump
+  predicate_id: skos:relatedMatch
+  predicate_label: related match
+  object_id: GO:0042910
+  object_label: xenobiotic transmembrane transporter activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.7
+  comment: >-
+    SMR proteins (EmrE, Qac, ...) are proton-coupled drug exporters. relatedMatch: heterodimeric
+    members (YkkCD, KpnEF) contribute to rather than individually enable the activity.
+
+- subject_id: ARO:3004281
+  subject_label: General Bacterial Porin with reduced permeability to beta-lactams
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0015288
+  object_label: porin activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.85
+  comment: >-
+    OmpF/OmpC/OmpK35/36-type general porins. The GO MF describes the protein; the resistance comes
+    from loss or altered alleles, captured by the mechanism row.
+
+- subject_id: ARO:3004282
+  subject_label: General Bacterial Porin with reduced permeability to peptide antibiotics
+  predicate_id: skos:relatedMatch
+  predicate_label: related match
+  object_id: GO:0015288
+  object_label: porin activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.7
+  comment: OmpU/OmpT are porins; relatedMatch because the family also holds OmpA, whose pore activity is weak.
+
+- subject_id: ARO:3004279
+  subject_label: Sugar Porin (SP)
+  predicate_id: RO:0002327
+  predicate_label: enables
+  object_id: GO:0015288
+  object_label: porin activity
+  mapping_justification: semapv:ManualMappingCuration
+  confidence: 0.85
+  comment: LamB-type maltoporins; GO:0015481 maltose transporting porin activity applies at the gene level.
+
+# =============================================================================================
+# Gaps: ARO families with NO suitable GO molecular-function term
+# =============================================================================================
+# SSSOM no-match convention (object_id: sssom:NoTermFound, object_source: obo:go.owl);
+# predicate_id is the relation we WOULD use had a term existed. Rows reviewed by CARD are the
+# ones drafted as GO new-term requests in go_term_requests/.
 - subject_id: ARO:3000221
   subject_label: lincosamide nucleotidyltransferase (LNU)
   predicate_id: skos:exactMatch
   object_id: sssom:NoTermFound
   object_source: obo:go.owl
   mapping_justification: semapv:ManualMappingCuration
-  comment: >-
-    GO has no lincosamide (O-)nucleotidyltransferase MF term (Lnu adenylylates lincosamides). GO term
-    request candidate.
+  reviewer_label:
+  - CARD curation team
+  comment: GO has no lincosamide (O-)nucleotidyltransferase MF term (Lnu adenylylates lincosamides). Drafted request go_term_requests/lincosamide-nucleotidyltransferase.md.
 - subject_id: ARO:3000453
   subject_label: streptogramin vat acetyltransferase
   predicate_id: skos:exactMatch
   object_id: sssom:NoTermFound
   object_source: obo:go.owl
   mapping_justification: semapv:ManualMappingCuration
-  comment: >-
-    GO has no streptogramin A O-acetyltransferase MF term (Vat). GO term request candidate.
+  comment: GO has no streptogramin A O-acetyltransferase MF term (Vat). Drafted request go_term_requests/streptogramin-a-acetyltransferase.md.
 - subject_id: ARO:3000376
   subject_label: streptogramin vgb lyase
   predicate_id: skos:exactMatch
   object_id: sssom:NoTermFound
   object_source: obo:go.owl
   mapping_justification: semapv:ManualMappingCuration
-  comment: >-
-    GO has no streptogramin B (virginiamycin B) lyase MF term (Vgb). GO term request candidate.
+  reviewer_label:
+  - CARD curation team
+  comment: GO has no streptogramin B (virginiamycin B) lyase MF term (Vgb). Drafted request go_term_requests/streptogramin-b-lyase.md.
 - subject_id: ARO:3000320
   subject_label: macrolide esterase
   predicate_id: skos:exactMatch
   object_id: sssom:NoTermFound
   object_source: obo:go.owl
   mapping_justification: semapv:ManualMappingCuration
-  comment: >-
-    GO has no macrolide/erythromycin esterase MF term (Ere). GO term request candidate.
+  reviewer_label:
+  - CARD curation team
+  comment: GO has no macrolide/erythromycin esterase MF term (Ere). GO term request candidate. Drafted request go_term_requests/erythromycin-esterase.md.
 - subject_id: ARO:3000390
   subject_label: rifampin ADP-ribosyltransferase (Arr)
   predicate_id: skos:exactMatch
   object_id: sssom:NoTermFound
   object_source: obo:go.owl
   mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
   comment: >-
     GO's nearest term GO:0003950 is NAD+ poly-ADP-ribosyltransferase; Arr is a mono-ADP-ribosyltransferase
-    acting on rifampin. No suitable mono term. GO term request candidate.
+    acting on rifampin (a small molecule), and GO:1990404 is protein mono-ADP-ribosylation. Drafted request
+    go_term_requests/rifampicin-adp-ribosyltransferase.md.
 - subject_id: ARO:3000445
   subject_label: rifampin monooxygenase
   predicate_id: skos:exactMatch
   object_id: sssom:NoTermFound
   object_source: obo:go.owl
   mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
   comment: >-
-    GO has no rifampin/rifamycin monooxygenase MF term (only the general GO:0004497 monooxygenase activity).
-    GO term request candidate.
+    GO has only the general GO:0004497 monooxygenase activity (GO:0050264 rifamycin-B oxidase is a
+    different, biosynthetic reaction). Drafted request go_term_requests/rifampicin-monooxygenase.md.
 - subject_id: ARO:3000036
   subject_label: tetracycline inactivation enzyme
   predicate_id: skos:exactMatch
   object_id: sssom:NoTermFound
   object_source: obo:go.owl
   mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
   comment: >-
     GO has no Tet(X)/tetracycline-destructase (flavin-dependent tetracycline monooxygenase) MF term.
-    GO term request candidate.
+    GO:0047670 anhydrotetracycline monooxygenase is a biosynthetic step. Drafted request
+    go_term_requests/tetracycline-monooxygenase.md.
 - subject_id: ARO:3000202
-  subject_label: Cfr 23S ribosomal RNA methyltransferase
+  subject_label: Cfr-like 23S rRNA methyltransferase
+  predicate_id: skos:exactMatch
+  object_id: sssom:NoTermFound
+  object_source: obo:go.owl
+  mapping_justification: semapv:ManualMappingCuration
+  reviewer_label:
+  - CARD curation team
+  comment: >-
+    Label updated to the CARD 4.0.2 name (was 'Cfr 23S ribosomal RNA methyltransferase').
+    GO:0070040 is the C2 (RlmN) activity. Cfr methylates C8 of A2503. ARO now has the parent
+    ARO:3009650 '23S rRNA (adenine(2503)-C(8))-methyltransferase'. Drafted request
+    go_term_requests/rrna-adenine2503-c8-methyltransferase.md.
+- subject_id: ARO:3000869
+  subject_label: streptothricin acetyltransferase (SAT)
+  predicate_id: skos:exactMatch
+  object_id: sssom:NoTermFound
+  object_source: obo:go.owl
+  mapping_justification: semapv:ManualMappingCuration
+  comment: GO has no streptothricin N-acetyltransferase MF term. Not yet drafted as a request.
+- subject_id: ARO:3000249
+  subject_label: chloramphenicol phosphotransferase
+  predicate_id: skos:exactMatch
+  object_id: sssom:NoTermFound
+  object_source: obo:go.owl
+  mapping_justification: semapv:ManualMappingCuration
+  comment: GO has no chloramphenicol 3-O-phosphotransferase MF term. Not yet drafted as a request.
+- subject_id: ARO:3000458
+  subject_label: macrolide glycosyltransferase
   predicate_id: skos:exactMatch
   object_id: sssom:NoTermFound
   object_source: obo:go.owl
   mapping_justification: semapv:ManualMappingCuration
   comment: >-
-    GO:0070040 is the C2 (RlmN housekeeping) 23S rRNA methyltransferase; Cfr methylates C8 of A2503. No
-    C8-specific GO term. GO term request candidate.
-- subject_id: ARO:3002978
-  subject_label: D-Ala-D-Lac ligase
+    GO has no macrolide 2'-O-glycosyltransferase MF term. Covers the gimA, mgt and ole AMR gene
+    families. Not yet drafted as a request.
+- subject_id: ARO:3000443
+  subject_label: rifampin glycosyltransferase
+  predicate_id: skos:exactMatch
+  object_id: sssom:NoTermFound
+  object_source: obo:go.owl
+  mapping_justification: semapv:ManualMappingCuration
+  comment: GO has no rifampicin glycosyltransferase MF term. Not yet drafted as a request.
+- subject_id: ARO:3004040
+  subject_label: rifampin phosphotransferase
+  predicate_id: skos:exactMatch
+  object_id: sssom:NoTermFound
+  object_source: obo:go.owl
+  mapping_justification: semapv:ManualMappingCuration
+  comment: GO has no rifampicin phosphotransferase MF term (RphA/RphB, EC 2.7.9.6). Not yet drafted as a request.
+- subject_id: ARO:3000359
+  subject_label: fosfomycin phosphotransferase
   predicate_id: skos:exactMatch
   object_id: sssom:NoTermFound
   object_source: obo:go.owl
   mapping_justification: semapv:ManualMappingCuration
   comment: >-
-    VanA/B-type ligase makes D-Ala-D-Lactate; GO:0008716 is D-Ala-D-Ala ligase (wrong product). No
-    D-alanine-D-lactate ligase GO term. GO term request candidate.
-
-
-
+    GO has no fosfomycin kinase MF term. Covers the Fom (FomA/FomB) and fosC AMR gene families. Not yet
+    drafted as a request.
+- subject_id: ARO:3007103
+  subject_label: nitroimidazole reductase
+  predicate_id: skos:exactMatch
+  object_id: sssom:NoTermFound
+  object_source: obo:go.owl
+  mapping_justification: semapv:ManualMappingCuration
+  comment: GO has no 5-nitroimidazole reductase MF term (Nim proteins). Not yet drafted as a request.
+- subject_id: ARO:3003025
+  subject_label: fusidic acid inactivation enzyme
+  predicate_id: skos:exactMatch
+  object_id: sssom:NoTermFound
+  object_source: obo:go.owl
+  mapping_justification: semapv:ManualMappingCuration
+  comment: GO has no fusidic acid esterase MF term. Not yet drafted as a request.
+- subject_id: ARO:3007074
+  subject_label: capreomycin phosphotransferase
+  predicate_id: skos:exactMatch
+  object_id: sssom:NoTermFound
+  object_source: obo:go.owl
+  mapping_justification: semapv:ManualMappingCuration
+  comment: GO:0050394 viomycin kinase names a different substrate; no capreomycin kinase MF term. Not yet drafted as a request.
+- subject_id: ARO:3004064
+  subject_label: Edeine acetyltransferase
+  predicate_id: skos:exactMatch
+  object_id: sssom:NoTermFound
+  object_source: obo:go.owl
+  mapping_justification: semapv:ManualMappingCuration
+  comment: GO has no edeine N-acetyltransferase MF term. Not yet drafted as a request.
+- subject_id: ARO:3004260
+  subject_label: Bah amidohydrolase
+  predicate_id: skos:exactMatch
+  object_id: sssom:NoTermFound
+  object_source: obo:go.owl
+  mapping_justification: semapv:ManualMappingCuration
+  comment: GO has no bacitracin amidohydrolase MF term. Not yet drafted as a request.
+- subject_id: ARO:3009312
+  subject_label: PBP2-like beta-lactam resistant peptidoglycan transpeptidase
+  predicate_id: skos:exactMatch
+  object_id: sssom:NoTermFound
+  object_source: obo:go.owl
+  mapping_justification: semapv:ManualMappingCuration
+  comment: >-
+    mecA/B/C/D (PBP2a-type) are D,D-transpeptidases; GO has only the L,D-transpeptidase activity
+    (GO:0071972), and GO:0008658 penicillin binding describes the very property these proteins have
+    lost. Not yet drafted as a request.

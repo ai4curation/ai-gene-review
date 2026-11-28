@@ -30,7 +30,6 @@ Example::
 """
 from __future__ import annotations
 
-import argparse
 import csv
 import glob
 import re
@@ -38,7 +37,11 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+import typer
 import yaml
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from aro_release import DEFAULT_CACHE, MINI_OBO, AroOntology, Release, applicable_subjects  # noqa: E402,F401
 
 # ARO ids look like ARO:0000000. Match one-or-more digits for consistency with the report script
 # (annotation_gain_report.py) and robustness to any non-7-digit accessions.
@@ -95,11 +98,11 @@ def parse_uniprot_card(uniprot_text: str) -> tuple[str, list[AroHit]]:
 def parse_rgi_output(path: Path) -> list[AroHit]:
     """Parse ARO ids from an RGI tab-delimited results file (``rgi main`` output).
 
-    RGI output has a header row; the relevant columns are typically ``ORF_ID`` (or the
-    contig/sequence name) and ``Best_Hit_ARO`` / ``ARO`` (the ARO *accession number*,
-    without the ``ARO:`` prefix). We accept either ``ARO`` or ``Best_Hit_ARO`` and
-    normalise to the ``ARO:NNNNNNN`` CURIE. The sequence/ORF name is stored as the
-    ``uniprot_acc`` so the caller can join it back to a UniProt accession.
+    RGI output has a header row. The ARO *accession* (without the ``ARO:`` prefix) is read from the
+    first of ``ARO``, ``Best_Hit_ARO_accession`` or ``ARO_accession`` present, and normalised to the
+    ``ARO:NNNNNNN`` CURIE. The sequence name is read from the first of ``ORF_ID``, ``Contig`` or
+    ``Best_Hit_ARO`` present and stored as ``uniprot_acc`` so the caller can join it back to a
+    UniProt accession; ``Best_Hit_ARO`` (the ARO name) also fills ``aro_label``.
 
     This function only *parses* RGI output; it does not run RGI.
     """
@@ -144,51 +147,28 @@ def load_aro2go(sssom_path: Path) -> dict[str, list[dict]]:
     return index
 
 
-def build_aro_ancestor_fn(adapter_string: str):
-    """Return ``ancestors_or_self(aro_id) -> set`` using OAK's ARO is_a hierarchy.
+def chain(hits: list[AroHit], aro2go: dict[str, list[dict]], onto: AroOntology | None = None) -> list[dict]:
+    """Join ARO hits to GO terms via the ARO->GO index.
 
-    Propagation rule: a GO term mapped at an ARO term applies to a gene whose ARO assignment
-    is that term OR any narrower (descendant) ARO term. We implement this by walking the gene's
-    is_a ancestors (cheap) and matching mapped subjects among them, rather than expanding the
-    (potentially thousands of) descendants of each family node.
+    With ``onto``, a mapping applies when its subject is the hit's ARO term (``exact``), an
+    ``is_a`` ancestor of it (``narrower``), or a mechanism the hit reaches through
+    ``participates_in`` (``participates_in``); see :func:`aro_release.applicable_subjects`.
+    Without ``onto`` only exact matches fire.
 
-    Returns ``None`` if the adapter cannot be loaded (e.g. offline), so the caller can fall back
-    to exact-match-only propagation.
-    """
-    try:
-        from functools import lru_cache
-
-        from oaklib import get_adapter
-        from oaklib.datamodels.vocabulary import IS_A
-
-        adapter = get_adapter(adapter_string)
-
-        @lru_cache(maxsize=None)
-        def ancestors_or_self(aro_id: str) -> frozenset[str]:
-            try:
-                return frozenset(adapter.ancestors(aro_id, predicates=[IS_A])) | {aro_id}
-            except Exception:
-                return frozenset({aro_id})
-
-        return ancestors_or_self
-    except Exception as e:  # pragma: no cover - depends on environment
-        print(f"# WARN: ARO hierarchy unavailable ({e}); exact-match propagation only.", file=sys.stderr)
-        return None
-
-
-def chain(hits: list[AroHit], aro2go: dict[str, list[dict]], ancestors_or_self=None) -> list[dict]:
-    """Join ARO hits to GO terms via the ARO->GO index, with exact-or-narrower propagation.
-
-    A mapping applies to a hit when the mapping's subject ARO term equals the hit's ARO term
-    (``aro_relation = exact``) or is an is_a ancestor of it (``aro_relation = narrower``: the
-    gene's ARO term is narrower than the mapped family/mechanism node). Without ``ancestors_or_self``
-    only exact matches fire.
+    >>> aro = AroOntology.from_obo_text(MINI_OBO)
+    >>> index = {"ARO:2": [{"subject_id": "ARO:2", "predicate_id": "RO:0002327", "object_id": "GO:0008800"}],
+    ...          "ARO:10": [{"subject_id": "ARO:10", "predicate_id": "skos:relatedMatch", "object_id": "GO:0046677"}]}
+    >>> hit = AroHit(uniprot_acc="P1", aro_id="ARO:4", aro_label="TEM-1", route="RGI")
+    >>> sorted((r["go_id"], r["aro_relation"]) for r in chain([hit], index, aro))
+    [('GO:0008800', 'narrower'), ('GO:0046677', 'participates_in')]
+    >>> chain([hit], index)
+    []
     """
     rows: list[dict] = []
     seen: set[tuple] = set()
     for hit in hits:
-        applicable = ancestors_or_self(hit.aro_id) if ancestors_or_self else {hit.aro_id}
-        for subj in applicable:
+        applicable = applicable_subjects(onto, hit.aro_id) if onto else {hit.aro_id: "exact"}
+        for subj, relation in sorted(applicable.items()):
             for m in aro2go.get(subj, []):
                 key = (hit.uniprot_acc, m["object_id"], m["predicate_id"], subj, hit.route)
                 if key in seen:
@@ -201,7 +181,7 @@ def chain(hits: list[AroHit], aro2go: dict[str, list[dict]], ancestors_or_self=N
                         "gene_aro_label": hit.aro_label,
                         "mapped_aro_id": subj,
                         "mapped_aro_label": m.get("subject_label", ""),
-                        "aro_relation": "exact" if subj == hit.aro_id else "narrower",
+                        "aro_relation": relation,
                         "predicate_id": m["predicate_id"],
                         "predicate_label": m.get("predicate_label", ""),
                         "go_id": m["object_id"],
@@ -223,43 +203,40 @@ def collect_hits(uniprot_paths: list[Path], rgi_output: Path | None) -> list[Aro
     return hits
 
 
-def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("uniprot", nargs="*", help="UniProt flat-file(s) (*-uniprot.txt) or globs")
-    ap.add_argument("--sssom", required=True, type=Path, help="ARO->GO SSSOM mapping file")
-    ap.add_argument("--rgi-output", type=Path, default=None, help="Optional RGI tab-delimited results to parse for ARO ids")
-    ap.add_argument("-o", "--output", type=Path, default=None, help="Output TSV (default: stdout)")
-    ap.add_argument(
-        "--propagate/--no-propagate", dest="propagate", default=True,
-        action=argparse.BooleanOptionalAction,
-        help="Propagate mappings to genes whose ARO term is narrower (is_a descendant) of a mapped term",
-    )
-    ap.add_argument("--aro-adapter", default="sqlite:obo:aro", help="OAK adapter for the ARO hierarchy")
-    args = ap.parse_args(argv)
-
+def main(
+    uniprot: list[str] = typer.Argument(None, help="UniProt flat-file(s) (*-uniprot.txt) or globs"),
+    sssom: Path = typer.Option(..., help="ARO->GO SSSOM mapping file"),
+    rgi_output: Path | None = typer.Option(None, help="Optional RGI tab-delimited results to parse for ARO ids"),
+    output: Path | None = typer.Option(None, "-o", "--output", help="Output TSV (default: stdout)"),
+    propagate: bool = typer.Option(True, help="Propagate along ARO is_a and participates_in (see aro_release.py)"),
+    aro_cache: Path = typer.Option(DEFAULT_CACHE, help="Fetched CARD release (just fetch-aro)"),
+) -> None:
+    """Chain UniProt -> ARO -> GO for AMR genes."""
     uniprot_paths: list[Path] = []
-    for pat in args.uniprot:
+    for pat in uniprot or []:
         matched = [Path(p) for p in glob.glob(pat, recursive=True)]
         uniprot_paths.extend(matched if matched else [Path(pat)])
 
-    aro2go = load_aro2go(args.sssom)
-    hits = collect_hits(uniprot_paths, args.rgi_output)
-    ancestors_fn = build_aro_ancestor_fn(args.aro_adapter) if args.propagate else None
-    rows = chain(hits, aro2go, ancestors_fn)
+    aro2go = load_aro2go(sssom)
+    hits = collect_hits(uniprot_paths, rgi_output)
+    onto = None
+    if propagate:
+        release = Release(aro_cache)
+        release.require()
+        onto = AroOntology.from_obo(release.obo)
+    rows = chain(hits, aro2go, onto)
 
     cols = [
         "uniprot_acc", "gene_aro_id", "gene_aro_label", "mapped_aro_id", "mapped_aro_label",
         "aro_relation", "predicate_id", "predicate_label", "go_id", "go_label",
         "mapping_justification", "route",
     ]
-    out = args.output.open("w", newline="") if args.output else sys.stdout
-    try:
-        w = csv.DictWriter(out, fieldnames=cols, delimiter="\t")
-        w.writeheader()
-        w.writerows(rows)
-    finally:
-        if args.output:
-            out.close()
+    out = output.open("w", newline="") if output else sys.stdout
+    w = csv.DictWriter(out, fieldnames=cols, delimiter="\t")
+    w.writeheader()
+    w.writerows(rows)
+    if output:
+        out.close()
 
     n_aro = len({h.aro_id for h in hits})
     print(
@@ -267,8 +244,7 @@ def main(argv: list[str] | None = None) -> int:
         f"{len(rows)} GO candidate(s).",
         file=sys.stderr,
     )
-    return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    typer.run(main)
