@@ -41,13 +41,13 @@ transmembrane-transport descendants where the same evidence supported that refin
 The old GO:0008381 InterPro2GO mapping is biologically correct for Piezo as a family,
 but should now point at GO:0140135.
 
-The GO ion-channel convention from issue #7187 matters for PIEZO1: calcium channel
-activity does not assert calcium selectivity. Because PMID:25955826 measured inward
-Ca2+ currents through mechanically stimulated human PIEZO1 single channels, GO:0005262
-calcium channel activity is a conservative NEW row.
+The GO ion-channel convention from issue #7187 matters for PIEZO1, but the best
+fit for human Ca2+ permeation is the stretch-activated Ca2+ child. PMID:25955826
+measured inward Ca2+ currents through mechanically stimulated human PIEZO1 single
+channels, supporting GO:0015275 as a conservative NEW row.
 
 The ER, ER-membrane, ERGIC-membrane, lamellipodium, stereocilium and cuticular-plate
 locations are not used in core functions. The ER/ERGIC rows come from early Fam38A/Mib
 localization; the lamellipodium row is a regulated endothelial sublocation under shear;
-and the mouse stereocilium/cuticular-plate transfer is explicitly non-core because
-mouse hair-cell Piezo1 deletion has no auditory or vestibular phenotype.
+and the mouse stereocilium/cuticular-plate transfer is a specialized inner-ear
+localization rather than a demonstrated human core location.
