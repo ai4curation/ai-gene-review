@@ -106,3 +106,28 @@ PMID:21478341.
   these compounds but does not catabolise them.
 - UNDECIDED: sulfur compound transmembrane transporter activity (PMID:23763788,
   abstract only, basis unknown).
+
+
+## 2026-11-07: conditional sulfur-cargo follow-up
+
+PA5377 is CbcW (Q9HTI7), the same 279-aa PAO1 permease reviewed under cbcW;
+CbcX is PA5378. The identical-accession duplicate has not been renamed, merged
+or deleted. The PMID23763788/GO1901682 source row is retained verbatim, with its
+review now KEEP_AS_NON_CORE. The recovered Results/Figure 5 record supports
+CosX-dependent choline-O-sulfate entry with PAO1 CbcWV in a B728a reporter host;
+PMID19919675 establishes the PAO1 construct and cbcX-deleted core provenance.
+This is conditional organic sulfur-cargo participation, not isolated CbcW
+binding, inorganic sulfate transport, purified flux or native PAO1 physiology.
+
+Full-source access is recorded at
+[file:analysis/module_audits/bacterial_l_carnitine_catabolism/round1/pseae-consultation/primary-evidence.md].
+The normal PMID23763788 cache remains abstract-only and unchanged. The old
+question about the sulfur compound and construct is answered; the remaining
+experiment concerns direct flux and native partner availability. All original
+row payloads/order/qualifiers and NEW lifecycle, other annotation judgments and
+core functions are preserved.
+
+
+## 2026-11-08 — canonical review moved to cbcW
+
+The active review for Q9HTI7 is now [cbcW](../cbcW/cbcW-ai-review.yaml). The prior review is retained under analysis/module_audits/bacterial_l_carnitine_catabolism/cbcw-consolidation-20261108/PA5377-before.yaml.txt. Raw PA5377 source records and earlier notes remain unchanged. Source-defect judgments have been incorporated into the canonical review.

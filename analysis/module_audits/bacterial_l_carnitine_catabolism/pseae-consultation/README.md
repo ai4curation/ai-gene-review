@@ -1,0 +1,25 @@
+# PAO1 carnitine consultation
+
+Six completed gene reviews cover CdhA, CdhB, CdhC, CaiX (folder Q9HTH6), CbcW and CbcV. The last two were normally fetched after exact PAO1 locus/accession verification: PA5377/Q9HTI7 and PA5376/Q9HTI8. PA5378/Q9HTI6 is CbcX and was not substituted for CaiX.
+
+## Evidence and biological decisions
+
+- PAO1 CdhA/B/C chemistry is retained from publication-linked curated UniProt evidence. Full PMID19406895 includes native PAO1 insertion mutants; targeted deletions/complementation and carnitine-dependent NADH lysate work are mainly PA14. The 2009 provisional DhcAB/AtoB pathway is not treated as an independently completed competing route.
+- The main text of PMID24240508 remains inaccessible. Authentic publisher supplements and Data Sets 2/4 were read. PAO1 CdhC Q9HTH7 is BKACE529; PA14 Q02DX5 is BKACE361. Neither appears in the accessible activity screen, and the G5 kinetic Table 6 assays different proteins. Their results are not target assays. PSEPK Q88R31/BKACE511 has a direct dual-substrate screen, so no claim of universal loss of KAH activity in the CdhC clade is justified.
+- CdhA NAD binding is now ACCEPT because it is integral to catalysis. CaiX's catabolic-process IMP row is MODIFY to carnitine transport after reading full primary evidence, which explicitly distinguishes its uptake role from downstream chemistry. No experimental assertion was rejected because an abstract named another strain.
+- The Cbc core supplies membrane translocation and ATP coupling; specificity depends on a compatible binding protein. PMID19919675 Table 5 combines PAO1 CbcWV with B728a CaiX in E. coli. Native P. aeruginosa evidence, construct identity and cross-species reconstitution are separate evidence tiers. System uptake Km is not a purified CaiX binding Kd.
+- Full PMID23763788 concerns CosX-dependent choline-O-sulfate uptake. The sulfate-ester cargo supports a secondary organic-sulfur transport role, not inorganic sulfate transport. Full PMID21478341 establishes conditional choline uptake/growth; CbcV osmotic-response inference remains UNDECIDED rather than a universal negative from retained osmoprotection.
+
+`primary-scope.md` contains dated URLs, short exact primary excerpts and assay limitations. `source-access.json` preserves successful and failed retrievals; the HTML response at a Nature PDF URL is explicitly not a PDF. Original publication caches were not overwritten. `bkace-identity.json`, `pao1-transporter-records.json` and `go-terms.json` preserve the independently inspected identity and ontology evidence.
+
+## Historical proposals and preservation
+
+The 38 original rows and 52 new seed rows remain in exactly their original order, with all machine payloads preserved. Only two explicit lifecycle deltas are allowed: CdhB's fourth row (zero-based 3), NEW GO:0016289, and CdhC's fourth row, NEW GO:0016747, gain annotation-level `retired: true`. Their terms exactly match the respective pre-existing third-row MODIFY replacements; both functions remain in the active cores. All distinct supporting quotations are retained on the archived NEW row and copied into its active replacement and core. This withdraws redundant author-created proposals, not a source annotation or biochemical judgment. `historical-proposals.json` archives the exact original objects. Counts: two historical NEW, zero active NEW; no new proposal was added.
+
+`verify.py` compares against the independently frozen root baseline and new-seed baseline. It permits only those two exact retirement deltas; it does not broadly ignore lifecycle or source fields. It also proves existing core GO assertions unchanged, evidence retained in active replacements, and 61 protected sources byte-identical, including raw/GOA/provider/publication files, PAINT family sources and the original comparator analysis. `action-ledger.json` records all 90 decisions, including unchanged actions.
+
+## Focused checks and limits
+
+All six `just validate` runs, six renders and six generated-history validations passed. The source/payload checker and Ruff passed. Four nonblocking warnings remain on new CbcW/V IBA MODIFY rows lacking structured propagation blocks; their reasons explicitly name the ancestral nodes, preserve legitimate target evidence and distinguish the substrate-class correction from node-loss claims. No loss or target divergence was invented to fill a failure-mode enum. PAINT checks reported no IRD/IKR losses for the five mapped proteins; CaiX has no raw PANTHER assignment and its lineage-loss check is unresolved.
+
+All six real Falcon requests failed with HTTP 403 authentication/access rejection. Logs are preserved and no provider report was fabricated. No whole-corpus validation, commit or push was performed. No module, family or shared-project file was edited by this consultation. The exact release file set and hashes are in `handoff.json`; operational logs and acquired source bytes remain under `.cache/module-audit-logs/carnitine-20261107/pseae-consultation/`.

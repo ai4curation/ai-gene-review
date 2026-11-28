@@ -19,3 +19,18 @@
 - GO has no exact terms for EC 2.3.1.317 (CdhC/BcoG) or EC 3.1.2.33
   (CdhB/BcoE-BcoF C-terminal region); these are recorded as proposed_new_terms
   and annotated at the parents GO:0016747 and GO:0016289.
+
+
+## 2026-11-07 full-primary re-review
+
+Full PMID30670548 was read from an official independent PMC HTML capture; the protected abstract cache is unchanged. Sequence comparison against CP004140.1 establishes496/496 BcoEF and300/300 BcoG identity to Rm2011, while the primary links the cloned 3D0a2 coding sequences to Rm2011. Native1021 GBB-growth failure must not be replaced by the positive3D0a2/Rm2011 phenotypes. Full assays used recombinant intact proteins, not independently isolated fusion domains.
+
+BcoEF hydrolyzes carnitinyl-CoA as well as betainyl-CoA and oxidizes carnitine. Its former no-substrate-route claim and stale question are corrected. BcoG mutant attribution is unsupported by the primary mutant list; its historical IMP proposal is explicitly retired with exact archive, while actual catalytic participation remains in the metabolic-row refinement and core. No new annotations were added.
+
+Default Falcon attempts for both genes failed403; no provider file was fabricated. PAINT-loss commands completed, but neither exact accession is present in the cached tree, so losses are unassessed rather than absent. All payloads and protected source bytes are preserved. See rhime-consultation proof and gene source-analysis for details.
+
+## 2026-11-07 PR6182 round1 follow-up
+
+The redundant historical GO:0016747 NEW proposal is now retired in place; its source payload/action/order are unchanged. The existing GO:0043720 MODIFY replacement and core continue to represent the supported acyltransferase chemistry. This is curator retirement for redundancy, not GOA disappearance or withdrawal of activity.
+
+See the round1/core-consultation audit for immutable payload/source preservation and validation. Previously generated research and primary-source records were reused without modification.

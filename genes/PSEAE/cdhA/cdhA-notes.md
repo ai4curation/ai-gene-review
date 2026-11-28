@@ -19,3 +19,10 @@
 - GO has no exact terms for EC 2.3.1.317 (CdhC/BcoG) or EC 3.1.2.33
   (CdhB/BcoE-BcoF C-terminal region); these are recorded as proposed_new_terms
   and annotated at the parents GO:0016747 and GO:0016289.
+
+
+## 2026-11-07 — independent PAO1 consultation
+
+CdhA performs NAD(+)-dependent L-carnitine oxidation. NAD binding is integral to this reaction, so its existing binding annotation is core. Native PAO1 transposon evidence supports pathway involvement (PMID19406895), while the lysate/deletion series mainly uses PA14. Exact chemistry is retained from the experimentally curated UniProt statement; the inaccessible main text of PMID24240508 is not described as newly inspected target biochemistry. Cytoplasmic placement remains inference, not fractionation evidence.
+
+Source scope and access receipts are preserved in [primary-scope](../../../analysis/module_audits/bacterial_l_carnitine_catabolism/pseae-consultation/primary-scope.md). The genuine Falcon attempt failed with HTTP 403 authentication/access rejection; no provider report was invented. The original ordered source payloads and protected caches remain intact. The mapped PANTHER lineage has no reported IRD/IKR loss. All primary source quotations are distinguished from analyst interpretation.

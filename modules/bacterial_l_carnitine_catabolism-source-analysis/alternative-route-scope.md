@@ -1,0 +1,9 @@
+# Alternative-route boundary evidence
+
+Consulted 2026-11-07. These controls test the definition of this three-reaction module. They do not assert that a strain carrying an alternative pathway cannot also carry this module.
+
+* **CntAB**: Zhu et al. 2014, PMID24591617, DOI10.1073/pnas.1316569111. The primary abstract at https://pubmed.ncbi.nlm.nih.gov/24591617/ was read through web search; full-text URL is https://pmc.ncbi.nlm.nih.gov/articles/PMC3964110/. Exact abstract excerpt: “Heterologous overexpression of cntAB enables Escherichia coli to produce TMA”. This establishes an alternative product outcome, not the oxidation–acyltransfer–betainyl-CoA hydrolysis sequence evaluated here. The control is a source-described activity descriptor, not an accession assignment or a claimed native negative. No full-text inspection is asserted for this capacity consultation.
+* **Cai reduction**: PMID9037756 cached review abstract explicitly describes conversion via crotonobetaine to gamma-butyrobetaine and the E. coli dehydratase/reductase pathway. PMID17910757 full review section1 and Figure1 expand that CoA-dependent route. Those products and reactions do not establish the present three required activities.
+* **CJ25**: PMID40853000 reports glycine-betaine production and proteomic candidates. Its authors explicitly call for cloning, purification and assays to confirm the proposed enzymes. A shared endpoint and Fad-family candidate proteins are not evidence for the exact intermediate reactions in this module. The control preserves this uncertainty; it does not deny the measured product formation.
+
+The source fixtures retain these boundary claims separately from the fourteen positive member claims. No control manufactures a UniProt accession, experimental loss phenotype, or family-wide substrate exclusion.

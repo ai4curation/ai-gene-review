@@ -1,0 +1,13 @@
+# Additive CdhB consistency correction
+
+This authorized follow-up changes only PSEAE/cdhB and PSEPK/PP_0301 judgments and notes, their derived renders and two new generated histories. The original PAO1 and PSEPK manifests and all original consultation proofs remain byte-identical historical receipts. The current files are linked through `preservation-update.json` and `handoff-update.json`; use this additive chain rather than treating the historical review hashes as current.
+
+Both reviews retain MODIFY from fatty acyl-CoA hydrolase to the positively supported acyl-CoA hydrolase genus. No action, ordered source payload, lifecycle flag, core function, molecular activity, replacement term or proposed new term changed. The PAO1 retired historical NEW remains retired; the KT2440 historical NEW process remains active.
+
+What changed: the categorical statement that SF2 lacks fatty-acyl activity, the FUNCTIONAL_DIVERGENCE classification and the FadM-only pruning request are withdrawn. A different established physiological substrate does not exclude additional substrate turnover. The propagation root cause and source status now explicitly record UNRESOLVED; the upstream source-defect request is a SUSPECTED scope CHECK, with no directed replacement/pruning demand. The existing source-defect object therefore records a question, not a confirmed false annotation.
+
+This reconciles the independently inspected family tree: PTN001273712 contains 212 cached leaves, including Q9HTH9. PAO1 target placement is established; substrate range is uncertain. FadM's positive evidence remains valid. Neither the CdhB betainyl reaction nor the plant ACP-positive reaction identifies a justified fatty-acyl loss boundary. See `../../family-consultation/evidence.md` and `../../family-consultation/tree-scope.json` for the independent family analysis. The pre-existing suggested CdhB substrate-panel experiment is consistent with this unresolved range.
+
+A related provenance defect was corrected in the PAO1 reference commentary: the accessible PMID24240508 BKACE screening supplement concerns CdhC-like cleavage enzymes, not an independent auxiliary CdhB substrate-range assay. The CdhB exact reaction remains grounded in Q9HTH9's publication-linked curated statements. This changes no activity assertion and does not claim a negative substrate experiment.
+
+Both focused gene validations, renders and generated-history checks pass. The strict additive checker passes: six changed review/notes/render paths, all other 78 files in the two original manifests unchanged, and 61 protected sources unchanged. Ruff passes. No raw, provider, publication, module, family or project files were edited; no commit, push or full-corpus validation was performed.
