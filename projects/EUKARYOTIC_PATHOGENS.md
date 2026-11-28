@@ -58,7 +58,8 @@ This page keeps the planning surface small. The reproducible data products are:
 - [coverage.tsv](EUKARYOTIC_PATHOGENS/coverage.tsv) - organism-level counts.
 - [candidate_genes.tsv](EUKARYOTIC_PATHOGENS/candidate_genes.tsv) - the first
   50 reviewed or experimentally annotated UniProtKB proteins per organism that
-  lack IBA after denominator filtering, grouped by PANTHER-family membership.
+  lack IBA after denominator filtering, with a `has_panther_family` column to
+  split classification from propagation gaps.
 - [veupathdb_panther_coverage.py](EUKARYOTIC_PATHOGENS/veupathdb_panther_coverage.py)
   - the stdlib-only script that queries VEuPathDB, UniProtKB, and QuickGO.
 
@@ -200,7 +201,7 @@ chagasin; *Leishmania major* gp63, IU-nucleoside hydrolase, and ecotins; and
 
 ### GiardiaDB
 
-The Assemblage A WB strain has 1,842 proteins with IBA, but several
+The Assemblage A WB strain has 1,825 proteins with IBA, but several
 experimentally characterized Swiss-Prot proteins lack propagation. First batch:
 UPPS, fructose-bisphosphate aldolase, median body protein, Notch homolog, and
 BIVM, followed by conserved Swiss-Prot no-IBA entries such as SLX1, ASNA1,
