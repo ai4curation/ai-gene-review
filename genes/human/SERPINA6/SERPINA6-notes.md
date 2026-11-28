@@ -134,9 +134,9 @@ from its `RESULTS.md`.
 | R260L | p.Arg282Leu | no binding (PMID:25322275) | pocket, 3.2 A | removes a steroid-contacting Arg and its salt bridge to Asp23 | binding LoF |
 | Lyon D367N | p.Asp389Asn | 4-fold lower affinity (PMID:10634411); no measurable binding (PMID:22948765) | buried, 4.6 A from steroid | carboxylate caps the 366-371 loop (H-bonds to F369 N, T370 N and OG1) that carries pocket residues F366, H368, W371 | binding LoF |
 | G237V | p.Gly259Val | no binding (PMID:20610591) | next to glycosylated Asn238 | Gly has phi +111; a beta-branched Val cannot adopt it; neighbour of pocket residue H368 and of the Asn238 sequon | binding LoF |
-| Leuven L93H | p.Leu115His | 3-fold lower affinity (PMID:1504007) | helix 4 (serpin helix D), 13 A | part of a His14-His89-Leu93 contact cluster on helix D | allosteric binding LoF |
-| H14Q / H14R | p.His36Gln / p.His36Arg | lower affinity / capacity (PMID:25322275) | N-terminal segment, 9 A | same cluster | allosteric binding LoF |
-| H89Y | p.His111Tyr | lower affinity (PMID:25322275) | helix 4, 13 A | same cluster | allosteric binding LoF |
+| Leuven L93H | p.Leu115His | 3-fold lower affinity (PMID:1504007) | helix 4 (serpin helix D), 13 A | part of a His14-His89-Leu93 contact cluster on helix D | binding LoF, second shell, mechanism unresolved |
+| H14Q / H14R | p.His36Gln / p.His36Arg | lower affinity / capacity (PMID:25322275) | N-terminal segment, 9 A | same cluster | binding LoF, second shell, mechanism unresolved |
+| H89Y | p.His111Tyr | lower affinity (PMID:25322275) | helix 4, 13 A | same cluster; Tyr is wild type in rodent CBG | binding LoF, second shell, mechanism unresolved |
 | E102G | p.Glu124Gly | low binding capacity (PMID:22337907) | strand, 15 A, exposed | loses a salt bridge to Lys159; mechanism not resolved | binding LoF, unexplained |
 | I279F | p.Ile301Phe | lower affinity, protease-resistant (PMID:25322275) | buried strand, 15 A | fully buried; larger side chain in the sheet the RCL inserts into | binding LoF, unexplained |
 | I179V | p.Ile201Val | slower loss of binding after protease (PMID:25322275) | buried strand | conservative change in the sheet | altered protease response |
@@ -154,9 +154,9 @@ Mechanistic reading by class:
    of the local geometry that positions them. Loss of affinity with normal quantity.
 4. **Helix D cluster** (H14, H89, L93): three positions 9-13 A from the steroid whose side chains touch
    each other. Helix D and its connecting loop are the published allosteric link between the RCL and the
-   steroid site (PMID:18513745, PMID:17644521, PMID:21325280), so these variants plausibly bias CBG toward
-   the low-affinity state. That is an inference from position; no structure of a variant exists. An
-   OpenScientist hypothesis job was launched on exactly this question (see below).
+   steroid site (PMID:18513745, PMID:17644521, PMID:21325280), which made a shared allosteric effect an
+   attractive reading. The OpenScientist hypothesis run on exactly this question (last section) supports
+   the geometry and not the single mechanism, so the class is left as unresolved.
 
 Population genetics agrees with a mild, tolerated loss of function: pLI is 0 and LOEUF is 1.06; 42
 high-confidence loss-of-function alleles are in gnomAD v4 including one homozygote for the Montevideo
@@ -236,4 +236,32 @@ Differences checked:
   site should not be assumed for mouse models; the reported membrane CBG receptor has two affinities
   8700-fold apart and no molecular identity. None of these changes an annotation decision.
 
-The two hypothesis jobs were still running when this was written; their outcome is in the history record.
+### 2026-11-28: hypothesis report received (helix D variant cluster)
+
+`SERPINA6-hypotheses/helix-d-allosteric-variant-cluster/openscientist.md`. Verdict: partially supported.
+It confirms, from the crystal structures and without sight of my analysis, that mature His14, His89 and
+Leu93 do not contact the steroid (9-15 A away) and that they touch each other. It rejects the stronger
+claim I had floated, that one shared helix D mechanism explains all of these variants:
+`[file:human/SERPINA6/SERPINA6-hypotheses/helix-d-allosteric-variant-cluster/openscientist.md "The claim that one shared allosteric mechanism centred on helix D explains all four substitutions is not supported as written."]`
+
+Its three grounds, and what I checked:
+
+- H14R is a capacity defect, H14Q and H89Y affinity defects (PMID:25322275 abstract says the same), so the
+  phenotypes differ in kind.
+- Tyrosine, the residue H89Y introduces, is the wild-type residue in rodent CBG. Checked in my own
+  alignment after adding the count to `02_analyze.py`: rat and mouse CBG have Tyr at this position and so
+  do 10 of 73 orthologues. A human-specific context must therefore be needed for H89Y to lower affinity.
+  `[file:human/SERPINA6/SERPINA6-bioinformatics/RESULTS.md "CBG H89Y: 10"]`
+- Only His89 and Leu93 are in helix D; His14 is in the N-terminal segment that packs against it and that
+  carries steroid contacts Ala18, Ser19 and Val22. The report proposes that the coupling runs through this
+  N-terminal segment and the Phe369-Thr370 strand next to His368 and Trp371, not through the helix D
+  connecting loop.
+
+Consequence for the review: the variant table above keeps "contact cluster on helix D" as a description of
+position, but the class is now "second-shell packing node, mechanism unresolved", not "allosteric via
+helix D". The knowledge gap in the review YAML was reworded accordingly. One difference left open: the
+report finds the cluster partly solvent-exposed in the cleaved crystal structures, whereas the AlphaFold
+(native-like) model buries His14 (RSA 0.03); the two describe different conformational states.
+
+The second hypothesis job (GO:0004867 as a neutral function hypothesis) was still running when this was
+written.

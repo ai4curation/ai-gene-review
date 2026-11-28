@@ -112,6 +112,8 @@ Residue labels in this table are in mature numbering.
 
 - Binding-defective missense positions more than 8 A from the steroid (mature numbering): H14 [loop/unassigned], H89 [helix 4 (102-117)], L93 [helix 4 (102-117)], E102 [strand 3 (123-134)], G237 [loop/unassigned], I279 [strand 11 (293-302)].
 - Of these, pairs whose side chains are in contact (<= 4.5 A, AlphaFold model): H14-H89 (3.24 A); H14-L93 (3.61 A); H89-L93 (3.01 A); pairs on the same helix or strand: H89-L93.
+- Residues observed at these positions across the orthologues (count per residue; rat, mouse CBG): H14 H69P2Q1Y1 (H, H); H89 H52Y10N3K2 (Y, Y); L93 L68V3F1I1 (L, L); E102 E59D11K3 (E, E); G237 G66S4K2E1 (G, G); I279 I60V7L5 (I, I).
+- Number of orthologues (of 73) whose wild-type residue equals the human variant residue: CBG Leuven (L93H): 0; CBG G237V: 0; CBG E102G: 0; CBG H14Q: 1; CBG H14R: 0; CBG H89Y: 10; CBG I279F: 0.
 - Of 13 missense variants with an experimentally shown binding or secretion defect, AlphaMissense calls 9 likely benign, 2 ambiguous and 2 likely pathogenic.
 
 ## 5. Population data (gnomAD v4)

@@ -755,6 +755,12 @@ def main() -> None:  # noqa: C901, PLR0912, PLR0915
     R["remote_binding_variant_cluster"] = {
         "positions_mature": [f"{seq[q - 1]}{q - sp_len}" for q in remote_pos],
         "elements": {f"{seq[q - 1]}{q - sp_len}": sse_at(q) for q in remote_pos},
+        "orthologue_residues": {f"{seq[q - 1]}{q - sp_len}": {"observed": cons[q]["observed"], "rat_CBG": aln["P31211"][cmap[q]],
+                                                            "mouse_CBG": aln["Q06770"][cmap[q]]} for q in remote_pos},
+        "variant_residue_is_wild_type_in_an_orthologue": {
+            r["name"]: sum(1 for sq, _ in kept.values()
+                           if sq[ocmap[int(re.search(r"(\d+)", r["hgvs_p_precursor"]).group(1))]] == THREE.get(r["hgvs_p_precursor"][-3:].upper()))
+            for r in remote},
         "pairs_in_contact_4.5A": [x for x in pairs if x["min_dist_A"] <= 4.5],
         "pairs_same_element": [x for x in pairs if x["same_element"]],
     }
@@ -956,6 +962,10 @@ def write_markdown(R: dict, lit_rows: list[dict], cv_rows: list[dict], sp_len: i
     w("- Of these, pairs whose side chains are in contact (<= 4.5 A, AlphaFold model): " + (
         "; ".join(f"{x['a']}-{x['b']} ({x['min_dist_A']} A)" for x in rc["pairs_in_contact_4.5A"]) or "none") + "; pairs on the same helix or strand: " + (
         "; ".join(f"{x['a']}-{x['b']}" for x in rc["pairs_same_element"]) or "none") + ".")
+    w("- Residues observed at these positions across the orthologues (count per residue; rat, mouse CBG): " + "; ".join(
+        f"{k} {v['observed']} ({v['rat_CBG']}, {v['mouse_CBG']})" for k, v in rc["orthologue_residues"].items()) + ".")
+    w("- Number of orthologues (of " + str(R["conservation"]["n_orthologues_used"]) + ") whose wild-type residue equals the human variant residue: " + "; ".join(
+        f"{k}: {v}" for k, v in rc["variant_residue_is_wild_type_in_an_orthologue"].items()) + ".")
     av = R["alphamissense_vs_assay"]
     w(f"- Of {av['n_experimentally_defective_missense']} missense variants with an experimentally shown binding or secretion defect, AlphaMissense calls "
       f"{av['n_called_likely_benign']} likely benign, {av['n_called_ambiguous']} ambiguous and {av['n_called_likely_pathogenic']} likely pathogenic.")
