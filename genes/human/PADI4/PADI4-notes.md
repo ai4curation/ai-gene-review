@@ -1,0 +1,9 @@
+# PADI4 notes
+
+## 2026-11-28 manual review
+
+PADI4 is the PADI family member with a well-supported nuclear histone program. Cuthbert et al. showed that human PADI4 specifically deiminates H3R2, H3R8, H3R17, and H3R26 and antagonizes histone arginine methylation [PMID:15339660, "PADI4 specifically deiminates, arginine residues R2, R8, R17, and R26 in the H3 tail"]. Wang et al. independently showed that human PAD4 converts methyl-arginine to citrulline on histones H3 and H4 [PMID:15345777, "PAD4 targets multiple sites in histones H3 and H4"]. Arita et al. provided the calcium-bound peptide-complex structures and biochemical basis of histone N-terminal recognition [PMID:16567635, "crystal structures of a Ca(2+)-bound PAD4 mutant in complex with three histone N-terminal peptides"].
+
+The neutrophil extracellular trap annotations are direct rather than a generic consequence: Wang et al. found that PAD4-mediated histone hypercitrullination drives chromatin decondensation and NET-like structures [PMID:19153223, "hypercitrullination of histones by PAD4 mediates chromatin decondensation"], Lewis et al. showed that PAD4 inhibition disrupts mouse and human NET formation [PMID:25622091, "Inhibition of PAD4 activity is sufficient to disrupt mouse and human NET formation"], and Thiam et al. showed that PAD4 enzymatic and nuclear-localization activities are required for chromatin decondensation, lamina/nuclear-envelope rupture, and extracellular DNA release in the NETosis sequence [PMID:32170015, "extracellular DNA release required the enzymatic and nuclear localization activities of PAD4"].
+
+The generic PADI4 rows for `protein modification process`, `post-translational protein modification`, and `protein-containing complex` were reviewed conservatively as non-core or over-annotated rather than being used to add broad process core functions.
