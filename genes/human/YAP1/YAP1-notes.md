@@ -31,6 +31,11 @@ sister reviews of Capsaspora coYki (`genes/CAPO3/coYki/`) and S. rosetta yorkie
 - Junction and polarity sequestration: [PMID:21145499 "TAZ/YAP dictate the localization of active SMAD complexes"];
   [PMID:31835537 "Dsg3 formed a complex with phospho-YAP and sequestered it to the plasma membrane"].
 
+## Subcellular location
+
+- HPA subcellular profile: Mainly localized to the nucleoplasm. In addition localized
+  to the nucleoli and cytosol.
+
 ## Animal tissue-level roles (downstream, animal-specific)
 
 - Epidermal stem cell proliferation via TEAD
@@ -87,5 +92,7 @@ GO:0030859, which I kept as non-core rather than removing.
 - REMOVE GO:0000976 and GO:0000978 (sequence-specific DNA binding): YAP1 lacks a DBD.
 - MARK_AS_OVER_ANNOTATED: chromatin binding (indirect), heart process, protein-containing
   complex assembly (x2), negative regulation of gene expression.
-- UNDECIDED (abstract only): GO:0000122 (PMID:25849865) and GO:0035331 (PMID:35429439).
+- UNDECIDED GO:0000122 and GO:0035331: the cached records for the ciliogenesis and
+  WWC/SuperHippo papers are abstract-only and do not expose the experimental bases for
+  the existing UniProt rows.
 - No NEW annotations proposed.
