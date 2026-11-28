@@ -1,4 +1,4 @@
-## 2026-11-28 NGF family review
+## 2026-11-28 BDNF family review
 
 Perplexity deep research was unavailable for this family, so this review used manual
 triage of the fetched GOA rows, the human UniProt record, cached publications, Reactome

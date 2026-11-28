@@ -18,7 +18,8 @@ factor activity remains the core function. PMID:20164177 supports a real ADAM10/
 metalloendopeptidase-inhibitor activity for recombinant human NGF; it was kept as non-core.
 
 PAINT places GO:0008021 at PTN001697725, the same deep mammalian neurotrophin node that
-covers NGF, BDNF, NTF3 and NTF4. That location is too specific for secreted growth-factor
-cargo, so the row is marked over-annotated and the family sidecar proposes removing the
-IBD. The same node also carries the NGF-specific GO:0038180; that term is correct for NGF
-but over-propagates to the non-NGF paralogs.
+covers NGF, BDNF, NTF3 and NTF4. That location is too broad for the synaptic-vesicle row,
+so the row is marked over-annotated and the family sidecar proposes moving the IBD to the
+BDNF branch. The same node also carries the NGF-specific GO:0038180; the family sidecar
+now proposes moving that term to the NGF subfamily branch because it over-propagates to the
+non-NGF paralogs.
