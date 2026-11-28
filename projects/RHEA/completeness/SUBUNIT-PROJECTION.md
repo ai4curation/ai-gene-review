@@ -87,6 +87,11 @@ glutaminase and synthase subunits, as expected.
   the complex activity; the counts here do not decide it.
 - A `contributes_to` row can be wrong too. The table lists candidates, not errors.
 
+## Follow-up
+
+[SUBUNIT-FLAGS.md](SUBUNIT-FLAGS.md) splits the consistency metric by subunit practice and evaluates
+complex-membership signals as flags for projected subunit rows.
+
 ## Related projects
 
 - [Protein Complex Functions](../../PROTEIN_COMPLEX_FUNCTIONS.md): the decision framework for

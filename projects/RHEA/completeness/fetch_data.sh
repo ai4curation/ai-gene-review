@@ -22,3 +22,5 @@ for q in enables contributes_to; do
   printf 'GO_REF:0000116 %s: ' "$q"
   curl -sSf -H 'Accept: application/json' "https://www.ebi.ac.uk/QuickGO/services/annotation/search?reference=GO_REF:0000116&qualifier=$q&limit=1" | python3 -c 'import sys,json; print(json.load(sys.stdin)["numberOfHits"])'
 done | tee "$DATA/rhea2go_projection_qualifiers.txt"
+# Inputs for subunit_flag_eval.py and subunit_consistency.py: recommended names, PANTHER subfamilies and active-site features.
+curl -sSf -o "$DATA/sp_rhea_roles.tsv" 'https://rest.uniprot.org/uniprotkb/stream?query=reviewed:true+AND+cc_catalytic_activity:RHEA&fields=accession,protein_name,xref_panther,ft_act_site&format=tsv'
