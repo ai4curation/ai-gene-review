@@ -1,0 +1,267 @@
+"""Evidence-qualified NHEJ scenarios; Boolean core truth is not cellular repair proof."""
+
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+
+import yaml
+
+from ai_gene_review.module_logic import (
+    compile_module,
+    core_atoms,
+    is_satisfied,
+    iter_atoms,
+)
+
+ROOT = Path(__file__).resolve().parent
+REPO = ROOT.parents[3]
+MODULE = REPO / "modules/bacterial_nonhomologous_end_joining.yaml"
+
+# Capabilities come from the independent gene/source reviews, not from presence
+# in this module. Unknown entries are not biological negations.
+PANEL = {
+    "PSEPK": ("Q88HU8", "Q88HU3"),
+    "PSEAE": ("Q9I1W5", "Q9I1X7"),
+    "MYCTU": ("P9WKD9", "P9WNV3"),
+    "BACSU": ("O34859", "O34398"),
+}
+ROLES = {
+    "ku_double_stranded_dna_binding": ("GO:0045027", "PANTHER:PTHR41251:SF1"),
+    "ligd_atp_dependent_ligase_activity": ("GO:0003910", "PANTHER:PTHR42705:SF2"),
+    "ligd_polymerase_activity": ("GO:0003887", "PANTHER:PTHR42705:SF2"),
+    "ligd_ribonucleotide_transfer": ("GO:0016779", "PANTHER:PTHR42705:SF2"),
+    "ligd_three_prime_phosphatase_activity": ("GO:0046403", "PANTHER:PTHR42705:SF2"),
+    "ku_ap_site_processing": ("GO:0140078", "PANTHER:PTHR41251:SF1"),
+    "ligd_ap_site_processing": ("GO:0140078", "PANTHER:PTHR42705:SF2"),
+}
+CAPABILITIES = {
+    "ku_double_stranded_dna_binding": {"Q88HU8", "Q9I1W5", "P9WKD9", "O34859"},
+    "ligd_atp_dependent_ligase_activity": {"Q88HU3", "Q9I1X7", "P9WNV3", "O34398"},
+    "ligd_polymerase_activity": {"Q88HU3", "Q9I1X7", "P9WNV3", "O34398"},
+    "ligd_ribonucleotide_transfer": {"Q9I1X7", "P9WNV3", "O34398"},
+    "ligd_three_prime_phosphatase_activity": {"Q88HU3", "Q9I1X7"},
+    "ku_ap_site_processing": {"Q9I1W5", "O34859"},
+    "ligd_ap_site_processing": {"O34398"},
+}
+SOURCES = {
+    "ku_double_stranded_dna_binding": ["PMID:12215643", "PMID:20018881"],
+    "ligd_atp_dependent_ligase_activity": [
+        "PMID:16023671",
+        "PMID:20018881",
+        "PMID:41957403",
+    ],
+    "ligd_polymerase_activity": ["PMID:16023671", "PMID:20018881", "PMID:26826709"],
+    "ligd_ribonucleotide_transfer": ["PMID:16023671", "PMID:20018881", "PMID:41957403"],
+    "ligd_three_prime_phosphatase_activity": ["PMID:16046407"],
+    "ku_ap_site_processing": ["PMID:25355514"],
+    "ligd_ap_site_processing": ["PMID:30976810", "PMID:41957403"],
+}
+KU = "ku_double_stranded_dna_binding"
+LIG = "ligd_atp_dependent_ligase_activity"
+POL = "ligd_polymerase_activity"
+RNA = "ligd_ribonucleotide_transfer"
+PE = "ligd_three_prime_phosphatase_activity"
+AP = "ligd_ap_site_processing"
+
+
+def evaluate(doc, panel, substrate, *, missing=(), extra=(), disabled=(), pair=None):
+    circuit = compile_module(doc)
+    atoms = {a.node_id: a for a in iter_atoms(circuit)}
+    selected = pair or PANEL[panel]
+    pool = (set(selected) | set(extra)) - set(missing)
+
+    def holds(atom):
+        role = atom.node_id
+        if role not in ROLES or role in disabled:
+            return False
+        function, family = ROLES[role]
+        if function not in atom.function_ids or family not in atom.family_ids:
+            return False
+        # All LigD chemistry must reside on the SAME selected fused LigD.
+        protein = selected[0] if role.startswith("ku_") else selected[1]
+        return (
+            protein in pool
+            and protein in CAPABILITIES[role]
+            and protein in {x.removeprefix("UniProtKB:") for x in atom.uniprots}
+        )
+
+    bare = is_satisfied(circuit, holds)
+    if not bare:
+        return {
+            "core": False,
+            "supported": False,
+            "reason": "canonical core not supported",
+        }
+    if selected not in PANEL.values():
+        return {
+            "core": True,
+            "supported": False,
+            "reason": "foreign pair unestablished, not biologically impossible",
+        }
+    if substrate == "compatible":
+        needed = []
+    elif substrate == "dna_gap":
+        needed = [POL]
+    elif substrate == "rntp_insertion":
+        # GO:0016779 ancestry alone cannot provide this independent rNTP fact.
+        needed = [RNA]
+    elif substrate == "three_prime_phosphate":
+        needed = [PE]
+    elif substrate == "bsub_recessed_ap_coupled":
+        if selected != PANEL["BACSU"]:
+            return {
+                "core": True,
+                "supported": False,
+                "reason": "specific coupled AP substrate evidence not established for selected pair",
+            }
+        needed = [AP, RNA]
+    elif substrate == "three_prime_pua":
+        return {
+            "core": True,
+            "supported": False,
+            "reason": "3-prime PUA resolution is not established; phosphatase is insufficient evidence",
+        }
+    else:
+        raise ValueError(substrate)
+    absent = [r for r in needed if r not in atoms or not holds(atoms[r])]
+    return {
+        "core": True,
+        "supported": not absent,
+        "reason": "supported canonical capability; not a native necessity claim"
+        if not absent
+        else "missing or unestablished scenario capability",
+        "unmet_roles": absent,
+        "evidence_level": "conserved-domain/ortholog inference"
+        if panel == "PSEPK"
+        else "biochemical exemplar evidence; construct qualifications retained",
+    }
+
+
+def main():
+    doc = yaml.safe_load(MODULE.read_text())
+    circuit = compile_module(doc)
+    assert {a.node_id for a in core_atoms(circuit)} == {KU, LIG}
+    assert {a.node_id for a in iter_atoms(circuit)} == set(ROLES)
+    cases = []
+
+    def check(name, panel, substrate, expected, **kwargs):
+        actual = evaluate(doc, panel, substrate, **kwargs)
+        assert actual["supported"] is expected, (name, actual)
+        cases.append(
+            {
+                "name": name,
+                "panel": panel,
+                "substrate": substrate,
+                "expected_supported": expected,
+                "inputs": kwargs,
+                "result": actual,
+            }
+        )
+
+    for panel in ["PSEPK", "PSEAE", "MYCTU", "BACSU"]:
+        ku, ligd = PANEL[panel]
+        check(panel + " compatible", panel, "compatible", True)
+        check(panel + " no canonical Ku", panel, "compatible", False, missing=[ku])
+        check(panel + " no canonical LigD", panel, "compatible", False, missing=[ligd])
+        check(panel + " templated DNA gap", panel, "dna_gap", True)
+        check(panel + " DNA gap without POL", panel, "dna_gap", False, disabled=[POL])
+        check(
+            panel + " compatible without processing",
+            panel,
+            "compatible",
+            True,
+            disabled=[POL, RNA, PE, AP, "ku_ap_site_processing"],
+        )
+    check("PAO1 rNTP incorporation", "PSEAE", "rntp_insertion", True)
+    check("H37Rv rNTP incorporation", "MYCTU", "rntp_insertion", True)
+    check("Bacillus single rNTP incorporation", "BACSU", "rntp_insertion", True)
+    check(
+        "KT2440 RNA role unestablished in this panel", "PSEPK", "rntp_insertion", False
+    )
+    check(
+        "DNA-polymerase ancestry cannot replace rNTP evidence",
+        "PSEAE",
+        "rntp_insertion",
+        False,
+        disabled=[RNA],
+    )
+    check("PAO1 simple 3-prime phosphate", "PSEAE", "three_prime_phosphate", True)
+    check("KT2440 PE-domain inference", "PSEPK", "three_prime_phosphate", True)
+    check("Bacillus lacks PE", "BACSU", "three_prime_phosphate", False)
+    check(
+        "H37Rv PE role not populated by this module",
+        "MYCTU",
+        "three_prime_phosphate",
+        False,
+    )
+    check(
+        "Bacillus coupled recessed AP substrate",
+        "BACSU",
+        "bsub_recessed_ap_coupled",
+        True,
+    )
+    check(
+        "Bacillus AP chemistry alone cannot fill after cleavage",
+        "BACSU",
+        "bsub_recessed_ap_coupled",
+        False,
+        disabled=[RNA],
+    )
+    check(
+        "PAO1 AP-lyase assay does not prove Bacillus coupled substrate",
+        "PSEAE",
+        "bsub_recessed_ap_coupled",
+        False,
+    )
+    check(
+        "AP plus PE does not establish 3-prime PUA repair",
+        "PSEAE",
+        "three_prime_pua",
+        False,
+    )
+    check(
+        "Bacillus AP does not establish 3-prime PUA repair",
+        "BACSU",
+        "three_prime_pua",
+        False,
+    )
+    check(
+        "Extra PAO1 LigD cannot donate PE to selected Bacillus LigD",
+        "BACSU",
+        "three_prime_phosphate",
+        False,
+        extra=["Q9I1X7"],
+    )
+    for first in PANEL:
+        for second in PANEL:
+            if first != second:
+                check(
+                    first + " Ku + " + second + " LigD unestablished",
+                    first,
+                    "compatible",
+                    False,
+                    pair=(PANEL[first][0], PANEL[second][1]),
+                )
+    result = {
+        "module_sha256": hashlib.sha256(MODULE.read_bytes()).hexdigest(),
+        "production_compiler": "ai_gene_review.module_logic.compile_module/is_satisfied",
+        "core_atoms": [KU, LIG],
+        "scenario_count": len(cases),
+        "result": "PASS",
+        "cases": cases,
+        "capability_sources": SOURCES,
+        "limits": [
+            "Scenario requirements, matched-pair coherence, same-LigD identity and substrate geometry are supplied by this evidence oracle; the production Boolean compiler does not enforce them.",
+            "False means unsupported by this panel/canonical route, not impossible biology, absence from a species or inability of backup routes to repair DNA.",
+            "KT2440 canonical capability is inferred; native Cas9 repair can be LigD-independent. Noncognate Ku/LigD combinations have been experimentally studied and are not universally impossible.",
+            "No GO ancestor membership alone establishes a particular nucleotide substrate. AP cleavage does not generically create ligatable termini.",
+        ],
+    }
+    (ROOT / "results.json").write_text(json.dumps(result, indent=2) + "\n")
+    print(f"PASS: {len(cases)} evidence-qualified scenarios")
+
+
+if __name__ == "__main__":
+    main()

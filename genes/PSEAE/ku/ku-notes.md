@@ -1,0 +1,26 @@
+# ku manual review
+
+Reviewed 8 ordered source annotations; no new rows or retirements. Raw UniProt, GOA and seed snapshots remain unchanged.
+
+The exact target descends from its seeded IBD node in the official PANTHER tree. Broad family membership is not a grant of every LigD domain, primase process, or partner interaction. No donor-count or self-source objection is used.
+
+GO:0045027 DNA-end binding is a distinct branch from duplex-binding3690; both describe real Ku properties. GO:0140078 captures AP beta-lyase cleavage; GO:0051575 captures terminal5′-dRP elimination. These are distinct from PE-mediated3′phosphatase0046403. No BER process NEW is inferred from necessity or a purified reconstitution.
+
+PAO1 target evidence is kept separate from PA14 LigD-independent NHEJ in PMID:42306942. The latter is not a PAO1 deletion experiment. Ku-(1–253) end protection, full-length stimulation and other truncation assays are distinguished in PMID:20018881. PMID:25355514 explicitly clones Ku from PAO-1 genomic DNA.
+
+The recent Mycobacterium POL-regulation result PMID:42953966 is not transferred as a universal sign to these proteins. The shared Falcon authentication failure is documented in the prior session; this file is manual synthesis, not a fabricated provider report.
+
+- PMID:20018881: Full primary text: recombinant P. aeruginosa Ku/LigD, DNA gap filling with dNTPs, and Ku stimulation of LigD. End protection used Ku-(1–253); full-length and other truncations were separately tested. This is not a native PA14 or KT2440 assay.
+- PMID:25355514: Full primary biochemistry demonstrates Bacillus Ku AP/5′-dRP lyase and P. aeruginosa Ku AP lyase. PAO1 genomic cloning is explicit. Substrate specificity and covalent-intermediate controls support catalysis. Proposed participation in cellular BER remains a hypothesis, not a new process annotation.
+
+Recovery provenance (2026-11-07): reconstructed from the preserved historical curation helper and recorded final edits after deletion of the prior uncommitted worktree. Fresh seed bytes match the historical observed seeds; raw sources were reacquired by root and are frozen independently. Validation, renders and generated histories are new recovery outputs; the lost historical handoff is not recreated.
+
+
+## 2026-11-08 — recovery PR review follow-up
+
+Replace functional methods-only quotes with result statements; retain construct provenance in reference findings and notes. Separate measured AP/dRP lyase capabilities from unproven native process assignments. Original annotation payloads and raw-source files remain unchanged.
+
+
+## 2026-11-08 — source-specific evidence follow-up
+
+Strengthen ATP, duplex/end-binding and multistep rNMP-extension support where applicable; remove duplicate evidence entries. Explicit NEW MF proposals record measured AP/5′-dRP chemistry without assigning a general native BER process. Abstract-only PMID:17293412 is scoped to the quoted mutant-spore phenotype, with no unverified strain details. Original source annotation payloads are unchanged. See the evidence-followup-20261108 receipt for the exact file scope.
