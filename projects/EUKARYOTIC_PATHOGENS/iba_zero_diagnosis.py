@@ -8,11 +8,14 @@ import gzip
 import json
 import urllib.parse
 import urllib.request
-from dataclasses import dataclass
+from collections import Counter, defaultdict
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 
 PANTHER_RELEASE = "19.0"
@@ -43,10 +46,13 @@ class Probe:
     organism: str
     mnemonic: str
     taxon_id: int
-    species_taxon_id: int | None
-    category: str
-    nearest_paint_reference: str
-    diagnosis: str
+    expected_state: str
+    species_taxon_id: int | None = None
+    nearest_paint_reference: str = ""
+    go_mnemonics: tuple[str, ...] = field(default_factory=tuple)
+
+    def all_go_mnemonics(self) -> tuple[str, ...]:
+        return (self.mnemonic, *self.go_mnemonics)
 
 
 PROBES: tuple[Probe, ...] = (
@@ -55,150 +61,213 @@ PROBES: tuple[Probe, ...] = (
         "Plasmodium vivax Sal-1",
         "PLAVS",
         126793,
-        5855,
         "zero",
+        5855,
         "PLAF7 / Plasmodium falciparum 3D7",
-        "No P. vivax or P. berghei genome is in the PAINT reference set; "
-        "Plasmodium is represented by P. falciparum 3D7 only.",
     ),
     Probe(
         "PlasmoDB",
         "Plasmodium berghei ANKA",
         "PLABA",
         5823,
-        5823,
         "zero",
+        5821,
         "PLAF7 / Plasmodium falciparum 3D7",
-        "No P. vivax or P. berghei genome is in the PAINT reference set; "
-        "Plasmodium is represented by P. falciparum 3D7 only.",
-    ),
-    Probe(
-        "TriTrypDB",
-        "Trypanosoma cruzi",
-        "TRYCR",
-        5693,
-        5693,
-        "zero",
-        "TRYB2 / Trypanosoma brucei TREU927",
-        "T. cruzi is absent from the PAINT reference set; "
-        "the included trypanosomatids are T. brucei TREU927 and L. major Friedlin.",
-    ),
-    Probe(
-        "TriTrypDB",
-        "Leishmania donovani",
-        "LEIDO",
-        5661,
-        5661,
-        "zero",
-        "LEIMA / Leishmania major Friedlin",
-        "L. donovani is absent from the PAINT reference set; "
-        "L. major Friedlin is the included Leishmania reference.",
-    ),
-    Probe(
-        "VectorBase",
-        "Aedes aegypti",
-        "AEDAE",
-        7159,
-        7159,
-        "zero",
-        "ANOGA / Anopheles gambiae PEST",
-        "A. aegypti is absent from the PAINT reference set; "
-        "Anopheles gambiae is the included mosquito.",
     ),
     Probe(
         "ToxoDB",
         "Toxoplasma gondii ME49",
         "TOXGM",
         508771,
-        5811,
         "zero",
-        "",
-        "T. gondii ME49 and the T. gondii species taxon are both absent from "
-        "the PAINT reference set.",
+        5811,
+        go_mnemonics=("TOXGO",),
+    ),
+    Probe(
+        "CryptoDB",
+        "Cryptosporidium parvum Iowa II",
+        "CRYPI",
+        353152,
+        "zero",
+        5807,
+    ),
+    Probe(
+        "TriTrypDB",
+        "Trypanosoma cruzi",
+        "TRYCR",
+        5693,
+        "zero",
+        5693,
+        "TRYB2 / Trypanosoma brucei TREU927",
+    ),
+    Probe(
+        "TriTrypDB",
+        "Leishmania donovani",
+        "LEIDO",
+        5661,
+        "zero",
+        5661,
+        "LEIMA / Leishmania major Friedlin",
+    ),
+    Probe(
+        "PiroplasmaDB",
+        "Babesia bovis T2Bo",
+        "BABBO",
+        5865,
+        "zero",
+        5865,
+    ),
+    Probe(
+        "PiroplasmaDB",
+        "Babesia microti strain RI",
+        "BABMR",
+        1133968,
+        "zero",
+        5868,
+    ),
+    Probe(
+        "PiroplasmaDB",
+        "Theileria annulata strain Ankara",
+        "THEAN",
+        5874,
+        "zero",
+        5874,
+    ),
+    Probe(
+        "PiroplasmaDB",
+        "Theileria parva strain Muguga",
+        "THEPA",
+        5875,
+        "zero",
+        5875,
+    ),
+    Probe(
+        "MicrosporidiaDB",
+        "Encephalitozoon cuniculi GB-M1",
+        "ENCCU",
+        284813,
+        "zero",
+        6035,
+    ),
+    Probe(
+        "MicrosporidiaDB",
+        "Encephalitozoon intestinalis ATCC 50506",
+        "ENCIT",
+        876142,
+        "zero",
+        58839,
+    ),
+    Probe(
+        "MicrosporidiaDB",
+        "Enterocytozoon bieneusi H348",
+        "ENTBH",
+        481877,
+        "zero",
+        31281,
+    ),
+    Probe(
+        "MicrosporidiaDB",
+        "Nematocida parisii ERTm3",
+        "NEMP3",
+        935791,
+        "zero",
+        586133,
     ),
     Probe(
         "FungiDB",
         "Nakaseomyces glabratus CBS 138",
         "CANGA",
         284593,
-        5478,
         "zero",
+        5478,
         "CANAL / Candida albicans SC5314",
-        "N. glabratus has GO per-taxon exports but is absent from the PAINT "
-        "reference set; Candida albicans SC5314 is the included Candida genome.",
     ),
     Probe(
         "FungiDB",
         "Cryptococcus neoformans H99",
         "CRYN9",
         235443,
-        5207,
         "zero",
+        5207,
         "CRYNJ/CRYD1 / Cryptococcus deneoformans JEC21",
-        "C. neoformans H99 is absent from the PAINT reference set; PAINT uses "
-        "the JEC21 genome, whose taxon is now exported by GO as C. deneoformans.",
+    ),
+    Probe(
+        "VectorBase",
+        "Aedes aegypti",
+        "AEDAE",
+        7159,
+        "zero",
+        7159,
+        "ANOGA / Anopheles gambiae PEST",
     ),
     Probe(
         "PlasmoDB",
         "Plasmodium falciparum 3D7",
         "PLAF7",
         36329,
-        None,
         "paint_reference",
-        "",
-        "Positive control: this taxon is present in PAINT.",
     ),
     Probe(
         "TriTrypDB",
         "Trypanosoma brucei TREU927",
         "TRYB2",
         185431,
-        None,
         "paint_reference",
-        "",
-        "Positive control: this taxon is present in PAINT.",
+        go_mnemonics=("TRYBB",),
     ),
     Probe(
         "TriTrypDB",
         "Leishmania major Friedlin",
         "LEIMA",
         5664,
-        None,
         "paint_reference",
-        "",
-        "Positive control: this taxon is present in PAINT.",
     ),
     Probe(
         "VectorBase",
         "Anopheles gambiae PEST",
         "ANOGA",
         7165,
-        None,
         "paint_reference",
-        "",
-        "Positive control: this taxon is present in PAINT.",
     ),
     Probe(
         "FungiDB",
         "Candida albicans SC5314",
         "CANAL",
         237561,
-        None,
         "paint_reference",
-        "",
-        "Positive control: this taxon is present in PAINT.",
     ),
     Probe(
         "FungiDB",
         "Cryptococcus deneoformans JEC21",
         "CRYD1",
         214684,
-        None,
         "paint_reference",
-        "",
-        "Positive control: this taxon is present in PAINT as CRYNJ in the "
-        "PANTHER 19.0 reference-genome metadata.",
     ),
+)
+
+IBA_DIAGNOSIS_FIELDS = (
+    "category",
+    "expected_state",
+    "site",
+    "organism",
+    "mnemonic",
+    "go_mnemonics",
+    "taxon_id",
+    "species_taxon_id",
+    "quickgo_iba_exact_hits",
+    "quickgo_iba_species_descendant_hits",
+    "in_go_reference_species",
+    "in_panther_supported_genomes",
+    "panther_short_name",
+    "panther_sequence_file",
+    "go_gaf_files",
+    "go_gpad_files",
+    "go_gpi_files",
+    "go_gaf_iba_total_rows",
+    "go_gaf_iba_rows_by_file",
+    "nearest_paint_reference",
+    "paint_leaf_gaf_rows",
+    "paint_leaf_gaf_accessions",
 )
 
 
@@ -227,41 +296,23 @@ def get_json(url: str, params: dict[str, str | int] | None = None) -> dict[str, 
     return json.loads(get(url))
 
 
-def directory_filenames(url: str, suffix: str = "") -> set[str]:
+def directory_filenames(url: str) -> set[str]:
     parser = LinkParser()
     parser.feed(get(url).decode())
     names: set[str] = set()
     for href in parser.hrefs:
         name = Path(urllib.parse.urlparse(href).path).name
-        if name.endswith(suffix):
+        if name:
             names.add(name)
     return names
 
 
 def parse_reference_species(text: str) -> dict[int, dict[str, str | int]]:
-    records: dict[int, dict[str, str | int]] = {}
-    record: dict[str, str | int] = {}
-
-    def save() -> None:
-        if not record:
-            return
-        taxon = str(record["taxon_id"]).removeprefix("NCBITaxon:")
-        record["taxon_id"] = int(taxon)
-        records[int(taxon)] = dict(record)
-
-    for line in text.splitlines():
-        if line.startswith("- "):
-            save()
-            record = {}
-            line = line[2:]
-        else:
-            line = line.strip()
-        if not line or ":" not in line:
-            continue
-        key, value = line.split(":", 1)
-        record[key.strip()] = value.strip()
-    save()
-    return records
+    records = yaml.safe_load(text)
+    return {
+        int(record["taxon_id"].removeprefix("NCBITaxon:")): record
+        for record in records
+    }
 
 
 def supported_genomes() -> dict[int, dict[str, str | int]]:
@@ -270,11 +321,12 @@ def supported_genomes() -> dict[int, dict[str, str | int]]:
     return {int(genome["taxon_id"]): genome for genome in genomes}
 
 
-def quickgo_iba_hits(taxon_id: int) -> int:
+def quickgo_iba_hits(taxon_id: int, taxon_usage: str = "exact") -> int:
     data = get_json(
         QUICKGO_URL,
         {
             "taxonId": taxon_id,
+            "taxonUsage": taxon_usage,
             "evidenceCode": "ECO:0000318",
             "geneProductType": "protein",
             "limit": 1,
@@ -283,11 +335,16 @@ def quickgo_iba_hits(taxon_id: int) -> int:
     return int(data["numberOfHits"])
 
 
-def paint_gaf_counts(
-    taxon_ids: set[int],
-) -> tuple[dict[int, int], dict[int, set[str]], str]:
-    row_counts = {taxon_id: 0 for taxon_id in taxon_ids}
-    accessions = {taxon_id: set() for taxon_id in taxon_ids}
+@dataclass
+class PaintGafSummary:
+    row_counts: Counter[int]
+    accessions: dict[int, set[str]]
+    header_date: str
+
+
+def paint_gaf_summary() -> PaintGafSummary:
+    row_counts: Counter[int] = Counter()
+    accessions: dict[int, set[str]] = defaultdict(set)
     header_date = ""
 
     request = urllib.request.Request(PAINT_GAF_URL, headers={"User-Agent": USER_AGENT})
@@ -306,10 +363,9 @@ def paint_gaf_counts(
                     if not taxon.startswith("taxon:"):
                         continue
                     taxon_id = int(taxon.removeprefix("taxon:"))
-                    if taxon_id in row_counts:
-                        row_counts[taxon_id] += 1
-                        accessions[taxon_id].add(fields[1])
-    return row_counts, accessions, header_date
+                    row_counts[taxon_id] += 1
+                    accessions[taxon_id].add(fields[1])
+    return PaintGafSummary(row_counts, accessions, header_date)
 
 
 def gaf_iba_count(filename: str) -> int:
@@ -328,25 +384,113 @@ def gaf_iba_count(filename: str) -> int:
     return count
 
 
-def files_for_mnemonic(files: set[str], mnemonic: str) -> list[str]:
-    return sorted(name for name in files if name.startswith(f"{mnemonic}-"))
+def files_for_mnemonics(files: set[str], mnemonics: tuple[str, ...]) -> list[str]:
+    return sorted(
+        name for name in files if any(name.startswith(f"{m}-") for m in mnemonics)
+    )
 
 
 def csv_list(values: list[str]) -> str:
     return ",".join(values)
 
 
-def write_tsv(rows: list[dict[str, str | int]], path: Path) -> None:
+def format_file_counts(counts: dict[str, int]) -> str:
+    return "; ".join(f"{filename}={counts[filename]}" for filename in sorted(counts))
+
+
+def write_tsv(
+    rows: list[dict[str, str | int]], path: Path, fieldnames: tuple[str, ...] | None = None
+) -> None:
     with path.open("w", newline="") as stream:
         writer = csv.DictWriter(
-            stream, fieldnames=list(rows[0]), delimiter="\t", lineterminator="\n"
+            stream,
+            fieldnames=fieldnames or list(rows[0]),
+            delimiter="\t",
+            lineterminator="\n",
         )
         writer.writeheader()
         writer.writerows(rows)
 
 
-def format_file_counts(counts: dict[str, int]) -> str:
-    return "; ".join(f"{filename}={counts[filename]}" for filename in sorted(counts))
+def write_paint_taxa(
+    path: Path,
+    paint: PaintGafSummary,
+    go_reference: dict[int, dict[str, str | int]],
+    panther_genomes: dict[int, dict[str, str | int]],
+) -> None:
+    rows = []
+    for taxon_id in sorted(paint.row_counts):
+        go_ref = go_reference.get(taxon_id, {})
+        panther = panther_genomes.get(taxon_id, {})
+        rows.append(
+            {
+                "taxon_id": taxon_id,
+                "panther_short_name": panther.get("short_name", ""),
+                "go_reference_mnemonic": go_ref.get(
+                    "reference_proteome_short_name", ""
+                ),
+                "panther_name": panther.get("name", ""),
+                "organism": go_ref.get("organism") or panther.get("long_name", ""),
+                "paint_leaf_gaf_rows": paint.row_counts[taxon_id],
+                "paint_leaf_gaf_accessions": len(paint.accessions[taxon_id]),
+            }
+        )
+    write_tsv(rows, path)
+
+
+def row_category(
+    go_ref: dict[str, str | int] | None,
+    panther: dict[str, str | int] | None,
+    paint_rows: int,
+    quickgo_exact: int,
+    quickgo_species_descendants: int | str,
+) -> str:
+    if go_ref and panther and paint_rows > 0 and quickgo_exact > 0:
+        return "paint_reference"
+    if (
+        not go_ref
+        and not panther
+        and paint_rows == 0
+        and quickgo_exact == 0
+        and quickgo_species_descendants == 0
+    ):
+        return "zero"
+    return "contradiction"
+
+
+def sequence_file_for(
+    panther: dict[str, str | int] | None, sequence_files: set[str]
+) -> str:
+    if not panther:
+        return ""
+    expected_file = f"PTHR{PANTHER_RELEASE}_{panther['name']}"
+    return expected_file if expected_file in sequence_files else ""
+
+
+def zero_diagnosis(row: dict[str, str | int]) -> str:
+    clauses = ["Absent from the GO/PANTHER PAINT reference taxon set"]
+    if row["go_gaf_files"]:
+        clauses.append("GO per-mnemonic exports exist but carry no IBA rows")
+    else:
+        clauses.append("GO has no per-mnemonic export for the probed mnemonic(s)")
+    if row["nearest_paint_reference"]:
+        clauses.append(f"nearest included reference: {row['nearest_paint_reference']}")
+    else:
+        clauses.append("no close PAINT reference in this VEuPathDB panel")
+    return "; ".join(clauses) + "."
+
+
+def validate_expectations(rows: list[dict[str, str | int]]) -> None:
+    errors = [
+        (
+            f"{row['mnemonic']} expected {row['expected_state']} but measured "
+            f"{row['category']}"
+        )
+        for row in rows
+        if row["category"] != row["expected_state"]
+    ]
+    if errors:
+        raise SystemExit("Contradictory zero-IBA diagnosis:\n- " + "\n- ".join(errors))
 
 
 def write_report(
@@ -356,6 +500,10 @@ def write_report(
     reference_rows = [row for row in rows if row["category"] == "paint_reference"]
 
     lines = [
+        "---",
+        "autolink_gene_symbols: false",
+        "---",
+        "",
         "# Zero-IBA VEuPathDB taxon diagnosis",
         "",
         "Generated by "
@@ -377,40 +525,45 @@ def write_report(
             "per-mnemonic `annotations/{gaf,gpad,gpi}` indexes."
         ),
         (
-            "- QuickGO annotation search for exact/species taxon IBA "
-            "(`ECO:0000318`) protein hit counts."
+            "- QuickGO annotation search for exact taxon and "
+            "species-plus-descendant IBA (`ECO:0000318`) annotation counts."
         ),
-        f"- Retrieval timestamp: {metadata['retrieved_at']}.",
+        f"- Retrieval date: {metadata['retrieved_date']}.",
         "",
         "## Diagnosis",
         "",
         (
-            "The zero rows are not caused by querying the wrong strain taxon. "
-            "Each exact taxon and its species taxon returned zero QuickGO IBA "
-            "hits, and none of the exact zero taxa appear in GO's PAINT reference "
-            "species list, the PANTHER supported-genomes API, the PANTHER 19.0 "
-            "per-species sequence-classification files, or the PAINT leaf GAF."
+            "All 17 zero-IBA organisms in the coverage panel are absent from "
+            "GO's PAINT reference-species list, the PANTHER supported-genomes "
+            "API, and the PANTHER PAINT leaf GAF. Their exact taxon and "
+            "species-plus-descendant QuickGO IBA queries both returned zero "
+            "annotations."
         ),
         "",
         (
             "Their nonzero PANTHER family coverage in UniProtKB comes from "
             "family/subfamily sequence classification and does not imply that the "
-            "taxon is a PAINT reference leaf eligible for a PTN-backed IBA export."
+            "taxon is a PAINT reference leaf eligible for a PTN-backed IBA export. "
+            "The PANTHER per-species sequence-classification directory contains "
+            "files for the supported-genome API entries; none of these 17 taxa "
+            "has a supported-genome entry."
         ),
         "",
-        "| Site | Taxon | Mnemonic | QuickGO exact IBA | QuickGO species IBA | "
-        "GO ref? | PANTHER ref? | PAINT rows | GO GAFs | Diagnosis |",
+        "| Site | Taxon | Mnemonic | QuickGO exact IBA | "
+        "QuickGO species+desc IBA | GO ref? | PANTHER ref? | PAINT rows | "
+        "GO GAFs | Diagnosis |",
         "|---|---|---:|---:|---:|---|---|---:|---|---|",
     ]
     for row in zero_rows:
         lines.append(
             f"| {row['site']} | {row['organism']} | `{row['mnemonic']}` | "
-            f"{row['quickgo_iba_exact_hits']} | {row['quickgo_iba_species_hits']} | "
+            f"{row['quickgo_iba_exact_hits']} | "
+            f"{row['quickgo_iba_species_descendant_hits']} | "
             f"{row['in_go_reference_species']} | "
             f"{row['in_panther_supported_genomes']} | "
             f"{row['paint_leaf_gaf_rows']} | "
             f"`{row['go_gaf_files'] or 'none'}` | "
-            f"{row['diagnosis']} |"
+            f"{zero_diagnosis(row)} |"
         )
 
     lines.extend(
@@ -419,13 +572,13 @@ def write_report(
             "## PAINT-bearing controls",
             "",
             (
-                "The sibling reference genomes do carry rows in the same data "
+                "The sibling reference genomes below carry rows in the same data "
                 "sources, which rules out a blanket PAINT export failure for "
                 "VEuPathDB-relevant clades."
             ),
             "",
-            "| Site | PAINT taxon | PANTHER short name | Sequence file | PAINT rows | "
-            "GO GAF IBA rows by file | GO GAFs |",
+            "| Site | PAINT taxon | PANTHER short name | Sequence file | "
+            "PAINT rows | GO GAF IBA rows by file | GO GAFs |",
             "|---|---|---:|---|---:|---|---|",
         ]
     )
@@ -449,21 +602,19 @@ def write_report(
     for row in zero_rows:
         clauses = [
             f"exact taxon `{row['taxon_id']}` had "
-            f"{row['quickgo_iba_exact_hits']} QuickGO IBA hits and "
-            f"{row['paint_leaf_gaf_rows']} PAINT leaf-GAF rows."
+            f"{row['quickgo_iba_exact_hits']} exact QuickGO IBA annotations and "
+            f"{row['paint_leaf_gaf_rows']} PAINT leaf-GAF rows.",
+            f"Species taxon `{row['species_taxon_id']}` and its descendants had "
+            f"{row['quickgo_iba_species_descendant_hits']} QuickGO IBA annotations.",
         ]
-        if row["species_taxon_id"]:
-            clauses.append(
-                f"The species-level taxon `{row['species_taxon_id']}` also had "
-                f"{row['quickgo_iba_species_hits']} QuickGO IBA hits."
-            )
         if row["go_gaf_files"]:
             clauses.append(
-                f"GO has `{row['go_gaf_files']}` GAF export(s) for this mnemonic "
-                f"with no IBA rows (`{row['go_gaf_iba_rows_by_file']}`)."
+                f"GO has `{row['go_gaf_files']}` GAF export(s) for the probed "
+                f"mnemonic(s) with no IBA rows "
+                f"(`{row['go_gaf_iba_rows_by_file']}`)."
             )
         else:
-            clauses.append("GO has no per-mnemonic GAF for this mnemonic.")
+            clauses.append("GO has no per-mnemonic GAF for the probed mnemonic(s).")
         if row["nearest_paint_reference"]:
             clauses.append(
                 f"Nearest included PAINT reference: {row['nearest_paint_reference']}."
@@ -481,8 +632,8 @@ def write_report(
             "",
             (
                 "We are using GO IBA annotations to triage VEuPathDB "
-                "eukaryotic pathogen and vector proteomes for GO review. Several "
-                "well-studied VEuPathDB organisms have UniProtKB proteins with "
+                "eukaryotic pathogen and vector proteomes for GO review. "
+                "The following VEuPathDB organisms have UniProtKB proteins with "
                 "PANTHER family cross-references but no IBA rows in QuickGO:"
             ),
             "",
@@ -499,11 +650,11 @@ def write_report(
             (
                 f"Against GO release {GO_RELEASE} and PANTHER {PANTHER_RELEASE}, "
                 "these exact taxa are absent from `go-reference-species.yaml`, "
-                "the PANTHER supported-genomes API, the PANTHER 19.0 "
-                "sequence-classification file set, and the PANTHER PAINT "
-                f"leaf GAF snapshot {PAINT_SNAPSHOT}. Querying the species-level "
-                "taxon in QuickGO also returns zero IBA rows, so this does not "
-                "look like a strain-only query mismatch."
+                "the PANTHER supported-genomes API, and the PANTHER PAINT "
+                f"leaf GAF snapshot {PAINT_SNAPSHOT}. Querying each exact taxon "
+                "and its species taxon with `taxonUsage=descendants` in QuickGO "
+                "also returns zero IBA rows, so this does not look like a "
+                "strain-only query mismatch."
             ),
             "",
             (
@@ -522,82 +673,94 @@ def write_report(
 
 def main() -> None:
     out_dir = Path(__file__).resolve().parent
-    retrieved_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    retrieved_date = datetime.now(timezone.utc).date().isoformat()
 
     panther_genomes = supported_genomes()
     go_reference = parse_reference_species(get(GO_REFERENCE_SPECIES_URL).decode())
-    sequence_files = directory_filenames(PANTHER_SEQUENCE_BASE, "")
+    sequence_files = directory_filenames(PANTHER_SEQUENCE_BASE)
     gaf_files = directory_filenames(f"{GO_RELEASE_BASE}/annotations/gaf/index.html")
     gpad_files = directory_filenames(f"{GO_RELEASE_BASE}/annotations/gpad/index.html")
     gpi_files = directory_filenames(f"{GO_RELEASE_BASE}/annotations/gpi/index.html")
+    paint = paint_gaf_summary()
 
-    watched_taxa = {probe.taxon_id for probe in PROBES}
-    paint_rows, paint_accessions, paint_date = paint_gaf_counts(watched_taxa)
-
-    quickgo_exact = {taxon_id: quickgo_iba_hits(taxon_id) for taxon_id in watched_taxa}
-    species_taxa = {
-        probe.species_taxon_id
-        for probe in PROBES
-        if probe.species_taxon_id is not None
+    quickgo_exact = {
+        taxon_id: quickgo_iba_hits(taxon_id)
+        for taxon_id in {probe.taxon_id for probe in PROBES}
     }
-    quickgo_species = {
-        taxon_id: quickgo_iba_hits(taxon_id) for taxon_id in species_taxa
+    quickgo_species_descendants = {
+        taxon_id: quickgo_iba_hits(taxon_id, "descendants")
+        for taxon_id in {
+            probe.species_taxon_id
+            for probe in PROBES
+            if probe.species_taxon_id is not None
+        }
     }
 
     rows: list[dict[str, str | int]] = []
     for probe in PROBES:
         panther = panther_genomes.get(probe.taxon_id)
         go_ref = go_reference.get(probe.taxon_id)
-        short_name = ""
-        sequence_file = ""
-        if panther:
-            short_name = str(panther["short_name"])
-            expected_file = f"PTHR{PANTHER_RELEASE}_{panther['name']}"
-            if expected_file in sequence_files:
-                sequence_file = expected_file
-        if not short_name and go_ref:
-            short_name = str(go_ref["reference_proteome_short_name"])
-
-        probe_gaf = files_for_mnemonic(gaf_files, probe.mnemonic)
+        probe_gaf = files_for_mnemonics(gaf_files, probe.all_go_mnemonics())
         go_gaf_iba_rows_by_file = {
             filename: gaf_iba_count(filename) for filename in probe_gaf
         }
+        quickgo_species_hits: str | int = ""
+        if probe.species_taxon_id is not None:
+            quickgo_species_hits = quickgo_species_descendants[probe.species_taxon_id]
+        paint_rows = paint.row_counts[probe.taxon_id]
+        category = row_category(
+            go_ref,
+            panther,
+            paint_rows,
+            quickgo_exact[probe.taxon_id],
+            quickgo_species_hits,
+        )
         rows.append(
             {
-                "category": probe.category,
+                "category": category,
+                "expected_state": probe.expected_state,
                 "site": probe.site,
                 "organism": probe.organism,
                 "mnemonic": probe.mnemonic,
+                "go_mnemonics": csv_list(list(probe.all_go_mnemonics())),
                 "taxon_id": probe.taxon_id,
                 "species_taxon_id": probe.species_taxon_id or "",
                 "quickgo_iba_exact_hits": quickgo_exact[probe.taxon_id],
-                "quickgo_iba_species_hits": (
-                    quickgo_species[probe.species_taxon_id]
-                    if probe.species_taxon_id is not None
-                    else ""
-                ),
+                "quickgo_iba_species_descendant_hits": quickgo_species_hits,
                 "in_go_reference_species": "yes" if go_ref else "no",
                 "in_panther_supported_genomes": "yes" if panther else "no",
-                "panther_short_name": short_name,
-                "panther_sequence_file": sequence_file,
+                "panther_short_name": panther.get("short_name", "") if panther else "",
+                "panther_sequence_file": sequence_file_for(panther, sequence_files),
                 "go_gaf_files": csv_list(probe_gaf),
-                "go_gpad_files": csv_list(files_for_mnemonic(gpad_files, probe.mnemonic)),
-                "go_gpi_files": csv_list(files_for_mnemonic(gpi_files, probe.mnemonic)),
-                "go_gaf_iba_rows": sum(go_gaf_iba_rows_by_file.values()),
-                "go_gaf_iba_rows_by_file": format_file_counts(go_gaf_iba_rows_by_file),
-                "paint_leaf_gaf_rows": paint_rows[probe.taxon_id],
-                "paint_leaf_gaf_accessions": len(paint_accessions[probe.taxon_id]),
+                "go_gpad_files": csv_list(
+                    files_for_mnemonics(gpad_files, probe.all_go_mnemonics())
+                ),
+                "go_gpi_files": csv_list(
+                    files_for_mnemonics(gpi_files, probe.all_go_mnemonics())
+                ),
+                "go_gaf_iba_total_rows": sum(go_gaf_iba_rows_by_file.values()),
+                "go_gaf_iba_rows_by_file": format_file_counts(
+                    go_gaf_iba_rows_by_file
+                ),
+                "paint_leaf_gaf_rows": paint_rows,
+                "paint_leaf_gaf_accessions": len(paint.accessions[probe.taxon_id]),
                 "nearest_paint_reference": probe.nearest_paint_reference,
-                "diagnosis": probe.diagnosis,
             }
         )
 
-    write_tsv(rows, out_dir / "iba_zero_diagnosis.tsv")
+    validate_expectations(rows)
+    write_tsv(rows, out_dir / "iba_zero_diagnosis.tsv", IBA_DIAGNOSIS_FIELDS)
+    write_paint_taxa(
+        out_dir / "paint_leaf_taxa.tsv",
+        paint,
+        go_reference,
+        panther_genomes,
+    )
     write_report(
         rows,
         {
-            "paint_gaf_date": paint_date,
-            "retrieved_at": retrieved_at,
+            "paint_gaf_date": paint.header_date,
+            "retrieved_date": retrieved_date,
         },
         out_dir / "iba_zero_diagnosis.md",
     )
