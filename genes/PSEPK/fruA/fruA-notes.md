@@ -25,3 +25,12 @@ Reviewed all original annotation rows and complete biological scope. Payloads, r
 A genuine default Falcon attempt failed with HTTP403; no provider report was fabricated. The review is based on cached primary literature, curated source statements and sequence/domain evidence.
 
 Q88PQ3 has two EIIB-like domains, but cysteine-bearing motifs do not prove that both accept phosphate. The B-prime facilitation result is direct for E. coli (PMID8626640), not a demonstrated KT2440 mechanism. ARBA-only catalytic/localization prose and DE EC-number quotes were replaced by target family evidence plus the native FruA/FruB literature (PMID18296519, PMID27933319).
+
+## 2026-11-26 follow-up (Claude, AI-assisted)
+
+The GO:0015755 fructose transmembrane transport row was changed from ACCEPT to MODIFY,
+with replacement GO:1990539 fructose import across plasma membrane (an is_a child), and the
+core function's process was updated to match. The PTS moves fructose inward across the
+plasma membrane [PMID:27933319 "EIIBC (membrane bound, encoded by fruA)"; PMID:17416664
+"Two of these (FruA and FruB) form a dedicated system for fructose intake"], and the
+E. coli FruA review already uses GO:1990539, so the two FruA reviews are now consistent.
