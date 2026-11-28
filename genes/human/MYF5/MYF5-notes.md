@@ -13,10 +13,14 @@ rows come from the same core myogenic-factor gains used for MYOD1 and MYOG:
 functions, and `PTN000164854` carries skeletal-muscle differentiation and the
 RNA polymerase II transcription regulator complex.
 
-The reviewed UniProt MYF5 record is the strongest compact source for the human
-protein: it describes MYF5 as a transcriptional activator of muscle-specific
-target genes, records its role in muscle differentiation, and notes that
-efficient DNA binding requires dimerization with another bHLH protein. The early
+The reviewed UniProt MYF5 record is a compact source for the human protein's
+myogenic transcription-factor biology: it describes MYF5 as a muscle-specific
+target-gene activator involved in muscle differentiation and notes that efficient
+DNA binding requires dimerization with another bHLH protein. Conerly et al. give
+the best mechanistic split from MYOD1: Myf5 binds the same genome-wide E-box
+sites as MyoD but weakly induces the shared target genes and instead primes
+bound loci by inducing local histone H4 acetylation [PMID:26906734, "Myf5
+induces local H4Ac, despite its lack of transcriptional induction"]. The early
 human MYF5 cDNA paper, PMID:2721498, is cached only as an abstract, so the
 review keeps the old TAS developmental rows but does not build new claims from
 the unread full text.
