@@ -14,10 +14,11 @@ A short options note for a call with the CARD team. Part of the
   propagation it gives a GO term to 342 of the 595 families in CARD's *AMR Gene Family* category,
   records a GO gap for 23 more, and lists the other 230 with a reason
   ([coverage report](FAMILY_COVERAGE.md)).
-- Release sync already works here as a check, not yet as a schedule. `just fetch-aro` downloads a
-  CARD release, and `just check-aro-release` fails on label drift, on ids missing from the release,
-  and on any AMR gene family that is neither mapped nor triaged. That check is how the two
-  relabellings the CARD team pointed out (ARO:3000560, ARO:3000202) would have been caught. It also
+- Release sync already works here as a check, not yet as a schedule. The mapping is pinned to one
+  CARD release (`aro_release.yaml`). `just check-aro-latest` fetches CARD's newest release and fails
+  when CARD has released past the pin, on label drift, on ids missing from the release, and on any AMR
+  gene family that is neither mapped nor triaged. That check is how the two relabellings the CARD
+  team pointed out (ARO:3000560, ARO:3000202) would have been caught. It also
   found that 18 ids listed as AMR gene families in `aro_categories.tsv` are absent from the
   `aro.obo` of the same release.
 - Applying the mapping to UniProt's 4,182 CARD-cross-referenced entries gives 1,784 candidate GO
@@ -37,7 +38,7 @@ Whichever repository hosts the file, the same three checks should run there on e
 and on a schedule against GO:
 
 1. **ARO drift**: every subject id is live in the new release and its label matches. This is
-   `aro_release.py check` today, comparing against a pinned release (`aro_release.yaml`).
+   `just check-aro-latest` today, comparing CARD's newest release against the pin (`aro_release.yaml`).
 2. **Coverage**: every AMR gene family is mapped, covered by a mapped ancestor, recorded as a GO gap,
    or listed with a reason. New families then show up as a failing check, not as silent gaps.
 3. **GO drift**: every object id is live and its label matches, and gap rows are re-tested when GO

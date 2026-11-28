@@ -203,10 +203,18 @@ now has `GO:0160220` D-alanine-(R)-lactate ligase activity.
 
 ## Release sync
 
-`just fetch-aro` downloads the latest CARD release into `.cache/aro/` (git-ignored);
-`just fetch-aro --update-pin` also makes it the pinned release. `just check-aro-release` then reports
-label drift, ids gone from the release, new untriaged families, and triaged families that became
-mapped. See [MAPPING_HOME_OPTIONS.md](MAPPING_HOME_OPTIONS.md) for where this should run long term.
+- `just fetch-aro` downloads the **pinned** CARD release (`aro_release.yaml`, from CARD's versioned
+  download URL) into `.cache/aro/` (git-ignored). This is what validation and the reports run against,
+  so they are reproducible.
+- `just check-aro-release` checks the mapping and triage against that pinned release.
+- `just check-aro-latest` is the **drift probe**: it fetches CARD's latest release into
+  `.cache/aro-latest/` and runs the same check, so it fails when CARD has released past the pin
+  (version or `aro.obo` sha256), and reports any label drift, retired ids or new untriaged families.
+- To move to a new release: `just fetch-aro --latest --update-pin`, fix what `just check-aro-release`
+  reports, regenerate the reports, and commit.
+
+See [MAPPING_HOME_OPTIONS.md](MAPPING_HOME_OPTIONS.md) for where this should run long term (a scheduled
+`check-aro-latest` is the CI hook).
 
 ## Validation & tests
 

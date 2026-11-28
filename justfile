@@ -123,8 +123,8 @@ validate-mappings: _ensure-aro
 	uv run linkml-term-validator validate-data projects/ANTIMICROBIAL_RESISTANCE/aro2go.terms.yaml -s src/ai_gene_review/schema/aro_go_mapping.yaml -t AROGOMappingSet --labels --no-cache -c projects/ANTIMICROBIAL_RESISTANCE/oak_config.yaml
 	uv run python projects/ANTIMICROBIAL_RESISTANCE/aro_release.py check
 
-# Pass --update-pin to make the fetched release the one the ARO->GO mapping is checked against.
-# Download the latest CARD release (ARO ontology + AMR gene family categories) into .cache/aro.
+# Pass --latest for CARD's newest release, and --latest --update-pin to re-pin the mapping to it.
+# Download the pinned CARD release (ARO ontology + AMR gene family categories) into .cache/aro.
 fetch-aro *ARGS:
 	uv run python projects/ANTIMICROBIAL_RESISTANCE/aro_release.py fetch {{ARGS}}
 
@@ -133,6 +133,12 @@ fetch-aro *ARGS:
 # Check the ARO->GO mapping against the fetched CARD release.
 check-aro-release: _ensure-aro
 	uv run python projects/ANTIMICROBIAL_RESISTANCE/aro_release.py check
+
+# This is the drift probe: it fails when CARD has released past the pin or the mapping has drifted.
+# Check the ARO->GO mapping against CARD's LATEST release (fetched into .cache/aro-latest).
+check-aro-latest:
+	uv run python projects/ANTIMICROBIAL_RESISTANCE/aro_release.py fetch --latest --cache .cache/aro-latest
+	uv run python projects/ANTIMICROBIAL_RESISTANCE/aro_release.py check --cache .cache/aro-latest
 
 # Regenerate FAMILY_COVERAGE.md (status of every CARD AMR gene family).
 aro-family-coverage: _ensure-aro

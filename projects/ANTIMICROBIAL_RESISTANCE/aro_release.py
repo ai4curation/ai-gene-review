@@ -4,7 +4,8 @@
 The curated mapping (``aro2go.sssom.yaml``) is checked against one pinned CARD release
 (``aro_release.yaml``). This module is the single place that knows how to
 
-* **fetch** a CARD release (ontology + data tarballs) into ``.cache/aro/`` (git-ignored);
+* **fetch** a CARD release (ontology + data tarballs) into ``.cache/aro/`` (git-ignored): the pinned
+  one by default, CARD's newest with ``--latest`` (the drift probe, ``just check-aro-latest``);
 * **propagate** a mapping from an ARO term to the gene/determinant terms it applies to; and
 * **check** the mapping set against a release: label drift, ids missing from the release,
   and coverage of CARD's "AMR Gene Family" category.
@@ -370,10 +371,10 @@ def check(onto: AroOntology, release_meta: dict, pin: dict, sssom: dict, triage:
         result.version_mismatch.append(
             f"cached CARD release {release_meta['card_version']} != pinned {pin['card_version']}"
         )
-    elif release_meta["aro_obo_sha256"] != pin["aro_obo_sha256"]:
+    elif release_meta.get("aro_obo_sha256") != pin["aro_obo_sha256"]:
         result.version_mismatch.append(
-            f"cached aro.obo sha256 {release_meta['aro_obo_sha256'][:12]}... differs from the pinned "
-            f"{pin['aro_obo_sha256'][:12]}... for the same CARD version"
+            f"cached aro.obo sha256 {str(release_meta.get('aro_obo_sha256'))[:12]}... differs from the pinned "
+            f"{pin['aro_obo_sha256'][:12]}... for the same CARD version (re-run `just fetch-aro`)"
         )
     pinned_source = f"CARD {pin['card_version']} (ARO {pin['aro_date']})"
     if sssom.get("subject_source_version") != pinned_source:

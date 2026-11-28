@@ -191,6 +191,7 @@ def compute(mappings, onto: AroOntology, uniprot_rows, go_descendants=None):
                 {
                     "uniprot_acc": acc,
                     "gene_aro_id": gene_aro,
+                    # is_a only: False means "not an is_a descendant of ARO:0000031", not a proven negative
                     "gene_is_resistance_variant": RESISTANCE_VARIANT in onto.isa_ancestors_or_self(gene_aro),
                     "mapped_aro_id": subj,
                     "aro_relation": relation,
@@ -325,9 +326,10 @@ def main(
     candidate_rows, stats = compute(mappings, onto, uniprot_rows, go_descendants)
 
     out_tsv.parent.mkdir(parents=True, exist_ok=True)
+    # New columns go at the end: gene reviews quote whole rows of this file as supporting_text.
     cols = [
-        "uniprot_acc", "gene_aro_id", "gene_is_resistance_variant", "mapped_aro_id", "aro_relation",
-        "predicate_id", "go_id", "go_label",
+        "uniprot_acc", "gene_aro_id", "mapped_aro_id", "aro_relation", "predicate_id", "go_id", "go_label",
+        "gene_is_resistance_variant",
     ]
     with out_tsv.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t")
